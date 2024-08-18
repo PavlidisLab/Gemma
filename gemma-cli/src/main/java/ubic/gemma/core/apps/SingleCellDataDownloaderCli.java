@@ -307,7 +307,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                             try {
                                 writer.printRecord(
                                         geoAccession, detectedDataType, numberOfSamples, numberOfCells, numberOfGenes,
-                                        additionalSupplementaryFiles.stream().map( FilenameUtils::getName ).collect( Collectors.joining( ";" ) ),
+                                        additionalSupplementaryFiles.stream().map( this::getFilename ).collect( Collectors.joining( ";" ) ),
                                         comment );
                                 writer.flush(); // for convenience, so that results appear immediately with tail -f
                             } catch ( IOException e ) {
@@ -318,6 +318,18 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                 } );
             }
             awaitBatchExecutorService();
+        }
+    }
+
+    /**
+     * Exclamation marks are used to refer to files within TAR archives (i.e. GSM000012_bundle.tar!cellids.csv).
+     */
+    private String getFilename( String fullPath ) {
+        int afterExclamationMark = fullPath.indexOf( "'!" );
+        if ( afterExclamationMark > 0 ) {
+            return FilenameUtils.getName( fullPath.substring( afterExclamationMark ) ) + "!" + fullPath.substring( afterExclamationMark );
+        } else {
+            return FilenameUtils.getName( fullPath );
         }
     }
 

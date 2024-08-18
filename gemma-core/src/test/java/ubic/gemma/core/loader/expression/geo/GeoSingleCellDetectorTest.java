@@ -340,6 +340,82 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
                 .isEmpty();
     }
 
+    /**
+     * This file has a large TAR attachment in its ATAC-seq samples that should be ignored.
+     */
+    @Test
+    public void testGSE196516() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE196516" );
+        assertThat( series ).isNotNull();
+        assertThat( detector.hasSingleCellData( series ) ).isTrue();
+        assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
+    }
+
+
+    /**
+     * THis series contains large TAR attachment that should be skipped when inspecting for MEX.
+     */
+    @Test
+    public void testGSE235314() throws IOException {
+        GeoSeries series = readSeriesFromGeo( "GSE235314" );
+        assertThat( series ).isNotNull();
+        assertThat( detector.hasSingleCellData( series ) ).isFalse();
+        GeoSample sample = series.getSamples().stream().filter( s -> s.getGeoAccession().equals( "GSM7498809" ) ).findAny().get();
+        assertThat( detector.getAdditionalSupplementaryFiles( sample ) )
+                .containsExactly( "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7498nnn/GSM7498809/suppl/GSM7498809_CEA.tar.gz" );
+    }
+
+    /**
+     * Similar case here with large TAR attachments, but in this case it has a lot of samples to skip.
+     */
+    @Test
+    @Category(SlowTest.class)
+    public void testGSE201262() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE201262" );
+        assertThat( series ).isNotNull();
+        assertThat( detector.hasSingleCellData( series ) ).isTrue();
+        assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
+    }
+
+    @Test
+    public void testGSE210889() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE210889" );
+        assertThat( series ).isNotNull();
+        assertThat( detector.hasSingleCellData( series ) ).isTrue();
+        assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
+        detector.downloadSingleCellData( series );
+    }
+
+    /**
+     * This files produces "java.util.zip.ZipException: invalid block type" apparently...
+     */
+    @Test
+    public void testGSE200202() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE200202" );
+        assertThat( series ).isNotNull();
+        detector.downloadSingleCellData( series );
+    }
+
+    /**
+     * GSM6681000 has MEX files, but the extension is .tar.gz instead of simply .gz.
+     */
+    @Test
+    @Ignore("This is a complicated case because we have to extract all three TARs.")
+    public void testGSE216591() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE216591" );
+        assertThat( series ).isNotNull();
+        GeoSample sample = series.getSamples().stream()
+                .filter( s -> s.getGeoAccession().equals( "GSM6681000" ) ).findAny()
+                .get();
+        detector.downloadSingleCellData( sample );
+        assertThat( tmpDir )
+                .isDirectoryRecursivelyContaining( "glob:**/GSM6681000/barcodes.tsv.gz" )
+                .isDirectoryRecursivelyContaining( "glob:**/GSM6681000/features.tsv.gz" )
+                .isDirectoryRecursivelyContaining( "glob:**/GSM6681000/matrix.mtx.gz" );
+        assertThat( detector.getAdditionalSupplementaryFiles( sample ) )
+                .isEmpty();
+    }
+
     @Nullable
     private GeoSeries readSeriesFromGeo( String accession ) throws IOException {
         try ( InputStream is = new GZIPInputStream( new URL( "https://ftp.ncbi.nlm.nih.gov/geo/series/" + accession.substring( 0, 6 ) + "nnn/" + accession + "/soft/" + accession + "_family.soft.gz" ).openStream() ) ) {

@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 /**
  * This is the main single-cell data detector that delegates to other more specific detectors.
- * <p>
+ * <pMexDe>
  * Samples can be loaded in parallel when retrieving a GEO series with {@link #downloadSingleCellData(GeoSeries)}. The
  * number of threads used is controlled by {@link #setNumberOfFetchThreads(int)} and defaults to 4.
  * @author poirigui
@@ -63,15 +63,6 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
     public void setNumberOfFetchThreads( int numberOfFetchThreads ) {
         Assert.isNull( executor, "The fetch thread pool is already initialized, it's too late to change the number of threads." );
         this.numberOfFetchThreads = numberOfFetchThreads;
-    }
-
-    /**
-     * Set the maximum number of retries to attempt when retrieving supplementary materials.
-     */
-    public void setMaxRetries( int maxRetries ) {
-        annDataDetector.setMaxRetries( maxRetries );
-        seuratDiskDetector.setMaxRetries( maxRetries );
-        mexDetector.setMaxRetries( maxRetries );
     }
 
     /**
@@ -176,7 +167,8 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
             return SingleCellDataType.MEX;
         } else {
             for ( GeoSample sample : series.getSamples() ) {
-                if ( mexDetector.hasSingleCellData( sample ) ) {
+                // at this point, we already rejected the presence of single-cell data in the series
+                if ( isSingleCell( sample, false ) && mexDetector.hasSingleCellData( sample ) ) {
                     return SingleCellDataType.MEX;
                 }
             }

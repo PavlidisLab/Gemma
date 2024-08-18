@@ -49,8 +49,8 @@ public abstract class AbstractSingleFileInSeriesSingleCellDetector extends Abstr
      * Obtain the download destination for the single-cell data file.
      */
     protected Path getDest( GeoSeries series ) {
-        Assert.notNull( downloadDirectory, "A download directory must be set." );
-        return downloadDirectory.resolve( series + extension );
+        Assert.notNull( getDownloadDirectory(), "A download directory must be set." );
+        return getDownloadDirectory().resolve( series + extension );
     }
 
     @Override
@@ -113,7 +113,7 @@ public abstract class AbstractSingleFileInSeriesSingleCellDetector extends Abstr
         }
 
         log.info( series.getGeoAccession() + ": Retrieving " + name + " file " + file + " to " + dest + "..." );
-        for ( int i = 0; i <= maxRetries; i++ ) {
+        retry( ( lastAttempt ) -> {
             PathUtils.createParentDirectories( dest );
             StopWatch timer = StopWatch.createStarted();
             try ( InputStream is = openSupplementaryFileAsStream( file, true ) ) {
@@ -122,23 +122,14 @@ public abstract class AbstractSingleFileInSeriesSingleCellDetector extends Abstr
                 log.info( String.format( "%s: Retrieved " + name + " file (%s in %s @ %s/s).", series.getGeoAccession(),
                         FileUtils.byteCountToDisplaySize( downloadedBytes ), timer,
                         FileUtils.byteCountToDisplaySize( 1000.0 * downloadedBytes / timer.getTime() ) ) );
-                break;
             } catch ( Exception e ) {
                 log.warn( String.format( "%s: %s file could not be downloaded successfully, removing %s...",
                         series.getGeoAccession(), name, dest ), e );
                 PathUtils.deleteFile( dest );
-                if ( isRetryable( i, e ) ) {
-                    log.info( String.format( "%s: Retrying download of %s...", series.getGeoAccession(), file ) );
-                    backoff( i );
-                } else {
-                    if ( i == maxRetries ) {
-                        log.error( String.format( "%s: Maximum number of retries reached for %s, raising the last exception.",
-                                series.getGeoAccession(), file ) );
-                    }
-                    throw e;
-                }
+                throw e;
             }
-        }
+            return null;
+        }, "download of " + name + " file " + file + " to " + dest );
     }
 
     @Override
