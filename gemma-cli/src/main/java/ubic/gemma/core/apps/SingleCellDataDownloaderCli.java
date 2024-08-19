@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -355,7 +356,8 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         if ( Files.exists( dest ) ) {
             FTPClient client = ftpClientFactory.getFtpClient( softFileUrl );
             try {
-                long expectedLength = client.mlistFile( remoteFile ).getSize();
+                FTPFile res = client.mlistFile( remoteFile );
+                long expectedLength = res != null ? res.getSize() : -1;
                 if ( expectedLength != -1 && dest.toFile().length() == expectedLength ) {
                     log.info( accession + ": Using existing SOFT file " + dest + "." );
                     download = false;

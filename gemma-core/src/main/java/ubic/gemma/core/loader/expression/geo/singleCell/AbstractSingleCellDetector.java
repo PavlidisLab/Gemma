@@ -3,6 +3,7 @@ package ubic.gemma.core.loader.expression.geo.singleCell;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.util.SimpleRetry;
@@ -68,7 +69,8 @@ public abstract class AbstractSingleCellDetector implements SingleCellDetector {
             expectedContentLength = retry( ( lastAttempt ) -> {
                 FTPClient client = ftpClientFactory.getFtpClient( url );
                 try {
-                    long ret = client.mlistFile( url.getPath() ).getSize();
+                    FTPFile res = client.mlistFile( url.getPath() );
+                    long ret = res != null ? res.getSize() : -1;
                     ftpClientFactory.recycleClient( url, client );
                     return ret;
                 } catch ( IOException e ) {

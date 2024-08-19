@@ -1,0 +1,8 @@
+<root>
+    <item name='org.apache.commons.net.ftp.FTPClient java.io.InputStream retrieveFileStream(java.lang.String)'>
+        <annotation name='javax.annotation.Nullable'/>
+    </item>
+    <item name='org.apache.commons.net.ftp.FTPClient org.apache.commons.net.ftp.FTPFile mlistFile(java.lang.String)'>
+        <annotation name='javax.annotation.Nullable'/>
+    </item>
+</root>
