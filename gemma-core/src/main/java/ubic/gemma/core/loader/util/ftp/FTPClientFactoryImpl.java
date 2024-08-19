@@ -102,8 +102,7 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
         if ( s == null ) {
             String reply = client.getReplyString();
             destroyClient( url, client );
-            throw new IOException( String.format( "Failed to retrieve %s from %s: %s", url.getPath(),
-                    url.getAuthority(), reply ) );
+            throw new IOException( String.format( "Failed to retrieve %s: %s", url, reply ) );
         }
         return new FilterInputStream( s ) {
 
@@ -156,7 +155,7 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
                 } else {
                     String reply = client.getReplyString();
                     destroyClient( url, client );
-                    throw new IOException( String.format( "Failed to retrieve %s from %s: %s", url.getPath(), url.getAuthority(), reply ) );
+                    throw new IOException( String.format( "Failed to retrieve %s: %s", url, reply ) );
                 }
             }
         };
