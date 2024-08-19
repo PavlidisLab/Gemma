@@ -10,6 +10,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.file.PathUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -83,7 +84,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
     @Nullable
     private Path summaryOutputFile;
     private boolean resume;
-    private boolean retryUnsupportedOrUnknown;
+    private String[] retry;
     @Nullable
     private Number fetchThreads;
 
@@ -117,8 +118,8 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         options.addOption( Option.builder( ACCESSIONS_OPTION ).longOpt( "acc" ).hasArg().desc( "Comma-delimited list of accessions to download" ).build() );
         options.addOption( Option.builder( SUMMARY_OUTPUT_FILE_OPTION ).longOpt( "summary-output-file" ).type( File.class ).hasArg().desc( "File to write the summary output to. This is used to keep track of progress and resume download with -r/--resume." ).build() );
         options.addOption( Option.builder( RESUME_OPTION ).longOpt( "resume" ).desc( "Resume download from a previous invocation of this command. Requires -s/--summary-output-file to be set and refer to an existing file." ).build() );
-        options.addOption( Option.builder( RETRY_OPTION ).longOpt( "retry" ).desc( "Retry datasets previously marked as '" + UNSUPPORTED_INDICATOR + "', '" + UNKNOWN_INDICATOR + "' or '" + FAILED_INDICATOR + "' in a summary file.  Requires -r/--resume option to be set." ).build() );
-        options.addOption( Option.builder( FETCH_THREADS_OPTION ).longOpt( "fetch-threads" ).hasArg().type( Number.class ).desc( "Number of threads to use for downloading files. Default is " + GeoSingleCellDetector.DEFAULT_NUMBER_OF_FETCH_THREADS + "." ).build() );
+        options.addOption( Option.builder( RETRY_OPTION ).longOpt( "retry" ).hasArg().desc( "Retry problematic datasets. Possible values are: '" + UNSUPPORTED_INDICATOR + "', '" + UNKNOWN_INDICATOR + "' or '" + FAILED_INDICATOR + "', or any combination delimited by ','. Requires -r/--resume option to be set." ).build() );
+        options.addOption( Option.builder( FETCH_THREADS_OPTION ).longOpt( "fetch-threads" ).hasArg().type( Number.class ).desc( "Number of threads to use for downloading files. Default is " + GeoSingleCellDetector.DEFAULT_NUMBER_OF_FETCH_THREADS + ". Use -threads/--threads for processing series in parallel." ).build() );
         options.addOption( Option.builder( DATA_TYPE_OPTION ).hasArg().desc( "Data type. Possible values are: " + Arrays.stream( SingleCellDataType.values() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) + ". Only works if a single accession is passed to -e/--acc." ).build() );
         options.addOption( Option.builder( SUPPLEMENTARY_FILE_OPTION ).hasArgs().desc( "Supplementary file to download. Only works if a single accession is passed to -e/--acc and -dataType is specified." ).build() );
         addThreadsOption( options );
@@ -172,7 +173,17 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             summaryOutputFile = null;
         }
         resume = commandLine.hasOption( RESUME_OPTION );
-        retryUnsupportedOrUnknown = commandLine.hasOption( RETRY_OPTION );
+        if ( commandLine.hasOption( RETRY_OPTION ) ) {
+            retry = StringUtils.split( commandLine.getOptionValue( RETRY_OPTION ), "," );
+            for ( String r : retry ) {
+                if ( !r.equals( UNKNOWN_INDICATOR ) && !r.equals( UNSUPPORTED_INDICATOR ) && !r.equals( FAILED_INDICATOR ) ) {
+                    throw new IllegalArgumentException( String.format( "Value for the %s option must be one of: %s, %s or %s.",
+                            RETRY_OPTION, UNKNOWN_INDICATOR, UNSUPPORTED_INDICATOR, FAILED_INDICATOR ) );
+                }
+            }
+        } else {
+            retry = null;
+        }
         if ( resume ) {
             if ( singleAccessionMode ) {
                 throw new IllegalArgumentException( "The -" + RESUME_OPTION + " option cannot be used in single accession mode." );
@@ -184,9 +195,9 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             try ( Stream<String> lines = Files.lines( summaryOutputFile ) ) {
                 Set<String> accessionsToRemove = lines.skip( 1 )
                         .filter( line -> {
-                            if ( retryUnsupportedOrUnknown ) {
+                            if ( retry != null ) {
                                 String dataType = line.split( "\t", 3 )[1];
-                                if ( dataType.equals( UNSUPPORTED_INDICATOR ) || dataType.equals( UNKNOWN_INDICATOR ) || dataType.equals( FAILED_INDICATOR ) ) {
+                                if ( ArrayUtils.contains( retry, dataType ) ) {
                                     accessionsToRetry.incrementAndGet();
                                     return false;
                                 }
@@ -208,7 +219,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
             }
-        } else if ( retryUnsupportedOrUnknown ) {
+        } else if ( retry != null ) {
             throw new IllegalArgumentException( "The -" + RETRY_OPTION + " option requires the -" + RESUME_OPTION + " option to be provided." );
         }
         if ( commandLine.hasOption( FETCH_THREADS_OPTION ) ) {
@@ -233,8 +244,8 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
 
     @Override
     protected void doWork() throws Exception {
-        if ( retryUnsupportedOrUnknown ) {
-            log.info( String.format( "Removing accessions marked as 'UNSUPPORTED' or 'UNKNOWN' from %s since they will be reattempted...", summaryOutputFile ) );
+        if ( retry != null ) {
+            log.info( String.format( "Removing accessions marked as %s from %s since they will be reattempted...", String.join( ", ", retry ), summaryOutputFile ) );
             // rewrite the summary output file to remove the accessions that will be retried since those will be appended
             assert summaryOutputFile != null;
             List<String> linesToKeep = new ArrayList<>();
