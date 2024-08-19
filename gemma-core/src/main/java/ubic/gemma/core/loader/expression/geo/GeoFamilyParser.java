@@ -134,15 +134,14 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
             executor.execute( future );
             executor.shutdown();
 
-            while ( !future.isDone() && !future.isCancelled() ) {
-                try {
-                    TimeUnit.SECONDS.sleep( 5L );
-                } catch ( InterruptedException e ) {
-                    // probably cancelled.
-                    dis.close();
-                    return;
+            try {
+                while ( !executor.awaitTermination( 5, TimeUnit.SECONDS ) ) {
+                    GeoFamilyParser.log.debug( parsedLines + " lines parsed." );
                 }
-                GeoFamilyParser.log.debug( parsedLines + " lines parsed." );
+            } catch ( InterruptedException e ) {
+                // probably cancelled.
+                dis.close();
+                return;
             }
 
             try {
