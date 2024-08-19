@@ -426,16 +426,16 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
 
     @Override
     public List<String> getAdditionalSupplementaryFiles( GeoSeries series ) {
-        return getAdditionalSupplementaryFiles( series.getGeoAccession(), series.getSupplementaryFiles() );
+        return getAdditionalSupplementaryFiles( series.getGeoAccession(), series.getSupplementaryFiles().stream().filter( f -> !f.endsWith( "_RAW.tar" ) ) );
     }
 
     @Override
     public List<String> getAdditionalSupplementaryFiles( GeoSample sample ) {
-        return getAdditionalSupplementaryFiles( sample.getGeoAccession(), sample.getSupplementaryFiles() );
+        return getAdditionalSupplementaryFiles( sample.getGeoAccession(), sample.getSupplementaryFiles().stream() );
     }
 
-    private List<String> getAdditionalSupplementaryFiles( String geoAccession, Collection<String> supplementaryFiles ) {
-        return supplementaryFiles.stream()
+    private List<String> getAdditionalSupplementaryFiles( String geoAccession, Stream<String> supplementaryFiles ) {
+        return supplementaryFiles
                 .flatMap( file -> {
                     if ( file.endsWith( ".tar" ) || file.endsWith( ".tar.gz" ) ) {
                         //extract files in tar
@@ -464,7 +464,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                         } catch ( IOException e ) {
                             log.error( String.format( "%s: Failed to read TAR archive %s, will move on to the next supplementary material...",
                                     geoAccession, file ), e );
-                            return Stream.empty();
+                            return Stream.of( file );
                         }
                     } else {
                         return Stream.of( file );
@@ -478,10 +478,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
         return !isMexFile( f, MexFileType.GENES )
                 && !isMexFile( f, MexFileType.FEATURES )
                 && !isMexFile( f, MexFileType.BARCODES )
-                && !isMexFile( f, MexFileType.MATRIX )
-                // FIXME: the tar might contain additional supplementary files
-                && !f.endsWith( ".tar" ) && !f.endsWith( ".tar.gz" )
-                && !f.endsWith( "_RAW.tar" );
+                && !isMexFile( f, MexFileType.MATRIX );
     }
 
     @Override
