@@ -301,7 +301,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                             numberOfGenes = loader.getGenes().size();
                             additionalSupplementaryFiles.addAll( detector.getAdditionalSupplementaryFiles( series ) );
                             for ( GeoSample sample : series.getSamples() ) {
-                                additionalSupplementaryFiles.addAll( detector.getAdditionalSupplementaryFiles( sample ) );
+                                additionalSupplementaryFiles.addAll( detector.getAdditionalSupplementaryFiles( series, sample ) );
                             }
                             addSuccessObject( geoAccession );
                         } else {

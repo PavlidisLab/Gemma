@@ -282,10 +282,35 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
      * at the series level.
      */
     @Test
-    public void testGSE242423() throws IOException {
+    @Category(SlowTest.class)
+    public void testGSE242423() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE242423" );
         assertThat( series ).isNotNull();
-        assertThat( detector.hasSingleCellData( series ) ).isFalse();
+        assertThat( detector.hasSingleCellData( series ) ).isTrue();
+        assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
+        // FIXME: files are detected as additional because the detection does not account for the files supplied by the
+        //        series
+        assertThat( detector.getAdditionalSupplementaryFiles( series ) )
+                .containsExactly( "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE242nnn/GSE242423/suppl/GSE242423_scRNA_genes.tsv.gz" );
+        assertThat( series.getSamples() ).allSatisfy( s -> {
+            // uncontextualized, the sample does not have single-cell data because it lacks features.tsv.gz
+            assertThat( detector.getAdditionalSupplementaryFiles( s ) )
+                    .hasSize( 2 )
+                    .satisfiesExactlyInAnyOrder( s1 -> {
+                        assertThat( s1 ).endsWith( "matrix.mtx.gz" );
+                    }, s2 -> {
+                        assertThat( s2 ).endsWith( "barcode.tsv.gz" );
+                    } );
+            // with the context of its series, it can properly detect the presence of the features.tsv.gz file from the
+            // parent series
+            assertThat( detector.getAdditionalSupplementaryFiles( series, s ) )
+                    .isEmpty();
+        } );
+        detector.downloadSingleCellData( series );
+        assertThat( tmpDir )
+                .isDirectoryRecursivelyContaining( "glob:**/GSM7763419/barcodes.tsv.gz" )
+                .isDirectoryRecursivelyContaining( "glob:**/GSM7763419/features.tsv.gz" )
+                .isDirectoryRecursivelyContaining( "glob:**/GSM7763419/matrix.mtx.gz" );
     }
 
     /**

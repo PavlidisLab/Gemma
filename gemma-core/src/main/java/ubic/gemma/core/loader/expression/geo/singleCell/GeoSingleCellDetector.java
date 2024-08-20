@@ -126,7 +126,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
         try {
             for ( GeoSample sample : series.getSamples() ) {
                 if ( isSingleCell( sample, hasSingleCellDataInSeries ) ) {
-                    if ( hasSingleCellData( sample ) ) {
+                    if ( mexDetector.hasSingleCellData( series, sample ) ) {
                         return true;
                     } else {
                         singleCellSamplesWithoutData.add( sample.getGeoAccession() );
@@ -168,7 +168,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
         } else {
             for ( GeoSample sample : series.getSamples() ) {
                 // at this point, we already rejected the presence of single-cell data in the series
-                if ( isSingleCell( sample, false ) && mexDetector.hasSingleCellData( sample ) ) {
+                if ( isSingleCell( sample, false ) && mexDetector.hasSingleCellData( series, sample ) ) {
                     return SingleCellDataType.MEX;
                 }
             }
@@ -422,6 +422,13 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
                 // this is just an aggregate of sample-level supplementary files
                 .filter( f -> !f.endsWith( "_RAW.tar" ) )
                 .collect( Collectors.toList() );
+    }
+
+    public List<String> getAdditionalSupplementaryFiles( GeoSeries series, GeoSample sample ) {
+        if ( mexDetector.hasSingleCellData( series, sample ) ) {
+            return mexDetector.getAdditionalSupplementaryFiles( series, sample );
+        }
+        return getAdditionalSupplementaryFiles( sample );
     }
 
     @Override
