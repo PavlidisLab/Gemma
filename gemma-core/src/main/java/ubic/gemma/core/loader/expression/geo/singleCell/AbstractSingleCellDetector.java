@@ -6,6 +6,7 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
+import ubic.gemma.core.util.ProgressInputStream;
 import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.core.util.SimpleRetryCallable;
 
@@ -63,10 +64,38 @@ public abstract class AbstractSingleCellDetector implements SingleCellDetector {
         if ( !dest.toFile().exists() ) {
             return false;
         }
+        long expectedContentLength = getSizeInBytes( remoteFile );
+        return expectedContentLength != -1 && dest.toFile().length() == expectedContentLength;
+    }
+
+    /**
+     * Open a supplementary file as an input stream, possibly decompressing it.
+     */
+    protected InputStream openSupplementaryFileAsStream( String filename, int attempt, boolean decompressIfNeeded ) throws IOException {
+        Assert.notNull( ftpClientFactory, "An FTP client factory must be set" );
+        URL url = new URL( filename );
+        String what = filename;
+        if ( attempt > 0 ) {
+            what += " (attempt #" + ( attempt + 1 ) + ")";
+        }
+        InputStream stream;
+        if ( url.getProtocol().equals( "ftp" ) ) {
+            stream = new ProgressInputStream( ftpClientFactory.openStream( url ), what, getClass().getName(), getSizeInBytes( filename ) );
+        } else {
+            stream = new ProgressInputStream( new BufferedInputStream( url.openStream() ), what, getClass().getName(), getSizeInBytes( filename ) );
+        }
+        if ( decompressIfNeeded && filename.endsWith( ".gz" ) ) {
+            return new GZIPInputStream( stream );
+        } else {
+            return stream;
+        }
+    }
+
+    private long getSizeInBytes( String remoteFile ) throws IOException {
         URL url = new URL( remoteFile );
         long expectedContentLength;
         if ( url.getProtocol().equals( "ftp" ) ) {
-            expectedContentLength = retry( ( lastAttempt ) -> {
+            expectedContentLength = retry( ( attempt, lastAttempt ) -> {
                 FTPClient client = ftpClientFactory.getFtpClient( url );
                 try {
                     FTPFile res = client.mlistFile( url.getPath() );
@@ -77,7 +106,7 @@ public abstract class AbstractSingleCellDetector implements SingleCellDetector {
                     ftpClientFactory.destroyClient( url, client );
                     throw e;
                 }
-            }, "checking size of " + remoteFile );
+            }, "checking the size of " + remoteFile );
         } else {
             URLConnection conn = null;
             try {
@@ -89,25 +118,6 @@ public abstract class AbstractSingleCellDetector implements SingleCellDetector {
                 }
             }
         }
-        return expectedContentLength != -1 && dest.toFile().length() == expectedContentLength;
-    }
-
-    /**
-     * Open a supplementary file as an input stream, possibly decompressing it.
-     */
-    protected InputStream openSupplementaryFileAsStream( String filename, boolean decompressIfNeeded ) throws IOException {
-        Assert.notNull( ftpClientFactory, "An FTP client factory must be set" );
-        URL url = new URL( filename );
-        InputStream stream;
-        if ( url.getProtocol().equals( "ftp" ) ) {
-            stream = ftpClientFactory.openStream( url );
-        } else {
-            stream = new BufferedInputStream( url.openStream() );
-        }
-        if ( decompressIfNeeded && filename.endsWith( ".gz" ) ) {
-            return new GZIPInputStream( stream );
-        } else {
-            return stream;
-        }
+        return expectedContentLength;
     }
 }

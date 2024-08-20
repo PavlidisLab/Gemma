@@ -11,6 +11,7 @@ import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.singleCell.MexSingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
+import ubic.gemma.core.util.ProgressInputStream;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -139,12 +140,12 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
             if ( allowTarLookup && ( file.endsWith( ".tar" ) || file.endsWith( ".tar.gz" ) ) ) {
                 log.info( "Looking up the TAR header of " + file + " for MEX data..." );
                 try {
-                    Boolean done = retry( ( lastAttempt ) -> {
+                    Boolean done = retry( ( attempt, lastAttempt ) -> {
                         String barcodesT = null;
                         String featuresT = null;
                         String matrixT = null;
                         // we just have to read the header of the TAR archive and not its content
-                        try ( TarInputStream tis = new TarInputStream( openSupplementaryFileAsStream( file, true ) ) ) {
+                        try ( TarInputStream tis = new TarInputStream( openSupplementaryFileAsStream( file, attempt, true ) ) ) {
                             TarEntry te;
                             while ( ( te = tis.getNextEntry() ) != null ) {
                                 if ( !te.isFile() ) {
@@ -302,10 +303,10 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                 }
                 try {
                     String file = files[i];
-                    retry( ( lastAttempt ) -> {
+                    retry( ( attempt, lastAttempt ) -> {
                         log.info( String.format( "%s: Downloading %s to %s...", geoAccession, file, dest ) );
                         PathUtils.createParentDirectories( dest );
-                        try ( InputStream is = openSupplementaryFileAsStream( file, false );
+                        try ( InputStream is = openSupplementaryFileAsStream( file, attempt, false );
                                 OutputStream os = openGzippedOutputStream( file, dest ) ) {
                             long downloadedBytes = IOUtils.copyLarge( is, os );
                             log.info( String.format( "%s: Done downloading %s (%s in %s @ %.3f MB/s).",
@@ -333,12 +334,12 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
         // detect MEX (1 TAR archive per GEO sample)
         for ( String file : supplementaryFiles ) {
             if ( file.endsWith( ".tar" ) || file.endsWith( ".tar.gz" ) ) {
-                Boolean found = retry( ( lastAttempt ) -> {
+                Boolean found = retry( ( attempt, lastAttempt ) -> {
                     String barcodesT = null;
                     String featuresT = null;
                     String matrixT = null;
                     boolean completed = false;
-                    try ( TarInputStream tis = new TarInputStream( openSupplementaryFileAsStream( file, true ) ) ) {
+                    try ( TarInputStream tis = new TarInputStream( openSupplementaryFileAsStream( file, attempt, true ) ) ) {
                         StopWatch timer = StopWatch.createStarted();
                         long copiedBytes = 0L;
                         TarEntry te;
@@ -392,7 +393,11 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                             log.info( String.format( "%s: Copying %s from TAR archive %s to %s...", geoAccession, te.getName(), file, dest ) );
                             PathUtils.createParentDirectories( dest );
                             try ( OutputStream os = openGzippedOutputStream( te.getName(), dest ) ) {
-                                copiedBytes += IOUtils.copyLarge( tis, os );
+                                String what = te.getName();
+                                if ( attempt > 0 ) {
+                                    what += " (attempt #" + ( attempt + 1 ) + ")";
+                                }
+                                copiedBytes += IOUtils.copyLarge( new ProgressInputStream( tis, what, MexDetector.class.getName(), te.getSize() ), os );
                             } catch ( IOException e ) {
                                     // only remove the affected file since we're retrying
                                 log.warn( String.format( "%s: MEX file could not be downloaded successfully, removing %s...", geoAccession, dest ), e );
@@ -423,7 +428,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                         }
                     }
                     return completed;
-                }, "Extract files from " + file );
+                }, "extracting MEX files from " + file );
                 if ( found ) {
                     return;
                 }
@@ -457,8 +462,8 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                     if ( file.endsWith( ".tar" ) || file.endsWith( ".tar.gz" ) ) {
                         //extract files in tar
                         try {
-                            return retry( ( lastAttempt ) -> {
-                                try ( TarInputStream tis = new TarInputStream( openSupplementaryFileAsStream( file, true ) ) ) {
+                            return retry( ( attempt, lastAttempt ) -> {
+                                try ( TarInputStream tis = new TarInputStream( openSupplementaryFileAsStream( file, attempt, true ) ) ) {
                                     List<String> files = new ArrayList<>();
                                     TarEntry entry;
                                     while ( ( entry = tis.getNextEntry() ) != null ) {

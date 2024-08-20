@@ -48,7 +48,7 @@ public class SimpleRetry<T, E extends Exception> {
         E lastException = null;
         for ( int i = 0; i <= maxRetries; i++ ) {
             try {
-                return callable.call( i == maxRetries );
+                return callable.call( i, i == maxRetries );
             } catch ( Exception e ) {
                 if ( exceptionClass.isInstance( e ) ) {
                     //noinspection unchecked

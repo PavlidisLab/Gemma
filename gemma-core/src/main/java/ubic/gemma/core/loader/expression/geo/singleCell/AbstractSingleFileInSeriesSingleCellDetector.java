@@ -1,7 +1,6 @@
 package ubic.gemma.core.loader.expression.geo.singleCell;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.file.PathUtils;
@@ -19,6 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
 
 /**
  * Handle detection and download of single-cell data from a single file in the supplementary materials of a GEO series.
@@ -113,15 +114,15 @@ public abstract class AbstractSingleFileInSeriesSingleCellDetector extends Abstr
         }
 
         log.info( series.getGeoAccession() + ": Retrieving " + name + " file " + file + " to " + dest + "..." );
-        retry( ( lastAttempt ) -> {
+        retry( ( attempt, lastAttempt ) -> {
             PathUtils.createParentDirectories( dest );
             StopWatch timer = StopWatch.createStarted();
-            try ( InputStream is = openSupplementaryFileAsStream( file, true ) ) {
+            try ( InputStream is = openSupplementaryFileAsStream( file, attempt, true ) ) {
                 OutputStream os = Files.newOutputStream( dest );
                 long downloadedBytes = IOUtils.copyLarge( is, os );
                 log.info( String.format( "%s: Retrieved " + name + " file (%s in %s @ %s/s).", series.getGeoAccession(),
-                        FileUtils.byteCountToDisplaySize( downloadedBytes ), timer,
-                        FileUtils.byteCountToDisplaySize( 1000.0 * downloadedBytes / timer.getTime() ) ) );
+                        byteCountToDisplaySize( downloadedBytes ), timer,
+                        byteCountToDisplaySize( 1000.0 * downloadedBytes / timer.getTime() ) ) );
             } catch ( Exception e ) {
                 log.warn( String.format( "%s: %s file could not be downloaded successfully, removing %s...",
                         series.getGeoAccession(), name, dest ), e );
@@ -129,7 +130,7 @@ public abstract class AbstractSingleFileInSeriesSingleCellDetector extends Abstr
                 throw e;
             }
             return null;
-        }, "download of " + name + " file " + file + " to " + dest );
+        }, "downloading " + file + " to " + dest + " for " + name );
     }
 
     @Override

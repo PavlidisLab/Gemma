@@ -27,6 +27,7 @@ import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.util.AbstractCLI;
+import ubic.gemma.core.util.ProgressInputStream;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -383,7 +384,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             log.info( accession + ": Downloading SOFT file to " + dest + "..." );
             PathUtils.createParentDirectories( dest );
             StopWatch timer = StopWatch.createStarted();
-            try ( InputStream in = ftpClientFactory.openStream( softFileUrl ); OutputStream out = Files.newOutputStream( dest ) ) {
+            try ( InputStream in = new ProgressInputStream( ftpClientFactory.openStream( softFileUrl ), accession + ".soft.gz", SingleCellDataDownloaderCli.class.getName() ); OutputStream out = Files.newOutputStream( dest ) ) {
                 int downloadedBytes = IOUtils.copy( in, out );
                 if ( downloadedBytes > 0 ) {
                     log.info( String.format( "%s: Done downloading SOFT file (%s in %s @ %.3f MB/s).", accession,
