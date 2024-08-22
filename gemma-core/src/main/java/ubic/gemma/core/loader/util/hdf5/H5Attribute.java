@@ -39,7 +39,7 @@ public class H5Attribute implements AutoCloseable {
     @WillClose
     public String[] toStringVector() {
         String[] buf = new String[( int ) size()];
-        H5Aread_VLStrings( attrId, H5Type.STRING, buf );
+        H5AreadVL( attrId, H5Type.STRING, buf );
         close();
         return buf;
     }
