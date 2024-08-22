@@ -264,6 +264,8 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             detector.setFTPClientFactory( ftpClientFactory );
             detector.setDownloadDirectory( singleCellDataBasePath.toPath() );
             if ( fetchThreads != null ) {
+                // ensure that each thread can utilize a FTP connection
+                ftpClientFactory.setMaxTotalConnections( fetchThreads.intValue() );
                 detector.setNumberOfFetchThreads( fetchThreads.intValue() );
             }
             log.info( "Downloading single cell data to " + singleCellDataBasePath + "..." );

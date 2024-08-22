@@ -34,7 +34,8 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
     /**
      * Maximum number of idle connections kept in the pool, per host.
      */
-    private static final int MAX_IDLE_CONNECTIONS = 4;
+    private int maxIdleConnections = 4;
+    private int maxTotalConnections = 16;
 
     @Value("${ncbi.host}")
     private String ncbiHost;
@@ -61,6 +62,18 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
      * Pools of FTP clients, one per authority.
      */
     private final ConcurrentMap<String, GenericObjectPool<FTPClient>> clientsPool = new ConcurrentHashMap<>();
+
+    @Override
+    public void setMaxIdleConnections( int maxIdle ) {
+        this.maxIdleConnections = maxIdle;
+        clientsPool.values().forEach( pool -> pool.setMaxIdle( maxIdle ) );
+    }
+
+    @Override
+    public void setMaxTotalConnections( int maxTotal ) {
+        this.maxTotalConnections = maxTotal;
+        clientsPool.values().forEach( pool -> pool.setMaxTotal( maxTotal ) );
+    }
 
     @Override
     public void close() {
@@ -173,7 +186,8 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
             password = "";
         }
         GenericObjectPool<FTPClient> pool = new GenericObjectPool<>( new FTPClientPooledObjectFactory( url.getAuthority(), url.getHost(), url.getPort(), username, password ) );
-        pool.setMaxIdle( MAX_IDLE_CONNECTIONS );
+        pool.setMaxIdle( maxIdleConnections );
+        pool.setMaxTotal( maxTotalConnections );
         // always check if an FTP connection is still valid when borrowing because FTP servers tend to close
         // inactive connections pretty aggressively.
         pool.setTestOnBorrow( true );

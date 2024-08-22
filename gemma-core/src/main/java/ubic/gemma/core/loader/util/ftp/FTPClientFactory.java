@@ -13,6 +13,16 @@ import java.net.URL;
 public interface FTPClientFactory {
 
     /**
+     * Set the maximum number of idle FTP connections to keep in the pool.
+     */
+    void setMaxIdleConnections( int maxIdle );
+
+    /**
+     * Set the maximum number of FTP connections.
+     */
+    void setMaxTotalConnections( int maxTotal );
+
+    /**
      * Create an FTP client for the given URL.
      * <p>
      * Once you're done with the client, you should consider recycling it with {@link #recycleClient(URL, FTPClient)}.
