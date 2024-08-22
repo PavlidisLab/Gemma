@@ -16,12 +16,6 @@ import static hdf.hdf5lib.H5.*;
  */
 public abstract class H5Location {
 
-    private static final H5A_iterate_t ATTR_ITERATOR_DATA = new H5A_iterate_t() {
-    };
-
-    private static final H5L_iterate_opdata_t LOC_ITERATOR_DATA = new H5L_iterate_opdata_t() {
-    };
-
     private final long locId;
 
     protected H5Location( long locId ) {
@@ -33,7 +27,8 @@ public abstract class H5Location {
         H5Aiterate( locId, HDF5Constants.H5_INDEX_NAME, HDF5Constants.H5_ITER_NATIVE, 0, ( loc_id, name, info, op_data ) -> {
             attributes.add( name );
             return 0;
-        }, ATTR_ITERATOR_DATA );
+        }, new H5A_iterate_t() {
+        } );
         return attributes;
     }
 
@@ -42,7 +37,8 @@ public abstract class H5Location {
         H5Aiterate_by_name( locId, path, HDF5Constants.H5_INDEX_NAME, HDF5Constants.H5_ITER_NATIVE, 0, ( loc_id, name, info, op_data ) -> {
             attributes.add( name );
             return 0;
-        }, ATTR_ITERATOR_DATA, HDF5Constants.H5P_DEFAULT );
+        }, new H5A_iterate_t() {
+        }, HDF5Constants.H5P_DEFAULT );
         return attributes;
     }
 
@@ -94,7 +90,8 @@ public abstract class H5Location {
         H5Literate( locId, HDF5Constants.H5_INDEX_NAME, HDF5Constants.H5_ITER_NATIVE, 0, ( loc_id, name, info, op_data ) -> {
             paths.add( name );
             return 0;
-        }, LOC_ITERATOR_DATA );
+        }, new H5L_iterate_opdata_t() {
+        } );
         return paths;
     }
 
@@ -103,7 +100,8 @@ public abstract class H5Location {
         H5Literate_by_name( locId, path, HDF5Constants.H5_INDEX_NAME, HDF5Constants.H5_ITER_NATIVE, 0, ( loc_id, name, info, op_data ) -> {
             paths.add( name );
             return 0;
-        }, LOC_ITERATOR_DATA, HDF5Constants.H5P_DEFAULT );
+        }, new H5L_iterate_opdata_t() {
+        }, HDF5Constants.H5P_DEFAULT );
         return paths;
     }
 
