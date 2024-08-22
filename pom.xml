@@ -684,9 +684,6 @@
 		<profile>
 			<!-- For deployment where host is local (and ssh isn't available for builder, e.g. CI) -->
 			<id>local-deploy</id>
-			<properties>
-				<hdf5.prefix>/space/opt/hdf5-${hdf5.version}</hdf5.prefix>
-			</properties>
 			<activation>
 				<activeByDefault>false</activeByDefault>
 				<property>
@@ -762,13 +759,11 @@
 		<micrometer.version>1.13.2</micrometer.version>
 		<dom4j.version>2.1.4</dom4j.version>
 		<!-- HDF5 -->
-		<hdf5.version>1.14.3</hdf5.version>
-		<!-- override this as needed in ~/.m2/settings.xml -->
-		<hdf5.prefix>${user.home}/hdf5-${hdf5.version}</hdf5.prefix>
-		<!-- directory containing the HDF5 shared library -->
-		<hdf5.libDir>${hdf5.prefix}/lib</hdf5.libDir>
+		<hdf5.version>1.12.1</hdf5.version>
+		<!-- directory containing the HDF5 JNI shared library -->
+		<hdf5.libDir>/usr/lib64/hdf5</hdf5.libDir>
 		<!-- full path to the HDF5 JAR -->
-		<hdf5.jarPath>${hdf5.prefix}/lib/jarhdf5-${hdf5.version}.jar</hdf5.jarPath>
+		<hdf5.jarPath>/usr/lib/java/hdf5.jar</hdf5.jarPath>
 		<mysql.version>8.4.0</mysql.version>
 		<tomcat.version>9.0.91</tomcat.version>
 		<mockito.version>5.12.0</mockito.version>
