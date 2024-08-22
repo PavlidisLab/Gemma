@@ -236,7 +236,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                             series.getGeoAccession(), destDir.resolve( file ) ) );
                 }
             }
-        } catch ( IOException e ) {
+        } catch ( Exception e ) {
             log.warn( sample.getGeoAccession() + ": An I/O error occurred, cleaning up " + destDir + "...", e );
             // note here that the series directory is kept since it might contain other samples
             PathUtils.deleteDirectory( destDir );
@@ -313,7 +313,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                                     geoAccession, file, FileUtils.byteCountToDisplaySize( downloadedBytes ), timer,
                                     ( 1000.0 / ( 1000.0 * 1000.0 ) ) * ( downloadedBytes / timer.getTime() ) ) );
                             return null;
-                        } catch ( IOException e ) {
+                        } catch ( Exception e ) {
                             log.warn( String.format( "%s: MEX files could not be downloaded successfully, removing %s...", geoAccession, dest ), e );
                             if ( Files.exists( dest ) ) {
                                 PathUtils.deleteFile( dest );
@@ -321,7 +321,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                             throw e;
                         }
                     }, "downloading " + file + " to " + dest + " for " + geoAccession );
-                } catch ( IOException e ) {
+                } catch ( Exception e ) {
                     log.warn( String.format( "%s: MEX files could not be downloaded successfully, removing %s...", geoAccession, sampleDirectory ), e );
                     // not retrying, delete everything in the sample folder
                     PathUtils.deleteDirectory( sampleDirectory );
@@ -398,7 +398,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                                     what += " (attempt #" + ( attempt + 1 ) + ")";
                                 }
                                 copiedBytes += IOUtils.copyLarge( new ProgressInputStream( tis, what, MexDetector.class.getName(), te.getSize() ), os );
-                            } catch ( IOException e ) {
+                            } catch ( Exception e ) {
                                     // only remove the affected file since we're retrying
                                 log.warn( String.format( "%s: MEX file could not be downloaded successfully, removing %s...", geoAccession, dest ), e );
                                     if ( Files.exists( dest ) ) {

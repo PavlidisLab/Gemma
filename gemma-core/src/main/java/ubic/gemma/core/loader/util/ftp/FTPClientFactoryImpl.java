@@ -4,6 +4,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPConnectionClosedException;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
@@ -70,13 +71,12 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
 
     @Override
     public FTPClient getFtpClient( URL url ) throws IOException {
-        Assert.isTrue( url.getProtocol().equals( "ftp" ), "URL protocol must be FTP." );
         try {
             return getPool( url ).borrowObject();
         } catch ( IOException | RuntimeException e ) {
             throw e;
         } catch ( Exception e ) {
-            throw new RuntimeException( e );
+            throw new RuntimeException( "Failed to borrow FTP client for " + url + ".", e );
         }
     }
 
@@ -91,85 +91,93 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
 
     @Override
     public void recycleClient( URL url, FTPClient client ) {
-        Assert.isTrue( url.getProtocol().equals( "ftp" ), "URL protocol must be FTP." );
         getPool( url ).returnObject( client );
     }
 
     @Override
     public InputStream openStream( URL url ) throws IOException {
         FTPClient client = getFtpClient( url );
-        InputStream s = client.retrieveFileStream( url.getPath() );
-        if ( s == null ) {
-            String reply = client.getReplyString();
+        InputStream s;
+        try {
+            s = client.retrieveFileStream( url.getPath() );
+            log.debug( client.getReplyString() );
+            if ( s == null ) {
+                String reply = client.getReplyString();
+                throw new IOException( String.format( "Failed to retrieve %s: %s", url, reply ) );
+            }
+            return new FTPClientInputStream( client, url, s );
+        } catch ( Exception e ) {
             destroyClient( url, client );
-            throw new IOException( String.format( "Failed to retrieve %s: %s", url, reply ) );
+            throw e;
         }
-        return new FilterInputStream( s ) {
+    }
 
-            private boolean eofReached = false;
+    private class FTPClientInputStream extends FilterInputStream {
 
-            @Override
-            public int read() throws IOException {
-                int ret = super.read();
-                if ( ret == -1 ) {
-                    eofReached = true;
-                }
-                return ret;
-            }
+        private final FTPClient client;
+        private final URL url;
 
-            @Override
-            public int read( byte[] b ) throws IOException {
-                int ret = super.read( b );
-                if ( ret == -1 ) {
-                    eofReached = true;
-                }
-                return ret;
-            }
+        private FTPClientInputStream( FTPClient client, URL url, InputStream is ) {
+            super( is );
+            this.client = client;
+            this.url = url;
+        }
 
-            @Override
-            public int read( byte[] b, int off, int len ) throws IOException {
-                int ret = super.read( b, off, len );
-                if ( ret == -1 ) {
-                    eofReached = true;
-                }
-                return ret;
-            }
-
-            @Override
-            public void close() throws IOException {
-                if ( !eofReached ) {
-                    // If EOF is not reached, we face two options: read it until the end or close the connection
-                    // immediately. We don't know how much data is left in the stream, so it's almost certainly cheaper
-                    // to open a new FTP connection.
-                    log.debug( "FTP data connection was not read until EOF, cannot recycle, will destroy instead." );
-                    try {
-                        super.close();
-                    } finally {
-                        destroyClient( url, client );
-                    }
-                    return;
-                }
+        @Override
+        public void close() throws IOException {
+            try {
                 client.completePendingCommand();
-                if ( FTPReply.isPositiveCompletion( client.getReplyCode() ) ) {
-                    recycleClient( url, client );
-                } else {
-                    String reply = client.getReplyString();
-                    destroyClient( url, client );
-                    throw new IOException( String.format( "Failed to retrieve %s: %s", url, reply ) );
+                log.debug( client.getReplyString() );
+                if ( !FTPReply.isPositiveCompletion( client.getReplyCode() ) ) {
+                    throw new IOException( String.format( "Failed to retrieve %s: %s", url, client.getReplyString() ) );
                 }
+                recycleClient( url, client );
+            } catch ( FTPConnectionClosedException e ) {
+                // no need to rethrow this exception
+                destroyClient( url, client );
+            } catch ( Exception e ) {
+                destroyClient( url, client );
+                throw e;
+            } finally {
+                super.close();
             }
-        };
+        }
     }
 
     private GenericObjectPool<FTPClient> getPool( URL url ) {
-        return clientsPool.computeIfAbsent( url.getAuthority(), k -> {
-            GenericObjectPool<FTPClient> pool = new GenericObjectPool<>( new FTPClientPooledObjectFactory( url ) );
-            pool.setMaxIdle( MAX_IDLE_CONNECTIONS );
-            // always check if an FTP connection is still valid when borrowing because FTP servers tend to close
-            // inactive connections pretty aggressively.
-            pool.setTestOnBorrow( true );
-            return pool;
-        } );
+        Assert.isTrue( url.getProtocol().equals( "ftp" ), "URL protocol must be FTP." );
+        return clientsPool.computeIfAbsent( url.getAuthority(), k -> createPool( url ) );
+    }
+
+    private GenericObjectPool<FTPClient> createPool( URL url ) {
+        String username, password;
+        if ( url.getUserInfo() != null ) {
+            String[] userInfo = url.getUserInfo().split( ":", 2 );
+            if ( userInfo.length != 2 ) {
+                throw new IllegalArgumentException( String.format( "The userinfo of %s does not have a ':' delimiter for credentials.", url ) );
+            }
+            username = userInfo[0];
+            password = userInfo[1];
+        } else if ( url.getHost().equals( ncbiHost ) ) {
+            username = ncbiUser;
+            password = ncbiPassword;
+        } else if ( url.getHost().equals( geoHost ) ) {
+            username = geoUser;
+            password = geoPassword;
+        } else if ( url.getHost().equals( arrayExpressHost ) ) {
+            username = arrayExpressUser;
+            password = arrayExpressPassword;
+        } else {
+            log.warn( String.format( "%s is not a known FTP server, using anonymous login.", url.getAuthority() ) );
+            username = "anonymous";
+            password = "";
+        }
+        GenericObjectPool<FTPClient> pool = new GenericObjectPool<>( new FTPClientPooledObjectFactory( url.getAuthority(), url.getHost(), url.getPort(), username, password ) );
+        pool.setMaxIdle( MAX_IDLE_CONNECTIONS );
+        // always check if an FTP connection is still valid when borrowing because FTP servers tend to close
+        // inactive connections pretty aggressively.
+        pool.setTestOnBorrow( true );
+        return pool;
     }
 
     private static final class FTPClientPooledObject extends DefaultPooledObject<FTPClient> {
@@ -191,46 +199,26 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
         }
     }
 
-    private class FTPClientPooledObjectFactory extends BasePooledObjectFactory<FTPClient> {
+    private static class FTPClientPooledObjectFactory extends BasePooledObjectFactory<FTPClient> {
 
         private final String authority;
         private final String host;
         private final int port;
         private final String username, password;
-        private final String path;
 
-        private FTPClientPooledObjectFactory( URL url ) {
-            this.authority = url.getAuthority();
-            this.host = url.getHost();
-            this.port = url.getPort();
-            if ( url.getUserInfo() != null ) {
-                String[] userInfo = url.getUserInfo().split( ":", 2 );
-                if ( userInfo.length != 2 ) {
-                    throw new IllegalArgumentException( String.format( "The userinfo of %s does not have a ':' delimiter for credentials.", url ) );
-                }
-                username = userInfo[0];
-                password = userInfo[1];
-            } else if ( url.getHost().equals( ncbiHost ) ) {
-                username = ncbiUser;
-                password = ncbiPassword;
-            } else if ( url.getHost().equals( geoHost ) ) {
-                username = geoUser;
-                password = geoPassword;
-            } else if ( url.getHost().equals( arrayExpressHost ) ) {
-                username = arrayExpressUser;
-                password = arrayExpressPassword;
-            } else {
-                log.warn( String.format( "Supplementary file %s is not hosted on a known FTP server, using anonymous login.", url ) );
-                username = "anonymous";
-                password = "";
-            }
-            this.path = url.getPath();
+        private FTPClientPooledObjectFactory( String authority, String host, int port, String username, String password ) {
+            this.authority = authority;
+            this.host = host;
+            this.port = port;
+            this.username = username;
+            this.password = password;
         }
 
         @Override
-        public FTPClient create() throws Exception {
+        public FTPClient create() {
             FTPClient client = new FTPClient();
-            client.setReceiveBufferSize( 33554432 );
+            // recommended settings as per https://ftp.ncbi.nlm.nih.gov/README.ftp
+            client.setSendDataSocketBufferSize( 33554432 );
             client.setReceieveDataSocketBufferSize( 33554432 );
             return client;
         }
@@ -243,7 +231,7 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
         @Override
         public boolean validateObject( PooledObject<FTPClient> p ) {
             FTPClient client = p.getObject();
-            if ( !client.isConnected() ) {
+            if ( !client.isAvailable() ) {
                 return false;
             }
             try {
@@ -267,6 +255,15 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
                 log.debug( client.getReplyString() );
                 if ( !FTPReply.isPositiveCompletion( client.getReplyCode() ) ) {
                     throw new IOException( String.format( "Failed to connect to %s: %s", authority, client.getReplyString() ) );
+                }
+                // this needs to be set after each connect()
+                client.enterLocalPassiveMode();
+                // always treat files as binary to avoid transformation of EOLs
+                client.setFileType( FTP.BINARY_FILE_TYPE );
+                log.debug( client.getReplyString() );
+                if ( !FTPReply.isPositiveCompletion( client.getReplyCode() ) ) {
+                    throw new IOException( String.format( "Failed to set file type to BINARY for %s: %s",
+                            authority, client.getReplyString() ) );
                 }
             }
             if ( !username.equals( ( ( FTPClientPooledObject ) p ).getLoggedInAs() ) ) {
@@ -294,13 +291,6 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
                             StringUtils.isNotBlank( password ) ? "with password" : "without password",
                             client.getReplyString() ) );
                 }
-            }
-            // recommended settings as per https://ftp.ncbi.nlm.nih.gov/README.ftp
-            client.enterLocalPassiveMode();
-            client.setFileType( FTP.BINARY_FILE_TYPE );
-            if ( !FTPReply.isPositiveCompletion( client.getReplyCode() ) ) {
-                throw new IOException( String.format( "Failed to set file type to BINARY for %s from %s: %s",
-                        path, authority, client.getReplyString() ) );
             }
         }
 

@@ -375,7 +375,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                     download = false;
                 }
                 ftpClientFactory.recycleClient( softFileUrl, client );
-            } catch ( IOException e ) {
+            } catch ( Exception e ) {
                 ftpClientFactory.destroyClient( softFileUrl, client );
                 throw e;
             }

@@ -102,7 +102,7 @@ public abstract class AbstractSingleCellDetector implements SingleCellDetector {
                     long ret = res != null ? res.getSize() : -1;
                     ftpClientFactory.recycleClient( url, client );
                     return ret;
-                } catch ( IOException e ) {
+                } catch ( Exception e ) {
                     ftpClientFactory.destroyClient( url, client );
                     throw e;
                 }
