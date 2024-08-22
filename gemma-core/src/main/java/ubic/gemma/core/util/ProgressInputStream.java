@@ -63,7 +63,7 @@ public class ProgressInputStream extends FilterInputStream {
         if ( startTimeNanos == -1 ) {
             startTimeNanos = System.nanoTime();
         }
-        return recordProgress( super.read( b, off, len ) );
+        return recordProgress( super.read( b, off, len ), false );
     }
 
     @Override
@@ -71,22 +71,26 @@ public class ProgressInputStream extends FilterInputStream {
         if ( startTimeNanos == -1 ) {
             startTimeNanos = System.nanoTime();
         }
-        return recordProgress( super.read() );
+        return recordProgress( super.read(), true );
     }
 
     @Override
     public long skip( long n ) throws IOException {
-        return recordProgress( super.skip( n ) );
-    }
-
-    private int recordProgress( int read ) {
-        return ( int ) recordProgress( ( long ) read );
-    }
-
-    private long recordProgress( long read ) {
-        if ( read > 0 ) {
-            progressInBytes += read;
+        if ( startTimeNanos == -1 ) {
+            startTimeNanos = System.nanoTime();
         }
+        return recordProgress( super.skip( n ), false );
+    }
+
+    private int recordProgress( int read, boolean oneByte ) {
+        return ( int ) recordProgress( ( long ) read, oneByte );
+    }
+
+    private long recordProgress( long read, boolean oneByte ) {
+        if ( read < 0 ) {
+            return read;
+        }
+        progressInBytes += oneByte ? 1 : read;
         if ( maxSizeInBytes > 0 ) {
             double progress = ( double ) progressInBytes / ( double ) maxSizeInBytes;
             if ( progress - lastReportedProgress > progressIncrementToReportInPercent ) {
