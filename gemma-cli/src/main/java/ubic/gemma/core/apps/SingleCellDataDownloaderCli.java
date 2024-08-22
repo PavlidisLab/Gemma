@@ -121,8 +121,8 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         options.addOption( Option.builder( RESUME_OPTION ).longOpt( "resume" ).desc( "Resume download from a previous invocation of this command. Requires -s/--summary-output-file to be set and refer to an existing file." ).build() );
         options.addOption( Option.builder( RETRY_OPTION ).longOpt( "retry" ).hasArg().desc( "Retry problematic datasets. Possible values are: '" + UNSUPPORTED_INDICATOR + "', '" + UNKNOWN_INDICATOR + "' or '" + FAILED_INDICATOR + "', or any combination delimited by ','. Requires -r/--resume option to be set." ).build() );
         options.addOption( Option.builder( FETCH_THREADS_OPTION ).longOpt( "fetch-threads" ).hasArg().type( Number.class ).desc( "Number of threads to use for downloading files. Default is " + GeoSingleCellDetector.DEFAULT_NUMBER_OF_FETCH_THREADS + ". Use -threads/--threads for processing series in parallel." ).build() );
-        options.addOption( Option.builder( DATA_TYPE_OPTION ).hasArg().desc( "Data type. Possible values are: " + Arrays.stream( SingleCellDataType.values() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) + ". Only works if a single accession is passed to -e/--acc." ).build() );
-        options.addOption( Option.builder( SUPPLEMENTARY_FILE_OPTION ).hasArgs().desc( "Supplementary file to download. Only works if a single accession is passed to -e/--acc and -dataType is specified." ).build() );
+        options.addOption( Option.builder( DATA_TYPE_OPTION ).longOpt( "data-type" ).hasArg().desc( "Data type. Possible values are: " + Arrays.stream( SingleCellDataType.values() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) + ". Only works if a single accession is passed to -e/--acc." ).build() );
+        options.addOption( Option.builder( SUPPLEMENTARY_FILE_OPTION ).longOpt( "supplementary-file" ).hasArgs().desc( "Supplementary file to download. Only works if a single accession is passed to -e/--acc and -dataType is specified." ).build() );
         addThreadsOption( options );
     }
 

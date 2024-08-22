@@ -869,7 +869,7 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.SingleCellDataDownloaderCli ' ]]; then
-        if ! [[ "$current_option" =~ (--acc|--fetch-threads|--file|--summary-output-file|--threads|-dataType|-e|-f|-fetchThreads|-s|-supplementaryFile|-threads) ]]; then
+        if ! [[ "$current_option" =~ (--acc|--fetch-threads|--file|--retry|--summary-output-file|--threads|-dataType|-e|-f|-fetchThreads|-retry|-s|-supplementaryFile|-threads) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--acc --fetch-threads --file --help --resume --retry --summary-output-file --threads -dataType -e -f -fetchThreads -h -r -retry -s -supplementaryFile -threads" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|--summary-output-file|-f|-s|-supplementaryFile) ]]; then
@@ -877,7 +877,7 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' downloadSingleCellData ' ]]; then
-        if ! [[ "$current_option" =~ (--acc|--fetch-threads|--file|--summary-output-file|--threads|-dataType|-e|-f|-fetchThreads|-s|-supplementaryFile|-threads) ]]; then
+        if ! [[ "$current_option" =~ (--acc|--fetch-threads|--file|--retry|--summary-output-file|--threads|-dataType|-e|-f|-fetchThreads|-retry|-s|-supplementaryFile|-threads) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--acc --fetch-threads --file --help --resume --retry --summary-output-file --threads -dataType -e -f -fetchThreads -h -r -retry -s -supplementaryFile -threads" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|--summary-output-file|-f|-s|-supplementaryFile) ]]; then
