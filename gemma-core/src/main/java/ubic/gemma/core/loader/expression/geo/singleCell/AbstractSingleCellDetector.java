@@ -78,11 +78,12 @@ public abstract class AbstractSingleCellDetector implements SingleCellDetector {
         if ( attempt > 0 ) {
             what += " (attempt #" + ( attempt + 1 ) + ")";
         }
+        long sizeInBytes = getSizeInBytes( filename );
         InputStream stream;
         if ( url.getProtocol().equals( "ftp" ) ) {
-            stream = new ProgressInputStream( ftpClientFactory.openStream( url ), what, getClass().getName(), getSizeInBytes( filename ) );
+            stream = new ProgressInputStream( ftpClientFactory.openStream( url ), what, getClass().getName(), sizeInBytes );
         } else {
-            stream = new ProgressInputStream( new BufferedInputStream( url.openStream() ), what, getClass().getName(), getSizeInBytes( filename ) );
+            stream = new ProgressInputStream( new BufferedInputStream( url.openStream() ), what, getClass().getName(), sizeInBytes );
         }
         if ( decompressIfNeeded && filename.endsWith( ".gz" ) ) {
             return new GZIPInputStream( stream );

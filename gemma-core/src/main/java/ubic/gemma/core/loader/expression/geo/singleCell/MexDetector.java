@@ -1,6 +1,5 @@
 package ubic.gemma.core.loader.expression.geo.singleCell;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -28,6 +27,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
+
+import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
 
 /**
  * Detects 10X MEX data from GEO series and samples.
@@ -145,7 +146,8 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                         String featuresT = null;
                         String matrixT = null;
                         // we just have to read the header of the TAR archive and not its content
-                        try ( TarInputStream tis = new TarInputStream( openSupplementaryFileAsStream( file, attempt, true ) ) ) {
+                        try ( InputStream in = openSupplementaryFileAsStream( file, attempt, true );
+                                TarInputStream tis = new TarInputStream( in ) ) {
                             TarEntry te;
                             while ( ( te = tis.getNextEntry() ) != null ) {
                                 if ( !te.isFile() ) {
@@ -168,7 +170,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                                         break;
                                     }
                                 } else if ( te.getSize() > maxEntrySizeToSkipInTar ) {
-                                    log.warn( geoAccession + ": " + file + " has an entry exceeding " + maxEntrySizeToSkipInTar + " B, the rest of the archive will be ignored." );
+                                    log.warn( geoAccession + ": " + file + " has an entry exceeding " + byteCountToDisplaySize( maxEntrySizeToSkipInTar ) + ", the rest of the archive will be ignored." );
                                     break;
                                 }
                             }
@@ -310,7 +312,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                                 OutputStream os = openGzippedOutputStream( file, dest ) ) {
                             long downloadedBytes = IOUtils.copyLarge( is, os );
                             log.info( String.format( "%s: Done downloading %s (%s in %s @ %.3f MB/s).",
-                                    geoAccession, file, FileUtils.byteCountToDisplaySize( downloadedBytes ), timer,
+                                    geoAccession, file, byteCountToDisplaySize( downloadedBytes ), timer,
                                     ( 1000.0 / ( 1000.0 * 1000.0 ) ) * ( downloadedBytes / timer.getTime() ) ) );
                             return null;
                         } catch ( Exception e ) {
@@ -339,7 +341,8 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                     String featuresT = null;
                     String matrixT = null;
                     boolean completed = false;
-                    try ( TarInputStream tis = new TarInputStream( openSupplementaryFileAsStream( file, attempt, true ) ) ) {
+                    try ( InputStream in = openSupplementaryFileAsStream( file, attempt, true );
+                            TarInputStream tis = new TarInputStream( in ) ) {
                         StopWatch timer = StopWatch.createStarted();
                         long copiedBytes = 0L;
                         TarEntry te;
@@ -373,7 +376,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                                 matrixT = te.getName();
                                 dest = sampleDirectory.resolve( "matrix.mtx.gz" );
                             } else if ( te.getSize() > maxEntrySizeToSkipInTar ) {
-                                log.warn( geoAccession + ": " + file + " has an entry exceeding " + maxEntrySizeToSkipInTar + " B, the rest of the archive will be ignored." );
+                                log.warn( geoAccession + ": " + file + " has an entry exceeding " + byteCountToDisplaySize( maxEntrySizeToSkipInTar ) + ", the rest of the archive will be ignored." );
                                 break;
                             } else {
                                 // skip to the next entry
@@ -381,7 +384,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                             }
                             if ( dest.toFile().exists() && dest.toFile().length() == te.getSize() ) {
                                 log.info( String.format( "%s: Skipping copy of %s to %s because it already exists and has expected size of %s.",
-                                        geoAccession, te.getName(), dest, FileUtils.byteCountToDisplaySize( te.getSize() ) ) );
+                                        geoAccession, te.getName(), dest, byteCountToDisplaySize( te.getSize() ) ) );
                                 if ( isMexFile( te.getName(), MexFileType.MATRIX ) && barcodesT != null && featuresT != null ) {
                                     // same kind of reasoning here that we use in hasSingleCellData(): if we have barcodes,
                                     // features and matrix is already on-disk, we can avoid reading the matrix
@@ -412,7 +415,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                             if ( copiedBytes > 0 ) {
                                 log.info( String.format( "%s: Done copying MEX files from TAR archive (%s in %s @ %.3f MB/s).",
                                         geoAccession,
-                                        FileUtils.byteCountToDisplaySize( copiedBytes ), timer,
+                                        byteCountToDisplaySize( copiedBytes ), timer,
                                         ( 1000.0 / ( 1000.0 * 1000.0 ) ) * ( copiedBytes / timer.getTime() ) ) );
                             }
                         }
@@ -422,7 +425,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                         // up the directory if that occurs.
                         // If we are retrying, do not remove downloaded files to save some time: missing files might be
                         // downloaded in the next attempt
-                        if ( !completed && !lastAttempt && sampleDirectory.toFile().exists() ) {
+                        if ( !completed && lastAttempt && sampleDirectory.toFile().exists() ) {
                             log.warn( String.format( "%s: MEX files are incomplete, removing %s...", geoAccession, sampleDirectory ) );
                             PathUtils.deleteDirectory( sampleDirectory );
                         }
@@ -463,7 +466,8 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                         //extract files in tar
                         try {
                             return retry( ( attempt, lastAttempt ) -> {
-                                try ( TarInputStream tis = new TarInputStream( openSupplementaryFileAsStream( file, attempt, true ) ) ) {
+                                try ( InputStream in = openSupplementaryFileAsStream( file, attempt, true );
+                                        TarInputStream tis = new TarInputStream( in ) ) {
                                     List<String> files = new ArrayList<>();
                                     TarEntry entry;
                                     while ( ( entry = tis.getNextEntry() ) != null ) {
@@ -471,7 +475,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                                             continue;
                                         }
                                         if ( entry.getSize() > maxEntrySizeToSkipInTar ) {
-                                            log.warn( geoAccession + ": " + file + " has an entry exceeding " + maxEntrySizeToSkipInTar + " B, the rest of the archive will be ignored." );
+                                            log.warn( geoAccession + ": " + file + " has an entry exceeding " + byteCountToDisplaySize( maxEntrySizeToSkipInTar ) + ", the rest of the archive will be ignored." );
                                             break;
                                         }
                                         // add a {file}! prefix to make it clear it was found inside an archive, this
