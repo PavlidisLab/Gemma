@@ -1,6 +1,5 @@
 package ubic.gemma.core.loader.util.ftp;
 
-import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 
 import java.io.IOException;
@@ -8,7 +7,13 @@ import java.io.InputStream;
 import java.net.URL;
 
 /**
- * Factory for creating {@link FTPClient}.
+ * Factory and pool for {@link FTPClient}.
+ * <p>
+ * You must make sure that the client is either recycled with {@link #recycleClient(URL, FTPClient)} or destroyed with
+ * {@link #destroyClient(URL, FTPClient)} using a try-finally block.
+ * <p>
+ * Alternatively, one may abandon a client with {@link #abandonClient(URL, FTPClient)} with the benefit of not having to
+ * wait for any pending reply by the FTP server.
  * @author poirigui
  */
 public interface FTPClientFactory {
@@ -22,6 +27,11 @@ public interface FTPClientFactory {
      * Set the maximum number of FTP connections.
      */
     void setMaxTotalConnections( int maxTotal );
+
+    /**
+     * Set the authenticator to use to authenticate against FTP servers.
+     */
+    void setAuthenticator( FTPClientAuthenticator authenticator );
 
     /**
      * Create an FTP client for the given URL.

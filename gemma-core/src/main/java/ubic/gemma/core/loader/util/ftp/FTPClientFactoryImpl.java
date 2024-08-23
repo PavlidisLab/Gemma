@@ -1,7 +1,6 @@
 package ubic.gemma.core.loader.util.ftp;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPConnectionClosedException;
@@ -11,8 +10,6 @@ import org.apache.commons.pool2.DestroyMode;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 import javax.annotation.Nullable;
@@ -24,12 +21,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * This implementation integrates with various configured FTP servers from the {@code project.properties} file. If the
- * requested resource is not hosted there, it will gracefully fall back to an anonymous login.
+ * This implementation maintains one pool of FTP clients per URL authority (i.e {@link URL#getAuthority()}).
+ * <p>
+ * Anonymous authentication is used by default.
  * @author poirigui
  */
 @CommonsLog
-@Component
 public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
 
     /**
@@ -37,27 +34,7 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
      */
     private int maxIdleConnections = 4;
     private int maxTotalConnections = 16;
-
-    @Value("${ncbi.host}")
-    private String ncbiHost;
-    @Value("${ncbi.user}")
-    private String ncbiUser;
-    @Value("${ncbi.password}")
-    private String ncbiPassword;
-
-    @Value("${geo.host}")
-    private String geoHost;
-    @Value("${geo.user}")
-    private String geoUser;
-    @Value("${geo.password}")
-    private String geoPassword;
-
-    @Value("${arrayExpress.host}")
-    private String arrayExpressHost;
-    @Value("${arrayExpress.user}")
-    private String arrayExpressUser;
-    @Value("${arrayExpress.password}")
-    private String arrayExpressPassword;
+    private FTPClientAuthenticator authenticator = new AnonymousFTPCLientAuthenticator();
 
     /**
      * Pools of FTP clients, one per authority.
@@ -77,6 +54,11 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
     }
 
     @Override
+    public void setAuthenticator( @Nullable FTPClientAuthenticator authenticator ) {
+        this.authenticator = authenticator;
+    }
+
+    @Override
     public void close() {
         for ( GenericObjectPool<FTPClient> pool : clientsPool.values() ) {
             pool.close();
@@ -86,7 +68,24 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
     @Override
     public FTPClient getFtpClient( URL url ) throws IOException {
         try {
-            return getPool( url ).borrowObject();
+            FTPClient client = getPool( url ).borrowObject();
+            if ( url.getUserInfo() != null ) {
+                log.debug( "Applying authentication from URL userinfo..." );
+                try {
+                    String[] userInfo = url.getUserInfo().split( ":", 2 );
+                    if ( userInfo.length != 2 ) {
+                        throw new IllegalArgumentException( String.format( "The userinfo of %s does not have a ':' delimiter for credentials.", url ) );
+                    }
+                    String username = userInfo[0];
+                    String password = userInfo[1];
+                    new UsernamePasswordFTPClientAuthenticator( username, password )
+                            .authenticate( client, url.getHost() );
+                } catch ( Exception e ) {
+                    destroyClient( url, client );
+                    throw e;
+                }
+            }
+            return client;
         } catch ( IOException | RuntimeException e ) {
             throw e;
         } catch ( Exception e ) {
@@ -195,29 +194,7 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
     }
 
     private GenericObjectPool<FTPClient> createPool( URL url ) {
-        String username, password;
-        if ( url.getUserInfo() != null ) {
-            String[] userInfo = url.getUserInfo().split( ":", 2 );
-            if ( userInfo.length != 2 ) {
-                throw new IllegalArgumentException( String.format( "The userinfo of %s does not have a ':' delimiter for credentials.", url ) );
-            }
-            username = userInfo[0];
-            password = userInfo[1];
-        } else if ( url.getHost().equals( ncbiHost ) ) {
-            username = ncbiUser;
-            password = ncbiPassword;
-        } else if ( url.getHost().equals( geoHost ) ) {
-            username = geoUser;
-            password = geoPassword;
-        } else if ( url.getHost().equals( arrayExpressHost ) ) {
-            username = arrayExpressUser;
-            password = arrayExpressPassword;
-        } else {
-            log.warn( String.format( "%s is not a known FTP server, using anonymous login.", url.getAuthority() ) );
-            username = "anonymous";
-            password = "";
-        }
-        GenericObjectPool<FTPClient> pool = new GenericObjectPool<>( new FTPClientPooledObjectFactory( url.getAuthority(), url.getHost(), url.getPort(), username, password ) );
+        GenericObjectPool<FTPClient> pool = new GenericObjectPool<>( new FTPClientPooledObjectFactory( url.getAuthority(), url.getHost(), url.getPort(), authenticator ) );
         pool.setMaxIdle( maxIdleConnections );
         pool.setMaxTotal( maxTotalConnections );
         // always check if an FTP connection is still valid when borrowing because FTP servers tend to close
@@ -226,38 +203,19 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
         return pool;
     }
 
-    private static final class FTPClientPooledObject extends DefaultPooledObject<FTPClient> {
-
-        @Nullable
-        private String loggedInAs;
-
-        public FTPClientPooledObject( FTPClient object ) {
-            super( object );
-        }
-
-        @Nullable
-        public String getLoggedInAs() {
-            return loggedInAs;
-        }
-
-        public void setLoggedInAs( @Nullable String loggedInAs ) {
-            this.loggedInAs = loggedInAs;
-        }
-    }
-
     private static class FTPClientPooledObjectFactory extends BasePooledObjectFactory<FTPClient> {
 
         private final String authority;
         private final String host;
         private final int port;
-        private final String username, password;
+        @Nullable
+        private final FTPClientAuthenticator authenticator;
 
-        private FTPClientPooledObjectFactory( String authority, String host, int port, String username, String password ) {
+        private FTPClientPooledObjectFactory( String authority, String host, int port, @Nullable FTPClientAuthenticator authenticator ) {
             this.authority = authority;
             this.host = host;
             this.port = port;
-            this.username = username;
-            this.password = password;
+            this.authenticator = authenticator;
         }
 
         @Override
@@ -271,7 +229,7 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
 
         @Override
         public PooledObject<FTPClient> wrap( FTPClient ftpClient ) {
-            return new FTPClientPooledObject( ftpClient );
+            return new DefaultPooledObject<>( ftpClient );
         }
 
         @Override
@@ -311,31 +269,8 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
                     throw new IOException( String.format( "Failed to set file type to BINARY for %s: %s",
                             authority, client.getReplyString() ) );
                 }
-            }
-            if ( !username.equals( ( ( FTPClientPooledObject ) p ).getLoggedInAs() ) ) {
-                // if already logged in as another user, logout first
-                if ( ( ( FTPClientPooledObject ) p ).getLoggedInAs() != null ) {
-                    client.logout();
-                    log.debug( client.getReplyString() );
-                    if ( FTPReply.isPositiveCompletion( client.getReplyCode() ) ) {
-                        ( ( FTPClientPooledObject ) p ).setLoggedInAs( null );
-                    } else {
-                        throw new IOException( String.format( "Failed to logout from %s as %s: %s",
-                                authority,
-                                ( ( FTPClientPooledObject ) p ).getLoggedInAs(),
-                                client.getReplyString() ) );
-                    }
-                }
-                client.login( username, password );
-                log.debug( client.getReplyString() );
-                if ( FTPReply.isPositiveCompletion( client.getReplyCode() ) ) {
-                    ( ( FTPClientPooledObject ) p ).setLoggedInAs( username );
-                } else {
-                    throw new IOException( String.format( "Failed to authenticate to %s as %s %s: %s",
-                            authority,
-                            username,
-                            StringUtils.isNotBlank( password ) ? "with password" : "without password",
-                            client.getReplyString() ) );
+                if ( authenticator != null ) {
+                    authenticator.authenticate( client, authority );
                 }
             }
         }

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.context.TestComponent;
@@ -22,6 +23,7 @@ import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactoryImpl;
+import ubic.gemma.core.loader.util.ftp.FTPConfig;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -44,6 +46,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @ContextConfiguration
 public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests {
 
+    @Import(FTPConfig.class)
     @Configuration
     @TestComponent
     static class Config {
@@ -53,11 +56,6 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
             // we can safely ignore GEO and ArrayExpress configurations
             configurer.setIgnoreUnresolvablePlaceholders( true );
             return configurer;
-        }
-
-        @Bean
-        public FTPClientFactory ftpClientFactory() {
-            return new FTPClientFactoryImpl();
         }
     }
 
