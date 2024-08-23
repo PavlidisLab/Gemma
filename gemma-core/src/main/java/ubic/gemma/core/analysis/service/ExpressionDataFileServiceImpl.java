@@ -19,7 +19,6 @@
 package ubic.gemma.core.analysis.service;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -89,7 +88,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
 
     private static final String DATA_ARCHIVE_FILE_SUFFIX = ".zip";
     private static final String DATA_FILE_SUFFIX = ".data.txt";
-    private static final String DATA_FILE_SUFFIX_COMPRESSED = ".data.txt.gz";
+    private static final String DATA_FILE_SUFFIX_COMPRESSED = DATA_FILE_SUFFIX + ".gz";
     private static final String JSON_FILE_SUFFIX = ".data.json.gz";
 
     private static final String MSG_FILE_EXISTS = " File (%s) exists, not regenerating";
@@ -127,9 +126,6 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
 
     @Value("${gemma.appdata.home}/dataFiles")
     private Path dataDir;
-
-    @Value("${gemma.tmpdata.home}/dataFiles")
-    private Path tmpDataDir;
 
     @Override
     public void analysisResultSetsToString( Collection<ExpressionAnalysisResultSet> results,
@@ -263,51 +259,34 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
         return getDiffExpressionAnalysisArchiveFile( analysis, forceCreate );
     }
 
-    @Override
-    public File getOutputFile( ExpressionExperiment ee, boolean filtered ) {
-        return this.getOutputFile( ee, filtered, true, false );
-    }
-
-    @Override
-    public File getOutputFile( ExpressionExperiment ee, boolean filtered, boolean compressed, boolean temporary ) {
+    /**
+     * @param ee       the experiment
+     * @param filtered if the data matrix is filtered
+     * @return file
+     */
+    private File getOutputFile( ExpressionExperiment ee, boolean filtered ) {
         String filteredAdd = "";
         if ( !filtered ) {
             filteredAdd = ".unfilt";
         }
         String suffix;
 
-        if ( compressed ) {
-            suffix = ExpressionDataFileServiceImpl.DATA_FILE_SUFFIX_COMPRESSED;
-        } else {
-            suffix = ExpressionDataFileServiceImpl.DATA_FILE_SUFFIX;
-        }
+        suffix = ExpressionDataFileServiceImpl.DATA_FILE_SUFFIX_COMPRESSED;
 
         String filename = this.getDataFileName( ee, filteredAdd, suffix );
 
         // randomize file name if temporary in case of access by more than one user at once
-        if ( temporary ) {
 
-            filename = RandomStringUtils.randomAlphabetic( 6 ) + filename;
-
-        }
-
-        return this.getOutputFile( filename, temporary );
+        return this.getOutputFile( filename );
     }
 
-    @Override
-    public File getOutputFile( String filename ) {
-        return this.getOutputFile( filename, false );
-
-    }
-
-    @Override
-    public File getOutputFile( String filename, boolean temporary ) {
+    /**
+     * @param filename without the path - that is, just the name of the file
+     * @return File, with location in the appropriate target directory.
+     */
+    private File getOutputFile( String filename ) {
         Path fullFilePath;
-        if ( temporary ) {
-            fullFilePath = tmpDataDir.resolve( filename );
-        } else {
-            fullFilePath = dataDir.resolve( filename );
-        }
+        fullFilePath = dataDir.resolve( filename );
         File f = fullFilePath.toFile();
 
         if ( f.exists() ) {

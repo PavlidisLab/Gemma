@@ -71,36 +71,6 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
     File getDiffExpressionAnalysisArchiveFile( Long analysisId, boolean forceCreate );
 
     /**
-     * @param ee       the experiment
-     * @param filtered if the data matrix is filtered
-     * @return file
-     */
-    File getOutputFile( ExpressionExperiment ee, boolean filtered );
-
-    /**
-     * @param filtered   if the data matrix is filtered
-     * @param compressed if the filename should have a .gz extension
-     * @param temporary  if you want the file to be saved in the configuration file temporary location
-     * @param ee         the experiment
-     * @return file
-     */
-    File getOutputFile( ExpressionExperiment ee, boolean filtered, boolean compressed, boolean temporary );
-
-    /**
-     * @param filename without the path - that is, just the name of the file
-     * @return File, with location in the appropriate target directory.
-     */
-    File getOutputFile( String filename );
-
-    /**
-     * @param filename   without the path - that is, just the name of the file
-     * @param temporary, if this is true then the file gets saved to the temporary location from the
-     *                   configuration file
-     * @return File, with location in the appropriate target directory.
-     */
-    File getOutputFile( String filename, boolean temporary );
-
-    /**
      * Locate a metadata file.
      */
     File getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type );
