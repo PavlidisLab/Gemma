@@ -36,9 +36,9 @@ import ubic.gemma.persistence.util.QueryUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
-import static ubic.gemma.persistence.util.QueryUtils.batchIdentifiableParameterList;
-import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
+import static ubic.gemma.persistence.util.QueryUtils.*;
 
 /**
  * @author pavlidis
@@ -130,13 +130,12 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
         if ( uris.isEmpty() ) {
             return Collections.emptyList();
         }
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct gene from Gene2GOAssociation as geneAss join geneAss.gene as gene "
+        return streamByBatch( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct gene from Gene2GOAssociation as geneAss "
+                        + "join geneAss.gene as gene "
                                 + "where geneAss.ontologyEntry.valueUri in (:uris) and gene.taxon = :tax" )
-                .setParameterList( "uris", optimizeParameterList( uris ) )
-                .setParameter( "tax", taxon )
-                .list();
+                .setParameter( "tax", taxon ), "uris", uris, 2048, Gene.class )
+                .collect( Collectors.toSet() );
     }
 
     @Override
