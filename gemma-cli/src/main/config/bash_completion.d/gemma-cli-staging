@@ -2,11 +2,11 @@ function __gemma_cli_complete() {
     COMPREPLY=()
     words="${COMP_WORDS[*]}"
     current_option="${COMP_WORDS[$COMP_CWORD-1]}"
-    if ! [[ " $words " =~ ' '(adATcleanup|addExternalDatabase|addGEOData|addPlatformSequences|addTSVData|affyAltsUpdate|affyCollapse|affyFromCel|blackList|blatPlatform|coexpAnalyze|corrMat|ctdDownload|deleteDiffEx|deleteExperiments|deletePhenotypes|deletePlatformElements|detachSequences|dgaDownload|diffExAnalyze|dumpForNIF|evidenceImport|fetchMeshTerms|fillBatchInfo|findDatasetPubs|findObsoleteTerms|geneUpdate|generateDataFile|genericPlatform|getDataMatrix|gwasDownload|importDesign|listExternalDatabases|listGEOData|loadEvidenceForClassifier|loadGenesFromFile|loadTaxa|makePlatformAnnotFiles|makePrivate|makeProcessedData|makePublic|mapPlatformToGenes|mergePlatforms|migrateFactorValues|omimDownload|orderVectorsByDesign|pca|platformMapSummary|platformRepeatScan|platformSubsumptionTest|printExperimentalDesign|probeRename|pubmedAssociateToExperiments|pubmedLoad|pubmedSearchAndSave|refreshExperiment|replaceData|rgdDownload|rnaseqBatchInfo|rnaseqDataAdd|runGeeq|searchIndex|seqCleanup|sfariDownload|splitExperiment|switchExperimentPlatform|updateEe2Ad|updateEe2c|updateExternalDatabase|updateGOAnnots|updateGene2Cs|updateMultifunc|updatePubMeds|vectorMerge|viewExpDesigns)' ' ]]; then
+    if ! [[ " $words " =~ ' '(adATcleanup|addExternalDatabase|addGEOData|addPlatformSequences|addTSVData|affyAltsUpdate|affyCollapse|affyFromCel|blackList|blatPlatform|coexpAnalyze|corrMat|ctdDownload|deleteDiffEx|deleteExperiments|deletePhenotypes|deletePlatformElements|detachSequences|dgaDownload|diffExAnalyze|dumpForNIF|evidenceImport|fetchMeshTerms|fillBatchInfo|findDatasetPubs|findObsoleteTerms|fixOntologyTermLabels|geneUpdate|generateDataFile|genericPlatform|getDataMatrix|gwasDownload|importDesign|listExternalDatabases|listGEOData|loadEvidenceForClassifier|loadGenesFromFile|loadTaxa|makePlatformAnnotFiles|makePrivate|makeProcessedData|makePublic|mapPlatformToGenes|mergePlatforms|migrateFactorValues|omimDownload|orderVectorsByDesign|pca|platformMapSummary|platformRepeatScan|platformSubsumptionTest|printExperimentalDesign|probeRename|pubmedAssociateToExperiments|pubmedLoad|pubmedSearchAndSave|refreshExperiment|replaceData|rgdDownload|rnaseqBatchInfo|rnaseqDataAdd|runGeeq|searchIndex|seqCleanup|sfariDownload|splitExperiment|switchExperimentPlatform|updateEe2Ad|updateEe2c|updateExternalDatabase|updateGOAnnots|updateGene2Cs|updateMultifunc|updatePubMeds|vectorMerge|viewExpDesigns)' ' ]]; then
         if ! [[ "$current_option" =~ (--completion-executable|--completion-shell|--logger|--verbosity|-ce|-cs|-logger|-v) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--completion' '--completion-executable' '--completion-shell' '--help' '--help-all' '--logger' '--profiling' '--testdb' '--verbosity' '--version' '-c' '-ce' '-cs' '-h' '-ha' '-logger' '-profiling' '-testdb' '-v' '-version'" -- "$2")
         fi
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'adATcleanup' 'addExternalDatabase' 'addGEOData' 'addPlatformSequences' 'addTSVData' 'affyAltsUpdate' 'affyCollapse' 'affyFromCel' 'blackList' 'blatPlatform' 'coexpAnalyze' 'corrMat' 'ctdDownload' 'deleteDiffEx' 'deleteExperiments' 'deletePhenotypes' 'deletePlatformElements' 'detachSequences' 'dgaDownload' 'diffExAnalyze' 'dumpForNIF' 'evidenceImport' 'fetchMeshTerms' 'fillBatchInfo' 'findDatasetPubs' 'findObsoleteTerms' 'geneUpdate' 'generateDataFile' 'genericPlatform' 'getDataMatrix' 'gwasDownload' 'importDesign' 'listExternalDatabases' 'listGEOData' 'loadEvidenceForClassifier' 'loadGenesFromFile' 'loadTaxa' 'makePlatformAnnotFiles' 'makePrivate' 'makeProcessedData' 'makePublic' 'mapPlatformToGenes' 'mergePlatforms' 'migrateFactorValues' 'omimDownload' 'orderVectorsByDesign' 'pca' 'platformMapSummary' 'platformRepeatScan' 'platformSubsumptionTest' 'printExperimentalDesign' 'probeRename' 'pubmedAssociateToExperiments' 'pubmedLoad' 'pubmedSearchAndSave' 'refreshExperiment' 'replaceData' 'rgdDownload' 'rnaseqBatchInfo' 'rnaseqDataAdd' 'runGeeq' 'searchIndex' 'seqCleanup' 'sfariDownload' 'splitExperiment' 'switchExperimentPlatform' 'updateEe2Ad' 'updateEe2c' 'updateExternalDatabase' 'updateGOAnnots' 'updateGene2Cs' 'updateMultifunc' 'updatePubMeds' 'vectorMerge' 'viewExpDesigns'" -- "$2")
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'adATcleanup' 'addExternalDatabase' 'addGEOData' 'addPlatformSequences' 'addTSVData' 'affyAltsUpdate' 'affyCollapse' 'affyFromCel' 'blackList' 'blatPlatform' 'coexpAnalyze' 'corrMat' 'ctdDownload' 'deleteDiffEx' 'deleteExperiments' 'deletePhenotypes' 'deletePlatformElements' 'detachSequences' 'dgaDownload' 'diffExAnalyze' 'dumpForNIF' 'evidenceImport' 'fetchMeshTerms' 'fillBatchInfo' 'findDatasetPubs' 'findObsoleteTerms' 'fixOntologyTermLabels' 'geneUpdate' 'generateDataFile' 'genericPlatform' 'getDataMatrix' 'gwasDownload' 'importDesign' 'listExternalDatabases' 'listGEOData' 'loadEvidenceForClassifier' 'loadGenesFromFile' 'loadTaxa' 'makePlatformAnnotFiles' 'makePrivate' 'makeProcessedData' 'makePublic' 'mapPlatformToGenes' 'mergePlatforms' 'migrateFactorValues' 'omimDownload' 'orderVectorsByDesign' 'pca' 'platformMapSummary' 'platformRepeatScan' 'platformSubsumptionTest' 'printExperimentalDesign' 'probeRename' 'pubmedAssociateToExperiments' 'pubmedLoad' 'pubmedSearchAndSave' 'refreshExperiment' 'replaceData' 'rgdDownload' 'rnaseqBatchInfo' 'rnaseqDataAdd' 'runGeeq' 'searchIndex' 'seqCleanup' 'sfariDownload' 'splitExperiment' 'switchExperimentPlatform' 'updateEe2Ad' 'updateEe2c' 'updateExternalDatabase' 'updateGOAnnots' 'updateGene2Cs' 'updateMultifunc' 'updatePubMeds' 'vectorMerge' 'viewExpDesigns'" -- "$2")
     fi
     if [[ " $words " =~ ' addGEOData ' ]]; then
         if ! [[ "$current_option" =~ (--acc|--file|-batchFormat|-batchOutputFile|-e|-f|-softfile) ]]; then
@@ -352,8 +352,11 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' listGEOData ' ]]; then
-        if ! [[ "$current_option" =~ (-date|-gselimit|-output|-platformLimit|-startat|-startdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-date' '-gselimit' '-h' '-output' '-platformLimit' '-platforms' '-startat' '-startdate'" -- "$2")
+        if ! [[ "$current_option" =~ (--accession|--accession-file|-a|-af|-date|-gselimit|-output|-platformLimit|-startat|-startdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--accession' '--accession-file' '--help' '-a' '-af' '-date' '-gselimit' '-h' '-output' '-platformLimit' '-platforms' '-startat' '-startdate'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--accession-file|-af) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' platformMapSummary ' ]]; then
@@ -380,6 +383,9 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' findObsoleteTerms ' ]]; then
         mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h'" -- "$2")
+    fi
+    if [[ " $words " =~ ' fixOntologyTermLabels ' ]]; then
+        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--dryRun' '--help' '-d' '-h'" -- "$2")
     fi
     if [[ " $words " =~ ' updatePubMeds ' ]]; then
         if ! [[ "$current_option" =~ (-pmids) ]]; then
