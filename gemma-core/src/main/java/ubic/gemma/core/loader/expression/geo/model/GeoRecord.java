@@ -18,11 +18,11 @@
  */
 package ubic.gemma.core.loader.expression.geo.model;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-
-import org.apache.commons.lang3.StringUtils;
+import java.util.List;
 
 /**
  * Used to contain GEO summary information from the 'Browse' views.
@@ -36,8 +36,10 @@ public class GeoRecord extends GeoData {
 
     private String contactName = "";
     private Collection<Long> correspondingExperiments;
-    private String meshHeadings = "";
+    @Nullable
+    private Collection<String> meshHeadings;
     private int numSamples;
+    @Nullable
     private Collection<String> organisms;
     private String platform = ""; // can be more than one here, for mixed data type series
     private String libraryStrategy = "";
@@ -46,9 +48,11 @@ public class GeoRecord extends GeoData {
      * for usefulness.
      */
     private int previousClicks = 0;
-    private String pubMedIds = "";
+    @Nullable
+    private List<String> pubMedIds;
     private Date releaseDate;
     private String sampleDetails = "";
+    @Nullable
     private Collection<String> sampleGEOAccessions;
     private String seriesType = "";
     private boolean subSeries = false;
@@ -91,13 +95,14 @@ public class GeoRecord extends GeoData {
         this.correspondingExperiments = correspondingExperiments;
     }
 
-    public String getMeshHeadings() {
+    @Nullable
+    public Collection<String> getMeshHeadings() {
         return meshHeadings;
     }
 
     /**
      */
-    public void setMeshHeadings( String meshheadings ) {
+    public void setMeshHeadings( @Nullable Collection<String> meshheadings ) {
         this.meshHeadings = meshheadings;
 
     }
@@ -110,11 +115,12 @@ public class GeoRecord extends GeoData {
         this.numSamples = numSamples;
     }
 
+    @Nullable
     public Collection<String> getOrganisms() {
         return organisms;
     }
 
-    public void setOrganisms( Collection<String> organisms ) {
+    public void setOrganisms( @Nullable Collection<String> organisms ) {
         this.organisms = organisms;
     }
 
@@ -134,13 +140,13 @@ public class GeoRecord extends GeoData {
         this.previousClicks = previousClicks;
     }
 
-    public String getPubMedIds() {
+    @Nullable
+    public List<String> getPubMedIds() {
         return this.pubMedIds;
     }
 
-    public void setPubMedIds( String pubMedIds ) {
-        if ( StringUtils.isNotBlank( pubMedIds ) )
-            this.pubMedIds = pubMedIds;
+    public void setPubMedIds( @Nullable List<String> pubMedIds ) {
+        this.pubMedIds = pubMedIds;
     }
 
     public Date getReleaseDate() {
@@ -159,11 +165,12 @@ public class GeoRecord extends GeoData {
         this.sampleDetails = sampleDetails;
     }
 
+    @Nullable
     public Collection<String> getSampleGEOAccessions() {
         return sampleGEOAccessions;
     }
 
-    public void setSampleGEOAccessions( Collection<String> sampleGEOAccessions ) {
+    public void setSampleGEOAccessions( @Nullable Collection<String> sampleGEOAccessions ) {
         this.sampleGEOAccessions = sampleGEOAccessions;
     }
 

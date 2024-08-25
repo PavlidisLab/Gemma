@@ -54,8 +54,8 @@ public class PubMedXMLParser {
     private static final String ERROR_TAG = "Error";
     private static final String PUB_MED_EXTERNAL_DB_NAME = "PubMed";
     private static final Locale PUB_MED_LOCALE = Locale.ENGLISH;
-    final DateFormat df = DateFormat.getDateInstance( DateFormat.MEDIUM );
-    private final String[] PUB_MED_DATE_FORMATS = new String[] { "MMM dd, yyyy", "yyyy", "mm dd, yyyy" };
+    private static final DateFormat df = DateFormat.getDateInstance( DateFormat.MEDIUM );
+    private static final String[] PUB_MED_DATE_FORMATS = new String[] { "MMM dd, yyyy", "yyyy", "mm dd, yyyy" };
 
     public void extractBookPublicationYear( BibliographicReference bibRef, Node item ) {
         NodeList c = item.getChildNodes();
