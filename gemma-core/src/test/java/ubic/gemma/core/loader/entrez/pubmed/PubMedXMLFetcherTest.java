@@ -18,13 +18,10 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.util.test.category.PubMedTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -41,8 +38,8 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatExceptionIsDueToNe
 @Ignore("This is failing with 400 errors on the CI (see https://github.com/PavlidisLab/Gemma/issues/1246)")
 @Category({ PubMedTest.class, SlowTest.class })
 public class PubMedXMLFetcherTest {
-    private static final Log log = LogFactory.getLog( PubMedXMLFetcherTest.class.getName() );
-    private PubMedXMLFetcher pmf;
+
+    private final PubMedXMLFetcher pmf = new PubMedXMLFetcher( Settings.getString( "entrez.efetch.apikey" ) );
 
     @Test
     public final void testRetrieveByHTTP() {
@@ -110,15 +107,5 @@ public class PubMedXMLFetcherTest {
         } catch ( Exception e ) {
             assumeThatExceptionIsDueToNetworkIssue( e );
         }
-    }
-
-    @Before
-    public void setUp() {
-        pmf = new PubMedXMLFetcher();
-    }
-
-    @After
-    public void tearDown() {
-        pmf = null;
     }
 }

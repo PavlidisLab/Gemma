@@ -34,19 +34,19 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.StringUtil;
-import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.util.XMLUtils;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.*;
 import java.io.*;
 import java.lang.reflect.Array;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -81,18 +81,12 @@ public class GeoBrowser {
      */
     private static final long MAX_MINIML_RECORD_SIZE = 100_000_000;
 
-    private static final String EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=gds&";
-    private static final String EPLATRETRIEVE = "https://eutls.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=gpl[ETYP]+AND+(mouse[orgn]+OR+human[orgn]+OR+rat[orgn])";
-    private static final String ERETRIEVE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=gse[ETYP]"; //no extra search term
-    // Used by getGeoRecordsBySearchTerm (will look for GSE entries only)
-    private static final String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=gse[ETYP]+AND+";
+    private static final String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds";
+    private static final String ESUMMARY = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=gds";
+    private static final String GEO_BROWSE = "https://www.ncbi.nlm.nih.gov/geo/browse/";
+    private static final String GEO_ACC = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi";
     private static final String FLANKING_QUOTES_REGEX = "^\"|\"$";
-    // mode=tsv : tells GEO to give us tab delimited file -- PP changed to csv
-    // because of garbled tabbed lines returned
-    // from GEO.
-    private static final String GEO_BROWSE_URL = "https://www.ncbi.nlm.nih.gov/geo/browse/?view=series&zsort=date&mode=csv&page=";
     private static final Log log = LogFactory.getLog( GeoBrowser.class.getName() );
-    private static final String NCBI_API_KEY = Settings.getString( "entrez.efetch.apikey" );
 
     private static final XPathExpression characteristics;
     private static final XPathExpression source;
@@ -115,9 +109,6 @@ public class GeoBrowser {
     /* locale */
     private static final Locale GEO_LOCALE = Locale.ENGLISH;
     private static final String[] GEO_DATE_FORMATS = new String[] { "MMM dd, yyyy" };
-
-    @SuppressWarnings("FieldCanBeLocal") // Constant is better
-    private static final String GEO_BROWSE_SUFFIX = "&display=";
 
     static {
         XPathFactory xFactory = XPathFactory.newInstance();
@@ -147,7 +138,13 @@ public class GeoBrowser {
         }
     }
 
-    private final PubMedXMLFetcher pubmedFetcher = new PubMedXMLFetcher();
+    private final String ncbiApiKey;
+    private final PubMedXMLFetcher pubmedFetcher;
+
+    public GeoBrowser( String ncbiApiKey ) {
+        this.ncbiApiKey = ncbiApiKey;
+        this.pubmedFetcher = new PubMedXMLFetcher( ncbiApiKey );
+    }
 
     /**
      * Retrieve records for experiments
@@ -159,18 +156,19 @@ public class GeoBrowser {
         //https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=GSE[ETYP]+AND+(GSE100[accn]+OR+GSE101[accn])&retmax=5000&usehistory=y
 
         for ( List<String> chunk : ListUtils.partition( new ArrayList<>( accessions ), 10 ) ) {
-            String searchUrlString = GeoBrowser.ESEARCH + "(" + chunk.stream().map( this::urlEncode ).collect( Collectors.joining( "[accn]+OR+" ) ) + "[accn])&usehistory=y";
-            if ( StringUtils.isNotBlank( NCBI_API_KEY ) ) {
-                searchUrlString = searchUrlString + "&api_key=" + urlEncode( NCBI_API_KEY );
+            String searchUrl = ESEARCH
+                    + "&term=" + urlEncode( "gse[ETYP] AND (" + chunk.stream().map( c -> quoteTerm( c ) + "[accn]" ).collect( Collectors.joining( " OR " ) ) + ")" )
+                    + "&usehistory=y";
+            if ( StringUtils.isNotBlank( ncbiApiKey ) ) {
+                searchUrl = searchUrl + "&api_key=" + urlEncode( ncbiApiKey );
             }
-            getGeoBasicRecords( records, searchUrlString );
+            getGeoBasicRecords( records, searchUrl );
         }
 
         return records;
     }
 
-    private void getGeoBasicRecords( List<GeoRecord> records, String searchUrlString ) throws IOException {
-        URL searchUrl = new URL( searchUrlString );
+    private void getGeoBasicRecords( List<GeoRecord> records, String searchUrl ) throws IOException {
         Document searchDocument;
         try {
             searchDocument = parseMiniMLDocument( searchUrl );
@@ -197,9 +195,11 @@ public class GeoBrowser {
         String queryId = XMLUtils.getTextValue( queryIdEl );
         String cookie = XMLUtils.getTextValue( cookieEl );
 
-        URL fetchUrl = new URL(
-                GeoBrowser.EFETCH + "&mode=mode.text&query_key=" + urlEncode( queryId ) + "&WebEnv=" + urlEncode( cookie )
-                        + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + urlEncode( NCBI_API_KEY ) : "" ) );
+        String fetchUrl = GeoBrowser.ESUMMARY
+                + "&mode=mode.text"
+                + "&query_key=" + urlEncode( queryId )
+                + "&WebEnv=" + urlEncode( cookie )
+                + ( StringUtils.isNotBlank( ncbiApiKey ) ? "&api_key=" + urlEncode( ncbiApiKey ) : "" );
 
         StopWatch t = new StopWatch();
         t.start();
@@ -271,23 +271,29 @@ public class GeoBrowser {
         }
     }
 
+
     /**
      * A bit hacky, can be improved. Limited to human, mouse, rat, is not guaranteed to get everything, though as of
      * 7/2021, this is sufficient (~8000 platforms)
      *
+     * @param allowedTaxa a collection of allowed taxa, ignored if null or empty
      * @return all relevant platforms up to single-query limit of NCBI
      */
-    public Collection<GeoRecord> getAllGEOPlatforms() throws IOException {
-
-        String searchUrlString;
-
-        searchUrlString = GeoBrowser.EPLATRETRIEVE + "&retmax=" + 10000 + "&usehistory=y"; //10k is the limit.
-
-        if ( StringUtils.isNotBlank( NCBI_API_KEY ) ) {
-            searchUrlString = searchUrlString + "&api_key=" + urlEncode( NCBI_API_KEY );
+    public Collection<GeoRecord> getAllGEOPlatforms( @Nullable Collection<String> allowedTaxa ) throws IOException {
+        String term = "gpl[ETYPE]";
+        if ( allowedTaxa != null && !allowedTaxa.isEmpty() ) {
+            term += " AND (" + allowedTaxa.stream().map( t -> quoteTerm( t ) + "[ORGN]" ).collect( Collectors.joining( " OR " ) ) + ")";
         }
 
-        URL searchUrl = new URL( searchUrlString );
+        String searchUrl = ESEARCH
+                + "&term=" + urlEncode( term )
+                + "&retmax=" + 10000
+                + "&usehistory=y"; //10k is the limit.
+
+        if ( StringUtils.isNotBlank( ncbiApiKey ) ) {
+            searchUrl += "&api_key=" + urlEncode( ncbiApiKey );
+        }
+
         Document searchDocument;
         try {
             searchDocument = parseMiniMLDocument( searchUrl );
@@ -312,10 +318,12 @@ public class GeoBrowser {
         String queryId = XMLUtils.getTextValue( queryIdEl );
         String cookie = XMLUtils.getTextValue( cookieEl );
 
-        URL fetchUrl = new URL(
-                GeoBrowser.EFETCH + "&mode=mode.text" + "&query_key=" + urlEncode( queryId ) + "&retmax="
-                        + 10000 + "&WebEnv=" + urlEncode( cookie )
-                        + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + urlEncode( NCBI_API_KEY ) : "" ) );
+        String fetchUrl = GeoBrowser.ESUMMARY
+                + "&mode=mode.text"
+                + "&query_key=" + urlEncode( queryId )
+                + "&retmax=" + 10000
+                + "&WebEnv=" + urlEncode( cookie )
+                + ( StringUtils.isNotBlank( ncbiApiKey ) ? "&api_key=" + urlEncode( ncbiApiKey ) : "" );
 
         StopWatch t = new StopWatch();
         t.start();
@@ -359,64 +367,73 @@ public class GeoBrowser {
         }
 
         return records;
-
     }
 
     /**
      * Provides more details than getRecentGeoRecords. Performs an E-utilities query of the GEO database with the given
      * searchTerms (search terms can be omitted). Returns at most pageSize records. Does some screening of results for
      * expression studies, and (optionally) taxa. This is used for identifying data sets for loading.
+     * <p>
+     * Note that the search is reversed in time. You get the most recent records first.
      *
-     * @param  start          start an offset to retrieve batches
-     * @param  pageSize       page size how many to retrive
-     * @param  searchTerms    search terms in NCBI Entrez query format
-     * @param  detailed       if true, additional information is fetched (slower)
-     * @param  allowedTaxa    if not null, data sets not containing any of these taxa will be skipped
-     * @param  limitPlatforms not null or empty, platforms to limit the query to (combining with searchTerms not
-     *                        supported yet)
-     * @return list of GeoRecords
-     * @throws IOException    if there is a problem obtaining or manipulating the file (some exceptions are not thrown
-     *                        and
-     *                        just logged)
+     * @param searchTerms    search terms in NCBI Entrez query format, ignored if null or blank
+     * @param field          a field to search in or null to search everywhere
+     * @param allowedTaxa    restrict search to the given taxa if not null
+     * @param limitPlatforms restrict search to the given platforms if not null
+     * @param seriesTypes    restrict search to the given series types (i.e. Expression profiling by array)
+     * @param start          start an offset to retrieve batches
+     * @param pageSize       number of results to retrieve in a batch
+     * @param detailed       if true, additional information is fetched (slower)
+     * @return a list of GeoRecords
+     * @throws IOException if there is a problem obtaining or manipulating the file (some exceptions are not thrown and just logged)
      */
-    public List<GeoRecord> getGeoRecordsBySearchTerm( String searchTerms, int start, int pageSize, boolean detailed, Collection<String> allowedTaxa,
-            Collection<String> limitPlatforms )
-            throws IOException {
+    public Slice<GeoRecord> searchGeoRecords( @Nullable String searchTerms, @Nullable GeoSearchField field, @Nullable Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatforms, @Nullable Collection<String> seriesTypes, int start, int pageSize, boolean detailed ) throws IOException {
+        String term = "gse[ETYP]";
 
-        List<GeoRecord> records = new ArrayList<>();
+        if ( StringUtils.isNotBlank( searchTerms ) ) {
+            term += " AND " + quoteTerm( searchTerms );
+            if ( field != null ) {
+                term += "[" + field + "]";
+            }
+        }
 
-        String platformLimitClause = "";
         if ( limitPlatforms != null && !limitPlatforms.isEmpty() ) {
-            platformLimitClause = " AND (" + limitPlatforms.stream().map( s -> s + "[ACCN]" ).collect( Collectors.joining( " OR " ) );
+            term += " AND (" + limitPlatforms.stream().map( s -> quoteTerm( s ) + "[ACCN]" ).collect( Collectors.joining( " OR " ) ) + ")";
         }
 
-        String searchUrlString;
-        if ( StringUtils.isBlank( searchTerms ) ) {
-            searchUrlString = GeoBrowser.ERETRIEVE + urlEncode( platformLimitClause ) + "&retstart=" + start + "&retmax=" + pageSize + "&usehistory=y";
-        } else {
-            // FIXME: could allow merging in of platformLimitClause. Should really rewrite the way we form these urls to be more modular.
-            searchUrlString = GeoBrowser.ESEARCH + urlEncode( searchTerms ) + "&retstart=" + start + "&retmax=" + pageSize
-                    + "&usehistory=y";
+        if ( allowedTaxa != null && !allowedTaxa.isEmpty() ) {
+            term += " AND (" + allowedTaxa.stream().map( s -> quoteTerm( s ) + "[ORGN]" ).collect( Collectors.joining( " OR " ) ) + ")";
         }
 
-        if ( StringUtils.isNotBlank( NCBI_API_KEY ) ) {
-            searchUrlString = searchUrlString + "&api_key=" + NCBI_API_KEY;
+        if ( seriesTypes != null ) {
+            term += " AND (" + seriesTypes.stream().map( s -> quoteTerm( s ) + "[DataSet Type]" ).collect( Collectors.joining( " OR " ) ) + ")";
         }
 
-        URL searchUrl = new URL( searchUrlString );
+        String searchUrl = ESEARCH
+                + "&term=" + urlEncode( term )
+                + "&retstart=" + start
+                + "&retmax=" + pageSize
+                + "&usehistory=y";
+
+        if ( StringUtils.isNotBlank( ncbiApiKey ) ) {
+            searchUrl += "&api_key=" + ncbiApiKey;
+        }
+
         Document searchDocument;
         try {
-            searchDocument = parseMiniMLDocument( searchUrl );
+            searchDocument = parseMiniMLDocument( ( searchUrl ) );
         } catch ( EmptyXmlDocumentException e ) {
-            throw new RuntimeException( "Got an empty MINiML document for " + searchUrl, e );
+            throw new RuntimeException( "Got an empty MINiML document for " + ( searchUrl ), e );
         }
 
         NodeList countNode = searchDocument.getElementsByTagName( "Count" );
         Node countEl = countNode.item( 0 );
 
-        int count = Integer.parseInt( XMLUtils.getTextValue( ( Element ) countEl ) );
-        if ( count == 0 )
-            throw new RuntimeException( "Got no records from: " + searchUrl );
+        long count = Long.parseLong( XMLUtils.getTextValue( ( Element ) countEl ) );
+        if ( count == 0 ) {
+            log.warn( "Got no records from: " + searchUrl );
+            return new Slice<>( Collections.emptyList(), Sort.by( null, "releaseDate", Sort.Direction.DESC, Sort.NullMode.DEFAULT ), 0, pageSize, count );
+        }
 
         NodeList qnode = searchDocument.getElementsByTagName( "QueryKey" );
 
@@ -428,16 +445,18 @@ public class GeoBrowser {
         String queryId = XMLUtils.getTextValue( queryIdEl );
         String cookie = XMLUtils.getTextValue( cookieEl );
 
-        URL fetchUrl = new URL(
-                GeoBrowser.EFETCH + "&mode=mode.text" + "&query_key=" + urlEncode( queryId ) + "&retstart=" + start + "&retmax="
-                        + pageSize + "&WebEnv=" + urlEncode( cookie )
-                        + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + urlEncode( NCBI_API_KEY ) : "" ) );
+        String fetchUrl = GeoBrowser.ESUMMARY
+                + "&mode=mode.text"
+                + "&query_key=" + urlEncode( queryId )
+                + "&retstart=" + start
+                + "&retmax=" + pageSize
+                + "&WebEnv=" + urlEncode( cookie )
+                + ( StringUtils.isNotBlank( ncbiApiKey ) ? "&api_key=" + urlEncode( ncbiApiKey ) : "" );
 
         StopWatch t = new StopWatch();
         DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd", Locale.ENGLISH ); // for logging
 
         t.start();
-        int rawRecords = 0;
 
         NodeList accNodes, titleNodes, sampleNodes, dateNodes, orgnNodes, platformNodes, summaryNodes, typeNodes, pubmedNodes;
         try {
@@ -455,44 +474,22 @@ public class GeoBrowser {
         } catch ( EmptyXmlDocumentException e ) {
             throw new RuntimeException( "Got an empty MINiML document for " + fetchUrl, e );
         } catch ( XPathExpressionException e ) {
-            throw new RuntimeException( String.format( "Failed to parse XML for %s", searchUrl ), e );
+            throw new RuntimeException( String.format( "Failed to parse XML for %s", ( searchUrl ) ), e );
         }
 
         // Create GeoRecords using information parsed from XML file
         log.debug( String.format( "Got %d XML records in %d ms", accNodes.getLength(), t.getTime( TimeUnit.MILLISECONDS ) ) );
 
+        List<GeoRecord> records = new ArrayList<>();
         for ( int i = 0; i < accNodes.getLength(); i++ ) {
             t.reset();
             t.start();
 
             GeoRecord record = new GeoRecord();
-
-            rawRecords++; // prior to any filtering.
-
             record.setGeoAccession( "GSE" + accNodes.item( i ).getTextContent() );
-
             record.setSeriesType( typeNodes.item( i ).getTextContent() );
-            if ( !record.getSeriesType().contains( "Expression profiling" ) ) {
-                continue;
-            }
-
-            Collection<String> taxa = this.getTaxonCollection( orgnNodes.item( i ).getTextContent() );
-            if ( allowedTaxa != null && !allowedTaxa.isEmpty() ) {
-                boolean useableTaxa = false;
-                for ( String ta : taxa ) {
-                    if ( allowedTaxa.contains( ta ) ) {
-                        useableTaxa = true;
-                        break;
-                    }
-                }
-                if ( !useableTaxa ) {
-                    continue;
-                }
-            }
-            record.setOrganisms( taxa );
-
+            record.setOrganisms( this.getTaxonCollection( orgnNodes.item( i ).getTextContent() ) );
             record.setTitle( titleNodes.item( i ).getTextContent() );
-
             record.setNumSamples( Integer.parseInt( sampleNodes.item( i ).getTextContent() ) );
 
             try {
@@ -520,7 +517,7 @@ public class GeoBrowser {
             if ( detailed ) {
                 // without details this goes a lot quicker so feedback isn't very important
                 log.debug( "Obtaining details for " + record.getGeoAccession() + " " + record.getNumSamples() + " samples..." );
-                getDetails( record );
+                fillDetails( record );
             }
 
             records.add( record );
@@ -528,21 +525,14 @@ public class GeoBrowser {
             log.debug( "Processed: " + record.getGeoAccession() + " (" + dateFormat.format( record.getReleaseDate() ) + "), " + record.getNumSamples() + " samples, " + t.getTime() / 1000 + "s " );
         }
 
-
-        if ( records.isEmpty() && rawRecords != 0 ) {
-            /*
-               When there are raw records, all that happened is we filtered them all out.
-             */
-            GeoBrowser.log.warn( "No records retained from query - all filtered out; number of raw records was " + rawRecords );
-        } else if ( rawRecords == 0 ) {
-            log.warn( "No records received at all" ); // could be the very beginning ...
-            log.warn( "Query was " + searchUrl );
-            log.warn( "Fetch was " + fetchUrl );
-        } else {
-            log.debug( "Parsed " + rawRecords + " records, " + records.size() + " retained at this stage" );
+        if ( records.isEmpty() ) {
+            // When there are raw records, all that happened is we filtered them all out.
+            GeoBrowser.log.warn( "No records retained from query - all filtered out; number of raw records was " + accNodes.getLength() );
         }
 
-        return records;
+        GeoBrowser.log.debug( "Parsed " + accNodes.getLength() + " records, " + records.size() + " retained at this stage" );
+
+        return new Slice<>( records, Sort.by( null, "releaseDate", Sort.Direction.DESC, Sort.NullMode.DEFAULT ), start, pageSize, count );
     }
 
     /**
@@ -554,14 +544,16 @@ public class GeoBrowser {
      * @return list of GeoRecords
      * @throws IOException    if there is a problem while manipulating the file
      */
-    public List<GeoRecord> getRecentGeoRecords( int startPage, int pageSize ) throws IOException {
-
+    public Slice<GeoRecord> getRecentGeoRecords( int startPage, int pageSize ) throws IOException {
         if ( startPage < 0 || pageSize < 0 )
             throw new IllegalArgumentException( "Values must be greater than zero " );
 
-        List<GeoRecord> records = new ArrayList<>();
-        URL url = new URL( GEO_BROWSE_URL + startPage + GEO_BROWSE_SUFFIX + pageSize );
+        // mode=tsv : tells GEO to give us tab delimited file -- PP changed to csv
+        // because of garbled tabbed lines returned
+        // from GEO.
+        URL url = new URL( GEO_BROWSE + "?view=series&zsort=date&mode=csv&page=" + startPage + "&display=" + pageSize );
 
+        List<GeoRecord> records = new ArrayList<>();
         try ( BufferedReader br = new BufferedReader( new InputStreamReader( url.openStream() ) ) ) {
 
             // We are getting a tab delimited file.
@@ -621,13 +613,33 @@ public class GeoBrowser {
         if ( records.isEmpty() ) {
             GeoBrowser.log.warn( "No records obtained" );
         }
-        return records;
 
+        return new Slice<>( records, Sort.by( null, "releaseDate", Sort.Direction.DESC, Sort.NullMode.DEFAULT ), startPage, pageSize, null );
+    }
+
+    /**
+     * Quote a term if needed.
+     * <p>
+     * Refer to <a href="https://www.ncbi.nlm.nih.gov/books/NBK3837/">Entrez Help</a> for more details about the search
+     * query syntax.
+     */
+    private String quoteTerm( String c ) {
+        // strip quotes, I don't think it's possible to escape them
+        c = c.replaceAll( "\"", "" );
+        // : is used for range queries (i.e. 1:10[Sequence Length])
+        // [] are used for fielded search
+        // () are used for grouping boolean expressions
+        // * is used for wildcard
+        // spaces must be quoted, or else they will be treated as separate terms
+        // '/' are used in date formatting
+        if ( c.matches( "[:\\[\\]()*/\\s]" ) ) {
+            return "\"" + c + "\"";
+        }
+        return c;
     }
 
     /**
      * exposed for testing
-     *
      */
     void parseMINiML( GeoRecord record, Document detailsDocument ) {
         // e.g. https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE180363&targ=gse&form=xml&view=full
@@ -657,7 +669,6 @@ public class GeoBrowser {
 
     /**
      * exposed for testing
-     *
      */
     void parseSampleMiNIML( GeoRecord record, Document detailsDocument ) throws XPathExpressionException {
         // Source, Characteristics
@@ -708,14 +719,9 @@ public class GeoBrowser {
      * This method is resilient to various errors, ensuring that the GEO record can still be returned even if all the
      * details might not be filled.
      */
-    private void getDetails( GeoRecord record ) {
+    private void fillDetails( GeoRecord record ) {
         if ( !record.isSuperSeries() ) {
-            URL miniMLURL;
-            try {
-                miniMLURL = new URL( "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gse&form=xml&view=full&acc=" + urlEncode( record.getGeoAccession() ) );
-            } catch ( MalformedURLException e ) {
-                throw new RuntimeException( e );
-            }
+            String miniMLURL = GEO_ACC + "?targ=gse&form=xml&view=full&acc=" + urlEncode( record.getGeoAccession() );
 
             /*
              * I can't find a better way to get subseries info: the eutils doesn't provide this
@@ -732,7 +738,7 @@ public class GeoBrowser {
         }
 
         try {
-            getSampleDetails( record );
+            fillSampleDetails( record );
         } catch ( EmptyXmlDocumentException | IOException e ) {
             log.error( e.getMessage() + " while processing MINiML for " + record.getGeoAccession()
                     + ", sample details will not be obtained" );
@@ -741,7 +747,7 @@ public class GeoBrowser {
         // another query. Note that new Pubmed IDs generally don't have mesh headings yet, so this might not be that useful.
         if ( StringUtils.isNotBlank( record.getPubMedIds() ) ) {
             try {
-                getMeshHeadings( record );
+                fillMeshHeadings( record );
             } catch ( IOException e ) {
                 log.error( "Could not get MeSH headings for " + record.getGeoAccession() + ": " + e.getMessage() );
             }
@@ -754,7 +760,7 @@ public class GeoBrowser {
     /**
      * @param  record      to process
      */
-    private void getMeshHeadings( GeoRecord record ) throws IOException {
+    private void fillMeshHeadings( GeoRecord record ) throws IOException {
         Collection<String> meshheadings = new ArrayList<>();
         String[] idlist = record.getPubMedIds().split( "[,\\s]+" );
         List<Integer> idints = new ArrayList<>();
@@ -780,10 +786,10 @@ public class GeoBrowser {
      * Fetch and parse MINiML for samples.
      *
      */
-    private void getSampleDetails( GeoRecord record ) throws EmptyXmlDocumentException, IOException {
+    private void fillSampleDetails( GeoRecord record ) throws EmptyXmlDocumentException, IOException {
         // Fetch miniML for the samples.
         // e.g. https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE171682&targ=gsm&form=xml&view=full
-        URL sampleMINIMLURL = new URL( "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gsm&form=xml&view=full&acc=" + urlEncode( record.getGeoAccession() ) );
+        String sampleMINIMLURL = GEO_ACC + "?targ=gsm&form=xml&view=full&acc=" + urlEncode( record.getGeoAccession() );
         log.debug( String.format( "Obtaining sample details for %s from %s...", record.getGeoAccession(), sampleMINIMLURL ) );
         try {
             parseSampleMiNIML( record, parseMiniMLDocument( sampleMINIMLURL ) );
@@ -816,6 +822,10 @@ public class GeoBrowser {
         } catch ( UnsupportedEncodingException e ) {
             throw new RuntimeException( e );
         }
+    }
+
+    private Document parseMiniMLDocument( String url ) throws EmptyXmlDocumentException, IOException {
+        return parseMiniMLDocument( new URL( url ), MAX_RETRIES, null );
     }
 
     /**

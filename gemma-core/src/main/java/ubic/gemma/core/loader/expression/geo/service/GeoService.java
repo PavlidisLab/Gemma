@@ -65,16 +65,6 @@ public interface GeoService {
     void updateFromGEO( String geoAccession );
 
     /**
-     * This is supplied to allow clients to check that the generator has been set correctly.
-     * @return generator
-     */
-    @SuppressWarnings("unused")
-    // Possible external use
-    GeoDomainObjectGenerator getGeoDomainObjectGenerator();
-
-    void setGeoDomainObjectGenerator( GeoDomainObjectGenerator generator );
-
-    /**
      * Load from a SOFT file. This can be used for testing but maybe there are other situations it is useful.
      *
      * @param accession e.g GSE1234
@@ -82,4 +72,6 @@ public interface GeoService {
      * @return a single experiment.
      */
     Collection<?> loadFromSoftFile( String accession, String softFile, boolean loadPlatformOnly, boolean doSampleMatching, boolean splitByPlatform );
+
+    void setGeoDomainObjectGenerator( GeoDomainObjectGenerator generator );
 }

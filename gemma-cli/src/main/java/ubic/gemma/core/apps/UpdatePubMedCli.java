@@ -18,6 +18,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
@@ -49,6 +50,9 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
     private BibliographicReferenceService bibliographicReferenceService;
     @Autowired
     private PersisterHelper persisterHelper;
+
+    @Value("${entrez.efetch.apikey")
+    private String ncbiApiKey;
 
     @Override
     public String getCommandName() {
@@ -82,7 +86,7 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
         }
         log.info( "Found " + toFetch.size() + " experiments lacking publications in Gemma.." );
 
-        GeoBrowser gbs = new GeoBrowser();
+        GeoBrowser gbs = new GeoBrowser( ncbiApiKey );
         Collection<GeoRecord> geoRecords = gbs.getGeoRecords( toFetch.keySet() );
 
         int numFound = 0;
@@ -150,7 +154,7 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
         // check if it already in the system
         BibliographicReference publication = bibliographicReferenceService.findByExternalId( pubmedId );
         if ( publication == null ) {
-            PubMedSearch pms = new PubMedSearch();
+            PubMedSearch pms = new PubMedSearch( ncbiApiKey );
             Collection<String> searchTerms = new ArrayList<>();
             searchTerms.add( pubmedId );
             Collection<BibliographicReference> publications;

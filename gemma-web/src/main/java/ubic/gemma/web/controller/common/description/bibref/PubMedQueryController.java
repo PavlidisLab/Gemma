@@ -19,16 +19,18 @@
 package ubic.gemma.web.controller.common.description.bibref;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.web.controller.BaseController;
 
 import javax.servlet.http.HttpServletRequest;
@@ -41,12 +43,20 @@ import java.io.IOException;
  */
 @Controller
 @RequestMapping("/bibRefSearch.html")
-public class PubMedQueryController extends BaseController {
+public class PubMedQueryController extends BaseController implements InitializingBean {
 
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
 
-    private final PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
+    @Value("${entrez.efetch.apikey}")
+    private String ncbiApiKey;
+
+    private PubMedXMLFetcher pubMedXmlFetcher;
+
+    @Override
+    public void afterPropertiesSet() {
+        pubMedXmlFetcher = new PubMedXMLFetcher( ncbiApiKey );
+    }
 
     @RequestMapping(method = { RequestMethod.GET, RequestMethod.HEAD })
     public String getView() {

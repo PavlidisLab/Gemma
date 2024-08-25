@@ -28,23 +28,9 @@ import ubic.gemma.core.loader.expression.geo.fetcher.LocalSeriesFetcher;
  */
 public class GeoDomainObjectGeneratorLocal extends GeoDomainObjectGenerator {
 
-    private final String fileLocation;
-
     public GeoDomainObjectGeneratorLocal( String fileLocation ) {
-        this.fileLocation = fileLocation;
-        this.initialize();
-    }
-
-    @Override
-    public void initialize() {
-        GeoDomainObjectGenerator.log.debug( "Initializing local-source domain object generator" );
-        if ( this.fileLocation != null ) {
-            datasetFetcher = new LocalDatasetFetcher( fileLocation );
-            seriesFetcher = new LocalSeriesFetcher( fileLocation );
-            platformFetcher = new LocalSeriesFetcher( fileLocation );
-        } else {
-            super.initialize();
-        }
-        this.parser = new GeoFamilyParser();
+        super( new LocalDatasetFetcher( fileLocation ),
+                new LocalSeriesFetcher( fileLocation ),
+                new LocalSeriesFetcher( fileLocation ) );
     }
 }

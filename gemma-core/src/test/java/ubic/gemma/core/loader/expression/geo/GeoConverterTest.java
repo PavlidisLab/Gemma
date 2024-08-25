@@ -18,25 +18,10 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.zip.GZIPInputStream;
-
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
@@ -51,11 +36,16 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+
+import java.io.InputStream;
+import java.util.*;
+import java.util.zip.GZIPInputStream;
+
+import static org.junit.Assert.*;
 
 /**
  * Unit test for GeoConversion Added extension BaseSpringContextTest as want Taxon Service to be called
@@ -68,6 +58,8 @@ public class GeoConverterTest extends BaseSpringContextTest {
     private final ByteArrayConverter bac = new ByteArrayConverter();
     @Autowired
     private GeoConverter gc;
+    @Value("${entrez.efetch.apikey}")
+    private String ncbiApiKey;
 
     /*
      * Bug 3976: make sure we skip non-expression data sets.

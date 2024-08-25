@@ -23,8 +23,10 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
+import ubic.gemma.core.loader.expression.geo.service.GeoSearchField;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 
@@ -32,8 +34,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.junit.Assume.assumeNoException;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
@@ -46,6 +47,8 @@ public class GeoBrowserTest {
 
     private static final Log log = LogFactory.getLog( GeoBrowserTest.class );
 
+    private static final String ncbiApiKey = Settings.getString( "entrez.efetch.apikey" );
+
     @BeforeClass
     public static void checkThatGeoIsAvailable() throws Exception {
         assumeThatResourceIsAvailable( "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi" );
@@ -54,24 +57,24 @@ public class GeoBrowserTest {
     @Test
     public void testGetRecentGeoRecords() throws Exception {
         assumeThatResourceIsAvailable( "https://www.ncbi.nlm.nih.gov/geo/browse/" );
-        GeoBrowser b = new GeoBrowser();
+        GeoBrowser b = new GeoBrowser( ncbiApiKey );
         Collection<GeoRecord> res = b.getRecentGeoRecords( 10, 10 );
-        assertTrue( res.size() > 0 );
+        assertFalse( res.isEmpty() );
     }
 
     @Test
-    public void testGetGeoRecordsBySearchTerm() {
-        GeoBrowser b = new GeoBrowser();
+    public void testSearchGeoRecords() {
+        GeoBrowser b = new GeoBrowser( ncbiApiKey );
 
         Collection<GeoRecord> res;
         try {
-            res = b.getGeoRecordsBySearchTerm( "Homo+sapiens[orgn]", 10, 10, false, null, null );
+            res = b.searchGeoRecords( "Homo sapiens", GeoSearchField.ORGANISM, null, null, null, 10, 10, false );
         } catch ( IOException e ) {
             assumeNoException( e );
             return;
         }
         // Check that the search has returned at least one record
-        assertTrue( res.size() > 0 );
+        assertFalse( res.isEmpty() );
 
         // Print out accession numbers etc.; check that the records returned match the search term
         for ( GeoRecord record : res ) {
@@ -92,16 +95,16 @@ public class GeoBrowserTest {
     @Test
     @Category(SlowTest.class)
     public void testGetGeoRecords() {
-        GeoBrowser b = new GeoBrowser();
+        GeoBrowser b = new GeoBrowser( ncbiApiKey );
         Collection<GeoRecord> res;
         try {
-            res = b.getGeoRecordsBySearchTerm( null, 10, 10, true, null, null );
+            res = b.searchGeoRecords( null, null, null, null, null, 10, 10, true );
         } catch ( IOException e ) {
             assumeNoException( e );
             return;
         }
         // Check that the search has returned at least one record
-        assertTrue( res.size() > 0 );
+        assertFalse( res.isEmpty() );
 
         // Print out accession numbers etc.; check that the records returned match the search term
         for ( GeoRecord record : res ) {
@@ -116,7 +119,7 @@ public class GeoBrowserTest {
 
     @Test
     public void testGetGeoRecordsB() {
-        GeoBrowser b = new GeoBrowser();
+        GeoBrowser b = new GeoBrowser( ncbiApiKey );
         Collection<GeoRecord> geoRecords;
         try {
             geoRecords = b.getGeoRecords( Arrays.asList( "GSE1", "GSE2", "GSE3" ) );
@@ -129,17 +132,17 @@ public class GeoBrowserTest {
 
     @Test
     public void testGetGeoRecordGSE93825() {
-        GeoBrowser b = new GeoBrowser();
+        GeoBrowser b = new GeoBrowser( ncbiApiKey );
 
         Collection<GeoRecord> res;
         try {
-            res = b.getGeoRecordsBySearchTerm( "GSE93825[acc]", 0, 10, false, null, null );
+            res = b.searchGeoRecords( "GSE93825", GeoSearchField.ACCESSION, null, null, null, 0, 10, false );
         } catch ( IOException e ) {
             assumeNoException( e );
             return;
         }
         // Check that the search has returned at least one record
-        assertTrue( res.size() > 0 );
+        assertFalse( res.isEmpty() );
 
         // Print out accession numbers etc.; check that the records returned match the search term
         for ( GeoRecord record : res ) {
@@ -159,8 +162,8 @@ public class GeoBrowserTest {
     @Test
     @Category(SlowTest.class)
     public void testGeoEmptyMINiML() throws IOException {
-        GeoBrowser b = new GeoBrowser();
-        b.getGeoRecordsBySearchTerm( "GSE127242", 0, 10, true, null, null );
+        GeoBrowser b = new GeoBrowser( ncbiApiKey );
+        b.searchGeoRecords( "GSE127242", null, null, null, null, 0, 10, true );
     }
 
 
