@@ -272,7 +272,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             for ( String geoAccession : accessions ) {
                 getBatchTaskExecutor().submit( () -> {
                     String detectedDataType = UNKNOWN_INDICATOR;
-                    int numberOfSamples = 0, numberOfCells = 0, numberOfGenes = 0;
+                    Integer numberOfSamples = null, numberOfCells = null, numberOfGenes = null;
                     List<String> additionalSupplementaryFiles = new ArrayList<>();
                     String comment = "";
                     try {
@@ -309,6 +309,11 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                             addSuccessObject( geoAccession );
                         } else {
                             detectedDataType = UNSUPPORTED_INDICATOR;
+                            // consider all supplementary materials as additional
+                            additionalSupplementaryFiles.addAll( detector.getAdditionalSupplementaryFiles( series ) );
+                            for ( GeoSample sample : series.getSamples() ) {
+                                additionalSupplementaryFiles.addAll( detector.getAdditionalSupplementaryFiles( series, sample ) );
+                            }
                         }
                     } catch ( Exception e ) {
                         addErrorObject( geoAccession, e );
