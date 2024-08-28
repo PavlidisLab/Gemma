@@ -764,6 +764,7 @@
 		<micrometer.version>1.13.2</micrometer.version>
 		<dom4j.version>2.1.4</dom4j.version>
 		<!-- HDF5 -->
+		<!-- You may override this in ~/.m2/settings.xml -->
 		<hdf5.version>1.12.1</hdf5.version>
 		<!-- directory containing the HDF5 JNI shared library -->
 		<hdf5.libDir>/usr/lib64/hdf5</hdf5.libDir>
@@ -792,6 +793,10 @@
 			--add-opens=java.base/java.lang=ALL-UNNAMED
 		</jvmOptions>
 		<!-- JVM options used in tests -->
-		<testJvmOptions>${jvmOptions} -Djava.library.path=${hdf5.libDir}</testJvmOptions>
+		<testJvmOptions>
+			${jvmOptions}
+			<!-- the location of libhdf5 is system-dependent, so we do not want to add it to the default ${jvmOptions} -->
+			-Djava.library.path=${hdf5.libDir}
+		</testJvmOptions>
 	</properties>
 </project>
