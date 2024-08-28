@@ -1,10 +1,14 @@
 package ubic.gemma.core.loader.expression.geo.singleCell;
 
+import lombok.Setter;
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.ArchiveInputStream;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.tools.tar.TarEntry;
-import org.apache.tools.tar.TarInputStream;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
@@ -19,8 +23,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -40,6 +43,7 @@ import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
  * but not downloading.
  * @author poirigui
  */
+@Setter
 public class MexDetector extends AbstractSingleCellDetector implements SingleCellDetector {
 
     /**
@@ -60,15 +64,20 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
         }
     };
 
-    private long maxEntrySizeToSkipInTar = 20_000_000L;
+    private String barcodesFileSuffix = "barcodes.tsv";
+    @Nullable
+    private String barcodeMetadataFileSuffix = "barcode_metadata.tsv";
+    private String featuresFileSuffix = "features.tsv";
+    @Nullable
+    private String genesFileSuffix = "genes.tsv";
+    private String matrixFileSuffix = "matrix.mtx";
 
     /**
-     * Set the maximum size of TAR entry to skip. If an entry exceeding this size is found, the supplementary material
-     * will be ignored.
+     * Set the maximum size of an archive entry to skip the supplementary file altogether.
+     * <p>
+     * Note that if a MEX file was previously found in the archive, it will not be skipped.
      */
-    public void setMaxEntrySizeToSkipInTar( long maxEntrySizeToSkipInTar ) {
-        this.maxEntrySizeToSkipInTar = maxEntrySizeToSkipInTar;
-    }
+    private long maxEntrySizeInArchiveToSkip = 25_000_000L;
 
     /**
      * {@inheritDoc}
@@ -78,7 +87,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
      */
     @Override
     public boolean hasSingleCellData( GeoSeries series ) {
-        // don't bother looking up MEX files in TAR archives at the series-level, it's just wasteful since we cannot
+        // don't bother looking up MEX files in archives at the series-level, it's just wasteful since we cannot
         // download them
         return hasSingleCellData( series.getGeoAccession(), series.getSupplementaryFiles(), false );
     }
@@ -87,7 +96,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
      * Check if a sample contains single-cell data in the context of its series.
      */
     public boolean hasSingleCellData( GeoSeries series, GeoSample sample ) {
-        return hasSingleCellData( series.getGeoAccession(), mergeSupplementaryFiles( series, sample ), true );
+        return hasSingleCellData( sample.getGeoAccession(), mergeSupplementaryFiles( series, sample ), true );
     }
 
     @Override
@@ -97,27 +106,27 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
 
     /**
      * Check if a GEO sample contains single-cell data.
-     * @param allowTarLookup allow looking into TAR archives for MEX files
+     * @param allowArchiveLookup allow looking into archives for MEX files
      */
-    public boolean hasSingleCellData( GeoSample sample, boolean allowTarLookup ) {
-        return hasSingleCellData( sample.getGeoAccession(), sample.getSupplementaryFiles(), allowTarLookup );
+    public boolean hasSingleCellData( GeoSample sample, boolean allowArchiveLookup ) {
+        return hasSingleCellData( sample.getGeoAccession(), sample.getSupplementaryFiles(), allowArchiveLookup );
     }
 
     /**
      * Check if a sample or series has single-cell data.
      * @param geoAccession       GEO accession of the sample or series
      * @param supplementaryFiles list of supplementary file
-     * @param allowTarLookup     allow looking up TAR archives for MEX data, use this with parsimony because it requires
+     * @param allowArchiveLookup allow looking up archives for MEX data, use this with parsimony because it requires
      *                           partially downloading the archive
      */
-    private boolean hasSingleCellData( String geoAccession, Collection<String> supplementaryFiles, boolean allowTarLookup ) {
+    private boolean hasSingleCellData( String geoAccession, Collection<String> supplementaryFiles, boolean allowArchiveLookup ) {
         // detect MEX (3 files per GEO sample)
         String barcodes = null, features = null, matrix = null;
         for ( String file : supplementaryFiles ) {
             if ( isMexFile( file, MexFileType.BARCODES ) ) {
                 barcodes = file;
-            } else if ( isMexFile( file, MexFileType.FEATURES ) || isMexFile( file, MexFileType.GENES ) ) {
-                if ( isMexFile( file, MexFileType.GENES ) ) {
+            } else if ( isMexFile( file, MexFileType.FEATURES ) ) {
+                if ( genesFileSuffix != null && ( endsWith( file, genesFileSuffix ) ) ) {
                     log.info( geoAccession + ": Found an old-style MEX file " + file + ", treating it as features.tsv." );
                 }
                 features = file;
@@ -136,50 +145,62 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                     Stream.of( barcodes, features, matrix ).filter( Objects::nonNull ).collect( Collectors.joining( "\n\t" ) ) ) );
         }
 
-        // detect MEX (1 TAR archive per GEO sample)
+        // detect MEX (1 archive per GEO sample)
         for ( String file : supplementaryFiles ) {
-            if ( allowTarLookup && ( file.endsWith( ".tar" ) || file.endsWith( ".tar.gz" ) ) ) {
-                log.info( "Looking up the TAR header of " + file + " for MEX data..." );
+            if ( allowArchiveLookup && ( file.endsWith( ".tar" ) || file.endsWith( ".tar.gz" ) || file.endsWith( ".zip" ) ) ) {
+                log.info( "Looking up the content of " + file + " for MEX data..." );
                 try {
                     Boolean done = retry( ( attempt, lastAttempt ) -> {
                         String barcodesT = null;
                         String featuresT = null;
                         String matrixT = null;
-                        // we just have to read the header of the TAR archive and not its content
-                        try ( InputStream in = openSupplementaryFileAsStream( file, attempt, true );
-                                TarInputStream tis = new TarInputStream( in ) ) {
-                            TarEntry te;
+                        // we just have to read the header of the archive and not its content
+                        try ( ArchiveInputStream<?> tis = openSupplementaryFileAsArchiveStream( file, attempt ) ) {
+                            ArchiveEntry te;
                             while ( ( te = tis.getNextEntry() ) != null ) {
-                                if ( !te.isFile() ) {
+                                if ( te.isDirectory() ) {
                                     continue;
                                 }
                                 if ( isMexFile( te.getName(), MexFileType.BARCODES ) ) {
                                     barcodesT = te.getName();
-                                } else if ( isMexFile( te.getName(), MexFileType.FEATURES ) || isMexFile( te.getName(), MexFileType.GENES ) ) {
-                                    if ( isMexFile( file, MexFileType.GENES ) ) {
-                                        log.info( geoAccession + ": Found an old-style MEX file " + te.getName() + " in a TAR archive, treating it as features.tsv." );
-                                    }
-                                    featuresT = te.getName();
-                                } else if ( isMexFile( te.getName(), MexFileType.MATRIX ) ) {
-                                    matrixT = te.getName();
-                                    if ( featuresT != null && barcodesT != null ) {
-                                        // TAR entries are generally sorted, so features.tsv and barcodes.tsv appear before
+                                    if ( featuresT != null && matrixT != null ) {
+                                        // Archive entries are generally sorted, so features.tsv and barcodes.tsv appear before
                                         // matrix.mtx, if we were not to skip at this point, the whole matrix would have to be
                                         // read, which would be inefficient. The downside is that we cannot detect cases
                                         // where an archive contains two matrices
                                         break;
                                     }
-                                } else if ( te.getSize() > maxEntrySizeToSkipInTar ) {
-                                    log.warn( geoAccession + ": " + file + " has an entry exceeding " + byteCountToDisplaySize( maxEntrySizeToSkipInTar ) + ", the rest of the archive will be ignored." );
+                                } else if ( isMexFile( te.getName(), MexFileType.FEATURES ) ) {
+                                    if ( genesFileSuffix != null && ( endsWith( te.getName(), genesFileSuffix ) ) ) {
+                                        log.info( geoAccession + ": Found an old-style MEX file " + te.getName() + " in an archive, treating it as features.tsv." );
+                                    }
+                                    featuresT = te.getName();
+                                    if ( barcodesT != null && matrixT != null ) {
+                                        // Archive entries are generally sorted, so features.tsv and barcodes.tsv appear before
+                                        // matrix.mtx, if we were not to skip at this point, the whole matrix would have to be
+                                        // read, which would be inefficient. The downside is that we cannot detect cases
+                                        // where an archive contains two matrices
+                                        break;
+                                    }
+                                } else if ( isMexFile( te.getName(), MexFileType.MATRIX ) ) {
+                                    matrixT = te.getName();
+                                    if ( featuresT != null && barcodesT != null ) {
+                                        // Archive entries are generally sorted, so features.tsv and barcodes.tsv appear before
+                                        // matrix.mtx, if we were not to skip at this point, the whole matrix would have to be
+                                        // read, which would be inefficient. The downside is that we cannot detect cases
+                                        // where an archive contains two matrices
+                                        break;
+                                    }
+                                } else if ( skipForLargeArchiveEntry( geoAccession, file, te, barcodesT, featuresT, matrixT ) ) {
                                     break;
                                 }
                             }
                             if ( barcodesT != null && featuresT != null && matrixT != null ) {
-                                log.info( String.format( "%s: Found MEX files bundled in a TAR archive %s:\n\t\t%s\n\t\t%s\n\t\t%s",
+                                log.info( String.format( "%s: Found MEX files bundled in an archive %s:\n\t\t%s\n\t\t%s\n\t\t%s",
                                         geoAccession, file, barcodesT, featuresT, matrixT ) );
                                 return true;
                             } else if ( barcodesT != null || featuresT != null || matrixT != null ) {
-                                log.warn( String.format( "%s: Found incomplete MEX files bundled in a TAR archive %s:\n\t%s",
+                                log.warn( String.format( "%s: Found incomplete MEX files bundled in an archive %s:\n\t%s",
                                         geoAccession, file,
                                         Stream.of( barcodesT, featuresT, matrixT ).filter( Objects::nonNull ).collect( Collectors.joining( "\n\t" ) ) ) );
                             }
@@ -190,7 +211,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                         return true;
                     }
                 } catch ( IOException e ) {
-                    log.error( String.format( "%s: Failed to read TAR archive %s, will move on to the next supplementary material...",
+                    log.error( String.format( "%s: Failed to read archive %s, will move on to the next supplementary material...",
                             geoAccession, file ), e );
                 }
             }
@@ -201,10 +222,10 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
 
     @Override
     public void downloadSingleCellData( GeoSeries series ) throws NoSingleCellDataFoundException {
-        if ( hasSingleCellData( series ) ) {
-            throw new NoSingleCellDataFoundException( "MEX files were found, but single-cell data is not supported at the series level." );
+        if ( !hasSingleCellData( series ) ) {
+            throw new NoSingleCellDataFoundException( "No MEX single-cell data was found at the series-level." );
         }
-        throw new NoSingleCellDataFoundException( "MEX does not support single-cell data at the series level." );
+        throw new UnsupportedOperationException( "MEX files were found, but single-cell data is not supported at the series level." );
     }
 
     /**
@@ -239,7 +260,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                 }
             }
         } catch ( Exception e ) {
-            log.warn( sample.getGeoAccession() + ": An I/O error occurred, cleaning up " + destDir + "...", e );
+            log.warn( sample.getGeoAccession() + ": An error occurred, cleaning up " + destDir + "...", e );
             // note here that the series directory is kept since it might contain other samples
             PathUtils.deleteDirectory( destDir );
             throw e;
@@ -269,23 +290,20 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
         for ( String file : supplementaryFiles ) {
             if ( isMexFile( file, MexFileType.BARCODES ) ) {
                 if ( barcodes != null ) {
-                    log.warn( String.format( "%s: There is already an entry for barcodes: %s", geoAccession, barcodes ) );
-                    barcodes = null;
-                    break;
+                    throw new UnsupportedOperationException( String.format( "%s: There is already an entry for barcodes: %s, %s cannot be downloaded.", geoAccession, barcodes, file ) );
+                }
+                if ( barcodeMetadataFileSuffix != null && endsWith( file, barcodeMetadataFileSuffix ) ) {
+                    throw new UnsupportedOperationException( "Barcode metadata files are not supported." );
                 }
                 barcodes = file;
-            } else if ( isMexFile( file, MexFileType.FEATURES ) || isMexFile( file, MexFileType.GENES ) ) {
+            } else if ( isMexFile( file, MexFileType.FEATURES ) ) {
                 if ( features != null ) {
-                    log.warn( String.format( "%s: There is already an entry for features: %s", geoAccession, features ) );
-                    features = null;
-                    break;
+                    throw new UnsupportedOperationException( String.format( "%s: There is already an entry for features: %s, %s cannot be downloaded.", geoAccession, features, file ) );
                 }
                 features = file;
             } else if ( isMexFile( file, MexFileType.MATRIX ) ) {
                 if ( matrix != null ) {
-                    log.warn( String.format( "%s: There is already an entry for matrix: %s", geoAccession, matrix ) );
-                    matrix = null;
-                    break;
+                    throw new UnsupportedEncodingException( String.format( "%s: There is already an entry for matrix: %s, %s cannot be downloaded.", geoAccession, matrix, file ) );
                 }
                 matrix = file;
             }
@@ -295,7 +313,6 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
             log.info( String.format( "%s: Downloading MEX data from supplementary materials...", geoAccession ) );
             String[] files = { barcodes, features, matrix };
             String[] dests = { "barcodes.tsv.gz", "features.tsv.gz", "matrix.mtx.gz" };
-            StopWatch timer = StopWatch.createStarted();
             for ( int i = 0; i < files.length; i++ ) {
                 Path dest = sampleDirectory.resolve( dests[i] );
                 if ( existsAndHasExpectedSize( dest, files[i] ) ) {
@@ -306,14 +323,15 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                 try {
                     String file = files[i];
                     retry( ( attempt, lastAttempt ) -> {
+                        StopWatch timer = StopWatch.createStarted();
                         log.info( String.format( "%s: Downloading %s to %s...", geoAccession, file, dest ) );
                         PathUtils.createParentDirectories( dest );
                         try ( InputStream is = openSupplementaryFileAsStream( file, attempt, false );
                                 OutputStream os = openGzippedOutputStream( file, dest ) ) {
                             long downloadedBytes = IOUtils.copyLarge( is, os );
-                            log.info( String.format( "%s: Done downloading %s (%s in %s @ %.3f MB/s).",
+                            log.info( String.format( "%s: Done downloading %s (%s in %s @ %s/s).",
                                     geoAccession, file, byteCountToDisplaySize( downloadedBytes ), timer,
-                                    ( 1000.0 / ( 1000.0 * 1000.0 ) ) * ( downloadedBytes / timer.getTime() ) ) );
+                                    byteCountToDisplaySize( 1000 * downloadedBytes / timer.getTime() ) ) );
                             return null;
                         } catch ( Exception e ) {
                             log.warn( String.format( "%s: MEX files could not be downloaded successfully, removing %s...", geoAccession, dest ), e );
@@ -324,7 +342,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                         }
                     }, "downloading " + file + " to " + dest + " for " + geoAccession );
                 } catch ( Exception e ) {
-                    log.warn( String.format( "%s: MEX files could not be downloaded successfully, removing %s...", geoAccession, sampleDirectory ), e );
+                    log.warn( String.format( "%s: An error occurred, removing %s...", geoAccession, sampleDirectory ), e );
                     // not retrying, delete everything in the sample folder
                     PathUtils.deleteDirectory( sampleDirectory );
                     throw e;
@@ -333,50 +351,47 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
             return;
         }
 
-        // detect MEX (1 TAR archive per GEO sample)
+        // detect MEX (1 archive per GEO sample)
         for ( String file : supplementaryFiles ) {
-            if ( file.endsWith( ".tar" ) || file.endsWith( ".tar.gz" ) ) {
+            if ( !isSupportedArchive( file ) ) {
+                continue;
+            }
+            try {
                 Boolean found = retry( ( attempt, lastAttempt ) -> {
-                    String barcodesT = null;
-                    String featuresT = null;
-                    String matrixT = null;
-                    boolean completed = false;
-                    try ( InputStream in = openSupplementaryFileAsStream( file, attempt, true );
-                            TarInputStream tis = new TarInputStream( in ) ) {
+                    try ( ArchiveInputStream<?> tis = openSupplementaryFileAsArchiveStream( file, attempt ) ) {
                         StopWatch timer = StopWatch.createStarted();
+                        String barcodesT = null;
+                        String featuresT = null;
+                        String matrixT = null;
                         long copiedBytes = 0L;
-                        TarEntry te;
+                        ArchiveEntry te;
                         while ( ( te = tis.getNextEntry() ) != null ) {
-                            if ( !te.isFile() ) {
+                            if ( te.isDirectory() ) {
                                 continue;
                             }
                             Path dest;
                             if ( isMexFile( te.getName(), MexFileType.BARCODES ) ) {
                                 if ( barcodesT != null ) {
-                                    log.warn( String.format( "%s: There is already an entry for barcodes: %s", geoAccession, barcodesT ) );
-                                    barcodesT = null;
-                                    break;
+                                    throw new UnsupportedOperationException( String.format( "%s: There is already an entry for barcodes: %s, %s cannot be downloaded.", geoAccession, barcodesT, te.getName() ) );
+                                }
+                                if ( barcodeMetadataFileSuffix != null && ( te.getName().endsWith( barcodeMetadataFileSuffix ) || te.getName().endsWith( barcodeMetadataFileSuffix + ".gz" ) ) ) {
+                                    throw new UnsupportedOperationException( "Barcode metadata files are not supported." );
                                 }
                                 dest = sampleDirectory.resolve( "barcodes.tsv.gz" );
                                 barcodesT = te.getName();
-                            } else if ( isMexFile( te.getName(), MexFileType.FEATURES ) || isMexFile( te.getName(), MexFileType.GENES ) ) {
+                            } else if ( isMexFile( te.getName(), MexFileType.FEATURES ) ) {
                                 if ( featuresT != null ) {
-                                    log.warn( String.format( "%s: There is already an entry for features: %s", geoAccession, featuresT ) );
-                                    featuresT = null;
-                                    break;
+                                    throw new UnsupportedOperationException( String.format( "%s: There is already an entry for features: %s, %s cannot be downloaded.", geoAccession, featuresT, te.getName() ) );
                                 }
                                 featuresT = te.getName();
                                 dest = sampleDirectory.resolve( "features.tsv.gz" );
                             } else if ( isMexFile( te.getName(), MexFileType.MATRIX ) ) {
                                 if ( matrixT != null ) {
-                                    log.warn( String.format( "%s: There is already an entry for matrix: %s", geoAccession, matrixT ) );
-                                    matrixT = null;
-                                    break;
+                                    throw new UnsupportedOperationException( String.format( "%s: There is already an entry for matrix: %s, %s cannot be downloaded.", geoAccession, matrixT, te.getName() ) );
                                 }
                                 matrixT = te.getName();
                                 dest = sampleDirectory.resolve( "matrix.mtx.gz" );
-                            } else if ( te.getSize() > maxEntrySizeToSkipInTar ) {
-                                log.warn( geoAccession + ": " + file + " has an entry exceeding " + byteCountToDisplaySize( maxEntrySizeToSkipInTar ) + ", the rest of the archive will be ignored." );
+                            } else if ( skipForLargeArchiveEntry( geoAccession, file, te, barcodesT, featuresT, matrixT ) ) {
                                 break;
                             } else {
                                 // skip to the next entry
@@ -393,7 +408,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                                     continue;
                                 }
                             }
-                            log.info( String.format( "%s: Copying %s from TAR archive %s to %s...", geoAccession, te.getName(), file, dest ) );
+                            log.info( String.format( "%s: Copying %s from archive %s to %s...", geoAccession, te.getName(), file, dest ) );
                             PathUtils.createParentDirectories( dest );
                             try ( OutputStream os = openGzippedOutputStream( te.getName(), dest ) ) {
                                 String what = te.getName();
@@ -402,39 +417,43 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                                 }
                                 copiedBytes += IOUtils.copyLarge( new ProgressInputStream( tis, what, MexDetector.class.getName(), te.getSize() ), os );
                             } catch ( Exception e ) {
-                                    // only remove the affected file since we're retrying
-                                log.warn( String.format( "%s: MEX file could not be downloaded successfully, removing %s...", geoAccession, dest ), e );
-                                    if ( Files.exists( dest ) ) {
-                                        PathUtils.deleteFile( dest );
-                                    }
+                                // only remove the affected file since we might be retrying, if not the whole directory will be removed
+                                log.warn( String.format( "%s: MEX file %s could not be downloaded successfully, removing %s...", geoAccession, file, dest ), e );
+                                if ( Files.exists( dest ) ) {
+                                    PathUtils.deleteFile( dest );
+                                }
                                 throw e;
                             }
                         }
-                        completed = barcodesT != null && featuresT != null && matrixT != null;
-                        if ( completed ) {
+                        if ( barcodesT != null && featuresT != null && matrixT != null ) {
                             if ( copiedBytes > 0 ) {
-                                log.info( String.format( "%s: Done copying MEX files from TAR archive (%s in %s @ %.3f MB/s).",
+                                log.info( String.format( "%s: Done copying MEX files from archive (%s in %s @ %s/s).",
                                         geoAccession,
                                         byteCountToDisplaySize( copiedBytes ), timer,
-                                        ( 1000.0 / ( 1000.0 * 1000.0 ) ) * ( copiedBytes / timer.getTime() ) ) );
+                                        byteCountToDisplaySize( 1000 * copiedBytes / timer.getTime() ) ) );
                             }
-                        }
-                    } finally {
-                        // Because we copied file as we traversed the TAR archive, it's possible that not all expected
-                        // files were encountered, or maybe some of them were encountered twice, thus we need to clean
-                        // up the directory if that occurs.
-                        // If we are retrying, do not remove downloaded files to save some time: missing files might be
-                        // downloaded in the next attempt
-                        if ( !completed && lastAttempt && sampleDirectory.toFile().exists() ) {
+                            return true;
+                        } else if ( sampleDirectory.toFile().exists() ) {
                             log.warn( String.format( "%s: MEX files are incomplete, removing %s...", geoAccession, sampleDirectory ) );
                             PathUtils.deleteDirectory( sampleDirectory );
                         }
+                        return false;
                     }
-                    return completed;
                 }, "extracting MEX files from " + file );
                 if ( found ) {
                     return;
                 }
+            } catch ( Exception e ) {
+                // Because we copied file as we traversed the archive, it's possible that not all expected
+                // files were encountered, or maybe some of them were encountered twice, thus we need to clean
+                // up the directory if that occurs.
+                // If we are retrying, do not remove downloaded files to save some time: missing files might be
+                // downloaded in the next attempt
+                if ( sampleDirectory.toFile().exists() ) {
+                    log.warn( String.format( "%s: An error occurred, removing %s...", geoAccession, sampleDirectory ), e );
+                    PathUtils.deleteDirectory( sampleDirectory );
+                }
+                throw e;
             }
         }
 
@@ -446,14 +465,6 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
         return getAdditionalSupplementaryFiles( series.getGeoAccession(), series.getSupplementaryFiles().stream().filter( f -> !f.endsWith( "_RAW.tar" ) ) );
     }
 
-    /**
-     * Obtain additional supplementary file of a sample within the context of its series.
-     * @see #getAdditionalSupplementaryFiles(GeoSample)
-     */
-    public List<String> getAdditionalSupplementaryFiles( GeoSeries series, GeoSample sample ) {
-        return getAdditionalSupplementaryFiles( sample.getGeoAccession(), mergeSupplementaryFiles( series, sample ).stream() );
-    }
-
     @Override
     public List<String> getAdditionalSupplementaryFiles( GeoSample sample ) {
         return getAdditionalSupplementaryFiles( sample.getGeoAccession(), sample.getSupplementaryFiles().stream() );
@@ -462,37 +473,40 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
     private List<String> getAdditionalSupplementaryFiles( String geoAccession, Stream<String> supplementaryFiles ) {
         return supplementaryFiles
                 .flatMap( file -> {
-                    if ( file.endsWith( ".tar" ) || file.endsWith( ".tar.gz" ) ) {
-                        //extract files in tar
-                        try {
-                            return retry( ( attempt, lastAttempt ) -> {
-                                try ( InputStream in = openSupplementaryFileAsStream( file, attempt, true );
-                                        TarInputStream tis = new TarInputStream( in ) ) {
-                                    List<String> files = new ArrayList<>();
-                                    TarEntry entry;
-                                    while ( ( entry = tis.getNextEntry() ) != null ) {
-                                        if ( !entry.isFile() ) {
-                                            continue;
-                                        }
-                                        if ( entry.getSize() > maxEntrySizeToSkipInTar ) {
-                                            log.warn( geoAccession + ": " + file + " has an entry exceeding " + byteCountToDisplaySize( maxEntrySizeToSkipInTar ) + ", the rest of the archive will be ignored." );
-                                            break;
-                                        }
-                                        // add a {file}! prefix to make it clear it was found inside an archive, this
-                                        // syntax is similar to how Java refers to files within JAR.
-                                        // TODO: check if file are URL-encoded in GEO metadata, in which case a '!'
-                                        //       could never appear
-                                        files.add( file + "!" + URLEncoder.encode( entry.getName(), StandardCharsets.UTF_8.name() ) );
+                    if ( !isSupportedArchive( file ) ) {
+                        return Stream.of( file );
+                    }
+                    //extract files in tar
+                    try {
+                        return retry( ( attempt, lastAttempt ) -> {
+                            try ( ArchiveInputStream<?> tis = openSupplementaryFileAsArchiveStream( file, attempt ) ) {
+                                List<String> files = new ArrayList<>();
+                                ArchiveEntry entry;
+                                while ( ( entry = tis.getNextEntry() ) != null ) {
+                                    if ( entry.isDirectory() ) {
+                                        continue;
                                     }
-                                    return files.stream();
+                                    if ( skipForLargeArchiveEntry( geoAccession, file, entry, null, null, null ) ) {
+                                        break;
+                                    }
+                                    // check for common mistakes from submitters
+                                    if ( FilenameUtils.getName( entry.getName() ).equals( ".DS_Store" )
+                                            || FilenameUtils.getName( entry.getName() ).startsWith( "._" )
+                                            || FilenameUtils.getName( entry.getName() ).equals( "index.html" ) ) {
+                                        continue;
+                                    }
+                                    // add a {file}! prefix to make it clear it was found inside an archive, this
+                                    // syntax is similar to how Java refers to files within JAR.
+                                    // TODO: check if file are URL-encoded in GEO metadata, in which case a '!'
+                                    //       could never appear
+                                    files.add( file + "!/" + entry.getName() );
                                 }
-                            }, "looking for additional supplementary files in " + file );
-                        } catch ( IOException e ) {
-                            log.error( String.format( "%s: Failed to read TAR archive %s, will move on to the next supplementary material...",
-                                    geoAccession, file ), e );
-                            return Stream.of( file );
-                        }
-                    } else {
+                                return files.stream();
+                            }
+                        }, "looking for additional supplementary files in " + file );
+                    } catch ( IOException e ) {
+                        log.error( String.format( "%s: Failed to read archive %s, will move on to the next supplementary material...",
+                                geoAccession, file ), e );
                         return Stream.of( file );
                     }
                 } )
@@ -501,8 +515,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
     }
 
     private boolean isAdditionalSupplementaryFile( String f ) {
-        return !isMexFile( f, MexFileType.GENES )
-                && !isMexFile( f, MexFileType.FEATURES )
+        return !isMexFile( f, MexFileType.FEATURES )
                 && !isMexFile( f, MexFileType.BARCODES )
                 && !isMexFile( f, MexFileType.MATRIX );
     }
@@ -543,23 +556,66 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
     private enum MexFileType {
         BARCODES,
         FEATURES,
-        GENES,
         MATRIX
     }
 
     private boolean isMexFile( String name, MexFileType type ) {
         switch ( type ) {
             case BARCODES:
-                return name.endsWith( "barcodes.tsv" ) || name.endsWith( "barcodes.tsv.gz" );
+                return endsWith( name, barcodesFileSuffix )
+                        // this is used for combined references
+                        || ( barcodeMetadataFileSuffix != null && ( endsWith( name, barcodeMetadataFileSuffix ) ) );
             case FEATURES:
-                return name.endsWith( "features.tsv" ) || name.endsWith( "features.tsv.gz" );
-            case GENES:
-                // older version of 10X pipeline uses genes.tsv, we import it as features.tsv
-                return name.endsWith( "genes.tsv" ) || name.endsWith( "genes.tsv.gz" );
+                return endsWith( name, featuresFileSuffix )
+                        // older version of 10X pipeline uses genes.tsv, we import it as features.tsv
+                        || ( genesFileSuffix != null && endsWith( name, genesFileSuffix ) );
             case MATRIX:
-                return name.endsWith( "matrix.mtx" ) || name.endsWith( "matrix.mtx.gz" );
+                return endsWith( name, matrixFileSuffix );
             default:
                 return false;
+        }
+    }
+
+    private boolean endsWith( String filename, String suffix ) {
+        return filename.endsWith( suffix ) || filename.endsWith( suffix + ".gz" );
+    }
+
+    /**
+     * Check if a supplementary file should be skipped given an archive entry that has to be consumed.
+     */
+    private boolean skipForLargeArchiveEntry( String geoAccession, String file, ArchiveEntry te, @Nullable String barcodesT, @Nullable String featuresT, @Nullable String matrixT ) {
+        if ( te.getSize() <= maxEntrySizeInArchiveToSkip )
+            return false;
+        String m = String.format( "%s: %s has an entry %s of %s exceeding %s",
+                geoAccession, file, te.getName(), byteCountToDisplaySize( te.getSize() ), byteCountToDisplaySize( maxEntrySizeInArchiveToSkip ) );
+        if ( barcodesT == null && featuresT == null && matrixT == null ) {
+            log.warn( m + ", the rest of the archive will be ignored." );
+            return true;
+        } else {
+            log.warn( m + ", but a MEX file was already found, the rest of the archive will be read." );
+            return false;
+        }
+    }
+
+    /**
+     * Check if a given file is a supported archive format.
+     */
+    private boolean isSupportedArchive( String file ) {
+        return file.endsWith( ".tar" ) || file.endsWith( ".tar.gz" ) || file.endsWith( ".zip" );
+    }
+
+    /**
+     * Open a given file as an archive stream.
+     */
+    private ArchiveInputStream<?> openSupplementaryFileAsArchiveStream( String file, int attempt ) throws IOException {
+        if ( file.endsWith( ".zip" ) ) {
+            return new ZipArchiveInputStream( openSupplementaryFileAsStream( file, attempt, false ) );
+        } else if ( file.endsWith( ".tar" ) ) {
+            return new TarArchiveInputStream( openSupplementaryFileAsStream( file, attempt, false ) );
+        } else if ( file.endsWith( ".tar.gz" ) ) {
+            return new TarArchiveInputStream( openSupplementaryFileAsStream( file, attempt, true ) );
+        } else {
+            throw new IllegalArgumentException( "No idea how to open " + file );
         }
     }
 
@@ -574,7 +630,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
     private Set<String> mergeSupplementaryFiles( GeoSeries series, GeoSample sample ) {
         Set<String> mergedSupplementaryFiles = new HashSet<>( sample.getSupplementaryFiles() );
         series.getSupplementaryFiles().stream()
-                // omit this, otherwise it might get looked up and it's redundant since it contains the supplementary
+                // omit this, otherwise it might get looked up, and it's redundant since it contains the supplementary
                 // materials from all the samples
                 .filter( f -> !f.endsWith( "_RAW.tar" ) )
                 .forEach( mergedSupplementaryFiles::add );

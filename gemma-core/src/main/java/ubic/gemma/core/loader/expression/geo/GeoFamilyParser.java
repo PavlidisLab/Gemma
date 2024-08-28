@@ -1302,7 +1302,6 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
             for ( int i = 0; i < numExtraChannelsNeeded; i++ ) {
                 results.getSampleMap().get( currentSampleAccession ).addChannel();
             }
-            this.sampleSet( currentSampleAccession, GeoSample::setChannelCount, Integer.parseInt( value ) );
         } else if ( this.startsWithIgnoreCase( line, "!Sample_source_name" ) ) {
             int channel = this.extractChannelNumber( line );
             this.sampleChannelSet( currentSampleAccession, GeoChannel::setSourceName, channel, value );
@@ -1385,7 +1384,7 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
             if ( !value.equals( "NONE" ) ) {
                 this.sampleAddTo( currentSampleAccession, GeoSample::addToSupplementaryFiles, value );
             } else {
-                GeoFamilyParser.log.warn( "Found NONE value for supplementary file in sample " + currentSampleAccession + ": " + line );
+                GeoFamilyParser.log.debug( "Found NONE value for supplementary file in sample " + currentSampleAccession + ": " + line );
             }
         } else if ( this.startsWithIgnoreCase( line, "!Sample_last_update_date" ) ) {
             this.sampleSet( currentSampleAccession, GeoSample::setLastUpdateDate, value );
@@ -1620,7 +1619,7 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
             if ( !value.equals( "NONE" ) ) {
                 seriesAddTo( currentSeriesAccession, GeoSeries::addToSupplementaryFiles, value );
             } else {
-                GeoFamilyParser.log.warn( "Found NONE value for supplementary file in series " + currentSeriesAccession + ": " + line );
+                GeoFamilyParser.log.debug( "Found NONE value for supplementary file in series " + currentSeriesAccession + ": " + line );
             }
         } else if ( this.startsWithIgnoreCase( line, "!Series_last_update_date" ) ) {
             seriesSet( currentSeriesAccession, GeoSeries::setLastUpdateDate, value );

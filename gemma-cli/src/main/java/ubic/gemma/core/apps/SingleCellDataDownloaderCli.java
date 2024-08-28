@@ -65,6 +65,14 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             DATA_TYPE_OPTION = "dataType",
             SUPPLEMENTARY_FILE_OPTION = "supplementaryFile";
 
+    /**
+     * Only applicable if dataType is set to MEX.
+     */
+    private static final String
+            MEX_BARCODES_FILE_SUFFIX = "mexBarcodesFile",
+            MEX_FEATURES_FILE_SUFFIX = "mexFeaturesFile",
+            MEX_MATRIX_FILE_SUFFIX = "mexMatrixFile";
+
     private static final String[] SUMMARY_HEADER = new String[] { "geo_accession", "data_type", "number_of_samples", "number_of_cells", "number_of_genes", "additional_supplementary_files", "comment" };
 
     private static final String
@@ -96,6 +104,13 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
     private String supplementaryFile;
 
     @Nullable
+    private String barcodesFileSuffix;
+    @Nullable
+    private String featuresFileSuffix;
+    @Nullable
+    private String matrixFileSuffix;
+
+    @Nullable
     @Override
     public String getCommandName() {
         return "downloadSingleCellData";
@@ -123,6 +138,9 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         options.addOption( Option.builder( FETCH_THREADS_OPTION ).longOpt( "fetch-threads" ).hasArg().type( Number.class ).desc( "Number of threads to use for downloading files. Default is " + GeoSingleCellDetector.DEFAULT_NUMBER_OF_FETCH_THREADS + ". Use -threads/--threads for processing series in parallel." ).build() );
         options.addOption( Option.builder( DATA_TYPE_OPTION ).longOpt( "data-type" ).hasArg().desc( "Data type. Possible values are: " + Arrays.stream( SingleCellDataType.values() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) + ". Only works if a single accession is passed to -e/--acc." ).build() );
         options.addOption( Option.builder( SUPPLEMENTARY_FILE_OPTION ).longOpt( "supplementary-file" ).hasArgs().desc( "Supplementary file to download. Only works if a single accession is passed to -e/--acc and -dataType is specified." ).build() );
+        options.addOption( Option.builder( MEX_BARCODES_FILE_SUFFIX ).longOpt( "mex-barcodes-file" ).hasArg().desc( "Suffix to use to detect MEX barcodes file. Only works if -dataType/--data-type is set to MEX." ).build() );
+        options.addOption( Option.builder( MEX_FEATURES_FILE_SUFFIX ).longOpt( "mex-features-file" ).hasArg().desc( "Suffix to use to detect MEX features file. Only works if -dataType/--data-type is set to MEX." ).build() );
+        options.addOption( Option.builder( MEX_MATRIX_FILE_SUFFIX ).longOpt( "mex-matrix-file" ).hasArg().desc( "Suffix to use to detect MEX matrix file. Only works if -dataType/--data-type is set to MEX." ).build() );
         addThreadsOption( options );
     }
 
@@ -232,6 +250,14 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             }
             dataType = SingleCellDataType.valueOf( commandLine.getOptionValue( DATA_TYPE_OPTION ).toUpperCase() );
         }
+        if ( commandLine.hasOption( MEX_BARCODES_FILE_SUFFIX ) || commandLine.hasOption( MEX_FEATURES_FILE_SUFFIX ) || commandLine.hasOption( MEX_MATRIX_FILE_SUFFIX ) ) {
+            if ( dataType != SingleCellDataType.MEX ) {
+                throw new IllegalArgumentException( "The -mexBarcodes, -mexFeatures and -mexMatrix options are only available if -dataType is set to MEX." );
+            }
+            barcodesFileSuffix = commandLine.getOptionValue( MEX_BARCODES_FILE_SUFFIX, "barcodes.tsv" );
+            featuresFileSuffix = commandLine.getOptionValue( MEX_FEATURES_FILE_SUFFIX, "features.tsv" );
+            matrixFileSuffix = commandLine.getOptionValue( MEX_MATRIX_FILE_SUFFIX, "matrix.mtx" );
+        }
         if ( commandLine.hasOption( SUPPLEMENTARY_FILE_OPTION ) ) {
             if ( !singleAccessionMode ) {
                 throw new IllegalArgumentException( "The -supplementaryFile option requires that only one accession be supplied via -e/--acc." );
@@ -263,6 +289,9 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                 CSVPrinter writer = getSummaryOutputFilePrinter() ) {
             detector.setFTPClientFactory( ftpClientFactory );
             detector.setDownloadDirectory( singleCellDataBasePath.toPath() );
+            if ( barcodesFileSuffix != null && featuresFileSuffix != null && matrixFileSuffix != null ) {
+                detector.setMexFileSuffixes( barcodesFileSuffix, featuresFileSuffix, matrixFileSuffix );
+            }
             if ( fetchThreads != null ) {
                 // ensure that each thread can utilize a FTP connection
                 ftpClientFactory.setMaxTotalConnections( fetchThreads.intValue() );
@@ -345,9 +374,9 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
      * Exclamation marks are used to refer to files within TAR archives (i.e. GSM000012_bundle.tar!cellids.csv).
      */
     private String getFilename( String fullPath ) {
-        int afterExclamationMark = fullPath.indexOf( "'!" );
+        int afterExclamationMark = fullPath.indexOf( "!" );
         if ( afterExclamationMark > 0 ) {
-            return FilenameUtils.getName( fullPath.substring( afterExclamationMark ) ) + "!" + fullPath.substring( afterExclamationMark );
+            return FilenameUtils.getName( fullPath.substring( 0, afterExclamationMark ) ) + fullPath.substring( afterExclamationMark );
         } else {
             return FilenameUtils.getName( fullPath );
         }

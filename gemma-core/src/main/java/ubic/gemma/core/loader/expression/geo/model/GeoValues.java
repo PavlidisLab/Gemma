@@ -248,8 +248,8 @@ public class GeoValues implements Serializable {
             throw new IllegalArgumentException( "Column name cannot be null" );
 
         if ( !quantitationTypeNameMap.containsKey( platform ) ) {
-            quantitationTypeNameMap.put( platform, new HashMap<String, Integer>() );
-            quantitationTypeIndexMap.put( platform, new HashMap<Integer, Collection<String>>() );
+            quantitationTypeNameMap.put( platform, new HashMap<>() );
+            quantitationTypeIndexMap.put( platform, new HashMap<>() );
         }
 
         Map<String, Integer> qtNameMapForPlatform = quantitationTypeNameMap.get( platform );
@@ -262,7 +262,7 @@ public class GeoValues implements Serializable {
 
         qtNameMapForPlatform.put( columnName, index );
         if ( !qtIndexMapForPlatform.containsKey( index ) ) {
-            qtIndexMapForPlatform.put( index, new HashSet<String>() );
+            qtIndexMapForPlatform.put( index, new HashSet<>() );
             qtIndexMapForPlatform.get( index ).add( columnName );
             GeoValues.log.debug( "Added quantitation type " + columnName + " at index " + index + " for platform "
                     + platform );
@@ -387,12 +387,12 @@ public class GeoValues implements Serializable {
         GeoPlatform platform = this.addSample( sample, quantitationTypeIndex );
 
         if ( !data.containsKey( platform ) ) {
-            data.put( platform, new HashMap<Integer, Map<String, List<Object>>>() );
+            data.put( platform, new HashMap<>() );
         }
 
         Map<Integer, Map<String, List<Object>>> platformMap = data.get( platform );
         if ( !platformMap.containsKey( quantitationTypeIndex ) ) {
-            platformMap.put( quantitationTypeIndex, new HashMap<String, List<Object>>() );
+            platformMap.put( quantitationTypeIndex, new HashMap<>() );
         }
 
         Map<String, List<Object>> qtMap = platformMap.get( quantitationTypeIndex );
@@ -583,19 +583,19 @@ public class GeoValues implements Serializable {
             GeoPlatform p = s.getPlatforms().iterator().next();
 
             if ( !v.sampleDimensions.containsKey( p ) ) {
-                v.sampleDimensions.put( p, new HashMap<Integer, LinkedHashSet<GeoSample>>() );
+                v.sampleDimensions.put( p, new HashMap<>() );
 
                 // deep copy.
                 for ( Integer o : this.sampleDimensions.get( p ).keySet() ) {
-                    v.sampleDimensions.get( p ).put( o, new LinkedHashSet<GeoSample>() );
+                    v.sampleDimensions.get( p ).put( o, new LinkedHashSet<>() );
                     for ( GeoSample ss : this.sampleDimensions.get( p ).get( o ) ) {
                         v.sampleDimensions.get( p ).get( o ).add( ss ); // could use add all
                     }
                 }
 
-                v.data.put( p, new HashMap<Integer, Map<String, List<Object>>>() );
+                v.data.put( p, new HashMap<>() );
                 for ( Integer o : this.data.get( p ).keySet() ) {
-                    v.data.get( p ).put( o, new HashMap<String, List<Object>>() );
+                    v.data.get( p ).put( o, new HashMap<>() );
 
                     for ( String probeId : this.data.get( p ).get( o ).keySet() ) {
                         v.data.get( p ).get( o ).put( probeId, new ArrayList<>() );
@@ -766,12 +766,12 @@ public class GeoValues implements Serializable {
 
         GeoPlatform platform = sample.getPlatforms().iterator().next();
         if ( !sampleDimensions.containsKey( platform ) ) {
-            sampleDimensions.put( platform, new HashMap<Integer, LinkedHashSet<GeoSample>>() );
+            sampleDimensions.put( platform, new HashMap<>() );
         }
 
         Map<Integer, LinkedHashSet<GeoSample>> samplePlatformMap = sampleDimensions.get( platform );
         if ( !samplePlatformMap.containsKey( quantitationTypeIndex ) ) {
-            samplePlatformMap.put( quantitationTypeIndex, new LinkedHashSet<GeoSample>() );
+            samplePlatformMap.put( quantitationTypeIndex, new LinkedHashSet<>() );
         }
 
         LinkedHashSet<GeoSample> sampleQtMap = samplePlatformMap.get( quantitationTypeIndex );

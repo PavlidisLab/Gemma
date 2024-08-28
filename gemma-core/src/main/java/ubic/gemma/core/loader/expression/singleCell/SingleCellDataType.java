@@ -7,5 +7,6 @@ package ubic.gemma.core.loader.expression.singleCell;
 public enum SingleCellDataType {
     ANNDATA,
     SEURAT_DISK,
+    LOOM,
     MEX
 }

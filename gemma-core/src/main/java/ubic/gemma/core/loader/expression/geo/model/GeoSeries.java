@@ -39,37 +39,25 @@ public class GeoSeries extends GeoData {
     private String status;
     private String submissionDate;
     private String platformId;
-    private final Collection<GeoSample> samples;
+    // use a LinkedHashSet for samples to preserve order
+    private final Collection<GeoSample> samples = new LinkedHashSet<>();
     private final Collection<SeriesType> seriesTypes = new HashSet<>();
-    private final Collection<String> subSeries;
-    private final Map<Integer, GeoVariable> variables;
-    private Collection<GeoContact> contributers;
-    private Collection<GeoDataset> dataSets;
+    private final Collection<String> subSeries = new HashSet<>();
+    private final Map<Integer, GeoVariable> variables = new HashMap<>();
+    private Collection<GeoContact> contributers = new HashSet<>();
+    private Collection<GeoDataset> dataSets = new HashSet<>();
     private boolean isSubSeries = false;
     private boolean isSuperSeries = false;
-    private Collection<String> keyWords;
+    private Collection<String> keyWords = new HashSet<>();
     private String lastUpdateDate = "";
     private String overallDesign = "";
-    private Collection<String> pubmedIds;
-    private Map<Integer, GeoReplication> replicates;
+    private Collection<String> pubmedIds = new HashSet<>();
+    private Map<Integer, GeoReplication> replicates = new HashMap<>();
     private GeoSampleCorrespondence sampleCorrespondence;
     private String summary = "";
-    private Collection<String> supplementaryFiles = new HashSet<>();
-    private GeoValues values;
-    private Collection<String> webLinks;
-
-    public GeoSeries() {
-        keyWords = new HashSet<>();
-        pubmedIds = new HashSet<>();
-        variables = new HashMap<>();
-        replicates = new HashMap<>();
-        webLinks = new HashSet<>();
-        contributers = new HashSet<>();
-        samples = new HashSet<>();
-        dataSets = new HashSet<>();
-        values = new GeoValues();
-        subSeries = new HashSet<>();
-    }
+    private final Collection<String> supplementaryFiles = new LinkedHashSet<>();
+    private GeoValues values = new GeoValues();
+    private Collection<String> webLinks = new HashSet<>();
 
     /**
      * See also GeoDataset.convertStringToExperimentType
@@ -369,10 +357,6 @@ public class GeoSeries extends GeoData {
         return supplementaryFiles;
     }
 
-    public void setSupplementaryFiles( Collection<String> supplementaryFiles ) {
-        this.supplementaryFiles = supplementaryFiles;
-    }
-
     public void addToSupplementaryFiles( String supplementaryFile ) {
         this.supplementaryFiles.add( supplementaryFile );
     }
@@ -440,13 +424,6 @@ public class GeoSeries extends GeoData {
             return;
         }
         this.samples.removeAll( samplesToSkip );
-    }
-
-    /**
-     * @param contact The contact to set.
-     */
-    public void setContact( GeoContact contact ) {
-        this.contact = contact;
     }
 
     public void setDataSets( Collection<GeoDataset> dataSets ) {

@@ -1,5 +1,6 @@
 package ubic.gemma.core.loader.util.ftp;
 
+import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 
 import java.io.IOException;
@@ -34,6 +35,13 @@ public interface FTPClientFactory {
      * Destroy an FTP client that is known to be no-longer valid.
      */
     void destroyClient( URL url, FTPClient client );
+
+    /**
+     * Abandon an FTP client.
+     * <p>
+     * Unlike {@link #destroyClient(URL, FTPClient)}, no attempt will be made to gracefully logout.
+     */
+    void abandonClient( URL url, FTPClient client );
 
     /**
      * Recycle the FTP client so that it might be reused in the future.

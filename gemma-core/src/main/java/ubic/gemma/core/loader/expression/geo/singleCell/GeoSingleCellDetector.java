@@ -40,10 +40,13 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
      */
     private static final String[] SINGLE_CELL_KEYWORDS = { "single-cell", "single cell", "scRNA" };
 
+    private static final String[] SINGLE_CELL_DATA_PROCESSING_KEYWORDS = { "cellranger" };
+
     private final AnnDataDetector annDataDetector = new AnnDataDetector();
     private final SeuratDiskDetector seuratDiskDetector = new SeuratDiskDetector();
+    private final LoomSingleCellDetector loomDetector = new LoomSingleCellDetector();
     private final MexDetector mexDetector = new MexDetector();
-    private final SingleCellDetector[] detectors = new SingleCellDetector[] { annDataDetector, seuratDiskDetector, mexDetector };
+    private final SingleCellDetector[] detectors = new SingleCellDetector[] { annDataDetector, seuratDiskDetector, loomDetector, mexDetector };
 
     @Nullable
     private ExecutorService executor;
@@ -70,9 +73,11 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
      * supplementary materials.
      */
     public void setFTPClientFactory( FTPClientFactory factory ) {
-        annDataDetector.setFTPClientFactory( factory );
-        seuratDiskDetector.setFTPClientFactory( factory );
-        mexDetector.setFTPClientFactory( factory );
+        for ( SingleCellDetector detector : detectors ) {
+            if ( detector instanceof AbstractSingleCellDetector ) {
+                ( ( AbstractSingleCellDetector ) detector ).setFTPClientFactory( factory );
+            }
+        }
     }
 
     /**
@@ -100,11 +105,41 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
     }
 
     /**
+     * Set the suffixes to use to detect MEX metadata.
+     */
+    public void setMexFileSuffixes( String barcodes, String features, String matrix ) {
+        mexDetector.setBarcodesFileSuffix( barcodes );
+        if ( barcodes.equals( "barcodes.tsv" ) ) {
+            mexDetector.setBarcodeMetadataFileSuffix( "barcode_metadata.tsv" );
+        } else {
+            log.warn( "Disabling detection of barcode_metadata.tsv since custom suffixes are used for detecting MEX barcodes files." );
+            mexDetector.setBarcodeMetadataFileSuffix( null );
+        }
+        mexDetector.setFeaturesFileSuffix( features );
+        if ( features.equals( "features.tsv" ) ) {
+            mexDetector.setGenesFileSuffix( "genes.tsv" );
+        } else {
+            log.warn( "Disabling detection of old-style genes.tsv since nce custom suffixes are used for detecting MEX features files." );
+            mexDetector.setGenesFileSuffix( null );
+        }
+        mexDetector.setMatrixFileSuffix( matrix );
+    }
+
+    public void resetMexFileSuffixes() {
+        mexDetector.setBarcodesFileSuffix( "barcodes.tsv" );
+        mexDetector.setBarcodeMetadataFileSuffix( "barcode_metadata.tsv" );
+        mexDetector.setFeaturesFileSuffix( "features.tsv" );
+        mexDetector.setGenesFileSuffix( "genes.tsv" );
+        mexDetector.setMatrixFileSuffix( "matrix.mtx" );
+    }
+
+    /**
      * Detects if a GEO series has single-cell data either at the series-level or in individual samples.
      */
     @Override
     public boolean hasSingleCellData( GeoSeries series ) {
-        boolean hasSingleCellDataInSeries = annDataDetector.hasSingleCellData( series ) || seuratDiskDetector.hasSingleCellData( series );
+        boolean hasSingleCellDataInSeries = Arrays.stream( detectors )
+                .anyMatch( detector -> detector.hasSingleCellData( series ) );
 
         // don't bother checking if none of the sample is single-cell
         if ( series.getSamples().stream().noneMatch( s -> isSingleCell( s, hasSingleCellDataInSeries ) ) ) {
@@ -126,7 +161,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
         try {
             for ( GeoSample sample : series.getSamples() ) {
                 if ( isSingleCell( sample, hasSingleCellDataInSeries ) ) {
-                    if ( mexDetector.hasSingleCellData( series, sample ) ) {
+                    if ( mexDetector.hasSingleCellData( series, sample ) || loomDetector.hasSingleCellData( sample ) ) {
                         return true;
                     } else {
                         singleCellSamplesWithoutData.add( sample.getGeoAccession() );
@@ -163,13 +198,19 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
             return SingleCellDataType.ANNDATA;
         } else if ( seuratDiskDetector.hasSingleCellData( series ) ) {
             return SingleCellDataType.SEURAT_DISK;
+        } else if ( loomDetector.hasSingleCellData( series ) ) {
+            return SingleCellDataType.LOOM;
         } else if ( mexDetector.hasSingleCellData( series ) ) {
             return SingleCellDataType.MEX;
         } else {
             for ( GeoSample sample : series.getSamples() ) {
                 // at this point, we already rejected the presence of single-cell data in the series
-                if ( isSingleCell( sample, false ) && mexDetector.hasSingleCellData( series, sample ) ) {
-                    return SingleCellDataType.MEX;
+                if ( isSingleCell( sample, false ) ) {
+                    if ( mexDetector.hasSingleCellData( series, sample ) ) {
+                        return SingleCellDataType.MEX;
+                    } else if ( loomDetector.hasSingleCellData( sample ) ) {
+                        return SingleCellDataType.LOOM;
+                    }
                 }
             }
         }
@@ -186,12 +227,23 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
         }
         if ( seuratDiskDetector.hasSingleCellData( series ) ) {
             result.add( SingleCellDataType.SEURAT_DISK );
-        } else {
-            for ( GeoSample sample : series.getSamples() ) {
+        }
+        if ( loomDetector.hasSingleCellData( series ) ) {
+            result.add( SingleCellDataType.LOOM );
+        }
+        if ( mexDetector.hasSingleCellData( series ) ) {
+            result.add( SingleCellDataType.MEX );
+        }
+        boolean hasSingleCellDataInSeries = !result.isEmpty();
+        for ( GeoSample sample : series.getSamples() ) {
+            if ( isSingleCell( sample, hasSingleCellDataInSeries ) ) {
+                if ( loomDetector.hasSingleCellData( sample ) ) {
+                    result.add( SingleCellDataType.LOOM );
+                }
                 if ( mexDetector.hasSingleCellData( sample ) ) {
                     result.add( SingleCellDataType.MEX );
-                    break;
                 }
+                break;
             }
         }
         return result;
@@ -202,10 +254,12 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
      * <p>
      * This has to be done prior to {@link #getSingleCellDataLoader(GeoSeries)}.
      * @throws NoSingleCellDataFoundException if no single-cell data is found either at the series level or in individual samples
+     * @throws UnsupportedOperationException if single-cell data is found at the series level
      */
     @Override
     public void downloadSingleCellData( GeoSeries series ) throws NoSingleCellDataFoundException, IOException {
-        boolean hasSingleCellDataInSeries = annDataDetector.hasSingleCellData( series ) || seuratDiskDetector.hasSingleCellData( series );
+        boolean hasSingleCellDataInSeries = Arrays.stream( detectors )
+                .anyMatch( detector -> detector.hasSingleCellData( series ) );
         Assert.isTrue( series.getSamples().stream().anyMatch( s -> isSingleCell( s, hasSingleCellDataInSeries ) ),
                 series.getGeoAccession() + " does not have any single-cell series." );
         for ( SingleCellDetector detector : detectors ) {
@@ -215,13 +269,6 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
             } catch ( NoSingleCellDataFoundException e ) {
                 // ignored, we'll try the next detector
             }
-        }
-
-        // retry MEX at the series-level
-        if ( mexDetector.hasSingleCellData( series ) ) {
-            // this will produce a NoSingleCellDataFoundException
-            mexDetector.downloadSingleCellData( series );
-            return;
         }
 
         // data is stored at the sample-level
@@ -238,6 +285,9 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
             case SEURAT_DISK:
                 download( () -> seuratDiskDetector.downloadSingleCellData( series, supplementaryFile ) );
                 break;
+            case LOOM:
+                download( () -> loomDetector.downloadSingleCellData( series, supplementaryFile ) );
+                break;
             case MEX:
                 throw new UnsupportedOperationException( "Downloading a specific supplementary file for " + dataType + " is not supported." );
             default:
@@ -252,6 +302,9 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
                 break;
             case SEURAT_DISK:
                 download( () -> seuratDiskDetector.downloadSingleCellData( series ) );
+                break;
+            case LOOM:
+                download( () -> loomDetector.downloadSingleCellData( series ) );
                 break;
             case MEX:
                 if ( mexDetector.hasSingleCellData( series ) ) {
@@ -303,6 +356,10 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
                     try {
                         mexDetector.downloadSingleCellData( series, sample );
                         return true;
+                    } catch ( UnsupportedOperationException e ) {
+                        // downloading at sample-level is not supported
+                        log.warn( series.getGeoAccession() + ": Downloading sample data for " + sample.getGeoAccession() + " is not supported, it will be ignored.", e );
+                        return false;
                     } catch ( NoSingleCellDataFoundException ex ) {
                         // This is only problematic if the dataset has single-cell data, then we essentially failed to
                         // retrieve it. We could check if beforehand, but that would be inefficient.
@@ -352,20 +409,9 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
 
     private void download( DownloadFunction function ) throws NoSingleCellDataFoundException, IOException {
         resolveDownloadFuture( getExecutor().submit( () -> {
-            try {
-                function.download();
-            } catch ( NoSingleCellDataFoundException | IOException ex ) {
-                throw new RuntimeException( ex );
-            }
+            function.download();
+            return null;
         } ) );
-    }
-
-    private synchronized ExecutorService getExecutor() {
-        if ( executor == null ) {
-            log.info( "Created executor with " + numberOfFetchThreads + " threads" );
-            executor = Executors.newFixedThreadPool( numberOfFetchThreads, new SimpleThreadFactory( "gemma-geo-single-cell-fetch-thread-" ) );
-        }
-        return executor;
     }
 
     private <T> T resolveDownloadFuture( Future<T> future ) throws NoSingleCellDataFoundException, IOException {
@@ -375,20 +421,25 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
             Thread.currentThread().interrupt();
             throw new RuntimeException( ex );
         } catch ( ExecutionException ex ) {
-            Throwable t = ex.getCause();
-            if ( t instanceof RuntimeException ) {
-                // checked exceptions are wrapped in a RuntimeException
-                if ( t.getCause() instanceof NoSingleCellDataFoundException ) {
-                    throw ( NoSingleCellDataFoundException ) t.getCause();
-                } else if ( t.getCause() instanceof IOException ) {
-                    throw ( IOException ) t.getCause();
-                } else {
-                    throw ( RuntimeException ) t;
-                }
+            // checked exceptions are wrapped in a RuntimeException
+            if ( ex.getCause() instanceof NoSingleCellDataFoundException ) {
+                throw ( NoSingleCellDataFoundException ) ex.getCause();
+            } else if ( ex.getCause() instanceof IOException ) {
+                throw ( IOException ) ex.getCause();
+            } else if ( ex.getCause() instanceof RuntimeException ) {
+                throw ( RuntimeException ) ex.getCause();
             } else {
-                throw new RuntimeException( t );
+                throw new RuntimeException( ex.getCause() );
             }
         }
+    }
+
+    private synchronized ExecutorService getExecutor() {
+        if ( executor == null ) {
+            log.info( "Created executor with " + numberOfFetchThreads + " threads" );
+            executor = Executors.newFixedThreadPool( numberOfFetchThreads, new SimpleThreadFactory( "gemma-geo-single-cell-fetch-thread-" ) );
+        }
+        return executor;
     }
 
     /**
@@ -402,11 +453,29 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
         for ( SingleCellDetector detector : detectors ) {
             try {
                 return detector.getSingleCellDataLoader( series );
-            } catch ( NoSingleCellDataFoundException e ) {
+            } catch ( UnsupportedOperationException | NoSingleCellDataFoundException e ) {
                 // ignored, we'll try the next detector
             }
         }
         throw new NoSingleCellDataFoundException( "No single-cell data was found for " + series.getGeoAccession() + "." );
+    }
+
+    /**
+     * Obtain a single-cell data loader for a specific data type.
+     */
+    public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series, SingleCellDataType dataType ) throws UnsupportedOperationException, NoSingleCellDataFoundException {
+        switch ( dataType ) {
+            case ANNDATA:
+                return annDataDetector.getSingleCellDataLoader( series );
+            case SEURAT_DISK:
+                return seuratDiskDetector.getSingleCellDataLoader( series );
+            case LOOM:
+                return loomDetector.getSingleCellDataLoader( series );
+            case MEX:
+                return mexDetector.getSingleCellDataLoader( series );
+            default:
+                throw new IllegalArgumentException( "Unknown single-cell data type " + dataType );
+        }
     }
 
     @Override
@@ -425,10 +494,23 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
     }
 
     public List<String> getAdditionalSupplementaryFiles( GeoSeries series, GeoSample sample ) {
-        if ( mexDetector.hasSingleCellData( series, sample ) ) {
-            return mexDetector.getAdditionalSupplementaryFiles( series, sample );
+        boolean hasSingleCellDataInSeries = Arrays.stream( detectors )
+                .anyMatch( detector -> detector.hasSingleCellData( series ) );
+        if ( !isSingleCell( sample, hasSingleCellDataInSeries ) ) {
+            log.warn( sample.getGeoAccession() + " is not a single-cell sample, ignoring its supplementary materials." );
+            return Collections.emptyList();
         }
-        return getAdditionalSupplementaryFiles( sample );
+        for ( SingleCellDetector detector : detectors ) {
+            if ( detector instanceof MexDetector ) {
+                if ( ( ( MexDetector ) detector ).hasSingleCellData( series, sample ) ) {
+                    return detector.getAdditionalSupplementaryFiles( sample );
+                }
+            } else if ( detector.hasSingleCellData( sample ) ) {
+                return detector.getAdditionalSupplementaryFiles( sample );
+            }
+        }
+        // if no detector can detect single-cell data, consider it all additional
+        return new ArrayList<>( sample.getSupplementaryFiles() );
     }
 
     @Override
@@ -447,22 +529,6 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
     }
 
     /**
-     * Obtain a single-cell data loader for a specific data type.
-     */
-    public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series, SingleCellDataType dataType ) throws NoSingleCellDataFoundException {
-        switch ( dataType ) {
-            case ANNDATA:
-                return annDataDetector.getSingleCellDataLoader( series );
-            case SEURAT_DISK:
-                return seuratDiskDetector.getSingleCellDataLoader( series );
-            case MEX:
-                return mexDetector.getSingleCellDataLoader( series );
-            default:
-                throw new IllegalArgumentException( "Unknown single-cell data type " + dataType );
-        }
-    }
-
-    /**
      * Check if a GEO sample is single-cell by looking up its metadata.
      * @param hasSingleCellDataInSeries indicate if the series has single-cell data, this is used as a last resort to
      *                                  determine if a given sample is single-cell
@@ -477,9 +543,14 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
                 && Objects.requireNonNull( sample.getLibStrategy() ).equals( GeoLibraryStrategy.RNA_SEQ ) ) {
             if ( StringUtils.containsAnyIgnoreCase( sample.getTitle(), SINGLE_CELL_KEYWORDS )
                     || StringUtils.containsAnyIgnoreCase( sample.getDescription(), SINGLE_CELL_KEYWORDS ) ) {
-                log.warn( sample.getGeoAccession() + ": does not use the 'single cell transcriptomics' library source, but keywords indicate it is single-cell." );
+                log.warn( sample.getGeoAccession() + ": does not use the 'single cell transcriptomics' library source, but keywords in its description indicate it is single-cell." );
                 return true;
             }
+            if ( StringUtils.containsAnyIgnoreCase( sample.getDataProcessing(), SINGLE_CELL_DATA_PROCESSING_KEYWORDS ) ) {
+                log.warn( sample.getGeoAccession() + ": does not use the 'single cell transcriptomics' library source, but keywords in its data processing section indicate it is single-cell." );
+                return true;
+            }
+            // don't allow TAR lookups because that would be too slow
             if ( mexDetector.hasSingleCellData( sample, false ) ) {
                 log.warn( sample.getGeoAccession() + ": does not use the 'single cell transcriptomics' library source, but has MEX data in its supplementary material." );
                 return true;

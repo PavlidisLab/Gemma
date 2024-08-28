@@ -7,6 +7,7 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPConnectionClosedException;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.pool2.BasePooledObjectFactory;
+import org.apache.commons.pool2.DestroyMode;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
@@ -103,6 +104,15 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
     }
 
     @Override
+    public void abandonClient( URL url, FTPClient client ) {
+        try {
+            getPool( url ).invalidateObject( client, DestroyMode.ABANDONED );
+        } catch ( Exception e ) {
+            log.error( "Failed to abandon FTP client for " + url + ".", e );
+        }
+    }
+
+    @Override
     public void recycleClient( URL url, FTPClient client ) {
         getPool( url ).returnObject( client );
     }
@@ -129,6 +139,7 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
 
         private final FTPClient client;
         private final URL url;
+        private boolean reachedEof = false;
 
         private FTPClientInputStream( FTPClient client, URL url, InputStream is ) {
             super( is );
@@ -137,14 +148,35 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
         }
 
         @Override
+        public int read() throws IOException {
+            int ret = super.read();
+            reachedEof = ret == -1;
+            return ret;
+        }
+
+        @Override
+        public int read( byte[] b, int off, int len ) throws IOException {
+            int ret = super.read( b, off, len );
+            reachedEof = ret == -1;
+            return ret;
+        }
+
+        @Override
         public void close() throws IOException {
             try {
-                client.completePendingCommand();
-                log.debug( client.getReplyString() );
-                if ( !FTPReply.isPositiveCompletion( client.getReplyCode() ) ) {
-                    throw new IOException( String.format( "Failed to retrieve %s: %s", url, client.getReplyString() ) );
+                if ( reachedEof ) {
+                    client.completePendingCommand();
+                    log.debug( client.getReplyString() );
+                    if ( !FTPReply.isPositiveCompletion( client.getReplyCode() ) ) {
+                        throw new IOException( String.format( "Failed to retrieve %s: %s", url, client.getReplyString() ) );
+                    }
+                    recycleClient( url, client );
+                } else {
+                    // EOF hasn't been reached, the FTP client will block for completePendingCommand(), so it's just
+                    // more efficient to abandon it and open a new connection
+                    log.debug( "Stream was partially consumed for " + url + ", the client will be abandoned and disconnected immediately." );
+                    abandonClient( url, client );
                 }
-                recycleClient( url, client );
             } catch ( FTPConnectionClosedException e ) {
                 // no need to rethrow this exception
                 destroyClient( url, client );
@@ -309,19 +341,31 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
         }
 
         @Override
+        public void destroyObject( PooledObject<FTPClient> p, DestroyMode destroyMode ) throws Exception {
+            if ( destroyMode == DestroyMode.ABANDONED ) {
+                FTPClient client = p.getObject();
+                if ( client.isConnected() ) {
+                    client.disconnect();
+                }
+            } else {
+                destroyObject( p );
+            }
+        }
+
+        @Override
         public void destroyObject( PooledObject<FTPClient> p ) throws Exception {
             FTPClient client = p.getObject();
-            if ( !client.isConnected() ) {
-                return;
-            }
-            if ( ( ( FTPClientPooledObject ) p ).getLoggedInAs() != null ) {
+            if ( client.isConnected() ) {
                 try {
                     client.logout();
-                } catch ( IOException e ) {
-                    // ignore, we're going to disconnect anyway
+                    log.debug( client.getReplyString() );
+                    if ( !FTPReply.isPositiveCompletion( client.getReplyCode() ) ) {
+                        throw new IOException( String.format( "Failed to logout from to %s: %s", authority, client.getReplyString() ) );
+                    }
+                } finally {
+                    client.disconnect();
                 }
             }
-            client.disconnect();
         }
     }
 }

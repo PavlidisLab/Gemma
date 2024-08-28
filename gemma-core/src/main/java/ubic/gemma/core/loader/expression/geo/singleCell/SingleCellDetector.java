@@ -31,15 +31,17 @@ public interface SingleCellDetector {
 
     /**
      * Download single-cell data for the given GEO series.
+     * @throws UnsupportedOperationException if downloading single cell for a given series is not supported
      * @throws NoSingleCellDataFoundException if there is no single cell data for the given series
      */
-    void downloadSingleCellData( GeoSeries series ) throws NoSingleCellDataFoundException, IOException;
+    void downloadSingleCellData( GeoSeries series ) throws UnsupportedOperationException, NoSingleCellDataFoundException, IOException;
 
     /**
      * Download single-cell data for the given GEO sample.
+     * @throws UnsupportedOperationException if downloading single cell for a given sample is not supported
      * @throws NoSingleCellDataFoundException if there is no single cell data for the given sample
      */
-    void downloadSingleCellData( GeoSample sample ) throws NoSingleCellDataFoundException, IOException;
+    void downloadSingleCellData( GeoSample sample ) throws UnsupportedOperationException, NoSingleCellDataFoundException, IOException;
 
     /**
      * Obtain a list of all additional supplementary files.
@@ -53,7 +55,8 @@ public interface SingleCellDetector {
 
     /**
      * Obtain a single cell data loader for the given GEO series based on previously downloading data.
+     * @throws UnsupportedOperationException if loading single cell data is not supported
      * @throws NoSingleCellDataFoundException if there is no single cell data for the given series
      */
-    SingleCellDataLoader getSingleCellDataLoader( GeoSeries series ) throws NoSingleCellDataFoundException;
+    SingleCellDataLoader getSingleCellDataLoader( GeoSeries series ) throws UnsupportedOperationException, NoSingleCellDataFoundException;
 }

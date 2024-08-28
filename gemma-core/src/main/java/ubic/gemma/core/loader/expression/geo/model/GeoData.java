@@ -18,9 +18,11 @@
  */
 package ubic.gemma.core.loader.expression.geo.model;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Abstract class from which other GEO objects are descended.
@@ -32,8 +34,9 @@ public abstract class GeoData implements Serializable {
     private static final long serialVersionUID = -859220901359581113L;
     private final List<String> columnNames = new ArrayList<>();
     private final List<String> columnDescriptions = new ArrayList<>();
-    GeoContact contact = new GeoContact();
-    String geoAccession;
+    private GeoContact contact = new GeoContact();
+    @Nullable
+    private String geoAccession;
     private String title = "";
 
     public void addColumnName( String columnName ) {
@@ -62,9 +65,14 @@ public abstract class GeoData implements Serializable {
         return this.contact;
     }
 
+    public void setContact( GeoContact contact ) {
+        this.contact = contact;
+    }
+
     /**
      * @return Returns the geoAccesssion.
      */
+    @Nullable
     public String getGeoAccession() {
         return this.geoAccession;
     }
@@ -72,7 +80,7 @@ public abstract class GeoData implements Serializable {
     /**
      * @param geoAccesssion The geoAccesssion to set.
      */
-    public void setGeoAccession( String geoAccesssion ) {
+    public void setGeoAccession( @Nullable String geoAccesssion ) {
         this.geoAccession = geoAccesssion;
     }
 
@@ -99,12 +107,15 @@ public abstract class GeoData implements Serializable {
 
     @Override
     public boolean equals( Object obj ) {
-        return obj instanceof GeoData && ( ( GeoData ) obj ).getGeoAccession().equals( this.getGeoAccession() );
+        if ( obj == this )
+            return true;
+        if ( !( obj instanceof GeoData ) )
+            return false;
+        return Objects.equals( ( ( GeoData ) obj ).getGeoAccession(), this.getGeoAccession() );
     }
 
     @Override
     public String toString() {
         return this.geoAccession;
     }
-
 }

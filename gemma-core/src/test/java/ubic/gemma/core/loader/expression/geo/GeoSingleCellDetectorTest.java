@@ -26,7 +26,6 @@ import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -86,7 +85,6 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
     @Test
     public void testGSE225158() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE225158" );
-        assertThat( series ).isNotNull();
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
         assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.ANNDATA );
         assertThat( detector.getAllSingleCellDataTypes( series ) )
@@ -101,7 +99,6 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
     @Test
     public void testGSE224438() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE224438" );
-        assertThat( series ).isNotNull();
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
         assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
         assertThat( detector.getAdditionalSupplementaryFiles( series ) )
@@ -119,13 +116,9 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
     @Category(SlowTest.class)
     public void testGSE201814() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE201814" );
-        assertThat( series ).isNotNull();
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
         assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
-        GeoSample sample = series.getSamples().stream().filter( s -> s.getGeoAccession().equals( "GSM6072067" ) )
-                .findFirst()
-                .orElse( null );
-        assertThat( sample ).isNotNull();
+        GeoSample sample = getSample( series, "GSM6072067" );
         assertThat( detector.hasSingleCellData( sample ) ).isTrue();
         detector.downloadSingleCellData( sample );
         assertThat( tmpDir )
@@ -152,7 +145,6 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
     @Category(SlowTest.class)
     public void testGSE201814DownloadAll() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE201814" );
-        assertThat( series ).isNotNull();
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
         assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
         detector.downloadSingleCellData( series );
@@ -167,7 +159,6 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
     @Test
     public void testGSE228370() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE228370" );
-        assertThat( series ).isNotNull();
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
         assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
     }
@@ -181,12 +172,8 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
     @Category(SlowTest.class)
     public void testGSE174574() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE174574" );
-        assertThat( series ).isNotNull();
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
-        GeoSample sample = series.getSamples().stream()
-                .filter( n -> n.getGeoAccession().equals( "GSM5319989" ) )
-                .findFirst()
-                .orElseThrow( NullPointerException::new );
+        GeoSample sample = getSample( series, "GSM5319989" );
         detector.downloadSingleCellData( sample );
         assertThat( tmpDir )
                 .isDirectoryRecursivelyContaining( "glob:**/GSM5319989/barcodes.tsv.gz" )
@@ -201,7 +188,6 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
     @Category(SlowTest.class)
     public void testGSE202051() throws IOException {
         GeoSeries series = readSeriesFromGeo( "GSE202051" );
-        assertThat( series ).isNotNull();
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
         assertThatThrownBy( () -> detector.downloadSingleCellData( series ) )
                 .isInstanceOf( IllegalArgumentException.class );
@@ -218,7 +204,6 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
     @Test
     public void testGSE200218() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE200218" );
-        assertThat( series ).isNotNull();
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
         assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
         assertThat( detector.getAdditionalSupplementaryFiles( series ) )
@@ -230,25 +215,25 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
                         "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE200nnn/GSE200218/suppl/GSE200218_VIPER_matrix_tumor_cells_sn.csv.gz",
                         "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE200nnn/GSE200218/suppl/GSE200218_sc_sn_metadata.csv.gz",
                         "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE200nnn/GSE200218/suppl/GSE200218_SCENIC_matrix_tumor_cells_sn.csv.gz" );
-        GeoSample sample = series.getSamples().stream().filter( s -> s.getGeoAccession().equals( "GSM6022251" ) ).findFirst().get();
+        GeoSample sample = getSample( series, "GSM6022251" );
         assertThat( detector.getAdditionalSupplementaryFiles( sample ) )
                 .containsExactlyInAnyOrder(
                         "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM6022nnn/GSM6022251/suppl/GSM6022251_MBM01_sc_CD45pos_filtered.h5",
                         "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM6022nnn/GSM6022251/suppl/GSM6022251_MBM01_sc_counts.csv.gz" );
     }
 
+    /**
+     * This is a pathologic case with nested zip and gzipped files.
+     */
     @Test
-    @Ignore("This is a pathologic case with nested zip and gzipped files.")
     public void testGSE162631() throws IOException {
         GeoSeries series = readSeriesFromGeo( "GSE162631" );
-        assertThat( series ).isNotNull();
-        assertThat( detector.hasSingleCellData( series ) ).isTrue();
+        assertThat( detector.hasSingleCellData( series ) ).isFalse();
     }
 
     @Test
-    public void testGSE148611() throws IOException, NoSingleCellDataFoundException {
+    public void testGSE148611() throws IOException {
         GeoSeries series = readSeriesFromGeo( "GSE148611" );
-        assertThat( series ).isNotNull();
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
         // detector.downloadSingleCellData( series );
     }
@@ -257,7 +242,6 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
     @Ignore("This is an example of a single MEX dataset at the series-level for all the samples.")
     public void testGSE193884() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE193884" );
-        assertThat( series ).isNotNull();
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
         detector.downloadSingleCellData( series );
     }
@@ -269,11 +253,10 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
     @Test
     public void testGSE147495() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE147495" );
-        assertThat( series ).isNotNull();
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
         assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
         assertThatThrownBy( () -> detector.downloadSingleCellData( series ) )
-                .isInstanceOf( NoSingleCellDataFoundException.class )
+                .isInstanceOf( UnsupportedOperationException.class )
                 .hasMessage( "MEX files were found, but single-cell data is not supported at the series level." );
     }
 
@@ -285,7 +268,6 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
     @Category(SlowTest.class)
     public void testGSE242423() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE242423" );
-        assertThat( series ).isNotNull();
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
         assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
         // FIXME: files are detected as additional because the detection does not account for the files supplied by the
@@ -296,11 +278,7 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
             // uncontextualized, the sample does not have single-cell data because it lacks features.tsv.gz
             assertThat( detector.getAdditionalSupplementaryFiles( s ) )
                     .hasSize( 2 )
-                    .satisfiesExactlyInAnyOrder( s1 -> {
-                        assertThat( s1 ).endsWith( "matrix.mtx.gz" );
-                    }, s2 -> {
-                        assertThat( s2 ).endsWith( "barcode.tsv.gz" );
-                    } );
+                    .satisfiesExactlyInAnyOrder( s1 -> assertThat( s1 ).endsWith( "matrix.mtx.gz" ), s2 -> assertThat( s2 ).endsWith( "barcodes.tsv.gz" ) );
             // with the context of its series, it can properly detect the presence of the features.tsv.gz file from the
             // parent series
             assertThat( detector.getAdditionalSupplementaryFiles( series, s ) )
@@ -319,7 +297,6 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
     @Test
     public void testGSE132188() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE132188" );
-        assertThat( series ).isNotNull();
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
         assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.ANNDATA );
     }
@@ -330,7 +307,6 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
     @Test
     public void testGSE162807() throws IOException {
         GeoSeries series = readSeriesFromGeo( "GSE162807" );
-        assertThat( series ).isNotNull();
         assertThat( detector.hasSingleCellData( series ) ).isFalse();
     }
 
@@ -340,25 +316,23 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
     @Test
     public void testGSE158184() throws IOException {
         GeoSeries series = readSeriesFromGeo( "GSE217464" );
-        assertThat( series ).isNotNull();
         for ( GeoSample sample : series.getSamples() ) {
             assertThat( detector.getAdditionalSupplementaryFiles( sample ) )
                     .isEmpty();
         }
     }
 
+    /**
+     * This dataset as a mix of scRNA-Seq and ATAC-Seq
+     */
     @Test
     public void testGSE185737() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE185737" );
-        assertThat( series ).isNotNull();
         assertThat( detector.getSingleCellDataType(
                 series
         ) ).isEqualTo( SingleCellDataType.MEX );
         // this is an ATAC-seq sample
-        GeoSample sample = series.getSamples().stream()
-                .filter( s -> s.getGeoAccession().equals( "GSM5623074" ) )
-                .findFirst()
-                .get();
+        GeoSample sample = getSample( series, "GSM5623074" );
         assertThat( detector.hasSingleCellData( sample ) )
                 .isFalse();
         assertThat( detector.getAdditionalSupplementaryFiles( sample ) )
@@ -371,21 +345,18 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
     @Test
     public void testGSE196516() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE196516" );
-        assertThat( series ).isNotNull();
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
         assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
     }
 
-
     /**
-     * THis series contains large TAR attachment that should be skipped when inspecting for MEX.
+     * This series contains large TAR attachment that should be skipped when inspecting for MEX.
      */
     @Test
     public void testGSE235314() throws IOException {
         GeoSeries series = readSeriesFromGeo( "GSE235314" );
-        assertThat( series ).isNotNull();
         assertThat( detector.hasSingleCellData( series ) ).isFalse();
-        GeoSample sample = series.getSamples().stream().filter( s -> s.getGeoAccession().equals( "GSM7498809" ) ).findAny().get();
+        GeoSample sample = getSample( series, "GSM7498809" );
         assertThat( detector.getAdditionalSupplementaryFiles( sample ) )
                 .containsExactly( "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7498nnn/GSM7498809/suppl/GSM7498809_CEA.tar.gz" );
     }
@@ -395,58 +366,199 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
      */
     @Test
     @Category(SlowTest.class)
-    public void testGSE201262() throws IOException, NoSingleCellDataFoundException {
+    public void testGSE201263() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE201262" );
-        assertThat( series ).isNotNull();
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
         assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
-    }
-
-    @Test
-    public void testGSE210889() throws IOException, NoSingleCellDataFoundException {
-        GeoSeries series = readSeriesFromGeo( "GSE210889" );
-        assertThat( series ).isNotNull();
-        assertThat( detector.hasSingleCellData( series ) ).isTrue();
-        assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
-        detector.downloadSingleCellData( series );
     }
 
     /**
      * This files produces "java.util.zip.ZipException: invalid block type" apparently...
      */
     @Test
+    @Category(SlowTest.class)
+    @Ignore("This files produces \"java.util.zip.ZipException: invalid block type\" apparently.")
     public void testGSE200202() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE200202" );
-        assertThat( series ).isNotNull();
+        assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.ANNDATA );
         detector.downloadSingleCellData( series );
     }
 
     /**
-     * GSM6681000 has MEX files, but the extension is .tar.gz instead of simply .gz.
+     * This example has some additional supplementary materials that are inside a TAR archive that contains MEX data.
      */
     @Test
-    @Ignore("This is a complicated case because we have to extract all three TARs.")
-    public void testGSE216591() throws IOException, NoSingleCellDataFoundException {
-        GeoSeries series = readSeriesFromGeo( "GSE216591" );
-        assertThat( series ).isNotNull();
-        GeoSample sample = series.getSamples().stream()
-                .filter( s -> s.getGeoAccession().equals( "GSM6681000" ) ).findAny()
-                .get();
-        detector.downloadSingleCellData( sample );
-        assertThat( tmpDir )
-                .isDirectoryRecursivelyContaining( "glob:**/GSM6681000/barcodes.tsv.gz" )
-                .isDirectoryRecursivelyContaining( "glob:**/GSM6681000/features.tsv.gz" )
-                .isDirectoryRecursivelyContaining( "glob:**/GSM6681000/matrix.mtx.gz" );
-        assertThat( detector.getAdditionalSupplementaryFiles( sample ) )
-                .isEmpty();
+    @Category(SlowTest.class)
+    public void testGSE155499() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE155499" );
+        assertThat( detector.hasSingleCellData( series ) ).isTrue();
+        assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
+        GeoSample sample = getSample( series, "GSM4705328" );
+        assertThat( detector.getAdditionalSupplementaryFiles( series, sample ) )
+                .containsExactlyInAnyOrder(
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_6_clusters/clusters.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_2_clusters/clusters.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_8_clusters/clusters.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_4_clusters/clusters.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_7_clusters/clusters.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_3_clusters/clusters.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/graphclust/clusters.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_10_clusters/clusters.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_9_clusters/clusters.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_5_clusters/clusters.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/pca/10_components/components.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/pca/10_components/genes_selected.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/pca/10_components/dispersion.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/pca/10_components/variance.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/pca/10_components/projection.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/tsne/2_components/projection.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_6_clusters/differential_expression.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_2_clusters/differential_expression.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_8_clusters/differential_expression.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_4_clusters/differential_expression.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_7_clusters/differential_expression.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_3_clusters/differential_expression.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/graphclust/differential_expression.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_10_clusters/differential_expression.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_9_clusters/differential_expression.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_5_clusters/differential_expression.csv",
+                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/cloupe.cloupe" );
     }
 
-    @Nullable
+    @Test
+    @Category(SlowTest.class)
+    public void testGSE201032() throws IOException {
+        GeoSeries series = readSeriesFromGeo( "GSE201032" );
+        assertThat( detector.getAdditionalSupplementaryFiles( series ) )
+                .containsExactly( "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE201nnn/GSE201032/suppl/GSE201032_Metadata.csv.gz" );
+        assertThat( series.getSamples() )
+                .hasSize( 8 )
+                .allSatisfy( sample -> assertThat( detector.getAdditionalSupplementaryFiles( series, sample ) ).isEmpty() );
+    }
+
+    /**
+     * This is a MEX dataset with a barcode_metadata.tsv.gz file.
+     */
+    @Test
+    public void testGSE218621() throws NoSingleCellDataFoundException, IOException {
+        GeoSeries series = readSeriesFromGeo( "GSE218621" );
+        assertThat( detector.hasSingleCellData( series ) ).isTrue();
+        assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
+        GeoSample sample = getSample( series, "GSM6753396" );
+        assertThat( detector.hasSingleCellData( sample ) ).isTrue();
+        assertThatThrownBy( () -> detector.downloadSingleCellData( sample ) )
+                .isInstanceOf( UnsupportedOperationException.class );
+    }
+
+    /**
+     * This dataset has a mixture of Loom and MEX, the latter should take precedence because Loom is not supported yet.
+     */
+    @Test
+    public void testGSE237862() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE237862" );
+        assertThat( detector.hasSingleCellData( series ) ).isTrue();
+        assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
+        assertThat( detector.getAllSingleCellDataTypes( series ) )
+                .containsExactlyInAnyOrder( SingleCellDataType.LOOM, SingleCellDataType.MEX );
+    }
+
+    /**
+     * This is a Loom dataset with files in individual samples
+     */
+    @Test
+    public void testGSE179516() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE179516" );
+        assertThat( detector.hasSingleCellData( series ) ).isTrue();
+        assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.LOOM );
+        assertThatThrownBy( () -> detector.downloadSingleCellData( series ) )
+                .isInstanceOf( NoSingleCellDataFoundException.class );
+        assertThatThrownBy( () -> detector.downloadSingleCellData( series ) )
+                .isInstanceOf( NoSingleCellDataFoundException.class );
+    }
+
+    /**
+     * This is a Loom dataset with a single file in the series. We support detection and download, but not loading.
+     */
+    @Test
+    @Category(SlowTest.class)
+    public void testGSE159416() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE159416" );
+        assertThat( detector.hasSingleCellData( series ) ).isTrue();
+        assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.LOOM );
+        detector.downloadSingleCellData( series );
+        assertThat( tmpDir )
+                .isDirectoryRecursivelyContaining( "glob:**/GSE159416.loom" );
+        assertThatThrownBy( () -> detector.getSingleCellDataLoader( series ) )
+                .isInstanceOf( NoSingleCellDataFoundException.class );
+    }
+
+    /**
+     * MEX dataset stored in ZIP archives.
+     */
+    @Test
+    public void testGSE178226() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE178226" );
+        assertThat( detector.hasSingleCellData( series ) ).isTrue();
+        assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
+    }
+
+    /**
+     * This one uses non-standard file names.
+     */
+    @Test
+    @Category(SlowTest.class)
+    public void testGSE199762() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE199762" );
+        try {
+            detector.setMexFileSuffixes( "barcodes.tsv", "features.tsv", "counts.mtx" );
+            assertThat( detector.hasSingleCellData( series ) ).isTrue();
+            assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
+            detector.downloadSingleCellData( series, getSample( series, "GSM8002943" ) );
+            assertThat( tmpDir )
+                    .isDirectoryRecursivelyContaining( "glob:**/GSE199762/GSM8002943/barcodes.tsv.gz" )
+                    .isDirectoryRecursivelyContaining( "glob:**/GSE199762/GSM8002943/features.tsv.gz" )
+                    .isDirectoryRecursivelyContaining( "glob:**/GSE199762/GSM8002943/matrix.mtx.gz" );
+        } finally {
+            detector.resetMexFileSuffixes();
+        }
+    }
+
+    /**
+     * This dataset has technical replicates, this is not supported.
+     */
+    @Test
+    @Category(SlowTest.class)
+    public void testGSE155695() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE155695" );
+        assertThat( detector.hasSingleCellData( series ) ).isTrue();
+        // this sample has technical replicates, but those can only be detected at download time because
+        // hasSingleCellData() is designed to run as fast s possible
+        GeoSample sample = getSample( series, "GSM4710634" );
+        assertThatThrownBy( () -> detector.downloadSingleCellData( series, sample ) )
+                .isInstanceOf( UnsupportedOperationException.class );
+        assertThat( tmpDir )
+                .isDirectoryNotContaining( "glob:**/GSM4710634" );
+        // FIXME: this sample also has technical replicates, but it is not being detected due to its naming scheme
+        GeoSample sample2 = getSample( series, "GSM4710635" );
+        detector.downloadSingleCellData( series, sample2 );
+        assertThat( tmpDir )
+                .isDirectoryRecursivelyContaining( "glob:**/GSE155695/GSM4710635/barcodes.tsv.gz" )
+                .isDirectoryRecursivelyContaining( "glob:**/GSE155695/GSM4710635/features.tsv.gz" )
+                .isDirectoryRecursivelyContaining( "glob:**/GSE155695/GSM4710635/matrix.mtx.gz" );
+    }
+
     private GeoSeries readSeriesFromGeo( String accession ) throws IOException {
         try ( InputStream is = new GZIPInputStream( new URL( "https://ftp.ncbi.nlm.nih.gov/geo/series/" + accession.substring( 0, 6 ) + "nnn/" + accession + "/soft/" + accession + "_family.soft.gz" ).openStream() ) ) {
             GeoFamilyParser parser = new GeoFamilyParser();
             parser.parse( is );
-            return requireNonNull( parser.getUniqueResult() ).getSeriesMap().get( accession );
+            return requireNonNull( requireNonNull( parser.getUniqueResult() ).getSeriesMap().get( accession ) );
         }
+    }
+
+    private GeoSample getSample( GeoSeries series, String sampleAccession ) {
+        return series.getSamples().stream()
+                .filter( s -> sampleAccession.equals( s.getGeoAccession() ) )
+                .findFirst()
+                .orElseThrow( NullPointerException::new );
     }
 }
