@@ -23,6 +23,7 @@ public class ProgressInputStream extends FilterInputStream {
     private long startTimeNanos = -1;
     private long progressInBytes = 0;
     private double lastReportedProgress = 0.0;
+    private boolean reportedAtEof = false;
 
     /**
      * @param what           an object describing what is being processed, it will be used for logging purposes
@@ -88,6 +89,15 @@ public class ProgressInputStream extends FilterInputStream {
 
     private long recordProgress( long read, boolean oneByte ) {
         if ( read < 0 ) {
+            if ( !reportedAtEof ) {
+                logger.info( String.format( "%s %.2f%% [%d/%d] @ %s/s",
+                        what,
+                        100.0,
+                        progressInBytes,
+                        progressInBytes, // maxSIzeInBytes is now progressInBytes regardless of its initial value
+                        byteCountToDisplaySize( 1e9 * progressInBytes / ( System.nanoTime() - startTimeNanos ) ) ) );
+                reportedAtEof = true;
+            }
             return read;
         }
         progressInBytes += oneByte ? 1 : read;
