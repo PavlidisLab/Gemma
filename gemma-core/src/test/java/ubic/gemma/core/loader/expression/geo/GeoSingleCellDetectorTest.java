@@ -284,7 +284,7 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
             assertThat( detector.getAdditionalSupplementaryFiles( series, s ) )
                     .isEmpty();
         } );
-        detector.downloadSingleCellData( series );
+        detector.downloadSingleCellData( series, getSample( series, "GSM7763419" ) );
         assertThat( tmpDir )
                 .isDirectoryRecursivelyContaining( "glob:**/GSM7763419/barcodes.tsv.gz" )
                 .isDirectoryRecursivelyContaining( "glob:**/GSM7763419/features.tsv.gz" )
@@ -496,6 +496,7 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
      * MEX dataset stored in ZIP archives.
      */
     @Test
+    @Category(SlowTest.class)
     public void testGSE178226() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE178226" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();

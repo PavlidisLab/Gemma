@@ -315,26 +315,31 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                         if ( detector.hasSingleCellData( series ) ) {
                             if ( dataType != null && supplementaryFile != null ) {
                                 detectedDataType = dataType.name();
-                                detector.downloadSingleCellData( series, dataType, supplementaryFile );
-                            } else if ( dataType != null ) {
-                                detectedDataType = dataType.name();
-                                detector.downloadSingleCellData( series, dataType );
                             } else {
                                 detectedDataType = detector.getSingleCellDataType( series ).name();
+                            }
+                            additionalSupplementaryFiles.addAll( detector.getAdditionalSupplementaryFiles( series ) );
+                            for ( GeoSample sample : series.getSamples() ) {
+                                additionalSupplementaryFiles.addAll( detector.getAdditionalSupplementaryFiles( series, sample ) );
+                            }
+                            if ( dataType != null && supplementaryFile != null ) {
+                                detector.downloadSingleCellData( series, dataType, supplementaryFile );
+                            } else if ( dataType != null ) {
+                                detector.downloadSingleCellData( series, dataType );
+                            } else {
                                 detector.downloadSingleCellData( series );
                             }
-                            List<String> samples = series.getSamples().stream().map( GeoSample::getGeoAccession ).collect( Collectors.toList() );
+                            // create a dummy platform, we just need to retrieve basic metadata from the loader
                             ArrayDesign platform = new ArrayDesign();
-                            List<BioAssay> bas = samples.stream().map( s -> BioAssay.Factory.newInstance( s, platform, BioMaterial.Factory.newInstance( s ) ) ).collect( Collectors.toList() );
+                            List<BioAssay> bas = series.getSamples().stream()
+                                    .map( GeoSample::getGeoAccession )
+                                    .map( s -> BioAssay.Factory.newInstance( s, platform, BioMaterial.Factory.newInstance( s ) ) )
+                                    .collect( Collectors.toList() );
                             SingleCellDataLoader loader = detector.getSingleCellDataLoader( series );
                             numberOfSamples = loader.getSampleNames().size();
                             SingleCellDimension scd = loader.getSingleCellDimension( bas );
                             numberOfCells = scd.getNumberOfCells();
                             numberOfGenes = loader.getGenes().size();
-                            additionalSupplementaryFiles.addAll( detector.getAdditionalSupplementaryFiles( series ) );
-                            for ( GeoSample sample : series.getSamples() ) {
-                                additionalSupplementaryFiles.addAll( detector.getAdditionalSupplementaryFiles( series, sample ) );
-                            }
                             addSuccessObject( geoAccession );
                         } else {
                             detectedDataType = UNSUPPORTED_INDICATOR;
@@ -350,7 +355,12 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                         if ( !detectedDataType.equals( UNKNOWN_INDICATOR ) ) {
                             comment += " (detected data type: " + detectedDataType + ")";
                         }
-                        detectedDataType = FAILED_INDICATOR;
+                        if ( e instanceof UnsupportedOperationException ) {
+                            // this might be caused by downloadSingleCellData() or getSingleCellDataLoader()
+                            detectedDataType = UNSUPPORTED_INDICATOR;
+                        } else {
+                            detectedDataType = FAILED_INDICATOR;
+                        }
                     } finally {
                         if ( writer != null ) {
                             try {
