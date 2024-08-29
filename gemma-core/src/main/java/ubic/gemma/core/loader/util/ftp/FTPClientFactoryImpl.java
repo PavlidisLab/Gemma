@@ -16,7 +16,9 @@ import javax.annotation.Nullable;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -29,6 +31,9 @@ import java.util.concurrent.ConcurrentMap;
 @CommonsLog
 public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
 
+    private Duration connectTimeout = Duration.ofMillis( 60000 );
+    private Duration controlTimeout = Duration.ofMillis( 1000 );
+    private Duration dataTimeout = Duration.ofMillis( 10000 );
     /**
      * Maximum number of idle connections kept in the pool, per host.
      */
@@ -41,19 +46,37 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
      */
     private final ConcurrentMap<String, GenericObjectPool<FTPClient>> clientsPool = new ConcurrentHashMap<>();
 
-    @Override
+    public void setConnectTimeout( Duration connectTimeout ) {
+        this.connectTimeout = connectTimeout;
+    }
+
+    public void setControlTimeout( Duration controlTimeout ) {
+        this.controlTimeout = controlTimeout;
+    }
+
+    public void setDataTimeout( Duration dataTimeout ) {
+        this.dataTimeout = dataTimeout;
+    }
+
+    /**
+     * Set the maximum number of idle FTP connections to keep in the pool.
+     */
     public void setMaxIdleConnections( int maxIdle ) {
         this.maxIdleConnections = maxIdle;
         clientsPool.values().forEach( pool -> pool.setMaxIdle( maxIdle ) );
     }
 
-    @Override
+    /**
+     * Set the maximum number of FTP connections.
+     */
     public void setMaxTotalConnections( int maxTotal ) {
         this.maxTotalConnections = maxTotal;
         clientsPool.values().forEach( pool -> pool.setMaxTotal( maxTotal ) );
     }
 
-    @Override
+    /**
+     * Set the authenticator to use to authenticate against FTP servers.
+     */
     public void setAuthenticator( @Nullable FTPClientAuthenticator authenticator ) {
         this.authenticator = authenticator;
     }
@@ -164,6 +187,7 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
         public void close() throws IOException {
             try {
                 if ( reachedEof ) {
+                    // this can block
                     client.completePendingCommand();
                     log.debug( client.getReplyString() );
                     if ( !FTPReply.isPositiveCompletion( client.getReplyCode() ) ) {
@@ -176,6 +200,9 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
                     log.debug( "Stream was partially consumed for " + url + ", the client will be abandoned and disconnected immediately." );
                     abandonClient( url, client );
                 }
+            } catch ( SocketTimeoutException e ) {
+                log.warn( "FTP server timed out when attempting to complete the download of " + url + ", the client will be abandoned and disconnected immediately." );
+                abandonClient( url, client );
             } catch ( FTPConnectionClosedException e ) {
                 // no need to rethrow this exception
                 destroyClient( url, client );
@@ -194,7 +221,7 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
     }
 
     private GenericObjectPool<FTPClient> createPool( URL url ) {
-        GenericObjectPool<FTPClient> pool = new GenericObjectPool<>( new FTPClientPooledObjectFactory( url.getAuthority(), url.getHost(), url.getPort(), authenticator ) );
+        GenericObjectPool<FTPClient> pool = new GenericObjectPool<>( new FTPClientPooledObjectFactory( url.getAuthority(), url.getHost(), url.getPort() ) );
         pool.setMaxIdle( maxIdleConnections );
         pool.setMaxTotal( maxTotalConnections );
         // always check if an FTP connection is still valid when borrowing because FTP servers tend to close
@@ -203,19 +230,16 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
         return pool;
     }
 
-    private static class FTPClientPooledObjectFactory extends BasePooledObjectFactory<FTPClient> {
+    private class FTPClientPooledObjectFactory extends BasePooledObjectFactory<FTPClient> {
 
         private final String authority;
         private final String host;
         private final int port;
-        @Nullable
-        private final FTPClientAuthenticator authenticator;
 
-        private FTPClientPooledObjectFactory( String authority, String host, int port, @Nullable FTPClientAuthenticator authenticator ) {
+        private FTPClientPooledObjectFactory( String authority, String host, int port ) {
             this.authority = authority;
             this.host = host;
             this.port = port;
-            this.authenticator = authenticator;
         }
 
         @Override
@@ -250,6 +274,9 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
         @Override
         public void activateObject( PooledObject<FTPClient> p ) throws Exception {
             FTPClient client = p.getObject();
+            client.setConnectTimeout( ( int ) connectTimeout.toMillis() );
+            client.setDefaultTimeout( ( int ) controlTimeout.toMillis() );
+            client.setDataTimeout( dataTimeout );
             if ( !client.isConnected() ) {
                 if ( port != -1 ) {
                     client.connect( host, port );

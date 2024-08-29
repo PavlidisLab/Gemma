@@ -51,7 +51,8 @@ public abstract class AbstractSingleFileInSeriesSingleCellDetector extends Abstr
      */
     protected Path getDest( GeoSeries series ) {
         Assert.notNull( getDownloadDirectory(), "A download directory must be set." );
-        return getDownloadDirectory().resolve( series + extension );
+        Assert.notNull( series.getGeoAccession() );
+        return getDownloadDirectory().resolve( series.getGeoAccession() + extension );
     }
 
     @Override
@@ -135,7 +136,7 @@ public abstract class AbstractSingleFileInSeriesSingleCellDetector extends Abstr
 
     @Override
     public void downloadSingleCellData( GeoSample sample ) throws NoSingleCellDataFoundException {
-        throw new NoSingleCellDataFoundException( name + " does not support single-cell data at the sample-level." );
+        throw new UnsupportedOperationException( name + " does not support single-cell data at the sample-level." );
     }
 
     @Override

@@ -27,12 +27,15 @@ import ubic.gemma.core.loader.util.ftp.FTPConfig;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 import static java.util.Objects.requireNonNull;
@@ -470,8 +473,8 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
         assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.LOOM );
         assertThatThrownBy( () -> detector.downloadSingleCellData( series ) )
                 .isInstanceOf( NoSingleCellDataFoundException.class );
-        assertThatThrownBy( () -> detector.downloadSingleCellData( series ) )
-                .isInstanceOf( NoSingleCellDataFoundException.class );
+        assertThatThrownBy( () -> detector.downloadSingleCellData( series, getSample( series, "GSM5419628" ) ) )
+                .isInstanceOf( UnsupportedOperationException.class );
     }
 
     /**
@@ -487,7 +490,7 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
         assertThat( tmpDir )
                 .isDirectoryRecursivelyContaining( "glob:**/GSE159416.loom" );
         assertThatThrownBy( () -> detector.getSingleCellDataLoader( series ) )
-                .isInstanceOf( NoSingleCellDataFoundException.class );
+                .isInstanceOf( UnsupportedOperationException.class );
     }
 
     /**
@@ -544,6 +547,20 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
                 .isDirectoryRecursivelyContaining( "glob:**/GSE155695/GSM4710635/barcodes.tsv.gz" )
                 .isDirectoryRecursivelyContaining( "glob:**/GSE155695/GSM4710635/features.tsv.gz" )
                 .isDirectoryRecursivelyContaining( "glob:**/GSE155695/GSM4710635/matrix.mtx.gz" );
+    }
+
+    /**
+     * This sample has duplicated cell IDs.
+     */
+    @Test
+    public void testGSM4282408() throws NoSingleCellDataFoundException, IOException {
+        GeoSeries series = readSeriesFromGeo( "GSE144172" );
+        GeoSample sample = getSample( series, "GSM4282408" );
+        detector.downloadSingleCellData( series, sample );
+        List<BioAssay> samples = Collections.singletonList( BioAssay.Factory.newInstance( "GSM4282408" ) );
+        assertThatThrownBy( () -> detector.getSingleCellDataLoader( series ).getSingleCellDimension( samples ) )
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessage( "Sample GSM4282408 has duplicate cell IDs." );
     }
 
     private GeoSeries readSeriesFromGeo( String accession ) throws IOException {

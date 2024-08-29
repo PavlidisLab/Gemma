@@ -23,7 +23,6 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -46,6 +45,13 @@ import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
 @Setter
 public class MexDetector extends AbstractSingleCellDetector implements SingleCellDetector {
 
+    public static final String
+            DEFAULT_BARCODES_FILE_SUFFIX = "barcodes.tsv",
+            DEFAULT_BARCODE_METADATA_FILE_SUFFIX = "barcode_metadata.tsv",
+            DEFAULT_FEATURES_FILE_SUFFIX = "features.tsv",
+            DEFAULT_GENES_FILE_SUFFIX = "genes.tsv",
+            DEFAULT_MATRIX_FILE_SUFFIX = "matrix.mtx";
+
     /**
      * Use GEO accession for comparing the sample name.
      */
@@ -64,13 +70,13 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
         }
     };
 
-    private String barcodesFileSuffix = "barcodes.tsv";
+    private String barcodesFileSuffix = DEFAULT_BARCODES_FILE_SUFFIX;
     @Nullable
-    private String barcodeMetadataFileSuffix = "barcode_metadata.tsv";
-    private String featuresFileSuffix = "features.tsv";
+    private String barcodeMetadataFileSuffix = DEFAULT_BARCODE_METADATA_FILE_SUFFIX;
+    private String featuresFileSuffix = DEFAULT_FEATURES_FILE_SUFFIX;
     @Nullable
-    private String genesFileSuffix = "genes.tsv";
-    private String matrixFileSuffix = "matrix.mtx";
+    private String genesFileSuffix = DEFAULT_GENES_FILE_SUFFIX;
+    private String matrixFileSuffix = DEFAULT_MATRIX_FILE_SUFFIX;
 
     /**
      * Set the maximum size of an archive entry to skip the supplementary file altogether.
@@ -87,6 +93,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
      */
     @Override
     public boolean hasSingleCellData( GeoSeries series ) {
+        Assert.notNull( series.getGeoAccession() );
         // don't bother looking up MEX files in archives at the series-level, it's just wasteful since we cannot
         // download them
         return hasSingleCellData( series.getGeoAccession(), series.getSupplementaryFiles(), false );
@@ -96,6 +103,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
      * Check if a sample contains single-cell data in the context of its series.
      */
     public boolean hasSingleCellData( GeoSeries series, GeoSample sample ) {
+        Assert.notNull( sample.getGeoAccession() );
         return hasSingleCellData( sample.getGeoAccession(), mergeSupplementaryFiles( series, sample ), true );
     }
 
@@ -109,6 +117,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
      * @param allowArchiveLookup allow looking into archives for MEX files
      */
     public boolean hasSingleCellData( GeoSample sample, boolean allowArchiveLookup ) {
+        Assert.notNull( sample.getGeoAccession() );
         return hasSingleCellData( sample.getGeoAccession(), sample.getSupplementaryFiles(), allowArchiveLookup );
     }
 
@@ -237,6 +246,8 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
      * can reuse the same files.
      */
     public void downloadSingleCellData( GeoSeries series, GeoSample sample ) throws NoSingleCellDataFoundException, IOException {
+        Assert.notNull( series.getGeoAccession() );
+        Assert.notNull( sample.getGeoAccession() );
         downloadSingleCellData( sample.getGeoAccession(), mergeSupplementaryFiles( series, sample ) );
         Path sampleDir = getDownloadDirectory().resolve( sample.getGeoAccession() );
         Path destDir = getDownloadDirectory()
@@ -273,6 +284,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
      */
     @Override
     public void downloadSingleCellData( GeoSample sample ) throws NoSingleCellDataFoundException, IOException {
+        Assert.notNull( sample.getGeoAccession() );
         downloadSingleCellData( sample.getGeoAccession(), sample.getSupplementaryFiles() );
     }
 
@@ -303,7 +315,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                 features = file;
             } else if ( isMexFile( file, MexFileType.MATRIX ) ) {
                 if ( matrix != null ) {
-                    throw new UnsupportedEncodingException( String.format( "%s: There is already an entry for matrix: %s, %s cannot be downloaded.", geoAccession, matrix, file ) );
+                    throw new UnsupportedOperationException( String.format( "%s: There is already an entry for matrix: %s, %s cannot be downloaded.", geoAccession, matrix, file ) );
                 }
                 matrix = file;
             }
@@ -462,11 +474,13 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
 
     @Override
     public List<String> getAdditionalSupplementaryFiles( GeoSeries series ) {
+        Assert.notNull( series.getGeoAccession() );
         return getAdditionalSupplementaryFiles( series.getGeoAccession(), series.getSupplementaryFiles().stream().filter( f -> !f.endsWith( "_RAW.tar" ) ) );
     }
 
     @Override
     public List<String> getAdditionalSupplementaryFiles( GeoSample sample ) {
+        Assert.notNull( sample.getGeoAccession() );
         return getAdditionalSupplementaryFiles( sample.getGeoAccession(), sample.getSupplementaryFiles().stream() );
     }
 
@@ -522,6 +536,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
 
     @Override
     public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series ) throws NoSingleCellDataFoundException {
+        Assert.notNull( series.getGeoAccession() );
         Assert.notNull( getDownloadDirectory(), "A download directory must be set." );
 
         List<String> sampleNames = new ArrayList<>();
@@ -530,6 +545,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                 matricesFiles = new ArrayList<>();
 
         for ( GeoSample sample : series.getSamples() ) {
+            Assert.notNull( sample.getGeoAccession() );
             Path sampleDir = getDownloadDirectory().resolve( sample.getGeoAccession() );
             if ( Files.exists( sampleDir ) ) {
                 sampleNames.add( sample.getGeoAccession() );

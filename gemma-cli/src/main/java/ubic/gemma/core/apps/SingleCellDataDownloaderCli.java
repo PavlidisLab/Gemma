@@ -26,6 +26,7 @@ import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
+import ubic.gemma.core.loader.util.ftp.FTPClientFactoryImpl;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.ProgressInputStream;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -62,6 +63,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             FETCH_THREADS_OPTION = "fetchThreads";
 
     private static final String
+            SAMPLE_ACCESSIONS_OPTION = "sampleAccessions",
             DATA_TYPE_OPTION = "dataType",
             SUPPLEMENTARY_FILE_OPTION = "supplementaryFile";
 
@@ -99,10 +101,13 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
 
     // single-accession options
     @Nullable
+    private Set<String> sampleAccessions;
+    @Nullable
     private SingleCellDataType dataType;
     @Nullable
     private String supplementaryFile;
 
+    // MEX options
     @Nullable
     private String barcodesFileSuffix;
     @Nullable
@@ -130,12 +135,13 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
     @Override
     protected void buildOptions( Options options ) {
         // options are consistent with those of LoadExpressionDataCli
-        options.addOption( Option.builder( ACCESSIONS_FILE_OPTION ).longOpt( "file" ).type( File.class ).hasArg().desc( "File containing accessions to download" ).build() );
-        options.addOption( Option.builder( ACCESSIONS_OPTION ).longOpt( "acc" ).hasArg().desc( "Comma-delimited list of accessions to download" ).build() );
+        options.addOption( Option.builder( ACCESSIONS_FILE_OPTION ).longOpt( "file" ).type( File.class ).hasArg().desc( "File containing accessions to download." ).build() );
+        options.addOption( Option.builder( ACCESSIONS_OPTION ).longOpt( "acc" ).hasArg().desc( "Comma-delimited list of accessions to download." ).build() );
         options.addOption( Option.builder( SUMMARY_OUTPUT_FILE_OPTION ).longOpt( "summary-output-file" ).type( File.class ).hasArg().desc( "File to write the summary output to. This is used to keep track of progress and resume download with -r/--resume." ).build() );
         options.addOption( Option.builder( RESUME_OPTION ).longOpt( "resume" ).desc( "Resume download from a previous invocation of this command. Requires -s/--summary-output-file to be set and refer to an existing file." ).build() );
         options.addOption( Option.builder( RETRY_OPTION ).longOpt( "retry" ).hasArg().desc( "Retry problematic datasets. Possible values are: '" + UNSUPPORTED_INDICATOR + "', '" + UNKNOWN_INDICATOR + "' or '" + FAILED_INDICATOR + "', or any combination delimited by ','. Requires -r/--resume option to be set." ).build() );
         options.addOption( Option.builder( FETCH_THREADS_OPTION ).longOpt( "fetch-threads" ).hasArg().type( Number.class ).desc( "Number of threads to use for downloading files. Default is " + GeoSingleCellDetector.DEFAULT_NUMBER_OF_FETCH_THREADS + ". Use -threads/--threads for processing series in parallel." ).build() );
+        options.addOption( Option.builder( SAMPLE_ACCESSIONS_OPTION ).longOpt( "sample-accessions" ).hasArg().desc( "Comma-delimited list of sample accessions to download." ).build() );
         options.addOption( Option.builder( DATA_TYPE_OPTION ).longOpt( "data-type" ).hasArg().desc( "Data type. Possible values are: " + Arrays.stream( SingleCellDataType.values() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) + ". Only works if a single accession is passed to -e/--acc." ).build() );
         options.addOption( Option.builder( SUPPLEMENTARY_FILE_OPTION ).longOpt( "supplementary-file" ).hasArgs().desc( "Supplementary file to download. Only works if a single accession is passed to -e/--acc and -dataType is specified." ).build() );
         options.addOption( Option.builder( MEX_BARCODES_FILE_SUFFIX ).longOpt( "mex-barcodes-file" ).hasArg().desc( "Suffix to use to detect MEX barcodes file. Only works if -dataType/--data-type is set to MEX." ).build() );
@@ -244,9 +250,15 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         if ( commandLine.hasOption( FETCH_THREADS_OPTION ) ) {
             fetchThreads = commandLine.getParsedOptionValue( FETCH_THREADS_OPTION );
         }
+        if ( commandLine.hasOption( SAMPLE_ACCESSIONS_OPTION ) ) {
+            if ( !singleAccessionMode ) {
+                throw new IllegalArgumentException( "The -sampleAccessions/--sample-accessions option requires that only one accession be supplied via -e/--acc." );
+            }
+            sampleAccessions = new HashSet<>( Arrays.asList( StringUtils.split( commandLine.getOptionValue( SAMPLE_ACCESSIONS_OPTION ), ',' ) ) );
+        }
         if ( commandLine.hasOption( DATA_TYPE_OPTION ) ) {
             if ( !singleAccessionMode ) {
-                throw new IllegalArgumentException( "The -dataType option requires that only one accession be supplied via -e/--acc." );
+                throw new IllegalArgumentException( "The -dataType/--data-type option requires that only one accession be supplied via -e/--acc." );
             }
             dataType = SingleCellDataType.valueOf( commandLine.getOptionValue( DATA_TYPE_OPTION ).toUpperCase() );
         }
@@ -294,7 +306,9 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             }
             if ( fetchThreads != null ) {
                 // ensure that each thread can utilize a FTP connection
-                ftpClientFactory.setMaxTotalConnections( fetchThreads.intValue() );
+                if ( ftpClientFactory instanceof FTPClientFactoryImpl ) {
+                    ( ( FTPClientFactoryImpl ) ftpClientFactory ).setMaxTotalConnections( fetchThreads.intValue() );
+                }
                 detector.setNumberOfFetchThreads( fetchThreads.intValue() );
             }
             log.info( "Downloading single cell data to " + singleCellDataBasePath + "..." );
@@ -311,6 +325,22 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                             addErrorObject( geoAccession, "The SOFT file does not contain an entry for the series." );
                             comment = "The SOFT file does not contain an entry for the series.";
                             return;
+                        }
+                        if ( sampleAccessions != null ) {
+                            log.info( "Only retaining the following samples from " + geoAccession + ": " + String.join( ", ", sampleAccessions ) );
+                            Set<GeoSample> samplesToKeep = series.getSamples().stream()
+                                    .filter( s -> sampleAccessions.contains( s.getGeoAccession() ) )
+                                    .collect( Collectors.toSet() );
+                            if ( samplesToKeep.size() != sampleAccessions.size() ) {
+                                Set<String> availableSamples = series.getSamples().stream().map( GeoSample::getGeoAccession )
+                                        .filter( Objects::nonNull ).collect( Collectors.toCollection( LinkedHashSet::new ) );
+                                String missingSamples = sampleAccessions.stream()
+                                        .filter( sa -> !availableSamples.contains( sa ) )
+                                        .collect( Collectors.joining( ", " ) );
+                                throw new IllegalArgumentException( String.format( "Not all desired samples were found in %s, the following were missing: %s. The following are available: %s.",
+                                        geoAccession, missingSamples, String.join( ", ", availableSamples ) ) );
+                            }
+                            series.keepSamples( samplesToKeep );
                         }
                         if ( detector.hasSingleCellData( series ) ) {
                             if ( dataType != null && supplementaryFile != null ) {
@@ -366,7 +396,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                             try {
                                 writer.printRecord(
                                         geoAccession, detectedDataType, numberOfSamples, numberOfCells, numberOfGenes,
-                                        additionalSupplementaryFiles.stream().map( this::getFilename ).collect( Collectors.joining( ";" ) ),
+                                        additionalSupplementaryFiles.stream().map( this::formatFilename ).collect( Collectors.joining( ";" ) ),
                                         comment );
                                 writer.flush(); // for convenience, so that results appear immediately with tail -f
                             } catch ( IOException e ) {
@@ -381,9 +411,11 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
     }
 
     /**
-     * Exclamation marks are used to refer to files within TAR archives (i.e. GSM000012_bundle.tar!cellids.csv).
+     * Format a filename for the summary output file.
+     * <p>
+     * Exclamation marks are used to refer to files within archives (i.e. {@code GSM000012_bundle.tar!/cellids.csv}).
      */
-    private String getFilename( String fullPath ) {
+    private String formatFilename( String fullPath ) {
         int afterExclamationMark = fullPath.indexOf( "!" );
         if ( afterExclamationMark > 0 ) {
             return FilenameUtils.getName( fullPath.substring( 0, afterExclamationMark ) ) + fullPath.substring( afterExclamationMark );

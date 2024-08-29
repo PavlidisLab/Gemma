@@ -5,6 +5,7 @@ import org.apache.commons.net.ftp.FTPClient;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.time.Duration;
 
 /**
  * Factory and pool for {@link FTPClient}.
@@ -19,21 +20,6 @@ import java.net.URL;
 public interface FTPClientFactory {
 
     /**
-     * Set the maximum number of idle FTP connections to keep in the pool.
-     */
-    void setMaxIdleConnections( int maxIdle );
-
-    /**
-     * Set the maximum number of FTP connections.
-     */
-    void setMaxTotalConnections( int maxTotal );
-
-    /**
-     * Set the authenticator to use to authenticate against FTP servers.
-     */
-    void setAuthenticator( FTPClientAuthenticator authenticator );
-
-    /**
      * Create an FTP client for the given URL.
      * <p>
      * Once you're done with the client, you should consider recycling it with {@link #recycleClient(URL, FTPClient)}.
@@ -41,6 +27,11 @@ public interface FTPClientFactory {
      */
     FTPClient getFtpClient( URL url ) throws IOException;
 
+    /**
+     * Recycle the FTP client so that it might be reused in the future.
+     */
+    void recycleClient( URL url, FTPClient client );
+   
     /**
      * Destroy an FTP client that is known to be no-longer valid.
      */
@@ -52,11 +43,6 @@ public interface FTPClientFactory {
      * Unlike {@link #destroyClient(URL, FTPClient)}, no attempt will be made to gracefully logout.
      */
     void abandonClient( URL url, FTPClient client );
-
-    /**
-     * Recycle the FTP client so that it might be reused in the future.
-     */
-    void recycleClient( URL url, FTPClient client );
 
     /**
      * Open an input stream for the given FTP URL.

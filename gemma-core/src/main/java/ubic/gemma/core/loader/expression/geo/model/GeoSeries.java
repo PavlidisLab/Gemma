@@ -415,6 +415,16 @@ public class GeoSeries extends GeoData {
     }
 
     /**
+     * Only keep the given samples.
+     */
+    public void keepSamples( Collection<GeoSample> samplesToKeep ) {
+        if ( samplesToKeep == null || samplesToKeep.isEmpty() ) {
+            return;
+        }
+        this.samples.removeIf( s -> !samplesToKeep.contains( s ) );
+    }
+
+    /**
      * Clean up samples we have decided are ineligible (i.e., non transcriptomic)
      *
      * @param samplesToSkip the samples to remove
