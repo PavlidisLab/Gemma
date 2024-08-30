@@ -90,19 +90,13 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
 
     @Override
     public FTPClient getFtpClient( URL url ) throws IOException {
+        FTPClientAuthenticator authenticator = getAuthenticatorForUrl( url );
         try {
             FTPClient client = getPool( url ).borrowObject();
-            if ( url.getUserInfo() != null ) {
-                log.debug( "Applying authentication from URL userinfo..." );
+            if ( authenticator != null ) {
                 try {
-                    String[] userInfo = url.getUserInfo().split( ":", 2 );
-                    if ( userInfo.length != 2 ) {
-                        throw new IllegalArgumentException( String.format( "The userinfo of %s does not have a ':' delimiter for credentials.", url ) );
-                    }
-                    String username = userInfo[0];
-                    String password = userInfo[1];
-                    new UsernamePasswordFTPClientAuthenticator( username, password )
-                            .authenticate( client, url.getHost() );
+                    log.debug( "Applying authentication from URL userinfo..." );
+                    authenticator.authenticate( client, url.getHost() );
                 } catch ( Exception e ) {
                     destroyClient( url, client );
                     throw e;
@@ -114,6 +108,21 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
         } catch ( Exception e ) {
             throw new RuntimeException( "Failed to borrow FTP client for " + url + ".", e );
         }
+    }
+
+    /**
+     * Obtain a FTP authenticator for a URL by extracting credentials from {@link URL#getUserInfo()}
+     */
+    @Nullable
+    private FTPClientAuthenticator getAuthenticatorForUrl( URL url ) {
+        if ( url.getUserInfo() == null ) {
+            return null;
+        }
+        String[] userInfo = url.getUserInfo().split( ":", 2 );
+        if ( userInfo.length != 2 ) {
+            throw new IllegalArgumentException( String.format( "The userinfo of %s does not have a ':' delimiter for credentials.", url ) );
+        }
+        return new UsernamePasswordFTPClientAuthenticator( userInfo[0], userInfo[1] );
     }
 
     @Override
