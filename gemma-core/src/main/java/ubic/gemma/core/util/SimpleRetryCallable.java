@@ -10,7 +10,7 @@ public interface SimpleRetryCallable<T, E extends Exception> {
     /**
      * @param attempt     indicate the attempt number (zero for first, 1 for second, etc.)
      * @param lastAttempt indicate if this is the last attempt, any raised exception will bubble up to
-     *                    {@link SimpleRetry#execute(SimpleRetryCallable)}
+     *                    {@link SimpleRetry#execute(SimpleRetryCallable, Object what)}
      */
     T call( int attempt, boolean lastAttempt ) throws E;
 }

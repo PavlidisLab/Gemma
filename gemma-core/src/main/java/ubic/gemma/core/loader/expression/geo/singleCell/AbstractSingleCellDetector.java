@@ -25,6 +25,7 @@ public abstract class AbstractSingleCellDetector implements SingleCellDetector {
 
     private FTPClientFactory ftpClientFactory;
     private Path downloadDirectory;
+    private final SimpleRetry<IOException> retryTemplate = new SimpleRetry<>( 3, 1000, 1.5, IOException.class, getClass().getName() );
 
     /**
      * Set the FTP client factory to use for downloading data over FTP.
@@ -52,8 +53,7 @@ public abstract class AbstractSingleCellDetector implements SingleCellDetector {
      * @see SimpleRetry
      */
     protected <T> T retry( SimpleRetryCallable<T, IOException> callable, String what ) throws IOException {
-        return new SimpleRetry<T, IOException>( what, 3, 1000, 1.5, IOException.class, getClass().getName() )
-                .execute( callable );
+        return retryTemplate.execute( callable, what );
     }
 
     /**

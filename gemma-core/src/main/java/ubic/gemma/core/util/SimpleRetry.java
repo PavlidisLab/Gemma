@@ -10,9 +10,8 @@ import org.springframework.util.Assert;
  * This is mainly meant for simple use cases, use {@link org.springframework.retry.support.RetryTemplate} otherwise.
  * @author poirigui
  */
-public class SimpleRetry<T, E extends Exception> {
+public class SimpleRetry<E extends Exception> {
 
-    private final Object what;
     private final int maxRetries;
     private final int retryDelayMillis;
     private final double exponentialBackoffFactor;
@@ -21,19 +20,16 @@ public class SimpleRetry<T, E extends Exception> {
 
     /**
      * Create a new simply retry strategy.
-     * @param what                     an object describing what is being retried, it's toString() will be used for
-     *                                 logging
      * @param maxRetries               maximum number of retries
      * @param retryDelayMillis         delay to wait after a failed attempt
      * @param exponentialBackoffFactor factor by which the retry delay is increased after each failed attempt
      * @param exceptionClass           the type of exception on which retry happens
      * @param logCategory             log category to use for retry-related messages
      */
-    public SimpleRetry( Object what, int maxRetries, int retryDelayMillis, double exponentialBackoffFactor, Class<E> exceptionClass, String logCategory ) {
+    public SimpleRetry( int maxRetries, int retryDelayMillis, double exponentialBackoffFactor, Class<E> exceptionClass, String logCategory ) {
         Assert.isTrue( maxRetries >= 0, "Maximum number of retries must be zero or greater." );
         Assert.isTrue( retryDelayMillis >= 0, "Retry delay must be zero or greater." );
         Assert.isTrue( exponentialBackoffFactor >= 1, "Exponential backoff must be one or greater." );
-        this.what = what;
         this.maxRetries = maxRetries;
         this.retryDelayMillis = retryDelayMillis;
         this.exponentialBackoffFactor = exponentialBackoffFactor;
@@ -43,8 +39,9 @@ public class SimpleRetry<T, E extends Exception> {
 
     /**
      * Execute the given callable with a retry strategy.
+     * @param what an object describing what is being retried, it's toString() will be used for logging
      */
-    public T execute( SimpleRetryCallable<T, E> callable ) throws E {
+    public <T> T execute( SimpleRetryCallable<T, E> callable, Object what ) throws E {
         E lastException = null;
         for ( int i = 0; i <= maxRetries; i++ ) {
             try {
