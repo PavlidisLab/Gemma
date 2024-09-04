@@ -602,7 +602,9 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             }
         }
 
-        assert samplesBioAssay.size() == sampleOffset.length;
+        // in the simple scenario, the SCD sample layout exactly match what is present in he data, so we don't need to
+        // do anything in particular
+        boolean isSimpleCase = scd.getBioAssays().equals( samplesBioAssay );
 
         int[] intptr;
         try ( H5Dataset indptr = X.getDataset( "indptr" ) ) {
@@ -626,8 +628,8 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                         // https://github.com/scverse/anndata/issues/1388
                         throw new IllegalStateException( String.format( "Indices for %s are not sorted.", genes[i] ) );
                     }
-                    // simple case: the number of BAs match the number of samples
-                    if ( scd.getBioAssays().size() == samples.length ) {
+                    // simple case: the number of BAs match the number of samples and the sample order matches
+                    if ( isSimpleCase ) {
                         // this is using the same storage strategy from ByteArrayConverter
                         vector.setData( data.slice( intptr[i], intptr[i + 1] ).toByteVector( H5Type.IEEE_F64BE ) );
                         vector.setDataIndices( IX );
@@ -637,38 +639,53 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                         // compute the vector length
                         int nnz = 0;
                         for ( BioAssay ba : scd.getBioAssays() ) {
-                            int z = samplesBioAssay.indexOf( ba );
-                            assert z != -1;
-                            nnz += sampleOffset[z + 1] - sampleOffset[z];
+                            int j = samplesBioAssay.indexOf( ba );
+                            assert j != -1;
+                            int start = Arrays.binarySearch( IX, sampleOffset[j] );
+                            if ( start < 0 ) {
+                                start = -start - 1;
+                            }
+                            int end;
+                            if ( j < sampleOffset.length - 1 ) {
+                                end = Arrays.binarySearch( IX, sampleOffset[j + 1] );
+                                if ( end < 0 ) {
+                                    end = -end - 1;
+                                }
+                            } else {
+                                end = IX.length;
+                            }
+                            nnz += end - start;
                         }
                         System.out.println( "nnz: " + nnz );
                         byte[] vectorData = new byte[8 * nnz];
                         int[] vectorIndices = new int[nnz];
                         // select indices relevant to BAs
                         nnz = 0;
-                        for ( int j = 0; j < sampleOffset.length; j++ ) {
+                        List<BioAssay> bioAssays = scd.getBioAssays();
+                        for ( int i1 = 0; i1 < bioAssays.size(); i1++ ) {
+                            BioAssay ba = bioAssays.get( i1 );
+                            int j = samplesBioAssay.indexOf( ba );
                             // find the first position where the sample occurs (in term of insertion point)
-                            int start = Arrays.binarySearch( IX, j ) - 2;
+                            int start = Arrays.binarySearch( IX, sampleOffset[j] );
                             if ( start < 0 ) {
-                                start = -start - 2;
+                                start = -start - 1;
                             }
                             int end;
-                            // find the ending position where the sample occurs
                             if ( j < sampleOffset.length - 1 ) {
-                                end = Arrays.binarySearch( IX, j + 1 ) - 2;
+                                end = Arrays.binarySearch( IX, sampleOffset[j + 1] );
                                 if ( end < 0 ) {
-                                    end = -end - 2;
+                                    end = -end - 1;
                                 }
                             } else {
                                 end = IX.length;
                             }
                             int sampleNnz = end - start;
                             byte[] w = data.slice( start, end ).toByteVector( H5Type.IEEE_F64BE );
-                            System.arraycopy( w, start, vectorData, 8 * nnz, sampleNnz );
+                            System.arraycopy( w, 0, vectorData, 8 * nnz, 8 * sampleNnz );
                             System.arraycopy( IX, start, vectorIndices, nnz, sampleNnz );
                             // adjust indices to be relative to the BA offset
                             for ( int k = nnz; k < nnz + sampleNnz; k++ ) {
-                                vectorIndices[k] = vectorData[k] - sampleOffset[j] + scd.getBioAssaysOffset()[j];
+                                vectorIndices[k] = vectorIndices[k] - sampleOffset[j] + scd.getBioAssaysOffset()[i1];
                             }
                             nnz += sampleNnz;
                         }
