@@ -581,9 +581,13 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
                 log.warn( sample.getGeoAccession() + ": does not use the 'single cell transcriptomics' library source, but keywords in its data processing section indicate it is single-cell." );
                 return true;
             }
-            // don't allow TAR lookups because that would be too slow
+            // don't allow archive lookups because that would be too slow
             if ( mexDetector.hasSingleCellData( sample, false ) ) {
                 log.warn( sample.getGeoAccession() + ": does not use the 'single cell transcriptomics' library source, but has MEX data in its supplementary material." );
+                return true;
+            }
+            if ( loomDetector.hasSingleCellData( sample ) ) {
+                log.warn( sample.getGeoAccession() + ": does not use the 'single cell transcriptomics' library source, but has Loom data in its supplementary material." );
                 return true;
             }
             if ( hasSingleCellDataInSeries ) {
