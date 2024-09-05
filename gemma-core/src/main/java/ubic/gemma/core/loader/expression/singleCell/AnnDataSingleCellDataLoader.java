@@ -6,7 +6,11 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
-import ubic.gemma.core.loader.util.hdf5.*;
+import ubic.gemma.core.loader.util.anndata.*;
+import ubic.gemma.core.loader.util.hdf5.H5Dataset;
+import ubic.gemma.core.loader.util.hdf5.H5FundamentalType;
+import ubic.gemma.core.loader.util.hdf5.H5Group;
+import ubic.gemma.core.loader.util.hdf5.H5Type;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
@@ -90,10 +94,10 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     public Set<String> getSampleNames() throws IOException {
         Assert.notNull( sampleFactorName, "A sample factor name must be set." );
         CategoricalArray sampleNames;
-        try ( H5File h5File = openFile(); H5Group v = h5File.getGroup( "var" ) ) {
-            sampleNames = loadCategoricalColumnFromDataframe( v, sampleFactorName );
+        try ( AnnData h5File = AnnData.open( file ); Dataframe v = h5File.getVar() ) {
+            sampleNames = v.getCategoricalColumn( sampleFactorName );
         }
-        return new HashSet<>( Arrays.asList( sampleNames.categories ) );
+        return new HashSet<>( Arrays.asList( sampleNames.getCategories() ) );
     }
 
     @Override
@@ -102,14 +106,12 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         Assert.notNull( sampleNameComparator, "A sample name comparator is necessary to match samples to BioMaterials." );
         Assert.notNull( sampleFactorName, "The sample factor name must be set." );
         SingleCellDimension singleCellDimension = new SingleCellDimension();
-        try ( H5File h5File = openFile() ) {
+        try ( AnnData h5File = AnnData.open( file ) ) {
             String[] cellIds;
-            try ( H5Group v = h5File.getGroup( "var" ) ) {
-                cellIds = loadStringIndexFromDataframe( v );
-            }
             CategoricalArray sampleNames;
-            try ( H5Group v = h5File.getGroup( "var" ) ) {
-                sampleNames = loadCategoricalColumnFromDataframe( v, sampleFactorName );
+            try ( Dataframe v = h5File.getVar() ) {
+                cellIds = v.getStringArrayColumn( v.getIndexColumn() );
+                sampleNames = v.getCategoricalColumn( sampleFactorName );
             }
             // ensure that samples are properly grouped, they do not have to be in any particular order
             Set<String> previouslySeenGroups = new HashSet<>();
@@ -179,34 +181,32 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     @Override
     public Set<QuantitationType> getQuantitationTypes() throws IOException {
         Set<QuantitationType> qts = new HashSet<>();
-        try ( H5File h5File = openFile() ) {
-            if ( h5File.exists( "X" ) ) {
-                qts.add( createQt( h5File, "X" ) );
+        try ( AnnData h5File = AnnData.open( file ) ) {
+            if ( h5File.getX() != null ) {
+                qts.add( createQt( h5File, h5File.getX() ) );
             }
-            if ( h5File.exists( "layers" ) ) {
-                for ( String layer : h5File.getChildren( "layers" ) ) {
-                    qts.add( createQt( h5File, "layers/" + layer ) );
-                }
+            for ( String layer : h5File.getLayers() ) {
+                qts.add( createQt( h5File, h5File.getLayer( layer ) ) );
             }
         }
         return qts;
     }
 
-    private QuantitationType createQt( H5File h5File, String path ) {
-        String et = h5File.getStringAttribute( path, "encoding-type" );
+    private QuantitationType createQt( AnnData h5File, Layer layer ) {
+        String et = layer.getType();
         H5Dataset dataset;
         if ( et == null ) {
             throw new IllegalArgumentException();
         } else if ( et.equals( "csr_matrix" ) || et.equals( "csc_matrix" ) ) {
             // CSC is wrong for loading vectors, but the data type is suitable for detection
-            dataset = h5File.getDataset( path + "/data" );
+            dataset = layer.getGroup().getDataset( "data" );
         } else if ( et.equals( "dense" ) ) {
-            dataset = h5File.getDataset( path );
+            dataset = layer.getDataset();
         } else {
             throw new UnsupportedOperationException( "Loading single-cell data from " + et + " is not supported." );
         }
         QuantitationType qt = new QuantitationType();
-        qt.setName( path );
+        qt.setName( layer.getPath() );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         try ( H5Type datasetType = dataset.getType() ) {
             if ( datasetType.getFundamentalType().equals( H5FundamentalType.INTEGER ) ) {
@@ -214,44 +214,45 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 qt.setScale( ScaleType.COUNT );
             } else if ( datasetType.getFundamentalType().equals( H5FundamentalType.FLOAT ) ) {
                 qt.setType( StandardQuantitationType.AMOUNT );
-                qt.setScale( detectScale( h5File, path ) );
+                qt.setScale( detectScale( h5File, layer ) );
             } else {
                 throw new IllegalArgumentException( "Unsupported datatype " + datasetType );
             }
         }
         qt.setRepresentation( PrimitiveType.DOUBLE );
-        log.info( "Detected quantitation type for '" + path + "': " + qt );
+        log.info( "Detected quantitation type for '" + layer.getPath() + "': " + qt );
         return qt;
     }
 
-    private ScaleType detectScale( H5File h5File, String path ) {
-        if ( "X".equals( path ) && "dict".equals( h5File.getStringAttribute( "uns", "encoding-type" ) ) ) {
-            try ( H5Group uns = h5File.getGroup( "uns" ) ) {
-                if ( uns.getChildren().contains( "log1p" ) ) {
-                    log.info( h5File.getPath().getFileName() + " contains unstructured data describing the scale type: " + ScaleType.LOG1P + ", using it for X." );
+    private ScaleType detectScale( AnnData h5File, Layer layer ) {
+        if ( "X".equals( layer.getPath() ) ) {
+            try ( H5Group uns = h5File.getUns() ) {
+                if ( uns != null && "dict".equals( uns.getStringAttribute( "encoding-type" ) )
+                        && uns.getChildren().contains( "log1p" ) ) {
+                    log.info( h5File + " contains unstructured data describing the scale type: " + ScaleType.LOG1P + ", using it for X." );
                     return ScaleType.LOG1P;
                 }
             }
         }
         // FIXME: infer scale from data using the logic from ExpressionDataDoubleMatrixUtil.inferQuantitationType()
-        log.warn( "Scale type cannot be detected for non-counting data in " + path + "." );
+        log.warn( "Scale type cannot be detected for non-counting data in " + layer.getPath() + "." );
         return ScaleType.OTHER;
     }
 
     @Override
     public Optional<CellTypeAssignment> getCellTypeAssignment( SingleCellDimension dimension ) throws IOException {
         Assert.notNull( cellTypeFactorName, "A cell type factor name must be set to determine cell type assignments." );
-        try ( H5File h5File = openFile(); H5Group group = h5File.getGroup( "var/" + cellTypeFactorName ) ) {
-            CategoricalArray cellTypes = new CategoricalArray( group );
+        try ( AnnData h5File = AnnData.open( file ); Dataframe var = h5File.getVar() ) {
+            CategoricalArray cellTypes = var.getCategoricalColumn( cellTypeFactorName );
             CellTypeAssignment assignment = new CellTypeAssignment();
             int unknownCellTypeCode = -1;
-            for ( int i = 0; i < cellTypes.categories.length; i++ ) {
-                String ct = cellTypes.categories[i];
+            for ( int i = 0; i < cellTypes.getCategories().length; i++ ) {
+                String ct = cellTypes.getCategories()[i];
                 if ( ct.equals( unknownCellTypeIndicator ) ) {
                     if ( unknownCellTypeCode != -1 ) {
                         throw new IllegalStateException( "There is not than one unknown cell type indicator." );
                     }
-                    log.info( h5File.getPath().getFileName() + " uses a special indicator for unknown cell types: " + ct + " with code: " + i + ", its occurrences will be replaced with -1." );
+                    log.info( h5File + " uses a special indicator for unknown cell types: " + ct + " with code: " + i + ", its occurrences will be replaced with -1." );
                     unknownCellTypeCode = i;
                     continue;
                 }
@@ -263,13 +264,13 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             assignment.setNumberOfCellTypes( assignment.getCellTypes().size() );
             if ( unknownCellTypeCode != -1 ) {
                 // rewrite unknown codes
-                for ( int i = 0; i < cellTypes.codes.length; i++ ) {
-                    if ( cellTypes.codes[i] == unknownCellTypeCode ) {
-                        cellTypes.codes[i] = CellTypeAssignment.UNKNOWN_CELL_TYPE;
+                for ( int i = 0; i < cellTypes.getCodes().length; i++ ) {
+                    if ( cellTypes.getCodes()[i] == unknownCellTypeCode ) {
+                        cellTypes.getCodes()[i] = CellTypeAssignment.UNKNOWN_CELL_TYPE;
                     }
                 }
             }
-            assignment.setCellTypeIndices( cellTypes.codes );
+            assignment.setCellTypeIndices( cellTypes.getCodes() );
             return Optional.of( assignment );
         }
     }
@@ -278,26 +279,26 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     public Set<ExperimentalFactor> getFactors( Collection<BioAssay> samples, @Nullable Map<BioMaterial, Set<FactorValue>> factorValueAssignments ) throws IOException {
         Assert.notNull( sampleFactorName, "A sample factor name must be set." );
         Set<ExperimentalFactor> factors = new HashSet<>();
-        try ( H5File h5File = openFile() ) {
-            try ( H5Group vars = h5File.getGroup( "var" ) ) {
-                String indexColumn = vars.getStringAttribute( "_index" );
-                CategoricalArray sampleNames = loadCategoricalColumnFromDataframe( vars, sampleFactorName );
-                for ( String factorName : vars.getChildren() ) {
+        try ( AnnData h5File = AnnData.open( file ) ) {
+            try ( Dataframe vars = h5File.getVar() ) {
+                String indexColumn = vars.getIndexColumn();
+                CategoricalArray sampleNames = vars.getCategoricalColumn( sampleFactorName );
+                for ( String factorName : vars.getColumns() ) {
                     if ( factorName.equals( indexColumn ) || factorName.equals( sampleFactorName ) || factorName.equals( cellTypeFactorName ) ) {
                         // cell IDs, sample names, etc. are not useful as sample characteristics
                         continue;
                     }
-                    String encodingType = vars.getStringAttribute( factorName, "encoding-type" );
+                    String encodingType = vars.getColumnType( factorName );
                     String[] values;
                     PrimitiveType representation;
                     if ( "categorical".equals( encodingType ) ) {
-                        values = loadCategoricalColumnFromDataframe( vars, factorName ).toStringVector();
+                        values = vars.getCategoricalColumn( factorName ).toStringVector();
                         representation = PrimitiveType.STRING;
                     } else if ( "string-array".equals( encodingType ) ) {
-                        values = loadStringArrayColumnFromDataframe( vars, factorName );
+                        values = vars.getStringArrayColumn( factorName );
                         representation = PrimitiveType.STRING;
                     } else if ( "array".equals( encodingType ) ) {
-                        try ( H5Dataset vector = vars.getDataset( factorName ) ) {
+                        try ( H5Dataset vector = vars.getArrayColumn( factorName ) ) {
                             switch ( vector.getType().getFundamentalType() ) {
                                 case INTEGER:
                                     values = Arrays.stream( vector.toIntegerVector() ).mapToObj( Integer::toString ).toArray( String[]::new );
@@ -374,28 +375,24 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     public Map<BioMaterial, Set<Characteristic>> getSamplesCharacteristics( Collection<BioAssay> samples ) throws IOException {
         Assert.notNull( sampleFactorName, "A sample factor name must be set." );
         Map<BioMaterial, Set<Characteristic>> result = new HashMap<>();
-        try ( H5File h5File = openFile() ) {
-            try ( H5Group vars = h5File.getGroup( "var" ) ) {
-                String indexColumn = vars.getStringAttribute( "_index" );
-                CategoricalArray sampleNames = loadCategoricalColumnFromDataframe( vars, sampleFactorName );
-                for ( String factorName : vars.getChildren() ) {
+        try ( AnnData h5File = AnnData.open( file ) ) {
+            try ( Dataframe vars = h5File.getVar() ) {
+                String indexColumn = vars.getIndexColumn();
+                CategoricalArray sampleNames = vars.getCategoricalColumn( sampleFactorName );
+                for ( String factorName : vars.getColumns() ) {
                     if ( factorName.equals( indexColumn ) || factorName.equals( sampleFactorName ) || factorName.equals( cellTypeFactorName ) ) {
                         // cell IDs, sample names, etc. are not useful as sample characteristics
                         continue;
                     }
-                    String encodingType = vars.getStringAttribute( factorName, "encoding-type" );
+                    String encodingType = vars.getColumnType( factorName );
                     String[] values;
                     if ( "categorical".equals( encodingType ) ) {
                         // to be valid for sample-level, a characteristic has to be the same for all cells
-                        values = loadCategoricalColumnFromDataframe( vars, factorName ).toStringVector();
+                        values = vars.getCategoricalColumn( factorName ).toStringVector();
                     } else if ( "string-array".equals( encodingType ) ) {
-                        values = loadStringArrayColumnFromDataframe( vars, factorName );
+                        values = vars.getStringArrayColumn( factorName );
                     } else if ( "array".equals( encodingType ) ) {
-                        try ( H5Dataset vector = vars.getDataset( factorName ) ) {
-                            Assert.isTrue( Objects.equals( vars.getStringAttribute( "encoding-type" ), "dataframe" ),
-                                    "The H5 group must have an 'encoding-type' attribute set to 'dataframe'." );
-                            Assert.isTrue( Objects.equals( vars.getStringAttribute( factorName, "encoding-type" ), "array" ),
-                                    "The column " + factorName + " is not an array." );
+                        try ( H5Dataset vector = vars.getArrayColumn( factorName ) ) {
                             switch ( vector.getType().getFundamentalType() ) {
                                 case INTEGER:
                                     values = Arrays.stream( vector.toIntegerVector() ).mapToObj( Integer::toString ).toArray( String[]::new );
@@ -440,8 +437,8 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
     @Override
     public Set<String> getGenes() throws IOException {
-        try ( H5File h5File = openFile(); H5Group obs = h5File.getGroup( "obs" ) ) {
-            return new HashSet<>( Arrays.asList( loadStringIndexFromDataframe( obs ) ) );
+        try ( AnnData h5File = AnnData.open( file ); Dataframe obs = h5File.getObs() ) {
+            return new HashSet<>( Arrays.asList( obs.getStringArrayColumn( obs.getIndexColumn() ) ) );
         }
     }
 
@@ -454,12 +451,12 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         Assert.isTrue( quantitationType.getName().equals( "X" ) || quantitationType.getName().startsWith( "layers/" ),
                 "The name of the quantitation must refer to a valid path in the HDF5 file." );
         // we don't want to close it since it will be closed by the stream
-        H5File h5File = openFile();
+        AnnData h5File = AnnData.open( file );
         try {
             // load genes
             String[] genes;
-            try ( H5Group obs = h5File.getGroup( "obs" ) ) {
-                genes = loadStringIndexFromDataframe( obs );
+            try ( Dataframe obs = h5File.getObs() ) {
+                genes = obs.getStringArrayColumn( obs.getIndexColumn() );
             }
             Set<String> genesSet = new HashSet<>( Arrays.asList( genes ) );
             if ( !CollectionUtils.containsAny( genesSet, elementsMapping.keySet() ) ) {
@@ -481,22 +478,25 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             }
             // load the sample layout (necessary for slicing the necessary samples)
             CategoricalArray samples;
-            try ( H5Group v = h5File.getGroup( "var" ) ) {
-                samples = loadCategoricalColumnFromDataframe( v, sampleFactorName );
+            try ( Dataframe v = h5File.getVar() ) {
+                samples = v.getCategoricalColumn( sampleFactorName );
             }
-            String path = quantitationType.getName();
-            if ( !h5File.exists( path ) ) {
-                throw new IllegalArgumentException( "No such path in the HDF5 file: " + path );
+            Layer layer;
+            if ( quantitationType.getName().startsWith( "layers/" ) ) {
+                String layerName = quantitationType.getName().substring( "layers/".length() );
+                layer = h5File.getLayer( layerName );
+            } else {
+                layer = requireNonNull( h5File.getX(), h5File + " does not have a layer for path 'X'." );
             }
-            String matrixEncodingType = h5File.getStringAttribute( path, "encoding-type" );
+            String matrixEncodingType = layer.getType();
             if ( matrixEncodingType == null ) {
-                throw new IllegalArgumentException( "The '" + path + "' location does not have an encoding-type attribute." );
+                throw new IllegalArgumentException( "The '" + quantitationType.getName() + "' location does not have an encoding-type attribute." );
             }
             if ( matrixEncodingType.equals( "csr_matrix" ) ) {
-                return loadVectorsFromSparseMatrix( new CsrMatrix( h5File.getGroup( path ) ), samples, genes, quantitationType, dimension, elementsMapping )
+                return loadVectorsFromSparseMatrix( new CsrMatrix( layer.getGroup() ), samples, genes, quantitationType, dimension, elementsMapping )
                         .onClose( h5File::close );
             } else if ( matrixEncodingType.equals( "csc_matrix" ) ) {
-                throw new IllegalArgumentException( "The matrix at '" + path + "' is stored as CSC; it must be converted to CSR for being loaded." );
+                throw new IllegalArgumentException( "The matrix at '" + quantitationType.getName() + "' is stored as CSC; it must be converted to CSR for being loaded." );
             } else {
                 throw new UnsupportedOperationException( "Loading single-cell data from " + matrixEncodingType + " is not supported." );
             }
@@ -509,16 +509,16 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
     private Stream<SingleCellExpressionDataVector> loadVectorsFromSparseMatrix( CsrMatrix matrix, CategoricalArray samples, String[]
             genes, QuantitationType qt, SingleCellDimension scd, Map<String, CompositeSequence> elementsMapping ) {
-        Assert.isTrue( genes.length == matrix.shape[0],
+        Assert.isTrue( genes.length == matrix.getShape()[0],
                 "The number of supplied genes does not match the number of rows in the sparse matrix." );
-        Assert.isTrue( samples.size() == matrix.shape[1],
+        Assert.isTrue( samples.size() == matrix.getShape()[1],
                 "The number of supplied samples does not match the number of columns in the sparse matrix." );
-        Assert.isTrue( scd.getCellIds().size() <= matrix.shape[1],
+        Assert.isTrue( scd.getCellIds().size() <= matrix.getShape()[1],
                 "The number of cells in the dimension cannot exceed the number of columns in the sparse matrix." );
 
         // build a sample offset index for efficiently selecting samples
         // if a sample does not have a corresponding BioAssay (i.e. an unwanted sample), it is set to null
-        int numberOfSamples = samples.categories.length;
+        int numberOfSamples = samples.getCategories().length;
         List<BioAssay> samplesBioAssay = new ArrayList<>( numberOfSamples );
         int[] samplesBioAssayOffset = new int[numberOfSamples];
         int W = 0;
@@ -540,16 +540,19 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         // do anything in particular
         boolean isSimpleCase = scd.getBioAssays().equals( samplesBioAssay );
 
-        return IntStream.range( 0, matrix.shape[0] )
+        return IntStream.range( 0, matrix.getShape()[0] )
                 // ignore entries that are missing a gene mapping
                 .filter( i -> elementsMapping.containsKey( genes[i] ) )
                 .mapToObj( i -> {
-                    assert matrix.intptr[i] < matrix.intptr[i + 1];
+                    assert matrix.getIndptr()[i] < matrix.getIndptr()[i + 1];
                     SingleCellExpressionDataVector vector = new SingleCellExpressionDataVector();
                     vector.setDesignElement( elementsMapping.get( genes[i] ) );
                     vector.setSingleCellDimension( scd );
                     vector.setQuantitationType( qt );
-                    int[] IX = matrix.indices.slice( matrix.intptr[i], matrix.intptr[i + 1] ).toIntegerVector();
+                    int[] IX;
+                    try ( H5Dataset indices = matrix.getIndices() ) {
+                        IX = indices.slice( matrix.getIndptr()[i], matrix.getIndptr()[i + 1] ).toIntegerVector();
+                    }
                     if ( !ArrayUtils.isSorted( IX ) ) {
                         // this is annoying, AnnData does not guarantee that indices are sorted
                         // https://github.com/scverse/anndata/issues/1388
@@ -558,7 +561,9 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                     // simple case: the number of BAs match the number of samples and the sample order matches
                     if ( isSimpleCase ) {
                         // this is using the same storage strategy from ByteArrayConverter
-                        vector.setData( matrix.data.slice( matrix.intptr[i], matrix.intptr[i + 1] ).toByteVector( H5Type.IEEE_F64BE ) );
+                        try ( H5Dataset data = matrix.getData() ) {
+                            vector.setData( data.slice( matrix.getIndptr()[i], matrix.getIndptr()[i + 1] ).toByteVector( H5Type.IEEE_F64BE ) );
+                        }
                         vector.setDataIndices( IX );
                     } else {
                         // for each sample we want, we compute the starting, ending and position in the vector
@@ -602,7 +607,10 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                             int start = sampleStarts[i1];
                             int end = sampleEnds[i1];
                             int sampleNnz = end - start;
-                            byte[] w = matrix.data.slice( start, end ).toByteVector( H5Type.IEEE_F64BE );
+                            byte[] w;
+                            try ( H5Dataset data = matrix.getData() ) {
+                                w = data.slice( start, end ).toByteVector( H5Type.IEEE_F64BE );
+                            }
                             System.arraycopy( w, 0, vectorData, 8 * sampleOffsetInVector, 8 * sampleNnz );
                             System.arraycopy( IX, start, vectorIndices, sampleOffsetInVector, sampleNnz );
                             // adjust indices to be relative to the BA offset
@@ -617,118 +625,6 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                     return vector;
                 } )
                 .onClose( matrix::close );
-    }
-
-    private H5File openFile() throws IOException {
-        H5File h5File = H5File.open( file );
-        String encodingType = h5File.getStringAttribute( "encoding-type" );
-        if ( !Objects.equals( encodingType, "anndata" ) ) {
-            h5File.close();
-            throw new IllegalArgumentException( "The HDF5 file does not have its 'encoding-type' set to 'anndata'." );
-        }
-        String encodingVersion = h5File.getStringAttribute( "encoding-version" );
-        if ( encodingVersion == null ) {
-            h5File.close();
-            throw new IllegalArgumentException( "The HDF5 file does not have an 'encoding-version' attribute set." );
-        }
-        return h5File;
-    }
-
-    /**
-     * Load the string index of a dataframe.
-     */
-    private String[] loadStringIndexFromDataframe( H5Group df ) {
-        Assert.isTrue( Objects.equals( df.getStringAttribute( "encoding-type" ), "dataframe" ),
-                "The H5 group must have an 'encoding-type' attribute set to 'dataframe'." );
-        String indexColumn = df.getStringAttribute( "_index" );
-        Assert.notNull( indexColumn );
-        Assert.isTrue( df.exists( indexColumn ) );
-        return df.getDataset( indexColumn ).toStringVector();
-    }
-
-    /**
-     * Load the values of a categorical column from a dataframe.
-     */
-    private CategoricalArray loadCategoricalColumnFromDataframe( H5Group df, String columnName ) {
-        Assert.isTrue( Objects.equals( df.getStringAttribute( "encoding-type" ), "dataframe" ),
-                "The H5 group must have an 'encoding-type' attribute set to 'dataframe'." );
-        Assert.isTrue( Objects.equals( df.getStringAttribute( columnName, "encoding-type" ), "categorical" ),
-                "The column " + columnName + " is not categorical." );
-        try ( H5Group dataset = df.getGroup( columnName ) ) {
-            return new CategoricalArray( dataset );
-        }
-    }
-
-    /**
-     * Load a string array column from a dataframe.
-     */
-    private String[] loadStringArrayColumnFromDataframe( H5Group df, String columnName ) {
-        Assert.isTrue( Objects.equals( df.getStringAttribute( "encoding-type" ), "dataframe" ),
-                "The H5 group must have an 'encoding-type' attribute set to 'dataframe'." );
-        Assert.isTrue( Objects.equals( df.getStringAttribute( columnName, "encoding-type" ), "string-array" ),
-                "The column " + columnName + " is not a string array." );
-        return df.getDataset( columnName ).toStringVector();
-    }
-
-    private static class CategoricalArray {
-
-        private final String[] categories;
-        private final int[] codes;
-
-        public CategoricalArray( H5Group group ) {
-            Assert.isTrue( Objects.equals( group.getStringAttribute( "encoding-type" ), "categorical" ),
-                    "The H5 group does not have an 'encoding-type' attribute set to 'categorical'." );
-            this.categories = group.getDataset( "categories" ).toStringVector();
-            this.codes = group.getDataset( "codes" ).toIntegerVector();
-        }
-
-        @Nullable
-        public String get( int i ) {
-            return codes[i] != -1 ? categories[codes[i]] : null;
-        }
-
-        public String[] toStringVector() {
-            String[] vec = new String[codes.length];
-            for ( int i = 0; i < vec.length; i++ ) {
-                vec[i] = codes[i] != -1 ? categories[codes[i]] : null;
-            }
-            return vec;
-        }
-
-        public int size() {
-            return codes.length;
-        }
-    }
-
-    private static class CsrMatrix implements AutoCloseable {
-
-        private final H5Group group;
-        private final int[] shape;
-        private final int[] intptr;
-        private final H5Dataset data;
-        private final H5Dataset indices;
-
-        public CsrMatrix( H5Group group ) {
-            Assert.isTrue( Objects.equals( group.getStringAttribute( "encoding-type" ), "csr_matrix" ),
-                    "The H5 group does not have an 'encoding-type' attribute set to 'csr_matrix'." );
-            this.shape = group.getAttribute( "shape" )
-                    .map( H5Attribute::toIntegerVector )
-                    .orElseThrow( () -> new IllegalStateException( "The sparse matrix does not have a shape attribute." ) );
-            this.group = group;
-            try ( H5Dataset indptr = group.getDataset( "indptr" ) ) {
-                this.intptr = indptr.toIntegerVector();
-            }
-            assert intptr.length == shape[0] + 1;
-            this.data = group.getDataset( "data" );
-            this.indices = group.getDataset( "indices" );
-        }
-
-        @Override
-        public void close() {
-            data.close();
-            indices.close();
-            group.close();
-        }
     }
 
     private Optional<BioAssay> getBioAssayBySampleName( Collection<BioAssay> bioAssays, String sampleName ) {

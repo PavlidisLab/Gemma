@@ -76,6 +76,20 @@ public abstract class H5Location {
     }
 
     /**
+     * Check if an attribute exists.
+     */
+    public boolean hasAttribute( String name ) {
+        return H5Aexists( locId, name );
+    }
+
+    /**
+     * Check if an attribute for a given path exists.
+     */
+    public boolean hasAttribute( String path, String name ) {
+        return H5Aexists_by_name( locId, path, name, HDF5Constants.H5P_DEFAULT );
+    }
+
+    /**
      * Check if a given path exists relative to this location.
      */
     public boolean exists( String path ) {
