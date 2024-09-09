@@ -70,10 +70,10 @@ import static ubic.gemma.core.search.lucene.LuceneQueryUtils.extractTerms;
 import static ubic.gemma.core.search.source.DatabaseSearchSource.NCBI_GENE_ID_URI_PREFIX;
 
 /**
- * This service is used for performing searches using free text or exact matches to items in the database.
+ * This service is used for performing searches using free text or exact match to items in the database.
  * <h2>Implementation notes</h2>
- * Internally, there are generally two kinds of searches performed, precise database searches looking for exact matches
- * in the database and compass/lucene searches which look for matches in the stored index.
+ * Internally, there are generally two kinds of searches performed, precise database searches looking for exact match
+ * in the database and compass/lucene searches which look for match in the stored index.
  * To add more dependencies to this Service edit the applicationContext-search.xml
  *
  * @author klc
@@ -409,7 +409,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
      * several different associations. To allow maximum flexibility, we try not to limit the number of results here (it
      * can be done via the settings object)
      * <p>
-     * If the search matches a GEO ID, short name or full name of an experiment, the search ends. Otherwise, we search
+     * If the search match a GEO ID, short name or full name of an experiment, the search ends. Otherwise, we search
      * free-text indices and ontology annotations.
      *
      * @param settings object; the maximum results can be set here but also has a default value defined by
@@ -425,7 +425,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
 
         SearchResultSet<ExpressionExperiment> results = new SearchResultSet<>( settings );
 
-        // searches for GEO names, etc - "exact" matches.
+        // searches for GEO names, etc - "exact" match.
         results.addAll( searchSource.searchExpressionExperiment( settings ) );
         if ( watch.getTime() > 1000 )
             SearchServiceImpl.log.warn( String.format( "Expression Experiment database search for %s took %d ms, %d hits.",

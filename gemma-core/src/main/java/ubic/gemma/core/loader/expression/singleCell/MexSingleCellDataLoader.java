@@ -104,9 +104,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
         Set<String> unmatchedSamples = new HashSet<>();
         for ( int i = 0; i < numberOfSamples; i++ ) {
             String sampleName = sampleNames.get( i );
-            List<BioAssay> matchedBas = bioAssays.stream()
-                    .filter( b -> sampleNameComparator.matches( b, sampleName ) )
-                    .collect( Collectors.toList() );
+            Set<BioAssay> matchedBas = sampleNameComparator.match( bioAssays, sampleName );
             if ( matchedBas.size() == 1 ) {
                 BioAssay ba = matchedBas.iterator().next();
                 bas.add( ba );
@@ -211,17 +209,22 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
         // location of a given element in individual matrices
         Map<CompositeSequence, int[]> elementsToSampleMatrixRow = new HashMap<>();
         ArrayList<CompRowMatrix> matrices = new ArrayList<>( scd.getBioAssays().size() );
+
         List<BioAssay> bioAssays = scd.getBioAssays();
+        Map<String, Set<BioAssay>> bioAssayBySampleName = sampleNames.stream()
+                .collect( Collectors.toMap( sn -> sn, sn -> sampleNameComparator.match( bioAssays, sn ) ) );
+
         for ( int j = 0; j < bioAssays.size(); j++ ) {
             BioAssay ba = bioAssays.get( j );
             // match corresponding sample in the SCD
-            List<String> matchedSampleNames = sampleNames.stream()
-                    .filter( sampleName -> sampleNameComparator.matches( ba, sampleName ) )
-                    .collect( Collectors.toList() );
+            Set<String> matchedSampleNames = bioAssayBySampleName.entrySet().stream()
+                    .filter( e -> e.getValue().contains( ba ) )
+                    .map( Map.Entry::getKey )
+                    .collect( Collectors.toSet() );
             if ( matchedSampleNames.isEmpty() ) {
                 throw new IllegalArgumentException( ba + " does not match any sample." );
             } else if ( matchedSampleNames.size() > 1 ) {
-                throw new IllegalArgumentException( ba + " matches more than one sample: " + String.join( ", ", matchedSampleNames ) );
+                throw new IllegalArgumentException( ba + " match more than one sample: " + String.join( ", ", matchedSampleNames ) );
             }
 
             String sampleName = matchedSampleNames.iterator().next();

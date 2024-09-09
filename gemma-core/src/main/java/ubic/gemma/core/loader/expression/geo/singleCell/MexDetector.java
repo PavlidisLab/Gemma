@@ -15,9 +15,6 @@ import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.singleCell.MexSingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.core.util.ProgressInputStream;
-import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.ExternalDatabases;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -51,24 +48,6 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
             DEFAULT_FEATURES_FILE_SUFFIX = "features.tsv",
             DEFAULT_GENES_FILE_SUFFIX = "genes.tsv",
             DEFAULT_MATRIX_FILE_SUFFIX = "matrix.mtx";
-
-    /**
-     * Use GEO accession for comparing the sample name.
-     */
-    private static final SingleCellDataLoader.BioAssayToSampleNameMatcher GEO_SAMPLE_NAME_COMPARATOR = new SingleCellDataLoader.BioAssayToSampleNameMatcher() {
-        @Override
-        public boolean matches( BioAssay ba, String n ) {
-            return matchGeoAccession( ba.getAccession(), n )
-                    || ba.getName().equals( n )
-                    || matchGeoAccession( ba.getSampleUsed().getExternalAccession(), n )
-                    || ba.getSampleUsed().getName().equals( n );
-        }
-
-        private boolean matchGeoAccession( @Nullable DatabaseEntry accession, String n ) {
-            return accession != null && accession.getExternalDatabase().getName().equals( ExternalDatabases.GEO )
-                    && accession.getAccession().equals( n );
-        }
-    };
 
     private String barcodesFileSuffix = DEFAULT_BARCODES_FILE_SUFFIX;
     @Nullable
@@ -230,7 +209,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
     }
 
     @Override
-    public void downloadSingleCellData( GeoSeries series ) throws NoSingleCellDataFoundException {
+    public Path downloadSingleCellData( GeoSeries series ) throws NoSingleCellDataFoundException {
         if ( !hasSingleCellData( series ) ) {
             throw new NoSingleCellDataFoundException( "No MEX single-cell data was found at the series-level." );
         }
@@ -245,7 +224,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
      * finally hard-link all the sample files in there. This ensures that if two series mention the same sample, they
      * can reuse the same files.
      */
-    public void downloadSingleCellData( GeoSeries series, GeoSample sample ) throws NoSingleCellDataFoundException, IOException {
+    public Path downloadSingleCellData( GeoSeries series, GeoSample sample ) throws NoSingleCellDataFoundException, IOException {
         Assert.notNull( series.getGeoAccession() );
         Assert.notNull( sample.getGeoAccession() );
         downloadSingleCellData( sample.getGeoAccession(), mergeSupplementaryFiles( series, sample ) );
@@ -270,6 +249,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                             series.getGeoAccession(), destDir.resolve( file ) ) );
                 }
             }
+            return destDir;
         } catch ( Exception e ) {
             log.warn( sample.getGeoAccession() + ": An error occurred, cleaning up " + destDir + "...", e );
             // note here that the series directory is kept since it might contain other samples
@@ -280,15 +260,17 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
 
     /**
      * Retrieve single-cell data for the given GEO sample to disk.
+     *
+     * @return
      * @throws NoSingleCellDataFoundException if no single-cell data is found in the given GEO sample
      */
     @Override
-    public void downloadSingleCellData( GeoSample sample ) throws NoSingleCellDataFoundException, IOException {
+    public Path downloadSingleCellData( GeoSample sample ) throws NoSingleCellDataFoundException, IOException {
         Assert.notNull( sample.getGeoAccession() );
-        downloadSingleCellData( sample.getGeoAccession(), sample.getSupplementaryFiles() );
+        return downloadSingleCellData( sample.getGeoAccession(), sample.getSupplementaryFiles() );
     }
 
-    private void downloadSingleCellData( String geoAccession, Collection<String> supplementaryFiles ) throws IOException, NoSingleCellDataFoundException {
+    private Path downloadSingleCellData( String geoAccession, Collection<String> supplementaryFiles ) throws IOException, NoSingleCellDataFoundException {
         Assert.notNull( getDownloadDirectory(), "A download directory must be set." );
 
         if ( supplementaryFiles.isEmpty() ) {
@@ -327,7 +309,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
             String[] dests = { "barcodes.tsv.gz", "features.tsv.gz", "matrix.mtx.gz" };
             for ( int i = 0; i < files.length; i++ ) {
                 Path dest = sampleDirectory.resolve( dests[i] );
-                if ( existsAndHasExpectedSize( dest, files[i] ) ) {
+                if ( existsAndHasExpectedSize( dest, files[i], false ) ) {
                     log.info( String.format( "%s: Skipping download of %s to %s because it already exists and has expected size.",
                             geoAccession, files[i], dest ) );
                     continue;
@@ -360,7 +342,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                     throw e;
                 }
             }
-            return;
+            return sampleDirectory;
         }
 
         // detect MEX (1 archive per GEO sample)
@@ -453,7 +435,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                     }
                 }, "extracting MEX files from " + file );
                 if ( found ) {
-                    return;
+                    return sampleDirectory;
                 }
             } catch ( Exception e ) {
                 // Because we copied file as we traversed the archive, it's possible that not all expected
@@ -561,9 +543,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
         }
 
         if ( !sampleNames.isEmpty() ) {
-            MexSingleCellDataLoader loader = new MexSingleCellDataLoader( sampleNames, barcodesFiles, featuresFiles, matricesFiles );
-            loader.setBioAssayToSampleNameMatcher( GEO_SAMPLE_NAME_COMPARATOR );
-            return loader;
+            return new MexSingleCellDataLoader( sampleNames, barcodesFiles, featuresFiles, matricesFiles );
         }
 
         throw new NoSingleCellDataFoundException( "No single-cell data was found for " + series.getGeoAccession() );

@@ -103,7 +103,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     @Override
     public SingleCellDimension getSingleCellDimension( Collection<BioAssay> bioAssays ) throws IOException {
         Assert.isTrue( !bioAssays.isEmpty(), "At least one bioassay must be provided" );
-        Assert.notNull( sampleNameComparator, "A sample name comparator is necessary to match samples to BioMaterials." );
+        Assert.notNull( sampleNameComparator, "A sample name comparator is necessary to match samples to BioAssays." );
         Assert.notNull( sampleFactorName, "The sample factor name must be set." );
         SingleCellDimension singleCellDimension = new SingleCellDimension();
         try ( AnnData h5File = AnnData.open( file ) ) {
@@ -193,22 +193,10 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     private QuantitationType createQt( AnnData h5File, Layer layer ) {
-        String et = layer.getType();
-        H5Dataset dataset;
-        if ( et == null ) {
-            throw new IllegalArgumentException();
-        } else if ( et.equals( "csr_matrix" ) || et.equals( "csc_matrix" ) ) {
-            // CSC is wrong for loading vectors, but the data type is suitable for detection
-            dataset = layer.getGroup().getDataset( "data" );
-        } else if ( et.equals( "dense" ) ) {
-            dataset = layer.getDataset();
-        } else {
-            throw new UnsupportedOperationException( "Loading single-cell data from " + et + " is not supported." );
-        }
         QuantitationType qt = new QuantitationType();
         qt.setName( layer.getPath() );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
-        try ( H5Type datasetType = dataset.getType() ) {
+        try ( Matrix matrix = layer.getMatrix(); H5Type datasetType = matrix.getDataType() ) {
             if ( datasetType.getFundamentalType().equals( H5FundamentalType.INTEGER ) ) {
                 qt.setType( StandardQuantitationType.COUNT );
                 qt.setScale( ScaleType.COUNT );
@@ -259,7 +247,8 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 assignment.getCellTypes().add( Characteristic.Factory.newInstance( Categories.CELL_TYPE, ct, null ) );
             }
             if ( unknownCellTypeIndicator != null && unknownCellTypeCode == -1 ) {
-                throw new IllegalStateException( "The unknown cell type indicator %s was not found." );
+                throw new IllegalStateException( String.format( "The unknown cell type indicator %s was not found. Possible values are: %s. If none of these indicate a missing cell type, set the indicator to null.",
+                        unknownCellTypeIndicator, String.join( ", ", cellTypes.getCategories() ) ) );
             }
             assignment.setNumberOfCellTypes( assignment.getCellTypes().size() );
             if ( unknownCellTypeCode != -1 ) {
@@ -333,12 +322,10 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                                 Map<String, FactorValue> fvByValue = factor.getFactorValues().stream()
                                         .collect( Collectors.toMap( FactorValue::getValue, fv -> fv ) );
                                 sampleValues.forEach( ( sn, v ) -> {
-                                    for ( BioAssay sample : samples ) {
-                                        if ( sampleNameComparator.matches( sample, sn ) ) {
+                                    for ( BioAssay sample : sampleNameComparator.match( samples, sn ) ) {
                                             factorValueAssignments
                                                     .computeIfAbsent( sample.getSampleUsed(), k -> new HashSet<>() )
                                                     .add( fvByValue.get( v ) );
-                                        }
                                     }
                                 } );
                             }
@@ -346,19 +333,17 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                             // measurement, no need to create any FVs since those are unique to each sample
                             if ( factorValueAssignments != null ) {
                                 sampleValues.forEach( ( sn, v ) -> {
-                                    for ( BioAssay sample : samples ) {
-                                        if ( sampleNameComparator.matches( sample, sn ) ) {
-                                            FactorValue fvO = FactorValue.Factory.newInstance( factor );
-                                            Measurement measurement = new Measurement();
-                                            measurement.setRepresentation( representation );
-                                            measurement.setValue( v );
-                                            fvO.setMeasurement( measurement );
-                                            fvO.setValue( v );
-                                            factor.getFactorValues().add( fvO );
-                                            factorValueAssignments
-                                                    .computeIfAbsent( sample.getSampleUsed(), k -> new HashSet<>() )
-                                                    .add( fvO );
-                                        }
+                                    for ( BioAssay sample : sampleNameComparator.match( samples, sn ) ) {
+                                        FactorValue fvO = FactorValue.Factory.newInstance( factor );
+                                        Measurement measurement = new Measurement();
+                                        measurement.setRepresentation( representation );
+                                        measurement.setValue( v );
+                                        fvO.setMeasurement( measurement );
+                                        fvO.setValue( v );
+                                        factor.getFactorValues().add( fvO );
+                                        factorValueAssignments
+                                                .computeIfAbsent( sample.getSampleUsed(), k -> new HashSet<>() )
+                                                .add( fvO );
                                     }
                                 } );
                             }
@@ -410,8 +395,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                         continue;
                     }
                     extractSingleValueBySampleName( sampleNames, values )
-                            .ifPresent( fvs -> fvs.forEach( ( sampleName, value ) -> samples.stream()
-                                    .filter( b -> sampleNameComparator.matches( b, sampleName ) )
+                            .ifPresent( fvs -> fvs.forEach( ( sampleName, value ) -> sampleNameComparator.match( samples, sampleName )
                                     .forEach( ba -> result.computeIfAbsent( ba.getSampleUsed(), k -> new HashSet<>() )
                                             .add( Characteristic.Factory.newInstance( factorName, null, value, null ) ) ) ) );
                 }
@@ -489,11 +473,8 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 layer = requireNonNull( h5File.getX(), h5File + " does not have a layer for path 'X'." );
             }
             String matrixEncodingType = layer.getType();
-            if ( matrixEncodingType == null ) {
-                throw new IllegalArgumentException( "The '" + quantitationType.getName() + "' location does not have an encoding-type attribute." );
-            }
             if ( matrixEncodingType.equals( "csr_matrix" ) ) {
-                return loadVectorsFromSparseMatrix( new CsrMatrix( layer.getGroup() ), samples, genes, quantitationType, dimension, elementsMapping )
+                return loadVectorsFromSparseMatrix( layer.getSparseMatrix(), samples, genes, quantitationType, dimension, elementsMapping )
                         .onClose( h5File::close );
             } else if ( matrixEncodingType.equals( "csc_matrix" ) ) {
                 throw new IllegalArgumentException( "The matrix at '" + quantitationType.getName() + "' is stored as CSC; it must be converted to CSR for being loaded." );
@@ -506,8 +487,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         }
     }
 
-
-    private Stream<SingleCellExpressionDataVector> loadVectorsFromSparseMatrix( CsrMatrix matrix, CategoricalArray samples, String[]
+    private Stream<SingleCellExpressionDataVector> loadVectorsFromSparseMatrix( SparseMatrix matrix, CategoricalArray samples, String[]
             genes, QuantitationType qt, SingleCellDimension scd, Map<String, CompositeSequence> elementsMapping ) {
         Assert.isTrue( genes.length == matrix.getShape()[0],
                 "The number of supplied genes does not match the number of rows in the sparse matrix." );
@@ -520,6 +500,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         // if a sample does not have a corresponding BioAssay (i.e. an unwanted sample), it is set to null
         int numberOfSamples = samples.getCategories().length;
         List<BioAssay> samplesBioAssay = new ArrayList<>( numberOfSamples );
+        List<String> samplesName = new ArrayList<>( numberOfSamples );
         int[] samplesBioAssayOffset = new int[numberOfSamples];
         int W = 0;
         String currentSample = null;
@@ -529,6 +510,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 currentSample = sample;
                 samplesBioAssayOffset[W++] = i;
                 samplesBioAssay.add( getBioAssayBySampleName( scd.getBioAssays(), sample ).orElse( null ) );
+                samplesName.add( sample );
             }
         }
 
@@ -539,6 +521,16 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         // in the simple scenario, the SCD sample layout exactly match what is present in he data, so we don't need to
         // do anything in particular
         boolean isSimpleCase = scd.getBioAssays().equals( samplesBioAssay );
+
+        if ( !isSimpleCase ) {
+            // map BAs to the correponding sample name in data
+            String scdNames = scd.getBioAssays().stream()
+                    .map( ba -> samplesName.get( samplesBioAssay.indexOf( ba ) ) )
+                    .collect( Collectors.joining( ", " ) );
+            log.info( "Samples in the data do not follow the same layout, will have to slice and adjust indices.\n"
+                    + "\tIn data: " + String.join( ", ", samplesName ) + "\n"
+                    + "\tIn single-cell dimension: " + scdNames );
+        }
 
         return IntStream.range( 0, matrix.getShape()[0] )
                 // ignore entries that are missing a gene mapping
@@ -558,7 +550,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                         // https://github.com/scverse/anndata/issues/1388
                         throw new IllegalStateException( String.format( "Indices for %s are not sorted.", genes[i] ) );
                     }
-                    // simple case: the number of BAs match the number of samples and the sample order matches
+                    // simple case: the number of BAs match the number of samples and the sample order match
                     if ( isSimpleCase ) {
                         // this is using the same storage strategy from ByteArrayConverter
                         try ( H5Dataset data = matrix.getData() ) {
@@ -579,9 +571,6 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                             assert j != -1;
                             int start = Arrays.binarySearch( IX, samplesBioAssayOffset[j] );
                             if ( start < 0 ) {
-                                // note here from poirigui, in ListUtils you might notice that getSparseRangeArrayElement() subtract 2
-                                // instead of 1,
-                                //
                                 start = -start - 1;
                             }
                             int end;
@@ -607,11 +596,9 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                             int start = sampleStarts[i1];
                             int end = sampleEnds[i1];
                             int sampleNnz = end - start;
-                            byte[] w;
                             try ( H5Dataset data = matrix.getData() ) {
-                                w = data.slice( start, end ).toByteVector( H5Type.IEEE_F64BE );
+                                data.slice( start, end ).toByteVector( vectorData, sampleOffsetInVector, sampleOffsetInVector + sampleNnz, H5Type.IEEE_F64BE );
                             }
-                            System.arraycopy( w, 0, vectorData, 8 * sampleOffsetInVector, 8 * sampleNnz );
                             System.arraycopy( IX, start, vectorIndices, sampleOffsetInVector, sampleNnz );
                             // adjust indices to be relative to the BA offset
                             for ( int k = sampleOffsetInVector; k < sampleOffsetInVector + sampleNnz; k++ ) {
@@ -629,9 +616,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
     private Optional<BioAssay> getBioAssayBySampleName( Collection<BioAssay> bioAssays, String sampleName ) {
         // lookup the sample
-        List<BioAssay> match = bioAssays.stream()
-                .filter( ba -> sampleNameComparator.matches( ba, sampleName ) )
-                .collect( Collectors.toList() );
+        Set<BioAssay> match = sampleNameComparator.match( bioAssays, sampleName );
         if ( match.size() > 1 ) {
             throw new IllegalStateException( String.format( "There is more than one BioAssay matching %s.", sampleName ) );
         } else if ( match.size() == 1 ) {

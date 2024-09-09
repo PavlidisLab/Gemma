@@ -259,7 +259,7 @@ public class AnnDataSingleCellDataLoaderTest {
         loader.setCellTypeFactorName( "celltype1" );
         loader.setUnknownCellTypeIndicator( "UNK_ALL" );
         loader.setIgnoreUnmatchedSamples( true );
-        loader.setBioAssayToSampleNameMatcher( ( bm, n ) -> n.equals( bm.getName() ) );
+        loader.setBioAssayToSampleNameMatcher( ( bms, s ) -> bms.stream().filter( bm -> s.equals( bm.getName() ) ).collect( Collectors.toSet() ) );
         return loader;
     }
 }

@@ -6,6 +6,7 @@ import ubic.gemma.core.loader.util.hdf5.H5Group;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class Dataframe implements AutoCloseable {
 
@@ -41,10 +42,12 @@ public class Dataframe implements AutoCloseable {
      * possible.
      */
     public String getColumnType( String columnName ) {
+        Assert.isTrue( group.exists( columnName ), "There is no column named " + columnName + ". Possible columns are: " + String.join( ", ", getColumns() ) + "." );
         return group.getStringAttribute( columnName, "encoding-type" );
     }
 
     public H5Dataset getArrayColumn( String columnName ) {
+        checkIfColumnExists( columnName, "array" );
         Assert.isTrue( Objects.equals( group.getStringAttribute( columnName, "encoding-type" ), "array" ),
                 "The column " + columnName + " is not an array." );
         return group.getDataset( columnName );
@@ -55,6 +58,7 @@ public class Dataframe implements AutoCloseable {
      * Load the values of a categorical column from a dataframe.
      */
     public CategoricalArray getCategoricalColumn( String columnName ) {
+        checkIfColumnExists( columnName, "categorical" );
         Assert.isTrue( Objects.equals( group.getStringAttribute( columnName, "encoding-type" ), "categorical" ),
                 "The column " + columnName + " is not categorical." );
         try ( H5Group dataset = group.getGroup( columnName ) ) {
@@ -66,9 +70,20 @@ public class Dataframe implements AutoCloseable {
      * Obtain a string-array column.
      */
     public String[] getStringArrayColumn( String columnName ) {
+        checkIfColumnExists( columnName, "string-array" );
         Assert.isTrue( Objects.equals( group.getStringAttribute( columnName, "encoding-type" ), "string-array" ),
                 "The column " + columnName + " is not a string array." );
         return group.getDataset( columnName ).toStringVector();
+    }
+
+    private void checkIfColumnExists( String columnName, String columnType ) {
+        if ( !group.exists( columnName ) ) {
+            String possibleColumns = getColumns().stream()
+                    .filter( c -> columnType.equals( getColumnType( c ) ) )
+                    .collect( Collectors.joining( ", " ) );
+            throw new IllegalArgumentException( String.format( "There is no %s column named %s. Possible columns are: %s.",
+                    columnType, columnName, possibleColumns ) );
+        }
     }
 
     @Override

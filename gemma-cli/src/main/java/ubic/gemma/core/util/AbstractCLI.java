@@ -255,7 +255,7 @@ public abstract class AbstractCLI implements CLI {
     }
 
     private void printHelp( Options options, PrintWriter writer ) {
-        HelpUtils.printHelp( writer, getCommandName(), options, allowPositionalArguments, getShortDesc(), null );
+        HelpUtils.printHelp( writer, getUsage(), options, getShortDesc(), null );
     }
 
     /**

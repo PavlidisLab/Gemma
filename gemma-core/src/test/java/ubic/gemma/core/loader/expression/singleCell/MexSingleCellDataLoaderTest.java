@@ -29,7 +29,7 @@ public class MexSingleCellDataLoaderTest {
 
         MexSingleCellDataLoader loader = createLoaderForResourceDir( "data/loader/expression/singleCell/GSE224438" );
         loader.setIgnoreUnmatchedSamples( false );
-        loader.setBioAssayToSampleNameMatcher( ( bm, n ) -> n.equals( bm.getName() ) );
+        loader.setBioAssayToSampleNameMatcher( ( bms, s ) -> bms.stream().filter( bm -> s.equals( bm.getName() ) ).collect( Collectors.toSet() ) );
         ArrayList<BioAssay> bas = new ArrayList<>();
         for ( String sampleName : loader.getSampleNames() ) {
             bas.add( BioAssay.Factory.newInstance( sampleName, null, BioMaterial.Factory.newInstance( sampleName ) ) );
@@ -86,7 +86,7 @@ public class MexSingleCellDataLoaderTest {
         Map<String, CompositeSequence> elementsMapping = createElementsMappingFromResourceFile( "data/loader/expression/singleCell/GSE224438/GSM7022370_2-3_features.tsv.gz" );
 
         MexSingleCellDataLoader loader = createLoaderForResourceDir( "data/loader/expression/singleCell/GSE224438" );
-        loader.setBioAssayToSampleNameMatcher( ( bm, n ) -> n.equals( bm.getName() ) );
+        loader.setBioAssayToSampleNameMatcher( ( bms, s ) -> bms.stream().filter( bm -> s.equals( bm.getName() ) ).collect( Collectors.toSet() ) );
         ArrayList<BioAssay> bas = new ArrayList<>();
         bas.add( BioAssay.Factory.newInstance( "GSM7022370", null, BioMaterial.Factory.newInstance( "GSM7022370" ) ) );
         bas.add( BioAssay.Factory.newInstance( "GSM7022375", null, BioMaterial.Factory.newInstance( "GSM7022375" ) ) );
@@ -156,7 +156,7 @@ public class MexSingleCellDataLoaderTest {
         Map<String, CompositeSequence> elementsMapping = createElementsMappingFromResourceFile( "data/loader/expression/singleCell/GSE224438/GSM7022370_2-3_features.tsv.gz" );
 
         MexSingleCellDataLoader loader = createLoaderForResourceDir( "data/loader/expression/singleCell/GSE224438" );
-        loader.setBioAssayToSampleNameMatcher( ( bm, n ) -> n.equals( bm.getName() ) );
+        loader.setBioAssayToSampleNameMatcher( ( bms, s ) -> bms.stream().filter( bm -> s.equals( bm.getName() ) ).collect( Collectors.toSet() ) );
         ArrayList<BioAssay> bas = new ArrayList<>();
         // this sample does note exist
         bas.add( BioAssay.Factory.newInstance( "GSM7022354", null, BioMaterial.Factory.newInstance( "GSM7022354" ) ) );

@@ -58,11 +58,17 @@ public abstract class AbstractSingleCellDetector implements SingleCellDetector {
 
     /**
      * Check if a file at a given destination exists and has the size of a remote file.
+     * @param decompressIfNeeded if true and the remote file is gzipped, will only check if the local file has a size
+     *                           that is greater or equal
      */
-    protected boolean existsAndHasExpectedSize( Path dest, String remoteFile ) throws IOException {
+    protected boolean existsAndHasExpectedSize( Path dest, String remoteFile, boolean decompressIfNeeded ) throws IOException {
         Assert.notNull( ftpClientFactory, "An FTP client factory must be set" );
         if ( !dest.toFile().exists() ) {
             return false;
+        }
+        if ( decompressIfNeeded && remoteFile.endsWith( ".gz" ) ) {
+            log.warn( "Cannot check if " + dest + " has expected size since it was decompressed." );
+            return true;
         }
         long expectedContentLength = getSizeInBytes( remoteFile );
         return expectedContentLength != -1 && dest.toFile().length() == expectedContentLength;
@@ -81,9 +87,9 @@ public abstract class AbstractSingleCellDetector implements SingleCellDetector {
         long sizeInBytes = getSizeInBytes( filename );
         InputStream stream;
         if ( url.getProtocol().equals( "ftp" ) ) {
-            stream = new ProgressInputStream( ftpClientFactory.openStream( url ), what, getClass().getName(), sizeInBytes );
+            stream = new BufferedInputStream( new ProgressInputStream( ftpClientFactory.openStream( url ), what, getClass().getName(), sizeInBytes ) );
         } else {
-            stream = new ProgressInputStream( new BufferedInputStream( url.openStream() ), what, getClass().getName(), sizeInBytes );
+            stream = new BufferedInputStream( new ProgressInputStream( url.openStream(), what, getClass().getName(), sizeInBytes ) );
         }
         if ( decompressIfNeeded && filename.endsWith( ".gz" ) ) {
             return new GZIPInputStream( stream );

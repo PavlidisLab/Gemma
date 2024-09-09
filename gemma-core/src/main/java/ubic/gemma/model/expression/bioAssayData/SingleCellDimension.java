@@ -2,6 +2,7 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.util.Assert;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.persistence.hibernate.ByteArrayType;
@@ -79,6 +80,7 @@ public class SingleCellDimension implements Identifiable {
      * @param sampleIndex the sample position in {@link #bioAssays}
      */
     public List<String> getCellIdsBySample( int sampleIndex ) {
+        Assert.isTrue( sampleIndex >= 0 && sampleIndex < bioAssays.size(), "Sample index must be in range [0, " + bioAssays.size() + "[." );
         return Collections.unmodifiableList( cellIds.subList( bioAssaysOffset[sampleIndex], bioAssaysOffset[sampleIndex] + getNumberOfCellsBySample( sampleIndex ) ) );
     }
 
@@ -90,6 +92,7 @@ public class SingleCellDimension implements Identifiable {
      * @param sampleIndex the sample position in {@link #bioAssays}
      */
     public int getNumberOfCellsBySample( int sampleIndex ) {
+        Assert.isTrue( sampleIndex >= 0 && sampleIndex < bioAssays.size(), "Sample index must be in range [0, " + bioAssays.size() + "[." );
         if ( sampleIndex == bioAssays.size() - 1 ) {
             return cellIds.size() - bioAssaysOffset[sampleIndex];
         } else {

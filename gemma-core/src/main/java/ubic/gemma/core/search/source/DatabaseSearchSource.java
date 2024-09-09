@@ -341,7 +341,7 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
             }
         }
 
-        // filter matches by taxon
+        // filter match by taxon
         if ( settings.getTaxon() != null ) {
             Collection<Long> retainedIds = expressionExperimentService
                     .filterByTaxon( results.stream().map( SearchResult::getResultId ).collect( Collectors.toList() ), settings.getTaxon() );
@@ -425,7 +425,7 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
         // if the query is shortish, always do a wild card search. This gives better behavior in 'live
         // search' situations. If we do wildcards on very short queries we get too many results.
         if ( exactString.length() <= 1 ) {
-            // case 0: we got no results yet, or user entered a very short string. We search only for exact matches.
+            // case 0: we got no results yet, or user entered a very short string. We search only for exact match.
             results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialSymbol( exactString ), MATCH_BY_OFFICIAL_SYMBOL_SCORE, "GeneService.findByOfficialSymbol" ) );
         } else if ( exactString.length() <= 5 ) {
             if ( isWildcard( settings ) ) {

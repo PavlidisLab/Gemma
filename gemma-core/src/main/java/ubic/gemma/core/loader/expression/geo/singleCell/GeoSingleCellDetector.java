@@ -8,6 +8,7 @@ import ubic.gemma.core.loader.expression.geo.GeoLibrarySource;
 import ubic.gemma.core.loader.expression.geo.model.GeoLibraryStrategy;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.core.loader.expression.singleCell.BioAssayToSampleNameMatcher;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
@@ -32,6 +33,7 @@ import static ubic.gemma.core.loader.expression.geo.singleCell.MexDetector.*;
 @CommonsLog
 public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable {
 
+
     /**
      * Default number of threads to use for fetching data.
      */
@@ -44,6 +46,8 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
 
     private static final String[] SINGLE_CELL_DATA_PROCESSING_KEYWORDS = { "cellranger" };
 
+    private static final BioAssayToSampleNameMatcher GEO_BIO_ASSAY_TO_SAMPLE_NAME_MATCHER = new GeoBioAssayToSampleNameMatcher();
+
     private final AnnDataDetector annDataDetector = new AnnDataDetector();
     private final SeuratDiskDetector seuratDiskDetector = new SeuratDiskDetector();
     private final LoomSingleCellDetector loomDetector = new LoomSingleCellDetector();
@@ -54,6 +58,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
     private ExecutorService executor;
 
     private int numberOfFetchThreads = DEFAULT_NUMBER_OF_FETCH_THREADS;
+    private Path downloadDirectory;
 
     @Override
     public void close() {
@@ -103,6 +108,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
      */
     @Override
     public void setDownloadDirectory( Path dir ) {
+        this.downloadDirectory = dir;
         for ( SingleCellDetector detector : detectors ) {
             detector.setDownloadDirectory( dir );
         }
@@ -258,18 +264,17 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
      * <p>
      * This has to be done prior to {@link #getSingleCellDataLoader(GeoSeries)}.
      * @throws NoSingleCellDataFoundException if no single-cell data is found either at the series level or in individual samples
-     * @throws UnsupportedOperationException if single-cell data is found at the series level
+     * @throws UnsupportedOperationException  if single-cell data is found at the series level
      */
     @Override
-    public void downloadSingleCellData( GeoSeries series ) throws NoSingleCellDataFoundException, IOException {
+    public Path downloadSingleCellData( GeoSeries series ) throws NoSingleCellDataFoundException, IOException {
         boolean hasSingleCellDataInSeries = Arrays.stream( detectors )
                 .anyMatch( detector -> detector.hasSingleCellData( series ) );
         Assert.isTrue( series.getSamples().stream().anyMatch( s -> isSingleCell( s, hasSingleCellDataInSeries ) ),
                 series.getGeoAccession() + " does not have any single-cell series." );
         for ( SingleCellDetector detector : detectors ) {
             try {
-                detector.downloadSingleCellData( series );
-                return;
+                return detector.downloadSingleCellData( series );
             } catch ( NoSingleCellDataFoundException e ) {
                 // ignored, we'll try the next detector
             }
@@ -277,7 +282,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
 
         // data is stored at the sample-level
         // TODO: include Loom files stored at sample-level
-        downloadSamplesInParallel( series, SingleCellDataType.MEX );
+        return downloadSamplesInParallel( series, SingleCellDataType.MEX );
     }
 
     // this exception cannot be raised since we're downloading a specific file
@@ -328,54 +333,59 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
      * <p>
      * This is only applicable to MEX and Loom.
      */
-    public void downloadSingleCellData( GeoSeries series, GeoSample sample ) throws NoSingleCellDataFoundException, IOException {
+    public Path downloadSingleCellData( GeoSeries series, GeoSample sample ) throws NoSingleCellDataFoundException, IOException {
         if ( mexDetector.hasSingleCellData( series, sample ) ) {
-            downloadSingleCellData( series, sample, SingleCellDataType.MEX );
+            return downloadSingleCellData( series, sample, SingleCellDataType.MEX );
         } else if ( loomDetector.hasSingleCellData( sample ) ) {
-            downloadSingleCellData( series, sample, SingleCellDataType.LOOM );
+            return downloadSingleCellData( series, sample, SingleCellDataType.LOOM );
         } else {
             throw new NoSingleCellDataFoundException( series.getGeoAccession() + ": No single cell data found for " + sample.getGeoAccession() + " at the sample-level." );
         }
     }
 
-    public void downloadSingleCellData( GeoSeries series, GeoSample sample, SingleCellDataType dataType ) throws NoSingleCellDataFoundException, IOException {
+    public Path downloadSingleCellData( GeoSeries series, GeoSample sample, SingleCellDataType dataType ) throws NoSingleCellDataFoundException, IOException {
         Assert.isTrue( dataType.equals( SingleCellDataType.MEX ) || dataType.equals( SingleCellDataType.LOOM ),
                 "Only MEX and Loom data can be retrieved at the sample-level." );
         boolean hasSingleCellDataInSeries = Arrays.stream( detectors )
                 .anyMatch( detector -> detector.hasSingleCellData( series ) );
         Assert.isTrue( isSingleCell( sample, hasSingleCellDataInSeries ), sample.getGeoAccession() + " is not a single-cell sample." );
         if ( dataType == SingleCellDataType.MEX ) {
-            download( () -> mexDetector.downloadSingleCellData( series, sample ) );
+            return download( () -> mexDetector.downloadSingleCellData( series, sample ) );
         } else {
-            downloadSingleCellData( sample, dataType );
+            return downloadSingleCellData( sample, dataType );
         }
     }
 
     @Override
-    public void downloadSingleCellData( GeoSample sample ) throws NoSingleCellDataFoundException, IOException {
+    public Path downloadSingleCellData( GeoSample sample ) throws NoSingleCellDataFoundException, IOException {
         if ( mexDetector.hasSingleCellData( sample ) ) {
-            downloadSingleCellData( sample, SingleCellDataType.MEX );
+            return downloadSingleCellData( sample, SingleCellDataType.MEX );
         } else if ( loomDetector.hasSingleCellData( sample ) ) {
-            downloadSingleCellData( sample, SingleCellDataType.LOOM );
+            return downloadSingleCellData( sample, SingleCellDataType.LOOM );
         } else {
             throw new NoSingleCellDataFoundException( "No single cell data found for " + sample.getGeoAccession() + " at the sample-level." );
         }
     }
 
-    public void downloadSingleCellData( GeoSample sample, SingleCellDataType dataType ) throws NoSingleCellDataFoundException, IOException {
+    public Path downloadSingleCellData( GeoSample sample, SingleCellDataType dataType ) throws NoSingleCellDataFoundException, IOException {
         Assert.isTrue( dataType.equals( SingleCellDataType.MEX ) || dataType.equals( SingleCellDataType.LOOM ),
                 "Only MEX or Loom data can be retrieved at the sample-level." );
         Assert.isTrue( isSingleCell( sample, false ), sample.getGeoAccession() + " is not a single-cell sample." );
         if ( dataType == SingleCellDataType.MEX ) {
-            download( () -> mexDetector.downloadSingleCellData( sample ) );
+            return download( () -> mexDetector.downloadSingleCellData( sample ) );
         } else {
-            download( () -> loomDetector.downloadSingleCellData( sample ) );
+            return download( () -> loomDetector.downloadSingleCellData( sample ) );
         }
     }
 
-    private void downloadSamplesInParallel( GeoSeries series, SingleCellDataType dataType ) throws NoSingleCellDataFoundException, IOException {
+    private Path downloadSamplesInParallel( GeoSeries series, SingleCellDataType dataType ) throws NoSingleCellDataFoundException, IOException {
+        Assert.notNull( series.getGeoAccession() );
+        Assert.notNull( downloadDirectory, "A downlodad directory must be set." );
         Assert.isTrue( dataType.equals( SingleCellDataType.MEX ), "Only MEX data can be downloaded at the sample-level." );
         ExecutorCompletionService<Boolean> completionService = new ExecutorCompletionService<>( getExecutor() );
+
+        // directory where everything is downloaded for the series
+        Path dest = downloadDirectory.resolve( series.getGeoAccession() );
 
         // attempt to fetch at series-level
         List<Future<Boolean>> futures = new ArrayList<>( series.getSamples().size() );
@@ -431,18 +441,17 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
         if ( !anySampleDownloaded ) {
             throw new NoSingleCellDataFoundException( "No data was downloaded for " + series.getGeoAccession() );
         }
+
+        return dest;
     }
 
     @FunctionalInterface
     private interface DownloadFunction {
-        void download() throws NoSingleCellDataFoundException, IOException;
+        Path download() throws NoSingleCellDataFoundException, IOException;
     }
 
-    private void download( DownloadFunction function ) throws NoSingleCellDataFoundException, IOException {
-        resolveDownloadFuture( getExecutor().submit( () -> {
-            function.download();
-            return null;
-        } ) );
+    private Path download( DownloadFunction function ) throws NoSingleCellDataFoundException, IOException {
+        return resolveDownloadFuture( getExecutor().submit( function::download ) );
     }
 
     private <T> T resolveDownloadFuture( Future<T> future ) throws NoSingleCellDataFoundException, IOException {
@@ -478,35 +487,33 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
      * <p>
      * Only local files previously retrieved with {@link #downloadSingleCellData(GeoSeries)} are inspected.
      * @throws NoSingleCellDataFoundException if no single-cell data was found on-disk
+     * @throws UnsupportedOperationException if single-cell data was found, but cannot be loaded
      */
     @Override
     public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series ) throws NoSingleCellDataFoundException {
+        UnsupportedOperationException firstUnsupported = null;
         for ( SingleCellDetector detector : detectors ) {
             try {
-                return detector.getSingleCellDataLoader( series );
+                SingleCellDataLoader loader = detector.getSingleCellDataLoader( series );
+                loader.setBioAssayToSampleNameMatcher( GEO_BIO_ASSAY_TO_SAMPLE_NAME_MATCHER );
+                return loader;
+            } catch ( UnsupportedOperationException e ) {
+                if ( firstUnsupported == null ) {
+                    firstUnsupported = e;
+                }
+                log.warn( "Loading data from " + series.getGeoAccession() + " is not supported, will try the next detector.", e );
             } catch ( NoSingleCellDataFoundException e ) {
                 // ignored, we'll try the next detector
             }
         }
-        throw new NoSingleCellDataFoundException( "No single-cell data was found for " + series.getGeoAccession() + "." );
-    }
 
-    /**
-     * Obtain a single-cell data loader for a specific data type.
-     */
-    public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series, SingleCellDataType dataType ) throws UnsupportedOperationException, NoSingleCellDataFoundException {
-        switch ( dataType ) {
-            case ANNDATA:
-                return annDataDetector.getSingleCellDataLoader( series );
-            case SEURAT_DISK:
-                return seuratDiskDetector.getSingleCellDataLoader( series );
-            case LOOM:
-                return loomDetector.getSingleCellDataLoader( series );
-            case MEX:
-                return mexDetector.getSingleCellDataLoader( series );
-            default:
-                throw new IllegalArgumentException( "Unknown single-cell data type " + dataType );
+        // if there's at least one unsupported error at this point, raise it, it will be more informative than a
+        // NoSingleCellDataFoundException
+        if ( firstUnsupported != null ) {
+            throw firstUnsupported;
         }
+
+        throw new NoSingleCellDataFoundException( "No single-cell data was found for " + series.getGeoAccession() + "." );
     }
 
     @Override

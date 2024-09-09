@@ -802,7 +802,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     /**
      * Look for genes, but only for certain category Uris (genotype, etc.)
      *
-     * @param taxon         okay if null, but then all matches returned.
+     * @param taxon         okay if null, but then all match returned.
      * @param searchResults added to this
      */
     private void searchForGenes( String queryString, @Nullable Taxon taxon,

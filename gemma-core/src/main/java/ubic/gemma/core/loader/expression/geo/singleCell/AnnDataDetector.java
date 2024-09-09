@@ -22,11 +22,11 @@ public class AnnDataDetector extends AbstractSingleFileInSeriesSingleCellDetecto
     public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series ) throws NoSingleCellDataFoundException {
         Path annDataFile = getDest( series );
         if ( Files.exists( annDataFile ) ) {
-            // TODO: retrieve the file
             AnnDataSingleCellDataLoader loader = new AnnDataSingleCellDataLoader( annDataFile );
-            loader.setBioAssayToSampleNameMatcher( ( bm, n ) -> n.equals( bm.getName() ) );
-            // TODO: find the column
-            loader.setSampleFactorName( "ID" );
+            // TODO: detect the sample factor name ae
+            // loader.setSampleFactorName();
+            // loader.setCellTypeFactorName();
+            // loader.setUnknownCellTypeIndicator();
             return loader;
         }
         throw new NoSingleCellDataFoundException( "Could not find " + annDataFile + " for " + series.getGeoAccession() );

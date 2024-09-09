@@ -367,7 +367,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     }
 
     /**
-     * Retrieve one entity whose given property matches the given value.
+     * Retrieve one entity whose given property match the given value.
      * <p>
      * Note: the property should have a unique index, otherwise a {@link org.hibernate.NonUniqueResultException} will be
      * raised.
