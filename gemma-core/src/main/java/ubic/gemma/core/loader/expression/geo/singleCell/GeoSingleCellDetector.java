@@ -24,7 +24,7 @@ import static ubic.gemma.core.loader.expression.geo.singleCell.MexDetector.*;
 
 /**
  * This is the main single-cell data detector that delegates to other more specific detectors.
- * <pMexDe>
+ * <p>
  * Samples can be loaded in parallel when retrieving a GEO series with {@link #downloadSingleCellData(GeoSeries)}. The
  * number of threads used is controlled by {@link #setNumberOfFetchThreads(int)} and defaults to 4.
  * @author poirigui
