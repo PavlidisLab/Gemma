@@ -122,7 +122,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI {
 
         // for retrieving datasets
         options.addOption( Option.builder( ACCESSION_OPTION ).longOpt( "accession" ).hasArg().desc( "A comma-delimited list of accessions to retrieve from GEO" ).build() );
-        options.addOption( Option.builder( ACCESSION_FILE_OPTION ).longOpt( "accession-file" ).hasArg().desc( "A file containing accessions to retrieve from GEO" ).type( File.class ).build() );
+        options.addOption( Option.builder( ACCESSION_FILE_OPTION ).longOpt( "accession-file" ).hasArg().desc( "A file containing accessions to retrieve from GEO" ).type( Path.class ).build() );
 
         // for browsing datasets
         options.addOption(
