@@ -407,6 +407,11 @@ public interface ExpressionExperimentDao
     List<Characteristic> getCellTypes( ExpressionExperiment ee );
 
     /**
+     * Obtain a list of single-cell QTs.
+     */
+    List<QuantitationType> getSingleCellQuantitationTypes( ExpressionExperiment ee );
+
+    /**
      * Obtain a set of single-cell data vectors for the given quantitation type.
      */
     List<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment expressionExperiment, QuantitationType quantitationType );

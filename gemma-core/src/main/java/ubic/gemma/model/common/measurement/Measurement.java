@@ -21,6 +21,7 @@ package ubic.gemma.model.common.measurement;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
@@ -31,6 +32,12 @@ public class Measurement implements Identifiable, Serializable {
      */
     private static final long serialVersionUID = 1833568047451431226L;
     private MeasurementType type;
+    /**
+     * The measurement value.
+     * <p>
+     * Null indicates a missing value.
+     */
+    @Nullable
     private String value;
     private MeasurementKind kindCV;
     private String otherKind;
@@ -167,11 +174,12 @@ public class Measurement implements Identifiable, Serializable {
         this.unit = unit;
     }
 
+    @Nullable
     public String getValue() {
         return this.value;
     }
 
-    public void setValue( String value ) {
+    public void setValue( @Nullable String value ) {
         this.value = value;
     }
 

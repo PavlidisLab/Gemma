@@ -81,7 +81,7 @@ public abstract class AbstractSingleFileInSeriesSingleCellDetector extends Abstr
      *                                  series, use {@link #downloadSingleCellData(GeoSeries, String)} as a workaround.
      */
     @Override
-    public void downloadSingleCellData( GeoSeries series ) throws NoSingleCellDataFoundException, IOException {
+    public Path downloadSingleCellData( GeoSeries series ) throws NoSingleCellDataFoundException, IOException {
         if ( series.getSupplementaryFiles().isEmpty() ) {
             throw new NoSingleCellDataFoundException( series.getGeoAccession() + " does not have any supplementary files." );
         }
@@ -97,25 +97,25 @@ public abstract class AbstractSingleFileInSeriesSingleCellDetector extends Abstr
         } else {
             throw new NoSingleCellDataFoundException( "No " + name + " data could be found in " + series.getGeoAccession() + " supplementary files." );
         }
-        downloadSingleCellData( series, file );
+        return downloadSingleCellData( series, file );
     }
 
     /**
      * Download a specific supplementary file at the series-level.
      * @throws IllegalArgumentException if the supplementary file is not present in the series
      */
-    public void downloadSingleCellData( GeoSeries series, String file ) throws IOException {
+    public Path downloadSingleCellData( GeoSeries series, String file ) throws IOException {
         Assert.isTrue( series.getSupplementaryFiles().contains( file ), series.getGeoAccession() + " does not have a supplementary file named " + file );
 
         Path dest = getDest( series );
-        if ( existsAndHasExpectedSize( dest, file ) ) {
+        if ( existsAndHasExpectedSize( dest, file, true ) ) {
             log.info( String.format( "%s: Skipping download of %s to %s because it already exists and has expected size.",
                     series.getGeoAccession(), file, dest ) );
-            return;
+            return dest;
         }
 
         log.info( series.getGeoAccession() + ": Retrieving " + name + " file " + file + " to " + dest + "..." );
-        retry( ( attempt, lastAttempt ) -> {
+        return retry( ( attempt, lastAttempt ) -> {
             PathUtils.createParentDirectories( dest );
             StopWatch timer = StopWatch.createStarted();
             try ( InputStream is = openSupplementaryFileAsStream( file, attempt, true ) ) {
@@ -124,18 +124,18 @@ public abstract class AbstractSingleFileInSeriesSingleCellDetector extends Abstr
                 log.info( String.format( "%s: Retrieved " + name + " file (%s in %s @ %s/s).", series.getGeoAccession(),
                         byteCountToDisplaySize( downloadedBytes ), timer,
                         byteCountToDisplaySize( 1000.0 * downloadedBytes / timer.getTime() ) ) );
+                return dest;
             } catch ( Exception e ) {
                 log.warn( String.format( "%s: %s file could not be downloaded successfully, removing %s...",
                         series.getGeoAccession(), name, dest ), e );
                 PathUtils.deleteFile( dest );
                 throw e;
             }
-            return null;
         }, "downloading " + file + " to " + dest + " for " + name );
     }
 
     @Override
-    public void downloadSingleCellData( GeoSample sample ) throws NoSingleCellDataFoundException {
+    public Path downloadSingleCellData( GeoSample sample ) throws NoSingleCellDataFoundException {
         throw new UnsupportedOperationException( name + " does not support single-cell data at the sample-level." );
     }
 

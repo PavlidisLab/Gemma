@@ -17,8 +17,9 @@ public class H5File extends H5Location implements AutoCloseable {
 
     /**
      * Open an HDF5 file.
-     * @throws FileNotFoundException if the file does not exist
-     * @throws IOException           for any other file-related errors
+     * @throws FileNotFoundException    if the file does not exist
+     * @throws TruncatedH5FileException if the file is truncated
+     * @throws IOException              for any other file-related errors
      */
     public static H5File open( Path path ) throws IOException {
         try {
@@ -26,25 +27,27 @@ public class H5File extends H5Location implements AutoCloseable {
         } catch ( HDF5FileInterfaceException e ) {
             if ( e.getMinorErrorNumber() == HDF5Constants.H5E_CANTOPENFILE ) {
                 throw new FileNotFoundException( e.getMessage() );
+            } else if ( e.getMinorErrorNumber() == HDF5Constants.H5E_TRUNCATED ) {
+                throw new TruncatedH5FileException( e.getMessage() );
             } else {
-                throw new IOException( e.getMessage() );
+                throw new IOException( e );
             }
         }
     }
 
-    private final long fd;
+    private final long fileId;
 
-    private H5File( long fd ) {
-        super( fd );
-        this.fd = fd;
+    private H5File( long fileId ) {
+        super( fileId );
+        this.fileId = fileId;
     }
 
     public Path getPath() {
-        return Paths.get( H5Fget_name( fd ) );
+        return Paths.get( H5Fget_name( fileId ) );
     }
 
     @Override
     public void close() throws HDF5LibraryException {
-        H5Fclose( fd );
+        H5Fclose( fileId );
     }
 }

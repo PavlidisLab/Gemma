@@ -4,6 +4,7 @@ import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 
 import java.io.BufferedReader;
@@ -59,6 +60,7 @@ public class AbstractPythonScriptBasedAnnDataTransformation implements SingleCel
         Assert.notNull( outputFile );
         Assert.isTrue( inputDataType == SingleCellDataType.ANNDATA, "Only AnnData is supported as input for this transformation." );
         Assert.isTrue( outputDataType == SingleCellDataType.ANNDATA, "Only AnnData is supported as output for this transformation." );
+        log.info( "Using " + getPythonVersion() + " from " + pythonExecutable + "." );
         try ( InputStream in = requireNonNull( getClass().getResourceAsStream( "/ubic/gemma/core/loader/expression/singleCell/" + scriptName + "-anndata.py" ) ) ) {
             Process process = Runtime.getRuntime().exec( ArrayUtils.addAll( new String[] { pythonExecutable, "-" }, createScriptArgs() ) );
             IOUtils.copy( in, process.getOutputStream() );
@@ -67,15 +69,29 @@ public class AbstractPythonScriptBasedAnnDataTransformation implements SingleCel
                 reader.lines().forEach( log::info );
             }
             if ( process.waitFor() != 0 ) {
-                throw new RuntimeException( "Transposition of " + inputFile + " failed:\n" + IOUtils.toString( process.getErrorStream(), StandardCharsets.UTF_8 ) );
+                throw new RuntimeException( "Transformation of " + inputFile + " failed:\n" + IOUtils.toString( process.getErrorStream(), StandardCharsets.UTF_8 ) );
             }
         } catch ( InterruptedException e ) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException( String.format( "Transposition of %s was interrupted.", inputFile ), e );
+            throw new RuntimeException( String.format( "Transformation of %s was interrupted.", inputFile ), e );
         }
     }
 
     protected String[] createScriptArgs() {
         return new String[] { inputFile.toString(), outputFile.toString() };
+    }
+
+    private String getPythonVersion() throws IOException {
+        Process process = Runtime.getRuntime().exec( new String[] { pythonExecutable, "--version" } );
+        try {
+            if ( process.waitFor() == 0 ) {
+                return StringUtils.strip( IOUtils.toString( process.getInputStream(), StandardCharsets.UTF_8 ) );
+            } else {
+                throw new RuntimeException( "Checking Python version failed:\n" + IOUtils.toString( process.getErrorStream(), StandardCharsets.UTF_8 ) );
+            }
+        } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException( e );
+        }
     }
 }

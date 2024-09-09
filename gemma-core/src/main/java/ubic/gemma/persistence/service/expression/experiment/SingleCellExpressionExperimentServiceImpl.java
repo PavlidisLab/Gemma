@@ -25,10 +25,7 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.core.util.ListUtils.validateSparseRangeArray;
@@ -45,6 +42,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Autowired
     private AuditTrailService auditTrailService;
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<QuantitationType> getSingleCellQuantitationTypes( ExpressionExperiment ee ) {
+        return expressionExperimentDao.getSingleCellQuantitationTypes( ee );
+    }
 
     @Override
     @Transactional(readOnly = true)

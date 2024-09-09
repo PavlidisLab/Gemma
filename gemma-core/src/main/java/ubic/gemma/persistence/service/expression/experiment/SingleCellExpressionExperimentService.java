@@ -14,8 +14,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface SingleCellExpressionExperimentService {
+
+    List<QuantitationType> getSingleCellQuantitationTypes(ExpressionExperiment ee);
 
     /**
      * Obtain a single-cell expression data matrix for the given quantitation type.

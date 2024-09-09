@@ -50,13 +50,6 @@ public class ListUtils {
 
     /**
      * Get an element of a sparse array.
-     *
-     * @param array
-     * @param indices
-     * @param index
-     * @param defaultValue
-     * @param <T>
-     * @return
      */
     public static <T> T getSparseArrayElement( T[] array, int[] indices, int numberOfElements, int index, T defaultValue ) {
         Assert.isTrue( array.length == indices.length,
@@ -93,6 +86,7 @@ public class ListUtils {
     public static <T> T getSparseRangeArrayElement( List<T> array, int[] offsets, int numberOfElements, int index ) throws IllegalArgumentException, IndexOutOfBoundsException {
         Assert.isTrue( array.size() == offsets.length,
                 String.format( "Invalid size for sparse range array, it must contain %d indices.", array.size() ) );
+        Assert.isTrue( offsets[0] == 0, "The first offset of a sparse range array must be zero." );
         if ( index < 0 ) {
             // FIXME: add support for negative indexing
             throw new IndexOutOfBoundsException( "Negative indexing of sparse range arrays is not allowed." );
@@ -120,6 +114,7 @@ public class ListUtils {
                 "A non-empty sparse range array must have at least one element." );
         Assert.isTrue( array.size() == offsets.length,
                 "There must be as many offsets as entries in the corresponding array." );
+        Assert.isTrue( offsets[0] == 0, "The first offset of a sparse range array must be zero." );
         int k = 0;
         int lastI = -1;
         Object lastObject = null;

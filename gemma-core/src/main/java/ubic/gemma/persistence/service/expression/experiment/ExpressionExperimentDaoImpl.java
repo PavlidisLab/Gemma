@@ -2056,6 +2056,7 @@ public class ExpressionExperimentDaoImpl
         }
     }
 
+
     @Override
     public List<SingleCellDimension> getSingleCellDimensions( ExpressionExperiment ee ) {
         //noinspection unchecked
@@ -2124,6 +2125,16 @@ public class ExpressionExperimentDaoImpl
                         + "join scd.cellTypeAssignments cta "
                         + "join cta.cellTypes ct "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType.isPreferred = true and cta.preferred = true" )
+                .setParameter( "ee", ee )
+                .list();
+    }
+
+    @Override
+    public List<QuantitationType> getSingleCellQuantitationTypes( ExpressionExperiment ee ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct scedv.quantitationType from SingleCellExpressionDataVector scedv "
+                        + "where scedv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .list();
     }

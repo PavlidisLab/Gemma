@@ -3,10 +3,12 @@ package ubic.gemma.core.loader.util.hdf5;
 import hdf.hdf5lib.HDF5Constants;
 import org.springframework.util.Assert;
 
+import javax.annotation.Nullable;
 import javax.annotation.WillClose;
 import java.util.Optional;
 
 import static hdf.hdf5lib.H5.*;
+import static hdf.hdf5lib.HDF5Constants.H5I_INVALID_HID;
 import static hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 
 /**
@@ -16,14 +18,13 @@ import static hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 public class H5Dataset implements AutoCloseable {
 
     static H5Dataset open( long locId, String path ) {
-        return new H5Dataset( locId, H5Dopen( locId, path, H5P_DEFAULT ) );
+        return new H5Dataset( H5Dopen( locId, path, H5P_DEFAULT ) );
     }
 
-    private final long locId;
     private final long datasetId;
 
-    private H5Dataset( long locId, long datasetId ) {
-        this.locId = locId;
+    private H5Dataset( long datasetId ) {
+        Assert.isTrue( datasetId != H5I_INVALID_HID );
         this.datasetId = datasetId;
     }
 
@@ -32,10 +33,22 @@ public class H5Dataset implements AutoCloseable {
     }
 
     public Optional<H5Attribute> getAttribute( String name ) {
-        if ( !H5Aexists( locId, name ) ) {
+        if ( !H5Aexists( datasetId, name ) ) {
             return Optional.empty();
         }
-        return Optional.of( H5Attribute.open( locId, name ) );
+        return Optional.of( H5Attribute.open( datasetId, name ) );
+    }
+
+    @Nullable
+    public String getStringAttribute( String name ) {
+        return getAttribute( name )
+                .map( H5Attribute::toStringVector )
+                .map( s -> s[0] )
+                .orElse( null );
+    }
+
+    public boolean hasAttribute( String name ) {
+        return H5Aexists( datasetId, name );
     }
 
     /**
@@ -48,22 +61,56 @@ public class H5Dataset implements AutoCloseable {
         return new H5Dataspace( diskSpaceId );
     }
 
+    @WillClose
+    public boolean[] toBooleanVector() {
+        try {
+            int[] buf = new int[( int ) size()];
+            H5Dread( datasetId, HDF5Constants.H5T_NATIVE_HBOOL, HDF5Constants.H5S_ALL, HDF5Constants.H5S_ALL, HDF5Constants.H5P_DEFAULT, buf );
+            boolean[] bools = new boolean[( int ) size()];
+            for ( int i = 0; i < buf.length; i++ ) {
+                bools[i] = buf[i] != 0;
+            }
+            return bools;
+        } finally {
+            close();
+        }
+    }
+
+    @WillClose
     public int[] toIntegerVector() {
-        int[] buf = new int[( int ) size()];
-        H5Dread( datasetId, HDF5Constants.H5T_NATIVE_INT32, HDF5Constants.H5S_ALL, HDF5Constants.H5S_ALL, HDF5Constants.H5P_DEFAULT, buf );
-        return buf;
+        try {
+            int[] buf = new int[( int ) size()];
+            H5Dread( datasetId, HDF5Constants.H5T_NATIVE_INT32, HDF5Constants.H5S_ALL, HDF5Constants.H5S_ALL, HDF5Constants.H5P_DEFAULT, buf );
+            return buf;
+        } finally {
+            close();
+        }
     }
 
+    @WillClose
     public double[] toDoubleVector() {
-        double[] buf = new double[( int ) size()];
-        H5Dread( datasetId, HDF5Constants.H5T_NATIVE_DOUBLE, HDF5Constants.H5S_ALL, HDF5Constants.H5S_ALL, HDF5Constants.H5P_DEFAULT, buf );
-        return buf;
+        try {
+            double[] buf = new double[( int ) size()];
+            H5Dread( datasetId, HDF5Constants.H5T_NATIVE_DOUBLE, HDF5Constants.H5S_ALL, HDF5Constants.H5S_ALL, HDF5Constants.H5P_DEFAULT, buf );
+            return buf;
+        } finally {
+            close();
+        }
     }
 
+    @WillClose
     public String[] toStringVector() {
-        String[] buf = new String[( int ) size()];
-        H5Dread_VLStrings( datasetId, H5Type.STRING, HDF5Constants.H5S_ALL, HDF5Constants.H5S_ALL, HDF5Constants.H5P_DEFAULT, buf );
-        return buf;
+        try {
+            if ( getType().getFundamentalType() == H5FundamentalType.ENUM ) {
+                return getType().getMemberNames();
+            } else {
+                String[] buf = new String[( int ) size()];
+                H5Dread_VLStrings( datasetId, H5Type.STRING, HDF5Constants.H5S_ALL, HDF5Constants.H5S_ALL, HDF5Constants.H5P_DEFAULT, buf );
+                return buf;
+            }
+        } finally {
+            close();
+        }
     }
 
     public long size() {
@@ -80,6 +127,18 @@ public class H5Dataset implements AutoCloseable {
         H5Dclose( datasetId );
     }
 
+    public long[] getShape() {
+        long spaceId = H5Dget_space( datasetId );
+        try {
+            int dims = H5Sget_simple_extent_ndims( spaceId );
+            long[] result = new long[dims];
+            H5Sget_simple_extent_dims( spaceId, result, null );
+            return result;
+        } finally {
+            H5Sclose( spaceId );
+        }
+    }
+
     /**
      * Represents a dataspace selection of a {@link H5Dataset}.
      * <p>
@@ -89,38 +148,106 @@ public class H5Dataset implements AutoCloseable {
     public class H5Dataspace implements AutoCloseable {
 
         private final long diskSpaceId;
-        private final long memSpaceId;
 
         private H5Dataspace( long diskSpaceId ) {
             this.diskSpaceId = diskSpaceId;
-            this.memSpaceId = H5Screate_simple( 1, new long[] { H5Sget_select_npoints( this.diskSpaceId ) }, null );
+        }
+
+        /**
+         * Write the dataspace into a slice of a target.
+         * <p>
+         * The start and end are expressed in terms of number of datapoints. The slice must contain exactly {@link #size()}
+         * datapoints to be valid.
+         * <p>
+         * The dataspace is closed once the operation is completed and should no-longer be used.
+         * @param buf        a target buffer of size {@code (end - start) * sizeof(scalarType)}
+         * @param start      start of a slice. inclusive
+         * @param end        end of a slice, exclusive
+         * @param scalarType a datatype to write into the buffer
+         */
+        @WillClose
+        public void toByteVector( byte[] buf, int start, int end, long scalarType ) {
+            Assert.isTrue( start >= 0 && start < end, "Invalid slice [" + start + ", " + end + "[." );
+            long sourceSize = size();
+            long targetSize = end - start;
+            long scalarSize = H5Tget_size( scalarType );
+            Assert.isTrue( sourceSize == targetSize, "The target slice should accommodate exactly " + sourceSize + " scalars, its size " + sourceSize );
+            Assert.isTrue( end * scalarSize <= buf.length, "The target slice should fit in the buffer." );
+            Assert.isTrue( buf.length % scalarSize == 0, "The size of the targe tbuffer must be a multiple of " + scalarSize + "." );
+            long memSpaceId = H5Screate_simple( 1, new long[] { buf.length / scalarSize }, null );
+            H5Sselect_hyperslab( memSpaceId, HDF5Constants.H5S_SELECT_SET, new long[] { start }, null, new long[] { end - start }, null );
+            try {
+                H5Dread( datasetId, scalarType, memSpaceId, diskSpaceId, HDF5Constants.H5P_DEFAULT, buf );
+            } finally {
+                H5Sclose( memSpaceId );
+                close();
+            }
         }
 
         @WillClose
         public byte[] toByteVector( long scalarType ) {
+            long memSpaceId = H5Screate_simple( 1, new long[] { size() }, null );
             try {
-                byte[] buf = new byte[( int ) H5Sget_select_npoints( memSpaceId ) * ( int ) H5Tget_size( scalarType )];
+                byte[] buf = new byte[( int ) size() * ( int ) H5Tget_size( scalarType )];
                 H5Dread( datasetId, scalarType, memSpaceId, diskSpaceId, HDF5Constants.H5P_DEFAULT, buf );
                 return buf;
             } finally {
+                H5Sclose( memSpaceId );
+                close();
+            }
+        }
+
+        public boolean[] toBooleanVector() {
+            long memSpaceId = H5Screate_simple( 1, new long[] { size() }, null );
+            try {
+                int[] buf = new int[( int ) size()];
+                H5Dread_int( datasetId, HDF5Constants.H5T_NATIVE_HBOOL, memSpaceId, diskSpaceId, HDF5Constants.H5P_DEFAULT, buf );
+                boolean[] bools = new boolean[( int ) size()];
+                for ( int i = 0; i < buf.length; i++ ) {
+                    bools[i] = buf[i] != 0;
+                }
+                return bools;
+            } finally {
+                H5Sclose( memSpaceId );
                 close();
             }
         }
 
         @WillClose
         public int[] toIntegerVector() {
+            long memSpaceId = H5Screate_simple( 1, new long[] { size() }, null );
             try {
-                int[] buf = new int[( int ) H5Sget_select_npoints( memSpaceId )];
-                H5Dread_int( datasetId, HDF5Constants.H5T_NATIVE_INT, memSpaceId, diskSpaceId, HDF5Constants.H5P_DEFAULT, buf );
+                int[] buf = new int[( int ) size()];
+                H5Dread_int( datasetId, HDF5Constants.H5T_NATIVE_INT32, memSpaceId, diskSpaceId, HDF5Constants.H5P_DEFAULT, buf );
                 return buf;
             } finally {
+                H5Sclose( memSpaceId );
                 close();
             }
         }
 
+        @WillClose
+        public double[] toDoubleVector() {
+            long memSpaceId = H5Screate_simple( 1, new long[] { size() }, null );
+            try {
+                double[] buf = new double[( int ) size()];
+                H5Dread_double( datasetId, HDF5Constants.H5T_NATIVE_DOUBLE, memSpaceId, diskSpaceId, HDF5Constants.H5P_DEFAULT, buf );
+                return buf;
+            } finally {
+                H5Sclose( memSpaceId );
+                close();
+            }
+        }
+
+        /**
+         * Obtain the size of this dataspace.
+         */
+        public long size() {
+            return H5Sget_select_npoints( diskSpaceId );
+        }
+
         @Override
         public void close() {
-            H5Sclose( memSpaceId );
             H5Sclose( diskSpaceId );
         }
     }

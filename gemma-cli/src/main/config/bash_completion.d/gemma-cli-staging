@@ -217,18 +217,18 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.SingleCellDataLoaderCli ' ]]; then
-        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -h -q -t -x" -- "$2")
+        if ! [[ "$current_option" =~ (--anndata-cell-type-factor-name|--anndata-sample-factor-name|--anndata-unknown-cell-type-indicator|--data-type|--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--platform|--taxon|-a|-annDataCellTypeFactorName|-annDataSampleFactorName|-annDataUnknownCellTypeIndicator|-batchFormat|-batchOutputFile|-dataType|-e|-eeset|-f|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--anndata-cell-type-factor-name --anndata-sample-factor-name --anndata-unknown-cell-type-indicator --cell-type-assignment-file --data-type --eeListfile --excludeEEFile --experiment --expressionQuery --help --platform --quantitation-type-name --taxon -a -all -annDataCellTypeFactorName -annDataSampleFactorName -annDataUnknownCellTypeIndicator -batchFormat -batchOutputFile -cellTypeAssignmentFile -dataType -e -eeset -f -h -q -quantitationTypeName -t -x" -- "$2")
         fi
-        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+        if [[ "$current_option" =~ (--cell-type-assignment-file|--eeListfile|--excludeEEFile|-batchOutputFile|-cellTypeAssignmentFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' loadSingleCellData ' ]]; then
-        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --taxon -all -batchFormat -batchOutputFile -e -eeset -f -h -q -t -x" -- "$2")
+        if ! [[ "$current_option" =~ (--anndata-cell-type-factor-name|--anndata-sample-factor-name|--anndata-unknown-cell-type-indicator|--data-type|--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--platform|--taxon|-a|-annDataCellTypeFactorName|-annDataSampleFactorName|-annDataUnknownCellTypeIndicator|-batchFormat|-batchOutputFile|-dataType|-e|-eeset|-f|-q|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--anndata-cell-type-factor-name --anndata-sample-factor-name --anndata-unknown-cell-type-indicator --cell-type-assignment-file --data-type --eeListfile --excludeEEFile --experiment --expressionQuery --help --platform --quantitation-type-name --taxon -a -all -annDataCellTypeFactorName -annDataSampleFactorName -annDataUnknownCellTypeIndicator -batchFormat -batchOutputFile -cellTypeAssignmentFile -dataType -e -eeset -f -h -q -quantitationTypeName -t -x" -- "$2")
         fi
-        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
+        if [[ "$current_option" =~ (--cell-type-assignment-file|--eeListfile|--excludeEEFile|-batchOutputFile|-cellTypeAssignmentFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
@@ -441,10 +441,14 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.SingleCellDataTransformCli ' ]]; then
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -h" -- "$2")
+        if ! [[ "$current_option" =~ (-python) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -h -python" -- "$2")
+        fi
     fi
     if [[ " $words " =~ ' transformSingleCellData ' ]]; then
-        mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -h" -- "$2")
+        if ! [[ "$current_option" =~ (-python) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -h -python" -- "$2")
+        fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.UpdateEe2AdCli ' ]]; then
         if ! [[ "$current_option" =~ (--since|-s) ]]; then

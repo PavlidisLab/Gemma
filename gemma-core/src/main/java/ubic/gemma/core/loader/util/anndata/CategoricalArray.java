@@ -4,26 +4,43 @@ import org.springframework.util.Assert;
 import ubic.gemma.core.loader.util.hdf5.H5Group;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
  * Represents a categorical array.
+ * @author poirigui
  */
-public class CategoricalArray {
+public class CategoricalArray<T> implements Array<T> {
 
-    private final String[] categories;
+    private final H5Group group;
+    private final T[] categories;
     private final int[] codes;
+    private final boolean ordered;
 
-    public CategoricalArray( H5Group group ) {
+    public CategoricalArray( H5Group group, Class<T> categoryType ) {
         Assert.isTrue( Objects.equals( group.getStringAttribute( "encoding-type" ), "categorical" ),
                 "The H5 group does not have an 'encoding-type' attribute set to 'categorical'." );
         Assert.isTrue( group.hasAttribute( "encoding-version" ) );
         Assert.isTrue( group.hasAttribute( "ordered" ) );
-        this.categories = group.getDataset( "categories" ).toStringVector();
+        this.group = group;
+        if ( String.class.isAssignableFrom( categoryType ) ) {
+            //noinspection unchecked
+            this.categories = ( T[] ) group.getDataset( "categories" ).toStringVector();
+        } else if ( Integer.class.isAssignableFrom( categoryType ) ) {
+            //noinspection unchecked
+            this.categories = ( T[] ) Arrays.stream( group.getDataset( "categories" ).toIntegerVector() ).boxed().toArray();
+        } else {
+            throw new IllegalArgumentException( "Unsupported scalar type for vector " + categoryType );
+        }
         this.codes = group.getDataset( "codes" ).toIntegerVector();
+        //noinspection resource
+        this.ordered = group.getAttribute( "ordered" )
+                .orElseThrow( IllegalArgumentException::new )
+                .toBooleanVector()[0];
     }
 
-    public String[] getCategories() {
+    public T[] getCategories() {
         return categories;
     }
 
@@ -31,20 +48,28 @@ public class CategoricalArray {
         return codes;
     }
 
+    public boolean isOrdered() {
+        return ordered;
+    }
+
     @Nullable
-    public String get( int i ) {
+    @Override
+    public T get( int i ) {
         return codes[i] != -1 ? categories[codes[i]] : null;
     }
 
-    public String[] toStringVector() {
-        String[] vec = new String[codes.length];
-        for ( int i = 0; i < vec.length; i++ ) {
-            vec[i] = codes[i] != -1 ? categories[codes[i]] : null;
-        }
-        return vec;
-    }
-
+    @Override
     public int size() {
         return codes.length;
+    }
+
+    @Override
+    public void close() {
+        group.close();
+    }
+
+    @Override
+    public String toString() {
+        return codes.length + " values from " + Arrays.toString( categories );
     }
 }

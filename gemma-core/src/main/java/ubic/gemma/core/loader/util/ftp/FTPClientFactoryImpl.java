@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentMap;
 public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
 
     private Duration connectTimeout = Duration.ofMillis( 60000 );
-    private Duration controlTimeout = Duration.ofMillis( 1000 );
+    private Duration controlTimeout = Duration.ofMillis( 10000 );
     private Duration dataTimeout = Duration.ofMillis( 10000 );
     /**
      * Maximum number of idle connections kept in the pool, per host.

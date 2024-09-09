@@ -17,8 +17,7 @@ public class HelpUtils {
         formatter.setSyntaxPrefix( "Usage: " );
     }
 
-    public static void printHelp( PrintWriter writer, String commandName, Options options, boolean allowPositionalArguments, String header, String footer ) {
-        String syntax = "gemma-cli " + commandName + " [options]" + ( allowPositionalArguments ? " [arguments]" : "" );
+    public static void printHelp( PrintWriter writer, String syntax, Options options, String header, String footer ) {
         if ( StringUtils.isBlank( header ) ) {
             header = HEADER;
         } else {

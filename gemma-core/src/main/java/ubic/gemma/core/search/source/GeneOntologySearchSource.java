@@ -88,7 +88,7 @@ public class GeneOntologySearchSource implements SearchSource {
                     }
                 }
             } else {
-                // find exact matches of the GO ID
+                // find exact match of the GO ID
                 Collection<Gene> exactMatchResults = geneOntologyService.getGenes( settings.getQuery(), settings.getTaxon() );
                 for ( Gene g : exactMatchResults ) {
                     results.add( SearchResult.from( Gene.class, g, 1.0, Collections.emptyMap(), "GeneOntologyService.getGenes using a GO ID" ) );
@@ -115,7 +115,7 @@ public class GeneOntologySearchSource implements SearchSource {
                     } else {
                         score = FULL_TEXT_SCORE_PENALTY * ( osr.getScore() - m ) / d;
                     }
-                    results.add( SearchResult.from( Gene.class, g, score, Collections.emptyMap(), "GeneOntologyService.getGenes via full-text matches" ) );
+                    results.add( SearchResult.from( Gene.class, g, score, Collections.emptyMap(), "GeneOntologyService.getGenes via full-text match" ) );
                 }
             }
         } catch ( OntologySearchException e ) {

@@ -250,6 +250,56 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         }
     }
 
+    @Override
+    protected void doWork() throws Exception {
+        for ( BioAssaySet bas : expressionExperiments ) {
+            try {
+                processBioAssaySet( bas );
+                addSuccessObject( bas );
+            } catch ( Exception e ) {
+                addErrorObject( bas, e );
+            }
+        }
+    }
+
+    /**
+     * Process a BioAssaySet.
+     * <p>
+     * This method delegates to one of {@link #processExpressionExperiment(ExpressionExperiment)},
+     * {@link #processExpressionExperimentSubSet(ExpressionExperimentSubSet)} or {@link #processOtherBioAssaySet(BioAssaySet)}.
+     */
+    protected final void processBioAssaySet( BioAssaySet bas ) {
+        Assert.notNull( bas, "Cannot process a null BioAssaySet." );
+        if ( bas instanceof ExpressionExperiment ) {
+            processExpressionExperiment( ( ExpressionExperiment ) bas );
+        } else if ( bas instanceof ExpressionExperimentSubSet ) {
+            processExpressionExperimentSubSet( ( ExpressionExperimentSubSet ) bas );
+        } else {
+            processOtherBioAssaySet( bas );
+        }
+    }
+
+    /**
+     * Process an {@link ExpressionExperiment}.
+     */
+    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        throw new UnsupportedOperationException( "This command line does support experiments." );
+    }
+
+    /**
+     * Process an {@link ExpressionExperimentSubSet}.
+     */
+    protected void processExpressionExperimentSubSet( ExpressionExperimentSubSet expressionExperimentSubSet ) {
+        throw new UnsupportedOperationException( "This command line does support experiment subsets." );
+    }
+
+    /**
+     * Process other kinds of {@link BioAssaySet} that are neither experiment nor subset.
+     */
+    protected void processOtherBioAssaySet( BioAssaySet bas ) {
+        throw new UnsupportedOperationException( "This command line does support other kinds of BioAssaySet." );
+    }
+
     protected void addForceOption( Options options ) {
         String desc = "Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)";
         Option forceOption = Option.builder( "force" ).longOpt( "force" ).desc( desc ).build();

@@ -27,14 +27,6 @@ import java.util.stream.Stream;
 public interface SingleCellDataLoader {
 
     /**
-     * Strategy used for comparing {@link BioAssay} to sample names from the data.
-     */
-    @FunctionalInterface
-    interface BioAssayToSampleNameMatcher {
-        boolean matches( BioAssay bioAssay, String sampleNameFromData );
-    }
-
-    /**
      * Set the strategy used for comparing {@link BioAssay} to sample names from the data.
      */
     void setBioAssayToSampleNameMatcher( BioAssayToSampleNameMatcher sampleNameComparator );
@@ -81,7 +73,6 @@ public interface SingleCellDataLoader {
 
     /**
      * Load single-cell type labelling present in the data.
-     * @param dimension dimension to use for organizing cell types
      */
     Optional<CellTypeAssignment> getCellTypeAssignment( SingleCellDimension dimension ) throws IOException;
 

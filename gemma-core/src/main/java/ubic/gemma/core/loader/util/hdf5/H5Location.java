@@ -3,6 +3,7 @@ package ubic.gemma.core.loader.util.hdf5;
 import hdf.hdf5lib.HDF5Constants;
 import hdf.hdf5lib.callbacks.H5A_iterate_t;
 import hdf.hdf5lib.callbacks.H5L_iterate_opdata_t;
+import org.springframework.util.Assert;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static hdf.hdf5lib.H5.*;
+import static hdf.hdf5lib.HDF5Constants.H5I_INVALID_HID;
 
 /**
  * Represents a location which is either a {@link H5File} or a {@link H5Group}.
@@ -19,6 +21,7 @@ public abstract class H5Location {
     private final long locId;
 
     protected H5Location( long locId ) {
+        Assert.isTrue( locId != H5I_INVALID_HID );
         this.locId = locId;
     }
 
@@ -117,6 +120,20 @@ public abstract class H5Location {
         }, new H5L_iterate_opdata_t() {
         }, HDF5Constants.H5P_DEFAULT );
         return paths;
+    }
+
+    /**
+     * Check if the given path refers to a H5 group.
+     */
+    public boolean isGroup( String path ) {
+        long groupId = H5Gopen( locId, path, HDF5Constants.H5P_DEFAULT );
+        try {
+            return groupId != H5I_INVALID_HID;
+        } finally {
+            if ( groupId != H5I_INVALID_HID ) {
+                H5Gclose( groupId );
+            }
+        }
     }
 
     public H5Group getGroup( String path ) {

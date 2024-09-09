@@ -349,6 +349,24 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
+    public Map<CompositeSequence, List<Gene>> getGenes( ArrayDesign arrayDesign ) {
+        //noinspection unchecked
+        List<Object[]> results = getSessionFactory().getCurrentSession().createSQLQuery(
+                        "select gene2cs.CS, gene2cs.GENE from GENE2CS gene2cs "
+                                + "where gene2cs.AD = :arrayDesignId" )
+                .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
+                .addSynchronizedEntityClass( ArrayDesign.class )
+                .addSynchronizedEntityClass( CompositeSequence.class )
+                .addSynchronizedEntityClass( Gene.class )
+                .setParameter( "arrayDesignId", arrayDesign.getId() )
+                .list();
+        return results.stream()
+                .collect( Collectors.groupingBy(
+                        row -> ( CompositeSequence ) getSessionFactory().getCurrentSession().load( CompositeSequence.class, ( Long ) row[0] ),
+                        Collectors.mapping( row -> ( Gene ) getSessionFactory().getCurrentSession().load( Gene.class, ( Long ) row[1] ), Collectors.toList() ) ) );
+    }
+
+    @Override
     public Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign ) {
         //language=HQL
         final String queryString = "select ee from "

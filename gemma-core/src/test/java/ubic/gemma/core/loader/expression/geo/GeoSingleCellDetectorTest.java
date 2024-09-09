@@ -1,7 +1,5 @@
 package ubic.gemma.core.loader.expression.geo;
 
-import org.apache.commons.io.file.PathUtils;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -13,34 +11,37 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.core.loader.expression.geo.singleCell.GeoBioAssayToSampleNameMatcher;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
 import ubic.gemma.core.loader.expression.geo.singleCell.NoSingleCellDataFoundException;
-import ubic.gemma.core.loader.expression.singleCell.MexSingleCellDataLoader;
-import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
-import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
+import ubic.gemma.core.loader.expression.singleCell.*;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
-import ubic.gemma.core.loader.util.ftp.FTPClientFactoryImpl;
 import ubic.gemma.core.loader.util.ftp.FTPConfig;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.zip.GZIPInputStream;
 
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.InstanceOfAssertFactories.type;
 
 /**
  * TODO: move SOFT files in test resources and mock FTP downloads
@@ -49,7 +50,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @ContextConfiguration
 public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests {
 
-    @Import(FTPConfig.class)
+    @Import({ FTPConfig.class })
     @Configuration
     @TestComponent
     static class Config {
@@ -66,24 +67,19 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
     private FTPClientFactory ftpClientFactory;
 
     private final GeoSingleCellDetector detector = new GeoSingleCellDetector();
-    private Path tmpDir;
+    private final Path tmpDir = Paths.get( Settings.getDownloadPath(), "singleCellData/GEO" );
 
     @Before
     public void setUp() throws IOException {
-        tmpDir = Files.createTempDirectory( "test" );
         detector.setFTPClientFactory( ftpClientFactory );
         detector.setDownloadDirectory( tmpDir );
-    }
-
-    @After
-    public void cleanUp() throws IOException {
-        PathUtils.deleteDirectory( tmpDir );
     }
 
     /**
      * AnnData (and also Seurat Disk, but the former is preferred)
      */
     @Test
+    @Category(SlowTest.class)
     public void testGSE225158() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE225158" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -92,6 +88,96 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
                 .containsExactlyInAnyOrder( SingleCellDataType.ANNDATA, SingleCellDataType.SEURAT_DISK );
         GeoSample sample = series.getSamples().iterator().next();
         assertThat( detector.hasSingleCellData( sample ) ).isFalse();
+        detector.downloadSingleCellData( series );
+        // this segment covers some heuristics for detecting sample and cell type columns
+        SingleCellDataLoader loader = detector.getSingleCellDataLoader( series );
+        assertThat( loader ).isInstanceOf( AnnDataSingleCellDataLoader.class );
+        assertThat( loader.getSampleNames() )
+                .containsExactlyInAnyOrder( "C-1262", "P-612", "C-1488", "P-1572", "C-1366", "C-13281",
+                        "P-1034", "P-13151", "P-1366", "P-13281", "C-1572", "P-13291", "C-1252", "C-1670", "P-1262",
+                        "C-1034", "P-1252", "P-1670", "P-13114", "P-1488", "C-13151", "C-13114" );
+        assertThat( loader.getGenes() )
+                .hasSize( 31393 );
+
+        // load two samples
+        Set<BioAssay> bas = new HashSet<>();
+        bas.add( BioAssay.Factory.newInstance( "C-13151", null, BioMaterial.Factory.newInstance( "C-13151" ) ) );
+        bas.add( BioAssay.Factory.newInstance( "P-13281", null, BioMaterial.Factory.newInstance( "P-13281" ) ) );
+
+        SingleCellDimension dim = loader.getSingleCellDimension( bas );
+        assertThat( dim.getNumberOfCells() ).isEqualTo( 3598 );
+        QuantitationType qt = loader.getQuantitationTypes().iterator().next();
+
+        Map<String, CompositeSequence> elementsMapping = new HashMap<>();
+        elementsMapping.put( "SLCO3A1", CompositeSequence.Factory.newInstance( "SLCO3A1" ) );
+
+        // loading vectors will fail because the matrix is stored in transposed
+        assertThatThrownBy( () -> loader.loadVectors( elementsMapping, dim, qt ) )
+                .isInstanceOf( UnsupportedOperationException.class )
+                .hasMessage( "The matrix at 'X' is stored as CSR and transposition is enabled; it must be converted to CSC for being loaded." );
+    }
+
+    /**
+     * This AnnData file has invalid columns and numerical categorical arrays and uses a dense matrix.
+     */
+    @Test
+    @Category(SlowTest.class)
+    public void testGSE221593() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE221593" );
+        detector.downloadSingleCellData( series );
+        assertThat( detector.getSingleCellDataLoader( series ) )
+                .isInstanceOf( AnnDataSingleCellDataLoader.class )
+                .satisfies( loader -> {
+                    assertThatThrownBy( loader::getSampleNames )
+                            .isInstanceOf( IllegalArgumentException.class );
+                    assertThat( loader.getGenes() ).hasSize( 4000 )
+                            .contains( "SCT", "IGHV3-1", "VSTM4" );
+                    assertThat( loader.getQuantitationTypes() )
+                            .hasSize( 3 )
+                            .extracting( QuantitationType::getName )
+                            .containsExactlyInAnyOrder( "X", "layers/counts", "layers/scvi_normalized" );
+                    assertThat( loader.getQuantitationTypes() )
+                            .hasSize( 3 )
+                            .extracting( QuantitationType::getDescription )
+                            .containsExactlyInAnyOrder(
+                                    "Data from a layer located at 'layers/scvi_normalized' originally encoded as an array of floats.",
+                                    "Data from a layer located at 'layers/counts' originally encoded as an array of floats.",
+                                    "Data from a layer located at 'X' originally encoded as an array of floats." );
+                } );
+    }
+
+    @Test
+    @Category(SlowTest.class)
+    public void testGSE221522() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE221522" );
+        detector.downloadSingleCellData( series );
+        assertThat( detector.getSingleCellDataLoader( series ) )
+                .asInstanceOf( type( AnnDataSingleCellDataLoader.class ) )
+                .satisfies( loader -> {
+                    // the AnnData use abbreviated column name that simply cannot be matched against the GEO record
+                    loader.setSampleFactorName( "sample" );
+                    assertThat( loader.getSampleNames() )
+                            .containsExactlyInAnyOrder( "Pt. A", "Pt. B", "Pt. C", "Pt. D", "Pt. E", "Pt. F", "Pt. G", "Pt. H", "Pt. I", "Pt. J" );
+                    loader.setBioAssayToSampleNameMatcher( new MappingBioAssayToSampleNameMatcher( new GeoBioAssayToSampleNameMatcher(),
+                            new String[] { "Patient_F", "Patient_G", "Patient_H", "Patient_I", "Patient_J" },
+                            new String[] { "Pt. F", "Pt. G", "Pt. H", "Pt. I", "Pt. J" } ) );
+                    List<BioAssay> bas = Collections.singletonList( BioAssay.Factory.newInstance( "Patient_G", null, BioMaterial.Factory.newInstance( "Patient_G" ) ) );
+                    SingleCellDimension dim = loader.getSingleCellDimension( bas );
+                    assertThat( dim.getNumberOfCells() ).isEqualTo( 413 );
+                    assertThat( loader.getQuantitationTypes() )
+                            .extracting( QuantitationType::getName )
+                            .containsExactlyInAnyOrder( "X", "layers/counts" );
+                    assertThat( loader.getGenes() )
+                            .hasSize( 18322 );
+                } );
+    }
+
+    @Test
+    @Category( SlowTest.class )
+    public void testGSE254569() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE254569" );
+        detector.downloadSingleCellData( series );
+        detector.getSingleCellDataLoader( series );
     }
 
     /**
@@ -121,14 +207,20 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
         assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
         GeoSample sample = getSample( series, "GSM6072067" );
         assertThat( detector.hasSingleCellData( sample ) ).isTrue();
-        detector.downloadSingleCellData( sample );
+        assertThat( detector.downloadSingleCellData( sample ) )
+                .exists()
+                .isDirectory()
+                .hasFileName( "GSM6072067" )
+                .hasParent( tmpDir );
         assertThat( tmpDir )
                 .isDirectoryRecursivelyContaining( "glob:**/GSM6072067/barcodes.tsv.gz" )
                 .isDirectoryRecursivelyContaining( "glob:**/GSM6072067/features.tsv.gz" )
                 .isDirectoryRecursivelyContaining( "glob:**/GSM6072067/matrix.mtx.gz" );
         // downloaded files will be reused, only the target will be linked
-        detector.downloadSingleCellData( series, sample );
-        assertThat( tmpDir )
+        assertThat( detector.downloadSingleCellData( series, sample ) )
+                .exists().isDirectory().hasFileName( "GSM6072067" )
+                .hasParent( tmpDir.resolve( "GSE201814" ) );
+        assertThat( tmpDir.resolve( "GSE201814" ) )
                 .isDirectoryRecursivelyContaining( "glob:**/GSE201814/GSM6072067/barcodes.tsv.gz" )
                 .isDirectoryRecursivelyContaining( "glob:**/GSE201814/GSM6072067/features.tsv.gz" )
                 .isDirectoryRecursivelyContaining( "glob:**/GSE201814/GSM6072067/matrix.mtx.gz" );
@@ -175,7 +267,9 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
         GeoSeries series = readSeriesFromGeo( "GSE174574" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
         GeoSample sample = getSample( series, "GSM5319989" );
-        detector.downloadSingleCellData( sample );
+        assertThat( detector.downloadSingleCellData( sample ) )
+                .isDirectory()
+                .hasFileName( "GSM5319989" );
         assertThat( tmpDir )
                 .isDirectoryRecursivelyContaining( "glob:**/GSM5319989/barcodes.tsv.gz" )
                 .isDirectoryRecursivelyContaining( "glob:**/GSM5319989/features.tsv.gz" )
@@ -236,7 +330,6 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
     public void testGSE148611() throws IOException {
         GeoSeries series = readSeriesFromGeo( "GSE148611" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
-        // detector.downloadSingleCellData( series );
     }
 
     @Test
@@ -486,7 +579,7 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
         GeoSeries series = readSeriesFromGeo( "GSE159416" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
         assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.LOOM );
-        detector.downloadSingleCellData( series );
+        assertThat( detector.downloadSingleCellData( series ) ).exists();
         assertThat( tmpDir )
                 .isDirectoryRecursivelyContaining( "glob:**/GSE159416.loom" );
         assertThatThrownBy( () -> detector.getSingleCellDataLoader( series ) )
@@ -515,7 +608,9 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
             detector.setMexFileSuffixes( "barcodes.tsv", "features.tsv", "counts.mtx" );
             assertThat( detector.hasSingleCellData( series ) ).isTrue();
             assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
-            detector.downloadSingleCellData( series, getSample( series, "GSM8002943" ) );
+            assertThat( detector.downloadSingleCellData( series, getSample( series, "GSM8002943" ) ) )
+                    .exists()
+                    .isDirectory();
             assertThat( tmpDir )
                     .isDirectoryRecursivelyContaining( "glob:**/GSE199762/GSM8002943/barcodes.tsv.gz" )
                     .isDirectoryRecursivelyContaining( "glob:**/GSE199762/GSM8002943/features.tsv.gz" )
@@ -542,7 +637,9 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
                 .isDirectoryNotContaining( "glob:**/GSM4710634" );
         // FIXME: this sample also has technical replicates, but it is not being detected due to its naming scheme
         GeoSample sample2 = getSample( series, "GSM4710635" );
-        detector.downloadSingleCellData( series, sample2 );
+        assertThat( detector.downloadSingleCellData( series, sample2 ) )
+                .exists()
+                .isDirectory();
         assertThat( tmpDir )
                 .isDirectoryRecursivelyContaining( "glob:**/GSE155695/GSM4710635/barcodes.tsv.gz" )
                 .isDirectoryRecursivelyContaining( "glob:**/GSE155695/GSM4710635/features.tsv.gz" )
@@ -556,7 +653,10 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
     public void testGSM4282408() throws NoSingleCellDataFoundException, IOException {
         GeoSeries series = readSeriesFromGeo( "GSE144172" );
         GeoSample sample = getSample( series, "GSM4282408" );
-        detector.downloadSingleCellData( series, sample );
+        assertThat( detector.downloadSingleCellData( series, sample ) )
+                .exists()
+                .isDirectory()
+                .hasFileName( "GSM4282408" );
         List<BioAssay> samples = Collections.singletonList( BioAssay.Factory.newInstance( "GSM4282408" ) );
         assertThatThrownBy( () -> detector.getSingleCellDataLoader( series ).getSingleCellDimension( samples ) )
                 .isInstanceOf( IllegalArgumentException.class )
@@ -564,7 +664,8 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
     }
 
     private GeoSeries readSeriesFromGeo( String accession ) throws IOException {
-        try ( InputStream is = new GZIPInputStream( new URL( "https://ftp.ncbi.nlm.nih.gov/geo/series/" + accession.substring( 0, 6 ) + "nnn/" + accession + "/soft/" + accession + "_family.soft.gz" ).openStream() ) ) {
+        URL url = new URL( "ftp://ftp.ncbi.nlm.nih.gov/geo/series/" + accession.substring( 0, 6 ) + "nnn/" + accession + "/soft/" + accession + "_family.soft.gz" );
+        try ( InputStream is = new GZIPInputStream( ftpClientFactory.openStream( url ) ) ) {
             GeoFamilyParser parser = new GeoFamilyParser();
             parser.parse( is );
             return requireNonNull( requireNonNull( parser.getUniqueResult() ).getSeriesMap().get( accession ) );

@@ -29,6 +29,7 @@ import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author kelsey
@@ -50,8 +51,9 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
      *
      * @return found QT
      */
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType );
+    QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType, Class<? extends DataVector> dataVectorTypes );
 
     /**
      * @see QuantitationTypeDao#findByNameAndVectorType(ExpressionExperiment, String, Class)
@@ -87,9 +89,6 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
     @Override
     @Secured({ "GROUP_USER" })
     void update( QuantitationType quantitationType );
-
-    @Secured({ "GROUP_USER" })
-    List<QuantitationType> loadByDescription( String description );
 
     List<QuantitationTypeValueObject> loadValueObjectsWithExpressionExperiment( Collection<QuantitationType> qts, ExpressionExperiment expressionExperiment );
 }

@@ -23,6 +23,8 @@ import java.util.stream.Collectors;
 @Component
 public class SingleCellDataTransformCli extends AbstractCLI {
 
+    private static final String PYTHON_OPTION = "python";
+
     @Value("${python.exe}")
     private String pythonExecutable;
 
@@ -34,10 +36,14 @@ public class SingleCellDataTransformCli extends AbstractCLI {
 
     @Override
     protected void buildOptions( Options options ) {
+        options.addOption( PYTHON_OPTION, true, "Override the Python executable to use (defaults to " + pythonExecutable + ")" );
     }
 
     @Override
     protected void processOptions( CommandLine commandLine ) throws ParseException {
+        if ( commandLine.hasOption( PYTHON_OPTION ) ) {
+            pythonExecutable = commandLine.getOptionValue( PYTHON_OPTION );
+        }
         LinkedList<String> positionalArguments = new LinkedList<>( commandLine.getArgList() );
         if ( positionalArguments.isEmpty() ) {
             throw new ParseException( "No operation specified. Possible values are: transpose, pack, sortBySample, sample." );
@@ -77,7 +83,8 @@ public class SingleCellDataTransformCli extends AbstractCLI {
                 throw new ParseException( "Unknown operation: " + operation + ". Possible values are: transpose, pack, sortBySample, sample." );
         }
         if ( transformation instanceof AbstractPythonScriptBasedAnnDataTransformation ) {
-            ( ( AbstractPythonScriptBasedAnnDataTransformation ) transformation ).setPythonExecutable( pythonExecutable );
+            ( ( AbstractPythonScriptBasedAnnDataTransformation ) transformation )
+                    .setPythonExecutable( pythonExecutable );
         }
         transformation.setInputFile( inputFile );
         transformation.setInputDataType( SingleCellDataType.ANNDATA );

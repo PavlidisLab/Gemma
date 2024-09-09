@@ -2,7 +2,9 @@ package ubic.gemma.core.loader.expression.singleCell;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.io.ClassPathResource;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.util.hdf5.H5Attribute;
 import ubic.gemma.core.loader.util.hdf5.H5File;
 
@@ -16,9 +18,12 @@ import static org.junit.Assume.assumeTrue;
 
 public class SingleCellDataTransformationsTest {
 
+    private static final String pythonExecutable = Settings.getString( "python.exe" );
+
     @BeforeClass
     public static void checkIfAnnDataAndScipyAreInstalled() throws IOException {
         SingleCellDataTranspose transpose = new SingleCellDataTranspose();
+        transpose.setPythonExecutable( pythonExecutable );
         assumeTrue( "scipy is required to run this test", transpose.isPackageInstalled( "scipy" ) );
         assumeTrue( "anndata is required to run this test", transpose.isPackageInstalled( "anndata" ) );
     }
@@ -26,6 +31,7 @@ public class SingleCellDataTransformationsTest {
     @Test
     public void testTranspose() throws IOException {
         SingleCellDataTranspose transpose = new SingleCellDataTranspose();
+        transpose.setPythonExecutable( pythonExecutable );
         transpose.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath() );
         transpose.setInputDataType( SingleCellDataType.ANNDATA );
         transpose.setOutputFile( Files.createTempFile( "test", null ) );
@@ -36,6 +42,7 @@ public class SingleCellDataTransformationsTest {
     @Test
     public void testPack() throws IOException {
         SingleCellDataPack pack = new SingleCellDataPack();
+        pack.setPythonExecutable( pythonExecutable );
         pack.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath() );
         pack.setInputDataType( SingleCellDataType.ANNDATA );
         pack.setOutputFile( Files.createTempFile( "test", null ) );
@@ -46,6 +53,7 @@ public class SingleCellDataTransformationsTest {
     @Test
     public void testSortBySample() throws IOException {
         SingleCellDataSortBySample pack = new SingleCellDataSortBySample();
+        pack.setPythonExecutable( pythonExecutable );
         pack.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath() );
         pack.setInputDataType( SingleCellDataType.ANNDATA );
         pack.setOutputFile( Files.createTempFile( "test", null ) );
@@ -58,6 +66,7 @@ public class SingleCellDataTransformationsTest {
     public void testSample() throws IOException {
         Path outputFile = Files.createTempFile( "test", null );
         SingleCellDataSample pack = new SingleCellDataSample();
+        pack.setPythonExecutable( pythonExecutable );
         pack.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath() );
         pack.setInputDataType( SingleCellDataType.ANNDATA );
         pack.setOutputFile( outputFile );

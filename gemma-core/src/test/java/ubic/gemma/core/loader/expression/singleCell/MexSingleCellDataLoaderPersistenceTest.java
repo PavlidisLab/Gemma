@@ -65,7 +65,7 @@ public class MexSingleCellDataLoaderPersistenceTest extends BaseDatabaseTest {
     @Test
     public void test() throws IOException {
         MexSingleCellDataLoader loader = createLoaderForResourceDir( "/data/loader/expression/singleCell/GSE224438" );
-        loader.setBioAssayToSampleNameMatcher( ( bm, s ) -> s.equals( bm.getName() ) );
+        loader.setBioAssayToSampleNameMatcher( ( bms, s ) -> bms.stream().filter( bm -> s.equals( bm.getName() ) ).collect( Collectors.toSet() ) );
 
         Taxon taxon = new Taxon();
         sessionFactory.getCurrentSession().persist( taxon );

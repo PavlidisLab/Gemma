@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -44,6 +45,10 @@ import java.util.function.Function;
 @SuppressWarnings("unused") // Possible external use
 public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
         SecurableFilteringVoEnabledService<ArrayDesign, ArrayDesignValueObject> {
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    ArrayDesign loadAndThaw( Long id );
 
     /**
      * Load a platform by ID and thaw it with {@link #thawLite(ArrayDesign)}
@@ -115,6 +120,9 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Map<CompositeSequence, List<Gene>> getGenes( ArrayDesign arrayDesign );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Long getCompositeSequenceCount( ArrayDesign arrayDesign );
