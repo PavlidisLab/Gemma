@@ -17,9 +17,11 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.apache.commons.lang3.time.DateUtils;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.lang3.StringUtils;
-import ubic.basecode.util.DateUtil;
+import org.apache.commons.lang3.time.DateUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
@@ -31,10 +33,11 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
+import javax.annotation.Nullable;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -42,22 +45,57 @@ import java.util.*;
 
 /**
  * Scans GEO for experiments that are not in Gemma, subject to some filtering criteria, outputs to a file for further
- * screening. See https://github.com/PavlidisLab/Gemma/issues/169
+ * screening. See <a href="https://github.com/PavlidisLab/Gemma/issues/169">#160</a>
  *
  * @author paul
  */
 public class GeoGrabberCli extends AbstractAuthenticatedCLI {
 
+    private static final String
+            ACCESSION_OPTION = "accession",
+            ACCESSION_FILE_OPTION = "accessionFile";
+
+    private enum Mode {
+        GET_PLATFORMS,
+        GET_DATASETS,
+        BROWSE_DATASETS
+    }
+
     private static final int NCBI_CHUNK_SIZE = 100;
     private static final int MAX_RETRIES = 5; // on failures
     private static final int MAX_EMPTY_CHUNKS_IN_A_ROW = 50; // stop condition when we stop seeing useful records
+    private static final DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd", Locale.ENGLISH );
+
+    // operating mode
+    private Mode mode;
+
+    @Nullable
+    private Path outputFileName;
+
+    // options for retrieving datasets
+    private String accession;
+    private Path accessionFile;
+
+    // options for browsing datasets
+    @Nullable
     private Date dateLimit;
+    @Nullable
     private String gseLimit;
-    private String outputFileName = "";
-    private boolean getPlatforms = false;
-    private Collection<String> limitPlatform = new ArrayList<>();
+    @Nullable
+    private Set<String> limitPlatform = null;
+    @Nullable
     private String startFrom = null;
+    @Nullable
     private Date startDate = null;
+
+    @Autowired
+    private ExpressionExperimentService ees;
+    @Autowired
+    private TaxonService ts;
+    @Autowired
+    private ArrayDesignService ads;
+
+    private final GeoBrowser gbs = new GeoBrowser();
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -76,6 +114,17 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI {
 
     @Override
     protected void buildOptions( Options options ) {
+        options.addOption( Option.builder( "output" ).desc( "File path for output (defaults to standard output)" ).argName( "path" ).hasArg().type( Path.class ).build() );
+
+        // for retrieving platforms
+        options.addOption(
+                Option.builder( "platforms" ).desc( "Fetch a list of all platforms instead of experiments (-startdate, -date, -startat and -gselimit are ignored)" ).build() );
+
+        // for retrieving datasets
+        options.addOption( Option.builder( ACCESSION_OPTION ).longOpt( "accession" ).hasArg().desc( "A comma-delimited list of accessions to retrieve from GEO" ).build() );
+        options.addOption( Option.builder( ACCESSION_FILE_OPTION ).longOpt( "accession-file" ).hasArg().desc( "A file containing accessions to retrieve from GEO" ).type( File.class ).build() );
+
+        // for browsing datasets
         options.addOption(
                 Option.builder( "date" ).longOpt( null ).desc( "A release date to stop the search in format yyyy.MM.dd e.g. 2010.01.12" )
                         .argName( "date limit" ).hasArg().build() );
@@ -84,11 +133,6 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI {
                         .build() );
         options.addOption( Option.builder( "platformLimit" ).longOpt( null ).desc( "Limit to selected platforms" )
                 .argName( "comma-delimited list of GPLs" ).hasArg().build() );
-
-        options.addOption( Option.builder( "output" ).desc( "File path for output (required)" ).argName( "path" ).hasArg().required().build() );
-
-        options.addOption(
-                Option.builder( "platforms" ).desc( "Fetch a list of all platforms instead of experiments (date and gselimit ignored)" ).build() );
 
         options.addOption(
                 Option.builder( "startat" ).hasArg().argName( "GSE ID" ).desc( "Attempt to 'fast-rewind' to the given GSE ID and continue retreiving from there " ).build() );
@@ -99,11 +143,21 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-
-        if ( !commandLine.hasOption( "output" ) ) {
-            throw new IllegalArgumentException( "You must provide an output file name" );
+    protected void processOptions( CommandLine commandLine ) throws org.apache.commons.cli.ParseException {
+        if ( commandLine.hasOption( "platforms" ) ) {
+            mode = Mode.GET_PLATFORMS;
+        } else if ( commandLine.hasOption( ACCESSION_OPTION ) || commandLine.hasOption( ACCESSION_FILE_OPTION ) ) {
+            mode = Mode.GET_DATASETS;
+        } else {
+            mode = Mode.BROWSE_DATASETS;
         }
+
+        if ( commandLine.hasOption( "output" ) ) {
+            this.outputFileName = commandLine.getParsedOptionValue( "output" );
+        }
+
+        this.accession = commandLine.getOptionValue( ACCESSION_OPTION );
+        this.accessionFile = commandLine.getParsedOptionValue( ACCESSION_FILE_OPTION );
 
         if ( commandLine.hasOption( "date" ) ) {
             try {
@@ -117,28 +171,21 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI {
             this.gseLimit = commandLine.getOptionValue( "gselimit" );
         }
 
-
-        if ( commandLine.hasOption( "platforms" ) ) {
-            this.getPlatforms = true;
-        }
-
         if ( commandLine.hasOption( "platformLimit" ) ) {
             //      this.limitPlatform  = AbstractCLIContextCLI.readListFileToStrings( commandLine.getOptionValue( "platformLimit" ) );
             String gpls = commandLine.getOptionValue( "platformLimit" );
-            this.limitPlatform = Arrays.asList( StringUtils.split( gpls, "," ) );
+            this.limitPlatform = new HashSet<>( Arrays.asList( StringUtils.split( gpls, "," ) ) );
         }
-
         if ( commandLine.hasOption( "startat" ) ) {
             this.startFrom = commandLine.getOptionValue( "startat" );
             if ( !startFrom.startsWith( "GSE" ) ) {
                 throw new IllegalArgumentException( "Must provide a valid GSE for the startat option" );
             }
         }
-
         if ( commandLine.hasOption( "startdate" ) ) {
             try {
                 // this is a user input, so we have to respect its locale
-                this.startDate = DateUtils.parseDate( commandLine.getOptionValue( "startdate" ), new String[] { "yyyy.MM.dd" } );
+                this.startDate = DateUtils.parseDate( commandLine.getOptionValue( "startdate" ), "yyyy.MM.dd" );
             } catch ( ParseException e ) {
                 throw new IllegalArgumentException( "Could not parse date " + commandLine.getOptionValue( "startdate" ) );
             }
@@ -148,79 +195,94 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI {
                 }
             }
         }
-
-        this.outputFileName = commandLine.getOptionValue( "output" );
-
     }
 
     @Override
     protected void doWork() throws Exception {
-        Set<String> seen = new HashSet<>();
-        GeoBrowser gbs = new GeoBrowser();
-        ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
-        TaxonService ts = this.getBean( TaxonService.class );
-        ArrayDesignService ads = this.getBean( ArrayDesignService.class );
-        DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd", Locale.ENGLISH );
-
-        int start = 0;
-
-        assert outputFileName != null;
-        File outputFile = new File( outputFileName );
-        log.info( "Writing output to " + outputFile.getPath() );
-
-        if ( outputFile.exists() ) {
-            log.warn( "Overwriting existing file ..." );
-            Thread.sleep( 500 );
-        }
-
-        outputFile.createNewFile();
-
-        if ( getPlatforms ) {
-            Collection<GeoRecord> allGEOPlatforms = gbs.getAllGEOPlatforms();
-            log.info( "Fetched " + allGEOPlatforms.size() + " records" );
-            try ( Writer os = new FileWriter( outputFile ) ) {
-                os.append( "Acc\tRelaseDate\tTaxa\tTitle\tSummary\tTechType\n" );
-                for ( GeoRecord geoRecord : allGEOPlatforms ) {
-
-                    os.write(
-                            geoRecord.getGeoAccession()
-                                    + "\t" + dateFormat.format( geoRecord.getReleaseDate() )
-                                    + "\t" + StringUtils.join( geoRecord.getOrganisms(), "," )
-                                    + "\t" + geoRecord.getTitle()
-                                    + "\t" + geoRecord.getSummary()
-                                    + "\t" + geoRecord.getSeriesType()
-                                    + "\n" );
-
+        switch ( mode ) {
+            case GET_PLATFORMS:
+                getPlatforms();
+                break;
+            case GET_DATASETS:
+                Set<String> accessions = new HashSet<>();
+                if ( accession != null ) {
+                    Collections.addAll( accessions, StringUtils.split( accession, "," ) );
                 }
-            }
-            return;
+                if ( accessionFile != null ) {
+                    accessions.addAll( Files.readAllLines( accessionFile ) );
+                }
+                accessions.removeIf( StringUtils::isBlank );
+                getDatasets( accessions );
+                break;
+            case BROWSE_DATASETS:
+                browseDatasets( startFrom, gseLimit, startDate, dateLimit, limitPlatform );
+                break;
+            default:
+                throw new IllegalStateException( "Unknown mode " + mode );
         }
+    }
 
-        Map<Long, ArrayDesign> seenArrayDesigns = new HashMap<>();
+    private void getPlatforms() throws IOException {
+        CSVFormat tsvFormat = CSVFormat.TDF.builder()
+                .setHeader( "Acc", "ReleaseDate", "Taxa", "Title", "Summary", "TechType" )
+                .build();
+        Collection<GeoRecord> allGEOPlatforms = gbs.getAllGEOPlatforms();
+        log.info( "Fetched " + allGEOPlatforms.size() + " records" );
+        try ( CSVPrinter os = tsvFormat.print( getOutputWriter() ) ) {
+            for ( GeoRecord geoRecord : allGEOPlatforms ) {
+                os.printRecord( geoRecord.getGeoAccession(), dateFormat.format( geoRecord.getReleaseDate() ),
+                        StringUtils.join( geoRecord.getOrganisms(), "," ), geoRecord.getTitle(),
+                        geoRecord.getSummary(), geoRecord.getSeriesType() );
+            }
+        }
+    }
 
-        try ( Writer os = new FileWriter( outputFile ) ) {
+    private static final String[] DATASET_HEADER = { "Acc", "ReleaseDate", "Taxa", "Platforms", "AllPlatformsInGemma",
+            "Affy", "NumSamples", "Type", "SuperSeries", "SubSeriesOf", "PubMed", "Title", "Summary", "MeSH",
+            "SampleTerms", "LibraryStrategy", "OverallDesign" };
 
-            os.append( "Acc\tReleaseDate\tTaxa\tPlatforms\tAllPlatformsInGemma\tAffy\tNumSamples\tType\tSuperSeries\tSubSeriesOf"
-                    + "\tPubMed\tTitle\tSummary\tMeSH\tSampleTerms\tLibraryStrategy\tOverallDesign\n" );
-            os.flush();
+    private void getDatasets( Collection<String> accessions ) throws IOException {
+        if ( accessions.isEmpty() ) {
+            throw new IllegalArgumentException( "No datasets accessions provided." );
+        }
+        Map<String, ArrayDesign> seenPlatforms = new HashMap<>();
+        CSVFormat tsvFormat = CSVFormat.TDF.builder()
+                .setHeader( DATASET_HEADER )
+                .build();
+        try ( CSVPrinter os = tsvFormat.print( getOutputWriter() ) ) {
+            for ( GeoRecord record : gbs.getGeoRecords( accessions ) ) {
+                writeDataset( record, areAllPlatformsInGemma( record, seenPlatforms ), isAffymetrix( record, seenPlatforms ), os );
+            }
+        }
+    }
 
+    private void browseDatasets( @Nullable String startFrom, @Nullable String gseLimit, @Nullable Date startDate, @Nullable Date dateLimit, @Nullable Set<String> limitPlatform ) throws IOException, InterruptedException {
+        Set<String> seen = new HashSet<>();
+
+        Map<String, ArrayDesign> seenArrayDesigns = new HashMap<>();
+
+        Collection<String> allowedTaxa = new HashSet<>();
+        for ( Taxon t : ts.loadAll() ) {
+            allowedTaxa.add( t.getScientificName() );
+        }
+        log.info( allowedTaxa.size() + " Taxa considered usable" );
+
+        CSVFormat tsvFormat = CSVFormat.TDF.builder()
+                .setHeader( DATASET_HEADER )
+                .build();
+        try ( CSVPrinter os = tsvFormat.print( getOutputWriter() ) ) {
+            int start = 0;
             int numProcessed = 0;
             int numUsed = 0;
             boolean keepGoing = true;
 
-            Collection<String> allowedTaxa = new HashSet<>();
-            for ( Taxon t : ts.loadAll() ) {
-                allowedTaxa.add( t.getScientificName() );
-            }
-            log.info( allowedTaxa.size() + " Taxa considered usable" );
             int retries = 0;
             int numSkippedChunks = 0;
             boolean reachedRewindPoint = ( startDate == null && startFrom == null );
             GeoRecord lastValidRecord = null;
             while ( keepGoing ) {
-
                 log.debug( "Searching from " + start + ", seeking " + NCBI_CHUNK_SIZE + " records" );
-                List<GeoRecord> recs = null;
+                List<GeoRecord> recs;
 
                 try {
 
@@ -243,11 +305,11 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI {
 
                         // repeated empty results can just mean we ran out of records.
                         if ( numSkippedChunks > MAX_EMPTY_CHUNKS_IN_A_ROW ) {
-                            if ( lastValidRecord != null && lastValidRecord.getReleaseDate().before( new Date( 2007, 01, 01 ) ) ) {
+                            if ( lastValidRecord != null && lastValidRecord.getReleaseDate().before( new Date( 2007, Calendar.JANUARY, 1 ) ) ) {
                                 log.info( "Seem to have hit end of records, bailing" );
                                 break;
                             } else {
-                               // no op fo rnow.
+                                // no op fo rnow.
                             }
                         }
                         start += NCBI_CHUNK_SIZE;
@@ -258,7 +320,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI {
                     retries++;
                     if ( retries <= MAX_RETRIES ) {
                         log.warn( "Failure while fetching records, retrying " + e.getMessage() );
-                        Thread.sleep( 500 * retries );
+                        Thread.sleep( 500L * retries );
                         continue;
                     }
                     throw new IOException( "Too many failures: " + e.getMessage() );
@@ -279,7 +341,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI {
                     If we are trying to fast-rewind, we need to reset and redo the last query while fetching details.
                      */
                     if ( !reachedRewindPoint ) {
-                        if ( startFrom != null && geoRecord.getGeoAccession().equals( startFrom ) ) {
+                        if ( geoRecord.getGeoAccession().equals( startFrom ) ) {
                             log.info( "Located requested starting point of " + startFrom + ", resuming detailed queries" );
                             reachedRewindPoint = true;
                             start = Math.max( 0, start - NCBI_CHUNK_SIZE );
@@ -297,16 +359,16 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI {
                     numProcessed++;
 
                     if ( numProcessed % 50 == 0 ) {
-                        System.err.println( "Processed " + numProcessed + " GEO records, retained " + numUsed + " so far" );
+                        log.info( "Processed " + numProcessed + " GEO records, retained " + numUsed + " so far" );
                     }
 
-                    if ( this.dateLimit != null && dateLimit.after( geoRecord.getReleaseDate() ) ) {
+                    if ( dateLimit != null && dateLimit.after( geoRecord.getReleaseDate() ) ) {
                         log.info( "Stopping as reached date limit" );
                         keepGoing = false;
                         break;
                     }
 
-                    if ( this.gseLimit != null && geoRecord.getGeoAccession().equals( this.gseLimit ) ) {
+                    if ( geoRecord.getGeoAccession().equals( gseLimit ) ) {
                         log.info( "Stopping as have reached " + gseLimit );
                         keepGoing = false;
                         break;
@@ -329,59 +391,18 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI {
                         continue;
                     }
 
-                    boolean allPlatformsInGemma = true;
-                    boolean anyNonBlacklistedPlatforms = false;
-                    boolean isAffymetrix = false;
-                    String[] platforms = geoRecord.getPlatform().split( ";" );
-                    for ( String p : platforms ) {
-
-                        ArrayDesign ad = ads.findByShortName( p );
-                        if ( ad == null ) {
-                            allPlatformsInGemma = false; // don't skip, just indicate
-                            break;
-                        }
-
-                        if ( seenArrayDesigns.containsKey( ad.getId() ) ) {
-                            ad = seenArrayDesigns.get( ad.getId() ); // cache
-                        } else {
-                            ad = ads.thawLite( ad );
-                            seenArrayDesigns.put( ad.getId(), ad );
-                        }
-                        isAffymetrix = ad.getDesignProvider() != null && "Affymetrix".equals( ad.getDesignProvider().getName() );
-
-                        if ( !ees.isBlackListed( p ) ) {
-                            anyNonBlacklistedPlatforms = true;
-                        }
-                        // check for Affymetrix
-                    }
+                    boolean allPlatformsInGemma = areAllPlatformsInGemma( geoRecord, seenArrayDesigns );
+                    boolean anyNonBlacklistedPlatforms = hasBlacklistedPlatform( geoRecord );
+                    boolean isAffymetrix = isAffymetrix( geoRecord, seenArrayDesigns );
 
                     // we skip if all the platforms for the GSE are blacklisted
                     if ( !anyNonBlacklistedPlatforms ) {
                         continue;
                     }
 
-                    os.write(
-                            geoRecord.getGeoAccession()
-                                    + "\t" + dateFormat.format( geoRecord.getReleaseDate() )
-                                    + "\t" + StringUtils.join( geoRecord.getOrganisms(), "," )
-                                    + "\t" + geoRecord.getPlatform()
-                                    + "\t" + allPlatformsInGemma
-                                    + "\t" + isAffymetrix
-                                    + "\t" + geoRecord.getNumSamples()
-                                    + "\t" + geoRecord.getSeriesType()
-                                    + "\t" + geoRecord.isSuperSeries()
-                                    + "\t" + geoRecord.getSubSeriesOf()
-                                    + "\t" + geoRecord.getPubMedIds()
-                                    + "\t" + geoRecord.getTitle()
-                                    + "\t" + clean( geoRecord.getSummary() )
-                                    + "\t" + geoRecord.getMeshHeadings()
-                                    + "\t" + clean( geoRecord.getSampleDetails() )
-                                    + "\t" + clean( geoRecord.getLibraryStrategy() )
-                                    + "\t" + clean( geoRecord.getOverallDesign() ) + "\n" );
+                    writeDataset( geoRecord, allPlatformsInGemma, isAffymetrix, os );
 
                     seen.add( geoRecord.getGeoAccession() );
-
-                    os.flush();
 
                     numUsed++;
                     lastValidRecord = geoRecord;
@@ -390,17 +411,72 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI {
 
             }
         }
-
     }
 
+    private Appendable getOutputWriter() throws IOException {
+        if ( outputFileName != null ) {
+            log.info( "Writing output to " + outputFileName );
+            if ( Files.exists( outputFileName ) ) {
+                log.warn( "Overwriting existing file..." );
+            }
+            return Files.newBufferedWriter( outputFileName );
+        } else {
+            return System.out;
+        }
+    }
 
     /**
-     * Replace any 'tab' characters with spaces.
-     * @param s
-     * @return
+     * Check if all the platforms referenced in a GEO record are present in Gemma.
      */
-    String clean( String s ) {
-        return s.replace( '\t', ' ' );
+    private boolean areAllPlatformsInGemma( GeoRecord geoRecord, Map<String, ArrayDesign> seenPlatforms ) {
+        String[] platforms = geoRecord.getPlatform().split( ";" );
+        for ( String p : platforms ) {
+            ArrayDesign ad = seenPlatforms.computeIfAbsent( p, shortName -> {
+                ArrayDesign found = ads.findByShortName( shortName );
+                if ( found != null ) {
+                    found = ads.thawLite( found );
+                }
+                return found;
+            } );
+            if ( ad == null ) {
+                return false; // don't skip, just indicate
+            }
+        }
+        return true;
     }
 
+    private boolean isAffymetrix( GeoRecord geoRecord, Map<String, ArrayDesign> seenPlatforms ) {
+        String[] platforms = geoRecord.getPlatform().split( ";" );
+        for ( String p : platforms ) {
+            ArrayDesign ad = seenPlatforms.computeIfAbsent( p, shortName -> {
+                ArrayDesign found = ads.findByShortName( shortName );
+                if ( found != null ) {
+                    found = ads.thawLite( found );
+                }
+                return found;
+            } );
+            if ( ad != null && ad.getDesignProvider() != null && "Affymetrix".equals( ad.getDesignProvider().getName() ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasBlacklistedPlatform( GeoRecord geoRecord ) {
+        String[] platforms = geoRecord.getPlatform().split( ";" );
+        for ( String p : platforms ) {
+            if ( !ees.isBlackListed( p ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void writeDataset( GeoRecord geoRecord, boolean allPlatformsInGemma, boolean isAffymetrix, CSVPrinter os ) throws IOException {
+        os.printRecord( geoRecord.getGeoAccession(), dateFormat.format( geoRecord.getReleaseDate() ),
+                StringUtils.join( geoRecord.getOrganisms(), "," ), geoRecord.getPlatform(), allPlatformsInGemma,
+                isAffymetrix, geoRecord.getNumSamples(), geoRecord.getSeriesType(), geoRecord.isSuperSeries(),
+                geoRecord.getSubSeriesOf(), geoRecord.getPubMedIds(), geoRecord.getTitle(), geoRecord.getSummary(),
+                geoRecord.getMeshHeadings(), geoRecord.getSampleDetails(), geoRecord.getLibraryStrategy(), geoRecord.getOverallDesign() );
+    }
 }
