@@ -42,6 +42,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
 
 import javax.annotation.Nullable;
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.*;
 import java.io.*;
@@ -182,10 +183,8 @@ public class GeoBrowser {
         Node countEl = countNode.item( 0 );
 
         int count = Integer.parseInt( XMLUtils.getTextValue( ( Element ) countEl ) );
-        if ( count == 0 ) {
-            log.warn( "Got no records from: " + searchUrl );
-            return;
-        }
+        if ( count == 0 )
+            throw new RuntimeException( "Got no records from: " + searchUrl );
 
         NodeList qnode = searchDocument.getElementsByTagName( "QueryKey" );
 
