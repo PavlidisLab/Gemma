@@ -21,7 +21,7 @@ void setBuildStatus(String context, String message, String state) {
 pipeline {
     agent any
     tools {
-        maven 'Maven 3.8.1'
+        maven 'Maven 3.6.3'
     }
     parameters {
         string(name: 'DATA_DIR', defaultValue: '/space/gemmaData', description: 'Directory where production data is stored.')
