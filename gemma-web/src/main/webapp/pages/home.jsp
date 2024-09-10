@@ -1,4 +1,5 @@
-<%--@elvariable id="appConfig" type="java.util.List"--%>
+<%--@elvariable id="appConfig" type="java.util.Map"--%>
+<%--@elvariable id="buildInfo" type="ubic.gemma.core.util.BuildInfo"--%>
 <%@ include file="/common/taglibs.jsp" %>
 <head>
 <title>Home</title>
@@ -137,15 +138,14 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
             Gemma ${appConfig["gemma.version"] != null ? appConfig["gemma.version"] : "?"}
             <security:authorize access="hasAuthority('GROUP_ADMIN')">
                 <span class="d-xl-inline">
-                <c:if test="${appConfig['gemma.build.timestamp'] != null or appConfig['gemma.build.gitHash'] != null}">
+                <c:if test="${buildInfo.timestamp != null or buildInfo.gitHash != null}">
                     built
                 </c:if>
-                <c:if test="${appConfig['gemma.build.timestamp'] != null}">
-                    <fmt:parseDate value="${appConfig['gemma.build.timestamp']}" pattern="yyyy-MM-dd'T'HH:mm:ss'Z'" var="parsedBuildTimestamp"/>
-                    on <time datetime="${appConfig["gemma.build.timestamp"]}"><fmt:formatDate value="${parsedBuildTimestamp}" type="both"/></time>
+                <c:if test="${buildInfo.timestamp != null}">
+                    on <time datetime="${buildInfo.timestamp}"><fmt:formatDate value="${buildInfo.timestamp}" type="both"/></time>
                 </c:if>
-                <c:if test="${appConfig['gemma.build.gitHash'] != null}">
-                    from <a href="https://github.com/PavlidisLab/Gemma/commits/${appConfig['gemma.build.gitHash']}">${appConfig["gemma.build.gitHash"]}</a>
+                <c:if test="${buildInfo.gitHash != null}">
+                    from <a href="https://github.com/PavlidisLab/Gemma/commits/${buildInfo.gitHash}">${buildInfo.gitHash}</a>
                 </c:if>
                 </span>
             </security:authorize>

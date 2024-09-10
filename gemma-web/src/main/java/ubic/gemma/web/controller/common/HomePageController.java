@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.servlet.view.RedirectView;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.WebConstants;
@@ -35,7 +36,7 @@ import java.util.Map.Entry;
 
 /**
  * Responsible for display of the Gemma 2.0 home page. Based on original HomePageController.java
- * 
+ *
  * @author thea
  *
  */
@@ -68,6 +69,9 @@ public class HomePageController {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    @Autowired
+    private BuildInfo buildInfo;
+
     @RequestMapping("/")
     public RedirectView redirectToHomePage( HttpServletRequest request ) {
         String uri = ServletUriComponentsBuilder.fromRequest( request )
@@ -81,6 +85,7 @@ public class HomePageController {
     @RequestMapping(WebConstants.HOME_PAGE)
     public ModelAndView showHomePage() {
         ModelAndView mav = new ModelAndView( "home" );
+        mav.addObject( "buildInfo", buildInfo );
         /*
          * Note that this needs to be fast. The queries involved almost always result in a O(1) cache hit. Don't add new
          * functionality here without considering that.

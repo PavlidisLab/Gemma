@@ -23,10 +23,18 @@ import java.util.TimeZone;
 public class BuildInfo implements InitializingBean {
 
     private static final DateFormat MAVEN_DATETIME_PATTERN;
+    /**
+     * Format used by Maven 3.1.1.
+     */
+    private static final DateFormat MAVEN_3_1_1_DATETIME_PATTERN;
 
     static {
         MAVEN_DATETIME_PATTERN = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.ENGLISH );
         MAVEN_DATETIME_PATTERN.setTimeZone( TimeZone.getTimeZone( "UTC" ) );
+        // we always build from America/Vancouver timezone, starting 1.32, this format will no-longer be used because we
+        // will require Maven 3.6.3+ for building
+        MAVEN_3_1_1_DATETIME_PATTERN = new SimpleDateFormat( "yyyyMMdd-HHmm", Locale.ENGLISH );
+        MAVEN_3_1_1_DATETIME_PATTERN.setTimeZone( TimeZone.getTimeZone( "America/Vancouver" ) );
     }
 
     /**
@@ -59,7 +67,7 @@ public class BuildInfo implements InitializingBean {
 
     }
 
-    private BuildInfo( String version, String timestampAsString, String gitHash ) {
+    BuildInfo( String version, String timestampAsString, String gitHash ) {
         this.version = version;
         this.timestampAsString = timestampAsString;
         this.gitHash = gitHash;
@@ -72,7 +80,11 @@ public class BuildInfo implements InitializingBean {
             try {
                 timestamp = MAVEN_DATETIME_PATTERN.parse( timestampAsString );
             } catch ( ParseException e ) {
-                log.error( "Failed to parse build timestamp.", e );
+                try {
+                    timestamp = MAVEN_3_1_1_DATETIME_PATTERN.parse( timestampAsString );
+                } catch ( ParseException ex ) {
+                    log.error( "Failed to parse build timestamp.", e );
+                }
             }
         }
     }
