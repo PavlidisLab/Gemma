@@ -41,7 +41,7 @@
                 <column name="SINGLE_CELL_DIMENSIONS_FK" sql-type="BIGINT"/>
             </key>
             <list-index column="ORDERING"/>
-            <many-to-many class="ubic.gemma.model.expression.bioAssay.BioAssay">
+            <many-to-many class="ubic.gemma.model.expression.bioAssay.BioAssay" foreign-key="BIO_ASSAYS_FKC">
                 <column name="BIO_ASSAYS_FK" sql-type="BIGINT"/>
             </many-to-many>
         </list>

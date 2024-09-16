@@ -12,11 +12,11 @@
             </generator>
         </id>
         <many-to-one name="singleCellDimension" class="ubic.gemma.model.expression.bioAssayData.SingleCellDimension"
-                     lazy="false" fetch="select">
+                     lazy="false" fetch="select" foreign-key="SINGLE_CELL_EXPRESSION_DATA_VECTOR_SINGLE_CELL_DIMENSION_FKC">
             <column name="SINGLE_CELL_DIMENSION_FK" not-null="true" sql-type="BIGINT"/>
         </many-to-one>
         <many-to-one name="designElement" class="ubic.gemma.model.expression.designElement.CompositeSequence"
-                     lazy="false" fetch="select">
+                     lazy="false" fetch="select" foreign-key="SINGLE_CELL_EXPRESSION_DATA_VECTOR_DESIGN_ELEMENT_FKC">
             <column name="DESIGN_ELEMENT_FK" not-null="true" sql-type="BIGINT"/>
         </many-to-one>
         <property name="data" type="org.hibernate.type.MaterializedBlobType">
@@ -29,11 +29,11 @@
             </type>
         </property>
         <many-to-one name="quantitationType" class="ubic.gemma.model.common.quantitationtype.QuantitationType"
-                     lazy="false" fetch="select">
+                     lazy="false" fetch="select" foreign-key="SINGLE_CELL_EXPRESSION_DATA_VECTOR_QUANTITATION_TYPE_FKC">
             <column name="QUANTITATION_TYPE_FK" not-null="true" sql-type="BIGINT"/>
         </many-to-one>
         <many-to-one name="expressionExperiment" class="ubic.gemma.model.expression.experiment.ExpressionExperiment"
-                     lazy="proxy" fetch="select">
+                     lazy="proxy" fetch="select" foreign-key="SINGLE_CELL_EXPRESSION_DATA_VECTOR_EXPRESSION_EXPERIMENT_FKC">
             <column name="EXPRESSION_EXPERIMENT_FK" not-null="true" sql-type="BIGINT"/>
         </many-to-one>
     </class>
