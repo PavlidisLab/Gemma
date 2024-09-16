@@ -34,7 +34,6 @@ import java.util.List;
  * {@link CompositeSequence}, a {@link BioSequence}, and an index. The list of these can be useful for iterating over
  * the rows of the matrix.
  *
- * @param <T>
  * @author pavlidis
  * @author keshav
  * @see BioAssayDimension

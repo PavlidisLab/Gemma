@@ -261,7 +261,6 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
     /**
      * Retrieve single-cell data for the given GEO sample to disk.
      *
-     * @return
      * @throws NoSingleCellDataFoundException if no single-cell data is found in the given GEO sample
      */
     @Override
