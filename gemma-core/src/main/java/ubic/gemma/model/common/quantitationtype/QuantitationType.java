@@ -47,14 +47,6 @@ public class QuantitationType extends AbstractDescribable implements Serializabl
     private boolean isBatchCorrected;
 
     /**
-     * Indicate if this quantitation is the preferred for processed data.
-     * <p>
-     * @deprecated this is useless as there can only be one QT for processed data per dataset.
-     */
-    @Deprecated
-    private boolean isMaskedPreferred;
-
-    /**
      * This is pretty confusing since we don't make clear what we mean by "normalized", so this isn't that useful.
      * It might be wise to separate out "quantile normalized", but since we always quantile normalize ProcessedData, this
      * isn't very useful.
@@ -62,9 +54,22 @@ public class QuantitationType extends AbstractDescribable implements Serializabl
     private boolean isNormalized;
 
     /**
-     * This is only useful for RawExpressionDataVectors; for the ProcessedData it is just confusing
+     * Indicate which set of {@link ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector} is
+     * preferred.
+     */
+    private boolean isSingleCellPreferred;
+
+    /**
+     * Indicate which set of {@link ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector} is preferred.
      */
     private boolean isPreferred;
+
+    /**
+     * Indicate if this quantitation is the preferred for processed data.
+     * @deprecated this is useless as there can only be one QT for processed data per dataset.
+     */
+    @Deprecated
+    private boolean isMaskedPreferred;
 
     /**
      * This is also confusing: it is an attempt to capture whether we just used the data from GEO (or whatever) or went
@@ -144,6 +149,14 @@ public class QuantitationType extends AbstractDescribable implements Serializabl
 
     public void setIsNormalized( boolean isNormalized ) {
         this.isNormalized = isNormalized;
+    }
+
+    public boolean getIsSingleCellPreferred() {
+        return this.isSingleCellPreferred;
+    }
+
+    public void setIsSingleCellPreferred( boolean singleCellPreferred ) {
+        this.isSingleCellPreferred = singleCellPreferred;
     }
 
     public boolean getIsPreferred() {
@@ -233,8 +246,8 @@ public class QuantitationType extends AbstractDescribable implements Serializabl
 
     @Override
     public int hashCode() {
-        return Objects.hash( getName(), type, representation, generalType, scale, isBackground, isBackgroundSubtracted,
-                isNormalized, isPreferred, isBatchCorrected, isRatio, isRecomputedFromRawData );
+        return Objects.hash( super.hashCode(), type, representation, generalType, scale, isBackground,
+                isBackgroundSubtracted, isNormalized, isPreferred, isBatchCorrected, isRatio, isRecomputedFromRawData );
     }
 
     @Override

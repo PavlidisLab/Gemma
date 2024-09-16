@@ -15,7 +15,6 @@
 package ubic.gemma.model.expression.experiment;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.auditAndSecurity.SecuredNotChild;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
@@ -33,6 +32,7 @@ import ubic.gemma.model.genome.Taxon;
 
 import javax.annotation.Nullable;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -105,25 +105,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     @Override
     public ExpressionExperimentValueObject createValueObject() {
         return new ExpressionExperimentValueObject( this );
-    }
-
-    @SuppressWarnings("EqualsWhichDoesntCheckParameterClass") // It does check, just not the classic way.
-    @Override
-    public boolean equals( Object object ) {
-        if ( object == null )
-            return false;
-        Class<?> thisClass = HibernateProxyHelper.getClassWithoutInitializingProxy( this );
-        Class<?> thatClass = HibernateProxyHelper.getClassWithoutInitializingProxy( object );
-        if ( !thisClass.equals( thatClass ) )
-            return false;
-
-        ExpressionExperiment that = ( ExpressionExperiment ) object;
-        if ( this.getId() != null && that.getId() != null ) {
-            return this.getId().equals( that.getId() );
-        } else if ( this.getShortName() != null && that.getShortName() != null ) {
-            return this.getShortName().equals( that.getShortName() );
-        }
-        return false;
     }
 
     @Override
@@ -264,17 +245,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         return allCharacteristics;
     }
 
-    @Override
-    public int hashCode() {
-        int result = 1;
-        if ( this.getId() != null ) {
-            return this.getId().hashCode();
-        } else if ( this.getShortName() != null ) {
-            return this.getShortName().hashCode();
-        }
-        return result;
-    }
-
     public void setBatchConfound( String batchConfound ) { // FIXME don't use a string for this
         this.batchConfound = batchConfound;
     }
@@ -362,8 +332,27 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash( getShortName() );
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof ExpressionExperiment ) )
+            return false;
+        ExpressionExperiment that = ( ExpressionExperiment ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return this.getId().equals( that.getId() );
+        } else if ( this.getShortName() != null && that.getShortName() != null ) {
+            return this.getShortName().equals( that.getShortName() );
+        } else {
+            return false;
+        }
+    }
+    @Override
     public String toString() {
         return super.toString() + ( shortName != null ? " Short Name=" + shortName : "" );
     }
-
 }

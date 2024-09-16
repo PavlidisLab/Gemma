@@ -18,11 +18,11 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import org.hibernate.search.annotations.DocumentId;
 import org.hibernate.search.annotations.Indexed;
 import org.hibernate.search.annotations.IndexedEmbedded;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 

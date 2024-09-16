@@ -20,12 +20,10 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import lombok.Getter;
 import lombok.Setter;
-import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import java.io.Serializable;
-import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -34,11 +32,8 @@ import java.util.Objects;
  */
 @Getter
 @Setter
-public abstract class DataVector implements Identifiable, Serializable {
+public abstract class DataVector extends AbstractIdentifiable {
 
-    private static final long serialVersionUID = -5823802521832643417L;
-
-    private Long id;
     private ExpressionExperiment expressionExperiment;
     private QuantitationType quantitationType;
     private byte[] data;
@@ -51,26 +46,5 @@ public abstract class DataVector implements Identifiable, Serializable {
         // also, we cannot hash the ID because it is assigned on creation
         // hashing the data is wasteful because subclasses will have a design element to distinguish distinct vectors
         return Objects.hash( expressionExperiment, quantitationType );
-    }
-
-    /**
-     * Returns <code>true</code> if the argument is an DataVector instance and all identifiers for this entity equal the
-     * identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof DataVector ) ) {
-            return false;
-        }
-        final DataVector that = ( DataVector ) object;
-        if ( this.id != null && that.id != null ) {
-            return Objects.equals( id, that.id );
-        }
-        return Objects.equals( expressionExperiment, that.expressionExperiment )
-                && Objects.equals( quantitationType, that.quantitationType )
-                && Arrays.equals( data, that.data );
     }
 }

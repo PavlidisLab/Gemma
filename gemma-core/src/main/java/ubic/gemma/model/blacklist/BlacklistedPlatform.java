@@ -25,4 +25,17 @@ package ubic.gemma.model.blacklist;
  */
 public class BlacklistedPlatform extends BlacklistedEntity {
 
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof BlacklistedPlatform ) )
+            return false;
+        BlacklistedPlatform that = ( BlacklistedPlatform ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return this.getId().equals( that.getId() );
+        } else {
+            return false;
+        }
+    }
 }

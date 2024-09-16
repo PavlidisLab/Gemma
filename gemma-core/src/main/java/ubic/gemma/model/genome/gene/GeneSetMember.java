@@ -25,6 +25,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.genome.Gene;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 @Indexed
 public class GeneSetMember implements Identifiable, Serializable {
@@ -83,10 +84,8 @@ public class GeneSetMember implements Identifiable, Serializable {
 
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
+        // we cannot simply hash gene because it is lazily loaded, the id is fine to use though
+        return getGene().getId().hashCode();
     }
 
     @Override
@@ -98,7 +97,14 @@ public class GeneSetMember implements Identifiable, Serializable {
             return false;
         }
         final GeneSetMember that = ( GeneSetMember ) object;
-        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        }
+        if ( getGene() != null && that.getGene() != null ) {
+            // compare gene by ID because they are lazy-loaded
+            return Objects.equals( getGene().getId(), that.getGene().getId() );
+        }
+        return false;
     }
 
     public static final class Factory {

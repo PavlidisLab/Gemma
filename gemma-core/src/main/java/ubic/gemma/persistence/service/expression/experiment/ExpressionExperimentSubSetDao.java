@@ -21,7 +21,6 @@ package ubic.gemma.persistence.service.expression.experiment;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.BaseDao;
 
 import java.util.Collection;
@@ -31,17 +30,13 @@ import java.util.Collection;
  */
 public interface ExpressionExperimentSubSetDao extends BaseDao<ExpressionExperimentSubSet> {
 
-    @Override
-    ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity );
-
     /**
-     * @return matching or new entity. Matching would mean the same bioassays.
+     * Obtain the {@link FactorValue} used by the samples from this subset in the given factor.
      */
-    @Override
-    ExpressionExperimentSubSet findOrCreate( ExpressionExperimentSubSet entity );
-
     Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor );
 
-    Collection<FactorValueValueObject> getFactorValuesUsed( Long subSetId, Long experimentalFactor );
-
+    /**
+     * @see #getFactorValuesUsed(ExpressionExperimentSubSet, ExperimentalFactor)
+     */
+    Collection<FactorValue> getFactorValuesUsed( Long subSetId, Long experimentalFactor );
 }

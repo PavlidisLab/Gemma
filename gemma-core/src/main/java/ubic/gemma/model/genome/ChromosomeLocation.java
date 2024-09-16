@@ -45,17 +45,6 @@ public abstract class ChromosomeLocation implements Identifiable, Serializable {
     public abstract int compareTo( Object o );
 
     /**
-     * Returns a hash code based on this entity's identifiers.
-     */
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
-    }
-
-    /**
      * Returns <code>true</code> if the argument is an ChromosomeLocation instance and all identifiers for this entity
      * equal the identifiers of the argument entity. Returns <code>false</code> otherwise.
      */

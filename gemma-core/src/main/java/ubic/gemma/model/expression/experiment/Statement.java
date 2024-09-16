@@ -3,6 +3,7 @@ package ubic.gemma.model.expression.experiment;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.search.annotations.Analyze;
 import org.hibernate.search.annotations.Field;
+import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
 
@@ -44,6 +45,10 @@ public class Statement extends Characteristic {
             entity.setSubject( subject );
             entity.setSubjectUri( stripToNull( subjectUri ) );
             return entity;
+        }
+
+        public static Statement newInstance( Category category, Characteristic subject ) {
+            return newInstance( category.getCategory(), category.getCategoryUri(), subject.getValue(), subject.getValueUri() );
         }
     }
 
@@ -242,8 +247,6 @@ public class Statement extends Characteristic {
 
     @Override
     public int hashCode() {
-        if ( this.getId() != null )
-            return super.hashCode();
         // don't both hashing labels unless the URI is null
         return super.hashCode() + 31 * Objects.hash(
                 StringUtils.lowerCase( predicateUri != null ? predicateUri : predicate ),

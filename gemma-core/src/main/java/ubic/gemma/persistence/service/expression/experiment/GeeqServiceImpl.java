@@ -587,7 +587,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
 
         for ( BioAssay ba : bas ) {
             // we need a copy here, otherwise the model will be mutated
-            Collection<FactorValue> fvs = new HashSet<>( ba.getSampleUsed().getFactorValues() );
+            Collection<FactorValue> fvs = new HashSet<>( ba.getSampleUsed().getAllFactorValues() );
 
             //only keep up to MAX_EFS_REPLICATE_CHECK categorical factors, ignoring batch factor and DE_EXCLUDE
             Collection<FactorValue> removeFvs = new LinkedList<>();

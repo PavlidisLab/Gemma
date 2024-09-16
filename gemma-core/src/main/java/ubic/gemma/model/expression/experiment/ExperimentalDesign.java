@@ -106,6 +106,20 @@ public class ExperimentalDesign extends AbstractDescribable implements SecuredCh
         this.types = types;
     }
 
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof ExperimentalDesign ) )
+            return false;
+        ExperimentalDesign that = ( ExperimentalDesign ) object;
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        } else {
+            return false;
+        }
+    }
+
     public static final class Factory {
 
         public static ExperimentalDesign newInstance() {

@@ -30,13 +30,14 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+
+import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialUtils.visitBioMaterials;
 
 /**
  * <p>
@@ -126,13 +127,14 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
                 Hibernate.initialize( ba.getSampleUsed() );
                 Hibernate.initialize( ba.getArrayDesignUsed() );
                 Hibernate.initialize( ba.getOriginalPlatform() );
-                BioMaterial bm = ba.getSampleUsed();
-                Hibernate.initialize( bm );
-                Hibernate.initialize( bm.getBioAssaysUsedIn() );
-                Hibernate.initialize( bm.getFactorValues() );
-                for ( FactorValue fv : bm.getFactorValues() ) {
-                    Hibernate.initialize( fv.getExperimentalFactor() );
-                }
+                visitBioMaterials( ba.getSampleUsed(), bm -> {
+                    Hibernate.initialize( bm );
+                    Hibernate.initialize( bm.getBioAssaysUsedIn() );
+                    Hibernate.initialize( bm.getFactorValues() );
+                    for ( FactorValue fv : bm.getFactorValues() ) {
+                        Hibernate.initialize( fv.getExperimentalFactor() );
+                    }
+                } );
             }
         }
     }

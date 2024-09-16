@@ -20,11 +20,9 @@
 package ubic.gemma.model.expression.experiment;
 
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 
 import javax.persistence.Transient;
 import java.io.Serializable;
-import java.util.Objects;
 
 /**
  * Represents quality information about a data set. The class name comes from the research project name, GEEQ.
@@ -92,18 +90,16 @@ public class Geeq implements Identifiable, Serializable {
     private String otherIssues;
 
     @Override
-    public int hashCode() {
-        return Objects.hash( this.getId() );
-    }
-
-    @Override
     public boolean equals( Object o ) {
         if ( this == o )
             return true;
         if ( !( o instanceof Geeq ) )
             return false;
         Geeq geeq = ( Geeq ) o;
-        return Objects.equals( this.getId(), geeq.getId() );
+        if ( getId() != null && geeq.getId() != null ) {
+            return getId().equals( geeq.getId() );
+        }
+        return false;
     }
 
     @Override

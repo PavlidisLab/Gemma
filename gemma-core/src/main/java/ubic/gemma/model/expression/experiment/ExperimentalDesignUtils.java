@@ -133,7 +133,7 @@ public class ExperimentalDesignUtils {
         /*
          * For factors that don't have an obvious baseline, use the first factorvalue.
          */
-        Collection<FactorValue> factorValuesOfFirstSample = samplesUsed.iterator().next().getFactorValues();
+        Collection<FactorValue> factorValuesOfFirstSample = samplesUsed.iterator().next().getAllFactorValues();
         for ( ExperimentalFactor factor : factors ) {
             if ( !baselineConditions.containsKey( factor ) ) {
 
@@ -292,7 +292,7 @@ public class ExperimentalDesignUtils {
          */
         Object value = null;
         boolean found = false;
-        for ( FactorValue fv : samp.getFactorValues() ) {
+        for ( FactorValue fv : samp.getAllFactorValues() ) {
 
             if ( fv.getExperimentalFactor().equals( factor ) ) {
 

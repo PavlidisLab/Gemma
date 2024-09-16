@@ -54,14 +54,6 @@ public class CurationDetails implements Identifiable, Serializable {
     public CurationDetails() {
     }
 
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
-    }
-
     /**
      * Compares the objects type and IDs.
      *

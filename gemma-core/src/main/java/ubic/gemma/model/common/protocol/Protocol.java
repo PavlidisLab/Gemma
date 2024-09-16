@@ -42,6 +42,20 @@ public class Protocol extends AbstractDescribable implements Securable, Serializ
         this.characteristics = characteristics;
     }
 
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof Protocol ) )
+            return false;
+        Protocol that = ( Protocol ) object;
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        } else {
+            return false;
+        }
+    }
+
     public static final class Factory {
 
         public static Protocol newInstance() {

@@ -108,7 +108,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
             if ( seen.contains( bm ) )
                 continue;
             seen.add( bm );
-            for ( FactorValue fv : bm.getFactorValues() ) {
+            for ( FactorValue fv : bm.getAllFactorValues() ) {
                 if ( fv.getExperimentalFactor().equals( batch ) ) {
                     Long batchId = fv.getId();
                     if ( !batches.containsKey( batchId ) )

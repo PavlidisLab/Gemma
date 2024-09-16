@@ -67,6 +67,7 @@ import java.util.stream.Stream;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingLong;
 import static ubic.gemma.model.common.description.CharacteristicUtils.*;
+import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialUtils.visitBioMaterials;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.EE2AD_QUERY_SPACE;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.EE2C_QUERY_SPACE;
 import static ubic.gemma.persistence.util.QueryUtils.*;
@@ -1366,6 +1367,18 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public QuantitationType getPreferredSingleCellQuantitationType( ExpressionExperiment ee ) {
+        return ( QuantitationType ) getSessionFactory().getCurrentSession()
+                .createQuery( "select qt from ExpressionExperiment ee "
+                        + "join ee.singleCellExpressionDataVectors v "
+                        + "join v.quantitationType qt "
+                        + "where qt.isSingleCellPreferred = true and ee = :ee "
+                        + "group by qt" )
+                .setParameter( "ee", ee )
+                .uniqueResult();
+    }
+
+    @Override
     public QuantitationType getPreferredQuantitationType( ExpressionExperiment ee ) {
         return ( QuantitationType ) getSessionFactory().getCurrentSession()
                 .createQuery( "select qt from ExpressionExperiment ee "
@@ -1904,7 +1917,27 @@ public class ExpressionExperimentDaoImpl
         // those can also be removed in cascade, but it's much faster to use these instead
         removeAllRawDataVectors( ee );
         removeProcessedDataVectors( ee );
+
+        if ( !dimensionsToRemove.isEmpty() ) {
+            log.info( String.format( "Removing %d BioAssayDimension that are no longer attached to any BioAssay", dimensionsToRemove.size() ) );
+            for ( BioAssayDimension dim : dimensionsToRemove ) {
+                log.debug( "Removing " + dim + "..." );
+                getSessionFactory().getCurrentSession().delete( dim );
+            }
+        }
+
+        // unlike BioAssayDimension, SingleCellDimension are immutable and can never hold BAs from other experiments, so
+        // we don't need to detach anything
+        List<SingleCellDimension> singleCellDimensionsToRemove = getSingleCellDimensions( ee );
+
         removeAllSingleCellDataVectors( ee );
+
+        // remove single-cell dimensions using any of the BAs
+        // these are immutable, so we cannot simply detach
+        for ( SingleCellDimension scd : singleCellDimensionsToRemove ) {
+            log.info( "Removing " + scd + "..." );
+            deleteSingleCellDimension( ee, scd );
+        }
 
         super.remove( ee );
 
@@ -1915,14 +1948,6 @@ public class ExpressionExperimentDaoImpl
             for ( BioMaterial bm : samplesToRemove ) {
                 log.debug( "Removing " + bm + "..." );
                 getSessionFactory().getCurrentSession().delete( bm );
-            }
-        }
-
-        if ( !dimensionsToRemove.isEmpty() ) {
-            log.info( String.format( "Removing %d BioAssayDimension that are no longer attached to any BioAssay", dimensionsToRemove.size() ) );
-            for ( BioAssayDimension dim : dimensionsToRemove ) {
-                log.debug( "Removing " + dim + "..." );
-                getSessionFactory().getCurrentSession().delete( dim );
             }
         }
     }
@@ -1977,14 +2002,13 @@ public class ExpressionExperimentDaoImpl
             if ( ba.getOriginalPlatform() != null ) {
                 Hibernate.initialize( ba.getOriginalPlatform() );
             }
-            BioMaterial bm = ba.getSampleUsed();
-            if ( bm != null ) {
+            visitBioMaterials( ba.getSampleUsed(), bm -> {
                 Hibernate.initialize( bm.getFactorValues() );
                 for ( FactorValue fv : bm.getFactorValues() ) {
                     Hibernate.initialize( fv.getExperimentalFactor() );
                 }
                 Hibernate.initialize( bm.getTreatments() );
-            }
+            } );
         }
     }
 
@@ -1996,12 +2020,22 @@ public class ExpressionExperimentDaoImpl
 
         for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
             Hibernate.initialize( ba.getArrayDesignUsed() );
-            Hibernate.initialize( ba.getSampleUsed() );
-            for ( FactorValue fv : ba.getSampleUsed().getFactorValues() ) {
+            Hibernate.initialize( ba.getOriginalPlatform() );
+            thawBioMaterial( ba.getSampleUsed() );
+        }
+    }
+
+    /**
+     * @see ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao#thaw(BioMaterial)
+     */
+    private void thawBioMaterial( BioMaterial bm2 ) {
+        visitBioMaterials( bm2, bm -> {
+            Hibernate.initialize( bm.getSourceTaxon() );
+            Hibernate.initialize( bm.getTreatments() );
+            for ( FactorValue fv : bm.getFactorValues() ) {
                 Hibernate.initialize( fv.getExperimentalFactor() );
             }
-            Hibernate.initialize( ba.getOriginalPlatform() );
-        }
+        } );
     }
 
     @Override
@@ -2068,8 +2102,22 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public SingleCellDimension getPreferredSingleCellDimension( ExpressionExperiment ee ) {
+        return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct scedv.singleCellDimension from SingleCellExpressionDataVector scedv "
+                        + "where scedv.quantitationType.isSingleCellPreferred = true and scedv.expressionExperiment = :ee" )
+                .setParameter( "ee", ee )
+                .uniqueResult();
+    }
+
+    @Override
     public void createSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
         getSessionFactory().getCurrentSession().persist( singleCellDimension );
+    }
+
+    @Override
+    public void updateSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
+        getSessionFactory().getCurrentSession().update( singleCellDimension );
     }
 
     @Override
@@ -2089,31 +2137,21 @@ public class ExpressionExperimentDaoImpl
                 .list();
     }
 
-    @Nullable
     @Override
     public CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee ) {
         return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct cta from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
-                        + "where scedv.quantitationType.isPreferred = true and cta.preferred = true and scedv.expressionExperiment = :ee" )
+                        + "where scedv.quantitationType.isSingleCellPreferred = true and cta.preferred = true and scedv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .uniqueResult();
     }
 
     @Override
-    public void addCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment assignment ) {
-        if ( assignment.isPreferred() ) {
-            for ( CellTypeAssignment a : dimension.getCellTypeAssignments() ) {
-                if ( a.isPreferred() ) {
-                    log.info( "Marking existing cell type assignment as non-preferred, a new preferred assignment will be added." );
-                    a.setPreferred( false );
-                    break;
-                }
-            }
-        }
+    public CellTypeAssignment createCellTypeAssignment( ExpressionExperiment ee, CellTypeAssignment assignment ) {
         getSessionFactory().getCurrentSession().persist( assignment );
-        dimension.getCellTypeAssignments().add( assignment );
+        return assignment;
     }
 
     @Override
@@ -2124,7 +2162,7 @@ public class ExpressionExperimentDaoImpl
                         + "join scedv.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
                         + "join cta.cellTypes ct "
-                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType.isPreferred = true and cta.preferred = true" )
+                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType.isSingleCellPreferred = true and cta.preferred = true" )
                 .setParameter( "ee", ee )
                 .list();
     }
@@ -2152,6 +2190,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public int removeSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, boolean deleteQt ) {
+        Assert.notNull( quantitationType.getId(), "The quantitation type must be persistent." );
         Assert.isTrue( ee.getQuantitationTypes().contains( quantitationType ) || ee.getSingleCellExpressionDataVectors().stream().anyMatch( v -> v.getQuantitationType().equals( quantitationType ) ),
                 "The quantitation must belong to at least one single-cell vector from experiment." );
         ee.getSingleCellExpressionDataVectors()
@@ -2700,6 +2739,9 @@ public class ExpressionExperimentDaoImpl
     }
 
     private void populateSingleCellMetadata( Collection<ExpressionExperimentValueObject> eevos ) {
+        if ( eevos.isEmpty() ) {
+            return;
+        }
         //noinspection unchecked
         List<Object[]> results = getSessionFactory().getCurrentSession()
                 .createQuery( "select scedv.expressionExperiment.id, scd, cta from ExpressionExperiment ee "
@@ -2708,7 +2750,7 @@ public class ExpressionExperimentDaoImpl
                         + "join scedv.singleCellDimension scd "
                         + "left join scd.cellTypeAssignments cta "
                         + "where scedv.expressionExperiment.id in :ees "
-                        + "and qt.isPreferred = true and cta is null or cta.preferred = true "
+                        + "and qt.isSingleCellPreferred = true and (cta is null or cta.preferred = true) "
                         + "group by scedv.expressionExperiment" )
                 .setParameterList( "ees", EntityUtils.getIds( eevos ) )
                 .list();

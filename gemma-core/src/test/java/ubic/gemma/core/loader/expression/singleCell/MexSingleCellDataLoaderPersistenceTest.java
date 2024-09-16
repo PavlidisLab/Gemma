@@ -18,6 +18,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.experiment.*;
 
 import java.io.IOException;
@@ -55,6 +56,11 @@ public class MexSingleCellDataLoaderPersistenceTest extends BaseDatabaseTest {
 
         @Bean
         public AuditTrailService auditTrailService() {
+            return mock();
+        }
+
+        @Bean
+        public QuantitationTypeService quantitationTypeService() {
             return mock();
         }
     }

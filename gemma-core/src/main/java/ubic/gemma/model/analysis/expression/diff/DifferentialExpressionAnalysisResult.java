@@ -23,6 +23,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -60,15 +61,7 @@ public class DifferentialExpressionAnalysisResult extends AnalysisResult impleme
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( this.getId() == null ) ? 0 : this.getId().hashCode() );
-
-        if ( this.getId() == null ) {
-            result = prime * result + ( ( this.getResultSet() == null ) ? 0 : this.getResultSet().hashCode() );
-            result = prime * result + ( ( this.getProbe() == null ) ? 0 : this.getProbe().hashCode() );
-        }
-        return result;
+        return Objects.hash( getResultSet(), getProbe() );
     }
 
     @SuppressWarnings("SimplifiableIfStatement") // Better readability
@@ -78,29 +71,13 @@ public class DifferentialExpressionAnalysisResult extends AnalysisResult impleme
             return true;
         if ( obj == null )
             return false;
-        if ( this.getClass() != obj.getClass() )
+        if ( !( obj instanceof DifferentialExpressionAnalysisResult ) )
             return false;
         DifferentialExpressionAnalysisResult other = ( DifferentialExpressionAnalysisResult ) obj;
-
-        if ( this.getId() == null ) {
-            if ( other.getId() != null )
-                return false;
-        } else if ( !this.getId().equals( other.getId() ) ) {
-            return false;
-        } else {
+        if ( this.getId() != null && other.getId() != null )
             return this.getId().equals( other.getId() );
-        }
-
-        // fallback.
-        if ( this.getResultSet() == null ) {
-            if ( other.getResultSet() != null )
-                return false;
-        } else if ( !this.getResultSet().equals( other.getResultSet() ) )
-            return false;
-        if ( this.getProbe() == null ) {
-            return other.getProbe() == null;
-        } else
-            return this.getProbe().equals( other.getProbe() );
+        return Objects.equals( getResultSet(), other.getResultSet() )
+                && Objects.equals( getProbe(), other.getProbe() );
     }
 
     @Override

@@ -31,26 +31,10 @@ import java.util.Objects;
 @Setter
 public abstract class DesignElementDataVector extends DataVector {
 
-    private static final long serialVersionUID = -4185333066166517308L;
-
     private CompositeSequence designElement;
 
     @Override
     public int hashCode() {
         return Objects.hash( super.hashCode(), designElement );
-    }
-
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object )
-            return true;
-        if ( !( object instanceof DesignElementDataVector ) )
-            return false;
-        DesignElementDataVector other = ( DesignElementDataVector ) object;
-        if ( getId() != null && other.getId() != null ) {
-            return Objects.equals( getId(), other.getId() );
-        }
-        return Objects.equals( designElement, ( ( DesignElementDataVector ) object ).designElement )
-                && super.equals( object );
     }
 }

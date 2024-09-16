@@ -518,7 +518,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         qt.setType( StandardQuantitationType.COUNT );
         qt.setRepresentation( PrimitiveType.DOUBLE );
         qt.setScale( ScaleType.COUNT );
-        qt.setIsPreferred( true );
+        qt.setIsSingleCellPreferred( true );
         ee.getQuantitationTypes().add( qt );
         SingleCellExpressionDataVector vector = new SingleCellExpressionDataVector();
         vector.setData( ByteArrayUtils.doubleArrayToBytes( new double[] { 1.0, 2.0, 1.0, 2.0 } ) );

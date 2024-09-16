@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialUtils.visitBioMaterials;
 import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
 
 /**
@@ -125,8 +126,10 @@ public abstract class AbstractDesignElementDataVectorDao<T extends BulkExpressio
         // thaw the bioassays.
         for ( BioAssay ba : designElementDataVector.getBioAssayDimension().getBioAssays() ) {
             Hibernate.initialize( ba.getArrayDesignUsed() );
-            Hibernate.initialize( ba.getSampleUsed() );
-            Hibernate.initialize( ba.getSampleUsed().getFactorValues() );
+            visitBioMaterials( ba.getSampleUsed(), bm -> {
+                Hibernate.initialize( bm );
+                Hibernate.initialize( bm.getFactorValues() );
+            } );
             Hibernate.initialize( ba.getOriginalPlatform() );
         }
     }

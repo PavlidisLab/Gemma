@@ -33,19 +33,27 @@ import javax.annotation.Nullable;
 import javax.persistence.Transient;
 import java.io.Serializable;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
+
+import static java.util.Collections.unmodifiableSet;
+import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialUtils.visitBioMaterials;
 
 /**
  * In MAGE, BioMaterial is an abstract class that represents the important substances such as cells, tissues, DNA,
  * proteins, etc... In MAGE, Biomaterial subclasses such as BioSample and BioSource can be related to other biomaterial
  * through a directed acyclic graph (represented by treatment(s)). In our implementation, we don't care so much about
  * the experimental procedures and we just lump all of the BioMaterial into one class.
+ * <p>
+ * BioMaterial can be organized in a hierarchy via {@link #getSourceBioMaterial()}. When that is the case,
+ * sub-biomaterials inherit characteristics, factors and treatments from their source biomaterials.
  */
 @Indexed
 public class BioMaterial extends AbstractDescribable implements SecuredChild, Serializable {
 
     private static final long serialVersionUID = 4374359557498220256L;
+
+    @Nullable
+    private BioMaterial sourceBioMaterial;
     private Taxon sourceTaxon;
     private Set<FactorValue> factorValues = new HashSet<>();
     private Set<BioAssay> bioAssaysUsedIn = new HashSet<>();
@@ -55,20 +63,19 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild, Se
     private DatabaseEntry externalAccession;
 
     @Override
-    public int hashCode() {
-        return Objects.hash( getName() );
-    }
-
-    @Override
     public boolean equals( Object object ) {
         if ( this == object )
             return true;
         if ( !( object instanceof BioMaterial ) )
             return false;
         final BioMaterial that = ( BioMaterial ) object;
-        if ( this.getId() != null && that.getId() != null )
+        if ( this.getId() != null && that.getId() != null ) {
             return this.getId().equals( that.getId() );
-        return Objects.equals( getName(), that.getName() );
+        } else if ( getName() != null && that.getName() != null ) {
+            return getName().equals( that.getName() );
+        } else {
+            return false;
+        }
     }
 
     @Override
@@ -81,6 +88,21 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild, Se
     @Field
     public String getName() {
         return super.getName();
+    }
+
+    /**
+     * Parent biomaterial or null if this is a top-level biomaterial.
+     * <p>
+     * This is used to represent a sample derived from another sample. For example, you could have a bulk tissue sample
+     * that has been sorted per cell type. Each cell type would constitute a biomaterial with the bulk tissue as parent.
+     */
+    @Nullable
+    public BioMaterial getSourceBioMaterial() {
+        return this.sourceBioMaterial;
+    }
+
+    public void setSourceBioMaterial( @Nullable BioMaterial sourceBioMaterial ) {
+        this.sourceBioMaterial = sourceBioMaterial;
     }
 
     @ContainedIn
@@ -102,6 +124,17 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild, Se
     }
 
     /**
+     * Obtain all the {@link Characteristic} associated to this biomaterial, including those inherited from its ancestors
+     * via {@link #getSourceBioMaterial()}.
+     */
+    @Transient
+    public Set<Characteristic> getAllCharacteristics() {
+        Set<Characteristic> result = new HashSet<>( this.characteristics );
+        visitBioMaterials( this, bm -> result.addAll( bm.getCharacteristics() ) );
+        return unmodifiableSet( result );
+    }
+
+    /**
      * @return An optional external reference for this BioMaterial. In many cases this is the same as the accession for
      *         the
      *         related BioAssay. We store the information here to help make the data easier to trace. Note that more
@@ -119,7 +152,7 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild, Se
     }
 
     /**
-     * @return The values that this BioAssay is associated with for the experiment.
+     * Obtain the values that this BioAssay is associated with for the experiment.
      */
     public Set<FactorValue> getFactorValues() {
         return this.factorValues;
@@ -127,6 +160,17 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild, Se
 
     public void setFactorValues( Set<FactorValue> factorValues ) {
         this.factorValues = factorValues;
+    }
+
+    /**
+     * Obtain all the {@link FactorValue} associated to this biomaterial, including those inherited from its ancestors
+     * via {@link #getSourceBioMaterial()}.
+     */
+    @Transient
+    public Set<FactorValue> getAllFactorValues() {
+        Set<FactorValue> result = new HashSet<>( this.factorValues );
+        visitBioMaterials( this, bm -> result.addAll( bm.getFactorValues() ) );
+        return unmodifiableSet( result );
     }
 
     @Transient
@@ -149,6 +193,16 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild, Se
 
     public void setTreatments( Set<Treatment> treatments ) {
         this.treatments = treatments;
+    }
+
+    /**
+     * Obtain all treatments, including those inherited from its ancestors via {@link #getSourceBioMaterial()}.
+     */
+    @Transient
+    public Set<Treatment> getAllTreatments() {
+        Set<Treatment> result = new HashSet<>();
+        visitBioMaterials( this, bm -> result.addAll( bm.getTreatments() ) );
+        return unmodifiableSet( result );
     }
 
     public static final class Factory {
