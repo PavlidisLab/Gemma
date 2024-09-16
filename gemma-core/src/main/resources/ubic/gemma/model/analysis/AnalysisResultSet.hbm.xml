@@ -26,11 +26,11 @@
                       abstract="false">
                 <property name="numberOfProbesTested" type="java.lang.Integer">
                     <column name="NUMBER_OF_PROBES_TESTED" not-null="false" unique="false" sql-type="INTEGER"
-                            index="NUMBER_OF_PROBES_TESTED"/>
+                            index="ANALYSIS_RESULT_SET_NUMBER_OF_PROBES_TESTED"/>
                 </property>
                 <property name="numberOfGenesTested" type="java.lang.Integer">
                     <column name="NUMBER_OF_GENES_TESTED" not-null="false" unique="false" sql-type="INTEGER"
-                            index="NUMBER_OF_GENES_TESTED"/>
+                            index="ANALYSIS_RESULT_SET_NUMBER_OF_GENES_TESTED"/>
                 </property>
                 <many-to-one name="baselineGroup" class="ubic.gemma.model.expression.experiment.FactorValue"
                              lazy="proxy" fetch="select">

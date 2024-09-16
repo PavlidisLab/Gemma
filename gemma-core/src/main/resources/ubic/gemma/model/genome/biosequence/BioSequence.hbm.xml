@@ -13,7 +13,7 @@
         </id>
         <property name="name" type="java.lang.String">
             <column name="NAME" not-null="false" unique="false"
-                    sql-type="VARCHAR(255)" index="BIOSEQUENCE_NAME"/>
+                    sql-type="VARCHAR(255)" index="BIO_SEQUENCE_NAME"/>
         </property>
         <property name="description" type="org.hibernate.type.MaterializedClobType">
             <column name="DESCRIPTION" not-null="false" unique="false"
