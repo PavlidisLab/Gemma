@@ -23,7 +23,7 @@
         </property>
         <property name="previousNcbiId" type="java.lang.String">
             <column name="PREVIOUS_NCBI_ID" not-null="false" unique="false"
-                    sql-type="VARCHAR(255)" index="PREVIOUS_NCBI_ID"/>
+                    sql-type="VARCHAR(255)" index="CHROMOSOME_FEATURE_PREVIOUS_NCBI_ID"/>
         </property>
         <many-to-one name="physicalLocation" class="ubic.gemma.model.genome.PhysicalLocation" cascade="all"
                      lazy="proxy" fetch="select">
@@ -65,7 +65,7 @@
             </property>
             <property name="ensemblId" type="java.lang.String">
                 <column name="ENSEMBL_ID" not-null="false" unique="false"
-                        sql-type="VARCHAR(255)" index="ENSEMBL_ID"/>
+                        sql-type="VARCHAR(255)" index="CHROMOSOME_FEATURE_ENSEMBL_ID"/>
             </property>
             <!-- dummy gene products are not visible in this collection, use BioSequence2GeneProduct instead -->
             <set name="products" lazy="true" fetch="select" inverse="true" cascade="all" where="DUMMY = 0">
