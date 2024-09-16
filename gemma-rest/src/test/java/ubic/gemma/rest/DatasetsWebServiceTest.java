@@ -28,6 +28,7 @@ import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -74,6 +75,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @Configuration
     @TestComponent
     static class DatasetsWebServiceTestContextConfiguration {
+
+        @Bean
+        public static TestPropertyPlaceholderConfigurer placeholderConfigurer() {
+            return new TestPropertyPlaceholderConfigurer( "gemma.hosturl=http://localhost:8080" );
+        }
 
         @Bean
         public OpenAPI openApi() {

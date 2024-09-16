@@ -2,6 +2,7 @@ package ubic.gemma.rest.providers;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.rest.util.MalformedArgException;
@@ -15,8 +16,8 @@ import javax.ws.rs.ext.Provider;
 public class MalformedArgExceptionMapper extends AbstractExceptionMapper<MalformedArgException> {
 
     @Autowired
-    public MalformedArgExceptionMapper( OpenAPI spec, BuildInfo buildInfo ) {
-        super( spec, buildInfo );
+    public MalformedArgExceptionMapper( @Value("${gemma.hosturl}") String hostUrl, OpenAPI spec, BuildInfo buildInfo ) {
+        super( hostUrl, spec, buildInfo );
     }
 
     @Override

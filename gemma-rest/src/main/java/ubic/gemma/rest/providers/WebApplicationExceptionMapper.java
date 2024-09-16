@@ -3,6 +3,7 @@ package ubic.gemma.rest.providers;
 import io.swagger.v3.oas.models.OpenAPI;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.rest.util.ResponseErrorObject;
@@ -24,8 +25,8 @@ import javax.ws.rs.ext.Provider;
 public class WebApplicationExceptionMapper extends AbstractExceptionMapper<WebApplicationException> {
 
     @Autowired
-    public WebApplicationExceptionMapper( OpenAPI spec, BuildInfo buildInfo ) {
-        super( spec, buildInfo );
+    public WebApplicationExceptionMapper( @Value("${gemma.hosturl}") String hostUrl, OpenAPI spec, BuildInfo buildInfo ) {
+        super( hostUrl, spec, buildInfo );
     }
 
     @Override

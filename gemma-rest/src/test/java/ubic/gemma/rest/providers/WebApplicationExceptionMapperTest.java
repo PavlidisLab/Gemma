@@ -105,7 +105,7 @@ public class WebApplicationExceptionMapperTest extends JerseyTest {
                 .extracting( "response" )
                 .extracting( "entity" )
                 .asInstanceOf( InstanceOfAssertFactories.INPUT_STREAM )
-                .hasContent( String.format( "Version: %s\nBuild info: %s\nMessage: test", version, buildInfo ) );
+                .hasContent( String.format( "Request method: GET\nRequest URI: http://localhost:8080/custom\nVersion: %s\nBuild info: %s\nMessage: test", version, buildInfo ) );
     }
 
     @Test

@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
@@ -56,6 +57,11 @@ public class SearchWebServiceTest extends BaseJerseyTest {
     @TestComponent
     @Import(JacksonConfig.class)
     public static class SearchWebServiceTestContextConfiguration {
+
+        @Bean
+        public static TestPropertyPlaceholderConfigurer placeholderConfigurer() {
+            return new TestPropertyPlaceholderConfigurer( "gemma.hosturl=http://localhost:8080" );
+        }
 
         @Bean
         public OpenAPI openApi() {

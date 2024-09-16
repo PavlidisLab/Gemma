@@ -1,8 +1,10 @@
 package ubic.gemma.rest.providers;
 
 import io.swagger.v3.oas.models.OpenAPI;
-import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.glassfish.jersey.server.ContainerRequest;
+import org.springframework.web.util.UriComponentsBuilder;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.rest.util.BuildInfoValueObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
@@ -14,16 +16,19 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
-@CommonsLog
 public abstract class AbstractExceptionMapper<E extends Throwable> implements ExceptionMapper<E> {
 
+    protected final Log log = LogFactory.getLog( getClass() );
+
+    private final String hostUrl;
     private final OpenAPI spec;
     private final BuildInfo buildInfo;
 
     @Context
     private ResourceContext ctx;
 
-    protected AbstractExceptionMapper( OpenAPI spec, BuildInfo buildInfo ) {
+    protected AbstractExceptionMapper( String hostUrl, OpenAPI spec, BuildInfo buildInfo ) {
+        this.hostUrl = hostUrl;
         this.spec = spec;
         this.buildInfo = buildInfo;
     }
@@ -55,10 +60,24 @@ public abstract class AbstractExceptionMapper<E extends Throwable> implements Ex
     @Override
     public final Response toResponse( E exception ) {
         ContainerRequest request = ctx.getResource( ContainerRequest.class );
+        String requestMethod, requestUri;
+        if ( request != null ) {
+            requestMethod = request.getMethod();
+            // make the request URI relative to the public-facing host URL
+            requestUri = UriComponentsBuilder.fromHttpUrl( hostUrl )
+                    .path( request.getRequestUri().getPath() )
+                    .query( request.getRequestUri().getQuery() )
+                    .fragment( request.getRequestUri().getFragment() )
+                    .build()
+                    .toUriString();
+        } else {
+            requestMethod = null;
+            requestUri = null;
+        }
         if ( logException( exception ) ) {
             String m;
             if ( request != null ) {
-                m = String.format( "Unhandled exception was raised for %s %s", request.getMethod(), request.getRequestUri() );
+                m = String.format( "Unhandled exception was raised for %s %s", requestMethod, requestUri );
             } else {
                 m = "Unhandled exception was raised, but there is no current request.";
             }
@@ -80,6 +99,8 @@ public abstract class AbstractExceptionMapper<E extends Throwable> implements Ex
         } else {
             WellComposedErrorBody body = getWellComposedErrorBody( exception );
             StringBuilder builder = new StringBuilder();
+            builder.append( "Request method: " ).append( requestMethod != null ? requestMethod : "?" ).append( '\n' );
+            builder.append( "Request URI: " ).append( requestUri != null ? requestUri : "?" ).append( '\n' );
             builder.append( "Version: " ).append( version != null ? version : "?" ).append( '\n' );
             builder.append( "Build info: " ).append( buildInfo ).append( '\n' );
             builder.append( "Message: " ).append( body.getMessage() );
