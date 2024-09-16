@@ -20,6 +20,7 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,16 +30,23 @@ import java.util.stream.Collectors;
  */
 public class GenerateDatabaseUpdateCli extends AbstractCLI {
 
+    private static final String
+            CREATE_OPTION = "c",
+            VENDOR_OPTION = "vendor",
+            OUTPUT_FILE_OPTION = "o";
+
     @Autowired
     private DataSource dataSource;
 
     @Autowired
     private LocalSessionFactoryBean factory;
 
-    @Nullable
-    private Path outputFile;
+    private boolean create;
 
     private Dialect dialect;
+
+    @Nullable
+    private Path outputFile;
 
     @Nullable
     @Override
@@ -49,7 +57,7 @@ public class GenerateDatabaseUpdateCli extends AbstractCLI {
     @Nullable
     @Override
     public String getShortDesc() {
-        return "Generate a script to update the database";
+        return "Generate SQL statements to update the database";
     }
 
     @Override
@@ -59,14 +67,16 @@ public class GenerateDatabaseUpdateCli extends AbstractCLI {
 
     @Override
     protected void buildOptions( Options options ) {
-        options.addOption( "d", "dialect", true, "Dialect to use to generate SQL statements (either mysql or h2, defaults to mysql)" );
-        options.addOption( Option.builder( "o" ).longOpt( "output-file" ).hasArg().type( Path.class ).desc( "File destination for the update script (defaults to stdout)" ).build() );
+        options.addOption( CREATE_OPTION, "create", false, "Generate a creation script" );
+        options.addOption( VENDOR_OPTION, "vendor", true, "Vendor to use to generate SQL statements (either mysql or h2, defaults to mysql)" );
+        options.addOption( Option.builder( OUTPUT_FILE_OPTION ).longOpt( "output-file" ).hasArg().type( Path.class ).desc( "File destination for the update script (defaults to stdout)" ).build() );
     }
 
     @Override
     protected void processOptions( CommandLine commandLine ) throws ParseException {
-        if ( commandLine.hasOption( "d" ) ) {
-            String dialectStr = commandLine.getOptionValue( "d" );
+        create = commandLine.hasOption( CREATE_OPTION );
+        if ( commandLine.hasOption( VENDOR_OPTION ) ) {
+            String dialectStr = commandLine.getOptionValue( VENDOR_OPTION );
             if ( "mysql".equalsIgnoreCase( dialectStr ) ) {
                 dialect = new MySQL57InnoDBDialect();
             } else if ( "h2".equalsIgnoreCase( dialectStr ) ) {
@@ -78,22 +88,27 @@ public class GenerateDatabaseUpdateCli extends AbstractCLI {
             log.info( "No dialect specified, defaulting to MySQL 5.7." );
             dialect = new MySQL57InnoDBDialect();
         }
-        outputFile = commandLine.getParsedOptionValue( "o" );
+        outputFile = commandLine.getParsedOptionValue( OUTPUT_FILE_OPTION );
     }
 
     @Override
     protected void doWork() throws Exception {
-        DatabaseMetadata dm;
-        try ( Connection c = dataSource.getConnection() ) {
-            dm = new DatabaseMetadata( c, dialect, factory.getConfiguration() );
+        List<String> sqlStatements;
+        if ( create ) {
+            sqlStatements = Arrays.asList( factory.getConfiguration().generateSchemaCreationScript( dialect ) );
+        } else {
+            DatabaseMetadata dm;
+            try ( Connection c = dataSource.getConnection() ) {
+                dm = new DatabaseMetadata( c, dialect, factory.getConfiguration() );
+            }
+            sqlStatements = factory.getConfiguration()
+                    .generateSchemaUpdateScriptList( dialect, dm )
+                    .stream()
+                    .map( SchemaUpdateScript::getScript )
+                    .collect( Collectors.toList() );
         }
-        List<String> sqlUpdates = factory.getConfiguration()
-                .generateSchemaUpdateScriptList( dialect, dm )
-                .stream()
-                .map( SchemaUpdateScript::getScript )
-                .collect( Collectors.toList() );
         try ( PrintWriter writer = getWriter() ) {
-            for ( String sqlUpdate : sqlUpdates ) {
+            for ( String sqlUpdate : sqlStatements ) {
                 writer.println( sqlUpdate + ";" );
             }
         }
