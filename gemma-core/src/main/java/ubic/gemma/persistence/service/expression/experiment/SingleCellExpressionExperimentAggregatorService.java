@@ -14,21 +14,14 @@ import java.util.List;
 public interface SingleCellExpressionExperimentAggregatorService {
 
     /**
-     *
-     * @param ee
      * @param cellBAs samples to aggregate vectors for
-     * @return
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     QuantitationType aggregateVectors( ExpressionExperiment ee, List<BioAssay> cellBAs );
 
     /**
      * Aggregate single-cell data vectors into raw expression data vectors.
-     * @param ee
-     * @param cellBAs
-     * @param quantitationType
      * @param cellTypeAssignment cell type assignment to use for creating aggregates
-     * @return
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     QuantitationType aggregateVectors( ExpressionExperiment ee, List<BioAssay> cellBAs, QuantitationType quantitationType, CellTypeAssignment cellTypeAssignment );

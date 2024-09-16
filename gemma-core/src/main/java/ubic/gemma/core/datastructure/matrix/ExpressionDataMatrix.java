@@ -29,6 +29,7 @@ import java.util.List;
  * <p>
  * The rows of this matrix represent design elements.
  *
+ * @param <T> type of scalar held in the matrix
  * @author pavlidis
  * @author keshav
  * @see BulkExpressionDataMatrix

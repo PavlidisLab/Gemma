@@ -10,7 +10,6 @@ public interface SingleCellDataTransformation {
 
     /**
      * Perform the transformation.
-     * @throws IOException
      */
     void perform() throws IOException;
 }

@@ -25,9 +25,11 @@ public interface SingleCellExpressionExperimentSplitService {
      * Split biomaterials and bioassays by the given cell type assignment and factor.
      * <p>
      * This method will:
+     * <ul>
      * <li>create sub-biomaterial for each subject and cell type</li>
      * <li>create bioassays for the sub-biomaterials</li>
      * <li>attach the bioassay to the experiment</li>
+     * </ul>
      *
      * @return a list of samples representing subpopulations of cells
      */
