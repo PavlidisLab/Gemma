@@ -201,20 +201,34 @@ public class DatasetsWebService {
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limitArg, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sortArg // Optional, default +id
+            @Parameter(schema = @Schema(defaultValue = "+id")) @QueryParam("sort") SortArg<ExpressionExperiment> sortArg // Optional, default +id
     ) {
         Collection<OntologyTerm> inferredTerms = new HashSet<>();
         Filters filters = datasetArgService.getFilters( filterArg, null, inferredTerms );
-        Sort sort = datasetArgService.getSort( sortArg );
         int offset = offsetArg.getValue();
         int limit = limitArg.getValue();
         Slice<ExpressionExperimentWithSearchResultValueObject> payload;
         if ( query != null ) {
-            List<Long> ids = new ArrayList<>( expressionExperimentService.loadIdsWithCache( filters, sort ) );
-            Map<Long, Double> scoreById = new HashMap<>();
-            ids.retainAll( datasetArgService.getIdsForSearchQuery( query, scoreById ) );
-            // sort is stable, so the order of IDs with the same score is preserved
-            ids.sort( Comparator.comparingDouble( i -> -scoreById.get( i ) ) );
+            List<Long> ids;
+            Sort sort;
+            if ( sortArg == null || sortArg.getValue().getOrderBy().equals( "searchResult.score" ) ) {
+                Sort.Direction direction;
+                if ( sortArg != null ) {
+                    direction = sortArg.getValue().getDirection() == SortArg.Sort.Direction.ASC ? Sort.Direction.ASC : Sort.Direction.DESC;
+                } else {
+                    direction = Sort.Direction.DESC;
+                }
+                sort = Sort.by( null, "searchResult.score", direction );
+                ids = new ArrayList<>( expressionExperimentService.loadIdsWithCache( filters, null ) );
+                Map<Long, Double> scoreById = new HashMap<>();
+                ids.retainAll( datasetArgService.getIdsForSearchQuery( query, scoreById ) );
+                // sort is stable, so the order of IDs with the same score is preserved
+                ids.sort( Comparator.comparing( scoreById::get, direction == Sort.Direction.ASC ? Comparator.naturalOrder() : Comparator.reverseOrder() ) );
+            } else {
+                sort = datasetArgService.getSort( sortArg );
+                ids = new ArrayList<>( expressionExperimentService.loadIdsWithCache( filters, sort ) );
+                ids.retainAll( datasetArgService.getIdsForSearchQuery( query ) );
+            }
 
             // slice the ranked IDs
             List<Long> idsSlice = sliceIds( ids, offset, limit );
@@ -224,9 +238,10 @@ public class DatasetsWebService {
             Map<Long, SearchResult<ExpressionExperiment>> resultById = results.stream().collect( Collectors.toMap( SearchResult::getResultId, e -> e ) );
 
             List<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjectsByIdsWithRelationsAndCache( idsSlice );
-            payload = new Slice<>( vos, Sort.by( null, "searchResult.score", Sort.Direction.DESC ), offset, limit, ( long ) ids.size() )
+            payload = new Slice<>( vos, sort, offset, limit, ( long ) ids.size() )
                     .map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, resultById.get( vo.getId() ) ) );
         } else {
+            Sort sort = sortArg != null ? datasetArgService.getSort( sortArg ) : datasetArgService.getSort( SortArg.valueOf( "+id" ) );
             payload = expressionExperimentService.loadValueObjectsWithCache( filters, sort, offset, limit )
                     .map( vo -> new ExpressionExperimentWithSearchResultValueObject( vo, null ) );
         }

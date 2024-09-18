@@ -149,10 +149,8 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
      */
     public Set<Long> getIdsForSearchQuery( QueryArg query, Map<Long, Double> scoreById ) {
         List<SearchResult<ExpressionExperiment>> _results = getResultsForSearchQuery( query, null );
-        if ( scoreById != null ) {
-            for ( SearchResult<ExpressionExperiment> result : _results ) {
-                scoreById.put( result.getResultId(), result.getScore() );
-            }
+        for ( SearchResult<ExpressionExperiment> result : _results ) {
+            scoreById.put( result.getResultId(), result.getScore() );
         }
         return _results.stream().map( SearchResult::getResultId ).collect( Collectors.toSet() );
     }
