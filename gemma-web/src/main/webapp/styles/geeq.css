@@ -206,8 +206,8 @@
 }
 
 .gq-override-value-slider .x-slider-thumb {
-    background-image: none !important;
     background: white;
+    background-image: none !important;
     width: 15px;
     height: 15px;
     border-radius: 10px;
