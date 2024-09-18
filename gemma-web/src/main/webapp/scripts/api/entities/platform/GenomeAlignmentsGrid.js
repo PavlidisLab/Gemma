@@ -4,7 +4,7 @@ Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
 
 Gemma.UCSC_ICON = ctxBasePath + "/images/logo/ucsc.gif";
 Gemma.NCBI_ICON = ctxBasePath + "/images/logo/ncbi.gif";
-UCSC_TRACKS = 'http://genome.ucsc.edu/cgi-bin/hgTracks';
+UCSC_TRACKS = 'https://genome.ucsc.edu/cgi-bin/hgTracks';
 /**
  * 
  * @class Gemma.GenomeAlignmentsGrid; based on old ProbeDetailsGrid
