@@ -37,8 +37,11 @@ public class ListUtilsTest {
 
     @Test
     public void testSparseRangeArray() {
+        ListUtils.validateSparseRangeArray( Arrays.asList( "a", "b" ), new int[] { 0, 50 }, 100 );
         assertThatThrownBy( () -> ListUtils.validateSparseRangeArray( Arrays.asList( "a", "a" ), new int[] { 0, 50 }, 100 ) )
                 .isInstanceOf( IllegalArgumentException.class );
+        assertThat( ListUtils.getSparseRangeArrayElement( Arrays.asList( "a", "b" ), new int[] { 0, 50 }, 100, 0 ) )
+                .isEqualTo( "a" );
     }
 
     @Test

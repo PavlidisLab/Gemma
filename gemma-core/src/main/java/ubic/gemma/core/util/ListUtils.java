@@ -2,6 +2,7 @@ package ubic.gemma.core.util;
 
 import org.springframework.util.Assert;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 import static java.util.Arrays.binarySearch;
@@ -15,10 +16,10 @@ public class ListUtils {
 
     /**
      * Get a mapping of element to their first occurrence in a {@link List}.
-     *
+     * <p>
      * This of this as an efficient way of calling {@link List#indexOf(Object)} in a loop, since it will reduce the
      * complexity to O(n) instead of O(n^2).
-     *
+     * <p>
      * I couldn't find this algorithm in Guava nor Apache Collections, but if you do, let me know!
      */
     public static <T> Map<T, Integer> indexOfElements( List<T> list ) {
@@ -51,16 +52,16 @@ public class ListUtils {
     /**
      * Get an element of a sparse array.
      */
-    public static <T> T getSparseArrayElement( T[] array, int[] indices, int numberOfElements, int index, T defaultValue ) {
-        Assert.isTrue( array.length == indices.length,
-                String.format( "Invalid size for sparse array, it must contain %d indices.", array.length ) );
+    public static <T> T getSparseArrayElement( List<T> array, int[] indices, int numberOfElements, int index, T defaultValue ) {
+        Assert.isTrue( array.size() == indices.length,
+                String.format( "Invalid size for sparse array, it must contain %d indices.", array.size() ) );
         // special case for dense array
         if ( indices.length == numberOfElements ) {
-            return array[index];
+            return array.get( index );
         }
         if ( index < 0 ) {
             // FIXME: add support for negative indexing
-            throw new IndexOutOfBoundsException( "Negative indexing of sparse range arrays is not allowed." );
+            throw new UnsupportedOperationException( "Negative indexing of sparse range arrays is not supported." );
         }
         if ( index >= numberOfElements ) {
             throw new IndexOutOfBoundsException( "The index exceeds the upper bound of the array." );
@@ -69,7 +70,20 @@ public class ListUtils {
         if ( offset < 0 ) {
             return defaultValue;
         }
-        return array[offset];
+        return array.get( offset );
+    }
+
+    public static <T> void validateSparseArray( List<T> array, int[] indices, int numberOfElements, @Nullable T defaultValue ) {
+        Assert.isTrue( array.size() <= numberOfElements, "Array can contain at most " + numberOfElements + " elements." );
+        Assert.isTrue( array.size() == indices.length,
+                String.format( "Invalid size for sparse array, it must contain %d elements and indices.", array.size() ) );
+        Assert.isTrue( !array.contains( defaultValue ), "Array may not contain the default value." );
+        int lastIndex = -1;
+        for ( int i : indices ) {
+            Assert.isTrue( i < numberOfElements, "Indices must be in the [0, " + numberOfElements + "[ range." );
+            Assert.isTrue( i > lastIndex, "Indices must be strictly increasing." );
+            lastIndex = i;
+        }
     }
 
     /**
@@ -86,10 +100,10 @@ public class ListUtils {
     public static <T> T getSparseRangeArrayElement( List<T> array, int[] offsets, int numberOfElements, int index ) throws IllegalArgumentException, IndexOutOfBoundsException {
         Assert.isTrue( array.size() == offsets.length,
                 String.format( "Invalid size for sparse range array, it must contain %d indices.", array.size() ) );
-        Assert.isTrue( offsets[0] == 0, "The first offset of a sparse range array must be zero." );
+        Assert.isTrue( array.isEmpty() || offsets[0] == 0, "The first offset of a non-empty sparse range array must be zero." );
         if ( index < 0 ) {
             // FIXME: add support for negative indexing
-            throw new IndexOutOfBoundsException( "Negative indexing of sparse range arrays is not allowed." );
+            throw new UnsupportedOperationException( "Negative indexing of sparse range arrays is not supported." );
         }
         if ( index >= numberOfElements ) {
             throw new IndexOutOfBoundsException( "The index exceeds the upper bound of the array." );
@@ -114,13 +128,12 @@ public class ListUtils {
                 "A non-empty sparse range array must have at least one element." );
         Assert.isTrue( array.size() == offsets.length,
                 "There must be as many offsets as entries in the corresponding array." );
-        Assert.isTrue( offsets[0] == 0, "The first offset of a sparse range array must be zero." );
         int k = 0;
         int lastI = -1;
         Object lastObject = null;
         for ( int i : offsets ) {
             Assert.isTrue( i > lastI, "Offsets must be monotonously increasing." );
-            Assert.isTrue( i < numberOfElements, "Offsets are invalid: indices must not exceed the number of cells." );
+            Assert.isTrue( i < numberOfElements, "Offsets are invalid: indices must not exceed the number of elements." );
             Object o = array.get( k );
             if ( k == 0 && i != 0 ) {
                 throw new IllegalArgumentException( "The first offset must be zero." );
