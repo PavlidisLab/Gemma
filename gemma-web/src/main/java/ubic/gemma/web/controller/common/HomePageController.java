@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.servlet.view.RedirectView;
@@ -72,7 +73,7 @@ public class HomePageController {
     @Autowired
     private BuildInfo buildInfo;
 
-    @RequestMapping("/")
+    @RequestMapping(value = "/", method = RequestMethod.GET)
     public RedirectView redirectToHomePage( HttpServletRequest request ) {
         String uri = ServletUriComponentsBuilder.fromRequest( request )
                 .scheme( null ).host( null ).port( -1 )
@@ -82,7 +83,7 @@ public class HomePageController {
         return new RedirectView( uri );
     }
 
-    @RequestMapping(WebConstants.HOME_PAGE)
+    @RequestMapping(value = WebConstants.HOME_PAGE, method = RequestMethod.GET)
     public ModelAndView showHomePage() {
         ModelAndView mav = new ModelAndView( "home" );
         mav.addObject( "buildInfo", buildInfo );

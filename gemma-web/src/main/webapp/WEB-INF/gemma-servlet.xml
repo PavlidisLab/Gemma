@@ -323,14 +323,14 @@
         </dwr:remote>
     </bean>
 
-    <bean id="generalSearchController" class="ubic.gemma.web.controller.GeneralSearchControllerImpl">
+    <bean id="generalSearchController" class="ubic.gemma.web.controller.GeneralSearchController">
         <dwr:remote javascript="SearchService">
             <dwr:include method="ajaxSearch"/>
         </dwr:remote>
     </bean>
 
     <bean id="bibliographicReferenceController"
-          class="ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceControllerImpl">
+          class="ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController">
         <dwr:remote javascript="BibliographicReferenceController">
             <dwr:include method="update"/>
             <dwr:include method="browse"/>
@@ -375,7 +375,7 @@
         </dwr:remote>
     </bean>
 
-    <bean id="arrayDesignController" class="ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignControllerImpl">
+    <bean id="arrayDesignController" class="ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController">
         <dwr:remote javascript="ArrayDesignController">
             <dwr:include method="getCsSummaries"/>
             <dwr:include method="updateReport"/>
@@ -611,14 +611,14 @@
         </dwr:remote>
     </bean>
 
-    <bean id="userListController" class="ubic.gemma.web.controller.common.auditAndSecurity.UserListControllerImpl">
+    <bean id="userListController" class="ubic.gemma.web.controller.common.auditAndSecurity.UserListController">
         <dwr:remote javascript="UserListController">
             <dwr:include method="getUsers"/>
             <dwr:include method="saveUser"/>
         </dwr:remote>
     </bean>
 
-    <bean id="securityController" class="ubic.gemma.web.controller.common.auditAndSecurity.SecurityControllerImpl">
+    <bean id="securityController" class="ubic.gemma.web.controller.common.auditAndSecurity.SecurityController">
         <dwr:remote javascript="SecurityController">
             <dwr:include method="addUserToGroup"/>
             <dwr:include method="createGroup"/>

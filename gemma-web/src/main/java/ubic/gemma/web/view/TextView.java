@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.view;
 
+import org.springframework.util.Assert;
 import org.springframework.web.servlet.view.AbstractView;
 
 import javax.servlet.http.HttpServletRequest;
@@ -27,7 +28,7 @@ import java.util.Map;
 /**
  * Simply prints text to the client. The model must have a parameter matching TEXT_PARAM which holds the text to be
  * written.
- * 
+ *
  * @author pavlidis
  *
  */
@@ -38,11 +39,28 @@ public class TextView extends AbstractView {
      */
     public static final String TEXT_PARAM = "text";
 
+    private final String contentType;
+
+    /**
+     * @param textMediaSubType the subtype of {@code text/*} media type to use.
+     */
+    public TextView( String textMediaSubType ) {
+        this.contentType = "text/" + textMediaSubType;
+    }
+
+    /**
+     * Create a text view for {@code text/plain} content.
+     */
+    public TextView() {
+        this( "plain" );
+    }
+
     @Override
     protected void renderMergedOutputModel( Map<String, Object> model, HttpServletRequest request,
             HttpServletResponse response ) throws Exception {
+        Assert.isTrue( model.get( TEXT_PARAM ) instanceof String, "The model must contain a string entry for " + TEXT_PARAM + "." );
         String textToRender = ( String ) model.get( TEXT_PARAM );
-        response.setContentType( "text/plain" );
+        response.setContentType( contentType );
         response.setContentLength( textToRender.getBytes().length );
         response.getWriter().print( textToRender );
         response.getWriter().flush();

@@ -31,6 +31,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
@@ -45,7 +46,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.util.EntityNotFoundException;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
@@ -79,47 +79,26 @@ public class ExpressionExperimentDataFetchController {
     /**
      * Regular spring MVC request to fetch a file that already has been generated. It is assumed that the file is in the
      * DATA_DIR.
-     *
-     * @param response response
-     * @param request  request
      */
-    @RequestMapping(value = "/getData.html", method = RequestMethod.GET, produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public void downloadFile( HttpServletRequest request, HttpServletResponse response ) throws IOException {
-        String filename = request.getParameter( "file" );
+    @RequestMapping(value = "/getData.html", method = RequestMethod.GET)
+    public void downloadFile( @RequestParam("file") String filename, HttpServletResponse response ) throws IOException {
         if ( StringUtils.isBlank( filename ) ) {
             throw new IllegalArgumentException( "The 'file' parameter must not be empty." );
         }
         // exclude any paths leading to the filename
         filename = FilenameUtils.getName( filename );
-        this.download( response, dataDir.resolve( filename ).toFile(), null );
+        this.download( dataDir.resolve( filename ).toFile(), null, MediaType.APPLICATION_OCTET_STREAM_VALUE, response );
     }
 
-    @RequestMapping(value = "/getMetaData.html", method = RequestMethod.GET, produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public void downloadMetaFile( HttpServletRequest request, HttpServletResponse response ) throws IOException {
-        IllegalArgumentException e = new IllegalArgumentException(
-                "The experiment ID and file type ID parameters must be valid identifiers." );
-
-        try {
-
-            String eeId = request.getParameter( "eeId" );
-            String typeId = request.getParameter( "typeId" );
-            if ( StringUtils.isBlank( eeId ) || StringUtils.isBlank( typeId ) ) {
-                throw e;
-            }
-
-            ExpressionExperiment ee = expressionExperimentService.loadOrFail( Long.parseLong( eeId ) );
-            ExpressionExperimentMetaFileType type = this.getType( Integer.parseInt( typeId ) );
-            if ( type == null ) {
-                throw e;
-            }
-
-            File file = expressionDataFileService.getMetadataFile( ee, type );
-
-            this.download( response, file, type.getDownloadName( ee ) );
-
-        } catch ( NumberFormatException ne ) {
-            throw e;
+    @RequestMapping(value = "/getMetaData.html", method = RequestMethod.GET)
+    public void downloadMetaFile( @RequestParam("eeId") Long eeId, @RequestParam("typeId") Integer typeId, HttpServletResponse response ) throws IOException {
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId );
+        ExpressionExperimentMetaFileType type = this.getType( typeId );
+        if ( type == null ) {
+            throw new IllegalArgumentException( "The experiment ID and file type ID parameters must be valid identifiers." );
         }
+        File file = expressionDataFileService.getMetadataFile( ee, type );
+        this.download( file, type.getDownloadName( ee ), type.getContentType(), response );
     }
 
     /**
@@ -199,22 +178,20 @@ public class ExpressionExperimentDataFetchController {
     }
 
     /**
-     * @param response     the http response to download to.
      * @param f            the file to download from
      * @param downloadName this string will be used as a download name for the downloaded file. If null, the filesystem name
      *                     of the file will be used.
+     * @param response     the http response to download to.
      * @throws IOException if the file in the given path can not be read.
      */
-    private void download( HttpServletResponse response, File f, String downloadName ) throws IOException {
-
+    private void download( File f, String downloadName, String contentType, HttpServletResponse response ) throws IOException {
         if ( !f.canRead() ) {
             throw new IOException( "Cannot read from " + f.getPath() );
         }
-
         if ( StringUtils.isBlank( downloadName ) ) {
             downloadName = f.getName();
         }
-
+        response.setContentType( contentType );
         response.setContentLength( ( int ) f.length() );
         response.addHeader( "Content-disposition", "attachment; filename=\"" + downloadName + "\"" );
         try ( FileInputStream in = new FileInputStream( f ) ) {
@@ -230,7 +207,6 @@ public class ExpressionExperimentDataFetchController {
             if ( t.getId() == id )
                 return t;
         }
-
         return null;
     }
 
