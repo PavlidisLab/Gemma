@@ -35,6 +35,7 @@ pipeline {
         // whether or not to force integration tests
         booleanParam(name: 'FORCE_INTEGRATION_TESTS', defaultValue: false, description: 'Force integration tests to be performed regardless of the branch being built.')
         booleanParam(name: 'FORCE_SLOW_TESTS', defaultValue: false, description: 'Force slow tests to be performed regardless of the branch being built.')
+        booleanParam(name: 'FORCE_DEPLOY', defaultValue: false, description: 'Force deployment to be performed regardless of the branch being built.')
     }
     stages {
         stage('Checkout scm') {
@@ -52,10 +53,10 @@ pipeline {
                     }
                     if (env.BRANCH_NAME == 'master') {
                         dataDir = params.DATA_DIR
-                    } else if (env.BRANCH_NAME == 'development') {
-                        dataDir = params.DEV_DATA_DIR
                     } else if (env.BRANCH_NAME =~ '^' + params.STAGING_BRANCH + '-.*') {
                         dataDir = params.STAGING_DATA_DIR
+                    } else {
+                        dataDir = params.DEV_DATA_DIR
                     }
                     if (env.BRANCH_NAME == 'master') {
                         deployDir = 'moe:' + params.DEPLOY_DIR_PREFIX
@@ -68,7 +69,7 @@ pipeline {
                     if (env.BRANCH_NAME == 'master') {
                         cliDir = params.CLI_DIR_PREFIX + '-' + gemmaVersion
                         cliDirSymlink = params.CLI_DIR_PREFIX
-                    } else if (env.BRANCH_NAME =~ '^(hotfix|release)-.*') {
+                    } else {
                         cliDir = params.CLI_DIR_PREFIX + '-' + gemmaVersion
                         if (env.BRANCH_NAME =~ '^' + params.STAGING_BRANCH + '-.*') {
                             cliDirSymlink = params.CLI_DIR_PREFIX + '-staging'
@@ -196,6 +197,7 @@ pipeline {
                             branch 'hotfix-*'
                             branch 'release-*'
                             branch 'development'
+                            expression { params.FORCE_DEPLOY }
                         }
                     }
                     steps {
@@ -209,6 +211,7 @@ pipeline {
                             branch 'hotfix-*'
                             branch 'release-*'
                             branch 'development'
+                            expression { params.FORCE_DEPLOY }
                         }
                     }
                     steps {
@@ -228,6 +231,7 @@ pipeline {
                             // we only support one staging server
                             branch params.STAGING_BRANCH + '-*'
                             branch 'development'
+                            expression { params.FORCE_DEPLOY }
                         }
                     }
                     steps {
