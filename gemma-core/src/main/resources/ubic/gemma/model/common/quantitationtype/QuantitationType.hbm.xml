@@ -47,7 +47,8 @@
            </type>
        </property>
        <property name="isSingleCellPreferred" type="java.lang.Boolean">
-           <column name="IS_SINGLE_CELL_PREFERRED" not-null="true" unique="false" sql-type="TINYINT"/>
+           <!-- this needs a default to remain backward-compatible with 1.31, it can be removed once the release is out -->
+           <column name="IS_SINGLE_CELL_PREFERRED" not-null="true" unique="false" sql-type="TINYINT" default="false"/>
        </property>
        <property name="isPreferred" type="java.lang.Boolean">
          <column name="IS_PREFERRED" not-null="true" unique="false" sql-type="TINYINT"/>
