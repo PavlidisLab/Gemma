@@ -120,9 +120,8 @@ Gemma.SequenceDetailsPanel = Ext
                                                     id: "ncbiLink",
                                                     target: "_blank",
                                                     title: "view at NCBI",
-                                                    href: "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Nucleotide&cmd=search&term="
-                                                    + seq.sequenceDatabaseEntry.accession,
-                                                    html: "View in NCBI <img src ='" + Gemma.NCBI_ICON + "'/>",
+                                                    href: "https://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=Nucleotide&cmd=search&term=" + encodeURIComponent(seq.sequenceDatabaseEntry.accession),
+                                                    html: "View in NCBI <img src=\"" + Gemma.NCBI_ICON + "\" alt=\"NCBI icon\"/>",
                                                     "ext:qtip": "View sequence at NCBI"
                                                 }
                                             });
