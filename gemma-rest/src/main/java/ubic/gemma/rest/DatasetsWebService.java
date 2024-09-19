@@ -197,7 +197,7 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<ExpressionExperimentWithSearchResultValueObject> getDatasets( // Params:
-            @QueryParam("query") QueryArg query,
+            @Parameter(description = "If specified, `sort` will default to `-searchResult.score` instead of `+id`. Note that sorting by `searchResult.score` is only valid if a query is specified.") @QueryParam("query") QueryArg query,
             @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filterArg, // Optional, default null
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, // Optional, default 0
             @QueryParam("limit") @DefaultValue("20") LimitArg limitArg, // Optional, default 20
