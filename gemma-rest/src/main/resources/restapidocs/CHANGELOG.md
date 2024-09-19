@@ -1,5 +1,10 @@
 ## Updates
 
+### Update 2.8.3
+
+Datasets can now be filtered by a full-text query and sorted by another field (i.e. `lastUpdated`). If a `query` is
+passed to `getDatasets`, a field named `searchResult.score` becomes available for sorting.
+
 ### Update 2.8.2
 
 - add a `characteristics` collection to the `ExpressionExperimentValueObject` model
