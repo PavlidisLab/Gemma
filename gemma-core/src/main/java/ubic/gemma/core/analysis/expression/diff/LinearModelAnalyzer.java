@@ -605,7 +605,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             dem.writeMatrix( designMatrix, true );
 
         } catch ( IOException e ) {
-            e.printStackTrace();
+            log.error( "An I/O error occurred when producing debugging output.", e );
         }
     }
 
