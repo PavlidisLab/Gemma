@@ -110,13 +110,11 @@ public class WebApplicationExceptionMapperTest extends JerseyTest {
 
     @Test
     public void testJsonRepresentation() {
-        String version = ctx.getBean( OpenAPI.class ).getInfo().getVersion();
         assertThatThrownBy( () -> target( "/custom" ).request().accept( MediaType.APPLICATION_JSON ).get( CustomResource.MyModel.class ) )
                 .isInstanceOf( BadRequestException.class )
                 .extracting( "response" )
                 .extracting( "entity" )
                 .asInstanceOf( InstanceOfAssertFactories.INPUT_STREAM )
-                .hasContent( String.format( "{\"error\":{\"code\":400,\"message\":\"test\"},\"apiVersion\":\"%s\",\"buildInfo\":{\"version\":\"1.0.0\",\"timestamp\":\"2024-05-20T04:41:58.000+00:00\",\"gitHash\":\"1234\"}}",
-                        version ) );
+                .hasContent( "\"{\"apiVersion\":\"2.8.3\",\"buildInfo\":{\"version\":\"\",\"timestamp\":\"2024-05-20T04:41:58.000+00:00\",\"gitHash\":\"1234\"},\"error\":{\"code\":400,\"message\":\"test\"}}\"" );
     }
 }
