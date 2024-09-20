@@ -106,10 +106,4 @@ public class DifferentialExpressionResultServiceImpl extends AbstractService<Dif
     public Map<Long, ContrastsValueObject> loadContrastDetailsForResults( Collection<Long> ids ) {
         return this.DERDao.loadContrastDetailsForResults( ids );
     }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Histogram loadPvalueDistribution( Long resultSetId ) {
-        return this.DERDao.loadPvalueDistribution( resultSetId );
-    }
 }

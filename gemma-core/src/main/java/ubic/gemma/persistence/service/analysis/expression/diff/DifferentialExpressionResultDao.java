@@ -113,6 +113,4 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      */
     Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene, double threshold,
             int limit );
-
-    Histogram loadPvalueDistribution( Long resultSetId );
 }

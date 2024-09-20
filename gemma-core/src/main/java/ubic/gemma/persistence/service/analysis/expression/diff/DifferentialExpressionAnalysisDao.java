@@ -37,21 +37,6 @@ import java.util.Map;
  */
 public interface DifferentialExpressionAnalysisDao extends SingleExperimentAnalysisDao<DifferentialExpressionAnalysis> {
 
-    /**
-     * @param threshold for corrected pvalue. Results may not be accurate for 'unreasonable' thresholds.
-     */
-    Integer countDownregulated( ExpressionAnalysisResultSet par, double threshold );
-
-    /**
-     * @param threshold for corrected pvalue. Results may not be accurate for 'unreasonable' thresholds.
-     */
-    Integer countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold );
-
-    /**
-     * @param threshold for corrected pvalue. Results may not be accurate for 'unreasonable' thresholds.
-     */
-    Integer countUpregulated( ExpressionAnalysisResultSet par, double threshold );
-
     Collection<DifferentialExpressionAnalysis> find( Gene gene, ExpressionAnalysisResultSet resultSet,
             double threshold );
 

@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.model.analysis.expression.diff.Baseline;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -120,5 +121,11 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
     @Transactional(readOnly = true)
     public Map<Long, Baseline> getBaselinesForInteractionsByIds( Collection<Long> rsIds, boolean initializeFactorValues ) {
         return voDao.getBaselinesForInteractionsByIds( rsIds, initializeFactorValues );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Histogram loadPvalueDistribution( ExpressionAnalysisResultSet resultSet ) {
+        return voDao.loadPvalueDistribution( resultSet );
     }
 }

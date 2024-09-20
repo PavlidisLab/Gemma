@@ -52,6 +52,7 @@ import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -71,22 +72,18 @@ import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataWriterUtils;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.expression.experiment.FactorValueUtils;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.core.config.Settings;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.view.TextView;
@@ -98,6 +95,7 @@ import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.*;
@@ -122,9 +120,12 @@ public class ExpressionExperimentQCController extends BaseController {
     @Autowired
     private OutlierDetectionService outlierDetectionService;
     @Autowired
-    private DifferentialExpressionResultService differentialExpressionResultService;
+    private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
     @Autowired
     private CoexpressionAnalysisService coexpressionAnalysisService;
+
+    @Value("${gemma.analysis.dir}")
+    private Path analysisStoragePath;
 
     @RequestMapping(value = "/expressionExperiment/detailedFactorAnalysis.html", method = RequestMethod.GET)
     public void detailedFactorAnalysis( @RequestParam("id") Long id, HttpServletResponse response ) throws Exception {
@@ -273,7 +274,6 @@ public class ExpressionExperimentQCController extends BaseController {
     public void visualizeCorrMat(
             @RequestParam("id") Long id,
             @RequestParam(value = "size", required = false) Double size,
-            @RequestParam(value = "contrVal", required = false) String contrVal,
             @RequestParam(value = "text", required = false) Boolean text,
             @RequestParam(value = "showLabels", required = false) Boolean showLabels,
             @RequestParam(value = "forceShowLabels", required = false) Boolean forceShowLabels,
@@ -402,7 +402,6 @@ public class ExpressionExperimentQCController extends BaseController {
      * @param id of the experiment
      * @param analysisId of the analysis
      * @param rsid resultSet Id
-     * @param factorName deprecated, we will use rsId instead. Maintained for backwards compatibility.
      * @param size of the image.
      * @param response stream to write the image to.
      */
@@ -411,15 +410,28 @@ public class ExpressionExperimentQCController extends BaseController {
             @RequestParam("id") Long id,
             @RequestParam("analysisId") Long analysisId,
             @RequestParam("rsid") Long rsid,
-            @RequestParam(value = "factorName", required = false) String factorName,
             @RequestParam(value = "size", required = false) Integer size,
             HttpServletResponse response ) throws Exception {
-        ExpressionExperiment ee = this.expressionExperimentService.loadOrFail( id, EntityNotFoundException::new,
-                "Could not load experiment with id " + id );
-        if ( size == null ) {
-            writePValueHistImage( ee, analysisId, rsid, factorName, response );
+        ExpressionAnalysisResultSet rs = expressionAnalysisResultSetService.loadOrFail( rsid, EntityNotFoundException::new );
+        if ( !rs.getAnalysis().getId().equals( analysisId ) ) {
+            throw new EntityNotFoundException( "Result set with ID " + id + " does not belong to analysis with ID " + analysisId );
+        }
+        // check the experiment ID
+        ExpressionExperiment ee;
+        if ( rs.getAnalysis().getExperimentAnalyzed() instanceof ExpressionExperimentSubSet ) {
+            ee = ( ( ExpressionExperimentSubSet ) rs.getAnalysis().getExperimentAnalyzed() ).getSourceExperiment();
+        } else if ( rs.getAnalysis().getExperimentAnalyzed() instanceof ExpressionExperiment ) {
+            ee = ( ExpressionExperiment ) rs.getAnalysis().getExperimentAnalyzed();
         } else {
-            writePValueHistThumbnailImage( ee, analysisId, rsid, factorName, size, response );
+            throw new UnsupportedOperationException( "Unsupported type of analyzed experiment for analysis with ID " + analysisId );
+        }
+        if ( !ee.getId().equals( id ) ) {
+            throw new EntityNotFoundException( "Analysis with ID " + analysisId + " does not belong to experiment with ID " + id );
+        }
+        if ( size == null ) {
+            writePValueHistImage( rs, response );
+        } else {
+            writePValueHistThumbnailImage( rs, size, response );
         }
     }
 
@@ -564,19 +576,11 @@ public class ExpressionExperimentQCController extends BaseController {
     /**
      * @return JFreeChart XYSeries representing the histogram for the requested result set
      */
-    private XYSeries getDiffExPvalueHistXYSeries( ExpressionExperiment ee, Long analysisId, Long rsId,
-            String factorName ) {
-        if ( ee == null || analysisId == null || rsId == null ) {
-            log.warn( "Got invalid values: " + ee + " " + analysisId + " " + rsId + " " + factorName );
-            return null;
-        }
-
-        Histogram hist = differentialExpressionResultService.loadPvalueDistribution( rsId );
-
-        XYSeries xySeries;
-
+    private XYSeries getDiffExPvalueHistXYSeries( ExpressionAnalysisResultSet rs ) {
+        Histogram hist = expressionAnalysisResultSetService.loadPvalueDistribution( rs );
         if ( hist != null ) {
-            xySeries = new XYSeries( rsId, true, true );
+            XYSeries xySeries;
+            xySeries = new XYSeries( rs.getId(), true, true );
             Double[] binEdges = hist.getBinEdges();
             double[] counts = hist.getArray();
             assert binEdges.length == counts.length;
@@ -659,10 +663,8 @@ public class ExpressionExperimentQCController extends BaseController {
      */
     private File locateProbeCorrFile( ExpressionExperiment ee ) {
         String shortName = ee.getShortName();
-        String analysisStoragePath = Settings.getAnalysisStoragePath();
-
         String suffix = ".correlDist.txt";
-        return new File( analysisStoragePath + File.separatorChar + shortName + suffix );
+        return analysisStoragePath.resolve( shortName + suffix ).toFile();
     }
 
     /**
@@ -939,6 +941,7 @@ public class ExpressionExperimentQCController extends BaseController {
         /*
          * Plot in a grid, with each factor as a column. FIXME What if we have too many factors to fit on the screen?
          */
+        //noinspection MathRoundingWithIntArgument
         int columns = ( int ) Math.ceil( charts.size() );
         int perChartSize = ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX;
         BufferedImage image = new BufferedImage( columns * perChartSize, MAX_COMP * perChartSize,
@@ -1275,9 +1278,8 @@ public class ExpressionExperimentQCController extends BaseController {
     /**
      * Has to handle the situation where there might be more than one ResultSet.
      */
-    private void writePValueHistImage( ExpressionExperiment ee, Long analysisId, Long rsId, String factorName, HttpServletResponse response ) throws IOException {
-
-        XYSeries series = this.getDiffExPvalueHistXYSeries( ee, analysisId, rsId, factorName );
+    private void writePValueHistImage( ExpressionAnalysisResultSet rs, HttpServletResponse response ) throws IOException {
+        XYSeries series = this.getDiffExPvalueHistXYSeries( rs );
 
         if ( series == null ) {
             writePlaceholderImage( response );
@@ -1304,8 +1306,8 @@ public class ExpressionExperimentQCController extends BaseController {
     /**
      * Write p-value histogram thumbnail image.
      */
-    private void writePValueHistThumbnailImage( ExpressionExperiment ee, Long analysisId, Long rsId, String factorName, int size, HttpServletResponse response ) throws IOException {
-        XYSeries series = this.getDiffExPvalueHistXYSeries( ee, analysisId, rsId, factorName );
+    private void writePValueHistThumbnailImage( ExpressionAnalysisResultSet rs, int size, HttpServletResponse response ) throws IOException {
+        XYSeries series = this.getDiffExPvalueHistXYSeries( rs );
 
         if ( series == null ) {
             writePlaceholderThumbnailImage( response, size );
