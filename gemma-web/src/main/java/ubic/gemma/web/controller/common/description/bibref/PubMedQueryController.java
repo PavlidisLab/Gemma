@@ -83,11 +83,11 @@ public class PubMedQueryController extends BaseController {
             try {
                 bibRefFound = this.pubMedXmlFetcher.retrieveByHTTP( pubMedId );
             } catch ( IOException e ) {
-                log.error( "Failed to retrieve bibliographic reference from PubMed with ID: " + accession, e );
+                log.error( "Failed to retrieve bibliographic reference from PubMed with ID: " + pubMedId, e );
             }
 
             if ( bibRefFound == null ) {
-                log.debug( accession + " not found in NCBI" );
+                log.debug( pubMedId + " not found in NCBI" );
 
                 result.rejectValue( "accession", "bibliographicReference.notfoundInNCBI", "Not found in NCBI" );
                 return new ModelAndView( "bibRefSearch", result.getModel() );
