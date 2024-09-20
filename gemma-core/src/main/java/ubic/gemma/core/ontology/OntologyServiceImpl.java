@@ -19,7 +19,6 @@
 package ubic.gemma.core.ontology;
 
 import io.micrometer.core.annotation.Timed;
-import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -51,6 +50,7 @@ import ubic.gemma.core.search.lucene.LuceneQueryUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -445,7 +445,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 .map( OntologyResource::getUri )
                 .collect( Collectors.toSet() );
         if ( !resultsWithMissingLabels.isEmpty() ) {
-            Set<OntologyTerm> replacements = getTerms( resultsWithMissingLabels );
+            Set<OntologyTerm> replacements = getTerms( resultsWithMissingLabels, Math.max( timeoutMs - totalTimer.getTime(), 0 ), TimeUnit.MILLISECONDS );
             results.removeAll( replacements );
             results.addAll( replacements );
         }
@@ -482,8 +482,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public String getDefinition( String uri ) {
-        OntologyTerm ot = this.getTerm( uri );
+    public String getDefinition( String uri, long timeout, TimeUnit timeUnit ) throws TimeoutException {
+        OntologyTerm ot = this.getTerm( uri, timeout, timeUnit );
         if ( ot != null ) {
             // FIXME: not clear this will work with all ontologies. UBERON, HP, MP, MONDO does it this way.
             AnnotationProperty annot = ot.getAnnotation( "http://purl.obolibrary.org/obo/IAO_0000115" );
@@ -495,18 +495,14 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public OntologyTerm getTerm( String uri ) {
-        try {
-            return findFirst( ontology -> {
-                OntologyTerm term = ontology.getTerm( uri );
-                if ( term != null && term.getLabel() == null ) {
-                    return null;
-                }
-                return term;
-            }, uri, 5000 );
-        } catch ( TimeoutException e ) {
-            throw new RuntimeException( String.format( "Retrieving a term for %s timed out.", uri ), e );
-        }
+    public OntologyTerm getTerm( String uri, long timeout, TimeUnit timeUnit ) throws TimeoutException {
+        return findFirst( ontology -> {
+            OntologyTerm term = ontology.getTerm( uri );
+            if ( term != null && term.getLabel() == null ) {
+                return null;
+            }
+            return term;
+        }, uri, timeUnit.toMillis( timeout ) );
     }
 
     @Override
@@ -550,6 +546,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         }
     }
 
+
     /**
      * Convert raw ontology resources into Characteristics.
      */
@@ -591,15 +588,19 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     @Override
-    public Map<Characteristic, Long> findObsoleteTermUsage() {
-        Map<Characteristic, Long> results = new HashMap<>();
+    public Map<OntologyTerm, Long> findObsoleteTermUsage( long timeout, TimeUnit timeUnit ) throws TimeoutException {
+        StopWatch timer = StopWatch.createStarted();
+        long timeoutMs = timeUnit.toMillis( timeout );
 
+        // sometimes the part we are looking at is the objects, not the subject/value.
+        Map<OntologyTerm, Long> obsoleteTerms = new HashMap<>();
         int prevObsoleteCnt = 0;
         int checked = 0;
-        Characteristic lastObsolete = null;
         long total = characteristicService.countAll();
+        Collection<String> checkedUris = new HashSet<>();
 
         int step = 5000;
+
         for ( int start = 0; ; start += step ) {
             Collection<Characteristic> chars = characteristicService.browse( start, step );
 
@@ -608,38 +609,206 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             }
 
             for ( Characteristic ch : chars ) {
-                String valueUri = ch.getValueUri();
-                if ( StringUtils.isBlank( valueUri ) ) {
+
+                if ( ch.getCategory() == null && ch.getValueUri() != null && ch.getValueUri().startsWith( "http://purl.obolibrary.org/obo/GO" ) ) {
+                    // these will generally be for gene annotations, obsoleteness there is a separate issue
                     continue;
                 }
 
+                ch.setId( null ); // make occurrences non-unique
+
                 checked++;
 
-                OntologyTerm term = this.getTerm( valueUri );
-                if ( term != null && term.isObsolete() ) {
-                    if ( valueUri.startsWith( "http://purl.org/commons/record/ncbi_gene" ) || valueUri.startsWith( "http://purl.obolibrary.org/obo/GO_" ) ) {
-                        // these are false positives, they aren't in an ontology, and we aren't looking at GO Terms.
-                        continue;
+                String valueUri = ch.getValueUri();
+                String value = ch.getValue();
+
+                if ( !checkedUris.contains( valueUri ) ) {
+                    checkedUris.add( valueUri );
+                    checkForObsolete( obsoleteTerms, valueUri, value, Math.max( timeoutMs - timer.getTime(), 0 ) );
+                }
+
+                if ( ch instanceof Statement ) {
+
+                    Statement st = ( Statement ) ch;
+
+                    String objectUri = st.getObjectUri();
+                    String objectLabel = st.getObject();
+
+                    if ( !checkedUris.contains( objectUri ) ) {
+                        checkedUris.add( objectUri );
+                        checkForObsolete( obsoleteTerms, objectUri, objectLabel, Math.max( timeoutMs - timer.getTime(), 0 ) );
                     }
-                    results.compute( ch, ( k, v ) -> v == null ? 1L : v + 1L );
-                    if ( log.isDebugEnabled() )
-                        OntologyServiceImpl.log.debug( "Found obsolete or missing term: " + ch.getValue() + " - " + valueUri );
-                    lastObsolete = ch;
+
+                    String secondObjectUri = st.getSecondObjectUri();
+                    String secondObject = st.getSecondObject();
+
+                    if ( !checkedUris.contains( secondObjectUri ) ) {
+                        checkedUris.add( secondObjectUri );
+                        checkForObsolete( obsoleteTerms, secondObjectUri, secondObject, Math.max( timeoutMs - timer.getTime(), 0 ) );
+                    }
                 }
             }
 
-            if ( results.size() > prevObsoleteCnt ) {
-                OntologyServiceImpl.log.info( "Found " + results.size() + " obsolete or missing terms so far, tested " + checked + " out of " + total + " characteristics" );
-                OntologyServiceImpl.log.info( "Last obsolete term seen: " + lastObsolete.getValue() + " - " + lastObsolete.getValueUri() );
+            if ( obsoleteTerms.size() > prevObsoleteCnt ) {
+                OntologyServiceImpl.log.info( "Found " + obsoleteTerms.size() + " obsolete terms so far, tested " + checked + " out of " + total + " characteristics" );
             }
 
-            prevObsoleteCnt = results.size();
+            if ( start % ( step * 10 ) == 0 ) {
+                OntologyServiceImpl.log.info( "Checked " + checked + " characteristics, found " + obsoleteTerms.size() + " obsolete terms so far" );
+            }
+
+            prevObsoleteCnt = obsoleteTerms.size();
         }
 
-        OntologyServiceImpl.log.info( "Done, obsolete or missing terms found: " + results.size() );
+        OntologyServiceImpl.log.info( "Done, obsolete or missing terms found: " + obsoleteTerms.size() );
 
-        return results;
+        return obsoleteTerms;
     }
+
+    private void checkForObsolete( Map<OntologyTerm, Long> obsoleteTerms, String uri, String label, long timeoutMs ) throws TimeoutException {
+        if ( StringUtils.isNotBlank( uri ) ) {
+            OntologyTerm term = this.getTerm( uri, timeoutMs, TimeUnit.MILLISECONDS );
+
+            if ( uri.startsWith( "http://purl.org/commons/record/ncbi_gene" ) ) {
+                // these are false positives, they aren't in an ontology. No-op. There may be others.
+                return;
+            } else if ( term == null ) {
+                // these are often just terms in ontologies we are not fully supporting.
+                log.debug( "No term found for:\t" + uri + "\t" + label ); // we can grep these out of the logs if we want them.
+            } else if ( term.isObsolete() ) {
+                obsoleteTerms.compute( term, ( k, v ) -> v == null ? 1L : v + 1L );
+            }
+        }
+    }
+
+
+    @Override
+    public Map<String, OntologyTerm> fixOntologyTermLabels( boolean dryRun, long timeout, TimeUnit timeUnit ) throws TimeoutException {
+        StopWatch timer = StopWatch.createStarted();
+        long timeoutMs = timeUnit.toMillis( timeout );
+
+        if ( dryRun ) {
+            log.info( " *** DRY RUN - no database changes will be made *** " );
+        }
+
+        int checked = 0;
+        Characteristic lastChanged = null;
+        String lastFixedLabel = null;
+        String lastFixedLabelCorrected = null;
+
+        int step = 5000;
+        int numUpdated = 0;
+        Map<String, OntologyTerm> mismatchedTerms = new HashMap<>(); // just for logging.
+        for ( int start = 0; ; start += step ) {
+            Collection<Characteristic> chars = characteristicService.browse( start, step );
+
+            if ( chars == null || chars.isEmpty() ) {
+                break;
+            }
+
+            boolean needsUpdate = false;
+            for ( Characteristic ch : chars ) {
+                String valueUri = ch.getValueUri();
+                if ( StringUtils.isNotBlank( valueUri ) ) {
+                    OntologyTerm term = this.getTerm( valueUri, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
+
+                    if ( term == null ) {
+                        if ( log.isDebugEnabled() && !ch.getValueUri().startsWith( "http://purl.org/commons/record/ncbi_gene/" ) ) {
+                            log.debug( "No term for " + valueUri + " (In Gemma: " + ch.getValue() + ")" );
+                        }
+                        checked++;
+                        continue;
+                    }
+
+                    if ( !term.getLabel().equals( ch.getValue() ) ) {
+                        mismatchedTerms.put( ch.getValue(), term );
+                        lastFixedLabel = ch.getValue();
+                        ch.setValue( term.getLabel() );
+                        lastFixedLabelCorrected = term.getLabel();
+
+                        needsUpdate = true;
+                    }
+                }
+
+                if ( ch instanceof Statement ) {
+                    Statement statement = ( Statement ) ch;
+
+                    String objectUri = statement.getObjectUri();
+                    if ( StringUtils.isNotBlank( objectUri ) ) {
+                        OntologyTerm term = this.getTerm( objectUri, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
+
+
+                        if ( term == null ) {
+                            if ( log.isDebugEnabled() )
+                                log.debug( "No term for " + objectUri + " (In Gemma: " + statement.getObject() + ")" );
+                            checked++;
+                            continue;
+                        }
+
+                        if ( !term.getLabel().equals( statement.getObject() ) ) {
+                            lastFixedLabel = statement.getObject();
+                            mismatchedTerms.put( statement.getObject(), term );
+                            statement.setObject( term.getLabel() );
+                            lastFixedLabelCorrected = term.getLabel();
+                            needsUpdate = true;
+                        }
+                    }
+
+                    String secondObjectUri = statement.getSecondObjectUri();
+                    if ( StringUtils.isNotBlank( secondObjectUri ) ) {
+                        OntologyTerm term = this.getTerm( secondObjectUri, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
+
+                        if ( term == null ) {
+                            if ( log.isDebugEnabled() )
+                                log.debug( "No term for " + secondObjectUri + " (In Gemma: " + statement.getSecondObject() + ")" );
+                            checked++;
+                            continue;
+                        }
+
+                        if ( !term.getLabel().equals( statement.getSecondObject() ) ) {
+                            lastFixedLabel = statement.getSecondObject();
+                            mismatchedTerms.put( statement.getSecondObject(), term );
+                            statement.setSecondObject( term.getLabel() );
+                            lastFixedLabelCorrected = term.getLabel();
+                            needsUpdate = true;
+                        }
+                    }
+
+                }
+
+                if ( log.isDebugEnabled() && lastChanged != null ) {
+                    OntologyServiceImpl.log.info( "Last updated: " + lastChanged + "; " + lastFixedLabel + " -> " + lastFixedLabelCorrected );
+                }
+
+                if ( needsUpdate ) {
+                    if ( !dryRun ) {
+                        lastChanged = ch;
+                        characteristicService.update( ch );
+                    }
+                    numUpdated++;
+                }
+
+                checked++;
+                if ( checked % ( step * 5 ) == 0 ) {
+                    OntologyServiceImpl.log.info( "Checked " + checked + " characteristics; " + ( dryRun ? "Needing updates: " : "Updated:" ) + numUpdated + " ..." );
+                    if ( lastChanged != null ) {
+                        if ( lastChanged instanceof Statement ) {
+                            OntologyServiceImpl.log.info( "Last updated: " + ( Statement ) lastChanged + "; " + lastFixedLabel + " -> " + lastFixedLabelCorrected );
+
+                        } else {
+                            OntologyServiceImpl.log.info( "Last updated: " + lastChanged + "; " + lastFixedLabel + " -> " + lastFixedLabelCorrected );
+                        }
+                    }
+                }
+
+                lastChanged = null;
+            }
+        }
+        OntologyServiceImpl.log.info( "Finished checking " + checked + " characteristics, updated " + numUpdated );
+
+        return mismatchedTerms;
+    }
+
 
     private void searchForCharacteristics( String queryString, Map<String, CharacteristicValueObject> previouslyUsedInSystem ) {
         StopWatch watch = new StopWatch();
@@ -810,7 +979,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
         SearchSettings ss = SearchSettings.builder()
                 .query( queryString )
-                .taxon( taxon )
+                .taxonConstraint( taxon )
                 .resultType( Gene.class )
                 .build();
         SearchService.SearchResultMap geneResults = this.searchService.search( ss.withFillResults( true ).withMode( SearchSettings.SearchMode.BALANCED ) );
@@ -863,6 +1032,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      */
     @Nullable
     private <T> T findFirst( Function<ubic.basecode.ontology.providers.OntologyService, T> function, String query, long timeoutMs ) throws TimeoutException {
+        StopWatch timer = StopWatch.createStarted();
         List<Future<T>> futures = new ArrayList<>( ontologyServices.size() );
         List<Object> objects = new ArrayList<>( ontologyServices.size() );
         ExecutorCompletionService<T> completionService = new ExecutorCompletionService<>( taskExecutor );
@@ -874,7 +1044,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         }
         try {
             for ( int i = 0; i < futures.size(); i++ ) {
-                T result = pollCompletionService( completionService, "Finding first result for " + query, futures, objects, timeoutMs );
+                T result = pollCompletionService( completionService, "Finding first result for " + query, futures, objects, timeoutMs - timer.getTime() );
                 if ( result != null ) {
                     return result;
                 }
@@ -891,7 +1061,11 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 throw new RuntimeException( e.getCause() );
             }
         } finally {
-            cancelRemainingFutures( futures, objects );
+            for ( Future<?> future : futures ) {
+                if ( !future.isDone() ) {
+                    future.cancel( true );
+                }
+            }
         }
     }
 
@@ -932,6 +1106,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      * The functions are evaluated using Gemma's short-lived task executor.
      */
     private <T> List<T> combineInThreads( CallableWithOntologyService<Collection<T>> work, List<ubic.basecode.ontology.providers.OntologyService> ontologyServices, String query, long timeoutMs ) throws TimeoutException {
+        StopWatch timer = StopWatch.createStarted();
         List<Future<Collection<T>>> futures = new ArrayList<>( ontologyServices.size() );
         List<Object> objects = new ArrayList<>( ontologyServices.size() );
         ExecutorCompletionService<Collection<T>> completionService = new ExecutorCompletionService<>( taskExecutor );
@@ -944,7 +1119,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         List<T> children = new ArrayList<>();
         try {
             for ( int i = 0; i < futures.size(); i++ ) {
-                children.addAll( pollCompletionService( completionService, "Combining all the results for " + query, futures, objects, timeoutMs ) );
+                children.addAll( pollCompletionService( completionService, "Combining all the results for " + query, futures, objects, Math.max( timeoutMs - timer.getTime(), 0 ) ) );
             }
         } catch ( InterruptedException e ) {
             Thread.currentThread().interrupt();
@@ -957,7 +1132,11 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 throw new RuntimeException( e.getCause() );
             }
         } finally {
-            cancelRemainingFutures( futures, objects );
+            for ( Future<?> future : futures ) {
+                if ( !future.isDone() ) {
+                    future.cancel( true );
+                }
+            }
         }
         return children;
     }
@@ -977,9 +1156,6 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         StopWatch timer = StopWatch.createStarted();
         Future<T> future;
         double recheckMs = Math.min( checkFrequencyMillis, timeoutMs );
-        // a fuzz factor to prevent concurrent tasks from all timing out at the same time
-        // up to 10% of the initial timeout
-        double fuzzyMs = RandomUtils.nextDouble() * checkFrequencyMillis / 10.0;
         while ( ( future = completionService.poll( ( long ) recheckMs, TimeUnit.MILLISECONDS ) ) == null ) {
             long remainingTimeMs = Math.max( timeoutMs - timer.getTime(), 0 );
             long i = futures.stream().filter( Future::isDone ).count();
@@ -997,27 +1173,9 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             } else {
                 throw new TimeoutException( message );
             }
-            recheckMs = Math.min( ( recheckMs + fuzzyMs ) * exponentialBackoff, remainingTimeMs );
+            recheckMs = Math.min( recheckMs * exponentialBackoff, remainingTimeMs );
         }
         return future.get();
-    }
-
-    /**
-     * Cancel all the remaining futures, this way if an exception occur, we don't needlessly occupy threads in the pool.
-     */
-    private <T> void cancelRemainingFutures( List<Future<T>> futures, List<?> objects ) {
-        Assert.isTrue( futures.size() == objects.size(), "The number of futures must match the number of descriptive objects." );
-        List<String> incompleteTasks = new ArrayList<>( futures.size() );
-        for ( Future<?> future : futures ) {
-            if ( !future.isDone() ) {
-                future.cancel( true );
-                incompleteTasks.add( objects.get( futures.indexOf( future ) ).toString() );
-            }
-        }
-        if ( !incompleteTasks.isEmpty() ) {
-            log.warn( "The following tasks did not have time to reply and were cancelled:\n\t"
-                    + String.join( "\n\t", incompleteTasks ) );
-        }
     }
 
     private SearchException convertBaseCodeOntologySearchExceptionToSearchException( OntologySearchException e, String query ) {

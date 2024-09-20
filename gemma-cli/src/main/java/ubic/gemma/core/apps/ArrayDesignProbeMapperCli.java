@@ -5,8 +5,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
-import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.goldenpath.GoldenPathSequenceAnalysis;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.core.util.AbstractCLI;
@@ -18,7 +18,6 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -58,11 +57,19 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private final static String OPTION_REFSEQ = "r";
 
     @Autowired
-    private AuditTrailService auditTrailService;
+    private TaxonService taxonService;
+    @Autowired
+    private ArrayDesignProbeMapperService arrayDesignProbeMapperService;
+    @Autowired
+    private ExternalDatabaseService eds;
+    @Autowired
+    private CompositeSequenceService compositeSequenceService;
+
+    @Value("${gemma.goldenpath.db.rat}")
+    private String goldenPathRatDbName;
 
     private String[] probeNames = null;
     private ProbeMapperConfig config;
-    private ArrayDesignProbeMapperService arrayDesignProbeMapperService;
     private String directAnnotationInputFileName = null;
     private boolean ncbiIds = false;
     private ExternalDatabase sourceDatabase = null;
@@ -76,12 +83,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private Double identityThreshold = null;
     private Double overlapThreshold = null;
 
-    @Override
-    public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.PLATFORM;
-    }
-
-    @SuppressWarnings({ "AccessStaticViaInstance", "static-access", "deprecation" })
     @Override
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
@@ -178,8 +179,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         return true;
     }
 
-    private TaxonService taxonService;
-
     /**
      * See 'configure' for how the other options are handled. (non-Javadoc)
      *
@@ -188,8 +187,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     @Override
     protected void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
-        arrayDesignProbeMapperService = this.getBean( ArrayDesignProbeMapperService.class );
-        taxonService = this.getBean( TaxonService.class );
 
         if ( commandLine.hasOption( "import" ) ) {
             if ( !commandLine.hasOption( 't' ) ) {
@@ -200,8 +197,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                         "You must provide source database name when using the import option" );
             }
             String sourceDBName = commandLine.getOptionValue( "source" );
-
-            ExternalDatabaseService eds = this.getBean( ExternalDatabaseService.class );
 
             this.sourceDatabase = eds.findByName( sourceDBName );
 
@@ -269,7 +264,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
      * Override to do additional checks to make sure the array design is in a state of readiness for probe mapping.
      */
     @Override
-    boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
+    protected boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
             Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
 
         if ( this.force ) {
@@ -537,8 +532,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             isRat = taxon.getCommonName().equals( "rat" );
         }
 
-        boolean isMissingTracks = isRat && Settings
-                .getString( "gemma.goldenpath.db.rat" ).startsWith( "rn" );
+        boolean isMissingTracks = isRat && goldenPathRatDbName.startsWith( "rn" );
 
         if ( mirnaOnlyModeOption ) {
             AbstractCLI.log.info( "Micro RNA only mode" );
@@ -649,7 +643,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         assert this.probeNames != null && this.probeNames.length > 0;
         arrayDesign = getArrayDesignService().thawLite( arrayDesign );
         this.configure( arrayDesign );
-        CompositeSequenceService compositeSequenceService = this.getBean( CompositeSequenceService.class );
 
         for ( String probeName : this.probeNames ) {
             CompositeSequence probe = compositeSequenceService.findByName( arrayDesign, probeName );
@@ -706,7 +699,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
     }
 
-    protected Taxon getTaxonByName( CommandLine commandLine ) {
+    private Taxon getTaxonByName( CommandLine commandLine ) {
         String taxonName = commandLine.getOptionValue( 't' );
         ubic.gemma.model.genome.Taxon taxon = taxonService.findByCommonName( taxonName );
         if ( taxon == null ) {

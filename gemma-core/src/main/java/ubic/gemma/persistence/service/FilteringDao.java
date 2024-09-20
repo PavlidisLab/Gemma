@@ -1,10 +1,7 @@
 package ubic.gemma.persistence.service;
 
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.Filter;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -81,10 +78,14 @@ public interface FilteringDao<O extends Identifiable> extends BaseDao<O> {
      */
     Filter getFilter( String property, Filter.Operator operator, String value ) throws IllegalArgumentException;
 
+    Filter getFilter( String property, Filter.Operator operator, String value, SubqueryMode subqueryMode );
+
     /**
      * Similar to {@link #getFilter(String, Filter.Operator, String)}, but with a collection of values.
      */
     Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException;
+
+    Filter getFilter( String property, Filter.Operator operator, Collection<String> values, SubqueryMode subqueryMode );
 
     /**
      * Obtain a {@link Filter} with an already parsed value.

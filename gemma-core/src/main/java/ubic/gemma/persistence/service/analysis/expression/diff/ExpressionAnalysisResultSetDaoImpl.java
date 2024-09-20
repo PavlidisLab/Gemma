@@ -31,6 +31,8 @@ import org.hibernate.type.Type;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
+import ubic.basecode.io.ByteArrayConverter;
+import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -406,6 +408,23 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             }
         }
         return results;
+    }
+
+    @Override
+    public Histogram loadPvalueDistribution( ExpressionAnalysisResultSet resultSet ) {
+        PvalueDistribution pvd = ( PvalueDistribution ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select rs.pvalueDistribution from ExpressionAnalysisResultSet rs where rs=:rs " )
+                .setParameter( "rs", resultSet )
+                .uniqueResult();
+        ByteArrayConverter bac = new ByteArrayConverter();
+        double[] counts = bac.byteArrayToDoubles( pvd.getBinCounts() );
+        Integer numBins = pvd.getNumBins();
+        assert numBins == counts.length;
+        Histogram hist = new Histogram( resultSet.getId().toString(), numBins, 0.0, 1.0 );
+        for ( int i = 0; i < numBins; i++ ) {
+            hist.fill( i, ( int ) counts[i] );
+        }
+        return hist;
     }
 
     @Override

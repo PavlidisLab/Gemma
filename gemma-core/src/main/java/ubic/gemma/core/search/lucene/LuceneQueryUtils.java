@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import static java.util.Objects.requireNonNull;
@@ -68,19 +69,27 @@ public class LuceneQueryUtils {
      * escaped if necessary.
      */
     public static Query parseSafely( SearchSettings settings, QueryParser queryParser ) throws SearchException {
-        return parseSafely( settings.getQuery(), queryParser );
+        return parseSafely( settings.getQuery(), queryParser, settings.getIssueReporter() );
     }
 
     /**
      * Safely parse the given search query into a Lucene query, falling back on a query with special characters
      * escaped if necessary.
+     * @param report a consumer for potential {@link ParseException} when attempting to parse the query, ignored if null
      */
-    public static Query parseSafely( String query, QueryParser queryParser ) throws SearchException {
+    public static Query parseSafely( String query, QueryParser queryParser, @Nullable Consumer<? super ParseException> report ) throws SearchException {
         try {
             return queryParser.parse( query );
         } catch ( ParseException e ) {
             String strippedQuery = escape( query );
-            log.debug( String.format( "Failed to parse '%s': %s.", query, ExceptionUtils.getRootCauseMessage( e ) ), e );
+            String m = String.format( "Failed to parse '%s': %s, it will be reattempted stripped from Lucene special characters as '%s'.",
+                    query, ExceptionUtils.getRootCauseMessage( e ), strippedQuery );
+            if ( report != null ) {
+                log.debug( m, e ); // no need to warn if it is consumed
+                report.accept( e );
+            } else {
+                log.warn( m, e );
+            }
             try {
                 return queryParser.parse( strippedQuery );
             } catch ( ParseException e2 ) {
@@ -241,7 +250,7 @@ public class LuceneQueryUtils {
 
     @Nullable
     public static String prepareDatabaseQuery( String query, boolean allowWildcards ) throws SearchException {
-        return prepareDatabaseQueryInternal( parseSafely( query, createQueryParser() ), allowWildcards );
+        return prepareDatabaseQueryInternal( parseSafely( query, createQueryParser(), null ), allowWildcards );
     }
 
     @Nullable
@@ -274,7 +283,7 @@ public class LuceneQueryUtils {
 
     @Nullable
     public static URI prepareTermUriQuery( String s ) throws SearchException {
-        Query query = parseSafely( s, createQueryParser() );
+        Query query = parseSafely( s, createQueryParser(), null );
         if ( query instanceof TermQuery ) {
             Term term = ( ( TermQuery ) query ).getTerm();
             return tryParseUri( term );

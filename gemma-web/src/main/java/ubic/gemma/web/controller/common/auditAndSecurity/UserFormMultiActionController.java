@@ -31,6 +31,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.common.auditAndSecurity.User;
@@ -69,7 +70,7 @@ public class UserFormMultiActionController extends BaseController {
     /**
      * Entry point for updates.
      */
-    @RequestMapping("/editUser.html")
+    @RequestMapping(value = "/editUser.html", method = RequestMethod.POST)
     public void editUser( @RequestParam("email") String email, @RequestParam("password") String password,
             @RequestParam("passwordConfirm") String passwordConfirm, @RequestParam("oldPassword") String oldPassword,
             @RequestParam("username") String originalUserName,
@@ -129,7 +130,7 @@ public class UserFormMultiActionController extends BaseController {
     /**
      * AJAX entry point. Loads a user.
      */
-    @RequestMapping("/loadUser.html")
+    @RequestMapping(value = "/loadUser.html", method = RequestMethod.GET)
     public void loadUser( HttpServletResponse response ) throws IOException {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -168,7 +169,7 @@ public class UserFormMultiActionController extends BaseController {
     /**
      * Resets the password to a random alphanumeric (of length MIN_PASSWORD_LENGTH).
      */
-    @RequestMapping("/resetPassword.html")
+    @RequestMapping(value = "/resetPassword.html", method = RequestMethod.POST)
     public void resetPassword( @RequestParam("email") String email, @RequestParam("username") String username, HttpServletRequest request, HttpServletResponse response ) throws IOException {
         if ( log.isDebugEnabled() ) {
             log.debug( "entering 'resetPassword' method..." );

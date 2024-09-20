@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,9 +25,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * Handles loading of Expression data into the system when the source is GEO or ArrayExpress, via Spring MVC or AJAX.
@@ -59,8 +56,7 @@ public class ExpressionExperimentLoadController {
     }
 
     @RequestMapping("/admin/loadExpressionExperiment.html")
-    @SuppressWarnings("unused")
-    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
+    public ModelAndView show() {
         return new ModelAndView( "/admin/loadExpressionExperimentForm" );
     }
 }

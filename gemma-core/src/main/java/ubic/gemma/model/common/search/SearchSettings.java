@@ -39,6 +39,7 @@ import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -136,7 +137,7 @@ public class SearchSettings implements Serializable {
         return builder()
                 .query( query )
                 .resultType( ExpressionExperiment.class )
-                .taxon( taxon )
+                .taxonConstraint( taxon )
                 .build();
     }
 
@@ -148,7 +149,7 @@ public class SearchSettings implements Serializable {
      * @return search settings
      */
     public static SearchSettings geneSearch( String query, @Nullable Taxon taxon ) {
-        return builder().query( query ).resultType( Gene.class ).taxon( taxon ).build();
+        return builder().query( query ).resultType( Gene.class ).taxonConstraint( taxon ).build();
     }
 
     /**
@@ -166,7 +167,9 @@ public class SearchSettings implements Serializable {
     @Nullable
     private ArrayDesign platformConstraint;
     @Nullable
-    private Taxon taxon;
+    private ExpressionExperiment experimentConstraint;
+    @Nullable
+    private Taxon taxonConstraint;
 
     /* sources */
     @Builder.Default
@@ -204,6 +207,14 @@ public class SearchSettings implements Serializable {
      */
     @Nullable
     private transient Highlighter highlighter;
+
+    /**
+     * A consumer that accepts various query issues.
+     * <p>
+     * This is meant to report non-critical issues.
+     */
+    @Nullable
+    private transient Consumer<Throwable> issueReporter;
 
     /**
      * Check if this is configured to search a given result type.
@@ -253,8 +264,8 @@ public class SearchSettings implements Serializable {
         if ( platformConstraint != null ) {
             s.append( " " ).append( "[" ).append( platformConstraint ).append( "]" );
         }
-        if ( taxon != null ) {
-            s.append( " " ).append( "[" ).append( taxon ).append( "]" );
+        if ( taxonConstraint != null ) {
+            s.append( " " ).append( "[" ).append( taxonConstraint ).append( "]" );
         }
         return s.toString();
     }

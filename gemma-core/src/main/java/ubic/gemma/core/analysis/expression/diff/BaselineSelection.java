@@ -58,22 +58,22 @@ public class BaselineSelection {
             "wild type"
     );
     /**
-     * Ontology terms we treat as baseline.
+     * Ontology terms we treat as baseline. Checked: 2024-08-12
      */
     private static final Set<String> controlGroupUris = createTermSet(
-            "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#wild_type",
-            "http://ontology.neuinfo.org/NIF/DigitalEntities/NIF-Investigation.owl#birnlex_2001", // normal control_group (retired)
-            "http://ontology.neuinfo.org/NIF/DigitalEntities/NIF-Investigation.owl#birnlex_2201", // control_group, new version (retired)
             "http://purl.obolibrary.org/obo/OBI_0000025", // reference substance
             "http://purl.obolibrary.org/obo/OBI_0000143", // baseline participant role
             "http://purl.obolibrary.org/obo/OBI_0000220",  // reference subject role
-            "http://purl.obolibrary.org/obo/OBI_0000825", // to be treated with placebo
+            "http://purl.obolibrary.org/obo/OBI_0000825", // to be treated with placebo role
             "http://purl.obolibrary.org/obo/OBI_0100046", // phosphate buffered saline
-            "http://purl.org/nbirn/birnlex/ontology/BIRNLex-Investigation.owl#birnlex_2201", // control group, old
             "http://www.ebi.ac.uk/efo/EFO_0001461", // control
             "http://www.ebi.ac.uk/efo/EFO_0001674", // placebo
             "http://www.ebi.ac.uk/efo/EFO_0004425",// initial time point
-            "http://www.ebi.ac.uk/efo/EFO_0005168" // wild type genotype
+            "http://www.ebi.ac.uk/efo/EFO_0005168", // wild type genotype
+            "http://purl.org/nbirn/birnlex/ontology/BIRNLex-Investigation.owl#birnlex_2201", // control group, old
+            "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#wild_type", // retired
+            "http://ontology.neuinfo.org/NIF/DigitalEntities/NIF-Investigation.owl#birnlex_2001", // normal control_group (retired)
+            "http://ontology.neuinfo.org/NIF/DigitalEntities/NIF-Investigation.owl#birnlex_2201" // control_group, new version (retired)
     );
 
     /**

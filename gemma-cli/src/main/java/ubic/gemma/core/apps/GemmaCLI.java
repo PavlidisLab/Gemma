@@ -106,21 +106,21 @@ public class GemmaCLI {
         try {
             commandLine = new DefaultParser().parse( options, args, true );
         } catch ( ParseException e ) {
-            exit( 1 );
+            System.exit( 1 );
             return; // that's silly...
         }
 
         // quick help without loading the context
         if ( commandLine.hasOption( HELP_OPTION ) ) {
             GemmaCLI.printHelp( options, null, new PrintWriter( System.out, true ) );
-            exit( 0 );
+            System.exit( 0 );
             return;
         }
 
         if ( commandLine.hasOption( VERSION_OPTION ) ) {
             BuildInfo buildInfo = BuildInfo.fromClasspath();
             System.out.printf( "Gemma %s%n", buildInfo );
-            exit( 0 );
+            System.exit( 0 );
             return;
         }
 
@@ -135,7 +135,7 @@ public class GemmaCLI {
                 System.err.printf( "Failed to parse the %s option: %s.%n", VERBOSITY_OPTION,
                         ExceptionUtils.getRootCauseMessage( e ) );
                 GemmaCLI.printHelp( options, null, new PrintWriter( System.err, true ) );
-                exit( 1 );
+                System.exit( 1 );
                 return;
             }
         }
@@ -145,7 +145,7 @@ public class GemmaCLI {
                 String[] vals = value.split( "=" );
                 if ( vals.length != 2 ) {
                     System.err.println( "Logging value must in format [loggerName]=[value]." );
-                    exit( 1 );
+                    System.exit( 1 );
                 }
                 String loggerName = vals[0];
                 try {
@@ -159,7 +159,7 @@ public class GemmaCLI {
                             loggerName,
                             ExceptionUtils.getRootCauseMessage( e ) );
                     GemmaCLI.printHelp( options, null, new PrintWriter( System.err, true ) );
-                    exit( 1 );
+                    System.exit( 1 );
                     return;
                 }
             }
@@ -180,6 +180,13 @@ public class GemmaCLI {
         }
 
         ctx = SpringContextUtils.getApplicationContext( profiles.toArray( new String[0] ) );
+
+        // register a shutdown hook to perform a graceful shutdown on SIGTERM or System.exit()
+        Runtime.getRuntime().addShutdownHook( new Thread( () -> {
+            if ( ctx instanceof ConfigurableApplicationContext ) {
+                ( ( ConfigurableApplicationContext ) ctx ).close();
+            }
+        } ) );
 
         Map<String, Command> commandsByName = new HashMap<>();
         SortedMap<CommandGroup, SortedMap<String, Command>> commandGroups = new TreeMap<>( Comparator.comparingInt( CommandGroup::ordinal ) );
@@ -210,7 +217,7 @@ public class GemmaCLI {
         // full help with all the commands
         if ( commandLine.hasOption( HELP_ALL_OPTION ) ) {
             GemmaCLI.printHelp( options, commandGroups, new PrintWriter( System.out, true ) );
-            exit( 0 );
+            System.exit( 0 );
             return;
         }
 
@@ -226,7 +233,7 @@ public class GemmaCLI {
                     shellName = Paths.get( System.getenv( "SHELL" ) ).getFileName().toString();
                 } else {
                     System.err.println( "The $SHELL environment variable is not set, could not determine the shell to generate completion for." );
-                    exit( 1 );
+                    System.exit( 1 );
                     return;
                 }
             }
@@ -237,7 +244,7 @@ public class GemmaCLI {
                 completionGenerator = new FishCompletionGenerator( executableName, commandsByName.keySet() );
             } else {
                 System.err.printf( "Completion is not support for %s.%n", shellName );
-                exit( 1 );
+                System.exit( 1 );
                 return;
             }
             PrintWriter completionWriter = new PrintWriter( System.out );
@@ -250,7 +257,7 @@ public class GemmaCLI {
             }
             completionGenerator.afterCompletion( completionWriter );
             completionWriter.flush();
-            exit( 0 );
+            System.exit( 0 );
             return;
         }
 
@@ -258,7 +265,7 @@ public class GemmaCLI {
         if ( commandLine.getArgList().isEmpty() ) {
             System.err.println( "No command was supplied." );
             GemmaCLI.printHelp( options, commandGroups, new PrintWriter( System.err, true ) );
-            exit( 1 );
+            System.exit( 1 );
             return;
         }
 
@@ -288,7 +295,7 @@ public class GemmaCLI {
             }
         }
 
-        exit( statusCode );
+        System.exit( statusCode );
     }
 
     /**
@@ -336,16 +343,6 @@ public class GemmaCLI {
         footer.append( "To get help for a specific tool, use: 'gemma-cli <commandName> --help'." );
 
         HelpUtils.printHelp( writer, "<commandName>", options, false, null, footer.toString() );
-    }
-
-    /**
-     * Exit the application with the given status code.
-     */
-    private static void exit( int statusCode ) {
-        if ( ctx instanceof ConfigurableApplicationContext ) {
-            ( ( ConfigurableApplicationContext ) ctx ).close();
-        }
-        System.exit( statusCode );
     }
 
     // order here is significant.

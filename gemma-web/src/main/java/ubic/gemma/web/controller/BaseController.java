@@ -44,7 +44,7 @@ public abstract class BaseController {
     protected Log log = LogFactory.getLog( getClass().getName() );
 
     @Autowired
-    private MailEngine mailEngine = null;
+    private MailEngine mailEngine;
 
     @Autowired
     private MessageSource messageSource;
@@ -54,14 +54,6 @@ public abstract class BaseController {
 
     @Autowired
     private ServletContext servletContext;
-
-    public void setMailEngine( MailEngine mailEngine ) {
-        this.mailEngine = mailEngine;
-    }
-
-    public void setMessageSource( MessageSource messageSource ) {
-        this.messageSource = messageSource;
-    }
 
     /**
      * @param messageCode - if no message is found, this is used to form the message (instead of throwing an exception).

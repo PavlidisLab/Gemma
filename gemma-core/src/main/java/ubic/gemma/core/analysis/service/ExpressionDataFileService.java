@@ -16,14 +16,13 @@ package ubic.gemma.core.analysis.service;
 
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.config.Settings;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -42,18 +41,9 @@ import java.util.Optional;
 @ParametersAreNonnullByDefault
 public interface ExpressionDataFileService extends TsvFileService<ExpressionExperiment> {
 
-    String DATA_ARCHIVE_FILE_SUFFIX = ".zip";
-    String DATA_DIR = Settings.getString( "gemma.appdata.home" ) + File.separatorChar + "dataFiles" + File.separatorChar;
-
-    String DATA_FILE_SUFFIX = ".data.txt";
-
-    String DATA_FILE_SUFFIX_COMPRESSED = ".data.txt.gz";
     String DISCLAIMER = "# If you use this file for your research, please cite: \n"
             + "# Lim et al. (2021) Curation of over 10 000 transcriptomic studies to enable data reuse. \n"
             + "# Database, baab006 (doi:10.1093/database/baab006). \n";
-    String JSON_FILE_SUFFIX = ".data.json.gz";
-    String TMP_DATA_DIR =
-            Settings.getString( "gemma.tmpdata.home" ) + File.separatorChar + "dataFiles" + File.separatorChar;
 
     void analysisResultSetsToString( Collection<ExpressionAnalysisResultSet> results,
             Map<Long, String[]> geneAnnotations, StringBuilder buf );
@@ -79,36 +69,6 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * @return file
      */
     File getDiffExpressionAnalysisArchiveFile( Long analysisId, boolean forceCreate );
-
-    /**
-     * @param ee       the experiment
-     * @param filtered if the data matrix is filtered
-     * @return file
-     */
-    File getOutputFile( ExpressionExperiment ee, boolean filtered );
-
-    /**
-     * @param filtered   if the data matrix is filtered
-     * @param compressed if the filename should have a .gz extension
-     * @param temporary  if you want the file to be saved in the configuration file temporary location
-     * @param ee         the experiment
-     * @return file
-     */
-    File getOutputFile( ExpressionExperiment ee, boolean filtered, boolean compressed, boolean temporary );
-
-    /**
-     * @param filename without the path - that is, just the name of the file
-     * @return File, with location in the appropriate target directory.
-     */
-    File getOutputFile( String filename );
-
-    /**
-     * @param filename   without the path - that is, just the name of the file
-     * @param temporary, if this is true then the file gets saved to the temporary location from the
-     *                   configuration file
-     * @return File, with location in the appropriate target directory.
-     */
-    File getOutputFile( String filename, boolean temporary );
 
     /**
      * Locate a metadata file.

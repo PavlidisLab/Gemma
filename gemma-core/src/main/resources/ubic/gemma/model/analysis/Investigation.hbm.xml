@@ -55,7 +55,7 @@
 				</property>
 				<property name="shortName" type="java.lang.String">
 					<column name="SHORT_NAME" not-null="false" unique="true"
-							sql-type="VARCHAR(255)" index="shortname"/>
+							sql-type="VARCHAR(255)"/>
 				</property>
 				<property name="numberOfDataVectors" type="java.lang.Integer">
 					<column name="NUMBER_OF_DATA_VECTORS" not-null="false" unique="false" sql-type="INTEGER"

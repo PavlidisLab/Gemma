@@ -36,9 +36,9 @@ import ubic.gemma.persistence.util.QueryUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
-import static ubic.gemma.persistence.util.QueryUtils.batchIdentifiableParameterList;
-import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
+import static ubic.gemma.persistence.util.QueryUtils.*;
 
 /**
  * @author pavlidis
@@ -83,12 +83,12 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
     }
 
     @Override
-    public Map<Gene, Collection<Characteristic>> findByGenes( Collection<Gene> needToFind ) {
+    public Map<Gene, Collection<Characteristic>> findByGenes( Collection<Gene> genes ) {
         Map<Gene, Collection<Characteristic>> result = new HashMap<>();
         StopWatch timer = new StopWatch();
         timer.start();
         int i = 0;
-        for ( Collection<Gene> batch : batchIdentifiableParameterList( needToFind, geneBatchSize ) ) {
+        for ( Collection<Gene> batch : batchIdentifiableParameterList( genes, geneBatchSize ) ) {
             Map<Long, Gene> giMap = EntityUtils.getIdMap( batch );
             //noinspection unchecked
             List<Object[]> o = this.getSessionFactory().getCurrentSession()
@@ -103,45 +103,44 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
                 result.computeIfAbsent( gene, k -> new HashSet<>() ).add( vc );
             }
             if ( ++i % 1000 == 0 ) {
-                AbstractDao.log.info( "Fetched GO associations for " + i + "/" + needToFind.size() + " genes" );
+                AbstractDao.log.info( "Fetched GO associations for " + i + "/" + genes.size() + " genes" );
             }
         }
         if ( timer.getTime() > 1000 ) {
             AbstractDao.log
-                    .info( "Fetched GO annotations for " + needToFind.size() + " genes in " + timer.getTime() + " ms" );
+                    .info( "Fetched GO annotations for " + genes.size() + " genes in " + timer.getTime() + " ms" );
         }
         return result;
     }
 
     @Override
-    public Collection<Gene> findByGoTerms( Collection<String> goIds ) {
-        if ( goIds.isEmpty() ) {
+    public Collection<Gene> findByGoTermUris( Collection<String> uris ) {
+        if ( uris.isEmpty() ) {
             return Collections.emptyList();
         }
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select distinct geneAss.gene from Gene2GOAssociation as geneAss  "
-                                + "where geneAss.ontologyEntry.value in ( :goIDs)" )
-                .setParameterList( "goIDs", optimizeParameterList( goIds ) ).list();
+                                + "where geneAss.ontologyEntry.valueUri in (:uris)" )
+                .setParameterList( "uris", optimizeParameterList( uris ) ).list();
     }
 
     @Override
-    public Collection<Gene> findByGoTerms( Collection<String> goIds, @Nullable Taxon taxon ) {
-        if ( goIds.isEmpty() ) {
+    public Collection<Gene> findByGoTermUris( Collection<String> uris, @Nullable Taxon taxon ) {
+        if ( uris.isEmpty() ) {
             return Collections.emptyList();
         }
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct gene from Gene2GOAssociation as geneAss join geneAss.gene as gene "
-                                + "where geneAss.ontologyEntry.value in ( :goIDs) and gene.taxon = :tax" )
-                .setParameterList( "goIDs", optimizeParameterList( goIds ) )
-                .setParameter( "tax", taxon )
-                .list();
+        return streamByBatch( this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct gene from Gene2GOAssociation as geneAss "
+                        + "join geneAss.gene as gene "
+                                + "where geneAss.ontologyEntry.valueUri in (:uris) and gene.taxon = :tax" )
+                .setParameter( "tax", taxon ), "uris", uris, 2048, Gene.class )
+                .collect( Collectors.toSet() );
     }
 
     @Override
-    public Map<Taxon, Collection<Gene>> findByGoTermsPerTaxon( Collection<String> termsToFetch ) {
-        Collection<Gene> genes = this.findByGoTerms( termsToFetch );
+    public Map<Taxon, Collection<Gene>> findByGoTermUrisPerTaxon( Collection<String> uris ) {
+        Collection<Gene> genes = this.findByGoTermUris( uris );
         Map<Taxon, Collection<Gene>> results = new HashMap<>();
         for ( Gene g : genes ) {
             if ( !results.containsKey( g.getTaxon() ) ) {

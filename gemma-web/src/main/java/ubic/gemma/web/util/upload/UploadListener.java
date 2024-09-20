@@ -37,16 +37,11 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class UploadListener implements OutputStreamListener {
 
-    private static Log log = LogFactory.getLog( UploadListener.class.getName() );
+    private static final Log log = LogFactory.getLog( UploadListener.class.getName() );
 
-    /**
-     * Set this while debugging. A value of 10-50 is sufficient.
-     */
-    private long delay = 0;
-
-    private long totalToRead = 0;
+    private final HttpServletRequest request;
+    private final long totalToRead;
     private long totalBytesRead = 0;
-    private HttpServletRequest request;
     private int totalFiles = -1;
 
     public UploadListener( HttpServletRequest request ) {
@@ -54,30 +49,10 @@ public class UploadListener implements OutputStreamListener {
         this.totalToRead = request.getContentLength();
     }
 
-    /**
-     * @param request    request
-     * @param debugDelay debug delay
-     */
-    public UploadListener( HttpServletRequest request, long debugDelay ) {
-        this( request );
-        this.delay = debugDelay;
-    }
-
     @Override
     public void bytesRead( int bytesRead ) {
         totalBytesRead = totalBytesRead + bytesRead;
         updateUploadInfo( "Reading" );
-
-        /*
-         * For debugging, slow things down
-         */
-        if ( delay > 0 ) {
-            try {
-                Thread.sleep( delay );
-            } catch ( InterruptedException e ) {
-                e.printStackTrace();
-            }
-        }
     }
 
     @Override
@@ -100,5 +75,4 @@ public class UploadListener implements OutputStreamListener {
         request.getSession()
                 .setAttribute( "uploadInfo", new UploadInfo( totalFiles, totalToRead, totalBytesRead, status ) );
     }
-
 }

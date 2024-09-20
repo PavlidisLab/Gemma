@@ -18,7 +18,7 @@ public class OpenApiConfig {
 
     private final Server[] additionalServers = {
             new Server().url( "https://gemma.msl.ubc.ca/rest/v2" ),
-            new Server().url( "https://gemma-staging.msl.ubc.ca/rest/v2" ),
+            new Server().url( "https://staging-gemma.msl.ubc.ca/rest/v2" ),
             new Server().url( "https://dev.gemma.msl.ubc.ca/rest/v2" ),
             new Server().url( "http://localhost:8080/rest/v2" )
     };

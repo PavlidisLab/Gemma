@@ -111,6 +111,15 @@ public class SortArg<O extends Identifiable> extends AbstractArg<SortArg.Sort> {
             this.direction = direction;
         }
 
+        public String getOrderBy() {
+            return orderBy;
+        }
+
+        @Nullable
+        public Direction getDirection() {
+            return direction;
+        }
+
         public enum Direction {
             ASC, DESC
         }

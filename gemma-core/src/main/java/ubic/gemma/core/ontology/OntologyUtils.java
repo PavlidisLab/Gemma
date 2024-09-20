@@ -11,6 +11,13 @@ import ubic.basecode.ontology.providers.OntologyService;
 public class OntologyUtils {
 
     /**
+     * Base URI used by PURL ontologies.
+     * <p>
+     * Read more about PURL <a href="https://github.com/OBOFoundry/purl.obolibrary.org/">here</a>.
+     */
+    public static final String BASE_PURL_URI = "http://purl.obolibrary.org/obo/";
+
+    /**
      * Ensure that a given ontology is initialized, force-loading it via {@link OntologyService#initialize(boolean, boolean)}
      * if necessary.
      * <p>

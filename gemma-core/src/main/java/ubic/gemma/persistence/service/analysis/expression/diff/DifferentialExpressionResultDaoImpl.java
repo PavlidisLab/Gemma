@@ -802,34 +802,6 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         return results;
     }
 
-    @Override
-    public Histogram loadPvalueDistribution( Long resultSetId ) {
-
-        List<?> pvds = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select rs.pvalueDistribution from ExpressionAnalysisResultSet rs where rs.id=:rsid " )
-                .setParameter( "rsid", resultSetId )
-                .list();
-        if ( pvds.isEmpty() ) {
-            return null;
-        }
-
-        assert pvds.size() == 1;
-
-        PvalueDistribution pvd = ( PvalueDistribution ) pvds.get( 0 );
-        ByteArrayConverter bac = new ByteArrayConverter();
-        double[] counts = bac.byteArrayToDoubles( pvd.getBinCounts() );
-
-        Integer numBins = pvd.getNumBins();
-        assert numBins == counts.length;
-
-        Histogram hist = new Histogram( resultSetId.toString(), numBins, 0.0, 1.0 );
-        for ( int i = 0; i < numBins; i++ ) {
-            hist.fill( i, ( int ) counts[i] );
-        }
-
-        return hist;
-
-    }
 
     @Override
     public Collection<DifferentialExpressionAnalysisResult> loadAll() {

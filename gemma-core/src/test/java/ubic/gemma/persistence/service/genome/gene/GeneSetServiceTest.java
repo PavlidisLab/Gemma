@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.annotation.DirtiesContext;
+import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
@@ -137,14 +138,14 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         geneOntologyService.initialize( is, false );
 
         Characteristic oe = Characteristic.Factory.newInstance();
-        oe.setValueUri( GeneOntologyService.BASE_GO_URI + GeneSetServiceTest.GOTERM_INDB );
+        oe.setValueUri( OntologyUtils.BASE_PURL_URI + GeneSetServiceTest.GOTERM_INDB );
         oe.setValue( GeneSetServiceTest.GOTERM_INDB );
         Gene2GOAssociation g2Go1 = Gene2GOAssociation.Factory.newInstance( g, oe, GOEvidenceCode.EXP );
 
         gene2GoService.create( g2Go1 );
 
         oe = Characteristic.Factory.newInstance();
-        oe.setValueUri( GeneOntologyService.BASE_GO_URI + GeneSetServiceTest.GOTERM_INDB );
+        oe.setValueUri( OntologyUtils.BASE_PURL_URI + GeneSetServiceTest.GOTERM_INDB );
         oe.setValue( GeneSetServiceTest.GOTERM_INDB );
         Gene2GOAssociation g2Go2 = Gene2GOAssociation.Factory.newInstance( g3, oe, GOEvidenceCode.EXP );
 

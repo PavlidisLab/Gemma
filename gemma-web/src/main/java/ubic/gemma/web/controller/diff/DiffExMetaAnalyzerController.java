@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService;
 import ubic.gemma.core.job.TaskRunningService;
@@ -35,8 +36,6 @@ import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaA
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.Collection;
 
 /**
@@ -105,8 +104,8 @@ public class DiffExMetaAnalyzerController {
         return taskRunningService.submitTaskCommand( cmd );
     }
 
-    @RequestMapping(value = { "/metaAnalysisManager.html" })
-    public ModelAndView showMetaAnalysisManager( HttpServletRequest request, HttpServletResponse response ) {
+    @RequestMapping(value = { "/metaAnalysisManager.html" }, method = RequestMethod.GET)
+    public ModelAndView showMetaAnalysisManager() {
         return new ModelAndView( "metaAnalysisManager" );
     }
 

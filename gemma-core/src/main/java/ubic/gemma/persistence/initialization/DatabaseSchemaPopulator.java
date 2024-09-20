@@ -12,6 +12,7 @@ import ubic.gemma.persistence.hibernate.LocalSessionFactoryBean;
 import ubic.gemma.persistence.hibernate.MySQL57InnoDBDialect;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /**
@@ -66,7 +67,9 @@ public class DatabaseSchemaPopulator extends CompositeDatabasePopulator {
             log.info( "Populating Hibernate schema..." );
             String[] ddl = configuration.generateSchemaCreationScript( dialect );
             for ( String sql : ddl ) {
-                connection.prepareStatement( sql ).execute();
+                try ( PreparedStatement ps = connection.prepareStatement( sql ) ) {
+                    ps.execute();
+                }
             }
         }
     }

@@ -14,10 +14,13 @@
  */
 package ubic.gemma.core.ontology.providers;
 
+import ubic.basecode.ontology.model.OntologyIndividual;
+import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.OntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl.GOAspect;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.Taxon;
@@ -33,8 +36,6 @@ import java.util.Set;
  */
 @SuppressWarnings("unused") // Possible external use
 public interface GeneOntologyService extends OntologyService {
-
-    String BASE_GO_URI = "http://purl.obolibrary.org/obo/";
 
     /**
      * <p>
@@ -74,6 +75,26 @@ public interface GeneOntologyService extends OntologyService {
     Set<OntologyTerm> getAllParents( Collection<OntologyTerm> entries, boolean includePartOf );
 
     /**
+     * Retrieve a GO resource by ID or URI.
+     */
+    @Nullable
+    @Override
+    OntologyResource getResource( String goId );
+
+    /**
+     * Retrieve a GO term by ID or URI.
+     */
+    @Nullable
+    @Override
+    OntologyTerm getTerm( String goId );
+
+    /**
+     * Retrieve a GO individuals by ID or URI.
+     */
+    @Override
+    Collection<OntologyIndividual> getTermIndividuals( String goId );
+
+    /**
      * Find genes for a given of GO term.
      * @return Collection of all genes in the given taxon that are annotated with the given id, including its
      *         child terms in the hierarchy, or null if the GO term is not found
@@ -82,6 +103,7 @@ public interface GeneOntologyService extends OntologyService {
 
     /**
      * Find genes for a given GO term by GO ID.
+     * @param goId a GO ID (i.e. GO:000001) or URI
      * @see #getGenes(OntologyTerm, Taxon)
      */
     Collection<Gene> getGenes( String goId, @Nullable Taxon taxon );
@@ -103,48 +125,25 @@ public interface GeneOntologyService extends OntologyService {
      */
     Collection<OntologyTerm> getGOTerms( Gene gene, boolean includePartOf, @Nullable GOAspect goAspect );
 
-    /**
-     *
-     * @param  uri of the term
-     * @return term if found or null otherwise.
-     */
-    @Nullable
-    OntologyTerm getTerm( String uri );
-
     @Nullable
     GOAspect getTermAspect( Characteristic goId );
 
     /**
      *
-     * @param  goId GO ID e.g. GO:0038128 (not URI)
+     * @param  goId GO ID e.g. GO:0038128 or URI
      * @return aspect if found, null otherwise
      */
     @Nullable
     GOAspect getTermAspect( String goId );
 
     /**
-     * Return a definition for a GO Id.
+     * Return a definition for a GO ID.
      *
-     * @param  goId e.g. GO:0094491
+     * @param  goId e.g. GO:0094491 or URI
      * @return Definition or null if there is no definition.
      */
     @Nullable
     String getTermDefinition( String goId );
-
-    /**
-     * @param  value e.g. GO:0038128
-     * @return term or null if not found
-     */
-    @Nullable
-    OntologyTerm getTermForId( String value );
-
-    /**
-     * Return human-readable term ("protein kinase") for a GO Id.
-     *
-     * @param  goId go id
-     * @return term name
-     */
-    String getTermName( String goId );
 
     /**
      * Converts the given Ontology Term to a Gene Ontology Value Object.

@@ -48,7 +48,6 @@ import ubic.gemma.web.controller.ControllerUtils;
 import ubic.gemma.web.view.TextView;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.*;
 
@@ -109,7 +108,7 @@ public class GeneController extends BaseController {
         GeneValueObject gvo = geneService.loadFullyPopulatedValueObject( geneId );
         try {
             Collection<EvidenceValueObject<? extends PhenotypeAssociation>> collEVO = phenotypeAssociationManagerService
-                    .findEvidenceByGeneId( geneId, new HashSet<String>(),
+                    .findEvidenceByGeneId( geneId, new HashSet<>(),
                             new EvidenceFilter( gvo.getTaxonId(), false, null ) );
             Iterator<EvidenceValueObject<? extends PhenotypeAssociation>> iterator = collEVO.iterator();
             Collection<CharacteristicValueObject> collFilteredDVO = new HashSet<>();
@@ -135,8 +134,6 @@ public class GeneController extends BaseController {
         return allenBrainAtlasService.getGeneUrl( geneService.load( geneId ) );
     }
 
-    ;
-
     /**
      * AJAX used to show gene info in the phenotype tab FIXME Why is the taxonId a parameter, since we have the gene ID?
      */
@@ -144,7 +141,7 @@ public class GeneController extends BaseController {
     public Collection<EvidenceValueObject<? extends PhenotypeAssociation>> loadGeneEvidence( Long taxonId,
             boolean showOnlyEditable, Collection<Long> databaseIds, Long geneId, String[] phenotypeValueUris ) {
         return phenotypeAssociationManagerService.findEvidenceByGeneId( geneId, phenotypeValueUris == null ?
-                        new HashSet<String>() :
+                        new HashSet<>() :
                         new HashSet<>( Arrays.asList( phenotypeValueUris ) ),
                 new EvidenceFilter( taxonId, showOnlyEditable, databaseIds ) );
     }
@@ -156,7 +153,7 @@ public class GeneController extends BaseController {
 
     @SuppressWarnings("unused") // Required
     @RequestMapping(value = { "/showGene.html", "/" }, method = RequestMethod.GET)
-    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
+    public ModelAndView show( HttpServletRequest request ) {
 
         String idString = request.getParameter( "id" );
         String ncbiId = request.getParameter( "ncbiid" );
@@ -181,7 +178,7 @@ public class GeneController extends BaseController {
                 geneVO = geneService.findByNCBIIdValueObject( Integer.parseInt( ncbiId ) );
 
             } else if ( StringUtils.isNotBlank( ensemblId ) ) {
-                @SuppressWarnings("unchecked") Collection<Gene> foundGenes = Collections
+                Collection<Gene> foundGenes = Collections
                         .singleton( geneService.findByEnsemblId( ensemblId ) );
 
                 Gene gene = foundGenes.iterator().next();
@@ -223,8 +220,7 @@ public class GeneController extends BaseController {
         return mav;
     }
 
-    @SuppressWarnings({ "WeakerAccess", "unused" }) // Frontend access
-    @RequestMapping("/downloadGeneList.html")
+    @RequestMapping(value = "/downloadGeneList.html", method = RequestMethod.GET)
     public ModelAndView handleRequestInternal( HttpServletRequest request ) {
 
         StopWatch watch = new StopWatch();
@@ -235,29 +231,25 @@ public class GeneController extends BaseController {
         String geneSetName = request.getParameter( "gsn" ); // might not be there
 
         ModelAndView mav = new ModelAndView( new TextView() );
-        if ( ( geneIds == null || geneIds.isEmpty() ) && ( geneSetIds == null || geneSetIds.isEmpty() ) ) {
+        if ( geneIds.isEmpty() && geneSetIds.isEmpty() ) {
             mav.addObject( "text",
                     "Could not find genes to match gene ids: {" + geneIds + "} or gene set ids {" + geneSetIds + "}" );
             return mav;
         }
         Collection<GeneValueObject> genes = new ArrayList<>();
-        if ( geneIds != null ) {
-            for ( Long id : geneIds ) {
-                GeneValueObject vo = geneService.loadValueObjectById( id );
-                if ( vo != null ) {
-                    genes.add( vo );
-                }
+        for ( Long id : geneIds ) {
+            GeneValueObject vo = geneService.loadValueObjectById( id );
+            if ( vo != null ) {
+                genes.add( vo );
             }
         }
-        if ( geneSetIds != null ) {
-            for ( Long id : geneSetIds ) {
-                genes.addAll( geneSetService.getGenesInGroup( new GeneSetValueObject( id ) ) );
-            }
+        for ( Long id : geneSetIds ) {
+            genes.addAll( geneSetService.getGenesInGroup( new GeneSetValueObject( id ) ) );
         }
 
         mav.addObject( "text", format4File( genes, geneSetName ) );
         watch.stop();
-        Long time = watch.getTime();
+        long time = watch.getTime();
 
         if ( time > 100 ) {
             log.info( "Retrieved and Formated" + genes.size() + " genes in : " + time + " ms." );
@@ -271,7 +263,7 @@ public class GeneController extends BaseController {
         strBuff.append( "# Generated by Gemma\n# " ).append( new Date() ).append( "\n" );
         strBuff.append( ExpressionDataFileService.DISCLAIMER + "#\n" );
 
-        if ( geneSetName != null && geneSetName.length() != 0 )
+        if ( geneSetName != null && !geneSetName.isEmpty() )
             strBuff.append( "# Gene Set: " ).append( geneSetName ).append( "\n" );
         strBuff.append( "# " ).append( genes.size() ).append( ( genes.size() > 1 ) ? " genes" : " gene" )
                 .append( "\n" );

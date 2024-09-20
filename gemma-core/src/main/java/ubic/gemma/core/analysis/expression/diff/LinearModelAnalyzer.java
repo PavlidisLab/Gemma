@@ -91,6 +91,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
     private static final String EXCLUDE_WARNING = "Found Factor Value with DE_Exclude characteristic. Skipping current subset.";
 
+    private static final int MAX_SUBSET_NAME_LENGTH = 255;
+
     public static void populateFactorValuesFromBASet( BioAssaySet ee, ExperimentalFactor f,
             Collection<FactorValue> fvs ) {
         for ( BioAssay ba : ee.getBioAssays() ) {
@@ -480,7 +482,13 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                  */
                 ExpressionExperimentSubSet eeSubSet = ExpressionExperimentSubSet.Factory.newInstance();
                 eeSubSet.setSourceExperiment( expressionExperiment );
-                eeSubSet.setName( "Subset for " + FactorValueUtils.getSummaryString( subsetFactorValue ) );
+                String subsetName = "Subset for " + FactorValueUtils.getSummaryString( subsetFactorValue );
+                if ( subsetName.length() > MAX_SUBSET_NAME_LENGTH ) {
+                    log.warn( "Name for resulting subset of " + subsetFactorValue + " exceeds " + MAX_SUBSET_NAME_LENGTH + " characters, it will be abbreviated." );
+                    eeSubSet.setName( StringUtils.abbreviate( subsetName, MAX_SUBSET_NAME_LENGTH ) );
+                } else {
+                    eeSubSet.setName( subsetName );
+                }
                 Collection<BioAssay> bioAssays = new HashSet<>();
                 for ( BioMaterial bm : bioMaterials ) {
                     bioAssays.addAll( bm.getBioAssaysUsedIn() );
@@ -597,7 +605,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             dem.writeMatrix( designMatrix, true );
 
         } catch ( IOException e ) {
-            e.printStackTrace();
+            log.error( "An I/O error occurred when producing debugging output.", e );
         }
     }
 

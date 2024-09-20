@@ -103,6 +103,11 @@ public interface ExpressionExperimentDao
     Map<ArrayDesign, Collection<Long>> getArrayDesignsUsed( Collection<Long> eeids );
 
     /**
+     * Obtain genes used by the processed vectors of this dataset.
+     */
+    Collection<Gene> getGenesUsedByPreferredVectors( ExpressionExperiment experimentConstraint );
+
+    /**
      * Obtain the dataset usage frequency by technology type.
      * <p>
      * If a dataset was switched to a platform of a different technology type, it is counted toward both.

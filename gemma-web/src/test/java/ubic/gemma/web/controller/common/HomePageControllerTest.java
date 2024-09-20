@@ -1,10 +1,12 @@
 package ubic.gemma.web.controller.common;
 
+import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.util.BaseWebTest;
 
@@ -28,6 +30,11 @@ public class HomePageControllerTest extends BaseWebTest {
         public ExpressionExperimentService expressionExperimentService() {
             return mock();
         }
+
+        @Bean
+        public BuildInfo buildInfo() {
+            return mock();
+        }
     }
 
     @Test
@@ -35,7 +42,8 @@ public class HomePageControllerTest extends BaseWebTest {
         perform( get( "/home.html" ) )
                 .andExpect( view().name( "home" ) )
                 .andExpect( model().attributeExists( "googleData" ) )
-                .andExpect( model().attributeExists( "googleLabels" ) );
+                .andExpect( model().attributeExists( "googleLabels" ) )
+                .andExpect( model().attributeExists( "buildInfo" ) );
     }
 
     @Test

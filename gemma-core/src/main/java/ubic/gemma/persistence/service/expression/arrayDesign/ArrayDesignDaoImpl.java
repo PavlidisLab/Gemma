@@ -349,6 +349,24 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
+    public Collection<Gene> getGenes( ArrayDesign arrayDesign ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                // using distinct for multi-mapping probes
+                .createSQLQuery( "select distinct {G.*} from GENE2CS "
+                        + "join CHROMOSOME_FEATURE G on GENE2CS.GENE = G.ID "
+                        + "where GENE2CS.AD = :ad" )
+                .addEntity( "G", Gene.class )
+                .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
+                .addSynchronizedEntityClass( ArrayDesign.class )
+                .addSynchronizedEntityClass( CompositeSequence.class )
+                .addSynchronizedEntityClass( Gene.class )
+                .setParameter( "ad", arrayDesign.getId() )
+                .setCacheable( true )
+                .list();
+    }
+
+    @Override
     public Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign ) {
         //language=HQL
         final String queryString = "select ee from "

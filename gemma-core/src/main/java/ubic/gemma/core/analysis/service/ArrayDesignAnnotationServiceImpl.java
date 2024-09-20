@@ -605,11 +605,13 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
     private Collection<OntologyTerm> getGoTerms( Collection<Characteristic> ontologyTerms, OutputType ty ) {
 
         Collection<OntologyTerm> results = new HashSet<>();
-        if ( ontologyTerms == null || ontologyTerms.size() == 0 )
+        if ( ontologyTerms == null || ontologyTerms.isEmpty() )
             return results;
 
         for ( Characteristic vc : ontologyTerms ) {
-            results.add( goService.getTermForId( vc.getValue() ) );
+            if ( vc.getValueUri() != null ) {
+                results.add( goService.getTerm( vc.getValueUri() ) );
+            }
         }
 
         if ( ty.equals( OutputType.SHORT ) )

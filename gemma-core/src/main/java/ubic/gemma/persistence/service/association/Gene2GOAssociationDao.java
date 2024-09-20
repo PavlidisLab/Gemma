@@ -41,15 +41,16 @@ public interface Gene2GOAssociationDao extends BaseDao<Gene2GOAssociation> {
     Collection<Gene2GOAssociation> findAssociationByGene( Gene gene );
 
     Collection<Gene2GOAssociation> findAssociationByGenes( Collection<Gene> genes );
+
     Collection<Characteristic> findByGene( Gene gene );
 
-    Map<Gene, Collection<Characteristic>> findByGenes( Collection<Gene> needToFind );
+    Map<Gene, Collection<Characteristic>> findByGenes( Collection<Gene> genes );
 
-    Collection<Gene> findByGoTerms( Collection<String> goIds );
+    Collection<Gene> findByGoTermUris( Collection<String> uris );
 
-    Collection<Gene> findByGoTerms( Collection<String> goIds, Taxon taxon );
+    Collection<Gene> findByGoTermUris( Collection<String> uris, Taxon taxon );
 
-    Map<Taxon, Collection<Gene>> findByGoTermsPerTaxon( Collection<String> termsToFetch );
+    Map<Taxon, Collection<Gene>> findByGoTermUrisPerTaxon( Collection<String> uris );
 
     int removeAll();
 }

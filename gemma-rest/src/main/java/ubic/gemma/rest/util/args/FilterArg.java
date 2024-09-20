@@ -23,6 +23,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.SubqueryMode;
 import ubic.gemma.rest.util.MalformedArgException;
 
 import java.util.Collection;
@@ -36,8 +37,13 @@ import static ubic.gemma.rest.util.ArgUtils.decodeCompressedArg;
 /**
  * Represent a filter argument designed to generate a {@link Filters} from user input.
  * <p>
+ * Filtering is done by constructing predicates in the {@code property operator requiredValue} form. Properties,
+ * operators and required values must be delimited by spaces.
+ * <h3>Properties</h3>
  * Filtering can be done on any property or nested property of an entity managed by a {@link FilteringService}. E.g:
  * 'curationDetails' or 'curationDetails.lastTroubledEvent.date'.
+ * <p>
+ * The available filterable properties on an entity can be retrieved from {@link FilteringService#getFilterableProperties()}.
  * <p>
  * Any property of a supported type. Currently, supported types are:
  * <dl>
@@ -46,16 +52,20 @@ import static ubic.gemma.rest.util.ArgUtils.decodeCompressedArg;
  * characters, or empty strings must be quoted with double-quotes {@code "}. Double-quotes can be escaped with a
  * backslash character: {@code \"}.</dd>
  * <dt>Number</dt>
- * <dd>Any Number implementation (i.e. {@link Float}, {@link Double}, {@link Integer}, {@link Long}, and their
- * corresponding primitive types). Required value must be a string parseable to the specific Number type.</dd>
+ * <dd>Any {@link Number} subclasses (i.e. {@link Float}, {@link Double}, {@link Integer}, {@link Long}). Required value
+ * must be a string parseable to the specific number type.</dd>
  * <dt>Boolean</dt>
  * <dd>Required value will be parsed to true only if the string matches {@code true}, ignoring case.</dd>
  * <dt>Date</dt>
- * <dd>Property of {@link java.util.Date}, required value must be an ISO 8601 formatted date or datetime, UTC is assumed of no timezone is supplied</dd>
+ * <dd>Property of {@link java.util.Date}, required value must be an ISO 8601 formatted date or datetime, UTC is assumed of no timezone is supplied.</dd>
  * <dt>Collection</dt>
- * <dd>Property of a {@link java.util.Collection} of any type aforementioned, nested collections are not supported</dd>
+ * <dd>Property of a {@link java.util.Collection} of any type aforementioned, nested collections are not supported. The
+ * format of collection is a sequence of comma-delimited  values surrounded by parenthesis. The values must be
+ * compatible with the type contained in the collection.<br>
+ * Example: {@code (1,2,3,4)}
+ * </dd>
  * </dl>
- * <p>
+ * <h3>Operators</h3>
  * Accepted operator keywords are:
  * <dl>
  * <dt>=</dt>
@@ -73,15 +83,28 @@ import static ubic.gemma.rest.util.ArgUtils.decodeCompressedArg;
  * <dt>like or LIKE</dt>
  * <dd>Similar string, effectively means 'begins with', translates to the SQL {@code LIKE} operator where a '%' is
  * appended to the given value (only String type)</dd>
+ * <dt>not like or NOT LIKE</dt>
+ * <dd>Similar string, effectively means 'does not begins with', translates to the SQL {@code NOT LIKE} operator where a
+ * '%' is appended to the given value (only String type)</dd>
  * <dt>in or IN</dt>
  * <dd>Required value in the given collection with the semantic of the '=' equality operator (only for Collection
  * types)</dd>
+ * <dt>not in or NOT IN</dt>
+ * <dd>Required value not in the given collection with the semantic of '=' equality operator (only for Collection types)</dd>
  * </dl>
- * <p>
  * See {@link ubic.gemma.persistence.util.Filter.Operator} for more details on the available operators.
- * <p>
- * Properties, operators and required values must be delimited by spaces.
- * <p>
+ * <h3>Quantifiers</h3>
+ * If the property refers to a collection of entities, an quantifier can be used to indicate the desired behavior:
+ * <dl>
+ * <dt>any(predicate)</dt>
+ * <dd>True if any element of the collection satisfies the predicate.</dd>
+ * <dt>all(predicate)</dt>
+ * <dd>True if all elements of the collection satisfies the predicate. Note that this is true for an empty collection.</dd>
+ * <dt>none(predicate)</dt>
+ * <dd>True if no element of the collection satisfies the predicate. Note that this is true for an empty collection.</dd>
+ * </dl>
+ * By default, {@code any(predicate)} is used.
+ * <h3>Logical expressions</h3>
  * Multiple filters can be chained using conjunctions (i.e. {@code AND, and}) or disjunctions (i.e. {@code OR, or, ','}) keywords.
  * Example:<br>
  * {@code property1 < value1 AND property2 like value2}
@@ -96,14 +119,6 @@ import static ubic.gemma.rest.util.ArgUtils.decodeCompressedArg;
  * {@code (p1 = v1 OR p1 != v2) AND (p2 <= v2) AND (p3 > v3 OR p3 < v4)}
  * <p>
  * Breaking the CNF results in an error.
- * <p>
- * The format of collection is a sequence of comma-delimited  values surrounded by parenthesis. The values must be
- * compatible with the type contained in the collection.
- * <p>
- * Example:<br>
- * {@code id in (1,2,3,4)}
- * <p>
- * The available filterable properties on an entity can be retrieved from {@link FilteringService#getFilterableProperties()}.
  *
  * @author tesarst
  * @author poirigui
@@ -114,7 +129,7 @@ import static ubic.gemma.rest.util.ArgUtils.decodeCompressedArg;
  */
 @CommonsLog
 @Schema(type = "string", description = "Filter results by matching the expression. The exact syntax is described in the attached external documentation. The filter value may be compressed with gzip and encoded with base64.",
-        externalDocs = @ExternalDocumentation(url = "https://gemma.msl.ubc.ca/resources/apidocs/ubic/gemma/rest/util/args/FilterArg.html"))
+        externalDocs = @ExternalDocumentation(url = "${gemma.hosturl}/resources/apidocs/ubic/gemma/rest/util/args/FilterArg.html"))
 public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Filter> {
 
     /**
@@ -151,20 +166,44 @@ public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Fil
         for ( FilterArgParser.ClauseContext clause : filter.filterContext.clause() ) {
             Filters.FiltersClauseBuilder disjunction = filterList.and();
             for ( FilterArgParser.SubClauseContext subClause : clause.subClause() ) {
-                String property = subClause.PROPERTY().getText();
+                SubqueryMode subqueryMode;
+                if ( subClause.quantifier() != null ) {
+                    if ( subClause.quantifier().NONE() != null ) {
+                        subqueryMode = SubqueryMode.NONE;
+                    } else if ( subClause.quantifier().ANY() != null ) {
+                        subqueryMode = SubqueryMode.ANY;
+                    } else if ( subClause.quantifier().ALL() != null ) {
+                        subqueryMode = SubqueryMode.ALL;
+                    } else {
+                        throw new IllegalArgumentException( "Unsupported sub-clause quantifier " + subClause.quantifier().getText() + "." );
+                    }
+                } else {
+                    subqueryMode = null;
+                }
+                FilterArgParser.PredicateContext predicate = subClause.predicate();
+                String property = predicate.PROPERTY().getText();
                 ubic.gemma.persistence.util.Filter.Operator operator;
                 try {
                     if ( !service.getFilterableProperties().contains( property ) ) {
                         throw new IllegalArgumentException( String.format( "The property of %s is unknown", property ) );
                     }
-                    if ( subClause.operator() != null ) {
-                        operator = operatorToOperator( subClause.operator() );
-                        String requiredValue = scalarToString( subClause.scalar() );
-                        disjunction = disjunction.or( service.getFilter( property, operator, requiredValue ) );
+                    ubic.gemma.persistence.util.Filter f;
+                    if ( predicate.operator() != null ) {
+                        operator = operatorToOperator( predicate.operator() );
+                        String requiredValue = scalarToString( predicate.scalar() );
+                        if ( subqueryMode != null ) {
+                            f = service.getFilter( property, operator, requiredValue, subqueryMode );
+                        } else {
+                            f = service.getFilter( property, operator, requiredValue );
+                        }
                     } else {
-                        operator = collectionOperatorToOperator( subClause.collectionOperator() );
-                        List<String> requiredValue = subClause.collection().scalar().stream().map( FilterArg::scalarToString ).collect( Collectors.toList() );
-                        ubic.gemma.persistence.util.Filter f = service.getFilter( property, operator, requiredValue );
+                        operator = collectionOperatorToOperator( predicate.collectionOperator() );
+                        List<String> requiredValue = predicate.collection().scalar().stream().map( FilterArg::scalarToString ).collect( Collectors.toList() );
+                        if ( subqueryMode != null ) {
+                            f = service.getFilter( property, operator, requiredValue, subqueryMode );
+                        } else {
+                            f = service.getFilter( property, operator, requiredValue );
+                        }
                         // the rhs might be a subquery, unnest it
                         ubic.gemma.persistence.util.Filter filterToValidate = unnestSubquery( f );
                         if ( filterToValidate.getRequiredValue() == null || ( ( Collection<?> ) filterToValidate.getRequiredValue() ).isEmpty() ) {
@@ -172,8 +211,8 @@ public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Fil
                             throw new MalformedArgException( String.format( "The right hand side collection in '%s' must be non-empty.",
                                     filterToValidate ) );
                         }
-                        disjunction = disjunction.or( f );
                     }
+                    disjunction = disjunction.or( f );
                 } catch ( IllegalArgumentException e ) {
                     throw new MalformedArgException( String.format( "The entity cannot be filtered by %s: %s", property, e.getMessage() ), e );
                 }
@@ -200,6 +239,8 @@ public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Fil
                 return ubic.gemma.persistence.util.Filter.Operator.greaterOrEq;
             case FilterArgLexer.LIKE:
                 return ubic.gemma.persistence.util.Filter.Operator.like;
+            case FilterArgLexer.NOT_LIKE:
+                return ubic.gemma.persistence.util.Filter.Operator.notLike;
         }
         throw new IllegalArgumentException( String.format( "Unknown operator: %s", operator.getText() ) );
     }
@@ -207,6 +248,9 @@ public class FilterArg<O extends Identifiable> extends AbstractArg<FilterArg.Fil
     private static ubic.gemma.persistence.util.Filter.Operator collectionOperatorToOperator( FilterArgParser.CollectionOperatorContext terminalNode ) {
         if ( terminalNode.IN() != null ) {
             return ubic.gemma.persistence.util.Filter.Operator.in;
+        }
+        if ( terminalNode.NOT_IN() != null ) {
+            return ubic.gemma.persistence.util.Filter.Operator.notIn;
         }
         throw new IllegalArgumentException( String.format( "Unknown operator: %s", terminalNode.getText() ) );
     }

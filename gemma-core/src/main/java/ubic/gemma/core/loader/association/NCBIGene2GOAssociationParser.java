@@ -21,7 +21,7 @@ package ubic.gemma.core.loader.association;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.loader.util.QueuingParser;
 import ubic.gemma.core.loader.util.parser.BasicLineParser;
-import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.description.Characteristic;
@@ -162,7 +162,7 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
         gene.setTaxon( taxaNcbiIds.get( taxonId ) );
         Characteristic oe = Characteristic.Factory.newInstance();
         String value = values[GO_ID].replace( ":", "_" );
-        oe.setValueUri( GeneOntologyService.BASE_GO_URI + value );
+        oe.setValueUri( OntologyUtils.BASE_PURL_URI + value );
         oe.setValue( values[GO_TERM_LABEL] );
 
         // g2GOAss.setSource( ncbiGeneDb );

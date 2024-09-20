@@ -7,13 +7,15 @@ import org.springframework.cache.concurrent.ConcurrentMapCache;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.basecode.ontology.providers.OntologyService;
+import ubic.basecode.ontology.search.OntologySearchException;
+import ubic.basecode.ontology.search.OntologySearchResult;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.assertj.core.util.Sets.set;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.*;
 
@@ -36,6 +38,21 @@ public class OntologyCacheTest {
     @After
     public void resetMocks() {
         reset( ontologyService );
+    }
+
+    @Test
+    public void testFindTerms() throws OntologySearchException {
+        OntologyService os = mock();
+        when( os.findTerm( "test", 10 ) )
+                .thenReturn( Arrays.asList( new OntologySearchResult<>( term1, 1 ), new OntologySearchResult<>( term2, 10 ), new OntologySearchResult<>( term3, 15 ) ) );
+        ontologyCache.findTerm( os, "test", 10 );
+        ontologyCache.findTerm( os, "test", 5 ); // this query will be cached
+        ontologyCache.findTerm( os, "test", 15 ); // this query will be cached as well becaue we returned less than 10 terms
+        assertThat( ontologyCache.findTerm( os, "test", 2 ) )
+                .extracting( OntologySearchResult::getResult )
+                .containsExactlyInAnyOrder( term2, term3 );
+        verify( os ).findTerm( "test", 10 );
+        verifyNoMoreInteractions( os );
     }
 
     @Test

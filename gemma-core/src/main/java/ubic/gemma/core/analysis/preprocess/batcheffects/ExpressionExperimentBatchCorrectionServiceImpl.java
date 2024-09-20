@@ -53,6 +53,9 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
     private static final Log log = LogFactory.getLog( ExpressionExperimentBatchCorrectionServiceImpl.class );
 
     private static final String QT_DESCRIPTION_SUFFIX_FOR_BATCH_CORRECTED = "(batch-corrected)";
+
+
+    // uris checked Aug 2024.
     public static final String COLLECTION_OF_MATERIAL_URI = "http://www.ebi.ac.uk/efo/EFO_0005066";
     public static final String DE_EXCLUDE_URI = "http://gemma.msl.ubc.ca/ont/TGEMO_00014";
     public static final String DE_INCLUDE_URI = "http://gemma.msl.ubc.ca/ont/TGEMO_00013";

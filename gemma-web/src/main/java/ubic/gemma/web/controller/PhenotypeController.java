@@ -19,8 +19,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerServiceImpl;
@@ -39,6 +37,7 @@ import ubic.gemma.web.remote.EntityDelegator;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Controller for phenotype
@@ -127,7 +126,7 @@ public class PhenotypeController extends BaseController {
 
     public Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString,
             String categoryUri, Long taxonId ) throws SearchException {
-        return this.phenotypeAssociationManagerService.findExperimentOntologyValue( givenQueryString );
+        return this.phenotypeAssociationManagerService.findExperimentOntologyValue( givenQueryString, 5000, TimeUnit.MILLISECONDS );
     }
 
     public Collection<ExternalDatabaseValueObject> findExternalDatabaseName() {
@@ -239,7 +238,7 @@ public class PhenotypeController extends BaseController {
         ValidateEvidenceValueObject validateEvidenceValueObject;
         try {
             validateEvidenceValueObject = this.phenotypeAssociationManagerService
-                    .validateEvidence( evidenceValueObject );
+                    .validateEvidence( evidenceValueObject, 5000, TimeUnit.MILLISECONDS );
         } catch ( Throwable throwable ) {
             validateEvidenceValueObject = this.generateValidateEvidenceValueObject( throwable );
         }

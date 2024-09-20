@@ -34,8 +34,8 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.StringUtil;
-import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.context.AsyncFactoryBeanUtils;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneServiceFactory;
@@ -43,6 +43,7 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.search.SearchTimeoutException;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResult;
@@ -59,12 +60,12 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.*;
 import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.persistence.service.association.phenotype.PhenotypeAssociationDaoImpl;
 import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.core.context.AsyncFactoryBeanUtils;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.core.config.Settings;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -74,6 +75,8 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -401,8 +404,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString ) throws SearchException {
-        return this.ontologyService.findExperimentsCharacteristicTags( givenQueryString, 100, true );
+    public Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString, long timeout, TimeUnit timeUnit ) throws SearchException {
+        return this.ontologyService.findExperimentsCharacteristicTags( givenQueryString, 100, true, timeout, timeUnit );
     }
 
     @Override
@@ -761,7 +764,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery, int maxResults ) throws SearchException {
+    public Collection<CharacteristicValueObject> searchInDatabaseForPhenotype( String searchQuery, int maxResults, long timeout, TimeUnit timeUnit ) throws SearchException {
         String newSearchQuery = this.prepareOntologyQuery( searchQuery );
 
         // search the Ontology with the search query
@@ -770,7 +773,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // add children if we did not reach max results
         if ( maxResults > 0 && ontologyTermsFound.size() < maxResults ) {
             // Set of valueUri of all Ontology Terms found + their children
-            ontologyTermsFound.addAll( ontologyService.getChildren( ontologyTermsFound, false, true ) );
+            try {
+                ontologyTermsFound.addAll( ontologyService.getChildren( ontologyTermsFound, false, true, timeout, timeUnit ) );
+            } catch ( TimeoutException e ) {
+                throw new SearchTimeoutException( "Search timed out while obtaining children for " + ontologyTermsFound.size() + " terms.", e );
+            }
         }
 
         return ontologyTermsFound.stream()
@@ -985,7 +992,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Override
     @Transactional(readOnly = true)
-    public ValidateEvidenceValueObject validateEvidence( EvidenceValueObject<PhenotypeAssociation> evidence ) {
+    public ValidateEvidenceValueObject validateEvidence( EvidenceValueObject<PhenotypeAssociation> evidence, long timeout, TimeUnit timeUnit ) throws TimeoutException {
 
         ValidateEvidenceValueObject validateEvidenceValueObject = null;
 
@@ -1004,7 +1011,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             CitationValueObject citationValueObject = pubVo.getCitationValueObject();
             String pubmedAccession = citationValueObject == null ? null : citationValueObject.getPubmedAccession();
 
-            validateEvidenceValueObject = this.determineSameGeneAndPhenotypeAnnotated( evidence, pubmedAccession );
+            validateEvidenceValueObject = this.determineSameGeneAndPhenotypeAnnotated( evidence, pubmedAccession, timeUnit.toMillis( timeout ) );
 
         }
 
@@ -1375,8 +1382,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return Populates the ValidateEvidenceValueObject with the correct flags if necessary
      */
     private ValidateEvidenceValueObject determineSameGeneAndPhenotypeAnnotated(
-            EvidenceValueObject<PhenotypeAssociation> evidence, String pubmed ) {
-
+            EvidenceValueObject<PhenotypeAssociation> evidence, String pubmed, long timeoutMs ) throws TimeoutException {
+        StopWatch timer = StopWatch.createStarted();
         ValidateEvidenceValueObject validateEvidenceValueObject = null;
 
         BibliographicReferenceValueObject bibliographicReferenceValueObject = this.findBibliographicReference( pubmed );
@@ -1457,7 +1464,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                             .getPhenotypesValues() ) {
 
                         OntologyTerm ontologyTerm = this.ontologyService
-                                .getTerm( phenotypeAlreadyPresent.getValueUri() );
+                                .getTerm( phenotypeAlreadyPresent.getValueUri(), Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
 
                         if ( ontologyTerm == null ) {
                             log.warn( String.format( "Unexpected null term for value URI %s from the ontology service.", phenotypeAlreadyPresent.getValueUri() ) );
@@ -1467,7 +1474,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                         terms.add( ontologyTerm );
                     }
 
-                    Set<String> parentOrChildTerm = this.ontologyService.getParents( terms, false, true )
+                    Set<String> parentOrChildTerm = this.ontologyService.getParents( terms, false, true, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS )
                             .stream()
                             .map( OntologyTerm::getUri )
                             .collect( Collectors.toSet() );

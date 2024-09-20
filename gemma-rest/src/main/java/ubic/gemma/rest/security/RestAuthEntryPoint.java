@@ -66,8 +66,8 @@ public class RestAuthEntryPoint implements AuthenticationEntryPoint {
             realm = "Gemma RESTful API";
             version = null;
         }
-        WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.UNAUTHORIZED, MESSAGE_401 );
-        ResponseErrorObject errorObject = new ResponseErrorObject( errorBody, version, new BuildInfoValueObject( buildInfo ) );
+        WellComposedErrorBody errorBody = new WellComposedErrorBody( Response.Status.UNAUTHORIZED.getStatusCode(), MESSAGE_401 );
+        ResponseErrorObject errorObject = new ResponseErrorObject( version, new BuildInfoValueObject( buildInfo ), errorBody );
         response.setContentType( MediaType.APPLICATION_JSON );
         // using 'xBasic' instead of 'basic' to prevent default browser login popup
         response.addHeader( "WWW-Authenticate", "xBasic realm=" + realm );

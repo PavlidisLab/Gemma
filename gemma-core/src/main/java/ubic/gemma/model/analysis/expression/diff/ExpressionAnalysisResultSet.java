@@ -19,14 +19,11 @@
 
 package ubic.gemma.model.analysis.expression.diff;
 
+import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
-import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
-import ubic.gemma.model.association.BioSequence2GeneProduct;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.genome.Gene;
 
 import javax.annotation.Nullable;
 import javax.persistence.Transient;
@@ -48,42 +45,6 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
     private PvalueDistribution pvalueDistribution;
     private Set<HitListSize> hitListSizes = new HashSet<>();
 
-    @Override
-    public String toString() {
-        StringBuilder buf = new StringBuilder();
-
-        for ( DifferentialExpressionAnalysisResult dear : this.getResults() ) {
-            int count = 0;
-
-            CompositeSequence cs = dear.getProbe();
-            buf.append( cs.getName() ).append( "\t" );
-            for ( BioSequence2GeneProduct bs2gp : cs.getBiologicalCharacteristic().getBioSequence2GeneProduct() ) {
-                Gene g = bs2gp.getGeneProduct().getGene();
-                if ( g != null ) {
-                    buf.append( bs2gp.getGeneProduct().getGene().getOfficialSymbol() ).append( "," );
-                    count++;
-                }
-            }
-            if ( count != 0 )
-                buf.deleteCharAt( buf.lastIndexOf( "," ) ); // removing trailing ,
-            buf.append( "\t" );
-
-            count = 0;
-            for ( ExperimentalFactor ef : this.getExperimentalFactors() ) {
-                buf.append( ef.getName() ).append( "," );
-                count++;
-            }
-            if ( count != 0 )
-                buf.deleteCharAt( buf.lastIndexOf( "," ) ); // removing trailing ,
-
-            buf.append( "\t" );
-
-            buf.append( dear.getCorrectedPvalue() ).append( "\n" );
-        }
-        return buf.toString();
-
-    }
-
     public DifferentialExpressionAnalysis getAnalysis() {
         return this.analysis;
     }
@@ -102,7 +63,7 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
         return this.baselineGroup;
     }
 
-    public void setBaselineGroup( FactorValue baselineGroup ) {
+    public void setBaselineGroup( @Nullable FactorValue baselineGroup ) {
         this.baselineGroup = baselineGroup;
     }
 
@@ -157,6 +118,11 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
     @Transient
     public Securable getSecurityOwner() {
         return analysis;
+    }
+
+    @Override
+    public String toString() {
+        return "ExpressionAnalysisResultSet" + ( getId() != null ? " Id=" + getId() : "" );
     }
 
     public static final class Factory {

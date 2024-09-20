@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
+import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -31,10 +32,13 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * Switching of platforms that have no composite sequences.
@@ -59,24 +63,42 @@ public class ExpressionExperimentPlatformSwitchTest extends AbstractGeoServiceTe
      * for bug 3451
      */
     @Test
-    @Category(SlowTest.class)
-    public void test() {
+    @Category({ GeoTest.class, SlowTest.class })
+    public void testGSE36025() {
+        assumeThatResourceIsAvailable( "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi" );
+
         // GSE36025
         //
-        // GPL9250
+        // This dataset contains a mixture of GPL9250 and GPL13112
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
         Collection<?> results = geoService.fetchAndLoad( "GSE36025", false, false, false );
         ExpressionExperiment ee = ( ExpressionExperiment ) results.iterator().next();
-        results = geoService.fetchAndLoad( "GPL13112", true, false, false );
-        ArrayDesign arrayDesign = ( ArrayDesign ) results.iterator().next();
-        arrayDesign = arrayDesignService.thaw( arrayDesign );
-
-        experimentPlatformSwitchService.switchExperimentToArrayDesign( ee, arrayDesign );
         Collection<ArrayDesign> arrayDesignsUsed = experimentService.getArrayDesignsUsed( ee );
+        assertEquals( 2, arrayDesignsUsed.size() );
+        Map<BioAssay, ArrayDesign> originalPlatforms = new HashMap<>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            assertNull( ba.getOriginalPlatform() );
+            originalPlatforms.put( ba, ba.getArrayDesignUsed() );
+        }
 
+        // switch to GPL13112
+        ArrayDesign arrayDesign = arrayDesignService.findByShortName( "GPL13112" );
+        assertNotNull( arrayDesign );
+        arrayDesign = arrayDesignService.thaw( arrayDesign );
+        experimentPlatformSwitchService.switchExperimentToArrayDesign( ee, arrayDesign );
+
+        arrayDesignsUsed = experimentService.getArrayDesignsUsed( ee );
         assertEquals( 1, arrayDesignsUsed.size() );
-
         assertEquals( arrayDesign, arrayDesignsUsed.iterator().next() );
+
+        ee = experimentService.loadAndThaw( ee.getId() );
+        assertNotNull( ee );
+
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            assertNotNull( ba.getOriginalPlatform() );
+            assertEquals( originalPlatforms.get( ba ), ba.getOriginalPlatform() );
+            assertEquals( arrayDesign, ba.getArrayDesignUsed() );
+        }
     }
 
     @Test

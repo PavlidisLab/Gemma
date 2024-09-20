@@ -49,7 +49,7 @@ public class InitializeDatabaseCli extends AbstractCLI {
 
     @Override
     public GemmaCLI.CommandGroup getCommandGroup() {
-        return GemmaCLI.CommandGroup.MISC;
+        return GemmaCLI.CommandGroup.SYSTEM;
     }
 
     @Override

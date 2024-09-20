@@ -28,6 +28,7 @@ import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -74,6 +75,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @Configuration
     @TestComponent
     static class DatasetsWebServiceTestContextConfiguration {
+
+        @Bean
+        public static TestPropertyPlaceholderConfigurer placeholderConfigurer() {
+            return new TestPropertyPlaceholderConfigurer( "gemma.hosturl=http://localhost:8080" );
+        }
 
         @Bean
         public OpenAPI openApi() {
@@ -247,7 +253,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     @After
     public void resetMocks() {
-        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService );
+        reset( expressionExperimentService, quantitationTypeService, analyticsProvider, expressionDataFileService, taxonArgService, geneArgService, searchService );
     }
 
     @Test
@@ -275,7 +281,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetsWithQuery() throws SearchException {
+    public void testGetDatasetsWithQuery() throws SearchException, TimeoutException {
         List<Long> ids = Arrays.asList( 1L, 3L, 5L );
         List<SearchResult<ExpressionExperiment>> results = ids.stream()
                 .map( this::createMockSearchResult )
@@ -285,10 +291,6 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .thenReturn( results );
         when( searchService.search( any() ) ).thenReturn( map );
         when( expressionExperimentService.loadIdsWithCache( any(), any() ) ).thenReturn( ids );
-        when( expressionExperimentService.getFilter( "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) ) )
-                .thenReturn( Filter.by( "ee", "id", Long.class, Filter.Operator.in, new HashSet<>( ids ) ) );
-        when( expressionExperimentService.getSort( "id", Sort.Direction.ASC ) )
-                .thenReturn( Sort.by( "ee", "id", Sort.Direction.ASC ) );
         assertThat( target( "/datasets" ).queryParam( "query", "cerebellum" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
@@ -305,8 +307,44 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                     assertThat( s.isFillResults() ).isFalse();
                     assertThat( s.getHighlighter() ).isNotNull();
                 } );
-        verify( expressionExperimentService ).loadIdsWithCache( Filters.empty(), Sort.by( "ee", "id", Sort.Direction.ASC ) );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, Collections.emptySet(), 30, TimeUnit.SECONDS );
+        verify( expressionExperimentService ).loadIdsWithCache( Filters.empty(), null );
         verify( expressionExperimentService ).loadValueObjectsByIdsWithRelationsAndCache( ids );
+        verifyNoMoreInteractions( expressionExperimentService );
+    }
+
+    @Test
+    public void testGetDatasetsWithQueryAndSort() throws SearchException, TimeoutException {
+        List<Long> ids = Arrays.asList( 1L, 3L, 5L );
+        List<SearchResult<ExpressionExperiment>> results = ids.stream()
+                .map( this::createMockSearchResult )
+                .collect( Collectors.toList() );
+        SearchService.SearchResultMap map = mock( SearchService.SearchResultMap.class );
+        when( map.getByResultObjectType( ExpressionExperiment.class ) )
+                .thenReturn( results );
+        when( searchService.search( any() ) ).thenReturn( map );
+        when( expressionExperimentService.loadIdsWithCache( any(), any() ) ).thenReturn( ids );
+        assertThat( target( "/datasets" ).queryParam( "query", "cerebellum" ).queryParam( "sort", "-lastUpdated" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+        ArgumentCaptor<SearchSettings> captor = ArgumentCaptor.forClass( SearchSettings.class );
+        verify( searchService, times( 2 ) ).search( captor.capture() );
+        assertThat( captor.getAllValues() )
+                .hasSize( 2 )
+                .satisfiesExactly( s -> {
+                    assertThat( s.getQuery() ).isEqualTo( "cerebellum" );
+                    assertThat( s.isFillResults() ).isFalse();
+                    assertThat( s.getHighlighter() ).isNull();
+                }, s -> {
+                    assertThat( s.getQuery() ).isEqualTo( "cerebellum" );
+                    assertThat( s.isFillResults() ).isFalse();
+                    assertThat( s.getHighlighter() ).isNotNull();
+                } );
+        verify( expressionExperimentService ).getSort( "lastUpdated", Sort.Direction.DESC );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, Collections.emptySet(), 30, TimeUnit.SECONDS );
+        verify( expressionExperimentService ).loadIdsWithCache( Filters.empty(), Sort.by( null, "lastUpdated", Sort.Direction.DESC ) );
+        verify( expressionExperimentService ).loadValueObjectsByIdsWithRelationsAndCache( ids );
+        verifyNoMoreInteractions( expressionExperimentService );
     }
 
     @Test
@@ -398,8 +436,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "sort.direction", "-" )
                 .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), Collections.emptySet(), new HashSet<>(), 30, TimeUnit.SECONDS );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, Collections.emptySet(), 100 );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), Collections.emptySet(), new HashSet<>(), 30000, TimeUnit.MILLISECONDS );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( eq( Filters.empty() ), isNull(), isNull(), isNull(), isNull(), eq( 0 ), eq( Collections.emptySet() ), eq( 100 ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
     }
 
     @Test
@@ -414,8 +452,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "sort.direction", "-" )
                 .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, new HashSet<>(), 30, TimeUnit.SECONDS );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, null, 100 );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, new HashSet<>(), 30000, TimeUnit.MILLISECONDS );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( eq( Filters.empty() ), isNull(), isNull(), isNull(), isNull(), eq( 0 ), isNull(), eq( 100 ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
     }
 
     @Test
@@ -433,12 +471,12 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .entity()
                 .hasFieldOrPropertyWithValue( "limit", 5000 );
-        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, new HashSet<>(), 30, TimeUnit.SECONDS );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 10, null, 5000 );
+        verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, new HashSet<>(), 30000, TimeUnit.MILLISECONDS );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 10, null, 5000, 30000, TimeUnit.MILLISECONDS );
     }
 
     @Test
-    public void testGetDatasetsAnnotationsWithLimitIsSupplied() {
+    public void testGetDatasetsAnnotationsWithLimitIsSupplied() throws TimeoutException {
         assertThat( target( "/datasets/annotations" ).queryParam( "limit", 50 ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
@@ -446,15 +484,15 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "limit", 50 )
                 .extracting( "groupBy", list( String.class ) )
                 .containsExactly( "classUri", "className", "termUri", "termName" );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 0, null, 50 );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( eq( Filters.empty() ), isNull(), isNull(), isNull(), isNull(), eq( 0 ), isNull(), eq( 50 ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
     }
 
     @Test
-    public void testGetDatasetsAnnotationsForUncategorizedTerms() {
+    public void testGetDatasetsAnnotationsForUncategorizedTerms() throws TimeoutException {
         assertThat( target( "/datasets/annotations" ).queryParam( "category", "" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, ExpressionExperimentService.UNCATEGORIZED, null, null, 0, null, 100 );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( eq( Filters.empty() ), isNull(), eq( ExpressionExperimentService.UNCATEGORIZED ), isNull(), isNull(), eq( 0 ), isNull(), eq( 100 ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
     }
 
     @Test
