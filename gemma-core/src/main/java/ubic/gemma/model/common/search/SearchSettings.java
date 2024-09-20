@@ -39,6 +39,7 @@ import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -206,6 +207,14 @@ public class SearchSettings implements Serializable {
      */
     @Nullable
     private transient Highlighter highlighter;
+
+    /**
+     * A consumer that accepts various query issues.
+     * <p>
+     * This is meant to report non-critical issues.
+     */
+    @Nullable
+    private transient Consumer<Throwable> issueReporter;
 
     /**
      * Check if this is configured to search a given result type.

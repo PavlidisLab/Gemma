@@ -2,8 +2,18 @@
 
 ### Update 2.8.3
 
+#### Ordering full-text results
+
 Datasets can now be filtered by a full-text query and sorted by another field (i.e. `lastUpdated`). If a `query` is
 passed to `getDatasets`, a field named `searchResult.score` becomes available for sorting.
+
+#### Warnings in payloads
+
+Add an optional `warnings` collection in a response. This is meant to provide feedback that would not usually result in
+a 400 error. One example is for invalid query syntax.
+
+The structure of `error` has been adjusted to comply with the Google JSON style-guide. In particular, `error.errors` is 
+now a list or structured error objects instead of a map.
 
 ### Update 2.8.2
 

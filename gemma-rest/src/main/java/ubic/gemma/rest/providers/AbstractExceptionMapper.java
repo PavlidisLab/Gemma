@@ -8,6 +8,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.rest.util.BuildInfoValueObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
+import ubic.gemma.rest.util.WellComposedError;
 import ubic.gemma.rest.util.WellComposedErrorBody;
 
 import javax.ws.rs.container.ResourceContext;
@@ -15,6 +16,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
+import java.util.List;
 
 public abstract class AbstractExceptionMapper<E extends Throwable> implements ExceptionMapper<E> {
 
@@ -43,7 +45,7 @@ public abstract class AbstractExceptionMapper<E extends Throwable> implements Ex
      */
     protected WellComposedErrorBody getWellComposedErrorBody( E exception ) {
         // for security reasons, we don't include the error object in the response entity
-        return new WellComposedErrorBody( getStatus( exception ), exception.getMessage() );
+        return new WellComposedErrorBody( getStatus( exception ).getStatusCode(), exception.getMessage() );
     }
 
     /**
@@ -91,13 +93,13 @@ public abstract class AbstractExceptionMapper<E extends Throwable> implements Ex
             version = null;
         }
         Response.ResponseBuilder responseBuilder = getResponseBuilder( request, exception );
+        WellComposedErrorBody body = getWellComposedErrorBody( exception );
         if ( request == null || acceptsJson( request ) ) {
             return responseBuilder
                     .type( MediaType.APPLICATION_JSON_TYPE )
-                    .entity( new ResponseErrorObject( getWellComposedErrorBody( exception ), version, new BuildInfoValueObject( buildInfo ) ) )
+                    .entity( new ResponseErrorObject( version, new BuildInfoValueObject( buildInfo ), body ) )
                     .build();
         } else {
-            WellComposedErrorBody body = getWellComposedErrorBody( exception );
             StringBuilder builder = new StringBuilder();
             builder.append( "Request method: " ).append( requestMethod != null ? requestMethod : "?" ).append( '\n' );
             builder.append( "Request URI: " ).append( requestUri != null ? requestUri : "?" ).append( '\n' );
@@ -105,9 +107,14 @@ public abstract class AbstractExceptionMapper<E extends Throwable> implements Ex
             builder.append( "Build info: " ).append( buildInfo ).append( '\n' );
             builder.append( "Message: " ).append( body.getMessage() );
             if ( body.getErrors() != null ) {
-                body.getErrors().forEach( ( k, v ) -> {
-                    builder.append( '\n' ).append( k ).append( ": " ).append( v );
-                } );
+                List<WellComposedError> errors = body.getErrors();
+                for ( int i = 0; i < errors.size(); i++ ) {
+                    WellComposedError e = errors.get( i );
+                    builder.append( '\n' ).append( '\n' )
+                            .append( "Error #" ).append( i + 1 ).append( '\n' )
+                            .append( "Reason: " ).append( e.getReason() ).append( '\n' )
+                            .append( "Message: " ).append( e.getMessage() );
+                }
             }
             return responseBuilder
                     .type( MediaType.TEXT_PLAIN_TYPE )

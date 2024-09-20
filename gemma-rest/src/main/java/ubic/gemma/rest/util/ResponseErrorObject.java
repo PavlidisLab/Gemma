@@ -17,15 +17,27 @@ package ubic.gemma.rest.util;
 import lombok.Value;
 
 /**
- * Wrapper for an error response payload compliant with the
- * <a href="https://google.github.io/styleguide/jsoncstyleguide.xml?showone=error#error">Google JSON style-guide</a>
+ * Wrapper for an error response payload compliant with the <a href="https://google.github.io/styleguide/jsoncstyleguide.xml#error">Google JSON style-guide</a>.
  *
  * @author tesarst
  */
 @Value
 public class ResponseErrorObject {
 
-    WellComposedErrorBody error;
+    /**
+     * API version.
+     */
     String apiVersion;
+
+    /**
+     * Build information.
+     * <p>
+     * This is an extension to the Google JSON style-guide.
+     */
     BuildInfoValueObject buildInfo;
+
+    /**
+     * Error beign reported.
+     */
+    WellComposedErrorBody error;
 }
