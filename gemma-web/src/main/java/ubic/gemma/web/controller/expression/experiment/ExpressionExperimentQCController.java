@@ -1244,10 +1244,8 @@ public class ExpressionExperimentQCController extends BaseController {
     private void writeProbeCorrHistImage( ExpressionExperiment ee, HttpServletResponse response ) throws IOException {
         XYSeries series = this.getCorrelHist( ee );
 
-        int size = ( int ) ( 0.8 * DEFAULT_QC_IMAGE_SIZE_PX );
-
         if ( series == null || series.getItemCount() == 0 ) {
-            writePlaceholderImage( response, size );
+            writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
             return;
         }
 
@@ -1263,7 +1261,7 @@ public class ExpressionExperimentQCController extends BaseController {
         renderer.setDefaultPaint( Color.white );
 
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, size, size );
+        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, DEFAULT_QC_IMAGE_SIZE_PX, DEFAULT_QC_IMAGE_SIZE_PX );
     }
 
     /**
