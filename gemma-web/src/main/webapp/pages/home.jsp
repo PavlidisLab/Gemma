@@ -150,10 +150,9 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
                 </span>
             </security:authorize>
         </div>
-        <div>Copyright &copy; 2007-2023</div>
+        <div>Copyright &copy; 2007-2024</div>
         <div class="d-lg">
-            Our <a href='<c:url value="https://pavlidislab.github.io/Gemma/terms.html" />'>Terms and conditions</a> have
-            been updated!
+             <a href='<c:url value="https://pavlidislab.github.io/Gemma/terms.html" />'>Terms and conditions</a>
         </div>
         <!-- <div><jsp:include page="/common/social.jsp"/></div> -->
         <div class="flex-grow"></div>
