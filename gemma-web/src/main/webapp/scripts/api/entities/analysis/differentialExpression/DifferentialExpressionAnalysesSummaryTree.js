@@ -480,14 +480,17 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                 var pValueDistImageSize = 16;
                 var imageUrl = ctxBasePath + '/expressionExperiment/visualizePvalueDist.html?' + 'id=' + eeID + '&analysisId='
                     + resultSet.analysisId + '&rsid=' + resultSet.resultSetId;
-                var methodWithArguments = 'showPValueDistributionWindow(\'' + escape(factorString) + '\', \'' + imageUrl
-                    + '\');';
-
+                var placeholderImageUrl = imageUrl + '&size=' + pValueDistImageSize;
                 // -8px -6px is used as background-position property because the image has gray border.
-                linkText += '<div ' + 'style="cursor: pointer; display: inline-block;' + 'width: ' + pValueDistImageSize
-                    + 'px;' + 'height: ' + pValueDistImageSize + 'px;' + 'background: url(' + imageUrl + '&size='
-                    + pValueDistImageSize + ') no-repeat -8px -6px; margin: 0 3px;" ' + 'ext:qtip="Click to view p-value distribution"'
-                    + 'onClick="return Ext.getCmp(\'' + this.getId() + '\').' + methodWithArguments + '"></div>';
+                var placeholderCss = 'cursor: pointer; display: inline-block;'
+                   + 'width: ' + pValueDistImageSize + 'px;'
+                   + 'height: ' + pValueDistImageSize + 'px;'
+                   + 'background: url(' + placeholderImageUrl + ') no-repeat -8px -6px; margin: 0 3px;'
+                var methodWithArguments = 'showPValueDistributionWindow(\'' + factorString.replaceAll( "'", "\\'" ) + '\', \'' + imageUrl.replaceAll( "'", "\\''" ) + '\');';
+
+                linkText += '<div style="' + placeholderCss + '" '
+                   + 'ext:qtip="Click to view the P-value distribution"'
+                   + ' onClick="return Ext.getCmp(\'' + this.getId() + '\').' + methodWithArguments + '"></div>';
 
                 return linkText;
             },

@@ -90,7 +90,6 @@ import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.view.TextView;
 
-import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
@@ -113,22 +112,12 @@ public class ExpressionExperimentQCController extends BaseController {
     /**
      * Default size for an image, in pixel.
      */
-    public static final int DEFAULT_QC_IMAGE_SIZE_PX = 200;
+    public static final int DEFAULT_QC_IMAGE_SIZE_PX = 300;
 
     /**
      * Maximum size for an image, in pixels.
      */
-    private static final int MAX_QC_IMAGE_SIZE_PX = 500;
-
-    /**
-     * Default size for a placeholder, in pixels.
-     */
-    private static final int DEFAULT_QC_IMAGE_PLACEHOLDER_SIZE_PX = ( int ) ( DEFAULT_QC_IMAGE_SIZE_PX * 0.75 );
-
-    /**
-     * Maximum size of a placeholder, in pixels.
-     */
-    private static final int MAX_QC_IMAGE_PLACEHOLDER_SIZE_PX = ( int ) ( MAX_QC_IMAGE_SIZE_PX * 0.75 );
+    private static final int MAX_QC_IMAGE_SIZE_PX = 800;
 
     /**
      * Maximum size of a thumbnail, in pixels.
@@ -251,7 +240,7 @@ public class ExpressionExperimentQCController extends BaseController {
         if ( svdo != null ) {
             this.writePCAFactors( ee, svdo, response );
         } else {
-            this.writePlaceholderImage( response, DEFAULT_QC_IMAGE_PLACEHOLDER_SIZE_PX );
+            this.writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
         }
     }
 
@@ -262,7 +251,7 @@ public class ExpressionExperimentQCController extends BaseController {
         if ( svdo != null ) {
             this.writePCAScree( svdo, response );
         } else {
-            this.writePlaceholderImage( response, DEFAULT_QC_IMAGE_PLACEHOLDER_SIZE_PX );
+            this.writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
         }
     }
 
@@ -705,12 +694,12 @@ public class ExpressionExperimentQCController extends BaseController {
     private void writeDetailedFactorAnalysis( ExpressionExperiment ee, HttpServletResponse os ) throws Exception {
         SVDValueObject svdo = svdService.getSvdFactorAnalysis( ee.getId() );
         if ( svdo == null ) {
-            writePlaceholderImage( os, DEFAULT_QC_IMAGE_PLACEHOLDER_SIZE_PX );
+            writePlaceholderImage( os, DEFAULT_QC_IMAGE_SIZE_PX );
             return;
         }
 
         if ( svdo.getFactors().isEmpty() && svdo.getDates().isEmpty() ) {
-            writePlaceholderImage( os, DEFAULT_QC_IMAGE_PLACEHOLDER_SIZE_PX );
+            writePlaceholderImage( os, DEFAULT_QC_IMAGE_SIZE_PX );
             return;
         }
         Map<Integer, Map<Long, Double>> factorCorrelations = svdo.getFactorCorrelations();
@@ -985,7 +974,7 @@ public class ExpressionExperimentQCController extends BaseController {
         final double OFFSET_FACTOR = 0.05f;
 
         if ( mvr == null ) {
-            writePlaceholderImage( response, DEFAULT_QC_IMAGE_PLACEHOLDER_SIZE_PX );
+            writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
             return;
         }
 
@@ -993,7 +982,7 @@ public class ExpressionExperimentQCController extends BaseController {
         XYSeriesCollection collection = this.getMeanVariance( mvr );
 
         if ( collection.getSeries().isEmpty() ) {
-            writePlaceholderImage( response, DEFAULT_QC_IMAGE_PLACEHOLDER_SIZE_PX );
+            writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
             return;
         }
 
@@ -1026,7 +1015,7 @@ public class ExpressionExperimentQCController extends BaseController {
         double xRange = series.getMaxX() - series.getMinX();
         if ( xRange < 0 ) {
             log.warn( "Min X was greater than Max X: Max=" + series.getMaxY() + " Min= " + series.getMinY() );
-            writePlaceholderImage( response, DEFAULT_QC_IMAGE_PLACEHOLDER_SIZE_PX );
+            writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
             return;
         }
         double ybuffer = ( yRange ) * OFFSET_FACTOR;
@@ -1043,7 +1032,7 @@ public class ExpressionExperimentQCController extends BaseController {
         chart.getXYPlot().setRangeAxis( yAxis );
         chart.getXYPlot().setDomainAxis( xAxis );
 
-        int finalSize = ( int ) Math.min( sizeFactor, MAX_IMAGE_SIZE_FACTOR ) * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX;
+        int finalSize = ( int ) Math.min( sizeFactor, MAX_IMAGE_SIZE_FACTOR ) * DEFAULT_QC_IMAGE_SIZE_PX;
 
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, finalSize, finalSize );
@@ -1117,7 +1106,7 @@ public class ExpressionExperimentQCController extends BaseController {
         assert ee.getId().equals( svdo.getId() );
 
         if ( factorCorrelations.isEmpty() && dateCorrelations.isEmpty() ) {
-            this.writePlaceholderImage( response, DEFAULT_QC_IMAGE_PLACEHOLDER_SIZE_PX );
+            this.writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
             return;
         }
         ee = expressionExperimentService.thawLite( ee ); // need the experimental design
@@ -1219,7 +1208,6 @@ public class ExpressionExperimentQCController extends BaseController {
      * Write a blank image so user doesn't see the broken icon.
      */
     private void writePlaceholderImage( HttpServletResponse response, @SuppressWarnings("SameParameterValue") int size ) throws IOException {
-        size = Math.min( size, MAX_QC_IMAGE_PLACEHOLDER_SIZE_PX );
         BufferedImage buffer = new BufferedImage( size, size, BufferedImage.TYPE_INT_RGB );
         Graphics g = buffer.createGraphics();
         g.setColor( Color.lightGray );
@@ -1227,7 +1215,7 @@ public class ExpressionExperimentQCController extends BaseController {
         g.setColor( Color.black );
         g.drawString( "Not available", size / 4, size / 4 );
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ImageIO.write( buffer, "png", response.getOutputStream() );
+        ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), buffer );
     }
 
     /**
@@ -1250,14 +1238,16 @@ public class ExpressionExperimentQCController extends BaseController {
         g.setFont( new Font( font.getName(), font.getStyle(), 8 ) );
         g.drawString( "N/A", 9, size );
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ImageIO.write( buffer, "png", response.getOutputStream() );
+        ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), buffer );
     }
 
     private void writeProbeCorrHistImage( ExpressionExperiment ee, HttpServletResponse response ) throws IOException {
         XYSeries series = this.getCorrelHist( ee );
 
+        int size = ( int ) ( 0.8 * DEFAULT_QC_IMAGE_SIZE_PX );
+
         if ( series == null || series.getItemCount() == 0 ) {
-            writePlaceholderImage( response, DEFAULT_QC_IMAGE_PLACEHOLDER_SIZE_PX );
+            writePlaceholderImage( response, size );
             return;
         }
 
@@ -1272,7 +1262,6 @@ public class ExpressionExperimentQCController extends BaseController {
         XYItemRenderer renderer = chart.getXYPlot().getRenderer();
         renderer.setDefaultPaint( Color.white );
 
-        int size = ( int ) ( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * 0.8 );
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, size, size );
     }
@@ -1284,7 +1273,7 @@ public class ExpressionExperimentQCController extends BaseController {
         XYSeries series = this.getDiffExPvalueHistXYSeries( rs );
 
         if ( series == null ) {
-            writePlaceholderImage( response, DEFAULT_QC_IMAGE_PLACEHOLDER_SIZE_PX );
+            writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
             return;
         }
 
@@ -1300,9 +1289,7 @@ public class ExpressionExperimentQCController extends BaseController {
         renderer.setDefaultPaint( Color.white );
 
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart,
-                ( int ) ( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * 1.4 ),
-                ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX );
+        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, ( int ) ( 1.4 * DEFAULT_QC_IMAGE_SIZE_PX ), DEFAULT_QC_IMAGE_SIZE_PX );
     }
 
     /**
