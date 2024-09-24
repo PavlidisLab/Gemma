@@ -9,7 +9,7 @@
         <!-- Default timezone for storage of DATETIME that are mapped to exact moments (i.e. java.util.Date) -->
         <prop key="connectionTimeZone">America/Vancouver</prop>
         <!-- Drops ONLY_FULL_GROUP_BY -->
-        <prop key="sessionVariables">sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'</prop>
+        <prop key="sessionVariables">sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'</prop>
     </util:properties>
 
     <!-- we use the same database for production and development -->

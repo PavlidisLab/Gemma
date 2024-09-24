@@ -1,7 +1,7 @@
 version: "3.1"
 services:
   testdb:
-    image: mysql:5.7
+    image: mysql:8.4
     environment:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
       - MYSQL_DATABASE=gemdtest

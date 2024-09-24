@@ -14,7 +14,7 @@
             <column name="SCORE" not-null="true" unique="false" sql-type="DOUBLE"/>
         </property>
         <property name="rank" type="java.lang.Double">
-            <column name="RANK" not-null="true" unique="false" sql-type="DOUBLE"/>
+            <column name="`RANK`" not-null="true" unique="false" sql-type="DOUBLE"/>
         </property>
         <property name="numGoTerms" type="java.lang.Integer">
             <column name="NUM_GO_TERMS" not-null="true" unique="false" sql-type="INTEGER"/>

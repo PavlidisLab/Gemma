@@ -18,7 +18,7 @@
                     index="DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_CORRECTED_PVALUE"/>
         </property>
         <property name="rank" type="java.lang.Double">
-            <column name="RANK" not-null="false" unique="false" sql-type="DOUBLE"/>
+            <column name="`RANK`" not-null="false" unique="false" sql-type="DOUBLE"/>
         </property>
         <property name="correctedPValueBin" type="java.lang.Integer">
             <column name="CORRECTED_P_VALUE_BIN" not-null="false" unique="false" sql-type="INTEGER"
