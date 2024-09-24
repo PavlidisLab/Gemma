@@ -1,36 +1,11 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Generate testdb" type="MavenRunConfiguration" factoryName="Maven">
-    <MavenSettings>
-      <option name="myGeneralSettings" />
-      <option name="myRunnerSettings" />
-      <option name="myRunnerParameters">
-        <MavenRunnerParameters>
-          <option name="cmdOptions" />
-          <option name="profiles">
-            <set />
-          </option>
-          <option name="goals">
-            <list>
-              <option value="org.apache.maven.plugins:maven-antrun-plugin:run@schema-export" />
-              <option value="org.codehaus.mojo:sql-maven-plugin:execute@drop-add-testdb" />
-              <option value="org.codehaus.mojo:sql-maven-plugin:execute@load-testdb-schema" />
-              <option value="-pl" />
-              <option value="gemma-core" />
-            </list>
-          </option>
-          <option name="multimoduleDir" />
-          <option name="pomFileName" />
-          <option name="profilesMap">
-            <map />
-          </option>
-          <option name="projectsCmdOptionValues">
-            <list />
-          </option>
-          <option name="resolveToWorkspace" value="false" />
-          <option name="workingDirPath" value="$PROJECT_DIR$" />
-        </MavenRunnerParameters>
-      </option>
-    </MavenSettings>
-    <method v="2" />
+  <configuration default="false" name="Generate testdb" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="ubic.gemma.core.apps.GemmaCLI" />
+    <module name="gemma-cli" />
+    <option name="PROGRAM_PARAMETERS" value="initializeDatabase -force" />
+    <option name="VM_PARAMETERS" value="-Dspring.profiles.active=dev,testdb -Dspring.security.strategy=MODE_INHERITABLETHREADLOCAL -Dlog4j.configuration=$PROJECT_DIR$/gemma-cli/src/main/config/log4j-dev.properties" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
   </configuration>
 </component>

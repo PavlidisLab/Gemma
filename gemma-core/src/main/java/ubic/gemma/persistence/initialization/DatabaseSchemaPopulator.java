@@ -7,6 +7,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.CompositeDatabasePopulator;
 import org.springframework.jdbc.datasource.init.DatabasePopulator;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+import org.springframework.util.Assert;
 import ubic.gemma.persistence.hibernate.H2Dialect;
 import ubic.gemma.persistence.hibernate.LocalSessionFactoryBean;
 import ubic.gemma.persistence.hibernate.MySQL57InnoDBDialect;
@@ -23,6 +24,7 @@ import java.sql.SQLException;
 public class DatabaseSchemaPopulator extends CompositeDatabasePopulator {
 
     public DatabaseSchemaPopulator( LocalSessionFactoryBean sessionFactoryBean, String vendor ) {
+        Assert.isTrue( vendor.equals( "mysql" ) || vendor.equals( "h2" ) );
         Configuration configuration = sessionFactoryBean.getConfiguration();
         Dialect dialect;
         if ( configuration.getProperty( "hibernate.dialect" ) != null ) {
@@ -33,7 +35,7 @@ public class DatabaseSchemaPopulator extends CompositeDatabasePopulator {
                 throw new RuntimeException( e );
             }
         } else {
-            dialect = vendor.equals( "h2" ) ? new H2Dialect() : new MySQL57InnoDBDialect();
+            dialect = vendor.equals( "mysql" ) ? new MySQL57InnoDBDialect() : new H2Dialect();
         }
         ResourceDatabasePopulator rdp = new ResourceDatabasePopulator() {
             @Override
