@@ -95,8 +95,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             List<DifferentialExpressionAnalysisResult> results = ( List<DifferentialExpressionAnalysisResult> ) getSessionFactory().getCurrentSession()
                     .createQuery( "select res from DifferentialExpressionAnalysisResult res "
                             + "where res.resultSet = :ears "
-                            // ascending, nulls last
-                            + "order by -res.correctedPvalue desc" )
+                            + "order by res.correctedPvalue asc nulls last" )
                     .setParameter( "ears", ears )
                     .list();
             // preserve order of results
@@ -122,8 +121,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             List<DifferentialExpressionAnalysisResult> results = ( List<DifferentialExpressionAnalysisResult> ) getSessionFactory().getCurrentSession()
                     .createQuery( "select res from DifferentialExpressionAnalysisResult res "
                             + "where res.resultSet = :ears "
-                            // ascending, nulls last
-                            + "order by -res.correctedPvalue desc" )
+                            + "order by res.correctedPvalue asc nulls last" )
                     .setParameter( "ears", ears )
                     .setFirstResult( offset )
                     .setMaxResults( limit )
@@ -152,7 +150,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             List<DifferentialExpressionAnalysisResult> results = ( List<DifferentialExpressionAnalysisResult> ) getSessionFactory().getCurrentSession()
                     .createQuery( "select res from DifferentialExpressionAnalysisResult res "
                             + "where res.resultSet = :ears and res.correctedPvalue <= :threshold "
-                            // no need for the hack, the threshold will filter out nulls
+                            // no need to specify a null mode, the threshold will filter them out
                             + "order by res.correctedPvalue" )
                     .setParameter( "ears", ears )
                     .setParameter( "threshold", threshold )

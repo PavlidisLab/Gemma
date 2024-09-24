@@ -102,12 +102,13 @@ public interface FilteringDao<O extends Identifiable> extends BaseDao<O> {
     /**
      * Obtain a {@link Sort} object for a property of the {@link O}.
      *
-     * @param property a property of {@link O} to sort by
+     * @param property  a property of {@link O} to sort by
      * @param direction a sorting direction, or null if the default direction applies
+     * @param nullMode  behavior for null values when sorting
      * @return a {@link Sort} object that can be used, for example, on {@link FilteringVoEnabledDao#loadValueObjects(Filters, Sort, int, int)}
      * @throws IllegalArgumentException if no such field exists in {@link O}
      */
-    Sort getSort( String property, @Nullable Sort.Direction direction ) throws IllegalArgumentException;
+    Sort getSort( String property, @Nullable Sort.Direction direction, Sort.NullMode nullMode ) throws IllegalArgumentException;
 
     /**
      * Load IDs of entities matching the given filters.

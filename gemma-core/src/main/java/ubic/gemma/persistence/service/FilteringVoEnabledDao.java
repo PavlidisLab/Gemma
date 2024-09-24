@@ -8,7 +8,6 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -21,7 +20,7 @@ public interface FilteringVoEnabledDao<O extends Identifiable, VO extends Identi
     /**
      * Load VOs with ordering, filtering and offset/limit.
      * <p>
-     * Consider using {@link #getFilter(String, Filter.Operator, String)} and {@link #getSort(String, Sort.Direction)}
+     * Consider using {@link #getFilter(String, Filter.Operator, String)} and {@link FilteringDao#getSort(String, Sort.Direction, Sort.NullMode)}
      * to produce the filters and sort safely from user input.
      *
      * @see #load(Filters, Sort, int, int)

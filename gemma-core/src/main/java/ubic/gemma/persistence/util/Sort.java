@@ -24,16 +24,16 @@ public class Sort implements PropertyMapping {
      * @param direction        a direction, or null for default
      * @param originalProperty an original property name for rendering via {@link #toOriginalString()}
      */
-    public static Sort by( @Nullable String alias, String propertyName, @Nullable Direction direction, String originalProperty ) {
-        return new Sort( alias, propertyName, direction, originalProperty, null );
+    public static Sort by( @Nullable String alias, String propertyName, @Nullable Direction direction, NullMode nullMode, String originalProperty ) {
+        return new Sort( alias, propertyName, direction, nullMode, originalProperty, null );
     }
 
     /**
      * Create a sort without an original property.
-     * @see #by(String, String, Direction)
+     * @see #by(String, String, Direction, NullMode)
      */
-    public static Sort by( @Nullable String alias, String propertyName, @Nullable Direction direction ) {
-        return new Sort( alias, propertyName, direction, null, null );
+    public static Sort by( @Nullable String alias, String propertyName, @Nullable Direction direction, NullMode nullMode ) {
+        return new Sort( alias, propertyName, direction, nullMode, null, null );
     }
 
     /**
@@ -48,11 +48,21 @@ public class Sort implements PropertyMapping {
         }
     }
 
+    public enum NullMode {
+        DEFAULT,
+        FIRST,
+        LAST
+    }
+
     @Nullable
     String objectAlias;
     String propertyName;
     @Nullable
     Direction direction;
+    /**
+     * Indicate if null values should appear last when sorting.
+     */
+    NullMode nullMode;
     /**
      * Indicate the original property from which this sort originates.
      */
@@ -61,7 +71,7 @@ public class Sort implements PropertyMapping {
     @Nullable
     Sort andThen;
 
-    private Sort( @Nullable String objectAlias, String propertyName, @Nullable Direction direction, @Nullable String originalProperty, @Nullable Sort andThen ) {
+    private Sort( @Nullable String objectAlias, String propertyName, @Nullable Direction direction, NullMode nullMode, @Nullable String originalProperty, @Nullable Sort andThen ) {
         if ( objectAlias != null && StringUtils.isBlank( objectAlias ) ) {
             throw new IllegalArgumentException( "The object alias must be either null or non-empty." );
         }
@@ -71,6 +81,7 @@ public class Sort implements PropertyMapping {
         this.objectAlias = objectAlias;
         this.propertyName = propertyName;
         this.direction = direction;
+        this.nullMode = nullMode;
         this.originalProperty = originalProperty;
         this.andThen = andThen;
     }
@@ -84,7 +95,7 @@ public class Sort implements PropertyMapping {
                 throw new IllegalArgumentException( "Creating cycles in the sort chain is not allowed." );
             }
         }
-        return new Sort( this.objectAlias, this.propertyName, this.direction, this.originalProperty, andThen );
+        return new Sort( this.objectAlias, this.propertyName, this.direction, this.nullMode, this.originalProperty, andThen );
     }
 
     @Override

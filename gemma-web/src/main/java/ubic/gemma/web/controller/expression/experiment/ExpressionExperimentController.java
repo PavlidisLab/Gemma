@@ -1442,7 +1442,7 @@ public class ExpressionExperimentController {
     private Collection<ExpressionExperimentDetailsValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon, Collection<Long> eeIds, int limit, boolean showPublic ) {
 
         Sort.Direction direction = limit < 0 ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService.loadDetailsValueObjectsWithCache( eeIds, taxon, expressionExperimentService.getSort( "curationDetails.lastUpdated", direction ), 0, Math.abs( limit ) );
+        Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService.loadDetailsValueObjectsWithCache( eeIds, taxon, expressionExperimentService.getSort( "curationDetails.lastUpdated", direction, Sort.NullMode.LAST ), 0, Math.abs( limit ) );
         // Hide public data sets if desired.
         if ( !vos.isEmpty() && !showPublic ) {
             Collection<ExpressionExperimentDetailsValueObject> publicEEs = securityService.choosePublic( vos );
@@ -1476,7 +1476,7 @@ public class ExpressionExperimentController {
         }
         int limit = batch.getLimit();
         int start = batch.getStart();
-        return expressionExperimentService.loadDetailsValueObjectsWithCache( ids, taxon, expressionExperimentService.getSort( o, direction ), start, limit );
+        return expressionExperimentService.loadDetailsValueObjectsWithCache( ids, taxon, expressionExperimentService.getSort( o, direction, Sort.NullMode.LAST ), start, limit );
     }
 
     /**

@@ -11,6 +11,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
 @Service
 public class PlatformArgService extends AbstractEntityArgService<ArrayDesign, ArrayDesignService> {
@@ -33,7 +34,7 @@ public class PlatformArgService extends AbstractEntityArgService<ArrayDesign, Ar
     public Slice<ExpressionExperimentValueObject> getExperiments( PlatformArg<?> arg, int limit, int offset ) {
         ArrayDesign ad = this.getEntity( arg );
         Filters filters = Filters.by( eeService.getFilter( "bioAssays.arrayDesignUsed.id", Long.class, Filter.Operator.eq, ad.getId() ) );
-        return eeService.loadValueObjects( filters, eeService.getSort( "bioAssays.arrayDesignUsed.id", null ), offset, limit );
+        return eeService.loadValueObjects( filters, eeService.getSort( "bioAssays.arrayDesignUsed.id", null, Sort.NullMode.LAST ), offset, limit );
     }
 
     /**
