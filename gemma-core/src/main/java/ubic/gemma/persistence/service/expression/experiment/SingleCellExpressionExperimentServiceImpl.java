@@ -404,6 +404,17 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 "The number of cell IDs must match the number of cells." );
         Assert.isTrue( scbad.getCellTypeAssignments().stream().filter( CellTypeAssignment::isPreferred ).count() <= 1,
                 "There must be at most one preferred cell type labelling." );
+        validateCellTypeAssignments( scbad );
+        validateCellLevelCharacteristics( scbad );
+        Assert.isTrue( !scbad.getBioAssays().isEmpty(), "There must be at least one BioAssay." );
+        Assert.isTrue( ee.getBioAssays().containsAll( scbad.getBioAssays() ), "Not all supplied BioAssays belong to " + ee );
+        validateSparseRangeArray( scbad.getBioAssays(), scbad.getBioAssaysOffset(), scbad.getNumberOfCells() );
+    }
+
+    private void validateCellTypeAssignments( SingleCellDimension scbad ) {
+        if ( !Hibernate.isInitialized( scbad.getCellTypeAssignments() ) ) {
+            return; // no need to validate if not initialized
+        }
         for ( CellTypeAssignment labelling : scbad.getCellTypeAssignments() ) {
             Assert.notNull( labelling.getNumberOfCellTypes() );
             Assert.notNull( labelling.getCellTypes() );
@@ -425,6 +436,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 Assert.isTrue( CharacteristicUtils.hasCategory( c, Categories.CELL_TYPE ), "All cell types must have the " + Categories.CELL_TYPE + " category." );
             }
         }
+    }
+
+    private void validateCellLevelCharacteristics( SingleCellDimension scbad ) {
+        if ( !Hibernate.isInitialized( scbad.getCellLevelCharacteristics() ) ) {
+            return; // no need to validate if not initialized
+        }
         for ( CellLevelCharacteristics clc : scbad.getCellLevelCharacteristics() ) {
             Assert.isTrue( clc.getIndices().length == scbad.getCellIds().size(),
                     "The number of cell-level characteristics must match the number of cell IDs." );
@@ -435,9 +452,6 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                                 0, numberOfCharacteristics, CellTypeAssignment.UNKNOWN_CELL_TYPE ) );
             }
         }
-        Assert.isTrue( !scbad.getBioAssays().isEmpty(), "There must be at least one BioAssay." );
-        Assert.isTrue( ee.getBioAssays().containsAll( scbad.getBioAssays() ), "Not all supplied BioAssays belong to " + ee );
-        validateSparseRangeArray( scbad.getBioAssays(), scbad.getBioAssaysOffset(), scbad.getNumberOfCells() );
     }
 
     @Nullable
