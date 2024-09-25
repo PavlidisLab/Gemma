@@ -17,12 +17,12 @@ import java.util.stream.Collectors;
  */
 @Getter
 @Setter
-public class CellTypeAssignment extends Analysis {
+public class CellTypeAssignment extends Analysis implements CellLevelCharacteristics {
 
     /**
      * A special indicator for {@link #cellTypeIndices} when the cell type is unknown.
      */
-    public static final int UNKNOWN_CELL_TYPE = -1;
+    public static final int UNKNOWN_CELL_TYPE = UNKNOWN_CHARACTERISTIC;
 
     /**
      * Indicate if this labelling is the preferred one.
@@ -62,6 +62,31 @@ public class CellTypeAssignment extends Analysis {
         } else {
             return cellTypes.get( i );
         }
+    }
+
+    /**
+     * Use {@link #getCellTypeIndices()} instead.
+     */
+    @Override
+    public int[] getIndices() {
+        return getCellTypeIndices();
+    }
+
+    /**
+     * Use {@link #getCellTypes()} instead.
+     */
+    @Override
+    public List<Characteristic> getCharacteristics() {
+        return getCellTypes();
+    }
+
+    /**
+     * Use {@link #getCellType(int)} instead.
+     */
+    @Nullable
+    @Override
+    public Characteristic getCharacteristic( int cellIndex ) {
+        return getCellType( cellIndex );
     }
 
     @Override

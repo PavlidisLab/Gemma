@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
+    <class name="ubic.gemma.model.expression.bioAssayData.GenericCellLevelCharacteristics"
+           table="CELL_LEVEL_CHARACTERISTICS" mutable="false">
+        <cache usage="read-only"/>
+        <id name="id" type="java.lang.Long" unsaved-value="null">
+            <column name="ID" sql-type="BIGINT"/>
+            <generator class="native"/>
+        </id>
+        <property name="indices">
+            <column name="INDICES" not-null="false" sql-type="LONGBLOB"/>
+            <type name="ubic.gemma.persistence.hibernate.ByteArrayType">
+                <param name="arrayType">int</param>
+            </type>
+        </property>
+        <list name="characteristics" fetch="select" lazy="false" cascade="all-delete-orphan">
+            <!-- this appears in the CHARACTERISTIC table, so it has to be spelled out for clarity -->
+            <key foreign-key="CHARACTERISTIC_CELL_LEVEL_CHARACTERISTICS_FKC">
+                <column name="CELL_LEVEL_CHARACTERISTICS_FK" sql-type="BIGINT"/>
+            </key>
+            <list-index column="CELL_LEVEL_CHARACTERISTICS_ORDERING"/>
+            <one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
+        </list>
+    </class>
+</hibernate-mapping>

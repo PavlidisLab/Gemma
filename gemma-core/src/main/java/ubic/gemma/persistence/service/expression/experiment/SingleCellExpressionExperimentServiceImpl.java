@@ -18,6 +18,7 @@ import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
@@ -27,7 +28,10 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.core.util.ListUtils.validateSparseRangeArray;
@@ -371,6 +375,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
+    public List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee ) {
+        return expressionExperimentDao.getCellLevelCharacteristics( ee );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Characteristic> getCellTypes( ExpressionExperiment ee ) {
         return expressionExperimentDao.getCellTypes( ee );
     }
@@ -402,8 +412,19 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             Assert.isTrue( numberOfCellTypeLabels == labelling.getNumberOfCellTypes(),
                     "The number of cell types must match the number of values the cellTypeLabels collection." );
             for ( int k : labelling.getCellTypeIndices() ) {
-                Assert.isTrue( k >= 0 && k < numberOfCellTypeLabels,
-                        String.format( "Cell type vector values must be within the [%d, %d[ range.", 0, numberOfCellTypeLabels ) );
+                Assert.isTrue( ( k >= 0 && k < numberOfCellTypeLabels ) || k == CellLevelCharacteristics.UNKNOWN_CHARACTERISTIC,
+                        String.format( "Cell type vector values must be within the [%d, %d[ range or use %d as an unknown indicator.",
+                                0, numberOfCellTypeLabels, CellLevelCharacteristics.UNKNOWN_CHARACTERISTIC ) );
+            }
+        }
+        for ( CellLevelCharacteristics clc : scbad.getCellLevelCharacteristics() ) {
+            Assert.isTrue( clc.getIndices().length == scbad.getCellIds().size(),
+                    "The number of cell-level characteristics must match the number of cell IDs." );
+            int numberOfCharacteristics = clc.getCharacteristics().size();
+            for ( int k : clc.getIndices() ) {
+                Assert.isTrue( ( k >= 0 && k < numberOfCharacteristics ) || k == CellTypeAssignment.UNKNOWN_CELL_TYPE,
+                        String.format( "Cell-level characteristics vector values must be within the [%d, %d[ range or use %d as an unknown indicator.",
+                                0, numberOfCharacteristics, CellTypeAssignment.UNKNOWN_CELL_TYPE ) );
             }
         }
         Assert.isTrue( !scbad.getBioAssays().isEmpty(), "There must be at least one BioAssay." );

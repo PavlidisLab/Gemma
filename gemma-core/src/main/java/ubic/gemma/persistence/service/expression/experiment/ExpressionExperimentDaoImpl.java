@@ -2149,6 +2149,17 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee ) {
+        List<CellLevelCharacteristics> results = new ArrayList<>( getCellTypeAssignments( ee ) );
+        //noinspection unchecked
+        results.addAll( getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct clc from SingleCellExpressionDataVector scedv join scedv.singleCellDimension scd join scd.cellLevelCharacteristics clc where scedv.expressionExperiment = :ee" )
+                .setParameter( "ee", ee )
+                .list() );
+        return results;
+    }
+
+    @Override
     public CellTypeAssignment createCellTypeAssignment( ExpressionExperiment ee, CellTypeAssignment assignment ) {
         getSessionFactory().getCurrentSession().persist( assignment );
         return assignment;

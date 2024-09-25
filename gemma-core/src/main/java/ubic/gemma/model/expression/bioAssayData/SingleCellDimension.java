@@ -42,12 +42,6 @@ public class SingleCellDimension extends AbstractDescribable implements Identifi
     private int numberOfCells = 0;
 
     /**
-     * Set of cell types assignment to individual cells. This is empty if no cell types have been assigned and should
-     * always contain a preferred labelling as per {@link CellTypeAssignment#isPreferred()} if non-empty.
-     */
-    private Set<CellTypeAssignment> cellTypeAssignments = new HashSet<>();
-
-    /**
      * List of {@link BioAssay}s applicable to the cells.
      * <p>
      * The {@link BioAssay} in {@code bioAssays[sampleIndex]} applies to all the cells in the interval {@code [bioAssaysOffset[sampleIndex], bioAssaysOffset[sampleIndex+1][}.
@@ -63,6 +57,21 @@ public class SingleCellDimension extends AbstractDescribable implements Identifi
      * This is stored in the database using {@link ByteArrayType}.
      */
     private int[] bioAssaysOffset = new int[0];
+
+    /**
+     * Set of cell types assignment to individual cells.
+     * <p>
+     * This is empty if no cell types have been assigned and should always contain a preferred assignment as per
+     * {@link CellTypeAssignment#isPreferred()} if non-empty.
+     */
+    private Set<CellTypeAssignment> cellTypeAssignments = new HashSet<>();
+
+    /**
+     * Set of cell-level characteristics.
+     * <p>
+     * Cell types have a special treatment and should be added to {@link #cellTypeAssignments}.
+     */
+    private Set<CellLevelCharacteristics> cellLevelCharacteristics = new HashSet<>();
 
     /**
      * Obtain the {@link BioAssay} for a given cell position.

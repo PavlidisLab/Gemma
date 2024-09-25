@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
+import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.SessionFactory;
@@ -22,6 +23,7 @@ import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
+import ubic.gemma.model.expression.bioAssayData.GenericCellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -33,9 +35,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -348,6 +348,30 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
             assertThat( f.getCategory() ).isEqualTo( "cell type" );
             assertThat( f.getCategoryUri() ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0000324" );
         } );
+    }
+
+    @Test
+    public void testGetCellLevelCharacteristics() {
+        SingleCellDimension dimension = createSingleCellDimension();
+        int[] indices = new int[100];
+        List<Characteristic> characteristics = new ArrayList<>();
+        characteristics.add( Characteristic.Factory.newInstance( Categories.TREATMENT, "A", null ) );
+        characteristics.add( Characteristic.Factory.newInstance( Categories.TREATMENT, "B", null ) );
+        characteristics.add( Characteristic.Factory.newInstance( Categories.TREATMENT, "C", null ) );
+        for ( int i = 0; i < 100; i++ ) {
+            indices[i] = RandomUtils.nextInt( characteristics.size() + 1 ) - 1;
+        }
+        GenericCellLevelCharacteristics cellTreatments = new GenericCellLevelCharacteristics();
+        cellTreatments.setIndices( indices );
+        cellTreatments.setCharacteristics( characteristics );
+        dimension.getCellLevelCharacteristics().add( cellTreatments );
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( dimension );
+        scExpressionExperimentService.addSingleCellDataVectors( ee, vectors.iterator().next().getQuantitationType(), vectors );
+
+        assertThat( scExpressionExperimentService.getCellLevelCharacteristics( ee ) )
+                .hasSize( 2 )
+                .extracting( clc -> clc.getCharacteristics().iterator().next().getCategory() )
+                .containsExactlyInAnyOrder( "treatment", "cell type" );
     }
 
     private SingleCellDimension createSingleCellDimension() {

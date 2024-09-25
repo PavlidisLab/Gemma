@@ -5,6 +5,7 @@ import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
@@ -14,7 +15,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 public interface SingleCellExpressionExperimentService {
 
@@ -101,6 +101,11 @@ public interface SingleCellExpressionExperimentService {
     @Nullable
     @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
     CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee );
+
+    /**
+     * @see ExpressionExperimentDao#getCellLevelCharacteristics(ExpressionExperiment)
+     */
+    List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee );
 
     /**
      * Obtain the cell types of a given single-cell dataset.

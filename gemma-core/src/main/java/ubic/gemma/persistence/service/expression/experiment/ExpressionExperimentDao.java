@@ -424,6 +424,11 @@ public interface ExpressionExperimentDao
     CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee );
 
     /**
+     * Obtain all cell-level characteristics from all single cell dimensions.
+     */
+    List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee );
+
+    /**
      * Add the given cell type assignment to the single-cell dimension.
      * <p>
      * If the new labelling is preferred, any existing one is marked as non-preferred.

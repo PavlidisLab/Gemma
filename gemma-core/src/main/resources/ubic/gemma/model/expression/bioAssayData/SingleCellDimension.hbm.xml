@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
-
-<hibernate-mapping>
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
     <class name="ubic.gemma.model.expression.bioAssayData.SingleCellDimension"
            table="SINGLE_CELL_DIMENSION" mutable="false">
         <cache usage="read-only"/>
@@ -34,6 +33,12 @@
                 <column name="SINGLE_CELL_DIMENSION_FK" sql-type="BIGINT"/>
             </key>
             <one-to-many class="ubic.gemma.model.expression.bioAssayData.CellTypeAssignment"/>
+        </set>
+        <set name="cellLevelCharacteristics" lazy="true" fetch="select" cascade="all-delete-orphan">
+            <key foreign-key="CELL_LEVEL_CHARACTERISTICS_SINGLE_SINGLE_CELL_DIMENSION_FKC">
+                <column name="SINGLE_CELL_DIMENSION_FK" sql-type="BIGINT"/>
+            </key>
+            <one-to-many class="ubic.gemma.model.expression.bioAssayData.GenericCellLevelCharacteristics"/>
         </set>
         <list name="bioAssays" table="BIO_ASSAYS2SINGLE_CELL_DIMENSIONS" lazy="false" fetch="select" mutable="false">
             <cache usage="read-only"/>
