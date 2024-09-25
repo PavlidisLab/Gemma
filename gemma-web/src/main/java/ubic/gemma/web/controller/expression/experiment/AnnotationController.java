@@ -113,7 +113,7 @@ public class AnnotationController {
         expressionExperimentService.addCharacteristic( ee, vc );
     }
 
-    private static final long FIND_TERM_TIMEOUT_MS = 5000L;
+    private static final long FIND_TERM_TIMEOUT_MS = 30000L;
 
     /**
      * AJAX. Find terms for tagging, etc.

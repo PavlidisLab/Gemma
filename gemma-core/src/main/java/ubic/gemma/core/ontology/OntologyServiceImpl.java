@@ -302,8 +302,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         if ( StringUtils.isBlank( queryString ) )
             return Collections.emptySet();
 
-        StopWatch watch = new StopWatch();
-        watch.start();
+        StopWatch watch = StopWatch.createStarted();
 
         if ( StringUtils.isBlank( queryString ) ) {
             OntologyServiceImpl.log.warn( "The query was not valid (ended up being empty): " + queryString );
@@ -332,7 +331,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             if ( results2.isEmpty() )
                 return Collections.emptySet();
             return CharacteristicValueObject.characteristic2CharacteristicVO( this.termsToCharacteristics( results2 ) );
-        }, queryString, timeUnit.toMillis( timeout ) ) );
+        }, queryString, Math.max( timeUnit.toMillis( timeout ) - watch.getTime(), 0 ) ) );
 
         // get GO terms, if we don't already have a lot of possibilities. (might have to adjust this)
         StopWatch findGoTerms = StopWatch.createStarted();
