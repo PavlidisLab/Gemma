@@ -5,6 +5,7 @@ import org.hibernate.CacheMode;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -427,6 +428,11 @@ public interface ExpressionExperimentDao
      * Obtain all cell-level characteristics from all single cell dimensions.
      */
     List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee );
+
+    /**
+     * Obtain all cell-level characteristics from all single cell dimensions matching the given category.
+     */
+    List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee, Category category );
 
     /**
      * Add the given cell type assignment to the single-cell dimension.

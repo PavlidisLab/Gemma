@@ -2,6 +2,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
+import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -106,6 +107,11 @@ public interface SingleCellExpressionExperimentService {
      * @see ExpressionExperimentDao#getCellLevelCharacteristics(ExpressionExperiment)
      */
     List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee );
+
+    /**
+     * Obtain CLC for given category.
+     */
+    List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee, Category category );
 
     /**
      * Obtain the cell types of a given single-cell dataset.

@@ -372,6 +372,25 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
                 .hasSize( 2 )
                 .extracting( clc -> clc.getCharacteristics().iterator().next().getCategory() )
                 .containsExactlyInAnyOrder( "treatment", "cell type" );
+
+        assertThat( scExpressionExperimentService.getCellLevelCharacteristics( ee, Categories.CELL_TYPE ) )
+                .hasSize( 1 )
+                .first()
+                .satisfies( c -> {
+                    assertThat( c.getCharacteristics() ).extracting( Characteristic::getValue )
+                            .containsExactly( "A", "B" );
+                } );
+
+        assertThat( scExpressionExperimentService.getCellLevelCharacteristics( ee, Categories.TREATMENT ) )
+                .hasSize( 1 )
+                .first()
+                .satisfies( c -> {
+                    assertThat( c.getCharacteristics() ).extracting( Characteristic::getValue )
+                            .containsExactly( "A", "B", "C" );
+                } );
+
+        assertThat( scExpressionExperimentService.getCellLevelCharacteristics( ee, Categories.GENOTYPE ) )
+                .isEmpty();
     }
 
     private SingleCellDimension createSingleCellDimension() {

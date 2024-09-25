@@ -35,10 +35,7 @@ import ubic.gemma.core.profiling.StopWatchUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.description.AnnotationValueObject;
-import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -2155,6 +2152,21 @@ public class ExpressionExperimentDaoImpl
         results.addAll( getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct clc from SingleCellExpressionDataVector scedv join scedv.singleCellDimension scd join scd.cellLevelCharacteristics clc where scedv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
+                .list() );
+        return results;
+    }
+
+    @Override
+    public List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee, Category category ) {
+        List<CellLevelCharacteristics> results = new ArrayList<>();
+        if ( category.equals( Categories.CELL_TYPE ) ) {
+            results.addAll( getCellTypeAssignments( ee ) );
+        }
+        //noinspection unchecked
+        results.addAll( getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct clc from SingleCellExpressionDataVector scedv join scedv.singleCellDimension scd join scd.cellLevelCharacteristics clc join clc.characteristics c where scedv.expressionExperiment = :ee and coalesce(c.categoryUri, c.category) = :c" )
+                .setParameter( "ee", ee )
+                .setParameter( "c", category.getCategoryUri() != null ? category.getCategoryUri() : category.getCategory() )
                 .list() );
         return results;
     }

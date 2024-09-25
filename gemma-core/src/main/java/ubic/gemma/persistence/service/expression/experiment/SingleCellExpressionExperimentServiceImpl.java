@@ -12,6 +12,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataRemovedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
 import ubic.gemma.model.common.description.Categories;
+import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.protocol.Protocol;
@@ -379,6 +380,10 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         return expressionExperimentDao.getCellLevelCharacteristics( ee );
     }
 
+    public List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee, Category category ) {
+        return expressionExperimentDao.getCellLevelCharacteristics( ee, category );
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<Characteristic> getCellTypes( ExpressionExperiment ee ) {
@@ -415,6 +420,9 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 Assert.isTrue( ( k >= 0 && k < numberOfCellTypeLabels ) || k == CellLevelCharacteristics.UNKNOWN_CHARACTERISTIC,
                         String.format( "Cell type vector values must be within the [%d, %d[ range or use %d as an unknown indicator.",
                                 0, numberOfCellTypeLabels, CellLevelCharacteristics.UNKNOWN_CHARACTERISTIC ) );
+            }
+            for ( Characteristic c : labelling.getCellTypes() ) {
+                Assert.isTrue( CharacteristicUtils.hasCategory( c, Categories.CELL_TYPE ), "All cell types must have the " + Categories.CELL_TYPE + " category." );
             }
         }
         for ( CellLevelCharacteristics clc : scbad.getCellLevelCharacteristics() ) {

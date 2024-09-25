@@ -12,4 +12,5 @@ public final class Categories {
 
     public static final Category TREATMENT = new Category( "treatment", "http://www.ebi.ac.uk/efo/EFO_0000727" );
     public static final Category CELL_TYPE = new Category( "cell type", "http://www.ebi.ac.uk/efo/EFO_0000324" );
+    public static final Category GENOTYPE = new Category( "genotype", "http://www.ebi.ac.uk/efo/EFO_0000513" );
 }
