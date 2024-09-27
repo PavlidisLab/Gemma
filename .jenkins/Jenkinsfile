@@ -150,7 +150,9 @@ pipeline {
                         sh 'mvn -B test -Dgroups=SlowTest'
                         lock('database/' + params.TESTDB_URL) {
                             withCredentials([usernamePassword(credentialId: 'gemma-testdb', usernameVariable: 'testdbUser', passwordVariable: 'testdbPassword')]) {
-                                sh "mvn -B verify -DskipUnitTests -DtestJvmOptions='-Dgemma.testdb.url=${params.TESTDB_URL} -Dgemma.testdb.username=${testdbUsername} -Dgemma.testdb.password=${testdbPassword}"
+                                // testdbUser and testdbPassword are not regular environment variables, they are
+                                // substituted by Jenkins as to not be disclosed in the logs
+                                sh "mvn -B verify -DskipUnitTests -DtestJvmOptions='-Dgemma.testdb.url=${params.TESTDB_URL} -Dgemma.testdb.username=\${testdbUser} -Dgemma.testdb.password=\${testdbPassword}''"
                             }
                         }
                     }
