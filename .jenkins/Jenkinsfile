@@ -35,6 +35,7 @@ pipeline {
         // whether or not to force integration tests
         booleanParam(name: 'FORCE_INTEGRATION_TESTS', defaultValue: false, description: 'Force integration tests to be performed regardless of the branch being built.')
         booleanParam(name: 'FORCE_SLOW_TESTS', defaultValue: false, description: 'Force slow tests to be performed regardless of the branch being built.')
+        booleanParam(name: 'FORCE_SONARQUBE', defaultValue: false, description: 'Force SonarQube analysis to be performed regardless of the branch being built.')
     }
     stages {
         stage('Checkout scm') {
@@ -132,6 +133,7 @@ pipeline {
                     branch 'release-*'
                     branch 'development'
                     expression { params.FORCE_INTEGRATION_TESTS }
+                    expression { params.FORCE_SONARQUBE }
                 }
             }
             parallel {
@@ -186,6 +188,34 @@ pipeline {
                         }
                         unsuccessful {
                             setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
+                        }
+                    }
+                }
+                stage('SonarQube Analysis') {
+                    when {
+                        anyOf {
+                            branch 'master'
+                            branch 'hotfix-*'
+                            branch 'release-*'
+                            branch 'development'
+                            expression { params.FORCE_SONARQUBE }
+                        }
+                    }
+                    steps {
+                        setBuildStatus "SonarQube Analysis", "SonarQube analysis for build #${env.BUILD_NUMBER} has started...", 'PENDING'
+                        withSonarQubeEnv('UBC SonarQube') {
+                            sh "mvn sonar:sonar -Dsonar.projectKey=mslg"
+                        }
+                    }
+                    post {
+                        success {
+                            setBuildStatus "SonarQube analysis", "SonarQube analysis for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
+                        }
+                        failure {
+                            setBuildStatus "SonarQube analysis", "SonarQube analysis for build #${env.BUILD_NUMBER} failed.", 'ERROR'
+                        }
+                        unstable {
+                            setBuildStatus "SonarQube analysis", "SonarQube analysis for build #${env.BUILD_NUMBER} failed.", 'FAILURE'
                         }
                     }
                 }

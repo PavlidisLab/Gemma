@@ -165,7 +165,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 .resultType( Gene.class )
                 .resultType( GeneSet.class )
                 .maxResults( maxGeneralSearchResults )
-                .taxon( taxon ) // FIXME: this doesn't work yet
+                .taxonConstraint( taxon ) // FIXME: this doesn't work yet
                 .build();
 
         GeneSearchServiceImpl.log.debug( "getting results from searchService for " + query );

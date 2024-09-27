@@ -9,14 +9,12 @@
 package ubic.gemma.model.expression.experiment;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.measurement.MeasurementValueObject;
 
 /**
  * Each {@link FactorValue} can be associated with multiple characteristics (or with a measurement). However, for
@@ -157,17 +155,6 @@ public class FactorValueValueObject extends AbstractFactorValueValueObject {
         this.secondObjectUri = c.getSecondObjectUri();
     }
 
-    /**
-     * @deprecated use {@link #getMeasurement()} instead, this is only named like this for the Gemma Web frontend.
-     */
-    @Deprecated
-    @Schema(description = "This property exists only if this factor value is a measurement")
-    @JsonProperty("measurement")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    public MeasurementValueObject getMeasurementObject() {
-        return getMeasurement();
-    }
-
     @Deprecated
     @Schema(description = "Use `summary` if you need a human-readable representation of this factor value or lookup the `characteristics` bag.", deprecated = true)
     public String getDescription() {
@@ -177,9 +164,9 @@ public class FactorValueValueObject extends AbstractFactorValueValueObject {
     @Deprecated
     @Schema(description = "Use `summary` if you need a human-readable representation of this factor value or lookup the `characteristics` bag.", deprecated = true)
     public String getFactorValue() {
-        if ( getMeasurement() != null ) {
+        if ( getMeasurementObject() != null ) {
             // for backward-compatibility
-            return getMeasurement().getValue();
+            return getMeasurementObject().getValue();
         }
         return getSummary();
     }

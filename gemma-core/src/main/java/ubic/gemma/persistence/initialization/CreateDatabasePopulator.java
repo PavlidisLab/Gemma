@@ -4,6 +4,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.jdbc.datasource.init.DatabasePopulator;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /**
@@ -27,11 +28,15 @@ public class CreateDatabasePopulator implements DatabasePopulator {
     @Override
     public void populate( Connection connection ) throws SQLException {
         if ( dropIfExists ) {
-            log.warn( "Dropping database " + databaseName + "..." );
-            connection.prepareStatement( "drop database if exists " + databaseName ).execute();
+            try ( PreparedStatement ps = connection.prepareStatement( "drop database if exists " + databaseName ) ) {
+                log.warn( "Dropping database " + databaseName + "..." );
+                ps.execute();
+            }
         }
-        log.info( "Creating database " + databaseName );
-        connection.prepareStatement( "create database " + databaseName + " character set utf8mb4" ).execute();
+        try ( PreparedStatement ps = connection.prepareStatement( "create database " + databaseName + " character set utf8mb4" ) ) {
+            log.info( "Creating database " + databaseName );
+            ps.execute();
+        }
     }
 
     public void setDropIfExists( boolean dropIfExists ) {

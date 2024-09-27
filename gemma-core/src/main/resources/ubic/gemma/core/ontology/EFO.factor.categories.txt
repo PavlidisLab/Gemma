@@ -1,7 +1,6 @@
 # Terms usable as 'categories' in Gemma Characteristics.
 # See bug 4272 for discussion of deprecated terms
 # Usable for all places we use categories:
-http://purl.obolibrary.org/obo/CHEBI_23367	molecular entity
 http://purl.obolibrary.org/obo/OBI_0000181	population
 http://purl.obolibrary.org/obo/CLO_0000031	cell line
 http://www.ebi.ac.uk/efo/EFO_0000324	cell type
@@ -19,7 +18,6 @@ http://www.ebi.ac.uk/efo/EFO_0000727	treatment
 http://www.ebi.ac.uk/efo/EFO_0004444	environmental history
 http://www.ebi.ac.uk/efo/EFO_0005135	strain
 http://www.ebi.ac.uk/efo/EFO_0002755	diet
-http://purl.obolibrary.org/obo/GO_0007610	behavior
 # OK for EFC and EFV but not EEtag
 http://www.ebi.ac.uk/efo/EFO_0005067	block
 http://www.ebi.ac.uk/efo/EFO_0000246	age
@@ -36,10 +34,12 @@ http://www.ebi.ac.uk/efo/EFO_0000724	timepoint
 # OK for EEtag only
 http://www.ebi.ac.uk/efo/EFO_0001426	study design
 # too rarely used to be useful
+#http://purl.obolibrary.org/obo/CHEBI_23367	molecular entity
 #http://www.ebi.ac.uk/efo/EFO_0002571	medical procedure
 #http://www.ebi.ac.uk/efo/EFO_0000470	environmental stress
 #http://www.ebi.ac.uk/efo/EFO_0000434	ecotype
 #http://www.ebi.ac.uk/efo/EFO_0001702	temperature
+#http://purl.obolibrary.org/obo/GO_0007610	behavior
 # Never to use any more for ee tags, factors, factor values.
 # But can be used for biomaterial characteristics
 #http://www.ebi.ac.uk/efo/EFO_0000562	labelling

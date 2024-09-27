@@ -247,14 +247,9 @@ public class ExpressionExperimentServiceImpl
         if ( bad.getId() == null ) {
             log.info( "Creating " + bad + "..." );
             bad = this.bioAssayDimensionService.findOrCreate( bad );
-        }
-
-        /*
-         * This is probably a more or less redundant setting, but doesn't hurt to make sure.
-         */
-        ArrayDesign vectorAd = newVectors.iterator().next().getDesignElement().getArrayDesign();
-        for ( BioAssay ba : bad.getBioAssays() ) {
-            ba.setArrayDesignUsed( vectorAd );
+            for ( RawExpressionDataVector vector : newVectors ) {
+                vector.setBioAssayDimension( bad );
+            }
         }
 
         return expressionExperimentDao.addRawDataVectors( ee, quantitationType, newVectors );
@@ -648,7 +643,7 @@ public class ExpressionExperimentServiceImpl
             }
             // recreate a clause with inferred terms
             for ( Map.Entry<SubClauseKey, Set<String>> e : termUrisBySubClause.entrySet() ) {
-                Set<OntologyTerm> terms = ontologyService.getTerms( e.getValue() );
+                Set<OntologyTerm> terms = ontologyService.getTerms( e.getValue(), Math.max( timeUnit.toMillis( timeout ) - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
                 if ( mentionedTerms != null ) {
                     mentionedTerms.addAll( terms );
                 }
@@ -806,15 +801,16 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
-     * If the term cannot be resolved via {@link OntologyService#getTerm(String)}, an attempt is done to resolve its
-     * category and assign it as its parent. This handles free-text terms that lack a value URI.
+     * If the term cannot be resolved via {@link OntologyService#getTerm(String, long, TimeUnit)}, an attempt is done to
+     * resolve its category and assign it as its parent. This handles free-text terms that lack a value URI.
      */
     @Override
     @Transactional(readOnly = true)
-    public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, int minFrequency, @Nullable Collection<String> retainedTermUris, int maxResults ) {
+    public List<CharacteristicWithUsageStatisticsAndOntologyTerm> getAnnotationsUsageFrequency( @Nullable Filters filters, @Nullable Set<Long> extraIds, @Nullable String category, @Nullable Collection<String> excludedCategoryUris, @Nullable Collection<String> excludedTermUris, int minFrequency, @Nullable Collection<String> retainedTermUris, int maxResults, long timeout, TimeUnit timeUnit ) throws TimeoutException {
+        StopWatch timer = StopWatch.createStarted();
         if ( excludedTermUris != null ) {
             try {
-                excludedTermUris = inferTermsUris( excludedTermUris, 30000 );
+                excludedTermUris = inferTermsUris( excludedTermUris, Math.max( timeUnit.toMillis( timeout ) - timer.getTime(), 0 ) );
             } catch ( TimeoutException e ) {
                 log.warn( "Inference for excluded terms too too much time to compute, will only use the original set of terms." );
             }
@@ -839,7 +835,7 @@ public class ExpressionExperimentServiceImpl
                 .flatMap( c -> Stream.of( c.getValueUri(), c.getCategoryUri() ) )
                 .filter( Objects::nonNull )
                 .collect( Collectors.toSet() );
-        Map<String, Set<OntologyTerm>> termByUri = ontologyService.getTerms( uris ).stream()
+        Map<String, Set<OntologyTerm>> termByUri = ontologyService.getTerms( uris, Math.max( timeUnit.toMillis( timeout ) - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ).stream()
                 .filter( t -> t.getUri() != null ) // should never occur, but better be safe than sorry
                 .collect( Collectors.groupingBy( OntologyTerm::getUri, Collectors.toSet() ) );
 
@@ -897,7 +893,7 @@ public class ExpressionExperimentServiceImpl
         @Nullable
         private final OntologyTerm categoryTerm;
 
-        public OntologyTermSimpleWithCategory( String uri, String term, @Nullable OntologyTerm categoryTerm ) {
+        public OntologyTermSimpleWithCategory( @Nullable String uri, String term, @Nullable OntologyTerm categoryTerm ) {
             super( uri, term );
             this.categoryTerm = categoryTerm;
         }
@@ -926,6 +922,12 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<ArrayDesign> getArrayDesignsUsed( final BioAssaySet expressionExperiment ) {
         return this.expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Gene> getGenesUsedByPreferredVectors( ExpressionExperiment experimentConstraint ) {
+        return this.expressionExperimentDao.getGenesUsedByPreferredVectors( experimentConstraint );
     }
 
     @Override

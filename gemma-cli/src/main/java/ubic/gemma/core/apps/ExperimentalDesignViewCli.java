@@ -122,7 +122,7 @@ public class ExperimentalDesignViewCli extends AbstractAuthenticatedCLI {
                 log.info( "     Value: " + value );
 
                 for ( FactorValueBasicValueObject fv : categoryMap.get( category ).get( value ) ) {
-                    if ( fv.getMeasurement() != null ) continue; // don't list individual values.
+                    if ( fv.getMeasurementObject() != null ) continue; // don't list individual values.
 
                     Long factor = fv.getId();
                     ExpressionExperimentValueObject expressionExperimentValueObject = ed2ee.get( factor2Design

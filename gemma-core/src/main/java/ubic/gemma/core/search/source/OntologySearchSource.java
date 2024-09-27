@@ -178,7 +178,12 @@ public class OntologySearchSource implements SearchSource {
         URI termUri = prepareTermUriQuery( settings );
         if ( termUri != null ) {
             OntologyResult resource;
-            OntologyTerm r2 = ontologyService.getTerm( termUri.toString() );
+            OntologyTerm r2;
+            try {
+                r2 = ontologyService.getTerm( termUri.toString(), Math.max( timeoutMs - watch.getTime(), 0L ), TimeUnit.MILLISECONDS );
+            } catch ( TimeoutException e ) {
+                throw new SearchTimeoutException( "Search timeout when attempting to retrieve " + termUri + ".", e );
+            }
             if ( r2 != null ) {
                 assert r2.getUri() != null;
                 resource = new OntologyResult( r2, EXACT_MATCH_SCORE );
@@ -299,7 +304,7 @@ public class OntologySearchSource implements SearchSource {
         // ranking results by level is costly
         boolean rankByLevel = settings.getMode().equals( SearchSettings.SearchMode.ACCURATE );
 
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits = characteristicService.findExperimentsByUris( uris, settings.getTaxon(), getLimit( results, settings ), settings.isFillResults(), rankByLevel );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits = characteristicService.findExperimentsByUris( uris, settings.getTaxonConstraint(), getLimit( results, settings ), settings.isFillResults(), rankByLevel );
 
         // collect all direct tags
         if ( hits.containsKey( ExpressionExperiment.class ) ) {

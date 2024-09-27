@@ -155,13 +155,14 @@ public class AnnotationsWebService {
         if ( StringUtils.isBlank( termUri ) ) {
             throw new BadRequestException( "The 'uri' parameter must not be blank." );
         }
-        OntologyTerm term = ontologyService.getTerm( termUri );
-        if ( term == null ) {
-            throw new NotFoundException( "No ontology term with URI " + termUri );
-        }
         try {
-            return ( parents ? ontologyService.getParents( Collections.singleton( term ), direct, true, 30, TimeUnit.SECONDS ) :
-                    ontologyService.getChildren( Collections.singleton( term ), direct, true, 30, TimeUnit.SECONDS ) ).stream()
+            StopWatch timer = StopWatch.createStarted();
+            OntologyTerm term = ontologyService.getTerm( termUri, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
+            if ( term == null ) {
+                throw new NotFoundException( "No ontology term with URI " + termUri );
+            }
+            return ( parents ? ontologyService.getParents( Collections.singleton( term ), direct, true, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) :
+                    ontologyService.getChildren( Collections.singleton( term ), direct, true, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS ) ).stream()
                     .map( t -> new AnnotationSearchResultValueObject( t.getLabel(), t.getUri(), null, null ) )
                     .collect( Collectors.toList() );
         } catch ( TimeoutException e ) {
@@ -174,7 +175,7 @@ public class AnnotationsWebService {
      *
      * @param query the search query. Either plain text, or an ontology term URI
      * @return response data object with a collection of found terms, each wrapped in a CharacteristicValueObject.
-     * @see OntologyService#findTermsInexact(String, int, Taxon) for better description of the search process.
+     * @see OntologyService#findTermsInexact(String, int, Taxon, long, TimeUnit) for better description of the search process.
      * @see CharacteristicValueObject for the output object structure.
      */
     @GET
@@ -399,7 +400,7 @@ public class AnnotationsWebService {
         SearchSettings settings = SearchSettings.builder()
                 .resultType( ExpressionExperiment.class )
                 .fillResults( false )
-                .taxon( taxon )
+                .taxonConstraint( taxon )
                 .build();
         Set<Long> ids = new HashSet<>();
         for ( String value : values ) {

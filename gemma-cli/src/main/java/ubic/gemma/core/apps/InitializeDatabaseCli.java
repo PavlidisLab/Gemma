@@ -49,7 +49,7 @@ public class InitializeDatabaseCli extends AbstractCLI {
 
     @Override
     public CommandGroup getCommandGroup() {
-        return CommandGroup.MISC;
+        return CommandGroup.SYSTEM;
     }
 
     @Override

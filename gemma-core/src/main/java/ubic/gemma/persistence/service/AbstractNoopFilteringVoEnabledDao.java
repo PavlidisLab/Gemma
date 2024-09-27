@@ -1,12 +1,9 @@
 package ubic.gemma.persistence.service;
 
 import org.hibernate.SessionFactory;
-import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.Filter;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.model.common.IdentifiableValueObject;
+import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -62,7 +59,17 @@ public abstract class AbstractNoopFilteringVoEnabledDao<O extends Identifiable, 
     }
 
     @Override
+    public Filter getFilter( String property, Filter.Operator operator, String value, SubqueryMode subqueryMode ) {
+        throw new UnsupportedOperationException( message );
+    }
+
+    @Override
     public final Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException {
+        throw new UnsupportedOperationException( message );
+    }
+
+    @Override
+    public Filter getFilter( String property, Filter.Operator operator, Collection<String> values, SubqueryMode subqueryMode ) {
         throw new UnsupportedOperationException( message );
     }
 

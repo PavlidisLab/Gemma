@@ -6,7 +6,7 @@
 
 <div style="padding-left: 15px">
 <h3>List of all ${fn:length(citationToEEs)} published papers with data in Gemma:</h3>
-To search for a paper or experiment and see more details, visit the 
+To search for a paper or experiment and see more details, visit the
 <a href="${pageContext.request.contextPath}/bibRef/searchBibRefs.html">annotated paper search page</a>.
 <br><br>
 <table>
@@ -16,7 +16,7 @@ To search for a paper or experiment and see more details, visit the
 		<c:out value="${citationToEE.key.citation}"></c:out>
 	</td>
 		<td style="padding-right: 10px">
-		<a target="_blank" href="${citationToEE.key.pubmedURL}">
+		<a target="_blank" href="${citationToEE.key.pubmedURL}" rel="noopener noreferrer">
 			<img src="${pageContext.request.contextPath}/images/pubmed.gif" alt="PubMed link"/>
 		</a>
 		</td>

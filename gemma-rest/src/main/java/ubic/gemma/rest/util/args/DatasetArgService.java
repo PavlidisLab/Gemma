@@ -1,5 +1,6 @@
 package ubic.gemma.rest.util.args;
 
+import lombok.Builder;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,7 @@ import javax.ws.rs.ServiceUnavailableException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Service
@@ -91,6 +93,18 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         return getFilters( filterArg, null, null );
     }
 
+    public Filters getFilters( FilterArg<ExpressionExperiment> filterArg, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms ) throws ServiceUnavailableException {
+        try {
+            return service.getFiltersWithInferredAnnotations( super.getFilters( filterArg ), mentionedTerms, inferredTerms, 30, TimeUnit.SECONDS );
+        } catch ( TimeoutException e ) {
+            throw new ServiceUnavailableException( "Inferring terms for the filter timed out.", DateUtils.addSeconds( new Date(), 30 ), e );
+        }
+    }
+
+    public Filters getFilters( FilterArg<ExpressionExperiment> filterArg, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms, long timeout, TimeUnit timeUnit ) throws TimeoutException {
+        return service.getFiltersWithInferredAnnotations( super.getFilters( filterArg ), mentionedTerms, inferredTerms, timeout, timeUnit );
+    }
+
     @Override
     public Sort getSort( SortArg<ExpressionExperiment> sortArg ) throws BadRequestException {
         Sort sort = super.getSort( sortArg );
@@ -106,27 +120,22 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         }
     }
 
-    public Filters getFilters( FilterArg<ExpressionExperiment> filterArg, @Nullable Collection<OntologyTerm> mentionedTerms, @Nullable Collection<OntologyTerm> inferredTerms ) throws ServiceUnavailableException {
-        try {
-            return service.getFiltersWithInferredAnnotations( super.getFilters( filterArg ), mentionedTerms, inferredTerms, 30, TimeUnit.SECONDS );
-        } catch ( TimeoutException e ) {
-            throw new ServiceUnavailableException( "Inferring terms for the filter timed out.", DateUtils.addSeconds( new Date(), 30 ), e );
-        }
-    }
-
     /**
      * Obtain the search results for a given query and highlighter.
-     * @param highlighter a highlighter to use for the query or null to ignore
-     * @throws BadRequestException if the query is empty
-     * @throws ServiceUnavailableException if the search times out
+     *
+     * @param highlighter   a highlighter to use for the query or null to ignore
+     * @param queryWarnings a collection that will receive warnings regarding the full-text query
+     * @throws BadRequestException          if the query is empty
+     * @throws ServiceUnavailableException  if the search times out
      * @throws InternalServerErrorException for any other search-related exceptions
      */
-    public List<SearchResult<ExpressionExperiment>> getResultsForSearchQuery( QueryArg query, @Nullable Highlighter highlighter ) throws BadRequestException, ServiceUnavailableException, InternalServerErrorException {
+    public List<SearchResult<ExpressionExperiment>> getResultsForSearchQuery( QueryArg query, @Nullable Highlighter highlighter, @Nullable Collection<Throwable> queryWarnings ) throws BadRequestException, ServiceUnavailableException, InternalServerErrorException {
         try {
             SearchSettings settings = SearchSettings.builder()
                     .query( query.getValue() )
                     .resultType( ExpressionExperiment.class )
                     .highlighter( highlighter )
+                    .issueReporter( queryWarnings != null ? queryWarnings::add : null )
                     .fillResults( false )
                     .build();
             return searchService.search( settings ).getByResultObjectType( ExpressionExperiment.class );
@@ -140,25 +149,25 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     }
 
     /**
-     * Shortcut for extracting the result IDs and scores from {@link #getResultsForSearchQuery(QueryArg, Highlighter)}.
-     * @see #getResultsForSearchQuery(QueryArg, Highlighter)
+     * Shortcut for extracting the result IDs and scores from {@link #getResultsForSearchQuery(QueryArg, Highlighter, Collection)}.
+     * @see #getResultsForSearchQuery(QueryArg, Highlighter, Collection)
      */
-    public Set<Long> getIdsForSearchQuery( QueryArg query, Map<Long, Double> scoreById ) {
-        List<SearchResult<ExpressionExperiment>> _results = getResultsForSearchQuery( query, null );
-        if ( scoreById != null ) {
-            for ( SearchResult<ExpressionExperiment> result : _results ) {
-                scoreById.put( result.getResultId(), result.getScore() );
-            }
+    public Set<Long> getIdsForSearchQuery( QueryArg query, Map<Long, Double> scoreById, @Nullable Collection<Throwable> queryWarnings ) {
+        List<SearchResult<ExpressionExperiment>> _results = getResultsForSearchQuery( query, null, queryWarnings );
+        for ( SearchResult<ExpressionExperiment> result : _results ) {
+            scoreById.put( result.getResultId(), result.getScore() );
         }
         return _results.stream().map( SearchResult::getResultId ).collect( Collectors.toSet() );
     }
 
     /**
-     * Shortcut for extracting the result IDs from {@link #getResultsForSearchQuery(QueryArg, Highlighter)}.
-     * @see #getResultsForSearchQuery(QueryArg, Highlighter)
+     * Shortcut for extracting the result IDs from {@link #getResultsForSearchQuery(QueryArg, Highlighter, Collection)}.
+     * @see #getResultsForSearchQuery(QueryArg, Highlighter, Collection)
      */
-    public Set<Long> getIdsForSearchQuery( QueryArg query ) {
-        return getResultsForSearchQuery( query, null ).stream().map( SearchResult::getResultId ).collect( Collectors.toSet() );
+    public Set<Long> getIdsForSearchQuery( QueryArg query, @Nullable Collection<Throwable> queryWarnings ) {
+        return getResultsForSearchQuery( query, null, queryWarnings ).stream()
+                .map( SearchResult::getResultId )
+                .collect( Collectors.toSet() );
     }
 
     /**

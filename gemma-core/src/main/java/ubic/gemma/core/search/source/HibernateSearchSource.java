@@ -236,7 +236,7 @@ public class HibernateSearchSource implements FieldAwareSearchSource, Initializi
         if ( settings.isFillResults() ) {
             //noinspection unchecked
             T entity = ( T ) row[0];
-            if ( row[0] == null ) {
+            if ( entity == null || entity.getId() == null ) {
                 // this happens if an entity is still in the cache, but was removed from the database
                 return null;
             }

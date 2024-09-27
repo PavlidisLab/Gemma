@@ -3,7 +3,8 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
 
-    <class name="ubic.gemma.model.expression.bioAssayData.BioAssayDimension" table="BIO_ASSAY_DIMENSION" mutable="false">
+    <class name="ubic.gemma.model.expression.bioAssayData.BioAssayDimension" table="BIO_ASSAY_DIMENSION"
+           mutable="false">
         <cache usage="read-only"/>
         <id name="id" type="java.lang.Long" unsaved-value="null">
             <column name="ID" sql-type="BIGINT"/>
@@ -25,7 +26,7 @@
                 <column name="BIO_ASSAY_DIMENSIONS_FK" sql-type="BIGINT"/>
             </key>
             <list-index column="ORDERING"/>
-            <many-to-many class="ubic.gemma.model.expression.bioAssay.BioAssay">
+            <many-to-many class="ubic.gemma.model.expression.bioAssay.BioAssay" foreign-key="BIO_ASSAYS_FKC">
                 <column name="BIO_ASSAYS_FK" sql-type="BIGINT"/>
             </many-to-many>
         </list>

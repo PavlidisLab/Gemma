@@ -113,6 +113,14 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
         ee = experimentService.thaw( ee );
 
+        ArrayDesign originalPlatform = arrayDesignService.findByShortName( "GPL13112" );
+        assertNotNull( originalPlatform );
+
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            assertNull( ba.getOriginalPlatform() );
+            assertEquals( originalPlatform, ba.getArrayDesignUsed() );
+        }
+
         List<BioAssay> bioAssays = new ArrayList<>( ee.getBioAssays() );
         assertEquals( 31, bioAssays.size() );
 
@@ -153,10 +161,6 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
          */
         dataUpdater.replaceData( ee, targetArrayDesign, data );
 
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
-        }
-
         ee = experimentService.thaw( ee );
 
         Set<QuantitationType> qts = ee.getRawExpressionDataVectors().stream()
@@ -166,6 +170,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         assertEquals( 2, ee.getQuantitationTypes().size() );
 
         for ( BioAssay ba : ee.getBioAssays() ) {
+            assertEquals( originalPlatform, ba.getOriginalPlatform() );
             assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
         }
 

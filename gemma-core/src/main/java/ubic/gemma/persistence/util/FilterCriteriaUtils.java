@@ -80,6 +80,8 @@ public class FilterCriteriaUtils {
                 }
             case like:
                 return Restrictions.like( property, escapeLike( ( String ) Objects.requireNonNull( filter.getRequiredValue(), "Required value cannot be null for the like operator." ) ), MatchMode.START );
+            case notLike:
+                return Restrictions.not( Restrictions.like( property, escapeLike( ( String ) Objects.requireNonNull( filter.getRequiredValue(), "Required value cannot be null for the like operator." ) ), MatchMode.START ) );
             case lessThan:
                 return Restrictions.lt( property, filter.getRequiredValue() );
             case greaterThan:
@@ -94,6 +96,12 @@ public class FilterCriteriaUtils {
                 }
                 //noinspection rawtypes,unchecked
                 return Restrictions.in( property, optimizeParameterList( ( Collection ) filter.getRequiredValue() ) );
+            case notIn:
+                if ( !( filter.getRequiredValue() instanceof Collection ) ) {
+                    throw new IllegalArgumentException( "Required value must be a non-null collection for the 'in' operator." );
+                }
+                //noinspection rawtypes,unchecked
+                return Restrictions.not( Restrictions.in( property, optimizeParameterList( ( Collection ) filter.getRequiredValue() ) ) );
             default:
                 throw new IllegalStateException( "Unexpected operator for filter: " + filter.getOperator() );
         }

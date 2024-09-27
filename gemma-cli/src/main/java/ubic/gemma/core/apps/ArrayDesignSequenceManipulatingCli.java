@@ -184,7 +184,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     // Better semantics
-    boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
+    protected boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
             Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
 
         if ( isAutoSeek() ) {
@@ -195,7 +195,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
             return true;
 
         List<AuditEvent> events = this.getEvents( arrayDesign, eventClass );
-        if ( events.size() == 0 ) {
+        if ( events.isEmpty() ) {
             return true; // always do it, it's never been done.
         }
         // return true if the last time was older than the limit time.
@@ -218,7 +218,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
             }
             arrayDesignsToProcess.add( ad );
         }
-        if ( arrayDesignsToProcess.size() == 0 ) {
+        if ( arrayDesignsToProcess.isEmpty() ) {
             throw new RuntimeException( "There were no valid platforms specified" );
         }
     }
@@ -261,9 +261,9 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
         }
 
         List<AuditEvent> eventsOfCurrentType = this.getEvents( arrayDesign, eventClass );
-        List<AuditEvent> allEvents = ( List<AuditEvent> ) arrayDesign.getAuditTrail().getEvents();
+        List<AuditEvent> allEvents = arrayDesign.getAuditTrail().getEvents();
 
-        if ( eventsOfCurrentType.size() == 0 ) {
+        if ( eventsOfCurrentType.isEmpty() ) {
             // it's never been run.
             return true;
         }

@@ -29,7 +29,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.FMAOntologyService;
 import ubic.basecode.ontology.search.OntologySearchResult;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.tasks.maintenance.IndexerTask;
@@ -43,13 +42,15 @@ import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -161,7 +162,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
                 .useIndices( false )
                 .build();
 
-        Collection<OntologySearchResult<OntologyTerm>> ontologyhits = ontologyService.findTerms( "brain", 100 );
+        Collection<OntologySearchResult<OntologyTerm>> ontologyhits = ontologyService.findTerms( "brain", 100, 5000, TimeUnit.MILLISECONDS );
         assertFalse( ontologyhits.isEmpty() ); // making sure this isn't a problem, rather than the search per se.
 
         SearchService.SearchResultMap found = this.searchService.search( settings );

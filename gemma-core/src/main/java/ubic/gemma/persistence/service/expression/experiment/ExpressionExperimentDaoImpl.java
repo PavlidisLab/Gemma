@@ -46,6 +46,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -67,8 +68,7 @@ import java.util.stream.Stream;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingLong;
 import static ubic.gemma.model.common.description.CharacteristicUtils.*;
-import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.EE2AD_QUERY_SPACE;
-import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.EE2C_QUERY_SPACE;
+import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.*;
 import static ubic.gemma.persistence.util.QueryUtils.*;
 
 /**
@@ -532,6 +532,8 @@ public class ExpressionExperimentDaoImpl
 
         /*
          * FIXME filtering here is going to have to be more elaborate for this to be useful.
+         *
+         * URIs checked for validity Aug 2024
          */
         Collection<AnnotationValueObject> results = new HashSet<>();
         for ( Statement c : raw ) {
@@ -982,6 +984,24 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Map<ArrayDesign, Collection<Long>> getArrayDesignsUsed( Collection<Long> eeids ) {
         return CommonQueries.getArrayDesignsUsed( eeids, this.getSessionFactory().getCurrentSession() );
+    }
+
+    @Override
+    public Collection<Gene> getGenesUsedByPreferredVectors( ExpressionExperiment experimentConstraint ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                // using distinct for multi-mapping probes to prevent duplicated genes
+                .createSQLQuery( "select distinct {G.*} from PROCESSED_EXPRESSION_DATA_VECTOR pedv "
+                        + "join GENE2CS on pedv.DESIGN_ELEMENT_FK = GENE2CS.CS "
+                        + "join CHROMOSOME_FEATURE G on GENE2CS.GENE = G.ID "
+                        + "where pedv.EXPRESSION_EXPERIMENT_FK = :eeId" )
+                .addEntity( "G", Gene.class )
+                .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
+                .addSynchronizedEntityClass( ArrayDesign.class )
+                .addSynchronizedEntityClass( CompositeSequence.class )
+                .addSynchronizedEntityClass( Gene.class )
+                .setParameter( "eeId", experimentConstraint.getId() )
+                .list();
     }
 
     @Override
@@ -2078,6 +2098,7 @@ public class ExpressionExperimentDaoImpl
         Hibernate.initialize( ee.getExperimentalDesign() );
         Hibernate.initialize( ee.getCurationDetails() );
         Hibernate.initialize( ee.getGeeq() );
+        Hibernate.initialize( ee.getCharacteristics() );
     }
 
     @Override

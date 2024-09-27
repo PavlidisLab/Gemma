@@ -196,16 +196,28 @@ public class Filter implements PropertyMapping {
         return new Filter( objectAlias, propertyName, propertyType, operator, parseRequiredValues( requiredValues, propertyType ), null );
     }
 
+    /**
+     * Negate the given filter.
+     * <p>
+     * If the required value is a subquery, the subquery itself is negated.
+     */
+    public static Filter not( Filter f ) {
+        return new Filter( f.objectAlias, f.propertyName, f.propertyType, negateOperator( f.operator ), f.requiredValue, f.originalProperty );
+    }
+
     public enum Operator {
         eq( "=", false, null ),
         notEq( "!=", false, null ),
         like( "like", true, String.class ),
+        notLike( "not like", true, String.class ),
         lessThan( "<", true, null ),
         greaterThan( ">", true, null ),
         lessOrEq( "<=", true, null ),
         greaterOrEq( ">=", true, null ),
         in( "in", true, Collection.class ),
-        inSubquery( "in", true, Subquery.class );
+        notIn( "not in", true, Collection.class ),
+        inSubquery( "in", true, Subquery.class ),
+        notInSubquery( "not in", true, Subquery.class );
 
         /**
          * Token used when parsing filter input.
@@ -343,6 +355,37 @@ public class Filter implements PropertyMapping {
             return conversionService.convert( rv, pt );
         } catch ( ConversionException e ) {
             throw new IllegalArgumentException( e );
+        }
+    }
+
+    private static Filter.Operator negateOperator( Filter.Operator op ) {
+        switch ( op ) {
+            case eq:
+                return Filter.Operator.notEq;
+            case notEq:
+                return Filter.Operator.eq;
+            case like:
+                return Filter.Operator.notLike;
+            case notLike:
+                return Filter.Operator.like;
+            case lessThan:
+                return Filter.Operator.greaterOrEq;
+            case greaterThan:
+                return Filter.Operator.lessOrEq;
+            case lessOrEq:
+                return Filter.Operator.greaterThan;
+            case greaterOrEq:
+                return Filter.Operator.lessThan;
+            case in:
+                return Filter.Operator.notIn;
+            case notIn:
+                return Filter.Operator.in;
+            case inSubquery:
+                return Filter.Operator.notInSubquery;
+            case notInSubquery:
+                return Filter.Operator.inSubquery;
+            default:
+                throw new IllegalArgumentException( "Don't know how to negate " + op + "." );
         }
     }
 }

@@ -714,6 +714,13 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         assertEquals( 10, ee.getNumberOfDataVectors().intValue() );
     }
 
+    @Test
+    public void testGetGenesUsedByProcessedVectors() {
+        ExpressionExperiment ee = createExpressionExperimentWithProcessedVectors();
+        Assertions.assertThat( expressionExperimentDao.getGenesUsedByPreferredVectors( ee ) )
+                .isEmpty();
+    }
+
     private ExpressionExperiment reload( ExpressionExperiment e ) {
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().evict( e );

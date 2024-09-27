@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
 import ubic.gemma.core.analysis.expression.diff.GeneDifferentialExpressionService;
@@ -479,7 +480,7 @@ public class DEDVController {
 
         Collection<DoubleVectorValueObject> dedvs;
         if ( geneIds == null || geneIds.isEmpty() ) {
-            dedvs = processedExpressionDataVectorService.getRandomProcessedDataArrays( ees.iterator().next(), SAMPLE_SIZE  );
+            dedvs = processedExpressionDataVectorService.getRandomProcessedDataArrays( ees.iterator().next(), SAMPLE_SIZE );
             if ( dedvs.size() > SAMPLE_SIZE ) {
                 dedvs = new ArrayList<>( dedvs ).subList( 0, SAMPLE_SIZE );
             }
@@ -568,8 +569,8 @@ public class DEDVController {
     /**
      * Handle case of text export of the results.
      */
-    @RequestMapping("/downloadDEDV.html")
-    public ModelAndView handleRequestInternal( HttpServletRequest request ) {
+    @RequestMapping(value = "/downloadDEDV.html", method = RequestMethod.GET)
+    public ModelAndView downloadDEDV( HttpServletRequest request ) {
 
         StopWatch watch = new StopWatch();
         watch.start();
@@ -577,8 +578,8 @@ public class DEDVController {
         Collection<Long> geneIds = ControllerUtils.extractIds( request.getParameter( "g" ) ); // might not be any
         Collection<Long> eeIds = ControllerUtils.extractIds( request.getParameter( "ee" ) ); // might not be there
 
-        ModelAndView mav = new ModelAndView( new TextView() );
-        if ( eeIds == null || eeIds.isEmpty() ) {
+        ModelAndView mav = new ModelAndView( new TextView( "tab-separated-values" ) );
+        if ( eeIds.isEmpty() ) {
             mav.addObject( "text", "Input empty for finding DEDVs: " + geneIds + " and " + eeIds );
             return mav;
         }
@@ -586,7 +587,7 @@ public class DEDVController {
         String threshSt = request.getParameter( "thresh" );
         String resultSetIdSt = request.getParameter( "rs" );
 
-        Double thresh = 100.0;
+        double thresh = 100.0;
         if ( StringUtils.isNotBlank( threshSt ) ) {
             try {
                 thresh = Double.parseDouble( threshSt );
@@ -602,7 +603,7 @@ public class DEDVController {
             Long eeId = eeIds.iterator().next();
 
             Map<ProbeLoading, DoubleVectorValueObject> topLoadedVectors = this.svdService
-                    .getTopLoadedVectors( eeId, component, thresh.intValue() );
+                    .getTopLoadedVectors( eeId, component, ( int ) thresh );
 
             if ( topLoadedVectors == null )
                 return null;
@@ -667,7 +668,7 @@ public class DEDVController {
 
         mav.addObject( "text", format4File( result ) );
         watch.stop();
-        Long time = watch.getTime();
+        long time = watch.getTime();
 
         if ( time > 100 ) {
             log.info(

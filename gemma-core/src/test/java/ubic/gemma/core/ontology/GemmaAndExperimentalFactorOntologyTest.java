@@ -27,6 +27,8 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
@@ -124,8 +126,8 @@ public class GemmaAndExperimentalFactorOntologyTest extends AbstractJUnit4Spring
     private OntologyService ontologyService;
 
     @Test
-    public void testInferenceInGemma() {
-        OntologyTerm overexpression = ontologyService.getTerm( "http://gemma.msl.ubc.ca/ont/TGEMO_00004" );
+    public void testInferenceInGemma() throws TimeoutException {
+        OntologyTerm overexpression = ontologyService.getTerm( "http://gemma.msl.ubc.ca/ont/TGEMO_00004", 5000, TimeUnit.MILLISECONDS );
         assertNotNull( overexpression );
 
         assertThat( gemmaOntologyService.getParents( Collections.singleton( overexpression ), false, false ) )
@@ -141,7 +143,7 @@ public class GemmaAndExperimentalFactorOntologyTest extends AbstractJUnit4Spring
                         "http://purl.obolibrary.org/obo/BFO_0000015" );
 
         // ensure that parents are combined when using the OS
-        assertThat( ontologyService.getParents( Collections.singleton( overexpression ), false, false ) )
+        assertThat( ontologyService.getParents( Collections.singleton( overexpression ), false, false, 5000, TimeUnit.MILLISECONDS ) )
                 .extracting( OntologyTerm::getUri )
                 .containsExactlyInAnyOrder(
                         "http://www.ebi.ac.uk/efo/EFO_0000001",

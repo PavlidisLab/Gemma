@@ -40,7 +40,6 @@ import ubic.gemma.web.persistence.SessionListManager;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -344,7 +343,7 @@ public class ExpressionExperimentSetController extends BaseController {
     }
 
     @RequestMapping(value = "/showExpressionExperimentSet.html", method = RequestMethod.GET)
-    public ModelAndView showExpressionExperimentSet( HttpServletRequest request, HttpServletResponse response ) {
+    public ModelAndView showExpressionExperimentSet( HttpServletRequest request ) {
 
         ModelAndView mav = new ModelAndView( "expressionExperimentSet.detail" );
         StopWatch timer = new StopWatch();

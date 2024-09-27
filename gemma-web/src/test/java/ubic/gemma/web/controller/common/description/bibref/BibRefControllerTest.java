@@ -22,7 +22,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLParser;
@@ -31,7 +30,6 @@ import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.web.util.BaseSpringWebTest;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
@@ -53,7 +51,6 @@ public class BibRefControllerTest extends BaseSpringWebTest {
     @Autowired
     private BibliographicReferenceService brs;
     private BibliographicReference br = null;
-    private MockHttpServletRequest req = null;
 
     /*
      * Add a bibliographic reference to the database for testing purposes.
@@ -103,11 +100,9 @@ public class BibRefControllerTest extends BaseSpringWebTest {
         }
         log.debug( "testing remove" );
 
-        req = new MockHttpServletRequest( "POST", "/bibRef/deleteBibRef.html" );
+        MockHttpServletRequest req = new MockHttpServletRequest( "POST", "/bibRef/deleteBibRef.html" );
         req.addParameter( "_eventId", "delete" );
-        req.addParameter( "acc", br.getPubAccession().getAccession() );
-
-        ModelAndView mav = brc.delete( req, new MockHttpServletResponse() );
+        ModelAndView mav = brc.delete( br.getPubAccession().getAccession(), req );
         assertNotNull( mav );
         assertEquals( "bibRefView", mav.getViewName() );
     }
@@ -122,11 +117,11 @@ public class BibRefControllerTest extends BaseSpringWebTest {
             return;
         }
         /* set pubMedId to a non-existent id in gemdtest. */
-        req = new MockHttpServletRequest( "POST", "/bibRef/deleteBibRef.html" );
+        MockHttpServletRequest req = new MockHttpServletRequest( "POST", "/bibRef/deleteBibRef.html" );
         String nonexistentpubmedid = "00000000";
         req.addParameter( "acc", nonexistentpubmedid );
 
-        ModelAndView b = brc.delete( req, new MockHttpServletResponse() );
+        ModelAndView b = brc.delete( nonexistentpubmedid, req );
         assert b != null; // ?
         assertEquals( "bibRefView", b.getViewName() );
         // in addition there should be a message "0000000 not found".
@@ -145,11 +140,8 @@ public class BibRefControllerTest extends BaseSpringWebTest {
             log.error( "Test skipped due to failure to connect to NIH" );
             return;
         }
-        req = new MockHttpServletRequest( "POST", "/bibRef/bibRefView.html" );
-        req.addParameter( "accession", "" + 1294000 );
-
         try {
-            ModelAndView mav = brc.show( req, new MockHttpServletResponse() );
+            ModelAndView mav = brc.show( "1294000", null, new MockHttpServletRequest() );
             assertNotNull( mav );
             assertEquals( "bibRefView", mav.getViewName() );
         } catch ( RuntimeException e ) {
@@ -163,8 +155,7 @@ public class BibRefControllerTest extends BaseSpringWebTest {
 
     @Test
     public void testShowAllForExperiments() {
-        ModelAndView mv = brc
-                .showAllForExperiments( new MockHttpServletRequest( "GET", "/bibRef/showAllEeBibRefs.html" ), ( HttpServletResponse ) null );
+        ModelAndView mv = brc.showAllForExperiments();
         @SuppressWarnings("unchecked") Map<CitationValueObject, Collection<ExpressionExperimentValueObject>> citationToEEs = ( Map<CitationValueObject, Collection<ExpressionExperimentValueObject>> ) mv
                 .getModel().get( "citationToEEs" );
         assertNotNull( citationToEEs );

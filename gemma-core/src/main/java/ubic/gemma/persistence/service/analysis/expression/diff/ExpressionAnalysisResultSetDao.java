@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
+import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -144,4 +145,10 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
      * @param initializeFactorValues whether to initialize factor values
      */
     Map<Long, Baseline> getBaselinesForInteractionsByIds( Collection<Long> ids, boolean initializeFactorValues );
+
+    /**
+     * Obtain a histogram of the P-value distribution for a given result set.
+     */
+    @Nullable
+    Histogram loadPvalueDistribution( ExpressionAnalysisResultSet resultSet );
 }

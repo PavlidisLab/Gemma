@@ -29,6 +29,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
@@ -48,6 +49,8 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.hibernate.criterion.Restrictions.like;
+import static org.hibernate.criterion.Restrictions.not;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.EE2C_QUERY_SPACE;
 import static ubic.gemma.persistence.util.IdentifiableUtils.toIdentifiableSet;
 import static ubic.gemma.persistence.util.QueryUtils.*;
@@ -69,16 +72,18 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     @Override
     public List<Characteristic> browse( int start, int limit ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "from Characteristic where value not like 'GO_%'" ).setMaxResults( limit )
-                .setFirstResult( start ).list();
+        return this.getSessionFactory().getCurrentSession().createCriteria( elementClass )
+                .add( not( like( "valueUri", OntologyUtils.BASE_PURL_URI + "GO_", MatchMode.START ) ) )
+                .setFirstResult( start )
+                .setMaxResults( limit )
+                .list();
     }
 
     @Override
     public List<Characteristic> browse( int start, int limit, String orderField, boolean descending ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createCriteria( elementClass )
-                .add( Restrictions.not( Restrictions.like( "value", "GO_", MatchMode.START ) ) )
+                .add( not( like( "valueUri", OntologyUtils.BASE_PURL_URI + "GO_", MatchMode.START ) ) )
                 .addOrder( descending ? Order.desc( orderField ) : Order.asc( orderField ) )
                 .setFirstResult( start )
                 .setMaxResults( limit )
@@ -86,12 +91,30 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Collection<? extends Characteristic> findByCategory( String query ) {
+    public Collection<Characteristic> findByCategory( String value ) {
+        //noinspection unchecked
+        return ( Collection<Characteristic> ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select char from Characteristic as char where char.category = :value" )
+                .setParameter( "value", value )
+                .list();
+    }
 
+    @Override
+    public Collection<Characteristic> findByCategoryLike( String query ) {
+        //noinspection unchecked
+        return ( Collection<Characteristic> ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select char from Characteristic as char where char.category like :search" )
+                .setParameter( "search", query )
+                .list();
+    }
+
+    @Override
+    public Collection<Characteristic> findByCategoryUri( String uri ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct char from Characteristic as char where char.category like :search" )
-                .setParameter( "search", query + "%" ).list();
+                .createQuery( "select char from Characteristic as char where char.categoryUri = :uri" )
+                .setParameter( "uri", uri )
+                .list();
     }
 
     @Override
@@ -293,7 +316,16 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Collection<Characteristic> findByValue( String search ) {
+    public Collection<Characteristic> findByValue( String value ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select char from Characteristic as char where char.value = :value" )
+                .setParameter( "value", value )
+                .list();
+    }
+
+    @Override
+    public Collection<Characteristic> findByValueLike( String search ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select char from Characteristic as char where char.value like :search " )

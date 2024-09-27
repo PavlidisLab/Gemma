@@ -64,7 +64,11 @@ public interface CharacteristicDao
     @Override
     List<Characteristic> browse( int start, int limit, String sortField, boolean descending );
 
-    Collection<? extends Characteristic> findByCategory( String query );
+    Collection<Characteristic> findByCategory( String value );
+
+    Collection<Characteristic> findByCategoryLike( String query );
+
+    Collection<Characteristic> findByCategoryUri( String uri );
 
     /**
      * This search looks at direct annotations, factor values and biomaterials in that order.
@@ -135,13 +139,15 @@ public interface CharacteristicDao
      */
     String normalizeByValue( Characteristic characteristic );
 
+    Collection<Characteristic> findByValue( String search );
+
     /**
      * Finds all Characteristics whose value match the given search term
      *
      * @param  search search
      * @return characteristics
      */
-    Collection<Characteristic> findByValue( String search );
+    Collection<Characteristic> findByValueLike( String search );
 
     /**
      * Obtain the parents (i.e. owners) of the given characteristics.

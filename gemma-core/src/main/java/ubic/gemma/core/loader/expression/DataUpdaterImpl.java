@@ -658,7 +658,7 @@ public class DataUpdaterImpl implements DataUpdater {
 
         if ( !targetPlatform.equals( originalArrayDesign ) ) {
 
-            this.switchBioAssaysToTargetPlatform( ee, targetPlatform, ee.getBioAssays() );
+            this.switchBioAssaysToTargetPlatform( ee, targetPlatform, null );
 
             auditTrailService.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class,
                     "Switched in course of updating vectors using data input (from " + originalArrayDesign
@@ -1186,26 +1186,19 @@ public class DataUpdaterImpl implements DataUpdater {
      *                        null
      * @return how many were switched
      */
-    private int switchBioAssaysToTargetPlatform( ExpressionExperiment ee, ArrayDesign targetPlatform,
-            Collection<BioAssay> toBeSwitched ) {
-
+    private int switchBioAssaysToTargetPlatform( ExpressionExperiment ee, ArrayDesign targetPlatform, @Nullable Collection<BioAssay> toBeSwitched ) {
         int i = 0;
         for ( BioAssay ba : ee.getBioAssays() ) {
             if ( toBeSwitched != null && !toBeSwitched.contains( ba ) )
                 continue;
-
             // don't clobber the original value if this is getting switched "again"
             if ( ba.getOriginalPlatform() == null ) {
                 ba.setOriginalPlatform( ba.getArrayDesignUsed() );
             }
             ba.setArrayDesignUsed( targetPlatform );
-
+            bioAssayService.update( ba );
             i++;
-
         }
-
-        experimentService.update( ee );
         return i;
     }
-
 }

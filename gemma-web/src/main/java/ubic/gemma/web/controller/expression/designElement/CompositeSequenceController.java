@@ -24,6 +24,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.core.analysis.sequence.CompositeSequenceMapValueObject;
@@ -43,7 +45,6 @@ import ubic.gemma.web.propertyeditor.SequenceTypePropertyEditor;
 import ubic.gemma.web.remote.EntityDelegator;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 
 /**
@@ -65,11 +66,8 @@ public class CompositeSequenceController extends BaseController {
     @Autowired
     private GeneService geneService;
 
-    @RequestMapping("/filter")
-    public ModelAndView filter( HttpServletRequest request, HttpServletResponse response ) {
-        String filter = request.getParameter( "filter" );
-        String arid = request.getParameter( "arid" );
-
+    @RequestMapping(value = "/filter", method = RequestMethod.GET)
+    public ModelAndView filter( @RequestParam("filter") String filter, @RequestParam("arid") String arid ) {
         ModelAndView mav = new ModelAndView( "compositeSequences.geneMap" );
 
         // Validate the filtering search criteria.
@@ -84,7 +82,7 @@ public class CompositeSequenceController extends BaseController {
                 throw new IllegalArgumentException( "Invalid search settings.", e );
             }
 
-            if ( ( compositeSequenceSummary == null ) || ( compositeSequenceSummary.size() == 0 ) ) {
+            if ( compositeSequenceSummary == null || compositeSequenceSummary.isEmpty() ) {
                 mav.getModel().put( "message", "Your search yielded no results" );
                 compositeSequenceSummary = new ArrayList<>();
             } else {
@@ -182,18 +180,15 @@ public class CompositeSequenceController extends BaseController {
         return getSummaries( css );
     }
 
-    @RequestMapping(value = "/show")
-    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
-        Long id = Long.parseLong( request.getParameter( "id" ) );
+    @RequestMapping(value = "/show", method = RequestMethod.GET)
+    public ModelAndView show( @RequestParam("id") Long id, HttpServletRequest request ) {
+        ModelAndView mav = new ModelAndView( "compositeSequence.detail" );
         CompositeSequence cs = compositeSequenceService.load( id );
         if ( cs == null ) {
             addMessage( request, "object.notfound", new Object[] { "composite sequence " + id } );
+            return mav;
         }
-
         cs = compositeSequenceService.thaw( cs );
-
-        ModelAndView mav = new ModelAndView( "compositeSequence.detail" );
-
         mav.addObject( "compositeSequence", cs );
         return mav;
     }

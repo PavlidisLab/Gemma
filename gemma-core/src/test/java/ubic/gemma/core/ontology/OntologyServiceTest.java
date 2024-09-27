@@ -17,7 +17,7 @@ import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.basecode.ontology.providers.*;
 import ubic.basecode.ontology.search.OntologySearchException;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchService;
@@ -25,9 +25,11 @@ import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
-import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -139,7 +141,7 @@ public class OntologyServiceTest extends AbstractJUnit4SpringContextTests {
         when( srm.getByResultObjectType( Gene.class ) ).thenReturn( Collections.emptyList() );
         when( searchService.search( any() ) ).thenReturn( srm );
         when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
-        ontologyService.findTermsInexact( "9-chloro-5-phenyl-3-prop-2-enyl-1,2,4,5-tetrahydro-3-benzazepine-7,8-diol", 5000, null );
+        ontologyService.findTermsInexact( "9-chloro-5-phenyl-3-prop-2-enyl-1,2,4,5-tetrahydro-3-benzazepine-7,8-diol", 5000, null, 5000, TimeUnit.MILLISECONDS );
         verify( characteristicService ).findCharacteristicsByValueUriOrValueLike( "9-chloro-5-phenyl-3-prop-2-enyl-1,2,4,5-tetrahydro-3-benzazepine-7,8-diol" );
         ArgumentCaptor<SearchSettings> captor = ArgumentCaptor.forClass( SearchSettings.class );
         verify( searchService ).search( captor.capture() );
@@ -152,15 +154,15 @@ public class OntologyServiceTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Test
-    public void testTermLackingLabelIsIgnored() {
+    public void testTermLackingLabelIsIgnored() throws TimeoutException {
         when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
 
         when( chebiOntologyService.getTerm( "http://test" ) ).thenReturn( new OntologyTermSimple( "http://test", null ) );
-        assertNull( ontologyService.getTerm( "http://test" ) );
+        assertNull( ontologyService.getTerm( "http://test", 5000, TimeUnit.MILLISECONDS ) );
 
         // provide the term from another ontology, but with a label this time
         when( obiService.isOntologyLoaded() ).thenReturn( true );
         when( obiService.getTerm( "http://test" ) ).thenReturn( new OntologyTermSimple( "http://test", "this is a test term" ) );
-        assertNotNull( ontologyService.getTerm( "http://test" ) );
+        assertNotNull( ontologyService.getTerm( "http://test", 5000, TimeUnit.MILLISECONDS ) );
     }
 }

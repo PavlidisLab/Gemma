@@ -71,7 +71,7 @@ public class SignupController extends BaseController implements InitializingBean
         }
     }
 
-    @RequestMapping(value = "/ajaxLoginCheck.html")
+    @RequestMapping(value = "/ajaxLoginCheck.html", method = RequestMethod.GET)
     public void ajaxLoginCheck( HttpServletResponse response ) throws Exception {
         JSONObject json;
         try {
@@ -93,7 +93,7 @@ public class SignupController extends BaseController implements InitializingBean
     /*
      * This is hit when a user clicks on the confirmation link they received by email.
      */
-    @RequestMapping("/confirmRegistration.html")
+    @RequestMapping(value = "/confirmRegistration.html", method = RequestMethod.GET)
     public void confirmRegistration( @RequestParam("username") String username, @RequestParam("key") String key,
             HttpServletRequest request, HttpServletResponse response ) throws Exception {
         if ( StringUtils.isBlank( username ) || StringUtils.isBlank( key ) ) {

@@ -171,8 +171,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
             try {
                 this.pubmedIds = parsePubmedIdFile( this.pubmedIdFilename );
             } catch ( IOException e ) {
-                log.error( e.getMessage() );
-                e.printStackTrace();
+                log.error( "Failed to parse PubMed ID file: " + this.pubmedIdFilename + ".", e );
             }
         }
     }

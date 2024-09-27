@@ -2175,7 +2175,7 @@ public class GeoConverterImpl implements GeoConverter {
             uri = "http://purl.obolibrary.org/obo/CHEBI_23367";
             term = "molecular entity";
         } else if ( varType.equals( VariableType.cellLine ) ) {
-            uri = "http://www.ebi.ac.uk/efo/EFO_0000322";
+            uri = "http://purl.obolibrary.org/obo/CLO_0000031";
             term = "cell line";
         } else if ( varType.equals( VariableType.cellType ) ) {
             uri = "http://www.ebi.ac.uk/efo/EFO_0000324";
@@ -2232,7 +2232,7 @@ public class GeoConverterImpl implements GeoConverter {
             term = "environmental stress";
         } else if ( varType.equals( VariableType.temperature ) ) {
             uri = "http://www.ebi.ac.uk/efo/EFO_0001702";
-            term = "Temperature";
+            term = "temperature";
         } else if ( varType.equals( VariableType.time ) ) {
             uri = "http://www.ebi.ac.uk/efo/EFO_0000724";
             term = "timepoint";

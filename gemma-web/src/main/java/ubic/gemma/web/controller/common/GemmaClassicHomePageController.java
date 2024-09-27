@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,7 @@ package ubic.gemma.web.controller.common;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.report.WhatsNew;
 import ubic.gemma.core.analysis.report.WhatsNewService;
@@ -35,7 +36,7 @@ import java.util.*;
 /**
  * Responsible for display of the Gemma home page.
  *
- * @author     joseph
+ * @author joseph
  * @deprecated
  */
 @Controller
@@ -66,7 +67,7 @@ public class GemmaClassicHomePageController {
         otherTaxa.setIsGenesUsable( false );
     }
 
-    @RequestMapping(WebConstants.CLASSIC_HOME_PAGE)
+    @RequestMapping(value = WebConstants.CLASSIC_HOME_PAGE, method = RequestMethod.GET)
     public ModelAndView showHomePage() {
 
         /*

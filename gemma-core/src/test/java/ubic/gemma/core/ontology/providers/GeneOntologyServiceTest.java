@@ -34,10 +34,10 @@ import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.ontology.search.OntologySearchResult;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
-import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -127,7 +127,7 @@ public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests im
     public final void testAllParents() {
         String id = "GO:0035242";
 
-        OntologyTerm termForId = gos.getTermForId( id );
+        OntologyTerm termForId = gos.getTerm( id );
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = termForId.getParents( false, false );
 
@@ -137,7 +137,7 @@ public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests im
     @Test
     public final void testAllParents2() {
         String id = "GO:0000006";
-        OntologyTerm termForId = gos.getTermForId( id );
+        OntologyTerm termForId = gos.getTerm( id );
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = termForId.getParents( false, false );
 
@@ -148,7 +148,7 @@ public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests im
     @Test
     public final void testAsRegularGoId() {
         String id = "GO:0000107";
-        OntologyTerm termForId = gos.getTermForId( id );
+        OntologyTerm termForId = gos.getTerm( id );
         assertNotNull( termForId );
         String formatedId = asRegularGoId( termForId );
         assertEquals( id, formatedId );
@@ -157,7 +157,7 @@ public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests im
     @Test
     public final void testGetAllChildren() {
         String id = "GO:0016791";
-        OntologyTerm termForId = gos.getTermForId( id );
+        OntologyTerm termForId = gos.getTerm( id );
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = termForId.getChildren( false, false );
 
@@ -177,7 +177,7 @@ public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests im
     @Test
     public final void testGetChildren() {
         String id = "GO:0016791";
-        OntologyTerm termForId = gos.getTermForId( id );
+        OntologyTerm termForId = gos.getTerm( id );
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = termForId.getChildren( true, false );
 
@@ -195,7 +195,7 @@ public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests im
     @Test
     public final void testGetChildrenPartOf() {
         String id = "GO:0023025";
-        OntologyTerm termForId = gos.getTermForId( id );
+        OntologyTerm termForId = gos.getTerm( id );
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = termForId.getChildren( false, true );
 
@@ -206,7 +206,7 @@ public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests im
     @Test
     public final void testGetParents() {
         String id = "GO:0000014";
-        OntologyTerm termForId = gos.getTermForId( id );
+        OntologyTerm termForId = gos.getTerm( id );
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = termForId.getParents( true, false );
 
@@ -219,7 +219,7 @@ public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests im
     @Test
     public final void testGetParentsPartOf() {
         String id = "GO:0000332";
-        OntologyTerm termForId = gos.getTermForId( id );
+        OntologyTerm termForId = gos.getTerm( id );
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = termForId.getParents( false, true );
 
@@ -233,7 +233,7 @@ public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests im
     @Test
     public final void testGetTermForId() {
         String id = "GO:0000310";
-        OntologyTerm termForId = gos.getTermForId( id );
+        OntologyTerm termForId = gos.getTerm( id );
         assertNotNull( termForId );
         assertEquals( "xanthine phosphoribosyltransferase activity", termForId.getLabel() );
     }

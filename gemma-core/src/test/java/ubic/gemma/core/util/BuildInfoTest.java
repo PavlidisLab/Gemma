@@ -12,6 +12,9 @@ import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.core.context.TestComponent;
 
+import java.util.Calendar;
+import java.util.Date;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assume.assumeTrue;
@@ -42,17 +45,25 @@ public class BuildInfoTest extends AbstractJUnit4SpringContextTests {
     @Test
     public void test() {
         assertEquals( "1.0.0", buildInfo.getVersion() );
-        assertNotNull( buildInfo.getTimestamp() );
         assertEquals( "1234", buildInfo.getGitHash() );
+        assertEquals( new Date( 2023 - 1900, Calendar.NOVEMBER, 8, 16, 26, 2 ), buildInfo.getTimestamp() );
     }
 
     @Test
     public void testFromClasspath() {
         assumeTrue( "Make sure that Gemma is build with Maven so that version.properties is generated.",
                 getClass().getResource( "/ubic/gemma/version.properties" ) != null );
-        buildInfo = BuildInfo.fromClasspath();
+        BuildInfo buildInfo = BuildInfo.fromClasspath();
         assertNotNull( buildInfo.getVersion() );
         assertNotNull( buildInfo.getTimestamp() );
         assertNotNull( buildInfo.getGitHash() );
+    }
+
+    @Test
+    public void testParseMaven311BuildTimestamp() {
+        BuildInfo buildInfo = new BuildInfo( "1.0.0", "20240910-1218", "1234" );
+        assertEquals( "1.0.0", buildInfo.getVersion() );
+        assertEquals( "1234", buildInfo.getGitHash() );
+        assertEquals( new Date( 2024 - 1900, Calendar.SEPTEMBER, 10, 12, 18 ), buildInfo.getTimestamp() );
     }
 }
