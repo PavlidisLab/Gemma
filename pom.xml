@@ -502,7 +502,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.3.1</version>
 				<configuration>
-					<argLine>${jvmOptions} ${testJvmOptions}</argLine>
+					<argLine>${jvmOptions}</argLine>
 					<redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
 					<includes>
 						<include>**/*Test.java</include>
@@ -517,7 +517,7 @@
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>3.3.1</version>
 				<configuration>
-					<argLine>${jvmOptions} ${testJvmOptions}</argLine>
+					<argLine>${jvmOptions}</argLine>
 					<redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
 					<includes>
 						<include>**/*Test.java</include>
@@ -772,7 +772,5 @@
 			<!-- this flag is ignored starting Java 17 -->
 			--add-opens=java.base/java.lang=ALL-UNNAMED
 		</jvmOptions>
-		<!-- JVM options specific for tests -->
-		<testJvmOptions/>
 	</properties>
 </project>
