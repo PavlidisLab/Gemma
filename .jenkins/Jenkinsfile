@@ -1,5 +1,6 @@
 //file:noinspection GrUnresolvedAccess
 
+def testdbUrl
 def gemmaVersion
 def baseCodeVersion
 def dataDir
@@ -34,13 +35,13 @@ pipeline {
         // whether or not to force integration tests
         booleanParam(name: 'FORCE_INTEGRATION_TESTS', defaultValue: false, description: 'Force integration tests to be performed regardless of the branch being built.')
         booleanParam(name: 'FORCE_SONARQUBE', defaultValue: false, description: 'Force SonarQube analysis to be performed regardless of the branch being built.')
-        string(name: 'TESTDB_URL', defaultValue: 'jdbc:mysql://prod-db/gemdtest?useSSL=false', description: 'URL to access the test database')
     }
     stages {
         stage('Checkout scm') {
             steps {
                 checkout scm
                 script {
+                    testdbUrl = sh script: 'mvn help:evaluate -Dexpression=gemma.testdb.build.url -q -DforceStdout', returnStdout: true
                     gemmaVersion = sh script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true
                     baseCodeVersion = sh script: 'mvn help:evaluate -Dartifact=baseCode:baseCode -Dexpression=project.version -q -DforceStdout', returnStdout: true
                     if (env.BRANCH_NAME == "master" && gemmaVersion.endsWith("-SNAPSHOT")) {
@@ -148,10 +149,8 @@ pipeline {
                     steps {
                         setBuildStatus "Integration tests", "Integration tests #${env.BUILD_NUMBER} have started...", 'PENDING'
                         sh 'mvn -B test -Dgroups=SlowTest'
-                        lock('database/' + params.TESTDB_URL) {
-                            withCredentials([usernamePassword(credentialId: 'gemma-testdb', usernameVariable: 'testdbUser', passwordVariable: 'testdbPassword')]) {
-                                sh "mvn -B verify -DskipUnitTests -DtestJvmOptions='-Dgemma.testdb.url=${params.TESTDB_URL} -Dgemma.testdb.username=${testdbUsername} -Dgemma.testdb.password=${testdbPassword}"
-                            }
+                        lock('database/' + testdbUrl) {
+                            sh 'mvn -B verify -DskipUnitTests'
                         }
                     }
                     post {
