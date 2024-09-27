@@ -124,6 +124,4 @@ public interface DifferentialExpressionResultService extends BaseReadOnlyService
      * @return map of result to contrasts value object.
      */
     Map<Long, ContrastsValueObject> loadContrastDetailsForResults( Collection<Long> ids );
-
-    Histogram loadPvalueDistribution( Long analysisResultSetId );
 }

@@ -7,12 +7,9 @@ import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.Filter;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.model.common.IdentifiableValueObject;
+import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -174,14 +171,28 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
         return null;
     }
 
+    @Override
     public Filter getFilter( String property, Filter.Operator operator, String value ) throws IllegalArgumentException {
         checkIfPropertyIsAccessible( property );
         return voDao.getFilter( property, operator, value );
     }
 
+    @Override
+    public Filter getFilter( String property, Filter.Operator operator, String value, SubqueryMode subqueryMode ) throws IllegalArgumentException {
+        checkIfPropertyIsAccessible( property );
+        return voDao.getFilter( property, operator, value, subqueryMode );
+    }
+
+    @Override
     public Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException {
         checkIfPropertyIsAccessible( property );
         return voDao.getFilter( property, operator, values );
+    }
+
+    @Override
+    public Filter getFilter( String property, Filter.Operator operator, Collection<String> values, SubqueryMode subqueryMode ) throws IllegalArgumentException {
+        checkIfPropertyIsAccessible( property );
+        return voDao.getFilter( property, operator, values, subqueryMode );
     }
 
     @Override
@@ -196,6 +207,7 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
         return voDao.getFilter( property, propertyType, operator, values );
     }
 
+    @Override
     public Sort getSort( String property, @Nullable Sort.Direction direction ) throws IllegalArgumentException {
         checkIfPropertyIsAccessible( property );
         return voDao.getSort( property, direction );

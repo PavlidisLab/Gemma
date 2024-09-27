@@ -13,9 +13,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
-import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.rest.util.JacksonConfig;
 import ubic.gemma.rest.util.OpenApiFactory;
 
@@ -38,7 +38,7 @@ public class WebApplicationExceptionMapperTest extends JerseyTest {
 
         @Bean
         public static TestPropertyPlaceholderConfigurer propertyPlaceholderConfigurer() {
-            return new TestPropertyPlaceholderConfigurer( "gemma.version=1.0.0", "gemma.build.timestamp=2024-05-20T04:41:58Z", "gemma.build.gitHash=1234" );
+            return new TestPropertyPlaceholderConfigurer( "gemma.version=1.0.0", "gemma.build.timestamp=2024-05-20T04:41:58Z", "gemma.build.gitHash=1234", "gemma.hosturl=http://localhost:8080" );
         }
 
         @Bean
@@ -105,7 +105,7 @@ public class WebApplicationExceptionMapperTest extends JerseyTest {
                 .extracting( "response" )
                 .extracting( "entity" )
                 .asInstanceOf( InstanceOfAssertFactories.INPUT_STREAM )
-                .hasContent( String.format( "Version: %s\nBuild info: %s\nMessage: test", version, buildInfo ) );
+                .hasContent( String.format( "Request method: GET\nRequest URI: http://localhost:8080/custom\nVersion: %s\nBuild info: %s\nMessage: test", version, buildInfo ) );
     }
 
     @Test

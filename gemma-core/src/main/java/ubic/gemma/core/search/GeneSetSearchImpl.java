@@ -28,6 +28,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.search.lucene.LuceneQueryUtils;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -104,7 +105,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     @Override
     @Nullable
     public GeneSet findByGoId( String goId, @Nullable Taxon taxon ) {
-        OntologyTerm goTerm = geneOntologyService.getTermForId( StringUtils.strip( goId ) );
+        OntologyTerm goTerm = geneOntologyService.getTerm( StringUtils.strip( goId ) );
 
         if ( goTerm == null ) {
             return null;
@@ -128,7 +129,11 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         try {
             matches = this.geneOntologyService.findTerm( StringUtils.strip( goTermName ), 500 );
         } catch ( OntologySearchException e ) {
-            throw new BaseCodeOntologySearchException( e );
+            try {
+                matches = this.geneOntologyService.findTerm( LuceneQueryUtils.escape( StringUtils.strip( goTermName ) ), 500 );
+            } catch ( OntologySearchException e1 ) {
+                throw new BaseCodeOntologySearchException( e );
+            }
         }
 
         Collection<GeneSet> results = new HashSet<>();
@@ -212,7 +217,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
 
 
     private Collection<GeneSet> findByGoId( String query ) {
-        OntologyTerm goTerm = geneOntologyService.getTermForId( StringUtils.strip( query ) );
+        OntologyTerm goTerm = geneOntologyService.getTerm( StringUtils.strip( query ) );
 
         if ( goTerm == null ) {
             return new HashSet<>();
@@ -241,13 +246,14 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         /*
          * Gather up uris
          */
-        Collection<String> termsToFetch = new HashSet<>();
+        Collection<String> uris = new HashSet<>();
         for ( OntologyTerm t : allMatches ) {
-            String goId = this.uri2goid( t );
-            termsToFetch.add( goId );
+            if ( t.getUri() != null ) {
+                uris.add( t.getUri() );
+            }
         }
 
-        Collection<Gene> genes = this.gene2GoService.findByGOTerms( termsToFetch, taxon );
+        Collection<Gene> genes = this.gene2GoService.findByGOTermUris( uris, taxon );
 
         if ( genes.isEmpty() || ( maxGeneSetSize != null && genes.size() > maxGeneSetSize ) ) {
             return null;
@@ -286,11 +292,12 @@ public class GeneSetSearchImpl implements GeneSetSearch {
          */
         Collection<String> termsToFetch = new HashSet<>();
         for ( OntologyTerm t : allMatches ) {
-            String goId = this.uri2goid( t );
-            termsToFetch.add( goId );
+            if ( t.getUri() != null ) {
+                termsToFetch.add( t.getUri() );
+            }
         }
 
-        Map<Taxon, Collection<Gene>> genesByTaxon = this.gene2GoService.findByGOTermsPerTaxon( termsToFetch );
+        Map<Taxon, Collection<Gene>> genesByTaxon = this.gene2GoService.findByGOTermUrisPerTaxon( termsToFetch );
 
         Collection<GeneSet> results = new HashSet<>();
         for ( Taxon t : genesByTaxon.keySet() ) {

@@ -101,7 +101,7 @@ public class GeneOntologyService2Test extends AbstractJUnit4SpringContextTests i
     public final void testParents() {
         String id = "GO:0034118"; // regulation of erythrocyte aggregation
 
-        OntologyTerm termForId = gos.getTermForId( id );
+        OntologyTerm termForId = gos.getTerm( id );
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = termForId.getParents( true, false );
         assertEquals( 1, terms.size() );
@@ -114,7 +114,7 @@ public class GeneOntologyService2Test extends AbstractJUnit4SpringContextTests i
     public final void testAllParents() {
         String id = "GO:0034118"; // regulation of erythrocyte aggregation
 
-        OntologyTerm termForId = gos.getTermForId( id );
+        OntologyTerm termForId = gos.getTerm( id );
         assertNotNull( termForId );
         Collection<OntologyTerm> terms = termForId.getParents( false, false );
 

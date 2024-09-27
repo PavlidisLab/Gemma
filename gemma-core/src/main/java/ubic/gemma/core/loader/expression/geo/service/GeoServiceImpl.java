@@ -942,16 +942,17 @@ public class GeoServiceImpl extends AbstractGeoService {
         if ( platforms.size() == 0 )
             throw new IllegalStateException( "Series has no platforms" );
         for ( GeoPlatform pl : platforms ) {
+
+            if ( expressionExperimentService.isBlackListed( pl.getGeoAccession() ) ) {
+                throw new IllegalArgumentException(
+                        "A platform used by " + series.getGeoAccession() + " is blacklisted: " + pl.getGeoAccession() );
+            }
+
             /*
              * We suppress the analysis of the array design if it is not supported (i.e. MPSS or exon arrays)
              */
             if ( !pl.useDataFromGeo() ) {
                 continue;
-            }
-
-            if ( expressionExperimentService.isBlackListed( pl.getGeoAccession() ) ) {
-                throw new IllegalArgumentException(
-                        "A platform used by " + series.getGeoAccession() + " is blacklisted: " + pl.getGeoAccession() );
             }
 
             this.matchToExistingPlatform( geoConverter, pl, c );

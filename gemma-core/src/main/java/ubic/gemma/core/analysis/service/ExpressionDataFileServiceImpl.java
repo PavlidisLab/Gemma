@@ -19,13 +19,14 @@
 package ubic.gemma.core.analysis.service;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 import ubic.basecode.util.FileTools;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
@@ -33,7 +34,6 @@ import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -62,8 +62,12 @@ import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.io.*;
-import java.nio.file.Paths;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -82,6 +86,12 @@ import java.util.zip.ZipOutputStream;
 public class ExpressionDataFileServiceImpl extends AbstractFileService<ExpressionExperiment> implements ExpressionDataFileService {
 
     private static final Log log = LogFactory.getLog( ArrayDesignAnnotationServiceImpl.class.getName() );
+
+    private static final String DATA_ARCHIVE_FILE_SUFFIX = ".zip";
+    private static final String DATA_FILE_SUFFIX = ".data.txt";
+    private static final String DATA_FILE_SUFFIX_COMPRESSED = DATA_FILE_SUFFIX + ".gz";
+    private static final String JSON_FILE_SUFFIX = ".data.json.gz";
+
     private static final String MSG_FILE_EXISTS = " File (%s) exists, not regenerating";
     private static final String MSG_FILE_FORCED = "Forcing file (%s) regeneration";
     private static final String MSG_FILE_NOT_EXISTS = "File (%s) does not exist or can not be accessed ";
@@ -111,6 +121,12 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
     private CoexpressionService gene2geneCoexpressionService = null;
     @Autowired
     private RawAndProcessedExpressionDataVectorService rawAndProcessedExpressionDataVectorService;
+
+    @Value("${gemma.appdata.home}/metadata")
+    private Path metadataDir;
+
+    @Value("${gemma.appdata.home}/dataFiles")
+    private Path dataDir;
 
     @Override
     public void analysisResultSetsToString( Collection<ExpressionAnalysisResultSet> results,
@@ -244,52 +260,35 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
         return getDiffExpressionAnalysisArchiveFile( analysis, forceCreate );
     }
 
-    @Override
-    public File getOutputFile( ExpressionExperiment ee, boolean filtered ) {
-        return this.getOutputFile( ee, filtered, true, false );
-    }
-
-    @Override
-    public File getOutputFile( ExpressionExperiment ee, boolean filtered, boolean compressed, boolean temporary ) {
+    /**
+     * @param ee       the experiment
+     * @param filtered if the data matrix is filtered
+     * @return file
+     */
+    private File getOutputFile( ExpressionExperiment ee, boolean filtered ) {
         String filteredAdd = "";
         if ( !filtered ) {
             filteredAdd = ".unfilt";
         }
         String suffix;
 
-        if ( compressed ) {
-            suffix = ExpressionDataFileService.DATA_FILE_SUFFIX_COMPRESSED;
-        } else {
-            suffix = ExpressionDataFileService.DATA_FILE_SUFFIX;
-        }
+        suffix = ExpressionDataFileServiceImpl.DATA_FILE_SUFFIX_COMPRESSED;
 
         String filename = this.getDataFileName( ee, filteredAdd, suffix );
 
         // randomize file name if temporary in case of access by more than one user at once
-        if ( temporary ) {
 
-            filename = RandomStringUtils.randomAlphabetic( 6 ) + filename;
-
-        }
-
-        return this.getOutputFile( filename, temporary );
+        return this.getOutputFile( filename );
     }
 
-    @Override
-    public File getOutputFile( String filename ) {
-        return this.getOutputFile( filename, false );
-
-    }
-
-    @Override
-    public File getOutputFile( String filename, boolean temporary ) {
-        String fullFilePath;
-        if ( temporary ) {
-            fullFilePath = ExpressionDataFileService.TMP_DATA_DIR + filename;
-        } else {
-            fullFilePath = ExpressionDataFileService.DATA_DIR + filename;
-        }
-        File f = new File( fullFilePath );
+    /**
+     * @param filename without the path - that is, just the name of the file
+     * @return File, with location in the appropriate target directory.
+     */
+    private File getOutputFile( String filename ) {
+        Path fullFilePath;
+        fullFilePath = dataDir.resolve( filename );
+        File f = fullFilePath.toFile();
 
         if ( f.exists() ) {
             return f;
@@ -307,9 +306,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
 
     @Override
     public File getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type ) {
-        File file = Paths.get( Settings.getString( "gemma.appdata.home" ), "metadata", this.getEEFolderName( ee ), type.getFileName( ee ) )
-                .toFile();
-
+        File file = metadataDir.resolve( this.getEEFolderName( ee ) ).resolve( type.getFileName( ee ) ).toFile();
         // If this is a directory, check if we can read the most recent file.
         if ( type.isDirectory() ) {
             File fNew = this.getNewestFile( file );
@@ -317,12 +314,11 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
                 file = fNew;
             }
         }
-
         return file;
     }
 
     /**
-     * Forms a folder name where the given experiments metadata will be located (within the {@link ExpressionDataFileService#METADATA_DIR} directory).
+     * Forms a folder name where the given experiments metadata will be located (within the {@link #metadataDir} directory).
      *
      * @param ee the experiment to get the folder name for.
      * @return folder name based on the given experiments properties. Usually this will be the experiments short name,
@@ -377,7 +373,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
 
         ExpressionDataFileServiceImpl.log
                 .info( "Creating differential expression analysis archive file: " + f.getName() );
-        try ( ZipOutputStream zipOut = new ZipOutputStream( new FileOutputStream( f ) ) ) {
+        try ( ZipOutputStream zipOut = new ZipOutputStream( Files.newOutputStream( f.toPath() ) ) ) {
 
             // top-level analysis results - ANOVA-style
             zipOut.putNextEntry( new ZipEntry( "analysis.results.txt" ) );
@@ -616,6 +612,9 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
 
     private String analysisResultSetWithContrastsToString( ExpressionAnalysisResultSet resultSet,
             Map<Long, String[]> geneAnnotations ) {
+        Assert.isTrue( resultSet.getExperimentalFactors().size() == 1,
+                resultSet + " should have exactly one experimental factor." );
+
         StringBuilder buf = new StringBuilder();
 
         ExperimentalFactor ef = resultSet.getExperimentalFactors().iterator().next();
@@ -662,19 +661,18 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
             }
 
         } else {
-
-            Long baselineId = resultSet.getBaselineGroup().getId();
-            List<Long> factorValueIdOrder = new ArrayList<>();
+            FactorValue baseline = resultSet.getBaselineGroup();
+            List<FactorValue> factorValueOrder = new ArrayList<>();
 
             /*
              * First find out what factor values are relevant in case this is a subsetted analysis. With this we
              * probably not worry about the baselineId since it won't be here.
              */
-            Collection<Long> usedFactorValueIds = new HashSet<>();
+            Collection<FactorValue> usedFactorValues = new HashSet<>();
             for ( DifferentialExpressionAnalysisResult dear : resultSet.getResults() ) {
                 for ( ContrastResult contrast : dear.getContrasts() ) {
                     if ( contrast.getFactorValue() != null ) {
-                        usedFactorValueIds.add( contrast.getFactorValue().getId() );
+                        usedFactorValues.add( contrast.getFactorValue() );
                     }
                 }
                 break; // only have to look at one.
@@ -685,10 +683,10 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
                 /*
                  * deal correctly with subset situations - only use factor values relevant to the subset
                  */
-                if ( Objects.equals( factorValue.getId(), baselineId ) || !usedFactorValueIds.contains( factorValue.getId() ) ) {
+                if ( Objects.equals( factorValue, baseline ) || !usedFactorValues.contains( factorValue ) ) {
                     continue;
                 }
-                factorValueIdOrder.add( factorValue.getId() );
+                factorValueOrder.add( factorValue );
                 // Generate column headers, try to be R-friendly
                 buf.append( "\tFoldChange_" ).append( this.getFactorValueString( factorValue ) );
                 buf.append( "\tTstat_" ).append( this.getFactorValueString( factorValue ) );
@@ -703,7 +701,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
 
                 this.addGeneAnnotationsToLine( rowBuffer, dear, geneAnnotations );
 
-                Map<Long, String> factorValueIdToData = new HashMap<>();
+                Map<FactorValue, String> factorValueToData = new HashMap<>();
                 // I don't think we can expect them in the same order.
                 for ( ContrastResult contrast : dear.getContrasts() ) {
                     Double foldChange = contrast.getLogFoldChange();
@@ -712,12 +710,12 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
                     String contrastData = "\t" + format( foldChange ) + "\t" + format( tStat ) + "\t" + format( pValue );
                     assert contrast.getFactorValue() != null;
 
-                    factorValueIdToData.put( contrast.getFactorValue().getId(), contrastData );
+                    factorValueToData.put( contrast.getFactorValue(), contrastData );
                 }
 
                 // Get them in the right order.
-                for ( Long factorValueId : factorValueIdOrder ) {
-                    String s = factorValueIdToData.get( factorValueId );
+                for ( FactorValue factorValue : factorValueOrder ) {
+                    String s = factorValueToData.get( factorValue );
                     if ( s == null )
                         s = "";
                     rowBuffer.append( s );
@@ -792,8 +790,8 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
             Map<Long, String[]> geneAnnotations, @Nullable DifferentialExpressionAnalysisConfig config ) {
         // Write header.
         // Write contrasts data.
-        return this.makeDiffExpressionResultSetFileHeader( resultSet, geneAnnotations, config ) + this
-                .analysisResultSetWithContrastsToString( resultSet, geneAnnotations );
+        return this.makeDiffExpressionResultSetFileHeader( resultSet, geneAnnotations, config )
+                + this.analysisResultSetWithContrastsToString( resultSet, geneAnnotations );
     }
 
     private void deleteAndLog( File f1 ) {
@@ -812,7 +810,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
 
     private String getCoexpressionDataFilename( ExpressionExperiment ee ) {
         return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_coExp"
-                + ExpressionDataFileService.DATA_FILE_SUFFIX_COMPRESSED;
+                + ExpressionDataFileServiceImpl.DATA_FILE_SUFFIX_COMPRESSED;
     }
 
     /**
@@ -842,7 +840,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
 
     private String getDesignFileName( ExpressionExperiment ee ) {
         return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_expdesign"
-                + ExpressionDataFileService.DATA_FILE_SUFFIX_COMPRESSED;
+                + ExpressionDataFileServiceImpl.DATA_FILE_SUFFIX_COMPRESSED;
     }
 
     private String getDiffExArchiveFileName( DifferentialExpressionAnalysis diff ) {
@@ -860,7 +858,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
 
         return experimentAnalyzed.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_diffExpAnalysis"
                 + ( diff.getId() != null ? "_" + diff.getId() : "" )
-                + ExpressionDataFileService.DATA_ARCHIVE_FILE_SUFFIX;
+                + ExpressionDataFileServiceImpl.DATA_ARCHIVE_FILE_SUFFIX;
     }
 
     private File getDiffExpressionAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, boolean forceCreate ) {
@@ -907,10 +905,11 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
             result = StringUtils.removeEnd( fvString.toString(), "_" );
         } else if ( fv.getMeasurement() != null ) {
             result = fv.getMeasurement().getValue();
-        } else if ( fv.getValue() != null && !fv.getValue().isEmpty() ) {
+        } else if ( StringUtils.isNotBlank( fv.getValue() ) ) {
             result = fv.getValue();
-        } else
+        } else {
             return "no_data";
+        }
 
         // R-friendly, but no need to add "X" to the beginning since this is a suffix.
         return result.replaceAll( "\\W+", "." );
@@ -954,9 +953,9 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
 
     private File getJSONOutputFile( QuantitationType type ) throws IOException {
         String filename = this.getJSONOutputFilename( type );
-        String fullFilePath = ExpressionDataFileService.DATA_DIR + filename;
+        Path fullFilePath = dataDir.resolve( filename );
 
-        File f = new File( fullFilePath );
+        File f = fullFilePath.toFile();
 
         if ( f.exists() ) {
             ExpressionDataFileServiceImpl.log.warn( "Will overwrite existing file " + f );
@@ -972,7 +971,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
      * @return Name, without full path.
      */
     private String getJSONOutputFilename( QuantitationType type ) {
-        return FileTools.cleanForFileName( type.getName() ) + ExpressionDataFileService.JSON_FILE_SUFFIX;
+        return FileTools.cleanForFileName( type.getName() ) + ExpressionDataFileServiceImpl.JSON_FILE_SUFFIX;
     }
 
     private File getOutputFile( QuantitationType type ) {
@@ -985,7 +984,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
      */
     private String getOutputFilename( QuantitationType type ) {
         return type.getId() + "_" + FileTools.cleanForFileName( type.getName() )
-                + ExpressionDataFileService.DATA_FILE_SUFFIX_COMPRESSED;
+                + ExpressionDataFileServiceImpl.DATA_FILE_SUFFIX_COMPRESSED;
     }
 
     private String makeDiffExpressionFileHeader( DifferentialExpressionAnalysis analysis,
@@ -1166,7 +1165,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
         }
 
         // Write coexpression data to file (zipped of course)
-        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) ) ) {
+        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( file.toPath() ) ) ) ) {
             writer.write( buf.toString() );
         }
 
@@ -1196,11 +1195,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
      * @return file that was written
      */
     private File writeDesignMatrix( File file, ExpressionExperiment expressionExperiment ) throws IOException {
-
-        OutputStream oStream;
-        oStream = new GZIPOutputStream( new FileOutputStream( file ) );
-
-        try ( Writer writer = new OutputStreamWriter( oStream ) ) {
+        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( file.toPath() ) ) ) ) {
             ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
             edWriter.write( writer, expressionExperiment, true );
         }
@@ -1209,14 +1204,14 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
 
     private void writeJson( File file, Collection<BulkExpressionDataVector> vectors ) throws IOException {
         BulkExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
-        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) ) ) {
+        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( file.toPath() ) ) ) ) {
             MatrixWriter matrixWriter = new MatrixWriter();
             matrixWriter.writeJSON( writer, expressionDataMatrix );
         }
     }
 
     private void writeJson( File file, BulkExpressionDataMatrix<?> expressionDataMatrix ) throws IOException {
-        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) ) ) {
+        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( file.toPath() ) ) ) ) {
             MatrixWriter matrixWriter = new MatrixWriter();
             matrixWriter.writeJSON( writer, expressionDataMatrix );
         }
@@ -1226,23 +1221,20 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
             BulkExpressionDataMatrix<?> expressionDataMatrix ) throws IOException {
 
         this.writeMatrix( file, geneAnnotations, expressionDataMatrix, true );
-
     }
 
     private void writeMatrix( File file, Map<CompositeSequence, String[]> geneAnnotations,
             BulkExpressionDataMatrix<?> expressionDataMatrix, boolean gzipped ) throws IOException {
         MatrixWriter matrixWriter = new MatrixWriter();
-
         if ( gzipped ) {
-            try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) ) ) {
+            try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( file.toPath() ) ) ) ) {
                 matrixWriter.writeWithStringifiedGeneAnnotations( writer, expressionDataMatrix, geneAnnotations, true );
             }
         } else {
-            try ( Writer writer = new OutputStreamWriter( new FileOutputStream( file ) ) ) {
+            try ( Writer writer = new OutputStreamWriter( Files.newOutputStream( file.toPath() ) ) ) {
                 matrixWriter.writeWithStringifiedGeneAnnotations( writer, expressionDataMatrix, geneAnnotations, true );
             }
         }
-
     }
 
     private void writeVectors( File file, Collection<BulkExpressionDataVector> vectors,

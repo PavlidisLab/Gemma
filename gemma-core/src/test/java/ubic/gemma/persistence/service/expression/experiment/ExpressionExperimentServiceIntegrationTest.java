@@ -48,6 +48,7 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Subquery;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
@@ -433,7 +434,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         };
 
         tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
-        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, null, null, null, null, 0, null, 0 ) )
+        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, null, null, null, null, 0, null, 0, 5000, TimeUnit.MILLISECONDS ) )
                 .noneSatisfy( consumer );
 
         // add the term to the dataset and update the pivot table
@@ -442,12 +443,12 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         assertThat( c.getId() ).isNotNull();
 
         // the table is out-of-date
-        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, null, null, null, null, 0, null, 0 ) )
+        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, null, null, null, null, 0, null, 0, 5000, TimeUnit.MILLISECONDS ) )
                 .noneSatisfy( consumer );
 
         // update the pivot table
         tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
-        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, null, null, null, null, 0, null, 0 ) )
+        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, null, null, null, null, 0, null, 0, 5000, TimeUnit.MILLISECONDS ) )
                 .satisfiesOnlyOnce( consumer );
 
         // remove the term, which must evict the query cache
@@ -460,7 +461,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
                 } );
 
         // since deletions are cascaded, the change will be reflected immediatly
-        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, null, null, null, null, 0, null, 0 ) )
+        assertThat( expressionExperimentService.getAnnotationsUsageFrequency( null, null, null, null, null, 0, null, 0, 5000, TimeUnit.MILLISECONDS ) )
                 .noneSatisfy( consumer );
     }
 

@@ -10,6 +10,7 @@ import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.basecode.ontology.search.OntologySearchException;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.OntologyHighlighter;
 import ubic.gemma.core.search.SearchException;
@@ -19,7 +20,6 @@ import ubic.gemma.core.search.lucene.LuceneParseSearchException;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
-import ubic.gemma.core.context.TestComponent;
 
 import javax.annotation.Nullable;
 import java.net.URI;
@@ -77,7 +77,7 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
         OntologyTerm term = new OntologyTermSimple( "http://purl.obolibrary.org/obo/CL_0000129", "microglial cell" );
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );
-        when( ontologyService.getTerm( "http://purl.obolibrary.org/obo/CL_0000129" ) )
+        when( ontologyService.getTerm( eq( "http://purl.obolibrary.org/obo/CL_0000129" ), anyLong(), any() ) )
                 .thenReturn( term );
         when( characteristicService.findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false ) )
                 .thenReturn( Collections.singletonMap( ExpressionExperiment.class,
@@ -94,8 +94,8 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
                         return Collections.singletonMap( field, termUri != null ? String.format( "[%s](%s)", termLabel, termUri ) : termLabel );
                     }
                 } ) );
-        verify( ontologyService ).getTerm( "http://purl.obolibrary.org/obo/CL_0000129" );
-        verify( ontologyService ).getChildren( argThat( col -> col.size() == 1 ), eq( false ), eq( true ), longThat( l -> l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
+        verify( ontologyService ).getTerm( eq( "http://purl.obolibrary.org/obo/CL_0000129" ), longThat( l -> l > 1 && l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
+        verify( ontologyService ).getChildren( argThat( col -> col.size() == 1 ), eq( false ), eq( true ), longThat( l -> l > 0 && l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
         verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false );
         assertThat( results ).anySatisfy( result -> {
             assertThat( result )
@@ -107,7 +107,7 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Test
-    public void testWhenTermIsNotFoundGenerateLabelFromUri() throws SearchException {
+    public void testWhenTermIsNotFoundGenerateLabelFromUri() throws SearchException, TimeoutException {
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );
         when( characteristicService.findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false ) )
@@ -125,7 +125,7 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
                         return Collections.singletonMap( field, termUri != null ? String.format( "[%s](%s)", termLabel, termUri ) : termLabel );
                     }
                 } ) );
-        verify( ontologyService ).getTerm( "http://purl.obolibrary.org/obo/CL_0000129" );
+        verify( ontologyService ).getTerm( eq( "http://purl.obolibrary.org/obo/CL_0000129" ), longThat( l -> l > 0 && l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
         verifyNoMoreInteractions( ontologyService );
         verify( characteristicService ).findBestByUri( "http://purl.obolibrary.org/obo/CL_0000129" );
         verify( characteristicService ).findExperimentsByUris( Collections.singleton( "http://purl.obolibrary.org/obo/CL_0000129" ), null, 5000, true, false );
@@ -139,12 +139,12 @@ public class OntologySearchSourceTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Test
-    public void testSearchExpressionExperimentWithBooleanQuery() throws SearchException {
+    public void testSearchExpressionExperimentWithBooleanQuery() throws SearchException, TimeoutException {
         ontologySearchSource.searchExpressionExperiment( SearchSettings.expressionExperimentSearch( "a OR (b AND c) OR http://example.com/d OR \"a quoted string containing an escaped quote \\\"\" OR test*" ) );
         verify( ontologyService ).findTerms( eq( "a" ), eq( 5000 ), longThat( l -> l > 0L && l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
         verify( ontologyService ).findTerms( eq( "b" ), eq( 5000 ), longThat( l -> l > 0L && l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
         // b returns no result, so c should not be queried
-        verify( ontologyService ).getTerm( "http://example.com/d" );
+        verify( ontologyService ).getTerm( eq( "http://example.com/d" ), longThat( l -> l > 0L && l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
         verify( ontologyService ).findTerms( eq( "\"a quoted string containing an escaped quote \\\"\"" ), eq( 5000 ), longThat( l -> l > 0L && l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
         verify( ontologyService ).findTerms( eq( "test*" ), eq( 5000 ), longThat( l -> l > 0L && l <= 30000L ), eq( TimeUnit.MILLISECONDS ) );
         verifyNoMoreInteractions( ontologyService );

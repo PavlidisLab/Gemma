@@ -11,7 +11,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.rest.util.*;
+import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
+import ubic.gemma.rest.util.MalformedArgException;
+import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.core.Response;
@@ -76,7 +78,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
     }
 
     @Test
-    public void testSome() {
+    public void testSomeByShortName() {
         ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.getDatasetsByIds( DatasetArrayArg.valueOf(
                         ees.get( 0 ).getShortName() + ", BAD_NAME, " + ees.get( 2 )
                                 .getShortName() ), FilterArg.valueOf( "" ), OffsetArg.valueOf( "0" ),
@@ -86,11 +88,8 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
         assertThat( ee.getAccession() ).isNotNull();
         assertThat( response.getData() )
                 .isNotNull()
-                .hasSize( 2 )
-                .first()
-                .hasFieldOrPropertyWithValue( "accession", ee.getAccession().getAccession() )
-                .hasFieldOrPropertyWithValue( "externalDatabase", ee.getAccession().getExternalDatabase().getName() )
-                .hasFieldOrPropertyWithValue( "externalUri", ee.getAccession().getExternalDatabase().getWebUri() );
+                .extracting( "id" )
+                .containsExactlyInAnyOrder( ees.get( 0 ).getId(), ees.get( 2 ).getId() );
     }
 
     @Test
@@ -104,13 +103,8 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
         assertThat( ee.getAccession() ).isNotNull();
         assertThat( response.getData() )
                 .isNotNull()
-                .hasSize( 2 )
-                .first()
-                .hasFieldOrPropertyWithValue( "accession", ee.getAccession().getAccession() )
-                .hasFieldOrPropertyWithValue( "externalDatabase", ee.getAccession().getExternalDatabase().getName() )
-                .hasFieldOrPropertyWithValue( "externalUri", ee.getAccession().getExternalDatabase().getWebUri() )
-                .hasFieldOrPropertyWithValue( "taxon", ee.getTaxon().getCommonName() )
-                .hasFieldOrPropertyWithValue( "taxonId", ee.getTaxon().getId() );
+                .extracting( "id" )
+                .containsExactlyInAnyOrder( ees.get( 0 ).getId(), ees.get( 2 ).getId() );
     }
 
     @Test

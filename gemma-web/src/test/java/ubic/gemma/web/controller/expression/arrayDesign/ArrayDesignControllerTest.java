@@ -51,7 +51,7 @@ public class ArrayDesignControllerTest extends BaseWebTest {
 
         @Bean
         public ArrayDesignController arrayDesignController() {
-            return new ArrayDesignControllerImpl();
+            return new ArrayDesignController();
         }
 
         @Bean

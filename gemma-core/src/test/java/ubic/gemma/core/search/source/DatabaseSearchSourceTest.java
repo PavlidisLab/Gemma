@@ -11,7 +11,6 @@ import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchSource;
-import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
@@ -23,6 +22,7 @@ import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 
 import static org.mockito.Mockito.*;
+import static ubic.gemma.model.common.search.SearchSettings.geneSearch;
 
 @ContextConfiguration
 public class DatabaseSearchSourceTest extends AbstractJUnit4SpringContextTests {
@@ -96,40 +96,46 @@ public class DatabaseSearchSourceTest extends AbstractJUnit4SpringContextTests {
 
     @Test
     public void test_whenQueryContainsQuote_thenStripThem() throws SearchException {
-        databaseSearchSource.searchGene( SearchSettings.geneSearch( "\"BRCA1\"", null ) );
+        databaseSearchSource.searchGene( geneSearch( "\"BRCA1\"", null ) );
         verify( geneService ).findByAccession( "BRCA1", null );
         verify( geneService ).findByOfficialSymbolInexact( "BRCA1%" );
     }
 
     @Test
     public void test_whenQueryContainsLikePatterns_thenEscape() throws SearchException {
-        databaseSearchSource.searchGene( SearchSettings.geneSearch( "BRCA%", null ) );
+        databaseSearchSource.searchGene( geneSearch( "BRCA%", null ) );
         verify( geneService ).findByAccession( "BRCA%", null );
         verify( geneService ).findByOfficialSymbolInexact( "BRCA\\%%" );
     }
 
     @Test
     public void test_whenQueryContainsAsterisk_thenSubstituteForPercent() throws SearchException {
-        databaseSearchSource.searchGene( SearchSettings.geneSearch( "BRCA?*", null ) );
+        databaseSearchSource.searchGene( geneSearch( "BRCA?*", null ) );
         verify( geneService ).findByOfficialSymbolInexact( "brca_%" );
     }
 
     @Test
     public void test_quotedTerms() throws SearchException {
-        databaseSearchSource.searchGene( SearchSettings.geneSearch( "\"BRCA1 BRCA2\"", null ) );
+        databaseSearchSource.searchGene( geneSearch( "\"BRCA1 BRCA2\"", null ) );
         verify( geneService ).findByOfficialSymbol( "BRCA1 BRCA2" );
     }
 
     @Test
     public void testSearchGeneByUri() throws SearchException {
-        databaseSearchSource.searchGene( SearchSettings.geneSearch( "http://purl.org/commons/record/ncbi_gene/1234", null ) );
+        databaseSearchSource.searchGene( geneSearch( "http://purl.org/commons/record/ncbi_gene/1234", null ) );
         verify( geneService ).findByNCBIId( 1234 );
         verify( geneService ).findByOfficialSymbol( "http://purl.org/commons/record/ncbi_gene/1234" );
     }
 
     @Test
     public void testSearchGeneByUriInexact() throws SearchException {
-        databaseSearchSource.searchGene( SearchSettings.geneSearch( "http://purl.org/commons/record/ncbi_gene/123?", null ) );
+        databaseSearchSource.searchGene( geneSearch( "http://purl.org/commons/record/ncbi_gene/123?", null ) );
         verify( geneService ).findByOfficialSymbolInexact( "http://purl.org/commons/record/ncbi\\_gene/123_" );
+    }
+
+    @Test
+    public void testSearchGeneByOfficialName_whenQueryContainsUnquotedSpaces_thenAttemptItAsItIs() throws SearchException {
+        databaseSearchSource.searchGene( geneSearch( "metabolic process", null ) );
+        verify( geneService ).findByOfficialName( "metabolic process" );
     }
 }

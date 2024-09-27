@@ -118,6 +118,9 @@ public class FilterQueryUtils {
                 case like:
                     token = "like";
                     break;
+                case notLike:
+                    token = "not like";
+                    break;
                 case lessThan:
                     token = "<";
                     break;
@@ -133,6 +136,10 @@ public class FilterQueryUtils {
                 case in:
                 case inSubquery:
                     token = "in";
+                    break;
+                case notIn:
+                case notInSubquery:
+                    token = "not in";
                     break;
                 default:
                     throw new IllegalArgumentException( String.format( "Unsupported operator %s.", filter.getOperator() ) );
@@ -208,17 +215,17 @@ public class FilterQueryUtils {
                 if ( subClause == null )
                     continue;
                 String paramName = formParamName( subClause, ++i );
-                if ( subClause.getOperator().equals( Filter.Operator.inSubquery ) ) {
+                if ( subClause.getOperator().equals( Filter.Operator.inSubquery ) || subClause.getOperator().equals( Filter.Operator.notInSubquery ) ) {
                     Subquery s = ( Subquery ) requireNonNull( subClause.getRequiredValue() );
                     addRestrictionParameters( query, Filters.by( s.getFilter() ), i - 1 );
-                } else if ( subClause.getOperator().equals( Filter.Operator.in ) ) {
+                } else if ( subClause.getOperator().equals( Filter.Operator.in ) || subClause.getOperator().equals( Filter.Operator.notIn ) ) {
                     if ( !( subClause.getRequiredValue() instanceof Collection ) ) {
                         throw new IllegalArgumentException( "Required value must be a non-null collection for the 'in' operator." );
                     }
                     // order is unimportant for this operation, so we can ensure that it is consistent and therefore cacheable
                     //noinspection rawtypes,unchecked
                     query.setParameterList( paramName, optimizeParameterList( ( Collection ) subClause.getRequiredValue() ) );
-                } else if ( subClause.getOperator().equals( Filter.Operator.like ) ) {
+                } else if ( subClause.getOperator().equals( Filter.Operator.like ) || subClause.getOperator().equals( Filter.Operator.notLike ) ) {
                     query.setParameter( paramName, escapeLike( ( String ) requireNonNull( subClause.getRequiredValue(), "Required value cannot be null for the 'like' operator." ) ) + "%" );
                 } else {
                     query.setParameter( paramName, subClause.getRequiredValue() );

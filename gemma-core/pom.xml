@@ -93,7 +93,9 @@
                         </goals>
                         <configuration>
                             <!-- dependencies:unpack does not add a test source root -->
-                            <sources>${project.build.directory}/generated-test-sources/spring-security-test</sources>
+                            <sources>
+                                <source>${project.build.directory}/generated-test-sources/spring-security-test</source>
+                            </sources>
                         </configuration>
                     </execution>
                 </executions>

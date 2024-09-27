@@ -121,8 +121,17 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign );
 
+    /**
+     * @see ArrayDesignDao#getGenes(ArrayDesign)
+     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Map<CompositeSequence, List<Gene>> getGenes( ArrayDesign arrayDesign );
+    Collection<Gene> getGenes( ArrayDesign arrayDesign );
+
+    /**
+     * @see ArrayDesignDao#getGenesByCompositeSequence(ArrayDesign)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Map<CompositeSequence, List<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Long getCompositeSequenceCount( ArrayDesign arrayDesign );

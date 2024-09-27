@@ -16,6 +16,7 @@ package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.apache.commons.io.FilenameUtils;
@@ -23,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
@@ -31,9 +31,13 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
-import ubic.gemma.rest.util.*;
+import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
+import ubic.gemma.rest.util.MediaTypeUtils;
+import ubic.gemma.rest.util.PaginatedResponseDataObject;
+import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.*;
@@ -268,8 +272,12 @@ public class PlatformsWebService {
     @GET
     @Path("/{platform}/annotations")
     @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
-    @Operation(summary = "Retrieve the annotations of a given platform", responses = {
-            @ApiResponse(content = @Content(schema = @Schema(type = "string", format = "binary"))) })
+    @Operation(summary = "Retrieve the annotations of a given platform",
+            description = "The following columns are available: ElementName, GeneSymbols, GOTerms, GemmaIDs, NCBIids. Older files might still use ProbeName instead of ElementName.",
+            responses = {
+                    @ApiResponse(content = @Content(schema = @Schema(type = "string", format = "binary"),
+                            examples = { @ExampleObject("classpath:/restapidocs/examples/platform-annotations.tsv") }))
+            })
     public Response getPlatformAnnotations( // Params:
             @PathParam("platform") PlatformArg<?> platformArg // Optional, default null
     ) {

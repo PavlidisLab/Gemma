@@ -21,6 +21,7 @@ import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -64,6 +65,11 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest {
     @TestComponent
     @Import(JacksonConfig.class)
     public static class AnnotationsWebServiceContextConfiguration {
+
+        @Bean
+        public static TestPropertyPlaceholderConfigurer placeholderConfigurer() {
+            return new TestPropertyPlaceholderConfigurer( "gemma.hosturl=http://localhost:8080" );
+        }
 
         @Bean
         public OntologyService ontologyService() {
@@ -200,27 +206,27 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest {
     @Test
     public void testParents() throws TimeoutException {
         OntologyTerm term = mock( OntologyTerm.class );
-        when( ontologyService.getTerm( "http://example.com/test" ) ).thenReturn( term );
+        when( ontologyService.getTerm( eq( "http://example.com/test" ), anyLong(), any() ) ).thenReturn( term );
         assertThat( target( "/annotations/parents" ).queryParam( "uri", "http://example.com/test" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
-        verify( ontologyService ).getTerm( "http://example.com/test" );
-        verify( ontologyService ).getParents( Collections.singleton( term ), false, true, 30L, TimeUnit.SECONDS );
+        verify( ontologyService ).getTerm( "http://example.com/test", 30000, TimeUnit.MILLISECONDS );
+        verify( ontologyService ).getParents( eq( Collections.singleton( term ) ), eq( false ), eq( true ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
     }
 
     @Test
-    public void testParentsWhenTermIsNotFound() {
+    public void testParentsWhenTermIsNotFound() throws TimeoutException {
         assertThat( target( "/annotations/parents" ).queryParam( "uri", "http://example.com/test" ).request().get() )
                 .hasStatus( Response.Status.NOT_FOUND )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
-        verify( ontologyService ).getTerm( "http://example.com/test" );
+        verify( ontologyService ).getTerm( "http://example.com/test", 30000, TimeUnit.MILLISECONDS );
         verifyNoMoreInteractions( ontologyService );
     }
 
     @Test
     public void testParentsWhenInferenceTimeout() throws TimeoutException {
         OntologyTerm term = mock( OntologyTerm.class );
-        when( ontologyService.getTerm( "http://example.com/test" ) ).thenReturn( term );
+        when( ontologyService.getTerm( eq( "http://example.com/test" ), anyLong(), any() ) ).thenReturn( term );
         when( ontologyService.getParents( any(), anyBoolean(), anyBoolean(), anyLong(), any() ) ).thenThrow( new TimeoutException( "Ontology inference timed out!" ) );
         assertThat( target( "/annotations/parents" ).queryParam( "uri", "http://example.com/test" ).request().get() )
                 .hasStatus( Response.Status.SERVICE_UNAVAILABLE )
@@ -228,17 +234,17 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest {
                 .entity()
                 .hasFieldOrPropertyWithValue( "error.code", 503 )
                 .hasFieldOrPropertyWithValue( "error.message", "HTTP 503 Service Unavailable" );
-        verify( ontologyService ).getTerm( "http://example.com/test" );
-        verify( ontologyService ).getParents( Collections.singleton( term ), false, true, 30L, TimeUnit.SECONDS );
+        verify( ontologyService ).getTerm( "http://example.com/test", 30000, TimeUnit.MILLISECONDS );
+        verify( ontologyService ).getParents( eq( Collections.singleton( term ) ), eq( false ), eq( true ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
     }
 
     @Test
     public void testChildren() throws TimeoutException {
         OntologyTerm term = mock( OntologyTerm.class );
-        when( ontologyService.getTerm( "http://example.com/test" ) ).thenReturn( term );
+        when( ontologyService.getTerm( eq( "http://example.com/test" ), anyLong(), any() ) ).thenReturn( term );
         assertThat( target( "/annotations/children" ).queryParam( "uri", "http://example.com/test" ).request().get() )
                 .hasStatus( Response.Status.OK );
-        verify( ontologyService ).getTerm( "http://example.com/test" );
-        verify( ontologyService ).getChildren( Collections.singleton( term ), false, true, 30L, TimeUnit.SECONDS );
+        verify( ontologyService ).getTerm( "http://example.com/test", 30000, TimeUnit.MILLISECONDS );
+        verify( ontologyService ).getChildren( eq( Collections.singleton( term ) ), eq( false ), eq( true ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
     }
 }

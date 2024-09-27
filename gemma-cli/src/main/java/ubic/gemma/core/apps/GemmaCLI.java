@@ -180,15 +180,15 @@ public class GemmaCLI {
 
         ctx = SpringContextUtils.getApplicationContext( profiles.toArray( new String[0] ) );
 
-        // register a shutdown hook
+        // register a shutdown hook to perform a graceful shutdown on SIGTERM or System.exit()
         Runtime.getRuntime().addShutdownHook( new Thread( () -> {
             if ( ctx instanceof ConfigurableApplicationContext ) {
                 ( ( ConfigurableApplicationContext ) ctx ).close();
             }
         } ) );
 
-        Map<String, Command> commandsByClassName = new HashMap<>();
         Map<String, Command> commandsByName = new HashMap<>();
+        Map<String, Command> commandsByClassName = new HashMap<>();
         SortedMap<CLI.CommandGroup, SortedMap<String, Command>> commandGroups = new TreeMap<>( Comparator.comparingInt( CLI.CommandGroup::ordinal ) );
         for ( String beanName : ctx.getBeanNamesForType( CLI.class ) ) {
             CLI cliInstance;

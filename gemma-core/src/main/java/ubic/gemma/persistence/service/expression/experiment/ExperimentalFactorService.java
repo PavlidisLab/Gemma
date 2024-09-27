@@ -34,7 +34,7 @@ public interface ExperimentalFactorService
 
     String BATCH_FACTOR_NAME_PREFIX = "Batch_";
 
-    String BATCH_FACTOR_CATEGORY_URI = "http://www.ebi.ac.uk/efo/EFO_0005067"; // block aka batch
+    String BATCH_FACTOR_CATEGORY_URI = "http://www.ebi.ac.uk/efo/EFO_0005067"; // block aka batch; confirmed Aug 2024.
 
     String BATCH_FACTOR_CATEGORY_NAME = "block";
 

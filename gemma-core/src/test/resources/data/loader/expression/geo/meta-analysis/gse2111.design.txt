@@ -5,7 +5,7 @@
 # Experiment details: https://gemma.msl.ubc.ca/expressionExperiment/showExpressionExperiment.html?id=23
 # If you use this file for your research, please cite: 
 # Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. Bioinformatics, 2012. 
-#$agent : Category=molecular_entity Type=Categorical
+#$agent : Category=treatment Type=Categorical
 Bioassay	ExternalID	agent
 GSE2111_Biomat_7___BioAssayId=648Name=Control1	GSM38117	control
 GSE2111_Biomat_1___BioAssayId=644Name=V1	GSM38121	zinc

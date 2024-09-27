@@ -3,10 +3,7 @@ package ubic.gemma.persistence.service;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.security.access.ConfigAttribute;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.Filter;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -74,10 +71,14 @@ public interface FilteringService<O extends Identifiable> extends BaseReadOnlySe
      */
     Filter getFilter( String property, Filter.Operator operator, String value ) throws IllegalArgumentException;
 
+    Filter getFilter( String property, Filter.Operator operator, String value, SubqueryMode subqueryMode ) throws IllegalArgumentException;
+
     /**
      * @see FilteringDao#getFilter(String, Filter.Operator, Collection)
      */
     Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException;
+
+    Filter getFilter( String property, Filter.Operator operator, Collection<String> values, SubqueryMode subqueryMode ) throws IllegalArgumentException;
 
     /**
      * @see FilteringDao#getFilter(String, Class, Filter.Operator, Object)

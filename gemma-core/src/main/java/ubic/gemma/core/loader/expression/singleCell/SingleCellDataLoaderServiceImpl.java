@@ -110,7 +110,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         }
 
         // create mapping by precedence of ID type
-        Map<CompositeSequence, List<Gene>> cs2g = arrayDesignService.getGenes( platform );
+        Map<CompositeSequence, List<Gene>> cs2g = arrayDesignService.getGenesByCompositeSequence( platform );
         Map<String, CompositeSequence> elementsMapping = new HashMap<>();
         addMappings( elementsMapping, cs2g, Gene::getOfficialSymbol );
         addMappings( elementsMapping, cs2g, Gene::getName );

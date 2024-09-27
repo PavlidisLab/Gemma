@@ -19,6 +19,7 @@ import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResultDisplayObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 
@@ -51,7 +52,7 @@ public interface ExpressionExperimentSearchService {
      * @param taxonId if the search should not be limited by taxon, pass in null
      * @return Collection of SearchResultDisplayObjects
      */
-    List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId ) throws SearchException;
+    List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, @Nullable Long taxonId ) throws SearchException;
 
     List<SearchResultDisplayObject> getAllTaxonExperimentGroup( Long taxonId );
 }

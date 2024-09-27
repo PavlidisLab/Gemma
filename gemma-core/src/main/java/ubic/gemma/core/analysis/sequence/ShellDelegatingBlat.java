@@ -460,9 +460,6 @@ public class ShellDelegatingBlat implements Blat {
         this.humanSensitiveServerPort = Settings.getInt( "gfClient.sensitive.humanServerPort" );
         this.mouseSensitiveServerPort = Settings.getInt( "gfClient.sensitive.mouseServerPort" );
         this.ratSensitiveServerPort = Settings.getInt( "gfClient.sensitive.ratServerPort" );
-        // this.humanServerHost = ConfigUtils.getString( "gfClient.humanServerHost" );
-        // this.mouseServerHost = ConfigUtils.getString( "gfClient.mouseServerHost" );
-        // this.ratServerHost = ConfigUtils.getString( "gfClient.ratServerHost" );
         this.host = Settings.getString( "gfClient.host" );
         this.seqDir = Settings.getString( "gfClient.seqDir" );
         this.mouseSeqFiles = Settings.getString( "gfClient.mouse.seqFiles" );

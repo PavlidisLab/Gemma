@@ -47,7 +47,9 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisServiceImpl;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
@@ -73,7 +75,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Autowired
-    private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
+    private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
 
     @Autowired
     private ExperimentalDesignImporter experimentalDesignImporter;
@@ -85,7 +87,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     private ExpressionDataFileService expressionDataFileService;
 
     @Autowired
-    private ExpressionExperimentService expressionExperimentService = null;
+    private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
     private ExperimentalDesignService experimentalDesignService;
@@ -94,10 +96,10 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     private ProcessedExpressionDataVectorService processedDataVectorService;
 
     @Autowired
-    private DifferentialExpressionResultService resultService;
+    private ArrayDesignAnnotationService arrayDesignAnnotationService;
 
     @Autowired
-    private ArrayDesignAnnotationService arrayDesignAnnotationService;
+    private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
 
     @Autowired
     private AclTestUtils aclTestUtils;
@@ -330,7 +332,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         for ( DifferentialExpressionAnalysis analysis : analyses ) {
             analysis = differentialExpressionAnalysisService.thaw( analysis );
             for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
-                Histogram hist = resultService.loadPvalueDistribution( resultSet.getId() );
+                Histogram hist = expressionAnalysisResultSetService.loadPvalueDistribution( resultSet );
                 assertNotNull( hist );
             }
         }

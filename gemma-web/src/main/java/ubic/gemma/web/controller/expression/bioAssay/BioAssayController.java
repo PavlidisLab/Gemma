@@ -24,6 +24,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
@@ -34,11 +36,8 @@ import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.web.controller.WebConstants;
 import ubic.gemma.web.util.EntityNotFoundException;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -96,37 +95,19 @@ public class BioAssayController {
         return taskRunningService.submitTaskCommand( new BioAssayOutlierProcessingTaskCommand( ids, true ) );
     }
 
-    @RequestMapping(value = { "/showBioAssay.html", "/" })
-    public ModelAndView show( HttpServletRequest request,
-            @SuppressWarnings("unused") /*required by spring*/ HttpServletResponse response ) {
-
-        BioAssayController.log.debug( request.getParameter( "id" ) );
-
-        Long id;
-
-        try {
-            id = Long.parseLong( request.getParameter( "id" ) );
-        } catch ( NumberFormatException e ) {
-            return new ModelAndView( WebConstants.HOME_PAGE )
-                    .addObject( "message", BioAssayController.identifierNotFound );
-        }
-
+    @RequestMapping(value = { "/showBioAssay.html", "/" }, method = RequestMethod.GET)
+    public ModelAndView show( @RequestParam("id") Long id ) {
         BioAssay bioAssay = bioAssayService.load( id );
         if ( bioAssay == null ) {
             throw new EntityNotFoundException( id + " not found" );
         }
-
         bioAssay = bioAssayService.thaw( bioAssay );
-
-        request.setAttribute( "id", id );
         return new ModelAndView( "bioAssay.detail" )
                 .addObject( "bioAssay", new BioAssayValueObject( bioAssay, false ) );
     }
 
-    @RequestMapping("/showAllBioAssays.html")
-    public ModelAndView showAllBioAssays( HttpServletRequest request,
-            @SuppressWarnings("unused") /*required by spring*/ HttpServletResponse response ) {
-        String sId = request.getParameter( "id" );
+    @RequestMapping(value = "/showAllBioAssays.html", method = RequestMethod.GET)
+    public ModelAndView showAllBioAssays( @RequestParam(value = "id", required = false) String sId ) {
         Collection<BioAssay> bioAssays = new ArrayList<>();
         if ( StringUtils.isBlank( sId ) ) {
             /*

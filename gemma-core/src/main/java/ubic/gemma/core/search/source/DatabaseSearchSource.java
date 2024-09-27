@@ -2,33 +2,34 @@ package ubic.gemma.core.search.source;
 
 import gemma.gsec.util.SecurityUtil;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
-import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchResultSet;
 import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
-import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -67,6 +68,9 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
 
     private static final double MATCH_BY_OFFICIAL_SYMBOL_SCORE = 1.0;
     private static final double MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE = 0.9;
+
+    private static final double MATCH_BY_OFFICIAL_NAME_SCORE = 0.8;
+    private static final double MATCH_BY_OFFICIAL_NAME_INEXACT_SCORE = 0.7;
 
     /**
      * Penalty when results are matched indirectly.
@@ -341,10 +345,10 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
             }
         }
 
-        // filter match by taxon
-        if ( settings.getTaxon() != null ) {
+        // filter matches by taxon
+        if ( settings.getTaxonConstraint() != null ) {
             Collection<Long> retainedIds = expressionExperimentService
-                    .filterByTaxon( results.stream().map( SearchResult::getResultId ).collect( Collectors.toList() ), settings.getTaxon() );
+                    .filterByTaxon( results.stream().map( SearchResult::getResultId ).collect( Collectors.toList() ), settings.getTaxonConstraint() );
             results.removeIf( sr -> !retainedIds.contains( sr.getResultId() ) );
         }
 
@@ -398,8 +402,8 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
         }
 
         // filter by taxon
-        if ( settings.getTaxon() != null ) {
-            results.removeIf( result1 -> result1.getResultObject() != null && !result1.getResultObject().getTaxon().equals( settings.getTaxon() ) );
+        if ( settings.getTaxonConstraint() != null ) {
+            results.removeIf( result1 -> result1.getResultObject() != null && !result1.getResultObject().getTaxon().equals( settings.getTaxonConstraint() ) );
         }
 
         watch.stop();
@@ -438,10 +442,25 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
         } else {
             if ( isWildcard( settings ) ) {
                 // case 3: string is long enough, and user asked for wildcard.
-                results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialSymbolInexact( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbol" ) );
+                results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialSymbolInexact( inexactString ), MATCH_BY_OFFICIAL_SYMBOL_INEXACT_SCORE, "GeneService.findByOfficialSymbolInexact" ) );
             } else {
                 // case 3: string is long enough, and user did not ask for wildcard.
                 results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialSymbol( exactString ), MATCH_BY_OFFICIAL_SYMBOL_SCORE, "GeneService.findByOfficialSymbol" ) );
+            }
+        }
+
+        if ( results.isEmpty() || settings.getMode().equals( SearchSettings.SearchMode.ACCURATE ) ) {
+            // sometimes, the full gene name is uttered, unquoted
+            Collection<Gene> r = geneService.findByOfficialName( StringUtils.strip( settings.getQuery() ) );
+            if ( !r.isEmpty() ) {
+                results.addAll( toSearchResults( settings, Gene.class, r, MATCH_BY_OFFICIAL_NAME_SCORE, "GeneService.findByOfficialName" ) );
+            } else {
+                // use the parsed string
+                if ( isWildcard( settings ) ) {
+                    results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialNameInexact( inexactString ), MATCH_BY_OFFICIAL_NAME_INEXACT_SCORE, "GeneService.findByOfficialNameInexact" ) );
+                } else {
+                    results.addAll( toSearchResults( settings, Gene.class, geneService.findByOfficialName( exactString ), MATCH_BY_OFFICIAL_NAME_SCORE, "GeneService.findByOfficialName" ) );
+                }
             }
         }
 
@@ -452,7 +471,7 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
             results.addAll( toSearchResults( settings, Gene.class, geneService.findByAlias( exactString ), MATCH_BY_ALIAS_SCORE, "GeneService.findByAlias" ) );
             Gene geneByEnsemblId = geneService.findByEnsemblId( exactString );
             if ( geneByEnsemblId != null ) {
-                results.add( SearchResult.from( Gene.class, geneByEnsemblId, MATCH_BY_ACCESSION_SCORE, null, "GeneService.findByAlias" ) );
+                results.add( SearchResult.from( Gene.class, geneByEnsemblId, MATCH_BY_ACCESSION_SCORE, null, "GeneService.findByEnsemblId" ) );
             }
             results.addAll( toSearchResults( settings, Gene.class, geneProductService.getGenesByName( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_NAME_SCORE, "GeneProductService.getGenesByName" ) );
             results.addAll( toSearchResults( settings, Gene.class, geneProductService.getGenesByNcbiId( exactString ), INDIRECT_HIT_PENALTY * MATCH_BY_ACCESSION_SCORE, "GeneProductService.getGenesByNcbiId" ) );
@@ -467,8 +486,8 @@ public class DatabaseSearchSource implements SearchSource, Ordered {
         if ( query == null ) {
             return Collections.emptySet();
         }
-        if ( settings.getTaxon() != null ) {
-            return toSearchResults( settings, GeneSet.class, this.geneSetService.findByName( query, settings.getTaxon() ), MATCH_BY_NAME_SCORE, "GeneSetService.findByNameWithTaxon" );
+        if ( settings.getTaxonConstraint() != null ) {
+            return toSearchResults( settings, GeneSet.class, this.geneSetService.findByName( query, settings.getTaxonConstraint() ), MATCH_BY_NAME_SCORE, "GeneSetService.findByNameWithTaxon" );
         } else {
             return toSearchResults( settings, GeneSet.class, this.geneSetService.findByName( query ), MATCH_BY_NAME_SCORE, "GeneSetService.findByName" );
         }

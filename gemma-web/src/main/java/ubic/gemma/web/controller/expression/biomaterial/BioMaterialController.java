@@ -19,11 +19,14 @@
 package ubic.gemma.web.controller.expression.biomaterial;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyService;
@@ -38,26 +41,22 @@ import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
-import ubic.gemma.web.controller.WebConstants;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author keshav
  */
-@SuppressWarnings("unused")
 @Controller
 @RequestMapping("/bioMaterial")
 public class BioMaterialController {
-
-    private static final Log log = LogFactory.getLog( BioMaterialController.class.getName() );
 
     @Autowired
     private BioMaterialService bioMaterialService;
@@ -68,8 +67,6 @@ public class BioMaterialController {
     @Autowired
     private FactorValueService factorValueService;
 
-    private boolean AJAX = true;
-
     /**
      * AJAX
      *
@@ -78,9 +75,9 @@ public class BioMaterialController {
      *                      biomaterials
      *                      will remove the previous one and add the new one.
      */
+    @SuppressWarnings("unused")
     public void addFactorValueTo( Collection<Long> bmIds, EntityDelegator<FactorValue> factorValueId ) {
-
-        Collection<BioMaterial> bms = this.getBioMaterials( bmIds );
+        Collection<BioMaterial> bms = bioMaterialService.load( bmIds );
         FactorValue factorVToAdd = factorValueService.loadWithExperimentalFactorOrFail( factorValueId.getId() );
         ExperimentalFactor eFactor = factorVToAdd.getExperimentalFactor();
 
@@ -101,41 +98,35 @@ public class BioMaterialController {
         }
     }
 
-    @RequestMapping("/annotate.html")
-    public ModelAndView annot( HttpServletRequest request, HttpServletResponse response ) {
-
-        log.debug( request.getParameter( "eeid" ) );
-
-        Long id = Long.parseLong( request.getParameter( "eeid" ) );
-
+    @RequestMapping(value = "/annotate.html", method = RequestMethod.GET)
+    public ModelAndView annot( @RequestParam("eeid") Long id ) {
         Collection<BioMaterial> bioMaterials = getBioMaterialsForEE( id );
-
         ModelAndView mav = new ModelAndView( "bioMaterialAnnotator" );
-        if ( AJAX ) {
-            mav.addObject( "bioMaterialIdList", bioMaterialService.getBioMaterialIdList( bioMaterials ) );
-        }
-
+        mav.addObject( "bioMaterialIdList", bioMaterialService.getBioMaterialIdList( bioMaterials ) );
         Long numBioMaterials = ( long ) bioMaterials.size();
         mav.addObject( "numBioMaterials", numBioMaterials );
         mav.addObject( "bioMaterials", bioMaterials );
         return mav;
     }
 
-    public Collection<AnnotationValueObject> getAnnotation( EntityDelegator<BioMaterial> bm ) {
+    @SuppressWarnings("unused")
+    public Collection<AnnotationValueObject> getAnnotation( EntityDelegator<BioMaterial> bm ) throws TimeoutException {
         if ( bm == null || bm.getId() == null )
             return null;
         BioMaterial bioM = bioMaterialService.loadOrFail( bm.getId() );
 
         Collection<AnnotationValueObject> annotation = new ArrayList<>();
 
+        long timeoutMs = 30000;
+        StopWatch timer = StopWatch.createStarted();
         for ( Characteristic c : bioM.getCharacteristics() ) {
             AnnotationValueObject annotationValue = new AnnotationValueObject( c, BioMaterial.class );
 
-            String className = getLabelFromUri( c.getCategoryUri() );
+            String className = getLabelFromUri( c.getCategoryUri(), Math.max( timeoutMs - timer.getTime(), 0 ) );
             if ( className != null )
                 annotationValue.setClassName( className );
 
-            String termName = getLabelFromUri( c.getValueUri() );
+            String termName = getLabelFromUri( c.getValueUri(), Math.max( timeoutMs - timer.getTime(), 0 ) );
             if ( termName != null )
                 annotationValue.setTermName( termName );
 
@@ -144,6 +135,7 @@ public class BioMaterialController {
         return annotation;
     }
 
+    @SuppressWarnings("unused")
     public Collection<BioMaterial> getBioMaterials( Collection<Long> ids ) {
         return bioMaterialService.load( ids );
     }
@@ -169,8 +161,8 @@ public class BioMaterialController {
         return bioMaterials;
     }
 
+    @SuppressWarnings("unused")
     public Collection<FactorValueValueObject> getFactorValues( EntityDelegator<BioMaterial> bm ) {
-
         if ( bm == null || bm.getId() == null )
             return null;
 
@@ -187,56 +179,20 @@ public class BioMaterialController {
 
     }
 
-    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
-        this.bioMaterialService = bioMaterialService;
-    }
-
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    /**
-     * @param factorValueService the factorValueService to set
-     */
-    public void setFactorValueService( FactorValueService factorValueService ) {
-        this.factorValueService = factorValueService;
-    }
-
-    public void setOntologyService( OntologyService ontologyService ) {
-        this.ontologyService = ontologyService;
-    }
-
-    @RequestMapping({ "/showBioMaterial.html", "/" })
-    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
-
-        Long id;
-
-        try {
-            id = Long.parseLong( request.getParameter( "id" ) );
-        } catch ( NumberFormatException e ) {
-            String message = "Must provide a numeric biomaterial id";
-            return new ModelAndView( WebConstants.HOME_PAGE ).addObject( "message", message );
-        }
-
-        BioMaterial bioMaterial = bioMaterialService.load( id );
-        if ( bioMaterial == null ) {
-            throw new EntityNotFoundException( id + " not found" );
-        }
+    @RequestMapping(value = { "/showBioMaterial.html", "/" }, method = RequestMethod.GET)
+    public ModelAndView show( @RequestParam("id") Long id ) {
+        BioMaterial bioMaterial = bioMaterialService.loadOrFail( id, EntityNotFoundException::new );
         bioMaterial = bioMaterialService.thaw( bioMaterial );
-
-        request.setAttribute( "id", id ); // / ??
-
         return new ModelAndView( "bioMaterial.detail" ).addObject( "bioMaterial", bioMaterial )
                 .addObject( "expressionExperiment", bioMaterialService.getExpressionExperiment( id ) );
     }
 
-    private String getLabelFromUri( String uri ) {
+    private String getLabelFromUri( String uri, long timeoutMs ) throws TimeoutException {
         if ( StringUtils.isBlank( uri ) ) return null;
-        OntologyTerm resource = ontologyService.getTerm( uri );
+        OntologyTerm resource = ontologyService.getTerm( uri, timeoutMs, TimeUnit.MILLISECONDS );
         if ( resource != null )
             return resource.getLabel();
         return null;
     }
-
 }
 

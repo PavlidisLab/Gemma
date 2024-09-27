@@ -233,54 +233,6 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
     }
 
     @Override
-    public Integer countDownregulated( ExpressionAnalysisResultSet par, double threshold ) {
-        String query = "select count(distinct r) from ExpressionAnalysisResultSet rs inner join rs.results r "
-                + "join r.contrasts c where rs = :rs and r.correctedPvalue < :threshold and c.tstat < 0";
-
-        Long count = ( Long ) this.getSessionFactory().getCurrentSession().createQuery( query )
-                .setParameter( "rs", par )
-                .setParameter( "threshold", threshold )
-                .uniqueResult();
-
-        AbstractDao.log.debug( "Found " + count + " downregulated genes in result set (" + par.getId()
-                + ") at a corrected pvalue threshold of " + threshold );
-
-        return count.intValue();
-    }
-
-    @Override
-    public Integer countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold ) {
-
-        String query = "select count(distinct r) from ExpressionAnalysisResultSet rs inner join rs.results r where rs = :rs and r.correctedPvalue < :threshold";
-
-        Long count = ( Long ) this.getSessionFactory().getCurrentSession().createQuery( query )
-                .setParameter( "rs", ears )
-                .setParameter( "threshold", threshold )
-                .uniqueResult();
-
-        AbstractDao.log.debug( "Found " + count + " differentially expressed genes in result set (" + ears.getId()
-                + ") at a corrected pvalue threshold of " + threshold );
-
-        return count.intValue();
-    }
-
-    @Override
-    public Integer countUpregulated( ExpressionAnalysisResultSet par, double threshold ) {
-        String query = "select count(distinct r) from ExpressionAnalysisResultSet rs inner join rs.results r"
-                + " join r.contrasts c where rs = :rs and r.correctedPvalue < :threshold and c.tstat > 0";
-
-        Long count = ( Long ) this.getSessionFactory().getCurrentSession().createQuery( query )
-                .setParameter( "rs", par )
-                .setParameter( "threshold", threshold )
-                .uniqueResult();
-
-        AbstractDao.log.debug( "Found " + count + " upregulated genes in result set (" + par.getId()
-                + ") at a corrected pvalue threshold of " + threshold );
-
-        return count.intValue();
-    }
-
-    @Override
     public Collection<DifferentialExpressionAnalysis> find( Gene gene, ExpressionAnalysisResultSet resultSet,
             double threshold ) {
         final String findByResultSet = "select distinct r from DifferentialExpressionAnalysis a"

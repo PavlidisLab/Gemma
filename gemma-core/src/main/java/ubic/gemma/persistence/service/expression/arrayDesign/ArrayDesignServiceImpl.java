@@ -149,8 +149,14 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
-    public Map<CompositeSequence, List<Gene>> getGenes( ArrayDesign arrayDesign ) {
+    public Collection<Gene> getGenes( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.getGenes( arrayDesign );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<CompositeSequence, List<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.getGenesByCompositeSequence( arrayDesign );
     }
 
     @Override

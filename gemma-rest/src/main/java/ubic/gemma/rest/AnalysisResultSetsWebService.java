@@ -134,21 +134,6 @@ public class AnalysisResultSetsWebService {
         return respond( expressionAnalysisResultSetService.count( expressionAnalysisResultSetArgService.getFilters( filter ) ) );
     }
 
-    private static final String TSV_EXAMPLE = "# If you use this file for your research, please cite:\n" +
-            "# Lim et al. (2021) Curation of over 10 000 transcriptomic studies to enable data reuse.\n" +
-            "# Database, baab006 (doi:10.1093/database/baab006).\n" +
-            "# Experimental factors: [name: genotype, values: [id: 7, characteristics: [wild type genotype], id: 8, characteristics: [Mfi2 [mouse] antigen p97 (melanoma associated) identified by monoclonal antibodies 133.2 and 96.5, Homozygous negative]]]\n" +
-            "id\tprobe_id\tprobe_name\tgene_id\tgene_name\tgene_ncbi_id\tgene_official_symbol\tgene_official_name\tpvalue\tcorrected_pvalue\trank\tcontrast_8_log2fc\tcontrast_8_tstat\tcontrast_8_pvalue\n" +
-            "2492126315\t86895\t1427283_at\t793757\tKmt2a\t214162\tKmt2a\tlysine (K)-specific methyltransferase 2A\t1.652E-1\t9.116E-1\t1.784E-1\t1.772E-1\t1.696E0\t1.652E-1\n" +
-            "2492126316\t87072\t1427106_at\t721517\tZbtb3\t75291\tZbtb3\tzinc finger and BTB domain containing 3\t8.961E-1\t9.863E-1\t9.086E-1\t4.574E-2\t1.391E-1\t8.961E-1\n" +
-            "2492126313\t89962\t1424216_a_at\t555147\tPapola\t18789\tPapola\tpoly (A) polymerase alpha\t4.174E-1\t9.183E-1\t4.544E-1\t-1.627E-1\t-9.033E-1\t4.174E-1\n" +
-            "2492126314\t67610\t1446568_at\t\t\t\t\t\t9.137E-1\t9.888E-1\t9.241E-1\t1.099E-1\t1.154E-1\t9.137E-1\n" +
-            "2492126319\t66807\t1447371_at\t863526\t9430037G07Rik\t320692\t9430037G07Rik\tRIKEN cDNA 9430037G07 gene\t8.41E-1\t9.763E-1\t8.614E-1\t6.666E-2\t2.14E-1\t8.41E-1\n" +
-            "2492126320\t81508\t1432670_at\t\t\t\t\t\t9.086E-1\t9.878E-1\t9.198E-1\t1.773E-1\t1.222E-1\t9.086E-1\n" +
-            "2492126317\t94081\t1420084_at\t\t\t\t\t\t8.125E-1\t9.726E-1\t8.354E-1\t-1.836E-1\t-2.533E-1\t8.125E-1\n" +
-            "2492126318\t59156\t1455033_at\t868095\tFam102b\t329739\tFam102b\tfamily with sequence similarity 102, member B\t3.26E-1\t9.153E-1\t3.56E-1\t2.782E-1\t1.118E0\t3.26E-1\n" +
-            "2492126307\t86209\t1427969_s_at\t699382\tZfp654\t72020\tZfp654\tzinc finger protein 654\t4.24E-1\t9.198E-1\t4.608E-1\t-1.774E-1\t-8.894E-1\t4.24E-1";
-
     /**
      * Retrieve a {@link AnalysisResultSet} given its identifier.
      */
@@ -157,14 +142,18 @@ public class AnalysisResultSetsWebService {
     @Path("/{resultSet}")
     @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_Q9 })
     @Operation(summary = "Retrieve a single analysis result set by its identifier",
-            description = "A slice or results can be retrieved by specifying the `offset` and `limit` parameters. This is only applicable to the JSON representation.",
+            description = "A slice or results can be retrieved by specifying the `offset` and `limit` parameters. "
+                    + "This is only applicable to the JSON representation. "
+                    + "The TSV output exposes the following columns: id, probe_id, probe_name, gene_(id|name|ncbi_id|official_symbol|official_name), pvalue, corrected_pvalue, rank, contrast_{fvId}_(coefficient|log2fc|tstat|pvalue). "
+                    + "For interaction terms, `{fvId}` is structured as `{id1}_{id2}`. "
+                    + "For continuous factors, `{fvId}` is empty and a single `_` delimiter is used.",
             responses = {
                     @ApiResponse(content = {
                             @Content(mediaType = MediaType.APPLICATION_JSON,
                                     schema = @Schema(implementation = PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject.class)),
                             @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, /* no need to expose the q-value */
                                     schema = @Schema(type = "string", format = "binary"),
-                                    examples = { @ExampleObject(value = TSV_EXAMPLE) })
+                                    examples = { @ExampleObject("classpath:/restapidocs/examples/result-set.tsv") })
                     }),
                     @ApiResponse(responseCode = "404", description = "The analysis result set could not be found.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })

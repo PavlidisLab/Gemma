@@ -55,12 +55,12 @@ public interface Gene2GOAssociationService extends BaseImmutableService<Gene2GOA
      * <p>
      * Used to fetch genes associated with a term + children.
      */
-    Collection<Gene> findByGOTerms( Collection<String> termsToFetch, @Nullable Taxon taxon );
+    Collection<Gene> findByGOTermUris( Collection<String> uris, @Nullable Taxon taxon );
 
     /**
      * Find all genes associated with a given set of GO terms, grouped by taxon.
      */
-    Map<Taxon, Collection<Gene>> findByGOTermsPerTaxon( Collection<String> termsToFetch );
+    Map<Taxon, Collection<Gene>> findByGOTermUrisPerTaxon( Collection<String> uris );
 
     /**
      * Remove all Gene2GO associations in batch.

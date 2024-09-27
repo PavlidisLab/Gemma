@@ -12,6 +12,7 @@ import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Subquery;
+import ubic.gemma.persistence.util.SubqueryMode;
 import ubic.gemma.rest.util.MalformedArgException;
 
 import java.time.LocalDateTime;
@@ -307,6 +308,30 @@ public class FilterArgTest {
                 .hasFieldOrPropertyWithValue( "objectAlias", "alias" )
                 .hasFieldOrPropertyWithValue( "propertyName", "H4s" )
                 .hasFieldOrPropertyWithValue( "requiredValue", "1" );
+    }
+
+    @Test
+    public void testNone() {
+        setUpMockVoService();
+        FilterArg<Identifiable> arg = FilterArg.valueOf( "none(characteristics.category = disease)" );
+        arg.getFilters( mockVoService );
+        verify( mockVoService ).getFilter( "characteristics.category", Filter.Operator.eq, "disease", SubqueryMode.NONE );
+    }
+
+    @Test
+    public void testAny() {
+        setUpMockVoService();
+        FilterArg<Identifiable> arg = FilterArg.valueOf( "any(characteristics.category = disease)" );
+        arg.getFilters( mockVoService );
+        verify( mockVoService ).getFilter( "characteristics.category", Filter.Operator.eq, "disease", SubqueryMode.ANY );
+    }
+
+    @Test
+    public void testAll() {
+        setUpMockVoService();
+        FilterArg<Identifiable> arg = FilterArg.valueOf( "all(characteristics.category = disease)" );
+        arg.getFilters( mockVoService );
+        verify( mockVoService ).getFilter( "characteristics.category", Filter.Operator.eq, "disease", SubqueryMode.ALL );
     }
 
     private void checkValidCollection( Collection<String> expected, String input ) {

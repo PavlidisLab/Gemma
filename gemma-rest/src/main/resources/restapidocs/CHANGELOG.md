@@ -1,5 +1,32 @@
 ## Updates
 
+### Update 2.8.3
+
+#### Ordering full-text results
+
+Datasets can now be filtered by a full-text query and sorted by another field (i.e. `lastUpdated`). If a `query` is
+passed to `getDatasets`, a field named `searchResult.score` becomes available for sorting.
+
+#### Warnings in payloads
+
+Add an optional `warnings` collection in a response. This is meant to provide feedback that would not usually result in
+a 400 error. One example is for invalid query syntax.
+
+The structure of `error` has been adjusted to comply with the Google JSON style-guide. In particular, `error.errors` is 
+now a list or structured error objects instead of a map.
+
+### Update 2.8.2
+
+- add a `characteristics` collection to the `ExpressionExperimentValueObject` model
+- add support for `any`, `all` and `none` quantifiers in filters
+- add `experimentalFactorType` to `FactorValueValueObject` and `FactorValueBasicValueObject`
+
+#### Quantifiers in filters
+
+It is now possible to apply a quantifier when filtering by a collection of entities. For example, one can filter
+datasets with "disease" characteristics by using the following filter: `none(characteristics.category = disease)`. The
+default quantifier is `any`.
+
 ### Update 2.8.1
 
 - add `factorValueId` and `secondFactorValueId` in `ContrastResultValueObject`. Those are populated in `getResultSet`

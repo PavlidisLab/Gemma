@@ -55,9 +55,14 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
     Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign );
 
     /**
-     * Obtain a mapping of composite sequences to genes for a given platform.
+     * Obtain all the genes associated to the platform.
      */
-    Map<CompositeSequence, List<Gene>> getGenes( ArrayDesign arrayDesign );
+    Collection<Gene> getGenes( ArrayDesign arrayDesign );
+
+    /**
+     * Obtain all the genes associated to the platform organized by corresponding design elements.
+     */
+    Map<CompositeSequence, List<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign );
 
     Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
 

@@ -9,16 +9,16 @@ import java.io.File;
  */
 public enum ExpressionExperimentMetaFileType {
 
-    BASE_METADATA( 1, ".base.metadata", "Sequence analysis summary", ".seq.analysis.sum.txt", false, true ),
+    BASE_METADATA( 1, ".base.metadata", "Sequence analysis summary", ".seq.analysis.sum.txt", false, true, "text/plain" ),
 
     ALIGNMENT_METADATA( 2, ".alignment.metadata", "Alignment statistics", ".alignment.statistics.txt", false,
-            true ),
+            true, "text/plain" ),
 
     MUTLQC_REPORT( 3, "MultiQCReports" + File.separatorChar + "multiqc_report.html", "Multi-QC Report",
-            ".multiqc.report.html", false, false ),
+            ".multiqc.report.html", false, false, "text/html" ),
 
     ADDITIONAL_PIPELINE_CONFIGURATIONS( 4, "configurations" + File.separatorChar, "Additional pipeline configuration settings",
-            ".pipeline.config.txt", true, false );
+            ".pipeline.config.txt", true, false, "text/plain" );
 
     private final int id;
     private final String fileName;
@@ -26,7 +26,7 @@ public enum ExpressionExperimentMetaFileType {
     private final String downloadName;
     private final boolean isDirectory;
     private final boolean isNamePrefixed;
-
+    private final String contentType;
 
     /**
      * @param id             the identifier of the meta file type.
@@ -38,13 +38,14 @@ public enum ExpressionExperimentMetaFileType {
      * @param isNamePrefixed whether the fileName has to be prefixed with the experiment accession name.
      */
     ExpressionExperimentMetaFileType( int id, String fileName, String displayName, String downloadName, Boolean isDirectory,
-            Boolean isNamePrefixed ) {
+            Boolean isNamePrefixed, String contentType ) {
         this.id = id;
         this.displayName = displayName;
         this.fileName = fileName;
         this.downloadName = downloadName;
         this.isDirectory = isDirectory;
         this.isNamePrefixed = isNamePrefixed;
+        this.contentType = contentType;
     }
 
     public int getId() {
@@ -61,6 +62,10 @@ public enum ExpressionExperimentMetaFileType {
 
     public boolean isDirectory() {
         return isDirectory;
+    }
+
+    public String getContentType() {
+        return contentType;
     }
 
     public String getDownloadName( ExpressionExperiment ee ) {

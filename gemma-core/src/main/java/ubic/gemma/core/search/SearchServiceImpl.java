@@ -176,8 +176,8 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
         StopWatch timer = StopWatch.createStarted();
 
         // attempt to infer a taxon from the query if missing
-        if ( settings.getTaxon() == null ) {
-            settings = settings.withTaxon( inferTaxon( settings ) );
+        if ( settings.getTaxonConstraint() == null ) {
+            settings = settings.withTaxonConstraint( inferTaxon( settings ) );
         }
 
         // If nothing to search return nothing.

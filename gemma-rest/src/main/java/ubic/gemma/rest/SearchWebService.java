@@ -171,7 +171,7 @@ public class SearchWebService {
 
         SearchSettings searchSettings = SearchSettings.builder()
                 .query( query.getValue() )
-                .taxon( taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null )
+                .taxonConstraint( taxonArg != null ? taxonArgService.getEntity( taxonArg ) : null )
                 .platformConstraint( platformArg != null ? platformArgService.getEntity( platformArg ) : null )
                 .resultTypes( resultTypesCls )
                 .maxResults( maxResults )
@@ -249,8 +249,8 @@ public class SearchWebService {
         public SearchSettingsValueObject( SearchSettings searchSettings ) {
             this.query = searchSettings.getQuery();
             this.resultTypes = searchSettings.getResultTypes().stream().map( Class::getName ).collect( Collectors.toSet() );
-            if ( searchSettings.getTaxon() != null ) {
-                this.taxon = taxonService.loadValueObject( searchSettings.getTaxon() );
+            if ( searchSettings.getTaxonConstraint() != null ) {
+                this.taxon = taxonService.loadValueObject( searchSettings.getTaxonConstraint() );
             } else {
                 this.taxon = null;
             }

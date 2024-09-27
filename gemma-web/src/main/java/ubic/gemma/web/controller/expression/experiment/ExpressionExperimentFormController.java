@@ -83,7 +83,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
-        BaseFormController.log.debug( "entering processFormSubmission" );
+        ExpressionExperimentFormController.log.debug( "entering processFormSubmission" );
 
         Long id = ( ( ExpressionExperimentValueObject ) command ).getId();
 
@@ -94,7 +94,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
                                 + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
             }
 
-            BaseFormController.log.warn( "Cannot find details view due to null id.  Redirecting to overview" );
+            ExpressionExperimentFormController.log.warn( "Cannot find details view due to null id.  Redirecting to overview" );
             return new ModelAndView( new RedirectView(
                     "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
                             + "/expressionExperiment/showAllExpressionExperiments.html" ) );

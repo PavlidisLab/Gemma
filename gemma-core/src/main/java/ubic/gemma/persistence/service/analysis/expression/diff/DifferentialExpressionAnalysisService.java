@@ -26,6 +26,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisService;
@@ -38,37 +39,13 @@ import java.util.Map;
 /**
  * @author kelsey
  */
-@SuppressWarnings("unused") // Possible external use
 public interface DifferentialExpressionAnalysisService extends BaseService<DifferentialExpressionAnalysis>, SingleExperimentAnalysisService<DifferentialExpressionAnalysis> {
-
-    /**
-     * @param par       result set
-     * @param threshold for corrected pvalue. Results may not be accurate for 'unreasonable' thresholds.
-     * @return number of downregulated elements
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Integer countDownregulated( ExpressionAnalysisResultSet par, double threshold );
-
-    /**
-     * @param ears      result sets
-     * @param threshold (double) for corrected pvalue. Results may not be accurate for 'unreasonable' thresholds.
-     * @return an integer count of all the probes that met the given threshold in the given expressionAnalysisResultSet
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Integer countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold );
-
-    /**
-     * @param par       result set
-     * @param threshold for corrected pvalue. Results may not be accurate for 'unreasonable' thresholds.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Integer countUpregulated( ExpressionAnalysisResultSet par, double threshold );
 
     @Secured({ "GROUP_USER" })
     DifferentialExpressionAnalysis create( DifferentialExpressionAnalysis analysis );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<DifferentialExpressionAnalysis> find( ubic.gemma.model.genome.Gene gene,
+    Collection<DifferentialExpressionAnalysis> find( Gene gene,
             ExpressionAnalysisResultSet resultSet, double threshold );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
@@ -82,7 +59,7 @@ public interface DifferentialExpressionAnalysisService extends BaseService<Diffe
     Collection<DifferentialExpressionAnalysis> findByTaxon( Taxon taxon );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<BioAssaySet> findExperimentsWithAnalyses( ubic.gemma.model.genome.Gene gene );
+    Collection<BioAssaySet> findExperimentsWithAnalyses( Gene gene );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
     Collection<DifferentialExpressionAnalysis> getAnalyses( BioAssaySet expressionExperiment );
@@ -91,6 +68,7 @@ public interface DifferentialExpressionAnalysisService extends BaseService<Diffe
      * @param expressionExperiments ees
      * @return quite deeply thawed analyses (not the results themselves, but metadata)
      */
+    @SuppressWarnings("unused")
     Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> getAnalyses(
             Collection<? extends BioAssaySet> expressionExperiments );
 

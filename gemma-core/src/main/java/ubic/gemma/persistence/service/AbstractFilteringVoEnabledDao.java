@@ -10,12 +10,9 @@ import org.hibernate.SessionFactory;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.type.*;
 import org.springframework.beans.factory.InitializingBean;
-import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.util.Filter;
-import ubic.gemma.persistence.util.Sort;
-import ubic.gemma.persistence.util.Subquery;
-import ubic.gemma.persistence.util.SubqueryUtils;
+import ubic.gemma.model.common.IdentifiableValueObject;
+import ubic.gemma.persistence.util.*;
 
 import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
@@ -321,54 +318,85 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     @Override
     public final Filter getFilter( String property, Filter.Operator operator, String value ) {
         FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
-        return nestIfSubquery( Filter.parse( propertyMeta.objectAlias, propertyMeta.propertyName, propertyMeta.propertyType, operator, value, property ),
-                ( property ) );
+        return nestIfSubquery( Filter.parse( propertyMeta.objectAlias, propertyMeta.propertyName, propertyMeta.propertyType, operator, value, property ), property, null );
+    }
+
+    @Override
+    public final Filter getFilter( String property, Filter.Operator operator, String value, SubqueryMode subqueryMode ) {
+        FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
+        return nestIfSubquery( Filter.parse( propertyMeta.objectAlias, propertyMeta.propertyName, propertyMeta.propertyType, operator, value, property ), property, subqueryMode );
     }
 
     @Override
     public final Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) {
         FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
-        return nestIfSubquery( Filter.parse( propertyMeta.objectAlias, propertyMeta.propertyName, propertyMeta.propertyType, operator, values, property ),
-                property );
+        return nestIfSubquery( Filter.parse( propertyMeta.objectAlias, propertyMeta.propertyName, propertyMeta.propertyType, operator, values, property ), property, null );
+    }
+
+    @Override
+    public final Filter getFilter( String property, Filter.Operator operator, Collection<String> values, SubqueryMode subqueryMode ) {
+        FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
+        return nestIfSubquery( Filter.parse( propertyMeta.objectAlias, propertyMeta.propertyName, propertyMeta.propertyType, operator, values, property ), property, subqueryMode );
     }
 
     @Override
     public final <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, T value ) {
         FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
-        return nestIfSubquery( Filter.by( propertyMeta.objectAlias, propertyMeta.propertyName, propertyType, operator, value, property ), property );
+        return nestIfSubquery( Filter.by( propertyMeta.objectAlias, propertyMeta.propertyName, propertyType, operator, value, property ), property, null );
     }
 
     @Override
     public final <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, Collection<T> values ) {
         FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
-        return nestIfSubquery( Filter.by( propertyMeta.objectAlias, propertyMeta.propertyName, propertyType, operator, values, property ), property );
+        return nestIfSubquery( Filter.by( propertyMeta.objectAlias, propertyMeta.propertyName, propertyType, operator, values, property ), property, null );
     }
 
-    private Filter nestIfSubquery( Filter f, String propertyName ) {
-        if ( filterablePropertiesViaSubquery.contains( propertyName ) ) {
-            String entityName = getSessionFactory().getClassMetadata( elementClass ).getEntityName();
-            List<Subquery.Alias> aliases;
-            if ( f.getObjectAlias() != null ) {
-                aliases = null;
-                for ( FilterablePropertyAlias fpa : filterablePropertyAliases ) {
-                    if ( f.getObjectAlias().equals( fpa.getObjectAlias() ) ) {
-                        aliases = SubqueryUtils.guessAliases( fpa.prefix, fpa.getObjectAlias() );
-                        break;
-                    }
-                }
-                if ( aliases == null ) {
-                    throw new IllegalArgumentException( String.format( "Could not find a filterable property alias for %s.", f.getObjectAlias() ) );
-                }
-            } else {
-                // the property refers to the root entity, no need for aliases
-                aliases = Collections.emptyList();
+    private Filter nestIfSubquery( Filter f, String propertyName, @Nullable SubqueryMode subqueryMode ) {
+        if ( !filterablePropertiesViaSubquery.contains( propertyName ) ) {
+            if ( subqueryMode != null ) {
+                throw new IllegalArgumentException( propertyName + " cannot be filtered via a subquery." );
             }
-            return Filter.by( objectAlias, getIdentifierPropertyName(), Long.class, Filter.Operator.inSubquery,
-                    new Subquery( entityName, getIdentifierPropertyName(), aliases, f ),
-                    propertyName );
-        } else {
             return f;
         }
+        String entityName = getSessionFactory().getClassMetadata( elementClass ).getEntityName();
+        List<Subquery.Alias> aliases;
+        if ( f.getObjectAlias() != null ) {
+            aliases = null;
+            for ( FilterablePropertyAlias fpa : filterablePropertyAliases ) {
+                if ( f.getObjectAlias().equals( fpa.getObjectAlias() ) ) {
+                    aliases = SubqueryUtils.guessAliases( fpa.prefix, fpa.getObjectAlias() );
+                    break;
+                }
+            }
+            if ( aliases == null ) {
+                throw new IllegalArgumentException( String.format( "Could not find a filterable property alias for %s.", f.getObjectAlias() ) );
+            }
+        } else {
+            // the property refers to the root entity, no need for aliases
+            aliases = Collections.emptyList();
+        }
+        Filter.Operator subqueryOp;
+        if ( subqueryMode != null ) {
+            switch ( subqueryMode ) {
+                case ANY:
+                    subqueryOp = Filter.Operator.inSubquery;
+                    break;
+                case ALL:
+                    subqueryOp = Filter.Operator.notInSubquery;
+                    f = Filter.not( f );
+                    break;
+                case NONE:
+                    subqueryOp = Filter.Operator.notInSubquery;
+                    break;
+                default:
+                    throw new IllegalArgumentException( "Unknown subquery mode." );
+            }
+        } else {
+            subqueryOp = Filter.Operator.inSubquery;
+        }
+        return Filter.by( objectAlias, getIdentifierPropertyName(), Long.class, subqueryOp,
+                    new Subquery( entityName, getIdentifierPropertyName(), aliases, f ),
+                    propertyName );
     }
 
     @Override

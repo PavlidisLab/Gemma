@@ -349,7 +349,25 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    public Map<CompositeSequence, List<Gene>> getGenes( ArrayDesign arrayDesign ) {
+    public Collection<Gene> getGenes( ArrayDesign arrayDesign ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                // using distinct for multi-mapping probes
+                .createSQLQuery( "select distinct {G.*} from GENE2CS "
+                        + "join CHROMOSOME_FEATURE G on GENE2CS.GENE = G.ID "
+                        + "where GENE2CS.AD = :ad" )
+                .addEntity( "G", Gene.class )
+                .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
+                .addSynchronizedEntityClass( ArrayDesign.class )
+                .addSynchronizedEntityClass( CompositeSequence.class )
+                .addSynchronizedEntityClass( Gene.class )
+                .setParameter( "ad", arrayDesign.getId() )
+                .setCacheable( true )
+                .list();
+    }
+
+    @Override
+    public Map<CompositeSequence, List<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign ) {
         //noinspection unchecked
         List<Object[]> results = getSessionFactory().getCurrentSession().createSQLQuery(
                         "select gene2cs.CS, gene2cs.GENE from GENE2CS gene2cs "
@@ -359,6 +377,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 .addSynchronizedEntityClass( CompositeSequence.class )
                 .addSynchronizedEntityClass( Gene.class )
                 .setParameter( "arrayDesignId", arrayDesign.getId() )
+                .setCacheable( true )
                 .list();
         return results.stream()
                 .collect( Collectors.groupingBy(

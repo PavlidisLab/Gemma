@@ -33,19 +33,32 @@ public abstract class AbstractFactorValueValueObject extends IdentifiableValueOb
      * The ID of the experimental factor this factor value belongs to.
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "This property is not filled if rendered within an ExperimentalFactorValueObject.")
     private Long experimentalFactorId;
+
+    /**
+     * The experimental factor type.
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(allowableValues = { "categorical", "continuous" }, description = "This property is not filled if rendered within an ExperimentalFactorValueObject.")
+    private String experimentalFactorType;
 
     /**
      * The experiment factor category.
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "This property is not filled if rendered within an ExperimentalFactorValueObject.")
     private CharacteristicValueObject experimentalFactorCategory;
 
     /**
      * The measurement associated with this factor value.
+     * <p>
+     * This is named as such to avoid conflict with {@link #isMeasurement()}.
      */
+    @JsonProperty("measurement")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private MeasurementValueObject measurement;
+    @Schema(description = "This property exists only if this factor value is a measurement.")
+    private MeasurementValueObject measurementObject;
 
     /**
      * The characteristics associated with this factor value.
@@ -77,13 +90,14 @@ public abstract class AbstractFactorValueValueObject extends IdentifiableValueOb
             this.experimentalFactorId = fv.getExperimentalFactor().getId();
             if ( Hibernate.isInitialized( fv.getExperimentalFactor() ) ) {
                 if ( fv.getExperimentalFactor().getCategory() != null ) {
+                    this.experimentalFactorType = fv.getExperimentalFactor().getType().equals( FactorType.CATEGORICAL ) ? "categorical" : "continuous";
                     this.experimentalFactorCategory = new CharacteristicValueObject( fv.getExperimentalFactor().getCategory() );
                 }
             }
         }
 
         if ( fv.getMeasurement() != null ) {
-            this.measurement = new MeasurementValueObject( fv.getMeasurement() );
+            this.measurementObject = new MeasurementValueObject( fv.getMeasurement() );
         }
 
         this.characteristics = fv.getCharacteristics().stream()
@@ -105,6 +119,6 @@ public abstract class AbstractFactorValueValueObject extends IdentifiableValueOb
     @Schema(description = "Indicate if this factor value represents a measurement. When this is true, the `measurement` field will be populated.")
     @JsonProperty("isMeasurement")
     public boolean isMeasurement() {
-        return getMeasurement() != null;
+        return measurementObject != null;
     }
 }

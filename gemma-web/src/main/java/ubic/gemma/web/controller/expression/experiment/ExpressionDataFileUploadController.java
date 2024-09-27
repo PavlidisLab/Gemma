@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.FileTools;
@@ -43,8 +44,6 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -80,9 +79,8 @@ public class ExpressionDataFileUploadController {
         return taskRunningService.submitTask( new SimpleEELoadLocalTask( loadEECommand ) );
     }
 
-    @RequestMapping("/expressionExperiment/upload.html")
-    @SuppressWarnings("unused")
-    public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
+    @RequestMapping(value = "/expressionExperiment/upload.html", method = RequestMethod.GET)
+    public ModelAndView show() {
         return new ModelAndView( "dataUpload" );
     }
 
@@ -176,7 +174,7 @@ public class ExpressionDataFileUploadController {
 
             result.setNumberMatchingProbes( numRowsMatchingArrayDesign );
             result.setNumberOfNonMatchingProbes( numRowsNotMatchingArrayDesign );
-            if ( mismatches.size() > 0 ) {
+            if ( !mismatches.isEmpty() ) {
                 result.setNonMatchingProbeNameExamples(
                         mismatches.subList( 0, Math.min( 10, mismatches.size() - 1 ) ) );
             }
@@ -279,11 +277,11 @@ public class ExpressionDataFileUploadController {
                 commandObject.setTaxon( taxonService.load( taxonId ) );
             }
 
-            if ( arrayDesignIds != null && arrayDesignIds.size() > 0 ) {
+            if ( arrayDesignIds != null && !arrayDesignIds.isEmpty() ) {
                 for ( Long adid : arrayDesignIds ) {
                     arrayDesigns.add( arrayDesignService.load( adid ) );
                 }
-            } else if ( arrayDesigns == null || arrayDesigns.size() == 0 ) {
+            } else if ( arrayDesigns == null || arrayDesigns.isEmpty() ) {
                 ExpressionDataFileUploadController.log
                         .info( "Platform " + commandObject.getArrayDesignName() + " is new, will create from data." );
                 ArrayDesign arrayDesign = ArrayDesign.Factory.newInstance();

@@ -687,9 +687,11 @@ public class GoMetricImpl implements GoMetric {
         HashSet<OntologyTerm> termsGO = new HashSet<>();
 
         for ( Characteristic characteristic : termsVoc ) {
-            OntologyTerm term = geneOntologyService.getTermForId( characteristic.getValue() );
-            if ( ( term != null ) )
-                termsGO.add( term );
+            if ( characteristic.getValueUri() != null ) {
+                OntologyTerm term = geneOntologyService.getTerm( characteristic.getValueUri() );
+                if ( ( term != null ) )
+                    termsGO.add( term );
+            }
         }
         return termsGO;
     }

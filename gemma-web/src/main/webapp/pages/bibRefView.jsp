@@ -26,7 +26,7 @@
 			<p>The entry is incomplete. You can attempt to complete it from
 				pubmed by clicking the 'add' button below.</p>
 			<div align="left">
-				<form method="GET" action="<c:url value="/bibRef/bibRefAdd.html"/>">
+				<form method="POST" action="<c:url value="/bibRef/bibRefAdd.html"/>">
 					<input type="hidden" name="accession" value="${accession}"><input
 						type="hidden" name="refresh" value="true"> <input
 						type="submit" value="Add to Gemma Database">

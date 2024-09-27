@@ -19,6 +19,7 @@
 
 package ubic.gemma.core.analysis.preprocess;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
@@ -50,8 +51,7 @@ public class OutlierDetectionServiceTest extends AbstractGeoServiceTest {
         DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = this.createMockMatrix();
 
         // 1 outlier initially
-        Collection<OutlierDetails> output = outlierDetectionService
-                .identifyOutliersByMedianCorrelation( sampleCorrelationMatrix );
+        Collection<OutlierDetails> output = outlierDetectionService.identifyOutliersByMedianCorrelation( sampleCorrelationMatrix );
         assertEquals( 0, output.size() );
 
         // modify 2 samples to be outliers
@@ -66,16 +66,35 @@ public class OutlierDetectionServiceTest extends AbstractGeoServiceTest {
             sampleCorrelationMatrix.set( outlierIdx2, j, val );
         }
 
+        BioAssay ol1 = sampleCorrelationMatrix.getColName( outlierIdx );
+        BioAssay ol2 = sampleCorrelationMatrix.getColName( outlierIdx2 );
+
         // now we expect one new outlier from the modified matrix
         output = outlierDetectionService.identifyOutliersByMedianCorrelation( sampleCorrelationMatrix );
         assertEquals( 2, output.size() );
-        assertEquals( sampleCorrelationMatrix.getColName( outlierIdx ), output.iterator().next().getBioAssay() );
+
+
+        boolean found1 = false;
+        boolean found2 = false;
+        for ( OutlierDetails outlier : output ) {
+            BioAssay s = outlier.getBioAssay();
+            if ( ol1.equals( s ) ) {
+                found1 = true;
+            } else if ( ol2.equals( s ) ) {
+                found2 = true;
+            }
+        }
+
+        assert ( found1 && found2 );
+
     }
 
     private DoubleMatrix<BioAssay, BioAssay> createMockMatrix() {
-        DoubleMatrix<BioAssay, BioAssay> matrix = new DenseDoubleMatrix<>( OutlierDetectionServiceTest.MATRIX_SIZE,
-                OutlierDetectionServiceTest.MATRIX_SIZE );
+        DoubleMatrix<BioAssay, BioAssay> matrix = new DenseDoubleMatrix<>( OutlierDetectionServiceTest.MATRIX_SIZE, OutlierDetectionServiceTest.MATRIX_SIZE );
         for ( int i = 0; i < OutlierDetectionServiceTest.MATRIX_SIZE; i++ ) {
+            BioAssay sample = BioAssay.Factory.newInstance( RandomStringUtils.randomAlphabetic( 8 ) );
+            matrix.setRowName( sample, i );
+            matrix.setColumnName( sample, i );
             for ( int j = 0; j < OutlierDetectionServiceTest.MATRIX_SIZE; j++ ) {
                 matrix.set( i, j, 0.9 + ( random.nextDouble() / 10 ) );
             }

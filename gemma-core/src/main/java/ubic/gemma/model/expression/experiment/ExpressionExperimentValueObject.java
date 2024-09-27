@@ -1,11 +1,11 @@
 package ubic.gemma.model.expression.experiment;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.acl.domain.AclSid;
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import gemma.gsec.model.SecureValueObject;
 import gemma.gsec.util.SecurityUtil;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,16 +13,20 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimensionValueObject;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @SuppressWarnings({ "unused", "WeakerAccess" }) // used in front end
 @Getter
@@ -81,6 +85,10 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private TaxonValueObject taxonObject;
 
     private String technologyType;
+
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Set<CharacteristicValueObject> characteristics;
 
     /**
      * The single-cell dimension of the preferred single-cell vectors.
@@ -159,6 +167,12 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         } else {
             geeq = null;
         }
+
+        if ( Hibernate.isInitialized( ee.getCharacteristics() ) ) {
+            characteristics = ee.getCharacteristics().stream()
+                    .map( CharacteristicValueObject::new )
+                    .collect( Collectors.toSet() );
+        }
     }
 
     public ExpressionExperimentValueObject( ExpressionExperiment ee, SingleCellDimension singleCellDimension, CellTypeAssignment cellTypeAssignment ) {
@@ -221,6 +235,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.geeq = vo.getGeeq();
         this.suitableForDEA = vo.getSuitableForDEA();
         this.singleCellDimension = vo.getSingleCellDimension();
+        this.characteristics = vo.getCharacteristics();
     }
 
     /**
