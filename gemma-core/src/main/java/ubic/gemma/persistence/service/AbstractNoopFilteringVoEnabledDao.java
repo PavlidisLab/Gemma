@@ -20,7 +20,7 @@ import java.util.Set;
  */
 public abstract class AbstractNoopFilteringVoEnabledDao<O extends Identifiable, VO extends IdentifiableValueObject<O>> extends AbstractVoEnabledDao<O, VO> implements FilteringVoEnabledDao<O, VO> {
 
-    private final String message = String.format( "Filtering %s is not supported.", elementClass.getName() );
+    private final String message = String.format( "Filtering %s is not supported.", getElementClass().getName() );
 
     protected AbstractNoopFilteringVoEnabledDao( Class<? extends O> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );

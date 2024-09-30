@@ -41,7 +41,6 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.hibernate.HibernateUtils;
-import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDaoBase;
 import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.EntityUtils;
@@ -344,7 +343,7 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
         }
 
         if ( timer.getTime() > 1000 ) {
-            AbstractDao.log.info( "Find probes: " + timer.getTime() + " ms" );
+            log.info( "Find probes: " + timer.getTime() + " ms" );
         }
         timer.reset();
         timer.start();
@@ -384,7 +383,7 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
         }
 
         if ( timer.getTime() > 1000 ) {
-            AbstractDao.log.info( "Find experiments: " + timer.getTime() + " ms" );
+            log.info( "Find experiments: " + timer.getTime() + " ms" );
         }
 
         return result;
@@ -419,7 +418,7 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
             count++;
         }
         if ( timer.getTime() > 1000 ) {
-            AbstractDao.log
+            log
                     .info( "Fetch " + count + " analyses for " + result.size() + " experiments: " + timer.getTime()
                             + "ms; Query was:\n" + query );
         }
@@ -459,10 +458,9 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
                 count++;
             }
             if ( timer.getTime() > 1000 ) {
-                AbstractDao.log
-                        .info( "Fetch " + count + " subset analyses for " + result.size() + " experiment subsets: "
-                                + timer.getTime() + "ms" );
-                AbstractDao.log.debug( "Query for subsets was: " + q2 );
+                log.info( String.format( "Fetch %d subset analyses for %d experiment subsets: %d ms",
+                        count, result.size(), timer.getTime() ) );
+                log.debug( "Query for subsets was: " + q2 );
             }
         }
 

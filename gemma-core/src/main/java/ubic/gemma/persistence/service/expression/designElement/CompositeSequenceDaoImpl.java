@@ -40,7 +40,6 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.*;
 
@@ -291,8 +290,8 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
             return returnVal;
         }
 
-        if ( AbstractDao.log.isDebugEnabled() )
-            AbstractDao.log.debug( "Built cs -> gene map in " + watch.getTime() + " ms; fetching " + genesToFetch.size()
+        if ( log.isDebugEnabled() )
+            log.debug( "Built cs -> gene map in " + watch.getTime() + " ms; fetching " + genesToFetch.size()
                     + " genes." );
 
         // fetch the genes
@@ -301,14 +300,14 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         org.hibernate.Query geneQueryObject = this.getSessionFactory().getCurrentSession()
                 .createQuery( geneQuery );
         for ( Collection<Long> batch : batchParameterList( genesToFetch, GENE2CS_BATCH_SIZE ) ) {
-            AbstractDao.log.debug( "Processing batch ... " );
+            log.debug( "Processing batch ... " );
             geneQueryObject.setParameterList( "gs", batch );
             //noinspection unchecked
             genes.addAll( geneQueryObject.list() );
         }
 
-        if ( AbstractDao.log.isDebugEnabled() )
-            AbstractDao.log.debug( "Got information on " + genes.size() + " genes in " + watch.getTime() + " ms" );
+        if ( log.isDebugEnabled() )
+            log.debug( "Got information on " + genes.size() + " genes in " + watch.getTime() + " ms" );
 
         Map<Long, Gene> geneIdMap = new HashMap<>();
         for ( Gene g : genes ) {
@@ -333,8 +332,8 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
             ++count;
         }
 
-        if ( AbstractDao.log.isDebugEnabled() )
-            AbstractDao.log
+        if ( log.isDebugEnabled() )
+            log
                     .debug( "Done, " + count + " result rows processed, " + returnVal.size() + "/" + compositeSequences
                             .size() + " probes are associated with genes" );
         return returnVal;
@@ -371,7 +370,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     public Map<CompositeSequence, Collection<BioSequence2GeneProduct>> getGenesWithSpecificity(
             Collection<CompositeSequence> compositeSequences ) {
 
-        AbstractDao.log.info( "Getting cs -> alignment specificity map for " + compositeSequences.size()
+        log.info( "Getting cs -> alignment specificity map for " + compositeSequences.size()
                 + " composite sequences" );
         Map<CompositeSequence, Collection<BioSequence2GeneProduct>> results = new HashMap<>();
 
@@ -385,7 +384,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
 
         timer.stop();
         if ( timer.getTime() > 10000 ) {
-            AbstractDao.log.info( "Probe to gene map finished: " + total + " retrieved in " + timer.getTime() + "ms" );
+            log.info( "Probe to gene map finished: " + total + " retrieved in " + timer.getTime() + "ms" );
         }
         return results;
     }
@@ -464,7 +463,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         for ( CompositeSequence cs : compositeSequences ) {
             thaw( cs );
             if ( ++i % 2000 == 0 ) {
-                AbstractDao.log.info( "Progress: " + i + "/" + numToDo + "..." );
+                log.info( "Progress: " + i + "/" + numToDo + "..." );
             }
         }
     }

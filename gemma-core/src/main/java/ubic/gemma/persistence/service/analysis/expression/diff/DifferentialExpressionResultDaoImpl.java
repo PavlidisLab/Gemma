@@ -25,8 +25,6 @@ import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
-import ubic.basecode.io.ByteArrayConverter;
-import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.util.SQLUtils;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.experiment.*;
@@ -268,12 +266,12 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                 .list();
 
         Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = groupDiffExResultVos( qResult );
-        AbstractDao.log.info( String.format( "Num experiments with probe analysis results (with limit = %d) : %d. Number of probes returned in total: %d",
+        log.info( String.format( "Num experiments with probe analysis results (with limit = %d) : %d. Number of probes returned in total: %d",
                 limit, results.size(), qResult.size() ) );
 
         timer.stop();
         if ( timer.getTime() > 1000 ) {
-            AbstractDao.log.warn( "Diff ex results: " + timer.getTime() + " ms" );
+            log.warn( "Diff ex results: " + timer.getTime() + " ms" );
         }
 
         return results;
@@ -305,7 +303,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         } finally {
             timer.stop();
             if ( timer.getTime() > 1000 ) {
-                AbstractDao.log.info( "Diff ex results: " + timer.getTime() + " ms" );
+                log.info( "Diff ex results: " + timer.getTime() + " ms" );
             }
         }
     }
@@ -324,7 +322,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         } finally {
             timer.stop();
             if ( timer.getTime() > 1000 ) {
-                AbstractDao.log.warn( "Diff ex results: " + timer.getTime() + " ms" );
+                log.warn( "Diff ex results: " + timer.getTime() + " ms" );
             }
         }
     }
@@ -347,7 +345,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         } finally {
             timer.stop();
             if ( timer.getTime() > 1000 ) {
-                AbstractDao.log.warn( "Diff ex results: " + timer.getTime() + " ms" );
+                log.warn( "Diff ex results: " + timer.getTime() + " ms" );
             }
         }
     }
@@ -379,9 +377,9 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         Map<Long, Collection<Long>> foundInCache = this.fillFromCache( results, resultSetIdsMap.keySet(), geneIds );
 
         if ( !foundInCache.isEmpty() ) {
-            AbstractDao.log.info( "Results for " + foundInCache.size() + " resultsets found in cache" );
+            log.info( "Results for " + foundInCache.size() + " resultsets found in cache" );
         } else {
-            AbstractDao.log.info( "No results were in the cache" );
+            log.info( "No results were in the cache" );
         }
 
         Collection<Long> resultSetsNeeded = this
@@ -389,11 +387,11 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         // Are we finished?
         if ( resultSetsNeeded.isEmpty() ) {
-            AbstractDao.log.info( "All results were in the cache." );
+            log.info( "All results were in the cache." );
             return results;
         }
 
-        AbstractDao.log.info( foundInCache.size() + "/" + resultSetIdsMap.size()
+        log.info( foundInCache.size() + "/" + resultSetIdsMap.size()
                 + " resultsSets had at least some cached results; still need to query " + resultSetsNeeded.size() );
 
         assert !resultSetsNeeded.isEmpty();
@@ -412,13 +410,13 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         if ( resultSetsNeeded.size() > geneIds.size() ) {
             resultSetBatchSize = Math.min( 500, resultSetsNeeded.size() );
-            AbstractDao.log
+            log
                     .info( "Batching by result sets (" + resultSetsNeeded.size() + " resultSets); " + geneIds.size()
                             + " genes; batch size=" + resultSetBatchSize );
 
         } else {
             geneBatchSize = Math.min( 200, geneIds.size() );
-            AbstractDao.log.info( "Batching by genes (" + geneIds.size() + " genes); " + resultSetsNeeded.size()
+            log.info( "Batching by genes (" + geneIds.size() + " genes); " + resultSetsNeeded.size()
                     + " resultSets; batch size=" + geneBatchSize );
         }
 
@@ -438,8 +436,8 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         // Iterate over batches of resultSets
         for ( Collection<Long> resultSetIdBatch : batchParameterList( resultSetsNeeded, resultSetBatchSize ) ) {
 
-            if ( AbstractDao.log.isDebugEnabled() )
-                AbstractDao.log.debug( "Starting batch of resultsets: " + StringUtils
+            if ( log.isDebugEnabled() )
+                log.debug( "Starting batch of resultsets: " + StringUtils
                         .abbreviate( StringUtils.join( resultSetIdBatch, "," ), 100 ) );
 
             /*
@@ -459,8 +457,8 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             // iterate over batches of probes (genes)
             for ( Collection<Long> probeBatch : batchParameterList( cs2GeneIdMap.keySet(), geneBatchSize ) ) {
 
-                if ( AbstractDao.log.isDebugEnabled() )
-                    AbstractDao.log.debug( "Starting batch of probes: " + StringUtils
+                if ( log.isDebugEnabled() )
+                    log.debug( "Starting batch of probes: " + StringUtils
                             .abbreviate( StringUtils.join( probeBatch, "," ), 100 ) );
 
                 queryObject.setParameterList( "probe_ids", probeBatch );
@@ -471,7 +469,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
                 if ( innerQt.getTime() > 2000 ) {
                     // show the actual query with params.
-                    AbstractDao.log.info( "Query time: " + innerQt.getTime() + "ms:\n " + queryObject.getQueryString()
+                    log.info( "Query time: " + innerQt.getTime() + "ms:\n " + queryObject.getQueryString()
                             .replace( ":probe_ids", StringUtils.join( probeBatch, "," ) )
                             .replace( ":rs_ids", StringUtils.join( resultSetIdBatch, "," ) ) );
                 }
@@ -486,8 +484,8 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                     numResults += this.processResultTuple( o, resultsFromDb, cs2GeneIdMap );
                 }
 
-                if ( timer.getTime() > 5000 && AbstractDao.log.isInfoEnabled() ) {
-                    AbstractDao.log.info( "Batch time: " + timer.getTime() + "ms; Fetched DiffEx " + numResults
+                if ( timer.getTime() > 5000 && log.isInfoEnabled() ) {
+                    log.info( "Batch time: " + timer.getTime() + "ms; Fetched DiffEx " + numResults
                             + " results so far. " + numResultSetBatchesDone + "/" + numResultSetBatches
                             + " resultset batches completed. " + numGeneBatchesDone + "/" + numGeneBatches
                             + " gene batches done." );
@@ -522,14 +520,14 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         }
 
-        if ( timer.getTime() > 1000 && AbstractDao.log.isInfoEnabled() ) {
-            AbstractDao.log
+        if ( timer.getTime() > 1000 && log.isInfoEnabled() ) {
+            log
                     .info( "Fetching DiffEx from DB took total of " + timer.getTime() + " ms : geneIds=" + StringUtils
                             .abbreviate( StringUtils.join( geneIds, "," ), 50 ) + " result set="
                             + StringUtils
                             .abbreviate( StringUtils.join( resultSetsNeeded, "," ), 50 ) );
             if ( timeForFillingNonSig > 100 ) {
-                AbstractDao.log.info( "Filling in non-significant values: " + timeForFillingNonSig + "ms in total" );
+                log.info( "Filling in non-significant values: " + timeForFillingNonSig + "ms in total" );
             }
         }
 
@@ -557,7 +555,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         // check for top hits in cache
         List<DifferentialExpressionValueObject> cachedResults = differentialExpressionResultCache.getTopHits( resultSet );
         if ( cachedResults != null && cachedResults.size() >= minNumberOfResults ) {
-            AbstractDao.log.info( "Top hits already in cache" );
+            log.info( "Top hits already in cache" );
             return cachedResults;
         }
 
@@ -578,7 +576,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         // If too few probes meet threshold, redo and just get top results.
         if ( qResult.size() < minNumberOfResults ) {
             // FIXME this is kind of dumb. If we always return the top minimum, why not just always get that?
-            AbstractDao.log.info( "Too few results met threshold, repeating to just get the top hits" );
+            log.info( "Too few results met threshold, repeating to just get the top hits" );
             qs = "select r from DifferentialExpressionAnalysisResult r "
                     + "where r.resultSet = :resultSet "
                     // ascending, nulls last
@@ -601,7 +599,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         timer.stop();
         if ( timer.getTime() > 1000 ) {
-            AbstractDao.log.info( "Diff ex results: " + timer.getTime() + " ms" );
+            log.info( "Diff ex results: " + timer.getTime() + " ms" );
         }
 
         return results;
@@ -659,7 +657,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             }
 
             if ( timer.getTime() > 2000 ) {
-                AbstractDao.log.info( "Fetch " + batch.size() + " results with contrasts: " + timer.getTime()
+                log.info( "Fetch " + batch.size() + " results with contrasts: " + timer.getTime()
                         + "ms; query was\n " + ( "SELECT DISTINCT c.ID, c.LOG_FOLD_CHANGE, c.FACTOR_VALUE_FK,"
                         + " c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK, c.PVALUE FROM CONTRAST_RESULT c"
                         + " WHERE c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK IN (:ids)  " ).replace( ":ids", StringUtils.join( batch, "," ) ) );
@@ -790,13 +788,13 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             }
         }
 
-        AbstractDao.log
+        log
                 .debug( "Num experiments with probe analysis results (with limit = " + limit + ") : " + results.size()
                         + ". Number of results (probes x contrasts) returned in total: " + qResult.size() );
 
         timer.stop();
         if ( timer.getTime() > 1000 ) {
-            AbstractDao.log.info( "Diff ex results: " + timer.getTime() + " ms" );
+            log.info( "Diff ex results: " + timer.getTime() + " ms" );
         }
 
         return results;
@@ -842,8 +840,8 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                     correctedPvalue, pvalue );
         }
 
-        if ( AbstractDao.log.isDebugEnabled() )
-            AbstractDao.log.debug( "resultset=" + resultSetId + " probe=" + probeId + " qval=" + String
+        if ( log.isDebugEnabled() )
+            log.debug( "resultset=" + resultSetId + " probe=" + probeId + " qval=" + String
                     .format( "%.2g", correctedPvalue ) );
 
         return 1;
@@ -878,7 +876,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         }
 
         if ( timer.getTime() > 10 ) {
-            AbstractDao.log.info( "Add " + i + " results to cache: " + timer.getTime() + "ms" );
+            log.info( "Add " + i + " results to cache: " + timer.getTime() + "ms" );
         }
     }
 
@@ -893,7 +891,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         boolean useCache = true;
         //noinspection ConstantConditions // for debugging ... disable cache.
         if ( !useCache ) {
-            AbstractDao.log.warn( "Cache is disabled" );
+            log.warn( "Cache is disabled" );
             return foundInCache;
         }
 
@@ -922,7 +920,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         }
 
         if ( timer.getTime() > 100 && totalFound > 0 ) {
-            AbstractDao.log.info( "Fill " + totalFound + " results from cache: " + timer.getTime() + "ms" );
+            log.info( "Fill " + totalFound + " results from cache: " + timer.getTime() + "ms" );
         }
 
         return foundInCache;
@@ -967,7 +965,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             }
         }
         if ( t.getTime() > 100 ) {
-            AbstractDao.log.info( "Fill in " + d + " non-significant values: " + t.getTime() + "ms" );
+            log.info( "Fill in " + d + " non-significant values: " + t.getTime() + "ms" );
         }
         return t.getTime();
     }
@@ -1036,7 +1034,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
 
         }
         if ( timer.getTime() > 1 ) {
-            AbstractDao.log.info( "Checking cache results: " + timer.getTime() + "ms; " + needToQuery.size()
+            log.info( "Checking cache results: " + timer.getTime() + "ms; " + needToQuery.size()
                     + " result sets must be queried" );
         }
         return needToQuery;

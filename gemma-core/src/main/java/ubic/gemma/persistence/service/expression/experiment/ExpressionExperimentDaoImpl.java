@@ -48,7 +48,6 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.hibernate.TypedResultTransformer;
-import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
 import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
@@ -205,15 +204,17 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public ExpressionExperiment findByBioAssay( BioAssay ba ) {
-
-        //language=HQL
-        final String queryString =
-                "select ee from ExpressionExperiment as ee inner join ee.bioAssays as ba " + "where ba = :ba group by ee";
-        List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ba", ba )
+        //noinspection unchecked
+        List<ExpressionExperiment> list = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment as ee "
+                        + "join ee.bioAssays as ba "
+                        + "where ba = :ba "
+                        + "group by ee" )
+                .setParameter( "ba", ba )
                 .list();
 
-        if ( list.size() == 0 ) {
-            AbstractDao.log.warn( "No expression experiment for " + ba );
+        if ( list.isEmpty() ) {
+            log.warn( "No expression experiment for " + ba );
             return null;
         }
 
@@ -221,34 +222,32 @@ public class ExpressionExperimentDaoImpl
             /*
              * This really shouldn't happen!
              */
-            AbstractDao.log.warn( "Found " + list.size() + " expression experiment for the given bio assay: " + ba
+            log.warn( "Found " + list.size() + " expression experiment for the given bio assay: " + ba
                     + " Only 1 returned." );
         }
-        return ( ExpressionExperiment ) list.iterator().next();
+        return list.iterator().next();
     }
 
     @Override
     public ExpressionExperiment findByBioMaterial( BioMaterial bm ) {
-
-        //language=HQL
-        final String queryString = "select ee from ExpressionExperiment as ee "
-                + "inner join ee.bioAssays as ba inner join ba.sampleUsed as sample where sample = :bm group by ee";
-
-        List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "bm", bm )
+        //noinspection unchecked
+        List<ExpressionExperiment> list = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ee from ExpressionExperiment as ee "
+                        + "join ee.bioAssays as ba join ba.sampleUsed as sample where sample = :bm group by ee" )
+                .setParameter( "bm", bm )
                 .list();
 
-        if ( list.size() == 0 ) {
-            AbstractDao.log.warn( "No expression experiment for " + bm );
+        if ( list.isEmpty() ) {
+            log.warn( "No expression experiment for " + bm );
             return null;
         }
         if ( list.size() > 1 ) {
             /*
              * This really shouldn't happen!
              */
-            AbstractDao.log.warn(
-                    "Found " + list.size() + " expression experiment for the given bm: " + bm + " Only 1 returned." );
+            log.warn( "Found " + list.size() + " expression experiment for the given bm: " + bm + " Only 1 returned." );
         }
-        return ( ExpressionExperiment ) list.iterator().next();
+        return list.iterator().next();
     }
 
     @Override

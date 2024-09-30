@@ -105,7 +105,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         }
         if ( timer.getTime() > 5000 ) {
             log.info( String.format( "Loaded [%s id=%d] with results, probes and contrasts in %d ms.",
-                    elementClass.getName(), id, timer.getTime() ) );
+                    getElementClass().getName(), id, timer.getTime() ) );
         }
         return ears;
     }
@@ -134,7 +134,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         }
         if ( timer.getTime() > 100 ) {
             log.info( String.format( "Loaded [%s id=%d] with results, probes and contrasts in %d ms.",
-                    elementClass.getName(), id, timer.getTime() ) );
+                    getElementClass().getName(), id, timer.getTime() ) );
         }
         return ears;
     }
@@ -165,7 +165,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         }
         if ( timer.getTime() > 100 ) {
             log.info( String.format( "Loaded [%s id=%d] with results, probes and contrasts in %d ms.",
-                    elementClass.getName(), id, timer.getTime() ) );
+                    getElementClass().getName(), id, timer.getTime() ) );
         }
         return ears;
     }

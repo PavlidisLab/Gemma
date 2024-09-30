@@ -40,7 +40,6 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.*;
@@ -104,7 +103,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         List<BlatResult> toDelete = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "arrayDesign", arrayDesign ).list();
 
-        AbstractDao.log.info( "Deleting " + toDelete.size() + " alignments for sequences on " + arrayDesign
+        log.info( "Deleting " + toDelete.size() + " alignments for sequences on " + arrayDesign
                 + " (will affect other designs that use any of the same sequences)" );
 
         for ( BlatResult r : toDelete ) {
@@ -132,7 +131,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             }
 
         }
-        AbstractDao.log.info(
+        log.info(
                 "Done deleting " + blatAssociations.size() + " blat associations for " + arrayDesign );
 
     }
@@ -158,7 +157,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
 
         }
-        AbstractDao.log.info(
+        log.info(
                 "Done deleting " + annotAssociations.size() + " AnnotationAssociations for " + arrayDesign );
     }
 
@@ -206,7 +205,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             for ( BlatAssociation r : blatAssociations ) {
                 this.getSessionFactory().getCurrentSession().delete( r );
             }
-            AbstractDao.log.info(
+            log.info(
                     "Done deleting " + blatAssociations.size() + " blat associations for " + arrayDesign );
         }
 
@@ -225,7 +224,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             for ( AnnotationAssociation r : annotAssociations ) {
                 this.getSessionFactory().getCurrentSession().delete( r );
             }
-            AbstractDao.log.info(
+            log.info(
                     "Done deleting " + annotAssociations.size() + " AnnotationAssociations for " + arrayDesign );
 
         }
@@ -342,7 +341,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         }
 
         if ( timer.getTime() > 1000 ) {
-            AbstractDao.log.info( "Fetch sequences: " + timer.getTime() + "ms" );
+            log.info( "Fetch sequences: " + timer.getTime() + "ms" );
         }
 
         return bioSequences;
@@ -801,7 +800,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
             cs.setBiologicalCharacteristic( null );
             if ( ++count % ArrayDesignDaoImpl.LOGGING_UPDATE_EVENT_COUNT == 0 ) {
-                AbstractDao.log.info( "Cleared sequence association for " + count + " composite sequences" );
+                log.info( "Cleared sequence association for " + count + " composite sequences" );
             }
         }
     }
@@ -839,9 +838,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         String message = String.format( "Thaw array design took %d ms (metadata: %d ms, probes: %d ms)",
                 timer.getTime(), timer.getTime() - probeTimer.getTime(), probeTimer.getTime() );
         if ( timer.getTime() > 1000 ) {
-            AbstractDao.log.warn( message );
+            log.warn( message );
         } else {
-            AbstractDao.log.debug( message );
+            log.debug( message );
         }
     }
 
@@ -856,7 +855,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         // Size does not automatically disqualify, because we only consider BioSequences that actually have
         // sequences in them.
         if ( candidateSubsumee.getCompositeSequences().size() > candidateSubsumer.getCompositeSequences().size() ) {
-            AbstractDao.log.info(
+            log.info(
                     "Subsumee has more sequences than subsumer so probably cannot be subsumed ... checking anyway" );
         }
 
@@ -878,7 +877,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         }
 
         if ( subsumeeSeqs.size() > subsumerSeqs.size() ) {
-            AbstractDao.log.info(
+            log.info(
                     "Subsumee has more sequences than subsumer so probably cannot be subsumed, checking overlap" );
         }
 
@@ -892,7 +891,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
             }
         }
 
-        AbstractDao.log.info( "Subsumer " + candidateSubsumer + " contains " + overlap + "/" + subsumeeSeqs.size()
+        log.info( "Subsumer " + candidateSubsumer + " contains " + overlap + "/" + subsumeeSeqs.size()
                 + " biosequences from the subsumee " + candidateSubsumee );
 
         if ( overlap != subsumeeSeqs.size() ) {
@@ -906,10 +905,9 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
         // if we got this far, then we definitely have a subsuming situation.
         if ( candidateSubsumee.getCompositeSequences().size() == candidateSubsumer.getCompositeSequences().size() ) {
-            AbstractDao.log.info(
-                    candidateSubsumee + " and " + candidateSubsumer + " are apparently exactly equivalent" );
+            log.info( candidateSubsumee + " and " + candidateSubsumer + " are apparently exactly equivalent" );
         } else {
-            AbstractDao.log.info( candidateSubsumer + " subsumes " + candidateSubsumee );
+            log.info( candidateSubsumer + " subsumes " + candidateSubsumee );
         }
         candidateSubsumer.getSubsumedArrayDesigns().add( candidateSubsumee );
         candidateSubsumee.setSubsumingArrayDesign( candidateSubsumer );

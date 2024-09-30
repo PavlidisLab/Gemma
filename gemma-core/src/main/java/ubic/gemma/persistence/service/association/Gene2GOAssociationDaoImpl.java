@@ -103,11 +103,11 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
                 result.computeIfAbsent( gene, k -> new HashSet<>() ).add( vc );
             }
             if ( ++i % 1000 == 0 ) {
-                AbstractDao.log.info( "Fetched GO associations for " + i + "/" + genes.size() + " genes" );
+                log.info( "Fetched GO associations for " + i + "/" + genes.size() + " genes" );
             }
         }
         if ( timer.getTime() > 1000 ) {
-            AbstractDao.log
+            log
                     .info( "Fetched GO annotations for " + genes.size() + " genes in " + timer.getTime() + " ms" );
         }
         return result;

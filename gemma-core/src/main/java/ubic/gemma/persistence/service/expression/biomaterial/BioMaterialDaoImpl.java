@@ -30,7 +30,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.IdentifiableUtils;
@@ -88,7 +87,7 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
                 result = ( BioMaterial ) queryObject.uniqueResult();
                 rep++;
             } catch ( ObjectNotFoundException e ) {
-                AbstractDao.log.warn( "BioMaterial query list threw: " + e.getMessage() );
+                log.warn( "BioMaterial query list threw: " + e.getMessage() );
             }
         }
 

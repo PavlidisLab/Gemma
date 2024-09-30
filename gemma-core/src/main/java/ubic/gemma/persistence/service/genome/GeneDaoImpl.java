@@ -40,7 +40,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.*;
 
@@ -333,7 +332,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                     .list() );
         }
         if ( timer.getTime() > 1000 ) {
-            AbstractDao.log.debug( "Load+thawRawAndProcessed " + result.size() + " genes: " + timer.getTime() + "ms" );
+            log.debug( "Load+thawRawAndProcessed " + result.size() + " genes: " + timer.getTime() + "ms" );
         }
         return result;
     }
@@ -354,7 +353,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
                     .list() );
         }
         if ( timer.getTime() > 1000 ) {
-            AbstractDao.log.debug( "Load+thawRawAndProcessed " + result.size() + " genes: " + timer.getTime() + "ms" );
+            log.debug( "Load+thawRawAndProcessed " + result.size() + " genes: " + timer.getTime() + "ms" );
         }
         return result;
     }
@@ -552,7 +551,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
 
             if ( !toDelete.isEmpty() ) {
                 assert toDelete.size() < results.size(); // it shouldn't be everything!
-                AbstractDao.log.warn(
+                log.warn(
                         "Deleting gene(s) that use a deprecated NCBI ID: " + StringUtils.join( toDelete, " | " ) );
                 this.remove( toDelete ); // WARNING this might fail due to constraints.
             }
@@ -569,11 +568,11 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
              * This should be quite a rare situation if the database is kept tidy.
              */
             if ( results.size() > 1 ) {
-                AbstractDao.log.error( "Multiple genes found for " + gene + ":" );
+                log.error( "Multiple genes found for " + gene + ":" );
                 this.debug( results );
                 results.sort( Comparator.comparing( Describable::getId ) );
                 result = results.iterator().next();
-                AbstractDao.log.error( "Returning arbitrary gene: " + result );
+                log.error( "Returning arbitrary gene: " + result );
             } else {
                 result = results.get( 0 );
             }
@@ -685,7 +684,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         for ( Gene g : results ) {
             buf.append( g ).append( "\n" );
         }
-        AbstractDao.log.error( buf );
+        log.error( buf );
 
     }
 

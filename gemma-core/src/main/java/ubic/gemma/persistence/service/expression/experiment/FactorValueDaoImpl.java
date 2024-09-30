@@ -140,7 +140,7 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
         for ( BioMaterial bm : bms ) {
             bm.getFactorValues().remove( factorValue );
         }
-        AbstractDao.log.debug( String.format( "%s was detached from %d samples.", factorValue, bms.size() ) );
+        log.debug( String.format( "%s was detached from %d samples.", factorValue, bms.size() ) );
 
         super.remove( factorValue );
     }
@@ -190,6 +190,6 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
         for ( Object object : results ) {
             sb.append( object ).append( "\n" );
         }
-        AbstractDao.log.error( sb.toString() );
+        log.error( sb.toString() );
     }
 }

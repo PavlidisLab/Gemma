@@ -113,8 +113,8 @@ public abstract class AbstractDesignElementDataVectorDao<T extends BulkExpressio
         }
 
         if ( timer.getTime() > 1000 ) {
-            AbstractDao.log.warn( String.format( "Thawing %d %s took %d ms (vectors: %d ms, ee: %d ms, dims: %d ms)",
-                    designElementDataVectors.size(), elementClass.getSimpleName(), timer.getTime(),
+            log.warn( String.format( "Thawing %d %s took %d ms (vectors: %d ms, ee: %d ms, dims: %d ms)",
+                    designElementDataVectors.size(), getElementClass().getSimpleName(), timer.getTime(),
                     vTimer.getTime(), eeTimer.getTime(), dimTimer.getTime() ) );
         }
     }
