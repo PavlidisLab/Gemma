@@ -77,10 +77,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
     @Override
     public int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
-        AbstractDao.log.info( "Removing processed expression vectors for " + expressionExperiment + "..." );
+        log.info( "Removing processed expression vectors for " + expressionExperiment + "..." );
         expressionExperimentDao.removeProcessedDataVectors( expressionExperiment );
 
-        AbstractDao.log.info( "Computing processed expression vectors for " + expressionExperiment );
+        log.info( "Computing processed expression vectors for " + expressionExperiment );
 
         boolean isTwoChannel = this.isTwoChannel( expressionExperiment );
 
@@ -118,15 +118,15 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             /*
              * Backfill target
              */
-            AbstractDao.log.warn( "Preferred data are counts; please convert to log2cpm" );
+            log.warn( "Preferred data are counts; please convert to log2cpm" );
         }
 
         if ( !preferredMaskedDataQuantitationType.getIsRatio()
                 && maskedVectorObjects.size() > ProcessedExpressionDataVectorDaoImpl.MIN_SIZE_FOR_RENORMALIZATION ) {
-            AbstractDao.log.info( "Normalizing the data" );
+            log.info( "Normalizing the data" );
             this.renormalize( maskedVectorObjects );
         } else {
-            AbstractDao.log.info( "Normalization skipped for this data set (not suitable)" );
+            log.info( "Normalization skipped for this data set (not suitable)" );
         }
 
         /*
@@ -161,11 +161,11 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             newVectors.add( vec );
             seenDes.add( cs );
             if ( ++i % 5000 == 0 ) {
-                AbstractDao.log.info( i + " vectors built" );
+                log.info( i + " vectors built" );
             }
         }
 
-        AbstractDao.log.info( String.format( "Persisting %d processed data vectors...",
+        log.info( String.format( "Persisting %d processed data vectors...",
                 newVectors.size() ) );
 
         int created = expressionExperimentDao.createProcessedDataVectors( expressionExperiment, newVectors );
@@ -187,7 +187,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                                 + "where dedv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .list();
-        log.info( String.format( "Loading %d %s took %d ms", result.size(), elementClass.getSimpleName(), timer.getTime() ) );
+        log.info( String.format( "Loading %d %s took %d ms", result.size(), getElementClass().getSimpleName(), timer.getTime() ) );
         return result;
     }
 
@@ -205,7 +205,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                 .getCs2GeneMap( genes, arrayDesigns, this.getSessionFactory().getCurrentSession() );
 
         if ( cs2gene.isEmpty() ) {
-            AbstractDao.log.warn( "No composite sequences found for genes" );
+            log.warn( "No composite sequences found for genes" );
             return new HashMap<>();
         }
         Map<ExpressionExperiment, Map<Gene, Collection<Double>>> result = new HashMap<>();
@@ -248,7 +248,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries
                 .getCs2GeneMap( genes, this.getSessionFactory().getCurrentSession() );
         if ( cs2gene.isEmpty() ) {
-            AbstractDao.log.warn( "No composite sequences found for genes" );
+            log.warn( "No composite sequences found for genes" );
             return new HashMap<>();
         }
 
@@ -457,7 +457,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         Map<CompositeSequence, DoubleVectorValueObject> unpackedData = this.unpack( preferredData );
 
         if ( missingValueData.isEmpty() ) {
-            AbstractDao.log.debug( "There is no separate missing data information, simply using the data as is" );
+            log.debug( "There is no separate missing data information, simply using the data as is" );
             for ( DoubleVectorValueObject rv : unpackedData.values() ) {
                 rv.setMasked( true );
             }
@@ -476,8 +476,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             CompositeSequenceValueObject de = rv.getDesignElement();
             BooleanVectorValueObject mv = missingValueMap.get( de );
             if ( mv == null ) {
-                if ( !warned && AbstractDao.log.isWarnEnabled() )
-                    AbstractDao.log.warn( "No mask vector for " + de
+                if ( !warned && log.isWarnEnabled() )
+                    log.warn( "No mask vector for " + de
                             + ", additional warnings for missing masks for this job will be skipped" );
                 // we're missing a mask vector for it for some reason, but still flag it as effectively masked.
                 rv.setMasked( true );

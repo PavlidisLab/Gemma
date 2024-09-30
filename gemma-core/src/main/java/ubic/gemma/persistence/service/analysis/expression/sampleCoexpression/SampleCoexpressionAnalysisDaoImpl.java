@@ -46,7 +46,7 @@ class SampleCoexpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoBase<
             return null;
 
         if ( r.size() > 1 ) {
-            AbstractDao.log.warn( "More than one analysis found! Run analysis recomputation to attempt automatic cleanup." );
+            log.warn( "More than one analysis found! Run analysis recomputation to attempt automatic cleanup." );
         }
 
         return r.iterator().next();

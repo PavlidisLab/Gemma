@@ -191,7 +191,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
 
         timer.stop();
         if ( timer.getTime() > 500 ) {
-            AbstractDao.log.info( String.format( "Last event%s retrieved for %d items in %d ms",
+            log.info( String.format( "Last event%s retrieved for %d items in %d ms",
                     types != null ? " of type " + types.getName() + "(closure: " + classes.stream().map( Class::getName ).collect( Collectors.joining( ", " ) ) + ")" : "",
                     auditables.size(), timer.getTime() ) );
         }
@@ -239,7 +239,7 @@ public class AuditEventDaoImpl extends AbstractDao<AuditEvent> implements AuditE
 
         timer.stop();
         if ( timer.getTime() > 500 ) {
-            AbstractDao.log.info( String.format( "Last event of type %s (closure: %s) retrieved for %d items in %d ms",
+            log.info( String.format( "Last event of type %s (closure: %s) retrieved for %d items in %d ms",
                     types.getName(), classes.stream().map( Class::getName ).collect( Collectors.joining( ", " ) ),
                     result.keySet().size(), timer.getTime() ) );
         }

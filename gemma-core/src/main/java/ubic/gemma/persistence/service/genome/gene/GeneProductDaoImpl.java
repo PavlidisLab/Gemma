@@ -27,11 +27,12 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
-import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * @author pavlidis
@@ -40,17 +41,6 @@ import java.util.*;
 @Repository
 public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GeneProductValueObject>
         implements GeneProductDao {
-
-    private static final Comparator<GeneProduct> c;
-
-    static {
-        c = new Comparator<GeneProduct>() {
-            @Override
-            public int compare( GeneProduct arg0, GeneProduct arg1 ) {
-                return arg0.getId().compareTo( arg1.getId() );
-            }
-        };
-    }
 
     @Autowired
     public GeneProductDaoImpl( SessionFactory sessionFactory ) {
@@ -120,14 +110,12 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
              * At this point we can trust that the genes are from the same taxon. This kind of confusion should
              * reduce with cruft-reduction.
              */
-            results.sort( GeneProductDaoImpl.c ); // we tend to want to keep the one with the lowest ID
+            results.sort( Comparator.comparing( GeneProduct::getId ) ); // we tend to want to keep the one with the lowest ID
             Gene gene = geneProduct.getGene();
             if ( gene != null ) {
                 GeneProduct keeper = null;
                 int numFound = 0;
-                for ( Object object : results ) {
-                    GeneProduct candidateMatch = ( GeneProduct ) object;
-
+                for ( GeneProduct candidateMatch : results ) {
                     Gene candidateGene = candidateMatch.getGene();
                     if ( candidateGene.getOfficialSymbol().equals( gene.getOfficialSymbol() ) && candidateGene
                             .getTaxon().equals( gene.getTaxon() ) ) {
@@ -138,26 +126,24 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
 
                 if ( numFound == 1 ) {
                     // not so bad, we figured out a match.
-                    AbstractDao.log.warn( "Multiple gene products match " + geneProduct
+                    log.warn( "Multiple gene products match " + geneProduct
                             + ", but only one for the right gene (" + gene + "), returning " + keeper );
                     this.debug( results );
                     return keeper;
                 }
 
                 if ( numFound == 0 ) {
-                    AbstractDao.log
-                            .error( "Multiple gene products match " + geneProduct + ", but none with " + gene );
+                    log.error( "Multiple gene products match " + geneProduct + ", but none with " + gene );
                     this.debug( results );
-                    AbstractDao.log.error( "Returning arbitrary match " + results.iterator().next() );
+                    log.error( "Returning arbitrary match " + results.iterator().next() );
                     return results.iterator().next();
                 }
 
                 if ( numFound > 1 ) {
-                    AbstractDao.log
-                            .error( "Multiple gene products match " + geneProduct + ", and matches " + numFound
+                    log.error( "Multiple gene products match " + geneProduct + ", and matches " + numFound
                                     + " genes" );
                     this.debug( results );
-                    AbstractDao.log.error( "Returning arbitrary match " + results.iterator().next() );
+                    log.error( "Returning arbitrary match " + results.iterator().next() );
                     return results.iterator().next();
                 }
             }
@@ -167,7 +153,7 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
         }
         if ( result == null )
             return null;
-        AbstractDao.log.debug( "Found: " + result );
+        log.debug( "Found: " + result );
         return result;
     }
 
@@ -183,7 +169,7 @@ public class GeneProductDaoImpl extends AbstractVoEnabledDao<GeneProduct, GenePr
         for ( Object o : results ) {
             buf.append( o ).append( "\n" );
         }
-        AbstractDao.log.error( buf );
+        log.error( buf );
 
     }
 }

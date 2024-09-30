@@ -186,8 +186,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
         //noinspection unchecked
         List<GeneSet> result = query.list();
         if ( timer.getTime() > 500 )
-            AbstractDao.log
-                    .info( "Find geneSets by name took " + timer.getTime() + "ms query=" + name + " taxon=" + taxon );
+            log.info( "Find geneSets by name took " + timer.getTime() + "ms query=" + name + " taxon=" + taxon );
         return result;
     }
 

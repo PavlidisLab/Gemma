@@ -72,10 +72,10 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     @Override
     @OverridingMethodsMustInvokeSuper
     public void afterPropertiesSet() {
-        log.debug( String.format( "Configuring filterable properties for %s...", elementClass.getName() ) );
+        log.debug( String.format( "Configuring filterable properties for %s...", getElementClass().getName() ) );
         StopWatch timer = StopWatch.createStarted();
         configureFilterableProperties( new FilterablePropertiesConfigurer() );
-        String message = String.format( "Done configuring for %s. %d properties were registered in %d ms.", elementClass.getName(), filterableProperties.size(), timer.getTime() );
+        String message = String.format( "Done configuring for %s. %d properties were registered in %d ms.", getElementClass().getName(), filterableProperties.size(), timer.getTime() );
         if ( timer.getTime() > 100 ) {
             log.warn( message );
         } else {
@@ -287,7 +287,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      */
     @OverridingMethodsMustInvokeSuper
     protected void configureFilterableProperties( FilterablePropertiesConfigurer configurer ) {
-        configurer.registerEntity( "", elementClass, FILTERABLE_PROPERTIES_MAX_DEPTH );
+        configurer.registerEntity( "", getElementClass(), FILTERABLE_PROPERTIES_MAX_DEPTH );
     }
 
     @Override
@@ -358,7 +358,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             }
             return f;
         }
-        String entityName = getSessionFactory().getClassMetadata( elementClass ).getEntityName();
+        String entityName = getSessionFactory().getClassMetadata( getElementClass() ).getEntityName();
         List<Subquery.Alias> aliases;
         if ( f.getObjectAlias() != null ) {
             aliases = null;
@@ -462,7 +462,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                         .withDescription( alias.aliasFor != null ? String.format( "alias for %s.%s", alias.aliasFor, fieldName ) : null );
             }
         }
-        return getFilterablePropertyMeta( objectAlias, propertyName, elementClass );
+        return getFilterablePropertyMeta( objectAlias, propertyName, getElementClass() );
     }
 
     protected FilterablePropertyMeta getFilterablePropertyMeta( @Nullable String objectAlias, String propertyName, Class<?> clazz ) throws IllegalArgumentException {

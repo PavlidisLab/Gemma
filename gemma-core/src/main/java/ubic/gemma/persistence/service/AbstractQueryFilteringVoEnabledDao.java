@@ -4,10 +4,13 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
-import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.persistence.hibernate.TypedResultTransformer;
-import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.FilterQueryUtils;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -62,7 +65,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
      * Produce a query that will be used to retrieve IDs of {@link #getFilteringQuery(Filters, Sort)}.
      */
     protected Query getFilteringIdQuery( @Nullable Filters filters, @Nullable Sort sort ) {
-        throw new NotImplementedException( "Retrieving IDs for " + elementClass + " is not supported." );
+        throw new NotImplementedException( "Retrieving IDs for " + getElementClass() + " is not supported." );
     }
 
     /**
@@ -70,7 +73,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
      * @return a {@link Query} which must return a single {@link Long} value
      */
     protected Query getFilteringCountQuery( @Nullable Filters filters ) {
-        throw new NotImplementedException( "Counting " + elementClass + " is not supported." );
+        throw new NotImplementedException( "Counting " + getElementClass() + " is not supported." );
     }
 
     private final TypedResultTransformer<O> DEFAULT_ENTITY_TRANSFORMER = new TypedResultTransformer<O>() {
@@ -228,7 +231,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         List<Long> result = getFilteringIdQuery( filters, sort ).setCacheable( cacheable ).list();
         timer.stop();
         if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.warn( String.format( "Loading %d IDs for %s took %s ms.", result.size(), elementClass.getName(),
+            log.warn( String.format( "Loading %d IDs for %s took %s ms.", result.size(), getElementClass().getName(),
                     timer.getTime( TimeUnit.MILLISECONDS ) ) );
         }
         return result;
@@ -242,7 +245,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
                 .setCacheable( cacheable )
                 .list();
         if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
-            log.warn( String.format( "Loading %d entities for %s took %s ms.", result.size(), elementClass.getName(),
+            log.warn( String.format( "Loading %d entities for %s took %s ms.", result.size(), getElementClass().getName(),
                     timer.getTime( TimeUnit.MILLISECONDS ) ) );
         }
         return result;
@@ -272,7 +275,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         countingStopWatch.stop();
         if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.warn( String.format( "Loading and counting %d entities for %s took %s ms (querying: %d ms, counting: %d ms).",
-                    result.size(), elementClass.getName(), timer.getTime( TimeUnit.MILLISECONDS ),
+                    result.size(), getElementClass().getName(), timer.getTime( TimeUnit.MILLISECONDS ),
                     timer.getTime( TimeUnit.MILLISECONDS ) - countingStopWatch.getTime( TimeUnit.MILLISECONDS ),
                     countingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
         }
@@ -291,7 +294,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.warn( String.format( "Loading %d VOs for %s took %dms (querying: %d ms, post-processing: %d ms).",
                     results.size(),
-                    elementClass.getName(), stopWatch.getTime( TimeUnit.MILLISECONDS ),
+                    getElementClass().getName(), stopWatch.getTime( TimeUnit.MILLISECONDS ),
                     stopWatch.getTime( TimeUnit.MILLISECONDS ) - postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ),
                     postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ) ) );
         }
@@ -333,7 +336,7 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         if ( stopWatch.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
             log.warn( String.format( "Loading and counting %d VOs for %s took %d ms (querying: %d ms, counting: %d ms, post-processing: %d ms).",
                     list.size(),
-                    elementClass.getName(),
+                    getElementClass().getName(),
                     stopWatch.getTime( TimeUnit.MILLISECONDS ),
                     stopWatch.getTime( TimeUnit.MILLISECONDS ) - countingStopWatch.getTime( TimeUnit.MILLISECONDS ) - postProcessingStopWatch.getTime( TimeUnit.MILLISECONDS ),
                     countingStopWatch.getTime( TimeUnit.MILLISECONDS ),
@@ -347,12 +350,12 @@ public abstract class AbstractQueryFilteringVoEnabledDao<O extends Identifiable,
         StopWatch timer = StopWatch.createStarted();
         try {
             return ( Long ) requireNonNull( this.getFilteringCountQuery( filters ).setCacheable( cacheable ).uniqueResult(),
-                    String.format( "Counting query for %s returned null.", elementClass.getName() ) );
+                    String.format( "Counting query for %s returned null.", getElementClass().getName() ) );
         } finally {
             timer.stop();
             if ( timer.getTime( TimeUnit.MILLISECONDS ) > REPORT_SLOW_QUERY_AFTER_MS ) {
                 log.warn( String.format( "Count VOs for %s took %d ms.",
-                        elementClass.getName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+                        getElementClass().getName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
             }
         }
     }
