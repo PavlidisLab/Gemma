@@ -63,7 +63,6 @@ import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.graphics.ColorMatrix;
 import ubic.basecode.graphics.MatrixDisplay;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.writer.MatrixWriter;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.distribution.Histogram;
@@ -72,13 +71,13 @@ import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataWriterUtils;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
@@ -367,10 +366,8 @@ public class ExpressionExperimentQCController extends BaseController {
         }
 
         if ( text != null && text ) {
-            final ByteArrayConverter bac = new ByteArrayConverter();
-
-            double[] means = bac.byteArrayToDoubles( mvr.getMeans() );
-            double[] variances = bac.byteArrayToDoubles( mvr.getVariances() );
+            double[] means = mvr.getMeans();
+            double[] variances = mvr.getVariances();
 
             DoubleMatrix2D matrix = new DenseDoubleMatrix2D( means.length, 2 );
             matrix.viewColumn( 0 ).assign( means );
@@ -513,9 +510,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
         XYSeries series = new XYSeries( ee.getId(), true, true );
 
-        byte[] binCountsBytes = coexpCorrelationDistribution.getBinCounts();
-        ByteArrayConverter bac = new ByteArrayConverter();
-        double[] binCounts = bac.byteArrayToDoubles( binCountsBytes );
+        double[] binCounts = coexpCorrelationDistribution.getBinCounts();
         Integer numBins = coexpCorrelationDistribution.getNumBins();
 
         double step = 2.0 / numBins;
@@ -619,16 +614,14 @@ public class ExpressionExperimentQCController extends BaseController {
      */
     private XYSeriesCollection getMeanVariance( MeanVarianceRelation mvr ) {
 
-        final ByteArrayConverter bac = new ByteArrayConverter();
-
         XYSeriesCollection dataset = new XYSeriesCollection();
 
         if ( mvr == null ) {
             return dataset;
         }
 
-        double[] means = bac.byteArrayToDoubles( mvr.getMeans() );
-        double[] variances = bac.byteArrayToDoubles( mvr.getVariances() );
+        double[] means = mvr.getMeans();
+        double[] variances = mvr.getVariances();
 
         if ( means == null || variances == null ) {
             return dataset;
@@ -672,12 +665,10 @@ public class ExpressionExperimentQCController extends BaseController {
      */
     private void corrDistFileToPersistent( File file, ExpressionExperiment ee, DoubleArrayList counts ) {
         log.info( "Converting from pvalue distribution file to persistent stored version" );
-        ByteArrayConverter bac = new ByteArrayConverter();
-        byte[] bytes = bac.doubleArrayToBytes( counts );
 
         CoexpCorrelationDistribution coexpd = CoexpCorrelationDistribution.Factory.newInstance();
         coexpd.setNumBins( counts.size() );
-        coexpd.setBinCounts( bytes );
+        coexpd.setBinCounts( counts.elements() );
 
         try {
             coexpressionAnalysisService.addCoexpCorrelationDistribution( ee, coexpd );
@@ -1054,10 +1045,9 @@ public class ExpressionExperimentQCController extends BaseController {
     @SuppressWarnings("unused")
     private MeanVarianceRelation removeMVOutliers( MeanVarianceRelation mvr, double zscoreMax ) {
         MeanVarianceRelation ret = MeanVarianceRelation.Factory.newInstance();
-        ByteArrayConverter bac = new ByteArrayConverter();
 
-        DoubleArrayList vars = new DoubleArrayList( bac.byteArrayToDoubles( mvr.getVariances() ) );
-        DoubleArrayList means = new DoubleArrayList( bac.byteArrayToDoubles( mvr.getMeans() ) );
+        DoubleArrayList vars = new DoubleArrayList( mvr.getVariances() );
+        DoubleArrayList means = new DoubleArrayList( mvr.getMeans() );
 
         DoubleArrayList filteredMeans = new DoubleArrayList();
         DoubleArrayList filteredVars = new DoubleArrayList();
@@ -1081,8 +1071,8 @@ public class ExpressionExperimentQCController extends BaseController {
                 .max( filteredVars )
                 + ")." );
 
-        ret.setVariances( bac.doubleArrayToBytes( filteredVars ) );
-        ret.setMeans( bac.doubleArrayToBytes( filteredMeans ) );
+        ret.setVariances( filteredVars.elements() );
+        ret.setMeans( filteredMeans.elements() );
 
         return ret;
     }

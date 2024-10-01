@@ -29,12 +29,12 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.Link;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.analysis.preprocess.InsufficientProbesException;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.SVDRelatedPreprocessingException;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
+import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.filter.InsufficientSamplesException;
@@ -59,7 +59,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
-import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.IOException;
@@ -255,8 +254,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         /*
          * Find the median, etc.
          */
-        ByteArrayConverter bac = new ByteArrayConverter();
-        double[] binCounts = bac.byteArrayToDoubles( corrDist.getBinCounts() );
+        double[] binCounts = corrDist.getBinCounts();
         int numBins = binCounts.length;
         DoubleMatrix1D histogram = new DenseDoubleMatrix1D( binCounts );
 

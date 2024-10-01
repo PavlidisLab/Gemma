@@ -56,7 +56,6 @@ import static org.junit.Assert.*;
 @Category(GeoTest.class)
 public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
-    private static final ByteArrayConverter bac = new ByteArrayConverter();
     @Autowired
     private MeanVarianceService meanVarianceService;
     @Autowired
@@ -115,8 +114,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         // convert byte[] to array[]
         // warning: order may have changed
-        double[] means = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getMeans() );
-        double[] variances = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getVariances() );
+        double[] means = mvr.getMeans();
+        double[] variances = mvr.getVariances();
         Arrays.sort( means );
         Arrays.sort( variances );
 
@@ -158,10 +157,9 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         MeanVarianceRelation mvr = meanVarianceService.create( ee, true );
 
-        // convert byte[] to array[]
         // warning: order may have changed
-        double[] means = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getMeans() );
-        double[] variances = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getVariances() );
+        double[] means = mvr.getMeans();
+        double[] variances = mvr.getVariances();
         Arrays.sort( means );
         Arrays.sort( variances );
 
@@ -244,10 +242,9 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         MeanVarianceRelation mvr = meanVarianceService.create( ee, true );
 
-        // convert byte[] to array[]
         // warning: order may have changed
-        double[] means = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getMeans() );
-        double[] variances = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getVariances() );
+        double[] means = mvr.getMeans();
+        double[] variances = mvr.getVariances();
         if ( means != null ) {
             Arrays.sort( means );
         }

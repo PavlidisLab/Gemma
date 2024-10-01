@@ -28,7 +28,7 @@ public class Eigenvector implements java.io.Serializable {
      */
     private static final long serialVersionUID = 5122763307995485698L;
     private Integer componentNumber;
-    private byte[] vector;
+    private double[] vector;
     private Long id;
 
     /**
@@ -56,11 +56,11 @@ public class Eigenvector implements java.io.Serializable {
     /**
      * @return Binary representing array of doubles
      */
-    public byte[] getVector() {
+    public double[] getVector() {
         return this.vector;
     }
 
-    public void setVector( byte[] vector ) {
+    public void setVector( double[] vector ) {
         this.vector = vector;
     }
 
@@ -90,13 +90,12 @@ public class Eigenvector implements java.io.Serializable {
     public static final class Factory {
 
         @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-        public static ubic.gemma.model.analysis.expression.pca.Eigenvector newInstance() {
-            return new ubic.gemma.model.analysis.expression.pca.Eigenvector();
+        public static Eigenvector newInstance() {
+            return new Eigenvector();
         }
 
-        public static ubic.gemma.model.analysis.expression.pca.Eigenvector newInstance( Integer componentNumber,
-                byte[] vector ) {
-            final ubic.gemma.model.analysis.expression.pca.Eigenvector entity = new ubic.gemma.model.analysis.expression.pca.Eigenvector();
+        public static Eigenvector newInstance( Integer componentNumber, double[] vector ) {
+            final Eigenvector entity = new Eigenvector();
             entity.setComponentNumber( componentNumber );
             entity.setVector( vector );
             return entity;

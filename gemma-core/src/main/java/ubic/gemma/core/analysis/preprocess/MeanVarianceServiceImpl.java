@@ -21,12 +21,10 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.linearmodels.MeanVarianceEstimator;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
-import ubic.gemma.model.common.auditAndSecurity.eventType.FailedMeanVarianceUpdateEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MeanVarianceUpdateEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
@@ -43,7 +41,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 public class MeanVarianceServiceImpl implements MeanVarianceService {
 
     private static final Log log = LogFactory.getLog( MeanVarianceServiceImpl.class );
-    private static final ByteArrayConverter bac = new ByteArrayConverter();
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -110,8 +107,8 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
 
         MeanVarianceRelation mvr = MeanVarianceRelation.Factory.newInstance();
         if ( mve.getMeanVariance() != null ) {
-            mvr.setMeans( bac.doubleArrayToBytes( mve.getMeanVariance().viewColumn( 0 ).toArray() ) );
-            mvr.setVariances( bac.doubleArrayToBytes( mve.getMeanVariance().viewColumn( 1 ).toArray() ) );
+            mvr.setMeans( mve.getMeanVariance().viewColumn( 0 ).toArray() );
+            mvr.setVariances( mve.getMeanVariance().viewColumn( 1 ).toArray() );
         }
 
         return mvr;

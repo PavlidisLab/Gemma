@@ -7,7 +7,7 @@ import org.hibernate.usertype.UserType;
 import org.springframework.jdbc.support.lob.DefaultLobHandler;
 import org.springframework.jdbc.support.lob.LobHandler;
 import org.springframework.util.Assert;
-import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.persistence.util.ByteArrayUtils;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -25,9 +25,9 @@ import java.util.Properties;
  *     <li>{@code int}</li>
  *     <li>{@code double}</li>
  * </ul>
- * Other types supported by {@link ByteArrayConverter} can be added if necessary.
+ * Other types supported by {@link ByteArrayUtils} can be added if necessary.
  * @author poirigui
- * @see ByteArrayConverter
+ * @see ByteArrayUtils
  */
 public class ByteArrayType implements UserType, ParameterizedType {
 
@@ -42,7 +42,6 @@ public class ByteArrayType implements UserType, ParameterizedType {
         }
     }
 
-    private final ByteArrayConverter converter = new ByteArrayConverter();
     private final LobHandler lobHandler = new DefaultLobHandler();
 
     private ByteArrayTypes arrayType;
@@ -87,9 +86,9 @@ public class ByteArrayType implements UserType, ParameterizedType {
         if ( data != null ) {
             switch ( arrayType ) {
                 case INT:
-                    return converter.byteArrayToInts( data );
+                    return ByteArrayUtils.byteArrayToInts( data );
                 case DOUBLE:
-                    return converter.byteArrayToDoubles( data );
+                    return ByteArrayUtils.byteArrayToDoubles( data );
                 default:
                     throw unsupportedArrayType( arrayType );
             }
@@ -104,10 +103,10 @@ public class ByteArrayType implements UserType, ParameterizedType {
         if ( value != null ) {
             switch ( arrayType ) {
                 case INT:
-                    blob = converter.intArrayToBytes( ( int[] ) value );
+                    blob = ByteArrayUtils.intArrayToBytes( ( int[] ) value );
                     break;
                 case DOUBLE:
-                    blob = converter.doubleArrayToBytes( ( double[] ) value );
+                    blob = ByteArrayUtils.doubleArrayToBytes( ( double[] ) value );
                     break;
                 default:
                     throw unsupportedArrayType( arrayType );

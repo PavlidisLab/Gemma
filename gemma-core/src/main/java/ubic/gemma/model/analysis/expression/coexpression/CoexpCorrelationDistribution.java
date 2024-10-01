@@ -19,15 +19,15 @@ package ubic.gemma.model.analysis.expression.coexpression;
  */
 public class CoexpCorrelationDistribution {
 
-    private byte[] binCounts;
+    private double[] binCounts;
     private Long id;
     private Integer numBins;
 
-    public byte[] getBinCounts() {
+    public double[] getBinCounts() {
         return binCounts;
     }
 
-    public void setBinCounts( byte[] binCounts ) {
+    public void setBinCounts( double[] binCounts ) {
         this.binCounts = binCounts;
     }
 

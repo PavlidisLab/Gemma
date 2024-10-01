@@ -23,4 +23,12 @@ public class ByteArrayUtils {
     public static double[] byteArrayToDoubles( byte[] bytes ) {
         return byteArrayConverter.byteArrayToDoubles( bytes );
     }
+
+    public static byte[] intArrayToBytes( int[] data ) {
+        return byteArrayConverter.intArrayToBytes( data );
+    }
+
+    public static int[] byteArrayToInts( byte[] bytes ) {
+        return byteArrayConverter.byteArrayToInts( bytes );
+    }
 }

@@ -20,7 +20,6 @@ package ubic.gemma.model.analysis.expression.pca;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -97,7 +96,6 @@ public class PrincipalComponentAnalysis extends SingleExperimentAnalysis {
      */
     @Transient
     public List<Double[]> getEigenvectorArrays() throws IllegalArgumentException {
-        ByteArrayConverter bac = new ByteArrayConverter();
 
         List<Double[]> result = new ArrayList<>( this.getNumComponentsStored() );
 
@@ -121,7 +119,7 @@ public class PrincipalComponentAnalysis extends SingleExperimentAnalysis {
             int index = ev.getComponentNumber() - 1;
             if ( index >= this.getNumComponentsStored() )
                 continue;
-            double[] doubleArr = bac.byteArrayToDoubles( ev.getVector() );
+            double[] doubleArr = ev.getVector();
             Double[] dA = ArrayUtils.toObject( doubleArr );
             result.set( index, dA );
         }

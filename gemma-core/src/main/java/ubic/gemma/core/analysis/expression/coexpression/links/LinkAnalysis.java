@@ -23,8 +23,6 @@ import cern.colt.list.ObjectArrayList;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.Link;
-import ubic.basecode.dataStructure.matrix.MatrixUtil;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Stats;
 import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisConfig.SingularThreshold;
@@ -142,8 +140,7 @@ public class LinkAnalysis {
 
         DoubleArrayList histogramArrayList = this.metricMatrix.getHistogramArrayList();
         result.setNumBins( histogramArrayList.size() );
-        ByteArrayConverter bac = new ByteArrayConverter();
-        result.setBinCounts( bac.doubleArrayToBytes( MatrixUtil.fromList( histogramArrayList ).toArray() ) );
+        result.setBinCounts( histogramArrayList.elements() );
 
         return result;
     }
