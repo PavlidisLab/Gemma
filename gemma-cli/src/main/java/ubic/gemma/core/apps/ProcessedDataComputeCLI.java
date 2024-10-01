@@ -25,10 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.QuantitationMismatchPreprocessingException;
 import ubic.gemma.core.datastructure.matrix.SuspiciousValuesForQuantitationException;
-import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorServiceImpl;
@@ -62,11 +59,6 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     private boolean ignoreQuantitationMismatch = false;
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CLI.CommandGroup.EXPERIMENT;
-    }
-
-    @Override
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
         addForceOption( options );
@@ -92,25 +84,14 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     }
 
     @Override
-    protected void doWork() throws Exception {
-        if ( expressionExperiments.size() == 0 ) {
-            AbstractCLI.log.error( "You did not select any usable expression experiments" );
-            return;
-        }
-
-        for ( BioAssaySet ee : expressionExperiments ) {
-            this.processExperiment( ( ExpressionExperiment ) ee );
-        }
-    }
-
-    @Override
     public String getShortDesc() {
         return "Performs preprocessing. Optionally can do only selected processing steps including batch correction, rank computation and diagnostic computation";
     }
 
-    private void processExperiment( ExpressionExperiment ee ) {
+    @Override
+    protected void processExpressionExperiment( ExpressionExperiment ee ) {
         if ( expressionExperimentService.isTroubled( ee ) && !force ) {
-            AbstractCLI.log.info( "Skipping troubled experiment " + ee.getShortName() );
+            log.info( "Skipping troubled experiment " + ee.getShortName() );
             return;
         }
         try {
@@ -136,7 +117,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
             try {
                 refreshExpressionExperimentFromGemmaWeb( ee, true, false );
             } catch ( Exception e ) {
-                AbstractCLI.log.error( "Failed to refresh " + ee + " from Gemma Web.", e );
+                log.error( "Failed to refresh " + ee + " from Gemma Web.", e );
             }
 
             // Note the auditing is done by the service.

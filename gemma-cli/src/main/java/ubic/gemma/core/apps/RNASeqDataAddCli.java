@@ -23,15 +23,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.core.loader.expression.DataUpdater;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 
 import java.io.File;
 import java.io.IOException;
@@ -68,8 +67,13 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     private ArrayDesignService arrayDesignService;
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.EXPERIMENT;
+    public String getCommandName() {
+        return "rnaseqDataAdd";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Add expression quantification to an RNA-seq experiment";
     }
 
     @Override
@@ -155,25 +159,20 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    public String getCommandName() {
-        return "rnaseqDataAdd";
-    }
-
-    @Override
-    protected void doWork() throws Exception {
-        if ( this.expressionExperiments.isEmpty() ) {
-            throw new Exception( "No experiment to be processed. Check in the logs above for troubled experiments." );
+    protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
+        if ( expressionExperiments.isEmpty() ) {
+            throw new RuntimeException( "No experiment to be processed. Check in the logs above for troubled experiments." );
         }
 
         if ( this.justbackfillLog2cpm ) {
-            for ( BioAssaySet bas : this.expressionExperiments ) {
+            for ( BioAssaySet bas : expressionExperiments ) {
                 try {
                     ExpressionExperiment ee = ( ExpressionExperiment ) bas;
                     QuantitationType qt = this.eeService.getPreferredQuantitationType( ee );
                     if ( qt == null )
                         throw new IllegalArgumentException( "No preferred quantitation type for " + ee.getShortName() );
                     if ( !qt.getType().equals( StandardQuantitationType.COUNT ) ) {
-                        AbstractCLI.log.warn( "Preferred data is not counts for " + ee );
+                        log.warn( "Preferred data is not counts for " + ee );
                         addErrorObject( ee.getShortName(), "Preferred data is not counts" );
                         continue;
                     }
@@ -188,15 +187,15 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
         /*
          * Usual cases.
          */
-        if ( this.expressionExperiments.size() > 1 ) {
+        if ( expressionExperiments.size() > 1 ) {
             throw new IllegalArgumentException( "Sorry, can only process one experiment with this tool." );
         }
         ArrayDesign targetArrayDesign = this.locateArrayDesign( this.platformName );
 
-        ExpressionExperiment ee = ( ExpressionExperiment ) this.expressionExperiments.iterator().next();
+        ExpressionExperiment ee = ( ExpressionExperiment ) expressionExperiments.iterator().next();
 
-        if ( this.expressionExperiments.size() > 1 ) {
-            AbstractCLI.log
+        if ( expressionExperiments.size() > 1 ) {
+            log
                     .warn( "This CLI can only deal with one experiment at a time; only the first one will be processed" );
         }
         DoubleMatrixReader reader = new DoubleMatrixReader();
@@ -215,7 +214,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
                     allowMissingSamples );
 
         } catch ( IOException e ) {
-            throw new Exception( "Failed while processing " + ee, e );
+            throw new RuntimeException( "Failed while processing " + ee, e );
         }
 
         /* copy metadata files */
@@ -232,31 +231,4 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
             }
         }
     }
-
-    @Override
-    public String getShortDesc() {
-        return "Add expression quantifiation to an RNA-seq experiment";
-    }
-
-    private ArrayDesign locateArrayDesign( String name ) throws Exception {
-
-        ArrayDesign arrayDesign = null;
-        Collection<ArrayDesign> byname = arrayDesignService.findByName( name.trim().toUpperCase() );
-        if ( byname.size() > 1 ) {
-            throw new IllegalArgumentException( "Ambiguous name: " + name );
-        } else if ( byname.size() == 1 ) {
-            arrayDesign = byname.iterator().next();
-        }
-
-        if ( arrayDesign == null ) {
-            arrayDesign = arrayDesignService.findByShortName( name );
-        }
-
-        if ( arrayDesign == null ) {
-            throw new Exception( "No arrayDesign " + name + " found" );
-        }
-
-        return arrayDesign;
-    }
-
 }

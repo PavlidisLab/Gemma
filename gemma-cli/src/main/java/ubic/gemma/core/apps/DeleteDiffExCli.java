@@ -14,8 +14,7 @@
  */
 package ubic.gemma.core.apps;
 
-import org.apache.commons.cli.CommandLine;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 
@@ -26,31 +25,12 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
  */
 public class DeleteDiffExCli extends ExpressionExperimentManipulatingCLI {
 
+    @Autowired
+    private DifferentialExpressionAnalysisService deas;
+
     @Override
     public String getCommandName() {
         return "deleteDiffEx";
-    }
-
-    @Override
-    protected void doWork() throws Exception {
-        this.force = true;
-
-        DifferentialExpressionAnalysisService deas = this.getBean( DifferentialExpressionAnalysisService.class );
-
-        for ( BioAssaySet bas : this.expressionExperiments ) {
-            try {
-                if ( !( bas instanceof ExpressionExperiment ) ) {
-                    continue;
-                }
-                log.info( "--------- Deleting any diff ex analyses for " + bas + " --------" );
-                deas.removeForExperiment( bas );
-                addSuccessObject( bas );
-                log.info( "--------- Finished Deleting for " + bas + " -------" );
-
-            } catch ( Exception ex ) {
-                addErrorObject( bas, ex );
-            }
-        }
     }
 
     @Override
@@ -58,4 +38,10 @@ public class DeleteDiffExCli extends ExpressionExperimentManipulatingCLI {
         return "Delete differential expression analyses for experiment(s) from the system";
     }
 
+    @Override
+    protected void processExpressionExperiment( ExpressionExperiment ee ) {
+        log.info( "--------- Deleting any diff ex analyses for " + ee + " --------" );
+        deas.removeForExperiment( ee );
+        log.info( "--------- Finished Deleting for " + ee + " -------" );
+    }
 }

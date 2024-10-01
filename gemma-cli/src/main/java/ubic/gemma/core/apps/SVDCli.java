@@ -20,10 +20,10 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Options;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.analysis.preprocess.svd.SVDException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -31,14 +31,17 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class SVDCli extends ExpressionExperimentManipulatingCLI {
 
+    @Autowired
+    private SVDService svdService;
+
     @Override
-    public String getShortDesc() {
-        return "Run PCA (using SVD) on data sets";
+    public String getCommandName() {
+        return "pca";
     }
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.EXPERIMENT;
+    public String getShortDesc() {
+        return "Run PCA (using SVD) on data sets";
     }
 
     @Override
@@ -48,32 +51,15 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    public String getCommandName() {
-        return "pca";
-    }
-
-    @Override
-    protected void doWork() throws Exception {
-        SVDService svdService = this.getBean( SVDService.class );
-
-        for ( BioAssaySet bas : this.expressionExperiments ) {
-
-            if ( !force && this.noNeedToRun( bas, PCAAnalysisEvent.class ) ) {
-                addErrorObject( bas, "Already has PCA; use -force to override" );
-                continue;
-            }
-
-            try {
-                AbstractCLI.log.info( "Processing: " + bas );
-                ExpressionExperiment ee = ( ExpressionExperiment ) bas;
-
-                svdService.svd( ee.getId() );
-
-                addSuccessObject( bas );
-            } catch ( Exception e ) {
-                addErrorObject( bas, e );
-            }
+    protected void processExpressionExperiment( ExpressionExperiment bas ) {
+        if ( !force && this.noNeedToRun( bas, PCAAnalysisEvent.class ) ) {
+            throw new IllegalArgumentException( "Already has PCA; use -force to override" );
+        }
+        log.info( "Processing: " + bas );
+        try {
+            svdService.svd( bas.getId() );
+        } catch ( SVDException e ) {
+            throw new RuntimeException( e );
         }
     }
-
 }

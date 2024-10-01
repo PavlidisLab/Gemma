@@ -23,7 +23,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import ubic.gemma.core.analysis.report.DatabaseViewGenerator;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
-import ubic.gemma.core.util.AbstractCLI;
 
 /**
  * Simple driver of DatabaseViewGenerator. Developed to support NIF and other external data consumers.
@@ -108,7 +107,7 @@ public class DatabaseViewGeneratorCLI extends AbstractAuthenticatedCLI {
             try {
                 this.limit = Integer.parseInt( commandLine.getOptionValue( 'l' ) );
             } catch ( NumberFormatException nfe ) {
-                AbstractCLI.log.warn( "Unable to process limit parameter. Processing all available experiments." );
+                log.warn( "Unable to process limit parameter. Processing all available experiments." );
                 this.limit = 0;
             }
         }

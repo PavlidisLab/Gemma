@@ -108,7 +108,7 @@ public class MeshTermFetcherCli extends AbstractCLI {
     }
 
     private Collection<Integer> readIdsFromFile( String inFile ) throws IOException {
-        AbstractCLI.log.info( "Reading " + inFile );
+        log.info( "Reading " + inFile );
 
         Collection<Integer> ids = new ArrayList<>();
         try ( BufferedReader in = new BufferedReader( new FileReader( file ) ) ) {

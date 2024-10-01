@@ -33,7 +33,6 @@ import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisPersis
 import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisService;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -52,8 +51,10 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
@@ -83,7 +84,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     private final FilterConfig filterConfig = new FilterConfig();
     private final LinkAnalysisConfig linkAnalysisConfig = new LinkAnalysisConfig();
     private String analysisTaxon = null;
-    private String dataFileName = null;
+    private Path dataFileName = null;
     private Taxon taxon;
     private boolean initializeFromOldData = false;
     private boolean updateNodeDegree = false;
@@ -92,107 +93,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     @Override
     public String getCommandName() {
         return "coexpAnalyze";
-    }
-
-    @Override
-    protected void doWork() throws Exception {
-        if ( initializeFromOldData ) {
-            AbstractCLI.log.info( "Initializing links from old data for " + taxon );
-            linkAnalysisPersister.initializeLinksFromOldData( taxon );
-            return;
-        } else if ( updateNodeDegree ) {
-            // we waste some time here getting the experiments.
-            this.loadTaxon();
-            coexpressionService.updateNodeDegrees( taxon );
-        }
-
-        if ( this.dataFileName != null ) {
-            /*
-             * Read vectors from file. Could provide as a matrix, but it's easier to provide vectors (less mess in later
-             * code)
-             */
-            ArrayDesign arrayDesign = arrayDesignService.findByShortName( this.linkAnalysisConfig.getArrayName() );
-
-            if ( arrayDesign == null ) {
-                throw new IllegalArgumentException( "No such array design " + this.linkAnalysisConfig.getArrayName() );
-            }
-
-            this.loadTaxon();
-            arrayDesign = arrayDesignService.thawLite( arrayDesign );
-
-            Collection<ProcessedExpressionDataVector> dataVectors = new HashSet<>();
-
-            Map<String, CompositeSequence> csMap = new HashMap<>();
-            for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-                csMap.put( cs.getName(), cs );
-            }
-
-            QuantitationType qtype = this.makeQuantitationType();
-
-            try ( InputStream data = new FileInputStream( this.dataFileName ) ) {
-
-                DoubleMatrix<String, String> matrix = simpleExpressionDataLoaderService.parse( data );
-
-                BioAssayDimension bad = this.makeBioAssayDimension( arrayDesign, matrix );
-
-                for ( int i = 0; i < matrix.rows(); i++ ) {
-                    byte[] bData = doubleArrayToBytes( matrix.getRow( i ) );
-
-                    ProcessedExpressionDataVector vector = ProcessedExpressionDataVector.Factory.newInstance();
-                    vector.setData( bData );
-
-                    CompositeSequence cs = csMap.get( matrix.getRowName( i ) );
-                    if ( cs == null ) {
-                        continue;
-                    }
-                    vector.setDesignElement( cs );
-
-                    vector.setBioAssayDimension( bad );
-                    vector.setQuantitationType( qtype );
-
-                    dataVectors.add( vector );
-
-                }
-                AbstractCLI.log.info( "Read " + dataVectors.size() + " data vectors" );
-
-            }
-
-            this.linkAnalysisService.processVectors( taxon, dataVectors, filterConfig, linkAnalysisConfig );
-        } else {
-
-            /*
-             * Do in decreasing order of size, to help capture more links earlier - reduces fragmentation.
-             */
-            List<BioAssaySet> sees = new ArrayList<>( expressionExperiments );
-
-            if ( expressionExperiments.size() > 1 ) {
-                AbstractCLI.log.info( "Sorting data sets by number of samples, doing large data sets first." );
-
-                Collection<ExpressionExperimentValueObject> vos = eeService
-                        .loadValueObjectsByIds( EntityUtils.getIds( expressionExperiments ), true );
-                final Map<Long, ExpressionExperimentValueObject> idMap = EntityUtils.getIdMap( vos );
-
-                sees.sort( ( o1, o2 ) -> {
-
-                    ExpressionExperimentValueObject e1 = idMap.get( o1.getId() );
-                    ExpressionExperimentValueObject e2 = idMap.get( o2.getId() );
-
-                    assert e1 != null : "No valueobject: " + e2;
-                    assert e2 != null : "No valueobject: " + e1;
-
-                    return -e1.getBioMaterialCount().compareTo( e2.getBioMaterialCount() );
-
-                } );
-            }
-
-            for ( BioAssaySet ee : sees ) {
-                if ( ee instanceof ExpressionExperiment ) {
-                    this.processExperiment( ( ExpressionExperiment ) ee );
-                } else {
-                    throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
-                }
-            }
-        }
     }
 
     @Override
@@ -240,8 +140,10 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 .longOpt( "nodb" ).build();
         options.addOption( useDB );
 
-        Option fileOpt = Option.builder( "dataFile" ).hasArg().argName( "Expression data file" ).desc(
-                        "Provide expression data from a tab-delimited text file, rather than from the database. Implies 'nodb' and must also provide 'array' and 't' option" )
+        Option fileOpt = Option.builder( "dataFile" )
+                .hasArg().type( Path.class )
+                .argName( "Expression data file" )
+                .desc( "Provide expression data from a tab-delimited text file, rather than from the database. Implies 'nodb' and must also provide 'array' and 't' option" )
                 .build();
         options.addOption( fileOpt );
 
@@ -337,10 +239,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         }
 
         if ( commandLine.hasOption( "dataFile" ) ) {
-            if ( !this.expressionExperiments.isEmpty() ) {
-                throw new RuntimeException( "The 'dataFile' option is incompatible with other data set selection options" );
-            }
-
             if ( commandLine.hasOption( "array" ) ) {
                 this.linkAnalysisConfig.setArrayName( commandLine.getOptionValue( "array" ) );
             } else {
@@ -353,7 +251,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 throw new RuntimeException( "Must provide 'taxon' option if you  use 'dataFile' as RNA taxon may be different to array taxon" );
             }
 
-            this.dataFileName = commandLine.getOptionValue( "dataFile" );
+            this.dataFileName = commandLine.getParsedOptionValue( "dataFile" );
 
             this.linkAnalysisConfig.setUseDb( false );
         }
@@ -409,7 +307,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
         if ( commandLine.hasOption( "subset" ) ) {
             String subsetSize = commandLine.getOptionValue( "subset" );
-            AbstractCLI.log.info( "Representative subset of links requested for output" );
+            log.info( "Representative subset of links requested for output" );
             this.linkAnalysisConfig.setSubsetSize( Double.parseDouble( subsetSize ) );
             this.linkAnalysisConfig.setSubset( true );
         }
@@ -418,10 +316,10 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             String singularThreshold = commandLine.getOptionValue( "choosecut" );
             if ( singularThreshold.equals( "fwe" ) || singularThreshold.equals( "cdfCut" ) || singularThreshold
                     .equals( "none" ) ) {
-                AbstractCLI.log.info( "Singular correlation threshold chosen" );
+                log.info( "Singular correlation threshold chosen" );
                 this.linkAnalysisConfig.setSingularThreshold( SingularThreshold.valueOf( singularThreshold ) );
             } else {
-                AbstractCLI.log
+                log
                         .error( "Must choose 'fwe', 'cdfCut', or 'none' as the singular correlation threshold, defaulting to 'none'" );
             }
         }
@@ -429,7 +327,109 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         if ( commandLine.hasOption( "probeDegreeLim" ) ) {
             this.linkAnalysisConfig.setProbeDegreeThreshold( ( ( Number ) commandLine.getParsedOptionValue( "probeDegreeLim" ) ).intValue() );
         }
+    }
 
+    @Override
+    protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
+        if ( initializeFromOldData ) {
+            log.info( "Initializing links from old data for " + taxon );
+            linkAnalysisPersister.initializeLinksFromOldData( taxon );
+            return;
+        } else if ( updateNodeDegree ) {
+            // we waste some time here getting the experiments.
+            this.loadTaxon();
+            coexpressionService.updateNodeDegrees( taxon );
+        }
+
+        if ( this.dataFileName != null ) {
+            /*
+             * Read vectors from file. Could provide as a matrix, but it's easier to provide vectors (less mess in later
+             * code)
+             */
+            ArrayDesign arrayDesign = arrayDesignService.findByShortName( this.linkAnalysisConfig.getArrayName() );
+
+            if ( arrayDesign == null ) {
+                throw new IllegalArgumentException( "No such array design " + this.linkAnalysisConfig.getArrayName() );
+            }
+
+            this.loadTaxon();
+            arrayDesign = arrayDesignService.thawLite( arrayDesign );
+
+            Collection<ProcessedExpressionDataVector> dataVectors = new HashSet<>();
+
+            Map<String, CompositeSequence> csMap = new HashMap<>();
+            for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+                csMap.put( cs.getName(), cs );
+            }
+
+            QuantitationType qtype = this.makeQuantitationType();
+
+            try ( InputStream data = Files.newInputStream( this.dataFileName ) ) {
+
+                DoubleMatrix<String, String> matrix = simpleExpressionDataLoaderService.parse( data );
+
+                BioAssayDimension bad = this.makeBioAssayDimension( arrayDesign, matrix );
+
+                for ( int i = 0; i < matrix.rows(); i++ ) {
+                    byte[] bData = doubleArrayToBytes( matrix.getRow( i ) );
+
+                    ProcessedExpressionDataVector vector = ProcessedExpressionDataVector.Factory.newInstance();
+                    vector.setData( bData );
+
+                    CompositeSequence cs = csMap.get( matrix.getRowName( i ) );
+                    if ( cs == null ) {
+                        continue;
+                    }
+                    vector.setDesignElement( cs );
+
+                    vector.setBioAssayDimension( bad );
+                    vector.setQuantitationType( qtype );
+
+                    dataVectors.add( vector );
+
+                }
+                log.info( "Read " + dataVectors.size() + " data vectors" );
+
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+
+            this.linkAnalysisService.processVectors( taxon, dataVectors, filterConfig, linkAnalysisConfig );
+        } else {
+
+            /*
+             * Do in decreasing order of size, to help capture more links earlier - reduces fragmentation.
+             */
+            List<BioAssaySet> sees = new ArrayList<>( expressionExperiments );
+
+            if ( expressionExperiments.size() > 1 ) {
+                log.info( "Sorting data sets by number of samples, doing large data sets first." );
+
+                Collection<ExpressionExperimentValueObject> vos = eeService
+                        .loadValueObjectsByIds( EntityUtils.getIds( expressionExperiments ), true );
+                final Map<Long, ExpressionExperimentValueObject> idMap = EntityUtils.getIdMap( vos );
+
+                sees.sort( ( o1, o2 ) -> {
+
+                    ExpressionExperimentValueObject e1 = idMap.get( o1.getId() );
+                    ExpressionExperimentValueObject e2 = idMap.get( o2.getId() );
+
+                    assert e1 != null : "No valueobject: " + e2;
+                    assert e2 != null : "No valueobject: " + e1;
+
+                    return -e1.getBioMaterialCount().compareTo( e2.getBioMaterialCount() );
+
+                } );
+            }
+
+            for ( BioAssaySet ee : sees ) {
+                if ( ee instanceof ExpressionExperiment ) {
+                    this.processExperiment( ( ExpressionExperiment ) ee );
+                } else {
+                    throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
+                }
+            }
+        }
     }
 
     private void buildFilterConfigOptions( Options options ) {
@@ -479,7 +479,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         if ( taxon == null || !taxon.getIsGenesUsable() ) {
             throw new IllegalArgumentException( "No such taxon or, does not have usable gene information: " + taxon );
         }
-        AbstractCLI.log.debug( taxon + "is used" );
+        log.debug( taxon + "is used" );
     }
 
     private BioAssayDimension makeBioAssayDimension( ArrayDesign arrayDesign, DoubleMatrix<String, String> matrix ) {
@@ -525,11 +525,9 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         ee = eeService.thaw( ee );
 
         if ( this.deleteAnalyses ) {
-            AbstractCLI.log.info( "======= Deleting coexpression analysis (if any) for: " + ee );
-            if ( linkAnalysisPersister.deleteAnalyses( ee ) ) {
-                addSuccessObject( ee );
-            } else {
-                addErrorObject( ee, "Seems to not have any eligible link analysis to remove" );
+            log.info( "======= Deleting coexpression analysis (if any) for: " + ee );
+            if ( !linkAnalysisPersister.deleteAnalyses( ee ) ) {
+                throw new RuntimeException( "Seems to not have any eligible link analysis to remove" );
             }
             return;
         }
@@ -538,7 +536,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
          * If we're not using the database, always run it.
          */
         if ( linkAnalysisConfig.isUseDb() && !force && this.noNeedToRun( ee, LinkAnalysisEvent.class ) ) {
-            AbstractCLI.log.info( "Can't or Don't need to run " + ee );
+            log.info( "Can't or Don't need to run " + ee );
             return;
         }
 
@@ -547,23 +545,16 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
          */
         StopWatch sw = new StopWatch();
         sw.start();
-        try {
 
-            if ( this.expressionExperiments.size() > 1 && linkAnalysisConfig.isTextOut() ) {
-                linkAnalysisConfig
-                        .setOutputFile( new File( FileTools.cleanForFileName( ee.getShortName() ) + "-links.txt" ) );
-            }
-
-            AbstractCLI.log.info( "==== Starting: [" + ee.getShortName() + "] ======" );
-
-            linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
-
-            addSuccessObject( ee );
-        } catch ( Exception e ) {
-            addErrorObject( ee, e );
+        if ( linkAnalysisConfig.isTextOut() ) {
+            linkAnalysisConfig.setOutputFile( new File( FileTools.cleanForFileName( ee.getShortName() ) + "-links.txt" ) );
         }
-        AbstractCLI.log.info( "==== Done: [" + ee.getShortName() + "] ======" );
-        AbstractCLI.log.info( "Time elapsed: " + String.format( "%.2f", sw.getTime() / 1000.0 / 60.0 ) + " minutes" );
+
+        log.info( "==== Starting: [" + ee.getShortName() + "] ======" );
+
+        linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
+        log.info( "==== Done: [" + ee.getShortName() + "] ======" );
+        log.info( "Time elapsed: " + String.format( "%.2f", sw.getTime() / 1000.0 / 60.0 ) + " minutes" );
 
     }
 

@@ -24,7 +24,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
@@ -107,13 +106,13 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
 
                 CompositeSequence cs = compositeSequenceService.findByName( arrayDesign, probe );
                 if ( cs != null ) {
-                    AbstractCLI.log.info( "Removing: " + cs );
+                    log.info( "Removing: " + cs );
                     removedVectors += rawAndProcessedExpressionDataVectorService.removeByCompositeSequence( cs );
                     compositeSequenceService.remove( cs );
                     removedProbes++;
                 }
             }
-            AbstractCLI.log.info( String.format( "Deleted %d probes and %d corresponding data vectors.", removedProbes, removedVectors ) );
+            log.info( String.format( "Deleted %d probes and %d corresponding data vectors.", removedProbes, removedVectors ) );
         }
     }
 }

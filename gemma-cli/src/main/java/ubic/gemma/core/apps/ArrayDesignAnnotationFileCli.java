@@ -24,14 +24,13 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.*;
@@ -60,7 +59,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     // file info
     private String batchFileName;
 
-  //  private boolean overWrite = false;
+    //  private boolean overWrite = false;
     private boolean processAllADs = false;
     private ArrayDesignAnnotationService arrayDesignAnnotationService;
     // private String geneFileName;
@@ -92,7 +91,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         Option taxonNameOption = Option.builder( "t" ).longOpt( "taxon" ).hasArg().argName( "taxon name" )
                 .desc( ArrayDesignAnnotationFileCli.TAXON_DESC ).build();
 
-     //   Option overWriteOption = Option.builder( "o" ).longOpt( "overwrite" ).desc( ArrayDesignAnnotationFileCli.OVERWRITE_DESC ).build();
+        //   Option overWriteOption = Option.builder( "o" ).longOpt( "overwrite" ).desc( ArrayDesignAnnotationFileCli.OVERWRITE_DESC ).build();
 
         Option skipGOOption = Option.builder( "nogo" ).longOpt( "nogo" ).desc( "Skip GO annotations" ).build();
 
@@ -101,7 +100,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         options.addOption( fileLoading );
         options.addOption( batchLoading );
-     //   options.addOption( overWriteOption );
+        //   options.addOption( overWriteOption );
         options.addOption( taxonNameOption );
         options.addOption( skipGOOption );
         options.addOption( dontDeleteOtherFilesOption );
@@ -131,7 +130,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         }
 
         if ( commandLine.hasOption( "nogo" ) ) {
-            AbstractCLI.log.info( "GO annotations will be ommitted (there will be a blank column) and only one annotation file will be generated instead of three." );
+            log.info( "GO annotations will be ommitted (there will be a blank column) and only one annotation file will be generated instead of three." );
             this.useGO = false;
         }
 
@@ -147,9 +146,9 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         if ( commandLine.hasOption( "taxon" ) ) {
             this.taxonName = commandLine.getOptionValue( "taxon" );
             if ( commandLine.hasOption( 'b' ) ) {
-                AbstractCLI.log.info( "Will batch process array designs for " + this.taxonName );
+                log.info( "Will batch process array designs for " + this.taxonName );
             } else {
-                AbstractCLI.log.info( "Will make generic file for all genes for " + this.taxonName );
+                log.info( "Will make generic file for all genes for " + this.taxonName );
             }
         }
 
@@ -214,17 +213,17 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         ArrayDesign thawed = getArrayDesignService().thawLite( arrayDesign );
 
         if ( thawed.getCurationDetails().getTroubled() ) {
-            AbstractCLI.log.warn( "Troubled, will not generate annotation file: " + arrayDesign );
+            log.warn( "Troubled, will not generate annotation file: " + arrayDesign );
             return;
         }
 
         if ( thawed.getAlternativeTo() != null ) {
-            AbstractCLI.log.warn( "Alternative CDF, will not generate annotation file: " + arrayDesign );
+            log.warn( "Alternative CDF, will not generate annotation file: " + arrayDesign );
             return;
         }
 
         if ( thawed.getTechnologyType().equals( TechnologyType.SEQUENCING ) ) {
-            AbstractCLI.log.warn( "Raw sequencing platform, will not generate annotation file: " + arrayDesign );
+            log.warn( "Raw sequencing platform, will not generate annotation file: " + arrayDesign );
             return;
         }
 
@@ -274,19 +273,19 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             }
 
             if ( ad.getCurationDetails().getTroubled() ) {
-                AbstractCLI.log.debug( "Troubled, skipping: " + ad );
+                log.debug( "Troubled, skipping: " + ad );
                 numTroubledOrAlt++;
                 continue;
             }
 
             if ( ad.getAlternativeTo() != null ) {
-                AbstractCLI.log.debug( "Alternative CDF, skipping: " + ad );
+                log.debug( "Alternative CDF, skipping: " + ad );
                 numTroubledOrAlt++;
                 continue;
             }
 
             if ( ad.getTechnologyType().equals( TechnologyType.SEQUENCING ) ) {
-                AbstractCLI.log.warn( "Raw sequencing platform, will not generate annotation file: " + ad );
+                log.warn( "Raw sequencing platform, will not generate annotation file: " + ad );
                 continue;
             }
 
@@ -328,7 +327,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
      */
     private void processFromListInFile() throws IOException {
 
-        AbstractCLI.log.info( "Loading platforms to annotate from " + this.batchFileName );
+        log.info( "Loading platforms to annotate from " + this.batchFileName );
         InputStream is = new FileInputStream( this.batchFileName );
         try ( BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
 
@@ -346,9 +345,9 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
                 // Check the syntax of the given line
                 if ( ( accession == null ) || StringUtils.isBlank( accession ) ) {
-                    AbstractCLI.log.warn( "Incorrect line format in Batch Annotation file: Line " + lineNumber
+                    log.warn( "Incorrect line format in Batch Annotation file: Line " + lineNumber
                             + "Platform is required: " + line );
-                    AbstractCLI.log.warn( "Unable to process that line. Skipping to next." );
+                    log.warn( "Unable to process that line. Skipping to next." );
                     continue;
                 }
 
@@ -365,7 +364,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     }
 //
 //    private void processGeneList() throws IOException {
-//        AbstractCLI.log.info( "Loading genes to annotate from " + geneFileName );
+//        log.info( "Loading genes to annotate from " + geneFileName );
 //        InputStream is = new FileInputStream( geneFileName );
 //        try ( BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
 //            String line;
@@ -383,16 +382,16 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 //                String gene = arguments[0];
 //                Gene g = geneService.findByOfficialSymbol( gene, taxon );
 //                if ( g == null ) {
-//                    AbstractCLI.log.info( "Gene: " + gene + " not found." );
+//                    log.info( "Gene: " + gene + " not found." );
 //                    continue;
 //                }
 //                genes.add( g );
 //            }
-//            AbstractCLI.log.info( "File contained " + genes.size() + " potential gene symbols" );
+//            log.info( "File contained " + genes.size() + " potential gene symbols" );
 //
 //            int numProcessed = arrayDesignAnnotationService
 //                    .generateAnnotationFile( new PrintWriter( System.out ), genes );
-//            AbstractCLI.log.info( "Processed " + numProcessed + " genes that were found" );
+//            log.info( "Processed " + numProcessed + " genes that were found" );
 //        }
 //    }
 
@@ -402,12 +401,12 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         if ( taxon == null ) {
             throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
         }
-        AbstractCLI.log.info( "Processing all genes for " + taxon );
+        log.info( "Processing all genes for " + taxon );
         Collection<Gene> genes = geneService.loadAll( taxon );
-        AbstractCLI.log.info( "Taxon has " + genes.size() + " 'known' genes" );
+        log.info( "Taxon has " + genes.size() + " 'known' genes" );
         int numProcessed = arrayDesignAnnotationService
                 .generateAnnotationFile( new PrintWriter( System.out ), genes, useGO );
-        AbstractCLI.log.info( "Processed " + numProcessed + " genes that were found" );
+        log.info( "Processed " + numProcessed + " genes that were found" );
     }
 
     private void processOneAD( ArrayDesign inputAd ) throws IOException {

@@ -25,7 +25,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.genome.gene.ncbi.NcbiGeneLoader;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.genome.Taxon;
@@ -158,7 +157,7 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
         }
         if ( commandLine.hasOption( "restart" ) ) {
             this.startNcbiId = Integer.parseInt( commandLine.getOptionValue( "restart" ) );
-            AbstractCLI.log.info( "Will attempt to pick up at ncbi gene id=" + startNcbiId );
+            log.info( "Will attempt to pick up at ncbi gene id=" + startNcbiId );
             this.skipDownload = true;
         }
         if ( commandLine.hasOption( "nodownload" ) ) {

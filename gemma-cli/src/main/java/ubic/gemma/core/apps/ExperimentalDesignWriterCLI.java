@@ -24,7 +24,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.io.IOException;
@@ -45,34 +44,11 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     }
 
     @Override
-    protected void doWork() throws Exception {
-        for ( BioAssaySet ee : expressionExperiments ) {
-
-            if ( ee instanceof ExpressionExperiment ) {
-                ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
-
-                try ( PrintWriter writer = new PrintWriter(
-                        outFileName + "_" + FileTools.cleanForFileName( ( ( ExpressionExperiment ) ee ).getShortName() )
-                                + ".txt" ) ) {
-
-                    edWriter.write( writer, ( ExpressionExperiment ) ee, true );
-                    writer.flush();
-                } catch ( IOException exception ) {
-                    throw exception;
-                }
-            } else {
-                throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
-            }
-        }
-    }
-
-    @Override
     public String getShortDesc() {
         return "Prints experimental design to a file in a R-friendly format";
     }
 
     @Override
-    @SuppressWarnings("static-access")
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
         Option outputFileOption = Option.builder( "o" ).hasArg().required().argName( "outFilePrefix" )
@@ -85,5 +61,16 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     protected void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
         outFileName = commandLine.getOptionValue( 'o' );
+    }
+
+    @Override
+    protected void processExpressionExperiment( ExpressionExperiment ee ) {
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
+        try ( PrintWriter writer = new PrintWriter( outFileName + "_" + FileTools.cleanForFileName( ee.getShortName() ) + ".txt" ) ) {
+            edWriter.write( writer, ee, true );
+            writer.flush();
+        } catch ( IOException exception ) {
+            throw new RuntimeException( exception );
+        }
     }
 }

@@ -23,9 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 
@@ -42,6 +40,11 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
     private GeeqService.ScoreMode mode = GeeqService.ScoreMode.all;
 
     @Override
+    public String getCommandName() {
+        return "runGeeq";
+    }
+
+    @Override
     public String getShortDesc() {
         return "Generate or update GEEQ scores";
     }
@@ -52,11 +55,6 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
         if ( commandLine.hasOption( 'm' ) ) {
             this.mode = GeeqService.ScoreMode.valueOf( commandLine.getOptionValue( 'm' ) );
         }
-    }
-
-    @Override
-    public String getCommandName() {
-        return "runGeeq";
     }
 
     @Override
@@ -79,27 +77,18 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
-        for ( BioAssaySet bioassay : expressionExperiments ) {
-            if ( !( bioassay instanceof ExpressionExperiment ) ) {
-                log.debug( bioassay.getName() + " is not an ExpressionExperiment" );
-                continue;
-            }
-            ExpressionExperiment ee = ( ExpressionExperiment ) bioassay;
+    protected void processExpressionExperiment( ExpressionExperiment ee ) {
+        if ( !force && this.noNeedToRun( ee, GeeqEvent.class ) ) {
+            log.info( "Can't or don't need to run " + ee );
+            return;
+        }
 
-            if ( !force && this.noNeedToRun( ee, GeeqEvent.class ) ) {
-                AbstractCLI.log.info( "Can't or don't need to run " + ee );
-                addErrorObject( ee, "Can't or don't need to run " + ee );
-                continue;
-            }
+        geeqService.calculateScore( ee, mode );
 
-            try {
-                geeqService.calculateScore( ee, mode );
-                refreshExpressionExperimentFromGemmaWeb( ee, false, true );
-                addSuccessObject( ee );
-            } catch ( Exception e ) {
-                addErrorObject( ee, e );
-            }
+        try {
+            refreshExpressionExperimentFromGemmaWeb( ee, false, true );
+        } catch ( Exception e ) {
+            log.warn( "Failed to refresh " + ee + " from Gemma Web", e );
         }
     }
 }

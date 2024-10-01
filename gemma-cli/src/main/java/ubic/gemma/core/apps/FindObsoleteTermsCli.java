@@ -9,7 +9,6 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.CLI;
 
 import java.util.LinkedHashMap;
@@ -95,7 +94,7 @@ public class FindObsoleteTermsCli extends AbstractAuthenticatedCLI {
 
         Map<OntologyTerm, Long> vos = ontologyService.findObsoleteTermUsage( 4, TimeUnit.HOURS );
 
-        AbstractCLI.log.info( "Obsolete term check finished, printing ..." );
+        log.info( "Obsolete term check finished, printing ..." );
 
         System.out.println( "Value\tValueUri\tCount" );
         for ( Map.Entry<OntologyTerm, Long> vo : vos.entrySet() ) {

@@ -53,7 +53,7 @@ import static java.util.Objects.requireNonNull;
  */
 public abstract class AbstractCLI implements CLI {
 
-    protected static final Log log = LogFactory.getLog( AbstractCLI.class );
+    protected final Log log = LogFactory.getLog( getClass() );
 
     /**
      * Exit code used for a successful {@link #doWork} execution.
@@ -359,7 +359,7 @@ public abstract class AbstractCLI implements CLI {
     @Nullable
     protected Date getLimitingDate() {
         if ( limitingDate != null ) {
-            AbstractCLI.log.info( "Analyses will be run only if last was older than " + limitingDate );
+            log.info( "Analyses will be run only if last was older than " + limitingDate );
         }
         return limitingDate;
     }
@@ -369,7 +369,7 @@ public abstract class AbstractCLI implements CLI {
     }
 
     private void buildStandardOptions( Options options ) {
-        AbstractCLI.log.debug( "Creating standard options" );
+        log.debug( "Creating standard options" );
         options.addOption( HELP_OPTION, "help", false, "Print this message" );
     }
 
@@ -607,7 +607,6 @@ public abstract class AbstractCLI implements CLI {
         if ( batchFormat != BatchFormat.SUPPRESS && batchOutputFile != null ) {
             log.info( String.format( "Batch processing summary will be written to %s", batchOutputFile.getAbsolutePath() ) );
         }
-        BatchTaskExecutorServiceSummarizer summarizer;
         try ( Writer dest = batchOutputFile != null ? new OutputStreamWriter( Files.newOutputStream( batchOutputFile.toPath() ) ) : null ) {
             switch ( batchFormat ) {
                 case TEXT:

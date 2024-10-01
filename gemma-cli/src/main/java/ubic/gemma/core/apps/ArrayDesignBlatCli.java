@@ -25,7 +25,6 @@ import org.apache.commons.cli.ParseException;
 import ubic.gemma.core.analysis.sequence.Blat;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.core.loader.genome.BlatResultParser;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
@@ -140,12 +139,12 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
             for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
                 if ( !this.shouldRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignSequenceAnalysisEvent.class ) ) {
-                    AbstractCLI.log.warn( arrayDesign + " does not meet criteria to be processed" );
+                    log.warn( arrayDesign + " does not meet criteria to be processed" );
                     return;
                 }
 
                 arrayDesign = getArrayDesignService().thaw( arrayDesign );
-                AbstractCLI.log.info( "============== Start processing: " + arrayDesign.getShortName() + " ==================" );
+                log.info( "============== Start processing: " + arrayDesign.getShortName() + " ==================" );
                 Collection<BlatResult> persistedResults;
                 try {
                     if ( this.blatResultFile != null ) {
@@ -155,7 +154,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                             throw new IllegalStateException( "No blat results in file!" );
                         }
 
-                        AbstractCLI.log.info( "Got " + blatResults.size() + " blat records" );
+                        log.info( "Got " + blatResults.size() + " blat records" );
                         persistedResults = arrayDesignSequenceAlignmentService
                                 .processArrayDesign( arrayDesign, taxon, blatResults );
                         this.audit( arrayDesign, "BLAT results read from file: " + blatResultFile );
@@ -169,7 +168,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                                 + this.blatScoreThreshold + "; sensitive mode was " + this.sensitive );
                         this.updateMergedOrSubsumed( arrayDesign );
                     }
-                    AbstractCLI.log.info( "Persisted " + persistedResults.size() + " results" );
+                    log.info( "Persisted " + persistedResults.size() + " results" );
                 } catch ( IOException e ) {
                     addErrorObject( arrayDesign, e );
                 }
@@ -178,7 +177,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         } else if ( taxon != null ) {
 
             Collection<ArrayDesign> allArrayDesigns = getArrayDesignService().findByTaxon( taxon );
-            AbstractCLI.log.warn( "*** Running BLAT for all " + taxon.getCommonName() + " Array designs *** ["
+            log.warn( "*** Running BLAT for all " + taxon.getCommonName() + " Array designs *** ["
                     + allArrayDesigns.size() + " items]" );
 
             // split over multiple threads so we can multiplex. Put the array designs in a queue.
@@ -212,7 +211,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         // check being running for just one taxon
         arrayDesignTaxon = arrayDesignSequenceAlignmentService.validateTaxaForBlatFile( arrayDesign, taxon );
 
-        AbstractCLI.log.info( "Reading blat results in from " + f.getAbsolutePath() );
+        log.info( "Reading blat results in from " + f.getAbsolutePath() );
         BlatResultParser parser = new BlatResultParser();
         parser.setScoreThreshold( this.blatScoreThreshold );
         parser.setTaxon( arrayDesignTaxon );
@@ -222,7 +221,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     private void processArrayDesign( ArrayDesign design ) {
 
-        AbstractCLI.log.info( "============== Start processing: " + design.getShortName() + " ==================" );
+        log.info( "============== Start processing: " + design.getShortName() + " ==================" );
         try {
             // thaw is already done.
             arrayDesignSequenceAlignmentService.processArrayDesign( design, this.sensitive );
@@ -248,7 +247,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
         Collection<ArrayDesign> toUpdate = this.getRelatedDesigns( design );
         for ( ArrayDesign ad : toUpdate ) {
-            AbstractCLI.log.info( "Marking subsumed or merged design as completed, updating report: " + ad );
+            log.info( "Marking subsumed or merged design as completed, updating report: " + ad );
             this.audit( ad, "Parent design was processed (merged or subsumed by this)" );
             getArrayDesignReportService().generateArrayDesignReport( ad.getId() );
         }

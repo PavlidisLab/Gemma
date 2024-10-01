@@ -19,20 +19,19 @@
 
 package ubic.gemma.core.apps;
 
-import java.util.Collection;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
-
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.preprocess.SplitExperimentService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
+
+import java.util.Collection;
 
 /**
  * Split an experiment into parts based on an experimental factor
@@ -46,20 +45,18 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
      */
     private static final String FACTOR_OPTION = "factor";
 
-    private Long factorId;
+    @Autowired
+    private SplitExperimentService serv;
+    @Autowired
+    private ExperimentalFactorService efs;
 
+    private Long factorId;
     private String factorName;
 
-    @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.EXPERIMENT;
+    public SplitExperimentCli() {
+        setSingleExperimentMode();
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "splitExperiment";
@@ -73,37 +70,9 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
     @Override
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
-
-        options.addOption( Option.builder( FACTOR_OPTION ).hasArg().desc(
-                "ID numbers, categories or names of the factor to use, with spaces replaced by underscores (must not be 'batch')" ).build() );
-
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
-     */
-    @Override
-    protected void doWork() throws Exception {
-        if ( expressionExperiments.size() > 1 ) {
-            throw new IllegalArgumentException( "Can only split one experiment at a time" );
-        }
-
-        BioAssaySet v = expressionExperiments.iterator().next();
-
-        if ( !( v instanceof ExpressionExperiment ) ) {
-            throw new IllegalArgumentException( "Cannot split a " + v.getClass().getSimpleName() );
-        }
-
-        ExpressionExperiment ee = ( ExpressionExperiment ) v;
-        SplitExperimentService serv = this.getBean( SplitExperimentService.class );
-
-        ee = this.eeService.thawLite( ee );
-
-        ExperimentalFactor splitOn = this.guessFactor( ee );
-
-        serv.split( ee, splitOn, true );
+        options.addOption( Option.builder( FACTOR_OPTION ).hasArg()
+                .desc( "ID numbers, categories or names of the factor to use, with spaces replaced by underscores (must not be 'batch')" )
+                .build() );
     }
 
     @Override
@@ -112,24 +81,29 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
         if ( !commandLine.hasOption( FACTOR_OPTION ) ) {
             throw new IllegalArgumentException( "Please specify the factor" );
         }
-
         String rawFactor = commandLine.getOptionValue( FACTOR_OPTION );
-
         try {
             this.factorId = Long.parseLong( rawFactor );
         } catch ( NumberFormatException e ) {
             this.factorName = rawFactor;
         }
+    }
 
+    @Override
+    protected void processExpressionExperiment( ExpressionExperiment ee ) {
+        ee = this.eeService.thawLite( ee );
+        ExperimentalFactor splitOn = this.guessFactor( ee );
+        serv.split( ee, splitOn, true );
     }
 
     /**
      * Adapted from code in DifferentialExpressionAnalysisCli
-     *
      */
     private ExperimentalFactor guessFactor( ExpressionExperiment ee ) {
+        if ( ee.getExperimentalDesign() == null ) {
+            throw new IllegalStateException( ee + " does not have an experimental design, it cannot be split on a factor." );
+        }
 
-        ExperimentalFactorService efs = this.getBean( ExperimentalFactorService.class );
         if ( this.factorName != null ) {
 
             Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();

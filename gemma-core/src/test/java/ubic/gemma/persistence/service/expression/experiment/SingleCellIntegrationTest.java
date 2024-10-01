@@ -25,10 +25,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 
 public class SingleCellIntegrationTest extends BaseIntegrationTest {
-
-    private static final ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
 
     @Autowired
     private ArrayDesignService arrayDesignService;
@@ -136,7 +135,7 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
                 X[i] = RandomUtils.nextInt( 100000 );
                 IX[i] = ( 100 * i ) + RandomUtils.nextInt( 100 );
             }
-            vector.setData( byteArrayConverter.doubleArrayToBytes( X ) );
+            vector.setData( doubleArrayToBytes( X ) );
             vector.setDataIndices( IX );
             results.add( vector );
         }
