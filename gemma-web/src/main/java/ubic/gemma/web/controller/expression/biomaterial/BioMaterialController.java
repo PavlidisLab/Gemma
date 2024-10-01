@@ -18,20 +18,14 @@
  */
 package ubic.gemma.web.controller.expression.biomaterial;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.StopWatch;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.common.description.AnnotationValueObject;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -48,8 +42,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 /**
  * @author keshav
@@ -110,29 +103,14 @@ public class BioMaterialController {
     }
 
     @SuppressWarnings("unused")
-    public Collection<AnnotationValueObject> getAnnotation( EntityDelegator<BioMaterial> bm ) throws TimeoutException {
+    public Collection<AnnotationValueObject> getAnnotation( EntityDelegator<BioMaterial> bm ) {
         if ( bm == null || bm.getId() == null )
             return null;
-        BioMaterial bioM = bioMaterialService.loadOrFail( bm.getId() );
-
-        Collection<AnnotationValueObject> annotation = new ArrayList<>();
-
-        long timeoutMs = 30000;
-        StopWatch timer = StopWatch.createStarted();
-        for ( Characteristic c : bioM.getCharacteristics() ) {
-            AnnotationValueObject annotationValue = new AnnotationValueObject( c, BioMaterial.class );
-
-            String className = getLabelFromUri( c.getCategoryUri(), Math.max( timeoutMs - timer.getTime(), 0 ) );
-            if ( className != null )
-                annotationValue.setClassName( className );
-
-            String termName = getLabelFromUri( c.getValueUri(), Math.max( timeoutMs - timer.getTime(), 0 ) );
-            if ( termName != null )
-                annotationValue.setTermName( termName );
-
-            annotation.add( annotationValue );
-        }
-        return annotation;
+        return bioMaterialService.loadOrFail( bm.getId(), EntityNotFoundException::new )
+                .getCharacteristics()
+                .stream()
+                .map( c -> new AnnotationValueObject( c, BioMaterial.class ) )
+                .collect( Collectors.toList() );
     }
 
     @SuppressWarnings("unused")
@@ -184,14 +162,6 @@ public class BioMaterialController {
         bioMaterial = bioMaterialService.thaw( bioMaterial );
         return new ModelAndView( "bioMaterial.detail" ).addObject( "bioMaterial", bioMaterial )
                 .addObject( "expressionExperiment", bioMaterialService.getExpressionExperiment( id ) );
-    }
-
-    private String getLabelFromUri( String uri, long timeoutMs ) throws TimeoutException {
-        if ( StringUtils.isBlank( uri ) ) return null;
-        OntologyTerm resource = ontologyService.getTerm( uri, timeoutMs, TimeUnit.MILLISECONDS );
-        if ( resource != null )
-            return resource.getLabel();
-        return null;
     }
 }
 
