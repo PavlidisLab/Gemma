@@ -4,7 +4,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.matrix.IntegerMatrix;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -14,6 +13,8 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.util.*;
+
+import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToInts;
 
 /**
  * Warning, not fully tested.
@@ -167,7 +168,6 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
             }
         }
 
-        ByteArrayConverter bac = new ByteArrayConverter();
         Map<Integer, CompositeSequence> rowNames = new TreeMap<>();
         for ( BulkExpressionDataVector vector : vectors ) {
 
@@ -180,7 +180,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
             rowNames.put( rowIndex, designElement );
 
             byte[] bytes = vector.getData();
-            int[] vals = bac.byteArrayToInts( bytes );
+            int[] vals = byteArrayToInts( bytes );
 
             BioAssayDimension dimension = vector.getBioAssayDimension();
             Collection<BioAssay> bioAssays = dimension.getBioAssays();

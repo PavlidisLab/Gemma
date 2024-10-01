@@ -67,6 +67,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static ubic.gemma.persistence.util.ByteArrayUtils.*;
+
 /**
  * Convert GEO domain objects into Gemma objects.
  * <p>
@@ -398,25 +400,25 @@ public class GeoConverterImpl implements GeoConverter {
             return null;
         }
 
-        byte[] bytes = byteArrayConverter.toBytes( toConvert.toArray() );
+        byte[] bytes = toBytes( toConvert.toArray() );
 
         /*
          * Debugging - absolutely make sure we can convert the data back.
          */
         if ( pt.equals( PrimitiveType.DOUBLE ) ) {
-            double[] byteArrayToDoubles = byteArrayConverter.byteArrayToDoubles( bytes );
-            if ( byteArrayToDoubles.length != vector.size() ) {
-                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToDoubles.length + " doubles" );
+            double[] doubles = byteArrayToDoubles( bytes );
+            if ( doubles.length != vector.size() ) {
+                throw new IllegalStateException( "Expected " + vector.size() + " got " + doubles.length + " doubles" );
             }
         } else if ( pt.equals( PrimitiveType.INT ) ) {
-            int[] byteArrayToInts = byteArrayConverter.byteArrayToInts( bytes );
-            if ( byteArrayToInts.length != vector.size() ) {
-                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToInts.length + " ints" );
+            int[] ints = byteArrayToInts( bytes );
+            if ( ints.length != vector.size() ) {
+                throw new IllegalStateException( "Expected " + vector.size() + " got " + ints.length + " ints" );
             }
         } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
-            boolean[] byteArrayToBooleans = byteArrayConverter.byteArrayToBooleans( bytes );
-            if ( byteArrayToBooleans.length != vector.size() ) {
-                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToBooleans.length + " booleans" );
+            boolean[] booleans = byteArrayToBooleans( bytes );
+            if ( booleans.length != vector.size() ) {
+                throw new IllegalStateException( "Expected " + vector.size() + " got " + booleans.length + " booleans" );
             }
         }
 

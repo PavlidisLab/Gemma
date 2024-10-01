@@ -25,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
@@ -48,6 +47,8 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+
+import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 
 /**
  * Convert a simple matrix and some meta-data into an ExpressionExperiment. Used to handle flat file conversion.
@@ -168,13 +169,13 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
             }
         }
 
-        if ( usedDesignElements.size() == 0 ) {
+        if ( usedDesignElements.isEmpty() ) {
             throw new IllegalArgumentException( "No design elements matched?" );
         }
 
         SimpleExpressionDataLoaderServiceImpl.log.info( "Found " + rows.size() + " data rows for " + design );
 
-        if ( rows.size() == 0 ) {
+        if ( rows.isEmpty() ) {
             SimpleExpressionDataLoaderServiceImpl.log.warn( "A platform was entered ( " + design
                     + " ) for which there are no matching rows in the data" );
             return null;
@@ -296,8 +297,6 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
     private Collection<RawExpressionDataVector> convertDesignElementDataVectors(
             ExpressionExperiment expressionExperiment, BioAssayDimension bioAssayDimension, ArrayDesign arrayDesign,
             QuantitationType quantitationType, DoubleMatrix<String, String> matrix ) {
-        ByteArrayConverter bArrayConverter = new ByteArrayConverter();
-
         Collection<RawExpressionDataVector> vectors = new HashSet<>();
 
         Map<String, CompositeSequence> csMap = new HashMap<>();
@@ -306,7 +305,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         }
 
         for ( int i = 0; i < matrix.rows(); i++ ) {
-            byte[] bdata = bArrayConverter.doubleArrayToBytes( matrix.getRow( i ) );
+            byte[] bdata = doubleArrayToBytes( matrix.getRow( i ) );
 
             RawExpressionDataVector vector = RawExpressionDataVector.Factory.newInstance();
             vector.setData( bdata );

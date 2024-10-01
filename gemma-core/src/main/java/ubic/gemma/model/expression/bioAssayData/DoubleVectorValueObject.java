@@ -30,6 +30,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
 import java.util.*;
 
+import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToDoubles;
+
 /**
  * Simple wrapper for a double[] that is derived from a DesignElementDataVector.
  *
@@ -59,7 +61,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         if ( qt.getIsMaskedPreferred() ) {
             this.masked = true;
         }
-        this.data = DataVectorValueObject.byteArrayConverter.byteArrayToDoubles( dedv.getData() );
+        this.data = byteArrayToDoubles( dedv.getData() );
         if ( dedv instanceof ProcessedExpressionDataVector ) {
             this.rankByMax = ( ( ProcessedExpressionDataVector ) dedv ).getRankByMax();
             this.rankByMean = ( ( ProcessedExpressionDataVector ) dedv ).getRankByMean();

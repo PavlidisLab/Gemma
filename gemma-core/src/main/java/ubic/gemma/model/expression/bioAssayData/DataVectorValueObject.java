@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
@@ -36,8 +35,6 @@ import java.util.Objects;
 public abstract class DataVectorValueObject extends IdentifiableValueObject<DataVector> {
 
     private static final long serialVersionUID = 4291090102921066018L;
-
-    protected static final ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
 
     private ExpressionExperimentValueObject expressionExperiment;
     private CompositeSequenceValueObject designElement;

@@ -31,4 +31,40 @@ public class ByteArrayUtils {
     public static int[] byteArrayToInts( byte[] bytes ) {
         return byteArrayConverter.byteArrayToInts( bytes );
     }
+
+    public static long[] byteArrayToLongs( byte[] bytes ) {
+        return byteArrayConverter.byteArrayToLongs( bytes );
+    }
+
+    public static char[] byteArrayToChars( byte[] bytes ) {
+        return byteArrayConverter.byteArrayToChars( bytes );
+    }
+
+    public static String[] byteArrayToStrings( byte[] bytes ) {
+        return byteArrayConverter.byteArrayToStrings( bytes );
+    }
+
+    public static String byteArrayToAsciiString( byte[] bytes ) {
+        return byteArrayConverter.byteArrayToAsciiString( bytes );
+    }
+
+    public static boolean[] byteArrayToBooleans( byte[] bytes ) {
+        return byteArrayConverter.byteArrayToBooleans( bytes );
+    }
+
+    public static byte[] booleanArrayToBytes( boolean[] data ) {
+        return byteArrayConverter.booleanArrayToBytes( data );
+    }
+
+    public static byte[] doubleMatrixToBytes( double[][] matrix ) {
+        return byteArrayConverter.doubleMatrixToBytes( matrix );
+    }
+
+    public static double[][] bytesToDoubleMatrix( byte[] bytes, int n ) {
+        return byteArrayConverter.byteArrayToDoubleMatrix( bytes, n );
+    }
+
+    public static byte[] toBytes( Object[] objects ) {
+        return byteArrayConverter.toBytes( objects );
+    }
 }

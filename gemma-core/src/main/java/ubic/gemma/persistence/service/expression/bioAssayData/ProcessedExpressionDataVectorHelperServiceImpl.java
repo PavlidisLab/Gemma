@@ -28,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
 import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
@@ -38,15 +37,17 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.*;
+
+import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToDoubles;
+import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 
 /**
  * Transactional methods.
@@ -129,16 +130,15 @@ class ProcessedExpressionDataVectorHelperServiceImpl
         newBioAssayDimension.setDescription( "Data was reordered based on the experimental design." );
         newBioAssayDimension = bioAssayDimensionService.create( newBioAssayDimension );
 
-        ByteArrayConverter converter = new ByteArrayConverter();
         for ( ProcessedExpressionDataVector v : processedDataVectors ) {
             assert newBioAssayDimension != null;
-            double[] data = converter.byteArrayToDoubles( v.getData() );
+            double[] data = byteArrayToDoubles( v.getData() );
             // put the data in the order of the bioAssayDimension.
             double[] resortedData = new double[data.length];
             for ( int k = 0; k < data.length; k++ ) {
                 resortedData[k] = data[indexes[k]];
             }
-            v.setData( converter.doubleArrayToBytes( resortedData ) );
+            v.setData( doubleArrayToBytes( resortedData ) );
             v.setBioAssayDimension( newBioAssayDimension );
         }
 

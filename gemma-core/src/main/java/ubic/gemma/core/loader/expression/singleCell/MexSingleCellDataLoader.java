@@ -8,7 +8,6 @@ import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.util.Assert;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -31,6 +30,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
+import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
+
 /**
  * Load single cell data from <a href="https://kb.10xgenomics.com/hc/en-us/articles/115000794686-How-is-the-MEX-format-used-for-the-gene-barcode-matrices">10X Genomics MEX format</a>.
  *
@@ -39,8 +40,6 @@ import java.util.zip.GZIPInputStream;
 @CommonsLog
 @Setter
 public class MexSingleCellDataLoader implements SingleCellDataLoader {
-
-    private static final ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
 
     private final List<String> sampleNames;
 
@@ -328,7 +327,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
                 }
                 offset += baNnz;
             }
-            vector.setData( byteArrayConverter.doubleArrayToBytes( X ) );
+            vector.setData( doubleArrayToBytes( X ) );
             vector.setDataIndices( IX );
             return vector;
         } );

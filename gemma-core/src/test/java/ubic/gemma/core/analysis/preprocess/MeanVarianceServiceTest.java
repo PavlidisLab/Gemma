@@ -22,7 +22,6 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.loader.expression.DataUpdater;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;

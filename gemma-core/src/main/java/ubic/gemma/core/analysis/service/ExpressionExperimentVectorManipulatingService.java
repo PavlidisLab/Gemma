@@ -18,24 +18,21 @@
  */
 package ubic.gemma.core.analysis.service;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 
+import java.util.Arrays;
+import java.util.List;
+
+import static ubic.gemma.persistence.util.ByteArrayUtils.*;
+
 /**
  * @author pavlidis
  */
 public abstract class ExpressionExperimentVectorManipulatingService {
-
-    // ByteArrayConverter is stateless.
-    protected final ByteArrayConverter converter = new ByteArrayConverter();
 
     @Autowired
     protected ProcessedExpressionDataVectorService processedExpressionDataVectorService;
@@ -52,32 +49,32 @@ public abstract class ExpressionExperimentVectorManipulatingService {
         byte[] rawDat = oldV.getData();
 
         if ( representation.equals( PrimitiveType.BOOLEAN ) ) {
-            boolean[] convertedDat = converter.byteArrayToBooleans( rawDat );
+            boolean[] convertedDat = byteArrayToBooleans( rawDat );
             for ( boolean b : convertedDat ) {
                 data.add( b );
             }
         } else if ( representation.equals( PrimitiveType.CHAR ) ) {
-            char[] convertedDat = converter.byteArrayToChars( rawDat );
+            char[] convertedDat = byteArrayToChars( rawDat );
             for ( char b : convertedDat ) {
                 data.add( b );
             }
         } else if ( representation.equals( PrimitiveType.DOUBLE ) ) {
-            double[] convertedDat = converter.byteArrayToDoubles( rawDat );
+            double[] convertedDat = byteArrayToDoubles( rawDat );
             for ( double b : convertedDat ) {
                 data.add( b );
             }
         } else if ( representation.equals( PrimitiveType.INT ) ) {
-            int[] convertedDat = converter.byteArrayToInts( rawDat );
+            int[] convertedDat = byteArrayToInts( rawDat );
             for ( int b : convertedDat ) {
                 data.add( b );
             }
         } else if ( representation.equals( PrimitiveType.LONG ) ) {
-            long[] convertedDat = converter.byteArrayToLongs( rawDat );
+            long[] convertedDat = byteArrayToLongs( rawDat );
             for ( long b : convertedDat ) {
                 data.add( b );
             }
         } else if ( representation.equals( PrimitiveType.STRING ) ) {
-            String[] convertedDat = converter.byteArrayToStrings( rawDat );
+            String[] convertedDat = byteArrayToStrings( rawDat );
             data.addAll( Arrays.asList( convertedDat ) );
         } else {
             throw new UnsupportedOperationException( "Don't know how to handle " + representation );

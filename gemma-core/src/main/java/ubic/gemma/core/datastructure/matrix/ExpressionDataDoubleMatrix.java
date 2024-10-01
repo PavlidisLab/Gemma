@@ -24,7 +24,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -38,6 +37,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.text.NumberFormat;
 import java.util.*;
+
+import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToDoubles;
+import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 
 /**
  * A data structure that holds a reference to the data for a given expression experiment. The data can be queried by row
@@ -399,7 +401,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     public Collection<ProcessedExpressionDataVector> toProcessedDataVectors() {
         Collection<ProcessedExpressionDataVector> result = new HashSet<>();
         QuantitationType qt = this.getQuantitationTypes().iterator().next();
-        ByteArrayConverter bac = new ByteArrayConverter();
         if ( this.getQuantitationTypes().size() > 1 ) {
             throw new UnsupportedOperationException( "Cannot convert matrix that has more than one quantitation type" );
         }
@@ -410,7 +411,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
             v.setBioAssayDimension( bad );
             v.setDesignElement( this.getRowNames().get( i ) );
             v.setQuantitationType( qt );
-            v.setData( bac.doubleArrayToBytes( data ) );
+            v.setData( doubleArrayToBytes( data ) );
             v.setExpressionExperiment( this.expressionExperiment );
             // we don't fill in the ranks because we only have the mean value here.
             result.add( v );
@@ -427,7 +428,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         Collection<RawExpressionDataVector> result = new HashSet<>();
         QuantitationType qt = this.getQuantitationTypes().iterator().next();
 
-        ByteArrayConverter bac = new ByteArrayConverter();
         if ( this.getQuantitationTypes().size() > 1 ) {
             throw new UnsupportedOperationException( "Cannot convert matrix that has more than one quantitation type" );
         }
@@ -439,7 +439,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
             v.setBioAssayDimension( bad );
             v.setDesignElement( this.getRowNames().get( i ) );
             v.setQuantitationType( qt );
-            v.setData( bac.doubleArrayToBytes( data ) );
+            v.setData( doubleArrayToBytes( data ) );
             v.setExpressionExperiment( this.expressionExperiment );
             // we don't fill in the ranks because we only have the mean value here.
             result.add( v );
@@ -586,8 +586,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
             }
         }
 
-        ByteArrayConverter bac = new ByteArrayConverter();
-
         Map<Integer, CompositeSequence> rowNames = new TreeMap<>();
         for ( BulkExpressionDataVector vector : vectors ) {
             BioAssayDimension dimension = vector.getBioAssayDimension();
@@ -601,7 +599,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
             rowNames.put( rowIndex, designElement );
 
-            double[] vals = bac.byteArrayToDoubles( bytes );
+            double[] vals = byteArrayToDoubles( bytes );
 
             Collection<BioAssay> bioAssays = dimension.getBioAssays();
             if ( bioAssays.size() != vals.length )

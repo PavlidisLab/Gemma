@@ -22,7 +22,6 @@ import junit.framework.TestCase;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.loader.expression.arrayDesign.Reporter;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -34,6 +33,8 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.util.*;
+
+import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 
 /**
  * @author pavlidis
@@ -134,9 +135,7 @@ public class MatrixConversionTest extends TestCase {
             for ( int k = 0; k < data.length; k++ ) {
                 data[k] = k;
             }
-            ByteArrayConverter bconverter = new ByteArrayConverter();
-            byte[] bdata = bconverter.doubleArrayToBytes( data );
-            vector.setData( bdata );
+            vector.setData( doubleArrayToBytes( data ) );
 
             CompositeSequence cs = sequencesb.get( ( int ) j );
             vector.setDesignElement( cs );

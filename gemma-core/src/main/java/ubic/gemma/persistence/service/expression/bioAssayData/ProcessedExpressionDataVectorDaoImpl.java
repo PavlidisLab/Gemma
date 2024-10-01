@@ -24,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.analysis.preprocess.normalize.QuantileNormalizer;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
@@ -39,13 +38,13 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
 
+import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 import static ubic.gemma.persistence.util.QueryUtils.batchIdentifiableParameterList;
 import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
 
@@ -61,8 +60,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
      * in data sets where normalization is more likely to harm than good.
      */
     private static final int MIN_SIZE_FOR_RENORMALIZATION = 4000;
-
-    private static final ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
 
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
@@ -154,7 +151,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             vec.setBioAssayDimension( preferredMaskedDataDimension );
             vec.setDesignElement( cs );
             // assert this.getBioAssays().size() > 0;
-            vec.setData( byteArrayConverter.doubleArrayToBytes( dvvo.getData() ) );
+            vec.setData( doubleArrayToBytes( dvvo.getData() ) );
             vec.setRankByMax( dvvo.getRankByMax() );
             vec.setRankByMean( dvvo.getRankByMean() );
 

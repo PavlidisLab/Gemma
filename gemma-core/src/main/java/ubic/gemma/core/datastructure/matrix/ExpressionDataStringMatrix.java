@@ -21,7 +21,6 @@ package ubic.gemma.core.datastructure.matrix;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.matrix.StringMatrix;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -32,6 +31,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+
+import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToStrings;
 
 /**
  * @author pavlidis
@@ -177,7 +178,6 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
             }
         }
 
-        ByteArrayConverter bac = new ByteArrayConverter();
         for ( BulkExpressionDataVector vector : vectors ) {
 
             CompositeSequence designElement = vector.getDesignElement();
@@ -189,7 +189,7 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
             mat.addRowName( rowIndex );
 
             byte[] bytes = vector.getData();
-            String[] vals = bac.byteArrayToStrings( bytes );
+            String[] vals = byteArrayToStrings( bytes );
 
             BioAssayDimension dimension = vector.getBioAssayDimension();
             Collection<BioAssay> bioAssays = dimension.getBioAssays();

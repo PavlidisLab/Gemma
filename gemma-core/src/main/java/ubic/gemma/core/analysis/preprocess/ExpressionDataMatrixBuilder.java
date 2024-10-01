@@ -20,7 +20,6 @@ package ubic.gemma.core.analysis.preprocess;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.datastructure.matrix.*;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -36,6 +35,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.util.ChannelUtils;
 
 import java.util.*;
+
+import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToDoubles;
 
 /**
  * Utility methods for taking an ExpressionExperiment and returning various types of ExpressionDataMatrices, such as the
@@ -792,15 +793,13 @@ public class ExpressionDataMatrixBuilder {
     }
 
     private void populateMissingValueInfo() {
-        ByteArrayConverter bac = new ByteArrayConverter();
-
         for ( DesignElementDataVector vector : vectors ) {
             QuantitationType qt = vector.getQuantitationType();
             if ( !numMissingValues.containsKey( qt ) ) {
                 numMissingValues.put( qt, 0 );
             }
 
-            for ( Double d : bac.byteArrayToDoubles( vector.getData() ) ) {
+            for ( Double d : byteArrayToDoubles( vector.getData() ) ) {
                 if ( d.isNaN() ) {
                     anyMissing = true;
                     numMissingValues.put( qt, numMissingValues.get( qt ) + 1 );

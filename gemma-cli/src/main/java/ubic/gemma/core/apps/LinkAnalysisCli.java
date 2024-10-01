@@ -25,7 +25,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisConfig;
 import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisConfig.NormalizationMethod;
@@ -56,6 +55,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.*;
+
+import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 
 /**
  * Commandline tool to conduct link (coexpression) analysis.
@@ -128,7 +129,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
             QuantitationType qtype = this.makeQuantitationType();
 
-            ByteArrayConverter bArrayConverter = new ByteArrayConverter();
             try ( InputStream data = new FileInputStream( this.dataFileName ) ) {
 
                 DoubleMatrix<String, String> matrix = simpleExpressionDataLoaderService.parse( data );
@@ -136,7 +136,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 BioAssayDimension bad = this.makeBioAssayDimension( arrayDesign, matrix );
 
                 for ( int i = 0; i < matrix.rows(); i++ ) {
-                    byte[] bData = bArrayConverter.doubleArrayToBytes( matrix.getRow( i ) );
+                    byte[] bData = doubleArrayToBytes( matrix.getRow( i ) );
 
                     ProcessedExpressionDataVector vector = ProcessedExpressionDataVector.Factory.newInstance();
                     vector.setData( bData );

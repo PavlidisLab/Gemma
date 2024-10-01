@@ -25,13 +25,15 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.*;
-import ubic.gemma.model.expression.bioAssayData.*;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -42,6 +44,8 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.util.Collection;
 import java.util.HashSet;
+
+import static ubic.gemma.persistence.util.ByteArrayUtils.booleanArrayToBytes;
 
 /**
  * Computes a missing value matrix for ratiometric data sets.
@@ -225,8 +229,6 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
             return results;
         }
 
-        ByteArrayConverter converter = new ByteArrayConverter();
-
         int count = 0;
 
         ExpressionDataDoubleMatrix baseChannel = signalChannelA == null ? signalChannelB : signalChannelA;
@@ -239,7 +241,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         source.getQuantitationTypes().add( present );
         for ( ExpressionDataMatrixRowElement element : baseChannel.getRowElements() ) {
             count = this.examineVector( source, preferred, signalChannelA, signalChannelB, bkgChannelA, bkgChannelB,
-                    signalToNoiseThreshold, extraMissingValueIndicators, results, converter, count, baseChannel,
+                    signalToNoiseThreshold, extraMissingValueIndicators, results, count, baseChannel,
                     signalThreshold, present, element );
 
         }
@@ -260,7 +262,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
             ExpressionDataDoubleMatrix signalChannelA, ExpressionDataDoubleMatrix signalChannelB,
             ExpressionDataDoubleMatrix bkgChannelA, ExpressionDataDoubleMatrix bkgChannelB,
             double signalToNoiseThreshold, Collection<Double> extraMissingValueIndicators,
-            Collection<RawExpressionDataVector> results, ByteArrayConverter converter, int count,
+            Collection<RawExpressionDataVector> results, int count,
             ExpressionDataDoubleMatrix baseChannel, Double signalThreshold, QuantitationType present,
             ExpressionDataMatrixRowElement element ) {
         CompositeSequence designElement = element.getDesignElement();
@@ -328,7 +330,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
             this.fillGapsInCalls( detectionCalls );
         }
 
-        vect.setData( converter.booleanArrayToBytes( ArrayUtils.toPrimitive( detectionCalls ) ) );
+        vect.setData( booleanArrayToBytes( ArrayUtils.toPrimitive( detectionCalls ) ) );
         results.add( vect );
 
         if ( ++count % 4000 == 0 ) {

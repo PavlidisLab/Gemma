@@ -27,7 +27,6 @@ import org.hibernate.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.dataStructure.CountingMap;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressedGenes;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionTestedIn;
@@ -46,6 +45,8 @@ import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 
 /**
  * Manages and queries coexpression 'links' between genes.
@@ -834,14 +835,13 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
     public void updateRelativeNodeDegrees( Map<Long, List<Double>> relRanksPerGenePositive,
             Map<Long, List<Double>> relRanksPerGeneNegative ) {
         Session session = sessionFactory.getCurrentSession();
-        ByteArrayConverter bac = new ByteArrayConverter();
 
         int i = 0;
         for ( Long g : relRanksPerGenePositive.keySet() ) {
-            i = this.process( relRanksPerGenePositive.get( g ), session, bac, i, g, true );
+            i = this.process( relRanksPerGenePositive.get( g ), session, i, g, true );
         }
         for ( Long g : relRanksPerGeneNegative.keySet() ) {
-            i = this.process( relRanksPerGeneNegative.get( g ), session, bac, i, g, false );
+            i = this.process( relRanksPerGeneNegative.get( g ), session, i, g, false );
         }
     }
 
@@ -906,11 +906,11 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
         return ( List<Object[]> ) query1.list();
     }
 
-    private int process( List<Double> relRanks, Session sess, ByteArrayConverter bac, int i,
+    private int process( List<Double> relRanks, Session sess, int i,
             Long g, boolean positive ) {
         GeneCoexpressionNodeDegree nd = ( GeneCoexpressionNodeDegree ) sess.load( GeneCoexpressionNodeDegree.class, g );
 
-        byte[] r = bac.doubleArrayToBytes( relRanks.toArray( new Double[] {} ) );
+        byte[] r = doubleArrayToBytes( relRanks.toArray( new Double[] {} ) );
 
         if ( positive ) {
             nd.setRelativeLinkRanksPositive( r );

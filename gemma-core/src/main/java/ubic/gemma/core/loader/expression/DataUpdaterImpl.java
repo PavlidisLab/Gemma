@@ -26,7 +26,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.MatrixStats;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
@@ -65,6 +64,8 @@ import ubic.gemma.persistence.util.EntityUtils;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.*;
+
+import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 
 /**
  * Update or fill in the data associated with an experiment. Cases include reprocessing data from CEL files (Affymetrix,
@@ -979,8 +980,6 @@ public class DataUpdaterImpl implements DataUpdater {
      */
     private Collection<RawExpressionDataVector> makeNewVectors( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ExpressionDataDoubleMatrix data, QuantitationType qt ) {
-        ByteArrayConverter bArrayConverter = new ByteArrayConverter();
-
         Collection<RawExpressionDataVector> vectors = new HashSet<>();
 
         BioAssayDimension bioAssayDimension = data.getBestBioAssayDimension();
@@ -993,7 +992,7 @@ public class DataUpdaterImpl implements DataUpdater {
         assert !bioAssayDimension.getBioAssays().isEmpty();
 
         for ( int i = 0; i < data.rows(); i++ ) {
-            byte[] bdata = bArrayConverter.doubleArrayToBytes( data.getRow( i ) );
+            byte[] bdata = doubleArrayToBytes( data.getRow( i ) );
 
             RawExpressionDataVector vector = RawExpressionDataVector.Factory.newInstance();
             vector.setData( bdata );

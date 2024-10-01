@@ -6,7 +6,6 @@ import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -30,10 +29,9 @@ import java.util.zip.GZIPInputStream;
 import static org.assertj.core.api.Assertions.*;
 import static ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil.*;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomExpressionDataMatrixUtils.*;
+import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 
 public class ExpressionDataDoubleMatrixUtilTest {
-
-    private final ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
 
     /* fixtures */
     private QuantitationType qt;
@@ -46,7 +44,7 @@ public class ExpressionDataDoubleMatrixUtilTest {
         ad.setTechnologyType( TechnologyType.ONECOLOR );
         CompositeSequence cs = CompositeSequence.Factory.newInstance( "test", ad );
         ev.setDesignElement( cs );
-        ev.setData( byteArrayConverter.doubleArrayToBytes( new Double[] { 4.0 } ) );
+        ev.setData( doubleArrayToBytes( new Double[] { 4.0 } ) );
         qt = new QuantitationType();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
