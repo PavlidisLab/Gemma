@@ -930,7 +930,7 @@ public class ExpressionExperimentController {
     /**
      * Shows a list of BioAssays for an expression experiment subset.
      */
-    @RequestMapping(value = { "/showExpressionExperimentSubSet.html", "/showSubset" })
+    @RequestMapping(value = { "/showExpressionExperimentSubSet.html", "/showSubset" }, method = RequestMethod.GET)
     public ModelAndView showSubSet( @RequestParam("id") Long id ) {
         ExpressionExperimentSubSet subset = expressionExperimentSubSetService.load( id );
         if ( subset == null ) {
