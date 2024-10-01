@@ -42,7 +42,9 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.web.util.EntityNotFoundException;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -100,15 +102,19 @@ public class AnnotationController {
      * @param vc . If the evidence code is null, it will be filled in with IC. A category and value must be provided.
      * @param id of the expression experiment
      */
-    public void createExperimentTag( Characteristic vc, Long id ) throws TimeoutException {
+    public void createExperimentTag( Characteristic vc, Long id ) {
         ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id,
                 EntityNotFoundException::new, "No such experiment with id=" + id );
         if ( vc == null ) {
             throw new IllegalArgumentException( "Null characteristic" );
         }
-        OntologyTerm term = ontologyService.getTerm( vc.getValueUri(), 5000, TimeUnit.MILLISECONDS );
-        if ( vc.getValueUri() != null && term != null && term.isObsolete() ) {
-            throw new IllegalArgumentException( vc + " is an obsolete term! Not saving." );
+        try {
+            OntologyTerm term = ontologyService.getTerm( vc.getValueUri(), 5000, TimeUnit.MILLISECONDS );
+            if ( vc.getValueUri() != null && term != null && term.isObsolete() ) {
+                throw new IllegalArgumentException( vc + " is an obsolete term! Not saving." );
+            }
+        } catch ( TimeoutException e ) {
+            log.error( "Obtaining term for " + vc.getValueUri() + " timed out, will not check if it is obsolete.", e );
         }
         expressionExperimentService.addCharacteristic( ee, vc );
     }
@@ -122,14 +128,14 @@ public class AnnotationController {
      * @param taxonId only used for genes, but generally this restriction is problematic for factorValues, which is an
      *                important use case.
      */
-    public Collection<CharacteristicValueObject> findTerm( String givenQueryString, Long taxonId ) {
+    public Collection<CharacteristicValueObject> findTerm( String givenQueryString, @Nullable Long taxonId ) {
         StopWatch timer = StopWatch.createStarted();
         if ( StringUtils.isBlank( givenQueryString ) ) {
-            return new HashSet<>();
+            return Collections.emptySet();
         }
         Taxon taxon = null;
         if ( taxonId != null ) {
-            taxon = taxonService.load( taxonId );
+            taxon = taxonService.loadOrFail( taxonId, EntityNotFoundException::new );
         }
         try {
             Collection<CharacteristicValueObject> sortedResults = ontologyService.findTermsInexact( givenQueryString, 5000, taxon, Math.max( FIND_TERM_TIMEOUT_MS - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
@@ -146,9 +152,12 @@ public class AnnotationController {
             }
 
             return sortedResults;
+        } catch ( TimeoutException e ) {
+            log.error( "Search for " + givenQueryString + ( taxon != null ? " in " + taxon : "" ) + " timed out, no results will be returned.", e );
+            return Collections.emptySet();
         } catch ( ParseSearchException e ) {
             throw new IllegalArgumentException( e.getMessage(), e );
-        } catch ( SearchException | TimeoutException e ) {
+        } catch ( SearchException e ) {
             throw new RuntimeException( e );
         }
     }
