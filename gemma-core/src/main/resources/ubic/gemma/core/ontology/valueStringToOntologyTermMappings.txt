@@ -1064,8 +1064,8 @@ primary breast cancer sample, fresh-frozen	breast cancer	http://purl.obolibrary.
 primary breast cancer tissue	breast cancer	http://purl.obolibrary.org/obo/MONDO_0007254	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 primary breast cancer, ER negative	estrogen-receptor negative breast cancer	http://purl.obolibrary.org/obo/MONDO_0006513	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 primary breast cancer, ER positive	estrogen-receptor positive breast cancer	http://purl.obolibrary.org/obo/MONDO_0006512	disease	http://www.ebi.ac.uk/efo/EFO_0000408
-primary breast tumor	breast neoplasm	http://purl.obolibrary.org/obo/MONDO_0021211	disease	http://www.ebi.ac.uk/efo/EFO_0000408
-primary breast tumor - fresh surgical samples	breast neoplasm	http://purl.obolibrary.org/obo/MONDO_0021211	disease	http://www.ebi.ac.uk/efo/EFO_0000408
+primary breast tumor	breast neoplasm	http://purl.obolibrary.org/obo/MONDO_0021100	disease	http://www.ebi.ac.uk/efo/EFO_0000408
+primary breast tumor - fresh surgical samples	breast neoplasm	http://purl.obolibrary.org/obo/MONDO_0021100	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 primary cancer cell	cancer	http://purl.obolibrary.org/obo/MONDO_0004992	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 primary CD4+ T cells	CD4-positive, alpha-beta T cell	http://purl.obolibrary.org/obo/CL_0000624	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 primary cerebella	cerebellum	http://purl.obolibrary.org/obo/UBERON_0002037	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
