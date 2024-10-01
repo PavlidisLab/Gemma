@@ -29,7 +29,6 @@ import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -150,7 +149,7 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
         }
 
         if ( accessions != null ) {
-            AbstractCLI.log.info( "Got accession(s) from command line " + accessions );
+            log.info( "Got accession(s) from command line " + accessions );
             String[] accsToRun = StringUtils.split( accessions, ',' );
 
             for ( String accession : accsToRun ) {
@@ -178,7 +177,7 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
         }
 
         if ( accessionFile != null ) {
-            AbstractCLI.log.info( "Loading accessions from " + accessionFile );
+            log.info( "Loading accessions from " + accessionFile );
             InputStream is = new FileInputStream( accessionFile );
             try ( BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
 
@@ -290,7 +289,7 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
         Collection<ExpressionExperiment> existing = eeService.findByAccession( acDbe );
 
         if ( !existing.isEmpty() ) {
-            AbstractCLI.log.info( "Deleting existing version of " + accession );
+            log.info( "Deleting existing version of " + accession );
             for ( ExpressionExperiment expressionExperiment : existing ) {
                 eeService.remove( expressionExperiment );
             }
@@ -303,7 +302,7 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
      * @param ees experiments
      */
     private void postProcess( Collection<ExpressionExperiment> ees ) {
-        AbstractCLI.log.info( "Postprocessing ..." );
+        log.info( "Postprocessing ..." );
         for ( ExpressionExperiment ee : ees ) {
 
             try {

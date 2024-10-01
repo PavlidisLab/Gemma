@@ -26,7 +26,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
@@ -95,7 +94,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
             this.arraysFromCliList( commandLine );
         } else if ( commandLine.hasOption( 'f' ) ) {
             String experimentListFile = commandLine.getOptionValue( 'f' );
-            AbstractCLI.log.info( "Reading arrayDesigns list from " + experimentListFile );
+            log.info( "Reading arrayDesigns list from " + experimentListFile );
             try {
                 this.arrayDesignsToProcess = this.readListFile( experimentListFile );
             } catch ( IOException e ) {
@@ -120,12 +119,12 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
      */
     protected boolean isSubsumedOrMerged( ArrayDesign arrayDesign ) {
         if ( arrayDesign.getSubsumingArrayDesign() != null ) {
-            AbstractCLI.log.info( arrayDesign + " is subsumed by " + arrayDesign.getSubsumingArrayDesign().getId() );
+            log.info( arrayDesign + " is subsumed by " + arrayDesign.getSubsumingArrayDesign().getId() );
             return true;
         }
 
         if ( arrayDesign.getMergedInto() != null ) {
-            AbstractCLI.log.info( arrayDesign + " is merged into " + arrayDesign.getMergedInto().getId() );
+            log.info( arrayDesign + " is merged into " + arrayDesign.getMergedInto().getId() );
             return true;
         }
         return false;
@@ -135,7 +134,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
     protected boolean shouldRun( Date skipIfLastRunLaterThan, ArrayDesign design,
             Class<? extends ArrayDesignAnalysisEvent> cls ) {
         if ( design.getTechnologyType().equals( TechnologyType.GENELIST ) || design.getTechnologyType().equals( TechnologyType.SEQUENCING ) ) {
-            AbstractCLI.log.warn( design + " is not a microarray platform (it doesn't have sequences) so it will not be run" );
+            log.warn( design + " is not a microarray platform (it doesn't have sequences) so it will not be run" );
             // not really an error, but nice to get notification.
             // TODO: use a warning instead of an error as it will cause a non-zero exit code
             addErrorObject( design, "Skipped because it is not a microarray platform." );
@@ -143,7 +142,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
         }
 
         if ( this.isSubsumedOrMerged( design ) ) {
-            AbstractCLI.log.warn( design
+            log.warn( design
                     + " is subsumed or merged into another design, it will not be run; instead process the 'parent' platform" );
 
             // not really an error, but nice to get notification.
@@ -213,7 +212,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
                 continue;
             ArrayDesign ad = this.locateArrayDesign( shortName );
             if ( ad == null ) {
-                AbstractCLI.log.warn( shortName + " not found" );
+                log.warn( shortName + " not found" );
                 continue;
             }
             arrayDesignsToProcess.add( ad );
@@ -273,7 +272,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
 
         if ( lastEventOfCurrentType.getEventType() != null && eventClass.isAssignableFrom( lastEventOfCurrentType.getEventType().getClass() ) ) {
             // then definitely don't run it. The last event was the same as the one we're trying to renew.
-            AbstractCLI.log.debug( "Last event on " + arrayDesign + " was also a " + eventClass + ", skipping." );
+            log.debug( "Last event on " + arrayDesign + " was also a " + eventClass + ", skipping." );
             return false;
         }
 
@@ -293,16 +292,16 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
             }
 
             if ( currentEvent.getDate().after( lastEventOfCurrentType.getDate() ) ) {
-                AbstractCLI.log
+                log
                         .info( arrayDesign + " needs update, last " + eventClass.getSimpleName() + " was before last "
                                 + currentEvent.getEventType().getClass().getSimpleName() );
                 return true;
             }
-            AbstractCLI.log.debug( arrayDesign + " " + eventClass.getSimpleName() + " was after last " + currentEvent
+            log.debug( arrayDesign + " " + eventClass.getSimpleName() + " was after last " + currentEvent
                     .getEventType().getClass().getSimpleName() + " (OK)" );
 
         }
-        AbstractCLI.log.debug( arrayDesign + " does not need an update" );
+        log.debug( arrayDesign + " does not need an update" );
         return false;
     }
 
@@ -353,7 +352,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
         }
 
         if ( arrayDesign == null ) {
-            AbstractCLI.log.error( "No arrayDesign " + name + " found" );
+            log.error( "No arrayDesign " + name + " found" );
         }
         return arrayDesign;
     }

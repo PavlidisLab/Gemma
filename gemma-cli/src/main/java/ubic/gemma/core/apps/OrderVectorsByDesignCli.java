@@ -19,7 +19,7 @@
 
 package ubic.gemma.core.apps;
 
-import ubic.gemma.model.expression.experiment.BioAssaySet;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 
@@ -30,21 +30,12 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
  */
 public class OrderVectorsByDesignCli extends ExpressionExperimentManipulatingCLI {
 
+    @Autowired
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+
     @Override
     public String getCommandName() {
         return "orderVectorsByDesign";
-    }
-
-    @Override
-    protected void doWork() throws Exception {
-        ProcessedExpressionDataVectorService processedExpressionDataVectorService = this
-                .getBean( ProcessedExpressionDataVectorService.class );
-
-        for ( BioAssaySet ee : this.expressionExperiments ) {
-            if ( ee instanceof ExpressionExperiment ) {
-                processedExpressionDataVectorService.reorderByDesign( ( ExpressionExperiment ) ee );
-            }
-        }
     }
 
     @Override
@@ -53,8 +44,7 @@ public class OrderVectorsByDesignCli extends ExpressionExperimentManipulatingCLI
     }
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.MISC;
+    protected void processExpressionExperiment( ExpressionExperiment ee ) {
+        processedExpressionDataVectorService.reorderByDesign( ee );
     }
-
 }

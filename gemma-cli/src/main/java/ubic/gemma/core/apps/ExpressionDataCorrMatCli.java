@@ -19,8 +19,8 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Options;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedSampleCorrelationAnalysisEvent;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 
@@ -31,26 +31,12 @@ import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.Sam
  */
 public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCLI {
 
+    @Autowired
+    private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
+
     @Override
     public String getCommandName() {
         return "corrMat";
-    }
-
-    @Override
-    protected void doWork() throws Exception {
-        for ( BioAssaySet ee : expressionExperiments ) {
-            try {
-                if ( !( ee instanceof ExpressionExperiment ) ) {
-                    addErrorObject( ee, "This is not an ExpressionExperiment!" );
-                    continue;
-                }
-                this.processExperiment( ( ExpressionExperiment ) ee );
-                addSuccessObject( ee );
-            } catch ( Exception e ) {
-                addErrorObject( ee, e );
-            }
-
-        }
     }
 
     @Override
@@ -64,13 +50,11 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
         super.addForceOption( options );
     }
 
-    private void processExperiment( ExpressionExperiment ee ) {
+    @Override
+    protected void processExpressionExperiment( ExpressionExperiment ee ) {
         if ( !force && this.noNeedToRun( ee, null ) ) {
             return;
         }
-
-        SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService = this
-                .getBean( SampleCoexpressionAnalysisService.class );
 
         ee = eeService.thawLiter( ee );
         try {
@@ -81,11 +65,9 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
                     sampleCoexpressionAnalysisService.compute( ee, sampleCoexpressionAnalysisService.prepare( ee ) );
                 }
             }
-            addSuccessObject( ee );
         } catch ( Exception e ) {
             auditTrailService.addUpdateEvent( ee, FailedSampleCorrelationAnalysisEvent.class, null, e );
-            addErrorObject( ee, e );
+            throw e;
         }
     }
-
 }

@@ -23,16 +23,11 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.springframework.security.core.context.SecurityContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
-
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 
 /**
  * @author paul
@@ -40,49 +35,31 @@ import java.util.concurrent.BlockingQueue;
 public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperimentManipulatingCLI {
 
     private static final String DESCRIPTION = "Generate analysis text files (diff expression)";
+
+    @Autowired
     private ExpressionDataFileService expressionDataFileService;
-    private boolean force_write = false;
+    @Autowired
+    private AuditTrailService ats;
+
+    private boolean forceWrite = false;
 
     @Override
     public String getCommandName() {
         return "generateDataFile";
     }
 
-    @Override
-    protected void doWork() throws Exception {
-        BlockingQueue<BioAssaySet> queue = new ArrayBlockingQueue<>( expressionExperiments.size() );
-
-        // Add the Experiments to the queue for processing
-        for ( BioAssaySet ee : expressionExperiments ) {
-            if ( ee instanceof ExpressionExperiment ) {
-                try {
-                    queue.put( ee );
-                } catch ( InterruptedException ie ) {
-                    AbstractCLI.log.info( ie );
-                }
-            } else {
-                throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
-            }
-
-        }
-
-        for ( BioAssaySet ee : queue ) {
-            getBatchTaskExecutor().submit( new ProcessBioAssaySet( ee ) );
-        }
-    }
 
     @Override
     public String getShortDesc() {
         return ExpressionExperimentDataFileGeneratorCli.DESCRIPTION;
     }
 
-    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
 
         Option forceWriteOption = Option.builder( "w" )
-                .desc( "Overwrites exsiting files if this option is set" ).longOpt( "forceWrite" )
+                .desc( "Overwrites existing files if this option is set" ).longOpt( "forceWrite" )
                 .build();
 
         options.addOption( forceWriteOption );
@@ -91,49 +68,19 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
     @Override
     protected void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
-
         if ( commandLine.hasOption( 'w' ) ) {
-            this.force_write = true;
+            this.forceWrite = true;
         }
-
-        expressionDataFileService = this.getBean( ExpressionDataFileService.class );
     }
 
-    private void processExperiment( ExpressionExperiment ee ) {
-
-        try {
-            ee = this.eeService.thawLite( ee );
-
-            AuditTrailService ats = this.getBean( AuditTrailService.class );
-
-            //expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, force_write );
-            expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, force_write );
-
+    @Override
+    protected void processExpressionExperiment( ExpressionExperiment ee1 ) {
+        getBatchTaskExecutor().submit( () -> {
+            log.info( "Processing Experiment: " + ee1.getName() );
+            ExpressionExperiment ee = this.eeService.thawLite( ee1 );
+            expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, forceWrite );
             ats.addUpdateEvent( ee, CommentedEvent.class, "Generated Flat data files for downloading" );
             addSuccessObject( ee, "Success:  generated data file for " + ee.getShortName() + " ID=" + ee.getId() );
-
-        } catch ( Exception e ) {
-            addErrorObject( ee, e );
-        }
-    }
-
-    // Inner class for processing the experiments
-    private class ProcessBioAssaySet implements Runnable {
-        private SecurityContext context;
-        private BioAssaySet bioAssaySet;
-
-        private ProcessBioAssaySet( BioAssaySet bioAssaySet ) {
-            this.bioAssaySet = bioAssaySet;
-        }
-
-        @Override
-        public void run() {
-            BioAssaySet ee = bioAssaySet;
-            if ( ee == null ) {
-                return;
-            }
-            AbstractCLI.log.info( "Processing Experiment: " + ee.getName() );
-            ExpressionExperimentDataFileGeneratorCli.this.processExperiment( ( ExpressionExperiment ) ee );
-        }
+        } );
     }
 }

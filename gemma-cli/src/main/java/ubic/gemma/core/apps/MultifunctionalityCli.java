@@ -19,7 +19,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import ubic.gemma.core.analysis.service.GeneMultifunctionalityPopulationService;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -74,7 +73,7 @@ public class MultifunctionalityCli extends AbstractAuthenticatedCLI {
             TaxonService taxonService = this.getBean( TaxonService.class );
             this.taxon = taxonService.findByCommonName( taxonName );
             if ( taxon == null ) {
-                AbstractCLI.log.error( "ERROR: Cannot find taxon " + taxonName );
+                log.error( "ERROR: Cannot find taxon " + taxonName );
             }
         }
     }

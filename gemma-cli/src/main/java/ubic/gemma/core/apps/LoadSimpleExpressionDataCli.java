@@ -27,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -119,7 +118,7 @@ public class LoadSimpleExpressionDataCli extends AbstractAuthenticatedCLI {
     @Override
     protected void doWork() throws Exception {
         if ( this.fileName != null ) {
-            AbstractCLI.log.info( "Loading experiments from " + this.fileName );
+            log.info( "Loading experiments from " + this.fileName );
             InputStream is = new FileInputStream( new File( this.dirName, this.fileName ) );
             try ( BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
                 String conf;

@@ -18,6 +18,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.loader.expression.DataUpdater;
@@ -25,6 +26,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.io.IOException;
 import java.util.Collection;
 
 /**
@@ -40,27 +42,13 @@ import java.util.Collection;
  */
 public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
 
+    @Autowired
+    private DataUpdater dataUpdater;
+
     private String file = null;
 
-    @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.EXPERIMENT;
-    }
-
-    @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
-        options.addOption( Option.builder( "file" ).longOpt( null ).desc( "Path to file with tab-delimited data, first column = probe ids, first row = sample IDs (e.g. GEO GSM#)" ).argName( "file path" ).hasArg().build() );
-        super.addForceOption( options );
-    }
-
-    @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
-
-        this.file = commandLine.getOptionValue( "file" );
-        if ( file == null )
-            throw new IllegalArgumentException( "File is required" );
+    public ReplaceDataCli() {
+        setSingleExperimentMode();
     }
 
     @Override
@@ -69,15 +57,25 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
-        DataUpdater dataUpdater = this.getBean( DataUpdater.class );
+    public String getShortDesc() {
+        return "Replace expression data for non-Affymetrix and non-RNA-seq data sets";
+    }
 
-        if ( this.expressionExperiments.size() > 1 ) {
-            throw new IllegalArgumentException( "Sorry, This CLI can only deal with one experiment at a time." );
-        }
+    @Override
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
+        options.addOption( Option.builder( "file" ).longOpt( null ).desc( "Path to file with tab-delimited data, first column = probe ids, first row = sample IDs (e.g. GEO GSM#)" ).argName( "file path" ).hasArg().required().build() );
+        super.addForceOption( options );
+    }
 
-        ExpressionExperiment ee = ( ExpressionExperiment ) this.expressionExperiments.iterator().next();
+    @Override
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
+        super.processOptions( commandLine );
+        this.file = commandLine.getOptionValue( "file" );
+    }
 
+    @Override
+    protected void processExpressionExperiment( ExpressionExperiment ee ) {
         Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );
 
         if ( arrayDesignsUsed.size() > 1 ) {
@@ -95,14 +93,13 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
 
         DoubleMatrixReader reader = new DoubleMatrixReader();
 
-        DoubleMatrix<String, String> data = reader.read( file );
+        DoubleMatrix<String, String> data;
+        try {
+            data = reader.read( file );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
 
         dataUpdater.replaceData( ee, targetArrayDesign, qt, data );
     }
-
-    @Override
-    public String getShortDesc() {
-        return "Replace expression data for non-Affymetrix and non-RNA-seq data sets";
-    }
-
 }

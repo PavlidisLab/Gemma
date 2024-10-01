@@ -26,7 +26,6 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.blacklist.BlacklistedExperiment;
 import ubic.gemma.model.blacklist.BlacklistedPlatform;
@@ -303,7 +302,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
                     Thread.sleep( 500 );
                     continue; // try again
                 }
-                AbstractCLI.log.info( "Too many failures, giving up" );
+                log.info( "Too many failures, giving up" );
                 keepGoing = false;
             }
 

@@ -10,7 +10,6 @@ import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
 import ubic.gemma.core.goldenpath.GoldenPathSequenceAnalysis;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -285,7 +284,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
          */
         if ( arrayDesign.getTechnologyType().equals( TechnologyType.GENELIST ) || arrayDesign.getTechnologyType().equals( TechnologyType.SEQUENCING )
                 || arrayDesign.getTechnologyType().equals( TechnologyType.OTHER ) ) {
-            AbstractCLI.log.info( "Skipping because it is not a microarray platform" );
+            log.info( "Skipping because it is not a microarray platform" );
             return false;
         }
 
@@ -293,7 +292,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             return false;
         }
 
-        AbstractCLI.log.debug( "Re-Checking status of " + arrayDesign );
+        log.debug( "Re-Checking status of " + arrayDesign );
 
         List<AuditEvent> allEvents = this.auditEventService.getEvents( arrayDesign );
         AuditEvent lastSequenceAnalysis = null;
@@ -301,7 +300,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         AuditEvent lastSequenceUpdate = null;
         AuditEvent lastProbeMapping = null;
 
-        AbstractCLI.log.debug( allEvents.size() + " to inspect" );
+        log.debug( allEvents.size() + " to inspect" );
         for ( int j = allEvents.size() - 1; j >= 0; j-- ) {
             AuditEvent currentEvent = allEvents.get( j );
             if ( currentEvent == null )
@@ -313,25 +312,25 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             // we only care about ArrayDesignAnalysisEvent events.
             Class<? extends AuditEventType> currentEventClass = currentEvent.getEventType().getClass();
 
-            AbstractCLI.log.debug( "Inspecting: " + currentEventClass );
+            log.debug( "Inspecting: " + currentEventClass );
 
             // Get the most recent event of each type.
             if ( lastRepeatMask == null && ArrayDesignRepeatAnalysisEvent.class
                     .isAssignableFrom( currentEventClass ) ) {
                 lastRepeatMask = currentEvent;
-                AbstractCLI.log.debug( "Last repeat mask: " + lastRepeatMask.getDate() );
+                log.debug( "Last repeat mask: " + lastRepeatMask.getDate() );
             } else if ( lastSequenceUpdate == null && ArrayDesignSequenceUpdateEvent.class
                     .isAssignableFrom( currentEventClass ) ) {
                 lastSequenceUpdate = currentEvent;
-                AbstractCLI.log.debug( "Last sequence update: " + lastSequenceUpdate.getDate() );
+                log.debug( "Last sequence update: " + lastSequenceUpdate.getDate() );
             } else if ( lastSequenceAnalysis == null && ArrayDesignSequenceAnalysisEvent.class
                     .isAssignableFrom( currentEventClass ) ) {
                 lastSequenceAnalysis = currentEvent;
-                AbstractCLI.log.debug( "Last sequence analysis: " + lastSequenceAnalysis.getDate() );
+                log.debug( "Last sequence analysis: " + lastSequenceAnalysis.getDate() );
             } else if ( lastProbeMapping == null && ArrayDesignGeneMappingEvent.class
                     .isAssignableFrom( currentEventClass ) ) {
                 lastProbeMapping = currentEvent;
-                AbstractCLI.log.info( "Last probe mapping analysis: " + lastProbeMapping.getDate() );
+                log.info( "Last probe mapping analysis: " + lastProbeMapping.getDate() );
             }
 
         }
@@ -351,17 +350,17 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         if ( isNotMerged && lastSequenceUpdate != null ) {
             // FIXME: repeatmasking is currently not operable so we are waiving this requirement.
             if ( lastRepeatMask != null && lastSequenceUpdate.getDate().after( lastRepeatMask.getDate() ) ) {
-//                AbstractCLI.log
+//                log
 //                        .warn( arrayDesign + ": Sequences were updated more recently than the last repeat masking" );
 //                return false;
-                AbstractCLI.log
+                log
                         .warn( arrayDesign + ": Sequences were updated more recently than the last repeat masking but requirement temporarily waived" );
                 // return false;
             }
 
             if ( lastSequenceAnalysis != null && lastSequenceUpdate.getDate()
                     .after( lastSequenceAnalysis.getDate() ) ) {
-                AbstractCLI.log
+                log
                         .warn( arrayDesign + ": Sequences were updated more recently than the last sequence analysis" );
                 return false;
             }
@@ -373,21 +372,21 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
          */
 
         if ( isNotMerged && lastSequenceAnalysis == null ) {
-            AbstractCLI.log.warn( arrayDesign + ": Must do sequence analysis before probe mapping" );
+            log.warn( arrayDesign + ": Must do sequence analysis before probe mapping" );
             // We return false because we're not in a state to run it.
             return false;
         }
 
         if ( isNotMerged && lastRepeatMask == null ) {
-            AbstractCLI.log
+            log
                     .warn( arrayDesign + "Repeat masking missing but requirement temporarily waived" );
-            // AbstractCLI.log.warn( arrayDesign + ": Must do repeat mask analysis before probe mapping" );
+            // log.warn( arrayDesign + ": Must do repeat mask analysis before probe mapping" );
             // return false;
         }
 
         if ( skipIfLastRunLaterThan != null && lastProbeMapping != null && lastProbeMapping.getDate()
                 .after( skipIfLastRunLaterThan ) ) {
-            AbstractCLI.log.info( arrayDesign + " was probemapped since " + skipIfLastRunLaterThan + ", skipping." );
+            log.info( arrayDesign + " was probemapped since " + skipIfLastRunLaterThan + ", skipping." );
             return false;
         }
 
@@ -406,7 +405,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         if ( this.taxon != null && this.directAnnotationInputFileName == null && this.getArrayDesignsToProcess()
                 .isEmpty() ) {
-            AbstractCLI.log.warn( "*** Running mapping for all " + taxon.getCommonName()
+            log.warn( "*** Running mapping for all " + taxon.getCommonName()
                     + " Array designs, troubled platforms may be skipped *** " );
         }
 
@@ -423,7 +422,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                     break;
                 }
 
-                AbstractCLI.log.info( "====== Start processing: " + arrayDesign + " (" + arrayDesign.getShortName() + ") =====" );
+                log.info( "====== Start processing: " + arrayDesign + " (" + arrayDesign.getShortName() + ") =====" );
 
                 if ( !shouldRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignGeneMappingEvent.class ) ) {
                     continue;
@@ -447,7 +446,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 } else {
 
                     if ( !this.useDB ) {
-                        AbstractCLI.log.info( "**** Writing to STDOUT instead of the database ***" );
+                        log.info( "**** Writing to STDOUT instead of the database ***" );
                         System.out.print( config );
                     }
 
@@ -535,7 +534,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         boolean isMissingTracks = isRat && goldenPathRatDbName.startsWith( "rn" );
 
         if ( mirnaOnlyModeOption ) {
-            AbstractCLI.log.info( "Micro RNA only mode" );
+            log.info( "Micro RNA only mode" );
             config.setAllTracksOff();
             config.setUseMiRNA( true );
         } else if ( this.configOption != null ) {
@@ -583,11 +582,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
 
         if ( isMissingTracks && config.isUseKnownGene() ) {
-            AbstractCLI.log.warn( "Genome does not have knowngene track, turning option off" );
+            log.warn( "Genome does not have knowngene track, turning option off" );
             config.setUseKnownGene( false );
         }
 
-        AbstractCLI.log.info( config );
+        log.info( config );
 
     }
 
@@ -600,7 +599,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             return;
         }
 
-        AbstractCLI.log.info( "============== Start processing: " + design + " ==================" );
+        log.info( "============== Start processing: " + design + " ==================" );
         try {
 
             design = getArrayDesignService().thaw( design );
@@ -648,7 +647,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             CompositeSequence probe = compositeSequenceService.findByName( arrayDesign, probeName );
 
             if ( probe == null ) {
-                AbstractCLI.log.warn( "No such probe: " + probeName + " on " + arrayDesign.getShortName() );
+                log.warn( "No such probe: " + probeName + " on " + arrayDesign.getShortName() );
                 continue;
             }
 
@@ -662,8 +661,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
             for ( Collection<BlatAssociation> col : results.values() ) {
                 for ( BlatAssociation association : col ) {
-                    if ( AbstractCLI.log.isDebugEnabled() )
-                        AbstractCLI.log.debug( association );
+                    if ( log.isDebugEnabled() )
+                        log.debug( association );
                 }
 
                 arrayDesignProbeMapperService.printResult( probe, col );
@@ -686,7 +685,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         public void run() {
 
             if ( arrayDesign.getCurationDetails().getTroubled() ) {
-                AbstractCLI.log.warn( "Skipping troubled platform: " + arrayDesign );
+                log.warn( "Skipping troubled platform: " + arrayDesign );
                 addErrorObject( arrayDesign, "Skipped because it is troubled; run in non-batch-mode" );
                 return;
             }
@@ -703,7 +702,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         String taxonName = commandLine.getOptionValue( 't' );
         ubic.gemma.model.genome.Taxon taxon = taxonService.findByCommonName( taxonName );
         if ( taxon == null ) {
-            AbstractCLI.log.error( "ERROR: Cannot find taxon " + taxonName );
+            log.error( "ERROR: Cannot find taxon " + taxonName );
         }
         return taxon;
     }

@@ -23,7 +23,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -119,7 +118,7 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
             throw new RuntimeException( e );
         }
 
-        AbstractCLI.log.info( old2new.size() + " potential renaming items read" );
+        log.info( old2new.size() + " potential renaming items read" );
 
         int count = 0;
         for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
@@ -134,7 +133,7 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
                 cs.setName( old2new.get( cs.getName() ) );
 
                 if ( ++count % 2000 == 0 ) {
-                    AbstractCLI.log.info( "Renamed " + count + " composite sequences, last to be renamed was " + cs );
+                    log.info( "Renamed " + count + " composite sequences, last to be renamed was " + cs );
                 }
             }
 
@@ -162,7 +161,7 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
                 String newProbeName = fields[1];
 
                 if ( old2new.containsKey( newProbeName ) ) {
-                    AbstractCLI.log.warn( newProbeName + " is a duplicate, will mangle to make unique" );
+                    log.warn( newProbeName + " is a duplicate, will mangle to make unique" );
                     String candidateNewProbeName = newProbeName;
                     int i = 1;
                     while ( old2new.containsKey( newProbeName ) ) {
@@ -170,7 +169,7 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
                         i++;
                         // just in case...
                         if ( i > 100 ) {
-                            AbstractCLI.log.warn( "Was unable to create unique probe name for " + originalProbeName );
+                            log.warn( "Was unable to create unique probe name for " + originalProbeName );
                         }
                     }
                 }

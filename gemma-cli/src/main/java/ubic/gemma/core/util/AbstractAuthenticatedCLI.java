@@ -113,7 +113,7 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
     private void authenticate() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if ( authentication != null && authentication.isAuthenticated() ) {
-            AbstractCLI.log.info( String.format( "Logged in as %s", authentication.getPrincipal() ) );
+            log.info( String.format( "Logged in as %s", authentication.getPrincipal() ) );
         } else if ( requireLogin || System.getenv().containsKey( usernameEnv ) ) {
             String username = getUsername();
             String password = getPassword();
@@ -129,13 +129,13 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
             boolean success = manAuthentication.validateRequest( username, password );
             if ( success ) {
                 gemmaRestApiClient.setAuthentication( username, password );
-                AbstractCLI.log.info( "Logged in as " + username );
+                log.info( "Logged in as " + username );
             } else {
                 throw new IllegalStateException( "Not authenticated. Make sure you entered a valid username (got '" + username
                         + "') and/or password" );
             }
         } else {
-            AbstractCLI.log.info( "Logging in as anonymous guest with limited privileges" );
+            log.info( "Logging in as anonymous guest with limited privileges" );
             manAuthentication.authenticateAnonymously();
         }
     }

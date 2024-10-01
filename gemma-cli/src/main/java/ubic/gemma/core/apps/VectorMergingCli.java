@@ -22,8 +22,6 @@ import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
-import ubic.gemma.core.util.CLI;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -40,11 +38,6 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
     private PreprocessorService preprocessorService;
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CLI.CommandGroup.EXPERIMENT;
-    }
-
-    @Override
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
         super.addForceOption( options );
@@ -56,29 +49,12 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
-        for ( BioAssaySet ee : expressionExperiments ) {
-            if ( ee instanceof ExpressionExperiment ) {
-                this.processExperiment( ( ExpressionExperiment ) ee );
-            } else {
-                throw new UnsupportedOperationException(
-                        "Can't do vector merging on non-expressionExperiment bioassaysets" );
-            }
-        }
-    }
-
-    @Override
     public String getShortDesc() {
         return "For experiments that used multiple array designs, merge the expression profiles";
     }
 
-    private void processExperiment( ExpressionExperiment expressionExperiment ) {
-        try {
-            mergingService.mergeVectors( expressionExperiment );
-            preprocessorService.process( expressionExperiment );
-            addSuccessObject( expressionExperiment );
-        } catch ( Exception e ) {
-            addErrorObject( expressionExperiment, e );
-        }
+    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        mergingService.mergeVectors( expressionExperiment );
+        preprocessorService.process( expressionExperiment );
     }
 }

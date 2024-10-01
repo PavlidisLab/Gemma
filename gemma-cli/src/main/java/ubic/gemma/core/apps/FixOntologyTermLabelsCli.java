@@ -71,7 +71,7 @@ public class FixOntologyTermLabelsCli extends AbstractAuthenticatedCLI {
             throw new IllegalArgumentException( "Auto-loading of ontologies is enabled, disable it by setting load.ontologies=false in Gemma.properties." );
         }
 
-        List<ubic.basecode.ontology.providers.OntologyService> ontologiesLoading = new ArrayList<>( );
+        List<ubic.basecode.ontology.providers.OntologyService> ontologiesLoading = new ArrayList<>();
 
         log.info( String.format( "Warming up %d ontologies ...", ontologies.size() ) );
         CompletionService<ubic.basecode.ontology.providers.OntologyService> completionService = new ExecutorCompletionService<>( ontologyTaskExecutor );
@@ -103,9 +103,9 @@ public class FixOntologyTermLabelsCli extends AbstractAuthenticatedCLI {
 
         Map<String, OntologyTerm> mismatches = ontologyService.fixOntologyTermLabels( dryRun, 4, TimeUnit.HOURS );
 
-        System.out.println("Wrong_label\tCorrect_Label\tURI");
+        System.out.println( "Wrong_label\tCorrect_Label\tURI" );
         for ( Map.Entry<String, OntologyTerm> entry : mismatches.entrySet() ) {
-            System.out.println( entry.getKey() + "\t" + entry.getValue().getLabel() + "\t" + entry.getValue().getUri());
+            System.out.println( entry.getKey() + "\t" + entry.getValue().getLabel() + "\t" + entry.getValue().getUri() );
         }
 
 

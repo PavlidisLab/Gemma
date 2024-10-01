@@ -20,9 +20,7 @@ import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -39,6 +37,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
@@ -122,7 +121,7 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
         }
 
         Set<String> ncbiIds = new HashSet<String>( FileUtils.readListFileToStrings( this.geneListFileName ) );
-        AbstractCLI.log.info( "File had " + ncbiIds.size() + " gene ids" );
+        log.info( "File had " + ncbiIds.size() + " gene ids" );
 
         Map<String, CompositeSequence> existingSymbolMap = this.nameMap( platform );
 
@@ -154,10 +153,10 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
                     continue;
                 } else {
                     needsDummyElement++;
-                    //  AbstractCLI.log.info( "Gene NCBI ID=" + ncbiId + " already has an element [" + csForGene + "], but it is not a dummy, will update" );
+                    //  log.info( "Gene NCBI ID=" + ncbiId + " already has an element [" + csForGene + "], but it is not a dummy, will update" );
                 }
             } else {
-                AbstractCLI.log.info( "Gene NCBI ID=" + ncbiId + " not on platform, may add" );
+                log.info( "Gene NCBI ID=" + ncbiId + " not on platform, may add" );
             }
 
             Gene gene = null;
@@ -165,12 +164,12 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
                 gene = geneService.findByNCBIId( Integer.parseInt( ncbiId ) );
             } catch ( NumberFormatException e ) {
                 // shouldn't happen but just in case
-                AbstractCLI.log.error( "Could not parse NCBI ID = " + ncbiId + " as an integer" );
+                log.error( "Could not parse NCBI ID = " + ncbiId + " as an integer" );
             }
 
             boolean geneExists = gene != null;
             if ( !geneExists ) {
-                AbstractCLI.log.warn( "No gene for NCBI ID = " + ncbiId + " but adding dummy sequence anyway (no gene product association wil be made)" );
+                log.warn( "No gene for NCBI ID = " + ncbiId + " but adding dummy sequence anyway (no gene product association wil be made)" );
                 geneNotFound++;
                 // continue;
                 // but still make sure there is an element on the platform for it.
@@ -180,7 +179,7 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
 
             if ( gene != null && gene.getProducts().isEmpty() ) {
                 numWithNoTranscript++;
-                AbstractCLI.log.info( "No transcripts for " + gene + ", adding element anyway" );
+                log.info( "No transcripts for " + gene + ", adding element anyway" );
             }
 
             AnnotationAssociation aa = null;
@@ -300,7 +299,7 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
                         + " genes had no transcript." );
         }
 
-        AbstractCLI.log.info( "Platform has " + arrayDesignService.numCompositeSequenceWithGenes( platform )
+        log.info( "Platform has " + arrayDesignService.numCompositeSequenceWithGenes( platform )
                 + " 'elements' associated with genes." );
 
         if ( !noDB ) arrayDesignReportService.generateArrayDesignReport( platform.getId() );
@@ -311,7 +310,7 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
 
         if ( !noDB ) auditTrailService.addUpdateEvent( platform, AnnotationBasedGeneMappingEvent.class, auditMessage );
 
-        AbstractCLI.log.info( "Don't forget to update the annotation files, any old ones will be deleted (unless dry run)" );
+        log.info( "Don't forget to update the annotation files, any old ones will be deleted (unless dry run)" );
         if ( !noDB ) arrayDesignAnnotationService.deleteExistingFiles( platform );
 
         /*

@@ -14,15 +14,14 @@
  */
 package ubic.gemma.core.apps;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationService;
-import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.config.Settings;
+
+import java.util.Collection;
 
 /**
  * Add batch information for RNA-seq experiments.
@@ -35,11 +34,17 @@ public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
     @Autowired
     private BatchInfoPopulationService batchService;
 
-    private String fastqRootDir = Settings.getString( "gemma.fastq.headers.dir" );
+    @Value("${gemma.fastq.headers.dir}")
+    private String fastqRootDir;
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CLI.CommandGroup.EXPERIMENT;
+    public String getCommandName() {
+        return "rnaseqBatchInfo";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Load RNASeq batch information; header files expected to be in structure like ${gemma.fastq.headers.dir}/GSExxx/GSMxxx/SRRxxx.fastq.header";
     }
 
     @Override
@@ -49,36 +54,13 @@ public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
-
-    }
-
-    @Override
-    public String getCommandName() {
-        return "rnaseqBatchInfo";
-    }
-
-    @Override
-    protected void doWork() throws Exception {
+    protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
         log.info( "Checking folders for existing experiments in " + fastqRootDir );
-        for ( BioAssaySet ee : this.expressionExperiments ) {
-            if ( ee instanceof ExpressionExperiment ) {
-                try {
-                    batchService.fillBatchInformation( ( ExpressionExperiment ) ee, this.force );
-                    addSuccessObject( ee, "Added batch information" );
-                } catch ( Exception e ) {
-                    addErrorObject( ee, "Failed to add batch information.", e );
-                }
-            } else {
-                addErrorObject( ee, "This is not an ExpressionExperiment" );
-            }
-        }
+        super.processBioAssaySets( expressionExperiments );
     }
 
     @Override
-    public String getShortDesc() {
-        return "Load RNASeq batch information; header files expected to be in structure like ${gemma.fastq.headers.dir}/GSExxx/GSMxxx/SRRxxx.fastq.header";
+    protected void processExpressionExperiment( ExpressionExperiment ee ) {
+        batchService.fillBatchInformation( ee, this.force );
     }
-
 }

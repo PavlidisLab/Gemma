@@ -21,58 +21,47 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.ontology.OntologyUtils;
-import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * @author Paul
  * @see ExperimentalDesignImporter
  */
-public class ExperimentalDesignImportCli extends AbstractAuthenticatedCLI {
+public class ExperimentalDesignImportCli extends ExpressionExperimentManipulatingCLI {
 
-    private ExpressionExperiment expressionExperiment;
-    private InputStream inputStream;
+    @Autowired
+    private ExperimentalDesignImporter edImp;
+    @Autowired
+    private ExpressionExperimentService ees;
+    @Autowired
+    private ExperimentalFactorOntologyService mos;
+
+    private Path experimentalDesignFile;
+
+    public ExperimentalDesignImportCli() {
+        setSingleExperimentMode();
+    }
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.EXPERIMENT;
+    public void afterPropertiesSet() throws Exception {
+        super.afterPropertiesSet();
+        OntologyUtils.ensureInitialized( mos );
     }
 
     @Override
     public String getCommandName() {
         return "importDesign";
-    }
-
-    @SuppressWarnings("static-access")
-    @Override
-    protected void buildOptions( Options options ) {
-
-        Option expOption = Option.builder( "e" ).required().hasArg().argName( "Expression experiment name" )
-                .desc(
-                        "Expression experiment short name" )
-                .longOpt( "experiment" ).build();
-
-        options.addOption( expOption );
-
-        Option designFileOption = Option.builder( "f" ).required().hasArg().argName( "Design file" )
-                .desc( "Experimental design description file" ).longOpt( "designFile" ).build();
-        options.addOption( designFileOption );
-    }
-
-    @Override
-    protected void doWork() throws Exception {
-        ExperimentalFactorOntologyService mos = this.getBean( ExperimentalFactorOntologyService.class );
-        OntologyUtils.ensureInitialized( mos );
-        ExperimentalDesignImporter edImp = this.getBean( ExperimentalDesignImporter.class );
-        ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
-        expressionExperiment = ees.thawBioAssays( expressionExperiment );
-        edImp.importDesign( expressionExperiment, inputStream );
     }
 
     @Override
@@ -81,44 +70,26 @@ public class ExperimentalDesignImportCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        String shortName = commandLine.getOptionValue( 'e' );
-        this.expressionExperiment = this.locateExpressionExperiment( shortName );
-        if ( this.expressionExperiment == null ) {
-            throw new IllegalArgumentException( shortName + " not found" );
-        }
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
+        Option designFileOption = Option.builder( "f" ).required().hasArg().type( Path.class ).argName( "Design file" )
+                .desc( "Experimental design description file" ).longOpt( "designFile" ).build();
+        options.addOption( designFileOption );
+    }
 
-        File f = new File( commandLine.getOptionValue( 'f' ) );
-        if ( !f.canRead() ) {
-            throw new IllegalArgumentException( "Cannot read from " + f );
-        }
+    @Override
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
+        super.processOptions( commandLine );
+        experimentalDesignFile = commandLine.getParsedOptionValue( 'f' );
+    }
 
-        try {
-            inputStream = new FileInputStream( f );
-        } catch ( FileNotFoundException e ) {
+    @Override
+    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        try ( InputStream inputStream = Files.newInputStream( experimentalDesignFile ) ) {
+            expressionExperiment = ees.thawBioAssays( expressionExperiment );
+            edImp.importDesign( expressionExperiment, inputStream );
+        } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
-
     }
-
-    /**
-     * @param shortName short name of the experiment to find.
-     * @return experiment with the given short name, if it exists.
-     */
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    protected ExpressionExperiment locateExpressionExperiment( String shortName ) {
-
-        if ( shortName == null ) {
-            addErrorObject( null, "Expression experiment short name must be provided" );
-            return null;
-        }
-        ExpressionExperimentService eeService = this.getBean( ExpressionExperimentService.class );
-        ExpressionExperiment experiment = eeService.findByShortName( shortName );
-
-        if ( experiment == null ) {
-            throw new RuntimeException( "No experiment " + shortName + " found" );
-        }
-        return experiment;
-    }
-
 }

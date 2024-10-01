@@ -24,7 +24,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import ubic.gemma.core.analysis.sequence.RepeatScan;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentServiceImpl;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -81,7 +80,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
             for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
 
                 if ( !this.needToRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignRepeatAnalysisEvent.class ) ) {
-                    AbstractCLI.log.warn( arrayDesign + " was last run more recently than " + skipIfLastRunLaterThan );
+                    log.warn( arrayDesign + " was last run more recently than " + skipIfLastRunLaterThan );
                     return;
                 }
 
@@ -90,26 +89,26 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
                 this.processArrayDesign( arrayDesign );
             }
         } else if ( skipIfLastRunLaterThan != null ) {
-            AbstractCLI.log.warn( "*** Running Repeatmasker for all Array designs *** " );
+            log.warn( "*** Running Repeatmasker for all Array designs *** " );
 
             Collection<ArrayDesign> allArrayDesigns = getArrayDesignService().loadAll();
             for ( ArrayDesign design : allArrayDesigns ) {
 
                 if ( !this.needToRun( skipIfLastRunLaterThan, design, ArrayDesignRepeatAnalysisEvent.class ) ) {
-                    AbstractCLI.log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
+                    log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
                     // not really an error, but nice to get notification.
                     addErrorObject( design, "Skipped because it was last run after " + skipIfLastRunLaterThan );
                     continue;
                 }
 
                 if ( this.isSubsumedOrMerged( design ) ) {
-                    AbstractCLI.log.warn( design + " is subsumed or merged into another design, it will not be run." );
+                    log.warn( design + " is subsumed or merged into another design, it will not be run." );
                     // not really an error, but nice to get notification.
                     addErrorObject( design, "Skipped because it is subsumed by or merged into another design." );
                     continue;
                 }
 
-                AbstractCLI.log.info( "============== Start processing: " + design + " ==================" );
+                log.info( "============== Start processing: " + design + " ==================" );
                 try {
                     design = getArrayDesignService().thaw( design );
                     this.processArrayDesign( design );
@@ -148,7 +147,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
             altered = scanner.repeatScan( sequences );
         }
 
-        AbstractCLI.log.info( "Saving..." );
+        log.info( "Saving..." );
         bsService.update( altered );
         if ( this.inputFileName != null ) {
             this.audit( thawed,
@@ -156,7 +155,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
         } else {
             this.audit( thawed, "Repeat scan done, updated " + altered.size() + " sequences." );
         }
-        AbstractCLI.log.info( "Done with " + thawed );
+        log.info( "Done with " + thawed );
     }
 
 }

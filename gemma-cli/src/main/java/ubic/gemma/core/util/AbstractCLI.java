@@ -31,7 +31,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import javax.annotation.Nullable;
 import java.io.*;
 import java.nio.file.Files;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
@@ -54,7 +53,7 @@ import static java.util.Objects.requireNonNull;
  */
 public abstract class AbstractCLI implements CLI {
 
-    protected static final Log log = LogFactory.getLog( AbstractCLI.class );
+    protected final Log log = LogFactory.getLog( getClass() );
 
     /**
      * Exit code used for a successful {@link #doWork} execution.
@@ -299,8 +298,8 @@ public abstract class AbstractCLI implements CLI {
      * Add the {@code -threads} option.
      * <p>
      * This is used to configure the internal batch processing thread pool which can be used with
-     * {@link #executeBatchTasks(Collection)}. You may also use {@link #getNumThreads()} to retrieve the number of
-     * threads to use.
+     * {@link #getBatchTaskExecutor()}. You may also use {@link #getNumThreads()} to retrieve the number of threads to
+     * use.
      */
     protected void addThreadsOption( Options options ) {
         options.addOption( Option.builder( THREADS_OPTION ).argName( "numThreads" ).hasArg()
@@ -349,7 +348,7 @@ public abstract class AbstractCLI implements CLI {
     @Nullable
     protected Date getLimitingDate() {
         if ( limitingDate != null ) {
-            AbstractCLI.log.info( "Analyses will be run only if last was older than " + limitingDate );
+            log.info( "Analyses will be run only if last was older than " + limitingDate );
         }
         return limitingDate;
     }
@@ -359,7 +358,7 @@ public abstract class AbstractCLI implements CLI {
     }
 
     private void buildStandardOptions( Options options ) {
-        AbstractCLI.log.debug( "Creating standard options" );
+        log.debug( "Creating standard options" );
         options.addOption( HELP_OPTION, "help", false, "Print this message" );
     }
 
@@ -597,7 +596,6 @@ public abstract class AbstractCLI implements CLI {
         if ( batchFormat != BatchFormat.SUPPRESS && batchOutputFile != null ) {
             log.info( String.format( "Batch processing summary will be written to %s", batchOutputFile.getAbsolutePath() ) );
         }
-        BatchTaskExecutorServiceSummarizer summarizer;
         try ( Writer dest = batchOutputFile != null ? new OutputStreamWriter( Files.newOutputStream( batchOutputFile.toPath() ) ) : null ) {
             switch ( batchFormat ) {
                 case TEXT:

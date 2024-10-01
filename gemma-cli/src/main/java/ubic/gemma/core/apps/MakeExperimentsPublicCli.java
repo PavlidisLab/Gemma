@@ -15,7 +15,7 @@
 package ubic.gemma.core.apps;
 
 import gemma.gsec.SecurityService;
-import org.apache.commons.cli.CommandLine;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 
@@ -26,22 +26,22 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
  */
 public class MakeExperimentsPublicCli extends ExpressionExperimentManipulatingCLI {
 
+    @Autowired
+    private SecurityService securityService;
+
     @Override
     public String getCommandName() {
         return "makePublic";
     }
 
     @Override
-    protected void doWork() throws Exception {
-        SecurityService securityService = this.getBean( SecurityService.class );
-        for ( BioAssaySet ee : this.expressionExperiments ) {
-            securityService.makePublic( ee );
-            this.auditTrailService.addUpdateEvent( ee, MakePublicEvent.class, "Made public from command line" );
-        }
+    public String getShortDesc() {
+        return "Make experiments public";
     }
 
     @Override
-    public String getShortDesc() {
-        return "Make experiments public";
+    protected void processBioAssaySet( BioAssaySet ee ) {
+        securityService.makePublic( ee );
+        this.auditTrailService.addUpdateEvent( ee, MakePublicEvent.class, "Made public from command line" );
     }
 }

@@ -17,12 +17,11 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -236,7 +235,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI {
 
                     if ( recs == null || recs.isEmpty() ) {
                         // When this happens, the issue is that we filtered out all the results. So we should just ignore and keep going.
-                        AbstractCLI.log.info( "No records received for start=" + start + ", advancing" );
+                        log.info( "No records received for start=" + start + ", advancing" );
                         numSkippedChunks++;
 
                         // repeated empty results can just mean we ran out of records.
@@ -245,7 +244,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI {
                                 log.info( "Seem to have hit end of records, bailing" );
                                 break;
                             } else {
-                               // no op fo rnow.
+                                // no op fo rnow.
                             }
                         }
                         start += NCBI_CHUNK_SIZE;

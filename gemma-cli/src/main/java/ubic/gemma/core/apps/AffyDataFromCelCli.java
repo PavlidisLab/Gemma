@@ -24,10 +24,9 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.DataUpdater;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
-import ubic.gemma.core.util.AbstractCLI;
-import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedDataReplacedEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -36,6 +35,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -49,22 +49,13 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
 
     private static final String APT_FILE_OPT = "aptFile";
 
+    @Autowired
+    private DataUpdater serv;
+    @Autowired
+    private ArrayDesignService asd;
+
     private String aptFile = null;
     private String celchip = null;
-
-    private boolean checkForAlreadyDone( BioAssaySet ee ) {
-        for ( QuantitationType qt : eeService.getQuantitationTypes( ( ExpressionExperiment ) ee ) ) {
-            if ( qt.getIsRecomputedFromRawData() ) {
-                return true;
-            }
-        }
-        return super.auditEventService.hasEvent( ee, DataReplacedEvent.class );
-    }
-
-    @Override
-    public CommandGroup getCommandGroup() {
-        return CLI.CommandGroup.EXPERIMENT;
-    }
 
     @Override
     public String getCommandName() {
@@ -81,116 +72,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
         super.buildOptions( options );
         options.addOption( Option.builder( AffyDataFromCelCli.APT_FILE_OPT ).longOpt( null ).desc( "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour; "
                 + "ensure you used the right official CDF/MPS configuration" ).argName( "path" ).hasArg().build() );
-        super.addForceOption( options );
-
-    }
-
-    @Override
-    protected void doWork() throws Exception {
-        DataUpdater serv = this.getBean( DataUpdater.class );
-
-        if ( this.expressionExperiments.isEmpty() )
-            return;
-
-        // This can be done for multiple experiments under some conditions; we get this one just  to test for some multi-platform situations
-        Collection<ArrayDesign> arrayDesignsUsed = this.eeService
-                .getArrayDesignsUsed( this.expressionExperiments.iterator().next() );
-
-        if ( StringUtils.isNotBlank( aptFile ) ) {
-            if ( this.expressionExperiments.size() > 1 ) {
-                throw new IllegalArgumentException(
-                        "Can't use " + AffyDataFromCelCli.APT_FILE_OPT + " unless you are doing just one experiment" );
-            }
-
-            if ( this.celchip != null ) {
-                throw new UnsupportedOperationException( "celchip not supported with aptFile yet" );
-            }
-
-            ExpressionExperiment thawedEe = ( ExpressionExperiment ) this.expressionExperiments.iterator().next();
-            thawedEe = this.eeService.thawLite( thawedEe );
-
-            if ( arrayDesignsUsed.size() > 1 ) {
-                throw new IllegalArgumentException( "Cannot use " + AffyDataFromCelCli.APT_FILE_OPT
-                        + " for experiment that uses multiple platforms" );
-            }
-
-            ArrayDesign ad = arrayDesignsUsed.iterator().next();
-
-            if ( !GeoPlatform.isAffyPlatform( ad.getShortName() ) ) {
-                throw new IllegalArgumentException( "Not an Affymetrix array so far as we can tell: " + ad );
-            }
-
-            AbstractCLI.log.info( "Loading data from " + aptFile );
-            serv.addAffyDataFromAPTOutput( thawedEe, aptFile );
-
-            return;
-        }
-
-        for ( BioAssaySet ee : this.expressionExperiments ) {
-            try {
-
-                Collection<ArrayDesign> adsUsed = this.eeService.getArrayDesignsUsed( ee );
-                ExpressionExperiment thawedEe = ( ExpressionExperiment ) ee;
-                thawedEe = this.eeService.thawLite( thawedEe );
-
-                /*
-                 * if the audit trail already has a DataReplacedEvent, skip it, unless --force.
-                 */
-                if ( this.checkForAlreadyDone( ee ) && !this.force ) {
-                    addErrorObject( ee, "Was already run before, use -force" );
-                    continue;
-                }
-
-                /*
-                 * Avoid repeated attempts that won't work e.g. no data available.
-                 */
-                if ( super.auditEventService.hasEvent( ee, FailedDataReplacedEvent.class ) && !this.force ) {
-                    addErrorObject( ee, "Failed before, use -force to re-attempt" );
-                    continue;
-                }
-
-                if ( thawedEe.getAccession() == null || thawedEe.getAccession().getAccession() == null ) {
-                    throw new UnsupportedOperationException( "Can only process from CEL for data sets with an external accession" );
-                }
-
-                ArrayDesign ad = adsUsed.iterator().next();
-                ArrayDesignService asd = this.getBean( ArrayDesignService.class );
-
-                /*
-                 * Even if there are multiple platforms, we assume they are all Affy, or all not. If not, that's your
-                 * problem :) (seriously, we could check...)
-                 */
-                if ( ( GeoPlatform.isAffyPlatform( ad.getShortName() ) ) ) {
-                    AbstractCLI.log.info( ad + " looks like Affy array" );
-                    serv.reprocessAffyDataFromCel( thawedEe );
-                    addSuccessObject( thawedEe );
-                } else if ( asd.isMerged( Collections.singleton( ad.getId() ) ).get( ad.getId() ) ) {
-                    ad = asd.thawLite( ad );
-                    ArrayDesign mergee = ad.getMergees().iterator().next();
-
-                    // handle one level of sub-mergees....
-                    if ( asd.isMerged( Collections.singleton( mergee.getId() ) ).get( mergee.getId() ) ) {
-                        mergee = asd.thawLite( mergee );
-                        mergee = asd.thawLite( mergee.getMergees().iterator().next() );
-                    }
-
-                    if ( GeoPlatform.isAffyPlatform( mergee.getShortName() ) ) {
-                        AbstractCLI.log.info( ad + " looks like Affy array made from merger of other platforms" );
-                        serv.reprocessAffyDataFromCel( thawedEe );
-                        addSuccessObject( thawedEe );
-                    } else {
-                        addErrorObject( ee, ad + " is not recognized as an Affymetrix platform. If this is a mistake, the Gemma configuration needs to be updated." );
-                    }
-                } else {
-
-                    addErrorObject( ee, ad + " is not recognized as an Affymetrix platform. If this is a mistake, the Gemma configuration needs to be updated." );
-                }
-
-            } catch ( Exception exception ) {
-                addErrorObject( ee, exception );
-            }
-
-        }
+        addForceOption( options );
     }
 
     @Override
@@ -204,4 +86,108 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
         }
     }
 
+    @Override
+    protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
+        // This can be done for multiple experiments under some conditions; we get this one just  to test for some multi-platform situations
+        Collection<ArrayDesign> arrayDesignsUsed = this.eeService
+                .getArrayDesignsUsed( expressionExperiments.iterator().next() );
+
+        if ( StringUtils.isNotBlank( aptFile ) ) {
+            if ( expressionExperiments.size() > 1 ) {
+                throw new IllegalArgumentException(
+                        "Can't use " + AffyDataFromCelCli.APT_FILE_OPT + " unless you are doing just one experiment" );
+            }
+
+            if ( this.celchip != null ) {
+                throw new UnsupportedOperationException( "celchip not supported with aptFile yet" );
+            }
+
+            ExpressionExperiment thawedEe = ( ExpressionExperiment ) expressionExperiments.iterator().next();
+            thawedEe = this.eeService.thawLite( thawedEe );
+
+            if ( arrayDesignsUsed.size() > 1 ) {
+                throw new IllegalArgumentException( "Cannot use " + AffyDataFromCelCli.APT_FILE_OPT
+                        + " for experiment that uses multiple platforms" );
+            }
+
+            ArrayDesign ad = arrayDesignsUsed.iterator().next();
+
+            if ( !GeoPlatform.isAffyPlatform( ad.getShortName() ) ) {
+                throw new IllegalArgumentException( "Not an Affymetrix array so far as we can tell: " + ad );
+            }
+
+            log.info( "Loading data from " + aptFile );
+            try {
+                serv.addAffyDataFromAPTOutput( thawedEe, aptFile );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+        } else {
+            super.processBioAssaySets( expressionExperiments );
+        }
+    }
+
+    @Override
+    protected void processExpressionExperiment( ExpressionExperiment ee ) {
+        ee = this.eeService.thawLite( ee );
+        Collection<ArrayDesign> adsUsed = this.eeService.getArrayDesignsUsed( ee );
+
+        /*
+         * if the audit trail already has a DataReplacedEvent, skip it, unless --force.
+         */
+        if ( this.checkForAlreadyDone( ee ) && !this.force ) {
+            throw new RuntimeException( "Was already run before, use -force" );
+        }
+
+        /*
+         * Avoid repeated attempts that won't work e.g. no data available.
+         */
+        if ( super.auditEventService.hasEvent( ee, FailedDataReplacedEvent.class ) && !this.force ) {
+            throw new RuntimeException( "Failed before, use -force to re-attempt" );
+        }
+
+        if ( ee.getAccession() == null || ee.getAccession().getAccession() == null ) {
+            throw new UnsupportedOperationException( "Can only process from CEL for data sets with an external accession" );
+        }
+
+        ArrayDesign ad = adsUsed.iterator().next();
+
+        /*
+         * Even if there are multiple platforms, we assume they are all Affy, or all not. If not, that's your
+         * problem :) (seriously, we could check...)
+         */
+        if ( ( GeoPlatform.isAffyPlatform( ad.getShortName() ) ) ) {
+            log.info( ad + " looks like Affy array" );
+            serv.reprocessAffyDataFromCel( ee );
+            addSuccessObject( ee );
+        } else if ( asd.isMerged( Collections.singleton( ad.getId() ) ).get( ad.getId() ) ) {
+            ad = asd.thawLite( ad );
+            ArrayDesign mergee = ad.getMergees().iterator().next();
+
+            // handle one level of sub-mergees....
+            if ( asd.isMerged( Collections.singleton( mergee.getId() ) ).get( mergee.getId() ) ) {
+                mergee = asd.thawLite( mergee );
+                mergee = asd.thawLite( mergee.getMergees().iterator().next() );
+            }
+
+            if ( GeoPlatform.isAffyPlatform( mergee.getShortName() ) ) {
+                log.info( ad + " looks like Affy array made from merger of other platforms" );
+                serv.reprocessAffyDataFromCel( ee );
+                addSuccessObject( ee );
+            } else {
+                throw new RuntimeException( ad + " is not recognized as an Affymetrix platform. If this is a mistake, the Gemma configuration needs to be updated." );
+            }
+        } else {
+            throw new RuntimeException( ad + " is not recognized as an Affymetrix platform. If this is a mistake, the Gemma configuration needs to be updated." );
+        }
+    }
+
+    private boolean checkForAlreadyDone( BioAssaySet ee ) {
+        for ( QuantitationType qt : eeService.getQuantitationTypes( ( ExpressionExperiment ) ee ) ) {
+            if ( qt.getIsRecomputedFromRawData() ) {
+                return true;
+            }
+        }
+        return super.auditEventService.hasEvent( ee, DataReplacedEvent.class );
+    }
 }

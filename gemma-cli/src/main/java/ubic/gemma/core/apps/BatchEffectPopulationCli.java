@@ -17,9 +17,7 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationService;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -33,8 +31,13 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
     private BatchInfoPopulationService ser;
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.EXPERIMENT;
+    public String getCommandName() {
+        return "fillBatchInfo";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Populate the batch information for experiments (if possible)";
     }
 
     @Override
@@ -44,45 +47,19 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
     }
 
     @Override
-    public String getCommandName() {
-        return "fillBatchInfo";
-    }
+    protected void processExpressionExperiment( ExpressionExperiment ee ) {
+        if ( !force && this.noNeedToRun( ee, BatchInformationFetchingEvent.class ) ) {
+            log.info( "Can't or don't need to run " + ee );
+            return;
+        }
 
-    @Override
-    protected void doWork() throws Exception {
-        for ( BioAssaySet bas : this.expressionExperiments ) {
-            if ( bas instanceof ExpressionExperiment ) {
+        log.info( "Processing: " + ee );
 
-                if ( !force && this.noNeedToRun( bas, BatchInformationFetchingEvent.class ) ) {
-                    AbstractCLI.log.info( "Can't or don't need to run " + bas );
-                    continue;
-                }
-
-                AbstractCLI.log.info( "Processing: " + bas );
-
-                try {
-                    ExpressionExperiment ee = ( ExpressionExperiment ) bas;
-                    ser.fillBatchInformation( ee, force );
-                    try {
-                        refreshExpressionExperimentFromGemmaWeb( ee, true, true );
-                    } catch ( Exception e ) {
-                        AbstractCLI.log.error( "Failed to refresh " + ee + " from Gemma Web.", e );
-                    }
-                    addSuccessObject( bas );
-                } catch ( Exception e ) {
-                    addErrorObject( bas, e );
-                }
-
-            } else {
-                addErrorObject( bas, "Is not an ExpressionExperiment" );
-            }
-
+        ser.fillBatchInformation( ee, force );
+        try {
+            refreshExpressionExperimentFromGemmaWeb( ee, true, true );
+        } catch ( Exception e ) {
+            log.error( "Failed to refresh " + ee + " from Gemma Web.", e );
         }
     }
-
-    @Override
-    public String getShortDesc() {
-        return "Populate the batch information for experiments (if possible)";
-    }
-
 }

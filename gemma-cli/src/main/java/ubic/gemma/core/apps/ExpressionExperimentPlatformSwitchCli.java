@@ -24,15 +24,11 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchService;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-
-import java.util.Collection;
 
 /**
  * Switch the array design used to the merged one.
@@ -58,17 +54,6 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
     }
 
     @Override
-    protected void doWork() throws Exception {
-        for ( BioAssaySet ee : expressionExperiments ) {
-            if ( ee instanceof ExpressionExperiment ) {
-                this.processExperiment( ( ExpressionExperiment ) ee );
-            } else {
-                throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
-            }
-        }
-    }
-
-    @Override
     public String getShortDesc() {
         return "Switch an experiment to a different array design (usually a merged one)";
     }
@@ -91,50 +76,21 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
         }
     }
 
-    private void processExperiment( ExpressionExperiment ee ) {
-        try {
-            ee = this.eeService.thawLite( ee );
-            ArrayDesign ad;
-            if ( this.arrayDesignName != null ) {
-                ad = this.locateArrayDesign( this.arrayDesignName );
-                if ( ad == null ) {
-                    throw new RuntimeException( "Unknown array design" );
-                }
-                serv.switchExperimentToArrayDesign( ee, ad );
-                ats.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class, "Switched to use " + ad );
-            } else {
-                // Identify merged platform automatically; not really recommended as it might not make the optimal choice.
-                ad = serv.switchExperimentToMergedPlatform( ee );
-                ats.addUpdateEvent( ee, ExpressionExperimentPlatformSwitchEvent.class, "Switched to use merged platform " + ad );
+    @Override
+    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        expressionExperiment = this.eeService.thawLite( expressionExperiment );
+        ArrayDesign ad;
+        if ( this.arrayDesignName != null ) {
+            ad = this.locateArrayDesign( this.arrayDesignName );
+            if ( ad == null ) {
+                throw new RuntimeException( "Unknown array design" );
             }
-            addSuccessObject( ee );
-        } catch ( Exception e ) {
-            addErrorObject( ee, e );
+            serv.switchExperimentToArrayDesign( expressionExperiment, ad );
+            ats.addUpdateEvent( expressionExperiment, ExpressionExperimentPlatformSwitchEvent.class, "Switched to use " + ad );
+        } else {
+            // Identify merged platform automatically; not really recommended as it might not make the optimal choice.
+            ad = serv.switchExperimentToMergedPlatform( expressionExperiment );
+            ats.addUpdateEvent( expressionExperiment, ExpressionExperimentPlatformSwitchEvent.class, "Switched to use merged platform " + ad );
         }
-    }
-
-    /**
-     * @param  name               of the array design to find.
-     * @return an array design, if found. Bails otherwise with an error exit code
-     */
-    private ArrayDesign locateArrayDesign( String name ) {
-
-        ArrayDesign arrayDesign = null;
-
-        Collection<ArrayDesign> byname = arrayDesignService.findByName( name.trim().toUpperCase() );
-        if ( byname.size() > 1 ) {
-            throw new IllegalArgumentException( "Ambiguous name: " + name );
-        } else if ( byname.size() == 1 ) {
-            arrayDesign = byname.iterator().next();
-        }
-
-        if ( arrayDesign == null ) {
-            arrayDesign = arrayDesignService.findByShortName( name );
-        }
-
-        if ( arrayDesign == null ) {
-            AbstractCLI.log.error( "No arrayDesign " + name + " found" );
-        }
-        return arrayDesign;
     }
 }

@@ -26,7 +26,6 @@ import ubic.gemma.core.loader.association.NCBIGene2GOAssociationLoader;
 import ubic.gemma.core.loader.association.NCBIGene2GOAssociationParser;
 import ubic.gemma.core.loader.util.fetcher.HttpFetcher;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.common.description.LocalFile;
@@ -101,10 +100,10 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractAuthenticatedCLI {
         }
         assert files.size() == 1;
         LocalFile gene2Gofile = files.iterator().next();
-        AbstractCLI.log.info( "Removing all old GO associations" );
+        log.info( "Removing all old GO associations" );
         gene2GOAssociationService.removeAll();
 
-        AbstractCLI.log.info( "Done, loading new ones" );
+        log.info( "Done, loading new ones" );
         gene2GOAssLoader.load( gene2Gofile );
 
         ExternalDatabase ed = externalDatabaseService.findByNameWithAuditTrail( ExternalDatabases.GO );
@@ -114,7 +113,7 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractAuthenticatedCLI {
             log.warn( String.format( "No external database with name %s.", ExternalDatabases.GO ) );
         }
 
-        AbstractCLI.log.info( "Don't forget to update the annotation files for platforms." );
+        log.info( "Don't forget to update the annotation files for platforms." );
     }
 
     @Override

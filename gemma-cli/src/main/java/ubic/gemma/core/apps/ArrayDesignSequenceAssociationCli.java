@@ -25,7 +25,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
-import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
@@ -63,7 +62,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
             BioSequence updated = arrayDesignSequenceProcessingService.processSingleAccession( this.sequenceId,
                     new String[] { "nt", "est_others", "est_human", "est_mouse" }, null, force );
             if ( updated != null ) {
-                AbstractCLI.log.info( "Updated or created " + updated );
+                log.info( "Updated or created " + updated );
             }
             return;
         }
@@ -98,7 +97,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
                     throw new IllegalArgumentException( "No file " + sequenceFile + " was readable" );
                 }
 
-                AbstractCLI.log.info( "Processing ArrayDesign..." );
+                log.info( "Processing ArrayDesign..." );
 
                 if ( idFile != null ) {
                     try ( InputStream idFileIs = FileTools
@@ -124,7 +123,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
                     throw new IllegalArgumentException( "No file " + idFile + " was readable" );
                 }
 
-                AbstractCLI.log.info( "Processing ArrayDesign..." );
+                log.info( "Processing ArrayDesign..." );
 
                 String[] databases = chooseBLASTdbs( taxon );
 
@@ -134,7 +133,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
                 this.audit( arrayDesign, "Sequences identifiers from file: " + idFile );
             }
         } else {
-            AbstractCLI.log.info( "Retrieving sequences from BLAST databases" );
+            log.info( "Retrieving sequences from BLAST databases" );
 
             String[] databases = chooseBLASTdbs( taxon );
 

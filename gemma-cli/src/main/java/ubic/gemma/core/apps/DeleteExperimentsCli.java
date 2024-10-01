@@ -19,12 +19,14 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -34,11 +36,19 @@ import java.util.List;
  */
 public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
 
+    @Autowired
+    private ArrayDesignService ads;
+
     private List<String> platformAccs = null;
 
     @Override
     public String getCommandName() {
         return "deleteExperiments";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Delete experiments or platforms from the system";
     }
 
     @Override
@@ -64,11 +74,8 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
-
+    protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
         if ( platformAccs != null ) {
-
-            ArrayDesignService ads = this.getBean( ArrayDesignService.class );
 
             log.info( "Deleting " + platformAccs.size() + " platform(s)" );
 
@@ -105,7 +112,7 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
             return;
         }
 
-        for ( BioAssaySet bas : this.expressionExperiments ) {
+        for ( BioAssaySet bas : expressionExperiments ) {
             try {
                 log.info( "--------- Deleting " + bas + " --------" );
                 this.eeService.remove( ( ExpressionExperiment ) bas );
@@ -116,10 +123,4 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
             }
         }
     }
-
-    @Override
-    public String getShortDesc() {
-        return "Delete experiments or platforms from the system";
-    }
-
 }

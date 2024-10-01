@@ -16,20 +16,13 @@ public class MakeExperimentPrivateCli extends ExpressionExperimentManipulatingCL
     }
 
     @Override
-    protected void doWork() throws Exception {
-        for ( BioAssaySet ee : this.expressionExperiments ) {
-            try {
-                securityService.makePrivate( ee );
-                this.auditTrailService.addUpdateEvent( ee, MakePrivateEvent.class, "Made private from command line" );
-                addSuccessObject( ee );
-            } catch ( Exception e ) {
-                addErrorObject( ee, e );
-            }
-        }
+    public String getShortDesc() {
+        return "Make experiments private";
     }
 
     @Override
-    public String getShortDesc() {
-        return "Make experiments private";
+    protected void processBioAssaySet( BioAssaySet ee ) {
+        securityService.makePrivate( ee );
+        this.auditTrailService.addUpdateEvent( ee, MakePrivateEvent.class, "Made private from command line" );
     }
 }
