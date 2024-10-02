@@ -12,6 +12,7 @@ public class RefreshExperimentCli extends ExpressionExperimentManipulatingCLI {
     private boolean refreshReports;
 
     public RefreshExperimentCli() {
+        super();
         setUseReferencesIfPossible();
     }
 

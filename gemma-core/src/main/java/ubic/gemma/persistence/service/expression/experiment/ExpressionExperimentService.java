@@ -39,6 +39,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableFilteringVoEnabledService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -79,6 +80,12 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment loadWithAuditTrail( Long id );
+
+    /**
+     * Load troubled experiment IDs.
+     * @see CuratableDao#loadTroubledIds()
+     */
+    List<Long> loadTroubledIds();
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor );

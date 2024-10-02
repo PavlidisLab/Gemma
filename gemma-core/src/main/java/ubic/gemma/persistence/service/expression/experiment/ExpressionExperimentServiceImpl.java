@@ -167,6 +167,12 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<Long> loadTroubledIds() {
+        return expressionExperimentDao.loadTroubledIds();
+    }
+
+    @Override
     @Transactional
     public ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor ) {
         ExpressionExperiment experiment = expressionExperimentDao.load( ee.getId() );

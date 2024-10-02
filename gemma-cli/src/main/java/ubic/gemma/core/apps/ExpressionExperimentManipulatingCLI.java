@@ -50,16 +50,13 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.Filter;
-import ubic.gemma.persistence.util.Filters;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-
-import static ubic.gemma.persistence.util.IdentifiableUtils.toIdentifiableSet;
 
 /**
  * Base class for CLIs that needs one or more expression experiment as an input. It offers the following ways of reading
@@ -277,17 +274,12 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         }
 
         if ( expressionExperiments.isEmpty() ) {
-            log.warn( "No expression experiments matched the given options." );
+            throw new RuntimeException( "No expression experiments matched the given options." );
         } else if ( expressionExperiments.size() == 1 ) {
             BioAssaySet ee = expressionExperiments.iterator().next();
             log.info( "Final dataset: " + experimentToString( ee ) );
         } else {
             log.info( String.format( "Final list: %d expression experiments", expressionExperiments.size() ) );
-        }
-
-        if ( expressionExperiments.isEmpty() ) {
-            log.warn( "No experiments to process." );
-            return;
         }
 
         processBioAssaySets( expressionExperiments );
@@ -353,10 +345,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         Collection<ExpressionExperiment> excludeExperiments;
         excludeExperiments = this.readExpressionExperimentListFile( excludeEeFileName );
         int before = expressionExperiments.size();
-        expressionExperiments.removeAll( excludeExperiments );
-        int removed = before - expressionExperiments.size();
-        if ( removed > 0 )
-            log.info( "Excluded " + removed + " expression experiments" );
+        if ( expressionExperiments.removeAll( excludeExperiments ) ) {
+            int removed = before - expressionExperiments.size();
+            log.info( "Excluded " + removed + " experiments from " + excludeEeFileName + "." );
+        }
     }
 
     private List<ExpressionExperiment> experimentsFromCliList( String[] identifiers ) {
@@ -364,16 +356,12 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         for ( String identifier : identifiers ) {
             ExpressionExperiment expressionExperiment = this.locateExpressionExperiment( identifier );
             if ( expressionExperiment == null ) {
-                log.warn( "No experiment " + identifier + " found either by ID or short name." );
                 continue;
             }
             if ( !useReferencesIfPossible ) {
                 expressionExperiment = eeService.thawLite( expressionExperiment );
             }
             ees.add( expressionExperiment );
-        }
-        if ( ees.isEmpty() ) {
-            throw new RuntimeException( "There were no valid experiments specified." );
         }
         return ees;
     }
@@ -470,11 +458,12 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
             log.debug( "Found " + ee + " by accession" );
             return ee;
         }
-        if ( ( eeService.findOneByName( identifier ) ) != null ) {
+        if ( ( ee = eeService.findOneByName( identifier ) ) != null ) {
             log.debug( "Found " + ee + " by name" );
             return ee;
         }
-        return ee;
+        log.warn( "Could not locate any experiment with identifier or name " + identifier );
+        return null;
     }
 
     /**
@@ -489,7 +478,6 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         for ( String id : idlist ) {
             ExpressionExperiment ee = locateExpressionExperiment( id );
             if ( ee == null ) {
-                log.warn( String.format( "No experiment found either by ID or short name matching %s.", id ) );
                 continue;
             }
             count++;
@@ -497,9 +485,6 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
             if ( idlist.size() > 500 && count > 0 && count % 500 == 0 ) {
                 log.info( "Loaded " + count + " experiments ..." );
             }
-        }
-        if ( ees.isEmpty() ) {
-            throw new RuntimeException( String.format( "There were no valid experiments specified in %s.", fileName ) );
         }
         log.info( String.format( "Loaded %d experiments for processing from %s", ees.size(), fileName ) );
         return ees;
@@ -513,27 +498,31 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
             log.warn( "No experiments to remove troubled from" );
             return;
         }
-        // it's not possible to check the curation details directly as that might trigger proxy initialization
-        List<Long> troubledIds = eeService.loadIds( Filters.by( eeService.getFilter( "curationDetails.troubled", Boolean.class, Filter.Operator.eq, true ) ), null );
 
-        // for subsets, check if the source experiment is troubled
-        Set<BioAssaySet> troubledExpressionExperiments = expressionExperiments.stream()
-                .filter( ee -> {
-                    // for subsets, check source experiment troubled flag
-                    if ( ee instanceof ExpressionExperimentSubSet ) {
-                        return troubledIds.contains( ( ( ExpressionExperimentSubSet ) ee ).getSourceExperiment().getId() );
-                    } else {
-                        return troubledIds.contains( ee.getId() );
-                    }
-                } )
-                .collect( toIdentifiableSet() );
+        // it's not possible to check the curation details directly as that might trigger proxy initialization
+        Set<Long> troubledIds = new HashSet<>( eeService.loadTroubledIds() );
 
         // only retain non-troubled experiments
-        expressionExperiments.removeAll( troubledExpressionExperiments );
-
-        if ( !troubledExpressionExperiments.isEmpty() ) {
-            log.info( String.format( "Removed %s troubled experiments, leaving %d to be processed; use -force to include those.",
-                    experimentsToString( troubledExpressionExperiments ), expressionExperiments.size() ) );
+        AtomicInteger removedTroubledExperiments = new AtomicInteger();
+        expressionExperiments.removeIf( ee -> {
+            // for subsets, check source experiment troubled flag
+            if ( ee instanceof ExpressionExperimentSubSet ) {
+                if ( troubledIds.contains( ( ( ExpressionExperimentSubSet ) ee ).getSourceExperiment().getId() ) ) {
+                    removedTroubledExperiments.incrementAndGet();
+                    return true;
+                } else {
+                    return false;
+                }
+            } else if ( troubledIds.contains( ee.getId() ) ) {
+                removedTroubledExperiments.incrementAndGet();
+                return true;
+            } else {
+                return false;
+            }
+        } );
+        if ( removedTroubledExperiments.get() > 0 ) {
+            log.info( String.format( "Removed %d troubled experiments, leaving %d to be processed; use -force to include those.",
+                    removedTroubledExperiments.get(), expressionExperiments.size() ) );
         }
     }
 

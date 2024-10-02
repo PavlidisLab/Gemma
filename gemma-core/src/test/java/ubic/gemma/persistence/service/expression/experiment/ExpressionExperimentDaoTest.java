@@ -69,6 +69,11 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     }
 
     @Test
+    public void loadTroubledIds() {
+        Assertions.assertThat( expressionExperimentDao.loadTroubledIds() ).isEmpty();
+    }
+
+    @Test
     public void testGetFilterableProperties() {
         Assertions.assertThat( expressionExperimentDao.getFilterableProperties() )
                 .contains( "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri" )
