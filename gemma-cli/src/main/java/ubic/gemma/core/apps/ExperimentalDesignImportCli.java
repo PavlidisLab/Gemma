@@ -50,6 +50,7 @@ public class ExperimentalDesignImportCli extends ExpressionExperimentManipulatin
     private Path experimentalDesignFile;
 
     public ExperimentalDesignImportCli() {
+        super();
         setSingleExperimentMode();
     }
 

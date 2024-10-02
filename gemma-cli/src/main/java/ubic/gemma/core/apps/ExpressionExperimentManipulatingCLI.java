@@ -277,17 +277,12 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         }
 
         if ( expressionExperiments.isEmpty() ) {
-            log.warn( "No expression experiments matched the given options." );
+            throw new RuntimeException( "No expression experiments matched the given options." );
         } else if ( expressionExperiments.size() == 1 ) {
             BioAssaySet ee = expressionExperiments.iterator().next();
             log.info( "Final dataset: " + experimentToString( ee ) );
         } else {
             log.info( String.format( "Final list: %d expression experiments", expressionExperiments.size() ) );
-        }
-
-        if ( expressionExperiments.isEmpty() ) {
-            log.warn( "No experiments to process." );
-            return;
         }
 
         processBioAssaySets( expressionExperiments );
@@ -353,10 +348,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         Collection<ExpressionExperiment> excludeExperiments;
         excludeExperiments = this.readExpressionExperimentListFile( excludeEeFileName );
         int before = expressionExperiments.size();
-        expressionExperiments.removeAll( excludeExperiments );
-        int removed = before - expressionExperiments.size();
-        if ( removed > 0 )
-            log.info( "Excluded " + removed + " expression experiments" );
+        if ( expressionExperiments.removeAll( excludeExperiments ) ) {
+            int removed = before - expressionExperiments.size();
+            log.info( "Excluded " + removed + " experiments from " + excludeEeFileName + "." );
+        }
     }
 
     private List<ExpressionExperiment> experimentsFromCliList( String[] identifiers ) {
@@ -364,16 +359,12 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         for ( String identifier : identifiers ) {
             ExpressionExperiment expressionExperiment = this.locateExpressionExperiment( identifier );
             if ( expressionExperiment == null ) {
-                log.warn( "No experiment " + identifier + " found either by ID or short name." );
                 continue;
             }
             if ( !useReferencesIfPossible ) {
                 expressionExperiment = eeService.thawLite( expressionExperiment );
             }
             ees.add( expressionExperiment );
-        }
-        if ( ees.isEmpty() ) {
-            throw new RuntimeException( "There were no valid experiments specified." );
         }
         return ees;
     }
@@ -470,11 +461,12 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
             log.debug( "Found " + ee + " by accession" );
             return ee;
         }
-        if ( ( eeService.findOneByName( identifier ) ) != null ) {
+        if ( ( ee = eeService.findOneByName( identifier ) ) != null ) {
             log.debug( "Found " + ee + " by name" );
             return ee;
         }
-        return ee;
+        log.warn( "Could not locate any experiment with identifier or name " + identifier );
+        return null;
     }
 
     /**
@@ -489,7 +481,6 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         for ( String id : idlist ) {
             ExpressionExperiment ee = locateExpressionExperiment( id );
             if ( ee == null ) {
-                log.warn( String.format( "No experiment found either by ID or short name matching %s.", id ) );
                 continue;
             }
             count++;
@@ -497,9 +488,6 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
             if ( idlist.size() > 500 && count > 0 && count % 500 == 0 ) {
                 log.info( "Loaded " + count + " experiments ..." );
             }
-        }
-        if ( ees.isEmpty() ) {
-            throw new RuntimeException( String.format( "There were no valid experiments specified in %s.", fileName ) );
         }
         log.info( String.format( "Loaded %d experiments for processing from %s", ees.size(), fileName ) );
         return ees;

@@ -48,6 +48,7 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
     private String file = null;
 
     public ReplaceDataCli() {
+        super();
         setSingleExperimentMode();
     }
 
