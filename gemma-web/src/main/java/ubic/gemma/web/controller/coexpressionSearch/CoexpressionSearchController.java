@@ -38,8 +38,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
-import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -132,7 +132,7 @@ public class CoexpressionSearchController {
             return result;
 
         if ( myEE != null && !myEE.isEmpty() ) {
-            eeIds.addAll( EntityUtils.getIds( myEE ) );
+            eeIds.addAll( IdentifiableUtils.getIds( myEE ) );
         } else {
             CoexpressionSearchController.log.info( "No user data to add" );
         }
@@ -201,7 +201,7 @@ public class CoexpressionSearchController {
             return result;
 
         if ( myEE != null && !myEE.isEmpty() ) {
-            eeIds.addAll( EntityUtils.getIds( myEE ) );
+            eeIds.addAll( IdentifiableUtils.getIds( myEE ) );
         } else {
             CoexpressionSearchController.log.debug( "No user data to add" );
         }
@@ -252,7 +252,7 @@ public class CoexpressionSearchController {
         Long eeSetId = null;
         if ( searchOptions.getEeIds() != null && !searchOptions.getEeIds().isEmpty() ) {
             // security filter.
-            return EntityUtils.getIds( expressionExperimentService.load( searchOptions.getEeIds() ) );
+            return IdentifiableUtils.getIds( expressionExperimentService.load( searchOptions.getEeIds() ) );
         }
 
         if ( searchOptions.getEeSetId() != null ) {
@@ -272,7 +272,7 @@ public class CoexpressionSearchController {
             return new HashSet<>();
 
         // security filter
-        return EntityUtils.getIds( expressionExperimentSetService.getExperimentsInSet( eeSetId ) );
+        return IdentifiableUtils.getIds( expressionExperimentSetService.getExperimentsInSet( eeSetId ) );
 
     }
 

@@ -23,7 +23,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -144,7 +144,7 @@ public class ProcessedExpressionDataVectorServiceImpl
     @Transactional(readOnly = true)
     public List<ExperimentExpressionLevelsValueObject> getExpressionLevels( Collection<ExpressionExperiment> ees,
             Collection<Gene> genes, boolean keepGeneNonSpecific, @Nullable String consolidateMode ) {
-        Map<Long, List<DoubleVectorValueObject>> vectorsByExperiment = cachedProcessedExpressionDataVectorService.getProcessedDataArrays( ees, EntityUtils.getIds( genes ) )
+        Map<Long, List<DoubleVectorValueObject>> vectorsByExperiment = cachedProcessedExpressionDataVectorService.getProcessedDataArrays( ees, IdentifiableUtils.getIds( genes ) )
                 .stream()
                 .collect( Collectors.groupingBy( vector -> vector.getExpressionExperiment().getId(), Collectors.toList() ) );
         List<ExperimentExpressionLevelsValueObject> vos = new ArrayList<>( ees.size() );

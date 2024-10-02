@@ -1050,7 +1050,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         //noinspection unchecked
         List<Object[]> r = getSessionFactory().getCurrentSession()
                 .createQuery( "select ad.id, e from ArrayDesign ad join ad.externalReferences e where ad.id in :ids" )
-                .setParameterList( "ids", optimizeParameterList( EntityUtils.getIds( results ) ) )
+                .setParameterList( "ids", optimizeParameterList( IdentifiableUtils.getIds( results ) ) )
                 .setCacheable( true )
                 .list();
         Map<Long, Set<DatabaseEntry>> dbi = r.stream()
@@ -1063,7 +1063,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     private void populateIsMerged( Collection<ArrayDesignValueObject> results ) {
-        Map<Long, Boolean> isMergedByArrayDesignId = isMerged( EntityUtils.getIds( results ) );
+        Map<Long, Boolean> isMergedByArrayDesignId = isMerged( IdentifiableUtils.getIds( results ) );
         for ( ArrayDesignValueObject advo : results ) {
             advo.setIsMerged( isMergedByArrayDesignId.get( advo.getId() ) );
         }
@@ -1099,7 +1099,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 .addSynchronizedEntityClass( ArrayDesign.class )
                 .setCacheable( true );
         EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
-        Map<Long, Long> countById = QueryUtils.streamByBatch( query, "ids", EntityUtils.getIds( entities ), 2048, Object[].class )
+        Map<Long, Long> countById = QueryUtils.streamByBatch( query, "ids", IdentifiableUtils.getIds( entities ), 2048, Object[].class )
                 .collect( Collectors.toMap( o -> ( Long ) o[0], o -> ( Long ) o[1] ) );
         for ( ArrayDesignValueObject vo : entities ) {
             // missing implies no EEs, so zero is a valid default
@@ -1127,7 +1127,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 .addSynchronizedEntityClass( ArrayDesign.class )
                 .setCacheable( true );
         EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
-        Map<Long, Long> switchedCountById = QueryUtils.streamByBatch( query, "ids", EntityUtils.getIds( entities ), 2048, Object[].class )
+        Map<Long, Long> switchedCountById = QueryUtils.streamByBatch( query, "ids", IdentifiableUtils.getIds( entities ), 2048, Object[].class )
                 .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
         for ( ArrayDesignValueObject vo : entities ) {
             // missing implies no switched EEs, so zero is a valid default

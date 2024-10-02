@@ -58,7 +58,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExp
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.DifferentialExpressionAnalysisResultComparator;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -932,7 +932,7 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
         Map<CompositeSequence, String[]> annotations = new HashMap<>();
         ads = arrayDesignService.thaw( ads );
         for ( ArrayDesign arrayDesign : ads ) {
-            Map<Long, CompositeSequence> csIdMap = EntityUtils.getIdMap( arrayDesign.getCompositeSequences() );
+            Map<Long, CompositeSequence> csIdMap = IdentifiableUtils.getIdMap( arrayDesign.getCompositeSequences() );
 
             Map<Long, String[]> geneAnnotations = ArrayDesignAnnotationServiceImpl
                     .readAnnotationFileAsString( arrayDesign );
@@ -959,11 +959,15 @@ public class ExpressionDataFileServiceImpl extends AbstractFileService<Expressio
 
         if ( f.exists() ) {
             ExpressionDataFileServiceImpl.log.warn( "Will overwrite existing file " + f );
-            EntityUtils.deleteFile( f );
+            if ( !f.delete() ) {
+                throw new IOException( "Could not delete file " + f.getPath() );
+            }
         }
 
         FileUtils.forceMkdirParent( f );
-        EntityUtils.createFile( f );
+        if ( !f.createNewFile() ) {
+            throw new IOException( "Could not create file " + f.getPath() );
+        }
         return f;
     }
 

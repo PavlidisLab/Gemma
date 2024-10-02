@@ -51,7 +51,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignSe
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.AnchorTagUtil;
@@ -710,7 +710,7 @@ public class ExperimentalDesignController extends BaseController {
 
                 if ( !toDelete.isEmpty() ) {
                     log.info( "Deleting " + toDelete.size() + " unused factorvalues for " + ef );
-                    factorValueDeletion.deleteFactorValues( EntityUtils.getIds( toDelete ) );
+                    factorValueDeletion.deleteFactorValues( IdentifiableUtils.getIds( toDelete ) );
                 }
 
             }

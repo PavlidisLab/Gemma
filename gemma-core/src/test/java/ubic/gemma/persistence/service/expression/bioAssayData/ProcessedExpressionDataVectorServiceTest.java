@@ -47,7 +47,7 @@ import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.io.IOException;
 import java.util.*;
@@ -181,7 +181,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
         tableMaintenanceUtil.updateGene2CsEntries();
 
         assertEquals( 100, genes.size() );
-        v = processedDataVectorService.getProcessedDataArrays( Collections.singleton( ee ), EntityUtils.getIds( genes ) );
+        v = processedDataVectorService.getProcessedDataArrays( Collections.singleton( ee ), IdentifiableUtils.getIds( genes ) );
         assertTrue( "got " + v.size() + ", expected at least 40", 40 <= v.size() );
     }
 

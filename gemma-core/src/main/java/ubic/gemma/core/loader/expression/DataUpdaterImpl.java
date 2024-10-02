@@ -59,7 +59,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionS
 import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -393,7 +393,7 @@ public class DataUpdaterImpl implements DataUpdater {
         }
 
         boolean isOnMergedPlatform = false;
-        Map<Long, Boolean> merged = arrayDesignService.isMerged( EntityUtils.getIds( associatedPlats ) );
+        Map<Long, Boolean> merged = arrayDesignService.isMerged( IdentifiableUtils.getIds( associatedPlats ) );
         for ( ArrayDesign ad : associatedPlats ) {
             isOnMergedPlatform = merged.get( ad.getId() );
             if ( isOnMergedPlatform && associatedPlats.size() > 1 ) {

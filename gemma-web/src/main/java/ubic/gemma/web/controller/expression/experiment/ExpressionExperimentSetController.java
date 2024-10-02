@@ -34,7 +34,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject
 import ubic.gemma.model.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetValueObjectHelper;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.persistence.SessionListManager;
 import ubic.gemma.web.util.EntityNotFoundException;
@@ -173,7 +173,7 @@ public class ExpressionExperimentSetController extends BaseController {
             throw new EntityNotFoundException( "No such set with id=" + id );
         }
         // FIXME this is a bit inefficient, for security filtering ... could have an ID-filtering interceptor.
-        return EntityUtils.getIds( expressionExperimentSetService.getExperimentValueObjectsInSet( id ) );
+        return IdentifiableUtils.getIds( expressionExperimentSetService.getExperimentValueObjectsInSet( id ) );
     }
 
     /**

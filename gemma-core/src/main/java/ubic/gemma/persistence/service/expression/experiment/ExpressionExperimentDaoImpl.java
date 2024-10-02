@@ -2537,7 +2537,7 @@ public class ExpressionExperimentDaoImpl
                         + "where ee.id in (:ids) "
                         + "group by ee" )
                 .setCacheable( true );
-        Map<Long, Long> adCountById = streamByBatch( q, "ids", EntityUtils.getIds( eevos ), 2048, Object[].class )
+        Map<Long, Long> adCountById = streamByBatch( q, "ids", IdentifiableUtils.getIds( eevos ), 2048, Object[].class )
                 .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
         for ( ExpressionExperimentValueObject eevo : eevos ) {
             eevo.setArrayDesignCount( adCountById.getOrDefault( eevo.getId(), 0L ) );
@@ -2808,10 +2808,10 @@ public class ExpressionExperimentDaoImpl
                         + "where scedv.expressionExperiment.id in :ees "
                         + "and qt.isSingleCellPreferred = true and (cta is null or cta.preferred = true) "
                         + "group by scedv.expressionExperiment" )
-                .setParameterList( "ees", EntityUtils.getIds( eevos ) )
+                .setParameterList( "ees", IdentifiableUtils.getIds( eevos ) )
                 .list();
         if ( !results.isEmpty() ) {
-            Map<Long, ExpressionExperimentValueObject> voById = EntityUtils.getIdMap( eevos );
+            Map<Long, ExpressionExperimentValueObject> voById = IdentifiableUtils.getIdMap( eevos );
             for ( Object[] row : results ) {
                 Long id = ( Long ) row[0];
                 SingleCellDimension scd = ( SingleCellDimension ) row[1];

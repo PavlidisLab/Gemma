@@ -39,7 +39,7 @@ import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValue
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import javax.annotation.Nullable;
 import java.math.BigInteger;
@@ -2346,7 +2346,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
         Query q = sess.createQuery( "from GeneCoexpressionTestedIn where geneId in (:ids)" );
 
         Set<Long> seenGenes = new HashSet<>();
-        Collection<Long> geneids = EntityUtils.getIds( genesTested );
+        Collection<Long> geneids = IdentifiableUtils.getIds( genesTested );
         BatchIterator<Long> bi = new BatchIterator<>( geneids, 512 );
 
         for ( ; bi.hasNext(); ) {

@@ -40,7 +40,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.util.CommonQueries;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
 
@@ -193,7 +193,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method ) {
 
         Collection<ArrayDesign> arrayDesigns = CommonQueries
-                .getArrayDesignsUsed( EntityUtils.getIds( expressionExperiments ),
+                .getArrayDesignsUsed( IdentifiableUtils.getIds( expressionExperiments ),
                         this.getSessionFactory().getCurrentSession() )
                 .keySet();
 

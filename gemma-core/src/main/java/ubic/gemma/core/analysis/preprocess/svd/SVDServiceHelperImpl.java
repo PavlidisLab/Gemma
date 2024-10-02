@@ -41,7 +41,7 @@ import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponent
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
 
@@ -273,7 +273,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
         if ( experimentalFactors.isEmpty() ) {
             return importantFactors;
         }
-        Map<Long, ExperimentalFactor> factors = EntityUtils.getIdMap( experimentalFactors );
+        Map<Long, ExperimentalFactor> factors = IdentifiableUtils.getIdMap( experimentalFactors );
         SVDValueObject svdFactorAnalysis = this.svdFactorAnalysis( ee );
         if ( svdFactorAnalysis == null ) {
             return importantFactors;

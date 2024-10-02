@@ -25,7 +25,6 @@ import ubic.gemma.core.loader.expression.geo.util.GeoUtil;
 import ubic.gemma.core.loader.util.fetcher.AbstractFetcher;
 import ubic.gemma.core.loader.util.fetcher.FtpArchiveFetcher;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.core.config.Settings;
 
 import java.io.File;
@@ -89,7 +88,9 @@ public class RawDataFetcher extends FtpArchiveFetcher {
                 AbstractFetcher.log
                         .info( "There is apparently no raw data archive for " + identifier + "(sought: " + seekFile
                                 + ")" );
-                EntityUtils.deleteFile( newDir );
+                if ( !newDir.delete() ) {
+                    throw new IOException( "Could not delete file " + newDir.getPath() );
+                }
                 this.ftpClient.disconnect(); // important to do this!
                 return null;
             }

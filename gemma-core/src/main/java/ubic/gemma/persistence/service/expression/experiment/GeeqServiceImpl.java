@@ -47,7 +47,7 @@ import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -608,7 +608,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             fvs.removeAll( removeFvs );
 
             // sort so the keys in the hash map are consistent
-            Collection<Long> ids = EntityUtils.getIds( fvs );
+            Collection<Long> ids = IdentifiableUtils.getIds( fvs );
             Long[] arr = ids.toArray( new Long[0] );
             Arrays.sort( arr );
             String key = Arrays.toString( arr );

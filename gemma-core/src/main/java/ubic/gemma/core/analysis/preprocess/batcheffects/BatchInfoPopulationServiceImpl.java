@@ -14,6 +14,7 @@
  */
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,7 +42,6 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -143,7 +143,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         } finally {
             if ( BatchInfoPopulationServiceImpl.CLEAN_UP && files != null ) {
                 for ( LocalFile localFile : files ) {
-                    EntityUtils.deleteFile( localFile.asFile() );
+                    File file = localFile.asFile();
+                    FileUtils.deleteQuietly( file );
                 }
             }
         }

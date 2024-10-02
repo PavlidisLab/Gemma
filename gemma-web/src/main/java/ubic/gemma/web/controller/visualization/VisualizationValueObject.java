@@ -28,7 +28,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
 
@@ -72,7 +72,7 @@ public class VisualizationValueObject {
             Double minPvalue, Collection<DifferentialExpressionValueObject> validatedProbes ) {
         this();
 
-        Map<Long, GeneValueObject> idMap = EntityUtils.getIdMap( genes );
+        Map<Long, GeneValueObject> idMap = IdentifiableUtils.getIdMap( genes );
         this.populateColorMap( new ArrayList<>( idMap.keySet() ) );
 
         Collection<Long> validatedProbeIdList = new ArrayList<>();
@@ -140,7 +140,7 @@ public class VisualizationValueObject {
             Collection<Long> validatedProbeIdList, Double minPvalue ) {
         this();
 
-        Map<Long, GeneValueObject> idMap = EntityUtils.getIdMap( genes );
+        Map<Long, GeneValueObject> idMap = IdentifiableUtils.getIdMap( genes );
         this.populateColorMap( new ArrayList<>( idMap.keySet() ) );
 
         for ( DoubleVectorValueObject vector : vectors ) {

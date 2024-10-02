@@ -19,7 +19,7 @@ import ubic.gemma.persistence.service.analysis.expression.coexpression.Coexpress
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.association.coexpression.LinkCreator;
 import ubic.gemma.persistence.service.association.coexpression.NonPersistentNonOrderedCoexpLink;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
 
@@ -63,7 +63,7 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
     @Override
     public void initializeLinksFromOldData( Taxon t ) {
         Collection<Gene> genes = geneService.loadAll( t );
-        Map<Long, Gene> idMap = EntityUtils.getIdMap( genes );
+        Map<Long, Gene> idMap = IdentifiableUtils.getIdMap( genes );
 
         /*
          * First count the old links for every gene, and remove genes that have too few. That set of genes has to be

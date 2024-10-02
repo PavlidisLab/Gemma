@@ -8,7 +8,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
 
@@ -47,7 +47,7 @@ public class ExperimentalDesignViewCli extends AbstractAuthenticatedCLI {
 
         ExpressionExperimentService ees = getBean( ExpressionExperimentService.class );
         Collection<ExpressionExperimentValueObject> experiments = ees.loadValueObjectsByIds(
-                EntityUtils.getIds( ees.loadAll() ) );
+                IdentifiableUtils.getIds( ees.loadAll() ) );
 
         Map<Long, ExpressionExperimentValueObject> ed2ee = new HashMap<>();
 

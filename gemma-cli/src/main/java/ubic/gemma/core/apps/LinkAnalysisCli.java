@@ -48,7 +48,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -406,8 +406,8 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 log.info( "Sorting data sets by number of samples, doing large data sets first." );
 
                 Collection<ExpressionExperimentValueObject> vos = eeService
-                        .loadValueObjectsByIds( EntityUtils.getIds( expressionExperiments ), true );
-                final Map<Long, ExpressionExperimentValueObject> idMap = EntityUtils.getIdMap( vos );
+                        .loadValueObjectsByIds( IdentifiableUtils.getIds( expressionExperiments ), true );
+                final Map<Long, ExpressionExperimentValueObject> idMap = IdentifiableUtils.getIdMap( vos );
 
                 sees.sort( ( o1, o2 ) -> {
 

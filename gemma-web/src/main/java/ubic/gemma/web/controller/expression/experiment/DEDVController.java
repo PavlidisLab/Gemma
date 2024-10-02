@@ -51,7 +51,7 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.web.controller.ControllerUtils;
 import ubic.gemma.web.controller.visualization.VisualizationValueObject;
 import ubic.gemma.web.view.TextView;
@@ -793,7 +793,7 @@ public class DEDVController {
 
     private List<GeneValueObject> getGeneValueObjectList( List<Long> genes ) {
         Collection<GeneValueObject> geneValueObjects = geneService.loadValueObjectsByIds( genes );
-        Map<Long, GeneValueObject> m = EntityUtils.getIdMap( geneValueObjects );
+        Map<Long, GeneValueObject> m = IdentifiableUtils.getIdMap( geneValueObjects );
         List<GeneValueObject> geneValueObjectList = new ArrayList<>();
         for ( Long id : genes ) {
             if ( !m.containsKey( id ) ) {
@@ -811,7 +811,7 @@ public class DEDVController {
                 continue;
             usedGeneIds.addAll( vec.getGenes() );
         }
-        return EntityUtils.getIdMap( geneService.loadValueObjectsByIds( usedGeneIds ) );
+        return IdentifiableUtils.getIdMap( geneService.loadValueObjectsByIds( usedGeneIds ) );
     }
 
     /**

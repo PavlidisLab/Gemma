@@ -25,7 +25,6 @@ import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTask;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
@@ -37,7 +36,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
 
@@ -192,7 +191,7 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
         Map<Long, List<DifferentialExpressionAnalysisValueObject>> analysesByExperimentIds = this.differentialExpressionAnalysisDao
                 .getAnalysesByExperimentIds( ids, offset, limit );
 
-        Map<Long, ExpressionExperimentDetailsValueObject> idMap = EntityUtils.getIdMap( expressionExperimentDao
+        Map<Long, ExpressionExperimentDetailsValueObject> idMap = IdentifiableUtils.getIdMap( expressionExperimentDao
                 .loadDetailsValueObjectsByIds( analysesByExperimentIds.keySet() ) );
 
         Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> result = new HashMap<>();

@@ -50,7 +50,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.io.File;
 import java.io.InputStream;
@@ -413,20 +413,20 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
 
         assertNotNull( differentialExpressionResultService.find( g ) );
         assertNotNull(
-                differentialExpressionResultService.find( g, EntityUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ) ) );
+                differentialExpressionResultService.find( g, IdentifiableUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ) ) );
         assertNotNull( differentialExpressionResultService
-                .find( EntityUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ), 0.05, 10 ) );
+                .find( IdentifiableUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ), 0.05, 10 ) );
         assertNotNull( differentialExpressionResultService.find( g, 0.05, 10 ) );
 
         assertTrue( !differentialExpressionResultService.find( g ).isEmpty() );
-        assertTrue( !differentialExpressionResultService.find( g, EntityUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ) )
+        assertTrue( !differentialExpressionResultService.find( g, IdentifiableUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ) )
                 .isEmpty() );
         assertTrue( !differentialExpressionResultService
-                .find( EntityUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ), 0.05, 10 ).isEmpty() );
+                .find( IdentifiableUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ), 0.05, 10 ).isEmpty() );
         assertTrue( !differentialExpressionResultService.find( g, 0.05, 10 ).isEmpty() );
 
         Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> analysesByExperiment = differentialExpressionAnalysisService
-                .getAnalysesByExperiment( EntityUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ) );
+                .getAnalysesByExperiment( IdentifiableUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ) );
 
         Collection<DiffExResultSetSummaryValueObject> resultSets = new HashSet<>();
         for ( ExpressionExperimentDetailsValueObject evo : analysesByExperiment.keySet() ) {

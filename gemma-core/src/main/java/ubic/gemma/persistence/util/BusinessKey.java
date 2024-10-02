@@ -793,7 +793,7 @@ public class BusinessKey {
         queryObject.add( Restrictions.sizeEq( "bioAssays", entity.getBioAssays().size() ) );
 
         queryObject.createCriteria( "bioAssays" )
-                .add( Restrictions.in( "id", EntityUtils.getIds( entity.getBioAssays() ) ) );
+                .add( Restrictions.in( "id", IdentifiableUtils.getIds( entity.getBioAssays() ) ) );
 
     }
 }

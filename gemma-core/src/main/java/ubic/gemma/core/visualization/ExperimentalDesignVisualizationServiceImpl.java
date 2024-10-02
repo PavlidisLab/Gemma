@@ -43,7 +43,7 @@ import ubic.gemma.model.expression.bioAssayData.SlicedDoubleVectorValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import javax.annotation.Nullable;
 import java.awt.*;
@@ -595,7 +595,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
             if ( isSubset ) {
                 BioAssayDimensionValueObject badvo = vec.getBioAssayDimension();
-                Collection<Long> badids = EntityUtils.getIds( badvo.getBioAssays() );
+                Collection<Long> badids = IdentifiableUtils.getIds( badvo.getBioAssays() );
                 for ( BioAssayDimension bad : bioAssayDimensions ) {
                     // trim the bads for relevant samples. This is unpleasant - it would be better to work with VOs
                     // but it's easier said than done

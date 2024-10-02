@@ -82,7 +82,7 @@ import ubic.gemma.persistence.service.analysis.expression.coexpression.Coexpress
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.view.TextView;
@@ -703,7 +703,7 @@ public class ExpressionExperimentQCController extends BaseController {
         ee = expressionExperimentService.thawLite( ee ); // need the experimental design
         int maxWidth = 30;
         Map<Long, String> efs = this.getFactorNames( ee, maxWidth );
-        Map<Long, ExperimentalFactor> efIdMap = EntityUtils
+        Map<Long, ExperimentalFactor> efIdMap = IdentifiableUtils
                 .getIdMap( ee.getExperimentalDesign().getExperimentalFactors() );
         Collection<Long> continuousFactors = new HashSet<>();
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {

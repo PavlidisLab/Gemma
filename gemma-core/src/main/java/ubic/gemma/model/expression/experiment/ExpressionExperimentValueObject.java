@@ -21,7 +21,7 @@ import ubic.gemma.model.expression.bioAssayData.SingleCellDimensionValueObject;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.genome.TaxonValueObject;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.SecurityUtils;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -191,7 +191,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this( ee );
 
         // ACL
-        boolean[] permissions = EntityUtils.getPermissions( aoi );
+        boolean[] permissions = SecurityUtils.getPermissions( aoi );
         this.setIsPublic( permissions[0] );
         this.setUserCanWrite( permissions[1] );
         this.setIsShared( permissions[2] );
