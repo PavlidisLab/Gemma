@@ -33,7 +33,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
-import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
@@ -73,6 +72,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionS
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.util.*;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -123,8 +123,6 @@ public class ExpressionExperimentServiceImpl
     @Autowired
     private SecurityService securityService;
     @Autowired
-    private SVDService svdService;
-    @Autowired
     private CoexpressionAnalysisService coexpressionAnalysisService;
     @Autowired
     private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
@@ -140,6 +138,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    @Nonnull
     @Transactional(readOnly = true)
     public ExpressionExperiment loadReference( Long id ) {
         return expressionExperimentDao.loadReference( id );
@@ -401,6 +400,12 @@ public class ExpressionExperimentServiceImpl
         return this.expressionExperimentDao.findByAccession( accession );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment findOneByAccession( String accession ) {
+        return this.expressionExperimentDao.findOneByAccession( accession );
+    }
+
     /**
      * @see ExpressionExperimentService#findByBibliographicReference(BibliographicReference)
      */
@@ -504,6 +509,12 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByName( final String name ) {
         return this.expressionExperimentDao.findByName( name );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment findOneByName( String name ) {
+        return expressionExperimentDao.findOneByName( name );
     }
 
     @Override

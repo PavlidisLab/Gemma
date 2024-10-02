@@ -154,6 +154,11 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public ExpressionExperiment findOneByName( String name ) {
+        return findOneByProperty( "name", name );
+    }
+
+    @Override
     public ExpressionExperiment find( ExpressionExperiment entity ) {
 
         Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( ExpressionExperiment.class );
@@ -184,12 +189,20 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Collection<ExpressionExperiment> findByAccession( String accession ) {
-        Query query = this.getSessionFactory().getCurrentSession().createQuery(
-                        "select e from ExpressionExperiment e inner join e.accession a where a.accession = :accession" )
-                .setParameter( "accession", accession );
-
         //noinspection unchecked
-        return query.list();
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select e from ExpressionExperiment e join e.accession a where a.accession = :accession" )
+                .setParameter( "accession", accession )
+                .list();
+    }
+
+    @Nullable
+    @Override
+    public ExpressionExperiment findOneByAccession( String accession ) {
+        return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select e from ExpressionExperiment e join e.accession a where a.accession = :accession" )
+                .setParameter( "accession", accession )
+                .uniqueResult();
     }
 
     @Override

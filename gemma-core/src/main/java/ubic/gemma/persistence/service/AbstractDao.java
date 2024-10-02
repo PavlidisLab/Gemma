@@ -376,6 +376,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
      * @param  propertyValue the value to look for.
      * @return an entity whose property matched the given value
      */
+    @Nullable
     protected T findOneByProperty( String propertyName, Object propertyValue ) {
         //noinspection unchecked
         return ( T ) sessionFactory.getCurrentSession()

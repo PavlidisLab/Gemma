@@ -12,7 +12,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.CachedFilteringVoEnabledDao;
-import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
@@ -39,11 +38,18 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
 
     void deleteGeneProductAssociations( ArrayDesign arrayDesign );
 
+    @Nullable
     ArrayDesign findByShortName( String shortName );
 
     Collection<ArrayDesign> findByName( String name );
 
+    @Nullable
+    ArrayDesign findOneByName( String name );
+
     Collection<ArrayDesign> findByAlternateName( String queryString );
+
+    @Nullable
+    ArrayDesign findOneByAlternateName( String name );
 
     Collection<ArrayDesign> findByManufacturer( String queryString );
 
@@ -141,7 +147,7 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
      */
     void thaw( ArrayDesign arrayDesign );
 
-    Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
+    boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
 
     void deleteGeneProductAlignmentAssociations( ArrayDesign arrayDesign );
 

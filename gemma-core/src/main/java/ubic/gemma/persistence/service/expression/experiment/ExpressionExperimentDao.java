@@ -60,9 +60,15 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperiment> findByName( String name );
 
+    @Nullable
+    ExpressionExperiment findOneByName( String name );
+
     Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession );
 
     Collection<ExpressionExperiment> findByAccession( String accession );
+
+    @Nullable
+    ExpressionExperiment findOneByAccession( String accession );
 
     Collection<ExpressionExperiment> findByBibliographicReference( Long bibRefID );
 

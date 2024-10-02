@@ -47,6 +47,7 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -60,6 +61,7 @@ import java.util.function.Function;
 public interface ExpressionExperimentService extends SecurableBaseService<ExpressionExperiment>,
         SecurableFilteringVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject> {
 
+    @Nonnull
     ExpressionExperiment loadReference( Long id );
 
     /**
@@ -250,6 +252,10 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByAccession( String accession );
 
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    ExpressionExperiment findOneByAccession( String accession );
+
     /**
      * @param bibRef bibliographic reference
      * @return a collection of EE that have that reference that BibliographicReference
@@ -311,6 +317,10 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByName( String name );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    ExpressionExperiment findOneByName( String name );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment findByQuantitationType( QuantitationType type );
