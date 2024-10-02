@@ -144,6 +144,7 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
         if ( System.getenv().containsKey( usernameEnv ) ) {
             return System.getenv().get( usernameEnv );
         } else if ( System.console() != null ) {
+            log.warn( "The " + usernameEnv + " environment variable is not set, consider setting it to skip this prompt." );
             return System.console().readLine( "Username: " );
         } else {
             throw new RuntimeException( String.format( "Could not read the username from the console. Please run Gemma CLI from an interactive shell or provide the %s environment variable.", usernameEnv ) );
@@ -174,6 +175,7 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
 
         // prompt the user for his password
         if ( System.console() != null ) {
+            log.warn( "Neither " + passwordEnv + " nor " + passwordCmdEnv + " environment variables are set, consider setting one of those to skip this prompt." );
             return String.valueOf( System.console().readPassword( "Password: " ) );
         } else {
             throw new IllegalArgumentException( String.format( "Could not read the password from the console. Please run Gemma CLI from an interactive shell or provide either the %s or %s environment variables.",
