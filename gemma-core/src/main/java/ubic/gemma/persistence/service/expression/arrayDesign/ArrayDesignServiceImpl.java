@@ -103,6 +103,12 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
+    public ArrayDesign findOneByAlternateName( String name ) {
+        return arrayDesignDao.findOneByAlternateName( name );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<ArrayDesign> findByManufacturer( String searchString ) {
         return this.arrayDesignDao.findByManufacturer( searchString );
     }
@@ -114,6 +120,12 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     @Transactional(readOnly = true)
     public Collection<ArrayDesign> findByName( String name ) {
         return this.arrayDesignDao.findByName( name );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ArrayDesign findOneByName( String name ) {
+        return arrayDesignDao.findOneByName( name );
     }
 
     @Override
@@ -468,7 +480,7 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional
-    public Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee ) {
+    public boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee ) {
         return this.arrayDesignDao.updateSubsumingStatus( candidateSubsumer, candidateSubsumee );
     }
 

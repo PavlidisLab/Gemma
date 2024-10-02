@@ -38,11 +38,18 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
 
     void deleteGeneProductAssociations( ArrayDesign arrayDesign );
 
+    @Nullable
     ArrayDesign findByShortName( String shortName );
 
     Collection<ArrayDesign> findByName( String name );
 
+    @Nullable
+    ArrayDesign findOneByName( String name );
+
     Collection<ArrayDesign> findByAlternateName( String queryString );
+
+    @Nullable
+    ArrayDesign findOneByAlternateName( String name );
 
     Collection<ArrayDesign> findByManufacturer( String queryString );
 
@@ -148,7 +155,7 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
      */
     void thaw( ArrayDesign arrayDesign );
 
-    Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
+    boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
 
     void deleteGeneProductAlignmentAssociations( ArrayDesign arrayDesign );
 

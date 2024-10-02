@@ -97,7 +97,7 @@ pipeline {
         stage('Run quick unit tests') {
             steps {
                 setBuildStatus "Tests", "Tests for build #${env.BUILD_NUMBER} have started...", 'PENDING'
-                sh 'mvn -B test -DexcludedGroups=SlowTest'
+                sh 'mvn -B test --fail-at-end -DexcludedGroups=SlowTest'
             }
             post {
                 always {
@@ -150,7 +150,7 @@ pipeline {
                     }
                     steps {
                         setBuildStatus "Slow tests", "Slow tests #${env.BUILD_NUMBER} have started...", 'PENDING'
-                        sh 'mvn -B test -Dgroups=SlowTest'
+                        sh 'mvn -B test --fail-at-end -Dgroups=SlowTest'
                     }
                     post {
                         always {
@@ -177,7 +177,7 @@ pipeline {
                     steps {
                         setBuildStatus "Integration tests", "Integration tests #${env.BUILD_NUMBER} have started...", 'PENDING'
                         lock('database/' + testdbUrl) {
-                            sh 'mvn -B verify -DskipUnitTests -Dmaven.javadoc.skip=true'
+                            sh 'mvn -B verify --fail-at-end -DskipUnitTests -Dmaven.javadoc.skip=true'
                         }
                     }
                     post {

@@ -241,6 +241,11 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
+    public ArrayDesign findOneByName( String name ) {
+        return findOneByProperty( "name", name );
+    }
+
+    @Override
     public ArrayDesign find( ArrayDesign entity ) {
         BusinessKey.checkValidKey( entity );
         Criteria query = super.getSessionFactory().getCurrentSession().createCriteria( ArrayDesign.class );
@@ -253,8 +258,16 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     public Collection<ArrayDesign> findByAlternateName( String queryString ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select ad from ArrayDesign ad inner join ad.alternateNames n where n.name = :q" )
+                .createQuery( "select ad from ArrayDesign ad join ad.alternateNames n where n.name = :q" )
                 .setParameter( "q", queryString ).list();
+    }
+
+    @Nullable
+    @Override
+    public ArrayDesign findOneByAlternateName( String name ) {
+        return ( ArrayDesign ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ad from ArrayDesign ad join ad.alternateNames n where n.name = :q" )
+                .setParameter( "q", name ).uniqueResult();
     }
 
     @Override
@@ -845,7 +858,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    public Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee ) {
+    public boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee ) {
 
         if ( candidateSubsumee.equals( candidateSubsumer ) ) {
             log.warn( "Attempt to check a platform against itself for subsuming!" );

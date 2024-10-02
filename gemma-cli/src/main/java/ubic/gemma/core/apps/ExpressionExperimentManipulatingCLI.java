@@ -55,10 +55,10 @@ import ubic.gemma.persistence.util.Filters;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static java.util.Objects.requireNonNull;
 import static ubic.gemma.persistence.util.IdentifiableUtils.toIdentifiableSet;
 
 /**
@@ -124,7 +124,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
     /**
      * File containing experiments.
      */
-    private String file;
+    private Path file;
     /**
      * Query to match experiments.
      */
@@ -136,7 +136,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
     /**
      * File containing experiments to exclude.
      */
-    private String excludeFile;
+    private Path excludeFile;
 
     /**
      * Force processing of EEs regardless of their troubled status.
@@ -166,8 +166,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
 
         options.addOption( "all", false, "Process all expression experiments" );
 
-        Option eeFileListOption = Option.builder( "f" ).hasArg().argName( "file" ).desc(
-                        "File with list of short names or IDs of expression experiments (one per line; use instead of '-e')" )
+        Option eeFileListOption = Option.builder( "f" ).hasArg().type( Path.class ).argName( "file" )
+                .desc( "File with list of short names or IDs of expression experiments (one per line; use instead of '-e')" )
                 .longOpt( "eeListfile" ).build();
         options.addOption( eeFileListOption );
 
@@ -185,7 +185,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
                 .build();
         options.addOption( taxonOption );
 
-        Option excludeEeOption = Option.builder( "x" ).hasArg().argName( "file" )
+        Option excludeEeOption = Option.builder( "x" ).hasArg().type( Path.class ).argName( "file" )
                 .desc( "File containing list of expression experiments to exclude" )
                 .longOpt( "excludeEEFile" ).build();
         options.addOption( excludeEeOption );
@@ -206,18 +206,16 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
             this.ees = StringUtils.split( optionValue, "," );
         }
         this.eeSet = commandLine.getOptionValue( "eeset" );
-        this.file = commandLine.getOptionValue( 'f' );
+        this.file = commandLine.getParsedOptionValue( 'f' );
         this.query = commandLine.getOptionValue( 'q' );
         this.taxonName = commandLine.getOptionValue( 't' );
-        this.excludeFile = commandLine.getOptionValue( 'x' );
+        this.excludeFile = commandLine.getParsedOptionValue( 'x' );
     }
 
     @Override
     protected void doWork() throws Exception {
         // intentionally a TreeSet over IDs, to prevent proxy initialization via hashCode()
         Set<BioAssaySet> expressionExperiments = new TreeSet<>( Comparator.comparing( BioAssaySet::getId ) );
-
-        Taxon taxon = getTaxonByName( this.taxonName );
 
         if ( all ) {
             if ( useReferencesIfPossible ) {
@@ -238,17 +236,17 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         }
 
         if ( file != null ) {
-            String experimentListFile = file;
-            log.info( "Reading experiment list from " + experimentListFile );
+            log.info( "Reading experiment list from " + file );
             try {
-                expressionExperiments.addAll( this.readExpressionExperimentListFile( experimentListFile ) );
+                expressionExperiments.addAll( this.readExpressionExperimentListFile( file ) );
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
             }
         }
 
         if ( query != null ) {
-            log.info( "Processing all experiments that match query " + query );
+            Taxon taxon = this.taxonName != null ? locateTaxon( this.taxonName ) : null;
+            log.info( "Processing all experiments that match query " + query + ( taxon != null ? " in taxon " + taxon : "" ) );
             try {
                 expressionExperiments.addAll( this.findExpressionExperimentsByQuery( query, taxon ) );
             } catch ( SearchException e ) {
@@ -350,7 +348,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         options.addOption( forceOption );
     }
 
-    private void excludeFromFile( Set<BioAssaySet> expressionExperiments, String excludeEeFileName ) throws IOException {
+    private void excludeFromFile( Set<BioAssaySet> expressionExperiments, Path excludeEeFileName ) throws IOException {
         assert !expressionExperiments.isEmpty();
         Collection<ExpressionExperiment> excludeExperiments;
         excludeExperiments = this.readExpressionExperimentListFile( excludeEeFileName );
@@ -448,24 +446,42 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
     @Nullable
     private ExpressionExperiment locateExpressionExperiment( String identifier ) {
         Assert.isTrue( StringUtils.isNotBlank( identifier ), "Expression experiment ID or short name must be provided" );
+        identifier = StringUtils.strip( identifier );
+        ExpressionExperiment ee;
         try {
             Long id = Long.parseLong( identifier );
             if ( useReferencesIfPossible ) {
+                // this is never null, but may produce ObjectNotFoundException later on
                 return eeService.loadReference( id );
+            } else if ( ( ee = eeService.load( id ) ) != null ) {
+                log.debug( "Found " + ee + " by ID" );
+                return ee;
             } else {
-                return eeService.load( id );
+                return null;
             }
         } catch ( NumberFormatException e ) {
             // can be safely ignored, we'll attempt to use it as a short name
-            return eeService.findByShortName( identifier );
         }
+        if ( ( ee = eeService.findByShortName( identifier ) ) != null ) {
+            log.debug( "Found " + ee + " by short name" );
+            return ee;
+        }
+        if ( ( ee = eeService.findOneByAccession( identifier ) ) != null ) {
+            log.debug( "Found " + ee + " by accession" );
+            return ee;
+        }
+        if ( ( eeService.findOneByName( identifier ) ) != null ) {
+            log.debug( "Found " + ee + " by name" );
+            return ee;
+        }
+        return ee;
     }
 
     /**
      * Load expression experiments based on a list of short names or IDs in a file. Only the first column of the file is
      * used, comments (#) are allowed.
      */
-    private Collection<ExpressionExperiment> readExpressionExperimentListFile( String fileName ) throws IOException {
+    private Collection<ExpressionExperiment> readExpressionExperimentListFile( Path fileName ) throws IOException {
         List<String> idlist = FileUtils.readListFileToStrings( fileName );
         List<ExpressionExperiment> ees = new ArrayList<>( idlist.size() );
         log.info( String.format( "Found %d experiment identifiers in %s", idlist.size(), fileName ) );
@@ -580,34 +596,62 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         return !needToRun || !okToRun;
     }
 
-    private Taxon getTaxonByName( String taxonName ) {
+    protected Taxon locateTaxon( String taxonName ) {
         Assert.isTrue( StringUtils.isNotBlank( taxonName ), "Taxon name must be be blank." );
-        return requireNonNull( taxonService.findByCommonName( taxonName ), "Cannot find taxon with name " + taxonName );
-    }
-
-    protected ArrayDesign locateArrayDesign( String name ) {
+        taxonName = StringUtils.strip( taxonName );
+        Taxon taxon;
         try {
-            return arrayDesignService.loadOrFail( Long.parseLong( name ) );
+            long id = Long.parseLong( taxonName );
+            if ( ( taxon = taxonService.load( id ) ) != null ) {
+                log.info( "Found " + taxon + " by ID" );
+                return taxon;
+            }
+            if ( ( taxon = taxonService.findByNcbiId( Math.toIntExact( id ) ) ) != null ) {
+                log.info( "Found " + taxon + " by NCBI ID" );
+                return taxon;
+            }
+            throw new NullPointerException( "No taxon with ID or NCBI ID " + id );
         } catch ( NumberFormatException e ) {
             // ignore
         }
+        if ( ( taxon = taxonService.findByCommonName( taxonName ) ) != null ) {
+            log.info( "Found " + taxon + " by common name." );
+            return taxon;
+        }
+        if ( ( taxon = taxonService.findByScientificName( taxonName ) ) != null ) {
+            log.info( "Found " + taxon + " by scientific name." );
+            return taxon;
+        }
+        throw new NullPointerException( "Cannot find taxon with name " + taxonName );
+    }
 
-        ArrayDesign arrayDesign = arrayDesignService.findByShortName( StringUtils.strip( name ) );
-
-        if ( arrayDesign == null ) {
-            Collection<ArrayDesign> byname = arrayDesignService.findByName( StringUtils.strip( name ) );
-            if ( byname.size() > 1 ) {
-                throw new IllegalStateException( "Ambiguous platform name: " + name );
-            } else if ( byname.size() == 1 ) {
-                arrayDesign = byname.iterator().next();
+    protected ArrayDesign locateArrayDesign( String name ) {
+        Assert.isTrue( StringUtils.isNotBlank( name ), "Platform name must not be blank." );
+        name = StringUtils.strip( name );
+        ArrayDesign arrayDesign;
+        try {
+            long id = Long.parseLong( name );
+            if ( ( arrayDesign = arrayDesignService.load( id ) ) != null ) {
+                log.info( "Found " + arrayDesign + " by ID." );
+                return arrayDesign;
             }
+            throw new NullPointerException( "No platform with ID " + id );
+        } catch ( NumberFormatException e ) {
+            // ignore
         }
-
-        if ( arrayDesign == null ) {
-            throw new IllegalStateException( "No platform found with ID or name " + name );
+        if ( ( arrayDesign = arrayDesignService.findByShortName( name ) ) != null ) {
+            log.info( "Found " + arrayDesign + " by short name." );
+            return arrayDesign;
         }
-
-        return arrayDesign;
+        if ( ( arrayDesign = arrayDesignService.findOneByName( name ) ) != null ) {
+            log.info( "Found " + arrayDesign + " by name." );
+            return arrayDesign;
+        }
+        if ( ( arrayDesign = arrayDesignService.findOneByAlternateName( name ) ) != null ) {
+            log.info( "Found " + arrayDesign + " by alternate name." );
+            return arrayDesign;
+        }
+        throw new NullPointerException( "No platform found with ID or name " + name );
     }
 
     /**
