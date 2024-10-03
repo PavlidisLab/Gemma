@@ -12,10 +12,35 @@
         <prop key="sessionVariables">sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'</prop>
     </util:properties>
 
+    <beans profile="dev">
+        <bean id="tunnel" class="ubic.gemma.persistence.util.LocalSshTunnel">
+            <property name="host" value="${gemma.db.tunnel.host}"/>
+            <property name="port" value="${gemma.db.tunnel.port}"/>
+            <property name="localPort" value="${gemma.db.tunnel.localPort}"/>
+            <property name="remoteHost" value="${gemma.db.tunnel.remoteHost}"/>
+            <property name="remotePort" value="${gemma.db.tunnel.remotePort}"/>
+            <property name="autoStart" value="${gemma.db.tunnel.enabled}"/>
+        </bean>
+        <bean id="testTunnel" class="ubic.gemma.persistence.util.LocalSshTunnel">
+            <property name="host" value="${gemma.testdb.tunnel.host}"/>
+            <property name="port" value="${gemma.testdb.tunnel.port}"/>
+            <property name="localPort" value="${gemma.testdb.tunnel.localPort}"/>
+            <property name="remoteHost" value="${gemma.testdb.tunnel.remoteHost}"/>
+            <property name="remotePort" value="${gemma.testdb.tunnel.remotePort}"/>
+            <property name="autoStart" value="${gemma.testdb.tunnel.enabled}"/>
+        </bean>
+    </beans>
+
+    <beans profile="!dev">
+        <!-- placeholders to satisfy depends-on -->
+        <bean id="tunnel" class="java.lang.Object"/>
+        <bean id="testTunnel" class="java.lang.Object"/>
+    </beans>
+
     <!-- we use the same database for production and development -->
     <beans profile="production,dev">
         <!-- Database connection information -->
-        <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+        <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close" depends-on="tunnel">
             <property name="poolName" value="gemma"/>
             <property name="driverClassName" value="com.mysql.cj.jdbc.Driver"/>
             <property name="username" value="${gemma.db.user}"/>
@@ -36,7 +61,7 @@
     </beans>
 
     <beans profile="test,testdb">
-        <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+        <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close" depends-on="testTunnel">
             <property name="driverClassName" value="com.mysql.cj.jdbc.Driver"/>
             <property name="username" value="${gemma.testdb.user}"/>
             <property name="password" value="${gemma.testdb.password}"/>
