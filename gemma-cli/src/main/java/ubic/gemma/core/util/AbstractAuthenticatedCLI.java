@@ -123,7 +123,7 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI {
         if ( System.getenv().containsKey( USERNAME_ENV ) ) {
             return System.getenv().get( USERNAME_ENV );
         } else if ( System.console() != null ) {
-            log.warn( "The " + usernameEnv + " environment variable is not set, consider setting it to skip this prompt." );
+            log.warn( "The " + USERNAME_ENV + " environment variable is not set, consider setting it to skip this prompt." );
             return System.console().readLine( "Username: " );
         } else {
             throw new RuntimeException( String.format( "Could not read the username from the console. Please run Gemma CLI from an interactive shell or provide the %s environment variable.", USERNAME_ENV ) );
@@ -154,7 +154,7 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI {
 
         // prompt the user for his password
         if ( System.console() != null ) {
-            log.warn( "Neither " + passwordEnv + " nor " + passwordCmdEnv + " environment variables are set, consider setting one of those to skip this prompt." );
+            log.warn( "Neither " + PASSWORD_ENV + " nor " + PASSWORD_CMD_ENV + " environment variables are set, consider setting one of those to skip this prompt." );
             return String.valueOf( System.console().readPassword( "Password: " ) );
         } else {
             throw new IllegalArgumentException( String.format( "Could not read the password from the console. Please run Gemma CLI from an interactive shell or provide either the %s or %s environment variables.",
