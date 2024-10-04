@@ -198,12 +198,12 @@ public class BibliographicReferenceController extends BaseController {
         }
     }
 
-    @RequestMapping(value = "/searchBibRefs.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/searchBibRefs.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView searchBibRefs() {
         return new ModelAndView( "bibRefList" );
     }
 
-    @RequestMapping(value = "/bibRefView.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/bibRefView.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView show( @RequestParam(value = "accession", required = false) String pubMedId, @RequestParam(value = "id", required = false) String gemmaId, HttpServletRequest request ) {
         // FIXME: allow use of the primary key as well.
 
@@ -240,7 +240,7 @@ public class BibliographicReferenceController extends BaseController {
                 .addObject( "byAccession", Boolean.TRUE ).addObject( "accession", pubMedId );
     }
 
-    @RequestMapping(value = "/showAllEeBibRefs.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/showAllEeBibRefs.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showAllForExperiments() {
         Map<ExpressionExperiment, BibliographicReference> eeToBibRefs = bibliographicReferenceService
                 .getAllExperimentLinkedReferences();

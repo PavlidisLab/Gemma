@@ -91,7 +91,7 @@ public class BioMaterialController {
         }
     }
 
-    @RequestMapping(value = "/annotate.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/annotate.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView annot( @RequestParam("eeid") Long id ) {
         Collection<BioMaterial> bioMaterials = getBioMaterialsForEE( id );
         ModelAndView mav = new ModelAndView( "bioMaterialAnnotator" );
@@ -156,7 +156,7 @@ public class BioMaterialController {
 
     }
 
-    @RequestMapping(value = { "/showBioMaterial.html", "/" }, method = RequestMethod.GET)
+    @RequestMapping(value = { "/showBioMaterial.html", "/" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView show( @RequestParam("id") Long id ) {
         BioMaterial bioMaterial = bioMaterialService.loadOrFail( id, EntityNotFoundException::new );
         bioMaterial = bioMaterialService.thaw( bioMaterial );

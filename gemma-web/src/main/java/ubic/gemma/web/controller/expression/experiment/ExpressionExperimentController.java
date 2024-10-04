@@ -256,7 +256,7 @@ public class ExpressionExperimentController {
         return userOwnsGroup;
     }
 
-    @RequestMapping(value = "/filterExpressionExperiments.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/filterExpressionExperiments.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView filter( @RequestParam("filter") String searchString ) {
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( searchString ) ) {
@@ -855,17 +855,17 @@ public class ExpressionExperimentController {
     /**
      * Show all experiments (optionally conditioned on either a taxon, a list of ids, or a platform)
      */
-    @RequestMapping(value = { "/showAllExpressionExperiments.html", "/showAll" }, method = RequestMethod.GET)
+    @RequestMapping(value = { "/showAllExpressionExperiments.html", "/showAll" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showAllExpressionExperiments() {
         return new ModelAndView( "expressionExperiments" );
     }
 
-    @RequestMapping(value = { "/showAllExpressionExperimentLinkSummaries.html", "/manage.html" }, method = RequestMethod.GET)
+    @RequestMapping(value = { "/showAllExpressionExperimentLinkSummaries.html", "/manage.html" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showAllLinkSummaries() {
         return new ModelAndView( "expressionExperimentLinkSummary" );
     }
 
-    @RequestMapping(value = { "/showBioAssaysFromExpressionExperiment.html", "/bioAssays" }, method = RequestMethod.GET)
+    @RequestMapping(value = { "/showBioAssaysFromExpressionExperiment.html", "/bioAssays" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showBioAssays( @RequestParam("id") Long id ) {
         ExpressionExperiment expressionExperiment = getExperimentById( id, true );
         ModelAndView mv = new ModelAndView( "bioAssays" ).addObject( "bioAssays", bioAssayService.thaw( expressionExperiment.getBioAssays() ) );
@@ -874,7 +874,7 @@ public class ExpressionExperimentController {
         return mv;
     }
 
-    @RequestMapping(value = { "/showBioMaterialsFromExpressionExperiment.html", "/bioMaterials" }, method = RequestMethod.GET)
+    @RequestMapping(value = { "/showBioMaterialsFromExpressionExperiment.html", "/bioMaterials" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showBioMaterials( @RequestParam("id") Long id ) {
         ExpressionExperiment expressionExperiment = getExperimentById( id, true );
 
@@ -901,7 +901,7 @@ public class ExpressionExperimentController {
         return mav;
     }
 
-    @RequestMapping(value = { "/showExpressionExperiment.html", "/", "/show" }, params = { "id" }, method = RequestMethod.GET)
+    @RequestMapping(value = { "/showExpressionExperiment.html", "/", "/show" }, params = { "id" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showExpressionExperimentById( @RequestParam(value = "id") Long id ) {
         ExpressionExperiment expressionExperiment;
         expressionExperiment = expressionExperimentService.load( id );
@@ -911,7 +911,7 @@ public class ExpressionExperimentController {
         return showExpressionExperiment( expressionExperiment );
     }
 
-    @RequestMapping(value = { "/showExpressionExperiment.html", "/", "/show" }, params = { "shortName" }, method = RequestMethod.GET)
+    @RequestMapping(value = { "/showExpressionExperiment.html", "/", "/show" }, params = { "shortName" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showExpressionExperimentByShortName( @RequestParam(value = "shortName") String shortName ) {
         ExpressionExperiment experimentExperiment = expressionExperimentService.findByShortName( shortName );
         if ( experimentExperiment == null ) {
@@ -930,7 +930,7 @@ public class ExpressionExperimentController {
     /**
      * Shows a list of BioAssays for an expression experiment subset.
      */
-    @RequestMapping(value = { "/showExpressionExperimentSubSet.html", "/showSubset" }, method = RequestMethod.GET)
+    @RequestMapping(value = { "/showExpressionExperimentSubSet.html", "/showSubset" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showSubSet( @RequestParam("id") Long id ) {
         ExpressionExperimentSubSet subset = expressionExperimentSubSetService.load( id );
         if ( subset == null ) {
@@ -1055,7 +1055,7 @@ public class ExpressionExperimentController {
         return taskRunningService.submitTask( task );
     }
 
-    @RequestMapping(value = "/downloadExpressionExperimentList.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/downloadExpressionExperimentList.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView handleRequestInternal(
             @RequestParam(value = "e", required = false) String e,
             @RequestParam(value = "es", required = false) String es,

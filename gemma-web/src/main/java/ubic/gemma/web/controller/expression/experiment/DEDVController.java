@@ -569,7 +569,7 @@ public class DEDVController {
     /**
      * Handle case of text export of the results.
      */
-    @RequestMapping(value = "/downloadDEDV.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/downloadDEDV.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView downloadDEDV( HttpServletRequest request ) {
 
         StopWatch watch = new StopWatch();

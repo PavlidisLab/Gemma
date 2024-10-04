@@ -147,13 +147,13 @@ public class ExpressionExperimentQCController extends BaseController {
     @Value("${gemma.analysis.dir}")
     private Path analysisStoragePath;
 
-    @RequestMapping(value = "/expressionExperiment/detailedFactorAnalysis.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/expressionExperiment/detailedFactorAnalysis.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void detailedFactorAnalysis( @RequestParam("id") Long id, HttpServletResponse response ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
         this.writeDetailedFactorAnalysis( ee, response );
     }
 
-    @RequestMapping(value = "/expressionExperiment/outliersRemoved.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/expressionExperiment/outliersRemoved.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView identifyOutliersRemoved( @RequestParam("id") Long id ) throws IOException {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
         ee = expressionExperimentService.thawLite( ee );
@@ -180,7 +180,7 @@ public class ExpressionExperimentQCController extends BaseController {
         return mav;
     }
 
-    @RequestMapping(value = "/expressionExperiment/possibleOutliers.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/expressionExperiment/possibleOutliers.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView identifyPossibleOutliers( @RequestParam("id") Long id ) throws IOException {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
 
@@ -225,7 +225,7 @@ public class ExpressionExperimentQCController extends BaseController {
                 .addObject( TextView.TEXT_PARAM, buf.toString() );
     }
 
-    @RequestMapping(value = "/expressionExperiment/pcaFactors.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/expressionExperiment/pcaFactors.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void pcaFactors( @RequestParam("id") Long id, HttpServletResponse response ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
 
@@ -244,7 +244,7 @@ public class ExpressionExperimentQCController extends BaseController {
         }
     }
 
-    @RequestMapping(value = "/expressionExperiment/pcaScree.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/expressionExperiment/pcaScree.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void pcaScree( @RequestParam("id") Long id, HttpServletResponse response ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
         SVDValueObject svdo = svdService.getSvd( ee.getId() );
@@ -263,7 +263,7 @@ public class ExpressionExperimentQCController extends BaseController {
      * @param forceShowLabels forces the display of labels in the picture
      * @param reg uses the regressed matrix (if available).
      */
-    @RequestMapping(value = "/expressionExperiment/visualizeCorrMat.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/expressionExperiment/visualizeCorrMat.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void visualizeCorrMat(
             @RequestParam("id") Long id,
             @RequestParam(value = "size", required = false) Double sizeFactor,
@@ -337,7 +337,7 @@ public class ExpressionExperimentQCController extends BaseController {
      * @param text if true, output a tabbed file instead of a png
      * @return ModelAndView object if text is true, otherwise null
      */
-    @RequestMapping(value = "/expressionExperiment/visualizeMeanVariance.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/expressionExperiment/visualizeMeanVariance.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView visualizeMeanVariance(
             @RequestParam("id") Long id,
             @RequestParam(value = "size", required = false) Double sizeFactor,
@@ -377,7 +377,7 @@ public class ExpressionExperimentQCController extends BaseController {
         return null;
     }
 
-    @RequestMapping(value = "/expressionExperiment/visualizeProbeCorrDist.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/expressionExperiment/visualizeProbeCorrDist.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void visualizeProbeCorrDist( @RequestParam("id") Long id, HttpServletResponse response ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) {
@@ -394,7 +394,7 @@ public class ExpressionExperimentQCController extends BaseController {
      * @param size of the image.
      * @param response stream to write the image to.
      */
-    @RequestMapping(value = "/expressionExperiment/visualizePvalueDist.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/expressionExperiment/visualizePvalueDist.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void visualizePvalueDist(
             @RequestParam("id") Long id,
             @RequestParam("analysisId") Long analysisId,
@@ -434,7 +434,7 @@ public class ExpressionExperimentQCController extends BaseController {
         }
     }
 
-    @RequestMapping(value = "/expressionExperiment/eigenGenes.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/expressionExperiment/eigenGenes.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView writeEigenGenes( @RequestParam("eeid") Long eeid ) throws IOException {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeid,
                 EntityNotFoundException::new, "Could not load experiment with id " + eeid );// or access deined.
