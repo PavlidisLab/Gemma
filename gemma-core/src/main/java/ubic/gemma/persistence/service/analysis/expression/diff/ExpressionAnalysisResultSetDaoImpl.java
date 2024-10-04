@@ -414,6 +414,9 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 .createQuery( "select rs.pvalueDistribution from ExpressionAnalysisResultSet rs where rs=:rs " )
                 .setParameter( "rs", resultSet )
                 .uniqueResult();
+        if ( pvd == null ) {
+            return null;
+        }
         ByteArrayConverter bac = new ByteArrayConverter();
         double[] counts = bac.byteArrayToDoubles( pvd.getBinCounts() );
         Integer numBins = pvd.getNumBins();
