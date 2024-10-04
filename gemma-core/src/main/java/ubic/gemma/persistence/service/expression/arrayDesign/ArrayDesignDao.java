@@ -147,6 +147,8 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
 
     /**
      * Lightly thaw the given platform.
+     * <p>
+     * This includes all the to-one relations, but not the design elements.
      */
     void thawLite( ArrayDesign arrayDesign );
 
@@ -154,6 +156,11 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
      * Thaw the given platform as per {@link #thawLite(ArrayDesign)} with its probes and genes.
      */
     void thaw( ArrayDesign arrayDesign );
+
+    /**
+     * Only thaw the design elements of a given platform.
+     */
+    void thawCompositeSequences( ArrayDesign arrayDesign );
 
     boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
 

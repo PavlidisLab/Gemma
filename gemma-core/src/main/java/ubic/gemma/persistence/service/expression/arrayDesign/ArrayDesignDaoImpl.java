@@ -833,23 +833,36 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public void thaw( final ArrayDesign arrayDesign ) {
-        if ( arrayDesign.getId() == null ) {
-            throw new IllegalArgumentException( "Cannot thaw a non-persistent array design" );
-        }
-
-        /*
-         * Thaw basic stuff
-         */
         StopWatch timer = StopWatch.createStarted();
-        this.thawLite( arrayDesign );
 
-        // Thaw the composite sequences
-        StopWatch probeTimer = StopWatch.createStarted();
+        // Thaw basic stuff
+        long metadataTime = timer.getTime();
+        thawLite( arrayDesign );
+        metadataTime = timer.getTime() - metadataTime;
+
+        // Thaw the composite sequences & biological characteristics
+        long probeTime = timer.getTime();
         Hibernate.initialize( arrayDesign.getCompositeSequences() );
-        probeTimer.stop();
+        for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
+            Hibernate.initialize( compositeSequence.getBiologicalCharacteristic() );
+        }
+        probeTime = timer.getTime() - probeTime;
 
-        String message = String.format( "Thaw array design took %d ms (metadata: %d ms, probes: %d ms)",
-                timer.getTime(), timer.getTime() - probeTimer.getTime(), probeTimer.getTime() );
+        String message = String.format( "Thaw array design with %d elements took %d ms (metadata: %d ms, probes: %d ms)",
+                arrayDesign.getCompositeSequences().size(), timer.getTime(), metadataTime, probeTime );
+        if ( timer.getTime() > 1000 ) {
+            log.warn( message );
+        } else {
+            log.debug( message );
+        }
+    }
+
+    @Override
+    public void thawCompositeSequences( ArrayDesign arrayDesign ) {
+        StopWatch timer = StopWatch.createStarted();
+        Hibernate.initialize( arrayDesign.getCompositeSequences() );
+        String message = String.format( "Thaw array design with %d elements took %d ms",
+                arrayDesign.getCompositeSequences().size(), timer.getTime() );
         if ( timer.getTime() > 1000 ) {
             log.warn( message );
         } else {

@@ -464,6 +464,14 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
+    public ArrayDesign thawCompositeSequences( ArrayDesign arrayDesign ) {
+        arrayDesign = ensureInSession( arrayDesign );
+        arrayDesignDao.thawCompositeSequences( arrayDesign );
+        return arrayDesign;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ArrayDesign thawLite( ArrayDesign arrayDesign ) {
         arrayDesign = ensureInSession( arrayDesign );
         arrayDesignDao.thawLite( arrayDesign );

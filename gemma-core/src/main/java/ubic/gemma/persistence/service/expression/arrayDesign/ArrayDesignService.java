@@ -364,6 +364,14 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
     Collection<ArrayDesign> thaw( Collection<ArrayDesign> aas );
 
     /**
+     * Thaw the composite sequences of a given platform
+     * @see ArrayDesignDao#thawCompositeSequences(ArrayDesign)
+     */
+    @CheckReturnValue
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    ArrayDesign thawCompositeSequences( ArrayDesign arrayDesign );
+
+    /**
      * Perform a less intensive thaw of an array design: not the composite sequences.
      *
      * @param arrayDesign AD
