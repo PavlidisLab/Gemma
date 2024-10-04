@@ -31,7 +31,7 @@ public class AuditLogger {
                 dateFormat.format( event.getDate() ),
                 event.getAction(),
                 event.getEventType() != null ? " of type " + event.getEventType().getClass().getName() : "",
-                auditable.getClass(), auditable.getId(),
+                auditable.getClass().getName(), auditable.getId(),
                 event.getPerformer() != null ? event.getPerformer().getUserName() : "[anonymous]",
                 StringUtils.isNotBlank( event.getNote() ) ? ": " + event.getNote() : "",
                 StringUtils.isNotBlank( event.getDetail() ) ? "\n" + event.getDetail() : "" ) );
