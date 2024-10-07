@@ -30,13 +30,11 @@ import org.springframework.util.Assert;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.core.util.AbstractAuthenticatedCLI;
+import ubic.gemma.core.util.AbstractAutoSeekingCLI;
+import ubic.gemma.core.util.EntityLocator;
 import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -49,7 +47,6 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -79,14 +76,12 @@ import java.util.stream.Collectors;
  *
  * @author Paul
  */
-public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthenticatedCLI {
+public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSeekingCLI<ExpressionExperiment> {
 
     @Autowired
     protected ExpressionExperimentService eeService;
     @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
-    @Autowired
-    private TaxonService taxonService;
     @Autowired
     private SearchService searchService;
     @Autowired
@@ -95,6 +90,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
     protected AuditTrailService auditTrailService;
     @Autowired
     protected AuditEventService auditEventService;
+    @Autowired
+    protected EntityLocator entityLocator;
 
     /**
      * Single-experiment mode.
@@ -135,13 +132,9 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
      */
     private Path excludeFile;
 
-    /**
-     * Force processing of EEs regardless of their troubled status.
-     */
-    protected boolean force = false;
-
     protected ExpressionExperimentManipulatingCLI() {
-        setRequireLogin( true );
+        super( ExpressionExperiment.class );
+        setRequireLogin();
     }
 
     @Override
@@ -195,7 +188,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         Assert.isTrue( commandLine.hasOption( "all" ) || commandLine.hasOption( "eeset" )
                         || commandLine.hasOption( "e" ) || commandLine.hasOption( 'f' ) || commandLine.hasOption( 'q' ),
                 "At least one of -all, -e, -eeset, -f, or -q must be provided." );
-        this.force = commandLine.hasOption( "force" );
+        super.processOptions( commandLine );
         this.all = commandLine.hasOption( "all" );
         if ( commandLine.hasOption( 'e' ) ) {
             String optionValue = commandLine.getOptionValue( 'e' );
@@ -210,7 +203,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected final void doAuthenticatedWork() throws Exception {
         // intentionally a TreeSet over IDs, to prevent proxy initialization via hashCode()
         Set<BioAssaySet> expressionExperiments = new TreeSet<>( Comparator.comparing( BioAssaySet::getId ) );
 
@@ -242,7 +235,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         }
 
         if ( query != null ) {
-            Taxon taxon = this.taxonName != null ? locateTaxon( this.taxonName ) : null;
+            Taxon taxon = this.taxonName != null ? entityLocator.locateTaxon( this.taxonName ) : null;
             log.info( "Processing all experiments that match query " + query + ( taxon != null ? " in taxon " + taxon : "" ) );
             try {
                 expressionExperiments.addAll( this.findExpressionExperimentsByQuery( query, taxon ) );
@@ -259,7 +252,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
             }
         }
 
-        if ( !force && !expressionExperiments.isEmpty() ) {
+        if ( !isForce() && !expressionExperiments.isEmpty() ) {
 
             if ( isAutoSeek() ) {
                 if ( this.getAutoSeekEventType() == null ) {
@@ -285,13 +278,21 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         processBioAssaySets( expressionExperiments );
     }
 
+    private boolean successObjectAdded, errorObjectAdded;
+
     protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
         for ( BioAssaySet bas : expressionExperiments ) {
+            successObjectAdded = false;
+            errorObjectAdded = false;
             try {
                 processBioAssaySet( bas );
-                addSuccessObject( bas );
+                if ( !successObjectAdded ) {
+                    addSuccessObject( bas );
+                }
             } catch ( Exception e ) {
-                addErrorObject( bas, e );
+                if ( !errorObjectAdded ) {
+                    addErrorObject( bas, e );
+                }
             }
         }
     }
@@ -334,10 +335,34 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         throw new UnsupportedOperationException( "This command line does support other kinds of BioAssaySet." );
     }
 
-    protected void addForceOption( Options options ) {
-        String desc = "Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)";
-        Option forceOption = Option.builder( "force" ).longOpt( "force" ).desc( desc ).build();
-        options.addOption( forceOption );
+    @Override
+    protected void addSuccessObject( Object successObject, String message ) {
+        super.addSuccessObject( successObject, message );
+        successObjectAdded = true;
+    }
+
+    @Override
+    protected void addSuccessObject( Object successObject ) {
+        super.addSuccessObject( successObject );
+        successObjectAdded = true;
+    }
+
+    @Override
+    protected void addErrorObject( @Nullable Object errorObject, String message ) {
+        super.addErrorObject( errorObject, message );
+        errorObjectAdded = true;
+    }
+
+    @Override
+    protected void addErrorObject( @Nullable Object errorObject, String message, Throwable throwable ) {
+        super.addErrorObject( errorObject, message, throwable );
+        errorObjectAdded = true;
+    }
+
+    @Override
+    protected void addErrorObject( @Nullable Object errorObject, Exception exception ) {
+        super.addErrorObject( errorObject, exception );
+        errorObjectAdded = true;
     }
 
     private void excludeFromFile( Set<BioAssaySet> expressionExperiments, Path excludeEeFileName ) throws IOException {
@@ -354,10 +379,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
     private List<ExpressionExperiment> experimentsFromCliList( String[] identifiers ) {
         List<ExpressionExperiment> ees = new ArrayList<>( identifiers.length );
         for ( String identifier : identifiers ) {
-            ExpressionExperiment expressionExperiment = this.locateExpressionExperiment( identifier );
-            if ( expressionExperiment == null ) {
-                continue;
-            }
+            ExpressionExperiment expressionExperiment = entityLocator.locateExpressionExperiment( identifier, useReferencesIfPossible );
             if ( !useReferencesIfPossible ) {
                 expressionExperiment = eeService.thawLite( expressionExperiment );
             }
@@ -428,43 +450,6 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         return ees;
     }
 
-    /**
-     * Attempt to locate an experiment using the given identifier.
-     */
-    @Nullable
-    private ExpressionExperiment locateExpressionExperiment( String identifier ) {
-        Assert.isTrue( StringUtils.isNotBlank( identifier ), "Expression experiment ID or short name must be provided" );
-        identifier = StringUtils.strip( identifier );
-        ExpressionExperiment ee;
-        try {
-            Long id = Long.parseLong( identifier );
-            if ( useReferencesIfPossible ) {
-                // this is never null, but may produce ObjectNotFoundException later on
-                return eeService.loadReference( id );
-            } else if ( ( ee = eeService.load( id ) ) != null ) {
-                log.debug( "Found " + ee + " by ID" );
-                return ee;
-            } else {
-                return null;
-            }
-        } catch ( NumberFormatException e ) {
-            // can be safely ignored, we'll attempt to use it as a short name
-        }
-        if ( ( ee = eeService.findByShortName( identifier ) ) != null ) {
-            log.debug( "Found " + ee + " by short name" );
-            return ee;
-        }
-        if ( ( ee = eeService.findOneByAccession( identifier ) ) != null ) {
-            log.debug( "Found " + ee + " by accession" );
-            return ee;
-        }
-        if ( ( ee = eeService.findOneByName( identifier ) ) != null ) {
-            log.debug( "Found " + ee + " by name" );
-            return ee;
-        }
-        log.warn( "Could not locate any experiment with identifier or name " + identifier );
-        return null;
-    }
 
     /**
      * Load expression experiments based on a list of short names or IDs in a file. Only the first column of the file is
@@ -476,10 +461,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         log.info( String.format( "Found %d experiment identifiers in %s", idlist.size(), fileName ) );
         int count = 0;
         for ( String id : idlist ) {
-            ExpressionExperiment ee = locateExpressionExperiment( id );
-            if ( ee == null ) {
-                continue;
-            }
+            ExpressionExperiment ee = entityLocator.locateExpressionExperiment( id, useReferencesIfPossible );
             count++;
             ees.add( ee );
             if ( idlist.size() > 500 && count > 0 && count % 500 == 0 ) {
@@ -521,127 +503,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
             }
         } );
         if ( removedTroubledExperiments.get() > 0 ) {
-            log.info( String.format( "Removed %d troubled experiments, leaving %d to be processed; use -force to include those.",
-                    removedTroubledExperiments.get(), expressionExperiments.size() ) );
+            log.info( String.format( "Removed %d troubled experiments, leaving %d to be processed; use -%s to include those.",
+                    removedTroubledExperiments.get(), expressionExperiments.size(), FORCE_OPTION ) );
         }
     }
 
-    /**
-     * @param auditable  auditable
-     * @param eventClass can be null
-     * @return boolean
-     */
-    protected boolean noNeedToRun( Auditable auditable, Class<? extends AuditEventType> eventClass ) {
-        boolean needToRun = true;
-        Date skipIfLastRunLaterThan = this.getLimitingDate();
-        List<AuditEvent> events = this.auditEventService.getEvents( auditable );
-
-        boolean okToRun = true; // assume okay unless indicated otherwise
-
-        // figure out if we need to run it by date; or if there is no event of the given class; "Fail" type events don't
-        // count.
-        for ( int j = events.size() - 1; j >= 0; j-- ) {
-            AuditEvent event = events.get( j );
-            if ( event == null ) {
-                continue; // legacy of ordered-list which could end up with gaps; should not be needed any more
-            }
-            AuditEventType eventType = event.getEventType();
-            if ( eventType != null && eventClass != null && eventClass.isAssignableFrom( eventType.getClass() )
-                    && !eventType.getClass().getSimpleName().startsWith( "Fail" ) ) {
-                if ( skipIfLastRunLaterThan != null ) {
-                    if ( event.getDate().after( skipIfLastRunLaterThan ) ) {
-                        log.info( auditable + ": " + " run more recently than " + skipIfLastRunLaterThan );
-                        addErrorObject( auditable, "Run more recently than " + skipIfLastRunLaterThan );
-                        needToRun = false;
-                    }
-                } else {
-                    needToRun = false; // it has been run already at some point
-                }
-            }
-        }
-
-        /*
-         * Always skip if the object is curatable and troubled
-         */
-        if ( auditable instanceof Curatable ) {
-            Curatable curatable = ( Curatable ) auditable;
-            okToRun = !curatable.getCurationDetails().getTroubled(); //not ok if troubled
-
-            // special case for expression experiments - check associated ADs.
-            if ( okToRun && curatable instanceof ExpressionExperiment ) {
-                for ( ArrayDesign ad : eeService.getArrayDesignsUsed( ( ExpressionExperiment ) auditable ) ) {
-                    if ( ad.getCurationDetails().getTroubled() ) {
-                        okToRun = false; // not ok if even one parent AD is troubled, no need to check the remaining ones.
-                        break;
-                    }
-                }
-            }
-
-            if ( !okToRun ) {
-                addErrorObject( auditable, "Has an active 'trouble' flag" );
-            }
-        }
-
-        return !needToRun || !okToRun;
-    }
-
-    protected Taxon locateTaxon( String taxonName ) {
-        Assert.isTrue( StringUtils.isNotBlank( taxonName ), "Taxon name must be be blank." );
-        taxonName = StringUtils.strip( taxonName );
-        Taxon taxon;
-        try {
-            long id = Long.parseLong( taxonName );
-            if ( ( taxon = taxonService.load( id ) ) != null ) {
-                log.info( "Found " + taxon + " by ID" );
-                return taxon;
-            }
-            if ( ( taxon = taxonService.findByNcbiId( Math.toIntExact( id ) ) ) != null ) {
-                log.info( "Found " + taxon + " by NCBI ID" );
-                return taxon;
-            }
-            throw new NullPointerException( "No taxon with ID or NCBI ID " + id );
-        } catch ( NumberFormatException e ) {
-            // ignore
-        }
-        if ( ( taxon = taxonService.findByCommonName( taxonName ) ) != null ) {
-            log.info( "Found " + taxon + " by common name." );
-            return taxon;
-        }
-        if ( ( taxon = taxonService.findByScientificName( taxonName ) ) != null ) {
-            log.info( "Found " + taxon + " by scientific name." );
-            return taxon;
-        }
-        throw new NullPointerException( "Cannot find taxon with name " + taxonName );
-    }
-
-    protected ArrayDesign locateArrayDesign( String name ) {
-        Assert.isTrue( StringUtils.isNotBlank( name ), "Platform name must not be blank." );
-        name = StringUtils.strip( name );
-        ArrayDesign arrayDesign;
-        try {
-            long id = Long.parseLong( name );
-            if ( ( arrayDesign = arrayDesignService.load( id ) ) != null ) {
-                log.info( "Found " + arrayDesign + " by ID." );
-                return arrayDesign;
-            }
-            throw new NullPointerException( "No platform with ID " + id );
-        } catch ( NumberFormatException e ) {
-            // ignore
-        }
-        if ( ( arrayDesign = arrayDesignService.findByShortName( name ) ) != null ) {
-            log.info( "Found " + arrayDesign + " by short name." );
-            return arrayDesign;
-        }
-        if ( ( arrayDesign = arrayDesignService.findOneByName( name ) ) != null ) {
-            log.info( "Found " + arrayDesign + " by name." );
-            return arrayDesign;
-        }
-        if ( ( arrayDesign = arrayDesignService.findOneByAlternateName( name ) ) != null ) {
-            log.info( "Found " + arrayDesign + " by alternate name." );
-            return arrayDesign;
-        }
-        throw new NullPointerException( "No platform found with ID or name " + name );
-    }
 
     /**
      * Refresh a dataset for Gemma Web.
@@ -702,13 +568,20 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         }
     }
 
-    private String experimentsToString( Collection<? extends BioAssaySet> bas ) {
-        if ( bas.isEmpty() ) {
-            return "no experiments";
-        } else if ( bas.size() == 1 ) {
-            return experimentToString( bas.iterator().next() );
-        } else {
-            return bas.size() + " experiments";
+    @Override
+    protected boolean noNeedToRun( ExpressionExperiment auditable, Class<? extends AuditEventType> eventClass ) {
+        if ( super.noNeedToRun( auditable, eventClass ) ) {
+            return true;
         }
+
+        // special case for expression experiments - check associated ADs.
+        for ( ArrayDesign ad : eeService.getArrayDesignsUsed( auditable ) ) {
+            if ( ad.getCurationDetails().getTroubled() ) {
+                addErrorObject( auditable, "Associated platform " + ad.getShortName() + " has an active troubled flag, use - " + FORCE_OPTION + "to process anyway." );
+                return true; // not ok if even one parent AD is troubled, no need to check the remaining ones.
+            }
+        }
+
+        return false;
     }
 }

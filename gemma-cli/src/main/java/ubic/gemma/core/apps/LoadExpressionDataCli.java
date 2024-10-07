@@ -132,7 +132,7 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
         if ( accessions == null && accessionFile == null ) {

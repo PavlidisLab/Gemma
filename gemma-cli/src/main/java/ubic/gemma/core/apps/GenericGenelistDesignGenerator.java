@@ -109,7 +109,7 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
 
         ArrayDesign platform = arrayDesignService.findByShortName( this.platformShortName );
         platform = arrayDesignService.thaw( platform );

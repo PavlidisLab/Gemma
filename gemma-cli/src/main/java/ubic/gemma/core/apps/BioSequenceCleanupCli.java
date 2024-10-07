@@ -23,6 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -42,33 +43,35 @@ import java.util.HashSet;
 
 /**
  * Goes through the biosequences for array designs in the database and removes duplicates.
- *
+ * <p>
  * Moved from GemmaAnalysis as this is a database maintenance tool
  *
  * @author pavlidis
  */
 public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
 
+    @Autowired
     private BlatAssociationService blatAssociationService;
-
+    @Autowired
     private BlatResultService blatResultService;
-
+    @Autowired
     private BioSequenceService bss;
+    @Autowired
     private CompositeSequenceService css;
+
     private String file = null;
     private boolean justTesting = false;
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "seqCleanup";
     }
 
-    @SuppressWarnings("static-access")
+    @Override
+    public String getShortDesc() {
+        return "Examines biosequences for array designs in the database and removes duplicates.";
+    }
+
     @Override
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
@@ -86,11 +89,24 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void doWork() {
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
+        super.processOptions( commandLine );
+        if ( commandLine.hasOption( "dryrun" ) ) {
+            this.justTesting = true;
+            log.info( "TEST MODE: NO DATABASE UPDATES WILL BE PERFORMED" );
+        }
 
-        Collection<ArrayDesign> ads = new HashSet<>();
+        if ( commandLine.hasOption( 'b' ) ) {
+            this.file = commandLine.getOptionValue( 'b' );
+        }
+    }
+
+    @Override
+    protected void doAuthenticatedWork() {
+
+        Collection<ArrayDesign> ads;
         if ( !this.getArrayDesignsToProcess().isEmpty() ) {
-            ads.addAll( this.getArrayDesignsToProcess() );
+            ads = new HashSet<>( this.getArrayDesignsToProcess() );
         } else if ( file != null ) {
             try ( InputStream is = new FileInputStream( file );
                     BufferedReader br = new BufferedReader( new InputStreamReader( is ) ); ) {
@@ -184,32 +200,6 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
                 }
             }
         }
-
-        return;
-
-    }
-
-    @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
-        if ( commandLine.hasOption( "dryrun" ) ) {
-            this.justTesting = true;
-            log.info( "TEST MODE: NO DATABASE UPDATES WILL BE PERFORMED" );
-        }
-
-        if ( commandLine.hasOption( 'b' ) ) {
-            this.file = commandLine.getOptionValue( 'b' );
-        }
-
-        bss = this.getBean( BioSequenceService.class );
-        css = this.getBean( CompositeSequenceService.class );
-        blatResultService = this.getBean( BlatResultService.class );
-        blatAssociationService = this.getBean( BlatAssociationService.class );
-    }
-
-    @Override
-    public String getShortDesc() {
-        return "Examines biosequences for array designs in the database and removes duplicates.";
     }
 
     /**
@@ -364,5 +354,4 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
             bss.remove( toRemove );
         }
     }
-
 }

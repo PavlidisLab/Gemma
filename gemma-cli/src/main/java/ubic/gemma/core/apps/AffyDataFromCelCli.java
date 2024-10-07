@@ -135,14 +135,14 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
         /*
          * if the audit trail already has a DataReplacedEvent, skip it, unless --force.
          */
-        if ( this.checkForAlreadyDone( ee ) && !this.force ) {
+        if ( this.checkForAlreadyDone( ee ) && !isForce() ) {
             throw new RuntimeException( "Was already run before, use -force" );
         }
 
         /*
          * Avoid repeated attempts that won't work e.g. no data available.
          */
-        if ( super.auditEventService.hasEvent( ee, FailedDataReplacedEvent.class ) && !this.force ) {
+        if ( super.auditEventService.hasEvent( ee, FailedDataReplacedEvent.class ) && !isForce() ) {
             throw new RuntimeException( "Failed before, use -force to re-attempt" );
         }
 

@@ -4,6 +4,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.annotation.Nullable;
 import java.io.PrintWriter;
 
 public class HelpUtils {
@@ -17,7 +18,7 @@ public class HelpUtils {
         formatter.setSyntaxPrefix( "Usage: " );
     }
 
-    public static void printHelp( PrintWriter writer, String syntax, Options options, String header, String footer ) {
+    public static void printHelp( PrintWriter writer, String syntax, Options options, @Nullable String header, @Nullable String footer ) {
         if ( StringUtils.isBlank( header ) ) {
             header = HEADER;
         } else {

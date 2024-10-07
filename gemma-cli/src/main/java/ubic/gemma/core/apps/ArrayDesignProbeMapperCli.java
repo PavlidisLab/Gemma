@@ -87,7 +87,12 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private Double overlapThreshold = null;
 
     public ArrayDesignProbeMapperCli() {
-        setRequireLogin( true );
+        setRequireLogin();
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Process the BLAT results for an array design to map them onto genes";
     }
 
     @Override
@@ -180,6 +185,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         options.addOption( probesToDoOption );
     }
+
 
     /**
      * See 'configure' for how the other options are handled. (non-Javadoc)
@@ -400,7 +406,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         final Date skipIfLastRunLaterThan = this.getLimitingDate();
 
         if ( this.taxon != null && this.directAnnotationInputFileName == null && this.getArrayDesignsToProcess()
@@ -491,17 +497,12 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
     }
 
-    @Override
-    public String getShortDesc() {
-        return "Process the BLAT results for an array design to map them onto genes";
-    }
-
     private void audit( ArrayDesign arrayDesign, String note, Class<? extends ArrayDesignGeneMappingEvent> eventType ) {
         getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
 
-    private void batchRun( final Date skipIfLastRunLaterThan ) throws InterruptedException {
+    private void batchRun( final Date skipIfLastRunLaterThan ) {
         Collection<ArrayDesign> allArrayDesigns;
 
         if ( this.taxon != null ) {

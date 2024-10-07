@@ -65,7 +65,7 @@ public class PubMedSearcher extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         @SuppressWarnings("unchecked")
         Collection<BibliographicReference> refs = PubMedSearcher.pms
                 .searchAndRetrieveByHTTP( this.args );

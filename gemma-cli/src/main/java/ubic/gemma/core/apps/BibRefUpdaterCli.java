@@ -23,6 +23,8 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang.math.RandomUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
@@ -37,10 +39,13 @@ import java.util.Collection;
  */
 public class BibRefUpdaterCli extends AbstractAuthenticatedCLI {
 
+    @Autowired
+    private BibliographicReferenceService bibliographicReferenceService;
+
     private String[] pmids;
 
     public BibRefUpdaterCli() {
-        setRequireLogin( true );
+        setRequireLogin();
     }
 
     @Override
@@ -65,13 +70,11 @@ public class BibRefUpdaterCli extends AbstractAuthenticatedCLI {
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
+        pmids = StringUtils.split( commandLine.getOptionValue( "pmids" ), "," );
     }
 
     @Override
-    protected void doWork() throws Exception {
-        BibliographicReferenceService bibliographicReferenceService = this
-                .getBean( BibliographicReferenceService.class );
-
+    protected void doAuthenticatedWork() throws Exception {
         Collection<Long> bibrefIds = new ArrayList<>();
         if ( this.pmids != null ) {
             for ( String s : pmids ) {

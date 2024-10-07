@@ -11,6 +11,8 @@ import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import javax.annotation.Nullable;
 import java.util.Date;
 
+import static ubic.gemma.core.util.OptionsUtils.addDateOption;
+
 public class UpdateEE2CCli extends AbstractAuthenticatedCLI {
 
     private static final String
@@ -57,7 +59,7 @@ public class UpdateEE2CCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( sinceLastUpdate, truncate );
         if ( updated > 0 ) {
             try {

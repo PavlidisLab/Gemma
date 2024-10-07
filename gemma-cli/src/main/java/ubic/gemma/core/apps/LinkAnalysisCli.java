@@ -216,7 +216,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
         if ( commandLine.hasOption( "delete" ) ) {
             this.deleteAnalyses = true;
-            this.force = true;
+            setForce();
             return;
         } else if ( commandLine.hasOption( "init" ) ) {
             initializeFromOldData = true;
@@ -535,8 +535,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         /*
          * If we're not using the database, always run it.
          */
-        if ( linkAnalysisConfig.isUseDb() && !force && this.noNeedToRun( ee, LinkAnalysisEvent.class ) ) {
-            log.info( "Can't or Don't need to run " + ee );
+        if ( linkAnalysisConfig.isUseDb() && this.noNeedToRun( ee, LinkAnalysisEvent.class ) ) {
             return;
         }
 

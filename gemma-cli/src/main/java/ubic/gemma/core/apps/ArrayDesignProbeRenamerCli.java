@@ -49,14 +49,19 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
     private String fileName;
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.PLATFORM;
+    public String getCommandName() {
+        return "probeRename";
+    }
+
+    @Nullable
+    @Override
+    public String getShortDesc() {
+        return null;
     }
 
     @Override
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
-        //noinspection AccessStaticViaInstance
         options.addOption( Option.builder( FILE_OPT )
                 .longOpt( "file" )
                 .required()
@@ -72,18 +77,7 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
     }
 
     @Override
-    public String getCommandName() {
-        return "probeRename";
-    }
-
-    @Nullable
-    @Override
-    public String getShortDesc() {
-        return null;
-    }
-
-    @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         if ( fileName == null ) {
             throw new IllegalArgumentException( "filename cannot be null" );
         }

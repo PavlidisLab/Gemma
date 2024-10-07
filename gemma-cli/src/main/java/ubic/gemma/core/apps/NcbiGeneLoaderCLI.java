@@ -60,7 +60,7 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
     private Integer startNcbiId = null;
 
     public NcbiGeneLoaderCLI() {
-        setRequireLogin( true );
+        setRequireLogin();
     }
 
     @Override
@@ -98,7 +98,7 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         loader = new NcbiGeneLoader();
         loader.setTaxonService( taxonService );
         loader.setPersisterHelper( persisterHelper );

@@ -16,9 +16,10 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.expression.DataUpdater;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.util.EntityLocator;
 import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -27,8 +28,8 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.core.context.TestComponent;
 
 import java.io.IOException;
 
@@ -107,6 +108,11 @@ public class RNASeqDataAddCliTest extends AbstractJUnit4SpringContextTests {
         @Bean
         public GemmaRestApiClient gemmaRestApiClient() {
             return mock();
+        }
+
+        @Bean
+        public EntityLocator entityLocator() {
+            return new EntityLocator();
         }
     }
 

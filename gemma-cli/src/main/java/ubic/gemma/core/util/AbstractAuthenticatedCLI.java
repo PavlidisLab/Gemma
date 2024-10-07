@@ -28,7 +28,6 @@ import org.springframework.security.concurrent.DelegatingSecurityContextExecutor
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -90,22 +89,24 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
         }
     }
 
-    @Override
-    protected final void beforeWork() {
-        authenticate();
-    }
-
-    @Override
-    protected final void afterWork( @Nullable Exception e ) {
-        SecurityContextHolder.clearContext();
-    }
-
     /**
-     * Indicate if the command requires authentication.
+     * Indicate that the command requires authentication.
      */
-    public void setRequireLogin( boolean requireLogin ) {
-        this.requireLogin = requireLogin;
+    protected void setRequireLogin() {
+        this.requireLogin = true;
     }
+
+    @Override
+    protected final void doWork() throws Exception {
+        try {
+            authenticate();
+            doAuthenticatedWork();
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    protected abstract void doAuthenticatedWork() throws Exception;
 
     /**
      * check username and password.

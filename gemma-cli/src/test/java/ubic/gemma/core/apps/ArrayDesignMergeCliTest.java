@@ -14,11 +14,14 @@ import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
+import ubic.gemma.core.util.EntityLocator;
 import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -74,6 +77,21 @@ public class ArrayDesignMergeCliTest extends AbstractJUnit4SpringContextTests {
         public GemmaRestApiClient gemmaRestApiClient() {
             return mock();
         }
+
+        @Bean
+        public TaxonService taxonService() {
+            return mock();
+        }
+
+        @Bean
+        public ExpressionExperimentService expressionExperimentService() {
+            return mock();
+        }
+
+        @Bean
+        public EntityLocator entityLocator() {
+            return new EntityLocator();
+        }
     }
 
     @Autowired
@@ -96,9 +114,9 @@ public class ArrayDesignMergeCliTest extends AbstractJUnit4SpringContextTests {
         ArrayDesign a = ArrayDesign.Factory.newInstance();
         ArrayDesign b = ArrayDesign.Factory.newInstance();
         ArrayDesign c = ArrayDesign.Factory.newInstance();
-        when( arrayDesignService.findByShortName( "1" ) ).thenReturn( a );
-        when( arrayDesignService.findByShortName( "2" ) ).thenReturn( b );
-        when( arrayDesignService.findByShortName( "3" ) ).thenReturn( c );
+        when( arrayDesignService.load( 1L ) ).thenReturn( a );
+        when( arrayDesignService.load( 2L ) ).thenReturn( b );
+        when( arrayDesignService.load( 3L ) ).thenReturn( c );
         when( arrayDesignService.thaw( any( ArrayDesign.class ) ) ).thenAnswer( args -> args.getArgument( 0 ) );
         when( arrayDesignService.thaw( anyCollection() ) ).thenAnswer( args -> args.getArgument( 0 ) );
         Collection<ArrayDesign> otherPlatforms = new HashSet<>( Arrays.asList( b, c ) );

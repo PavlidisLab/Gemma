@@ -52,8 +52,8 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment bas ) {
-        if ( !force && this.noNeedToRun( bas, PCAAnalysisEvent.class ) ) {
-            throw new IllegalArgumentException( "Already has PCA; use -force to override" );
+        if ( this.noNeedToRun( bas, PCAAnalysisEvent.class ) ) {
+            return;
         }
         log.info( "Processing: " + bas );
         try {

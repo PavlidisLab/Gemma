@@ -17,6 +17,7 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.service.GeneMultifunctionalityPopulationService;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.CLI;
@@ -28,10 +29,15 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
  */
 public class MultifunctionalityCli extends AbstractAuthenticatedCLI {
 
+    @Autowired
+    private GeneMultifunctionalityPopulationService gfs;
+    @Autowired
+    private TaxonService taxonService;
+
     private Taxon taxon;
 
     public MultifunctionalityCli() {
-        setRequireLogin( true );
+        setRequireLogin();
     }
 
     @Override
@@ -39,7 +45,17 @@ public class MultifunctionalityCli extends AbstractAuthenticatedCLI {
         return "updateMultifunc";
     }
 
-    @SuppressWarnings("static-access")
+
+    @Override
+    public String getShortDesc() {
+        return "Update or create gene multifunctionality metrics";
+    }
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.SYSTEM;
+    }
+
     @Override
     protected void buildOptions( Options options ) {
         Option taxonOption = Option.builder( "t" ).hasArg()
@@ -49,28 +65,9 @@ public class MultifunctionalityCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
-        GeneMultifunctionalityPopulationService gfs = this.getBean( GeneMultifunctionalityPopulationService.class );
-
-        if ( this.taxon != null ) {
-            gfs.updateMultifunctionality( taxon );
-        } else {
-            gfs.updateMultifunctionality();
-        }
-    }
-
-    @Override
-    public String getShortDesc() {
-        return "Update or create gene multifunctionality metrics";
-    }
-
-    @Override
-
     protected void processOptions( CommandLine commandLine ) {
-
         if ( commandLine.hasOption( 't' ) ) {
             String taxonName = commandLine.getOptionValue( 't' );
-            TaxonService taxonService = this.getBean( TaxonService.class );
             this.taxon = taxonService.findByCommonName( taxonName );
             if ( taxon == null ) {
                 log.error( "ERROR: Cannot find taxon " + taxonName );
@@ -79,8 +76,11 @@ public class MultifunctionalityCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CLI.CommandGroup.SYSTEM;
+    protected void doAuthenticatedWork() {
+        if ( this.taxon != null ) {
+            gfs.updateMultifunctionality( taxon );
+        } else {
+            gfs.updateMultifunctionality();
+        }
     }
-
 }

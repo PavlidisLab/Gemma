@@ -81,10 +81,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
         expressionExperiment = this.eeService.thawLite( expressionExperiment );
         ArrayDesign ad;
         if ( this.arrayDesignName != null ) {
-            ad = this.locateArrayDesign( this.arrayDesignName );
-            if ( ad == null ) {
-                throw new RuntimeException( "Unknown array design" );
-            }
+            ad = entityLocator.locateArrayDesign( this.arrayDesignName );
             serv.switchExperimentToArrayDesign( expressionExperiment, ad );
             ats.addUpdateEvent( expressionExperiment, ExpressionExperimentPlatformSwitchEvent.class, "Switched to use " + ad );
         } else {

@@ -10,7 +10,7 @@ import java.util.TimeZone;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class DateConverterImplTest {
+public class OptionsUtilsTest {
 
     private static TimeZone tz;
 
@@ -26,10 +26,10 @@ public class DateConverterImplTest {
     }
 
     private final Date relativeTo = new Date();
-    private final DateConverterImpl c = new DateConverterImpl( relativeTo, TimeZone.getTimeZone( "America/Vancouver" ) );
+    private final OptionsUtils.DateConverterImpl c = new OptionsUtils.DateConverterImpl( relativeTo, TimeZone.getTimeZone( "America/Vancouver" ) );
 
     @Test
-    public void test() throws ParseException {
+    public void testParseFuzzyDate() throws ParseException {
         assertThat( c.apply( "2019-01-01" ) )
                 .hasYear( 2019 ).hasMonth( 1 ).hasDayOfMonth( 1 );
         assertThat( c.apply( "2019-01-01 02:12:11" ) )
@@ -37,7 +37,7 @@ public class DateConverterImplTest {
     }
 
     @Test
-    public void testIso8601() throws ParseException {
+    public void testParseIso8601Date() throws ParseException {
         assertThat( c.apply( "2019" ) )
                 .hasYear( 2019 ).hasMonth( 1 ).hasDayOfMonth( 1 );
         assertThat( c.apply( "2019-01" ) )
@@ -61,7 +61,7 @@ public class DateConverterImplTest {
     }
 
     @Test
-    public void testWords() throws ParseException {
+    public void testParseWords() throws ParseException {
         assertThat( c.apply( "now" ) ).isCloseTo( relativeTo, 10 );
 
         assertThat( c.apply( "yesterday" ) )

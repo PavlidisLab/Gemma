@@ -160,7 +160,7 @@ public class FactorValueMigratorCLI extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         if ( noop ) {
             log.info( "Noop mode enabled, no statements will be saved." );
         }

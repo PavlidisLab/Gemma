@@ -10,6 +10,8 @@ import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import javax.annotation.Nullable;
 import java.util.Date;
 
+import static ubic.gemma.core.util.OptionsUtils.addDateOption;
+
 public class UpdateEe2AdCli extends AbstractAuthenticatedCLI {
 
     private static final String SINCE_OPTION = "s";
@@ -51,7 +53,7 @@ public class UpdateEe2AdCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         int updated = tableMaintenanceUtil.updateExpressionExperiment2ArrayDesignEntries( sinceLastUpdate );
         if ( updated > 0 ) {
             try {

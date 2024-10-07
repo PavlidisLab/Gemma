@@ -190,7 +190,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
         if ( expressionExperiments.size() > 1 ) {
             throw new IllegalArgumentException( "Sorry, can only process one experiment with this tool." );
         }
-        ArrayDesign targetArrayDesign = this.locateArrayDesign( this.platformName );
+        ArrayDesign targetArrayDesign = entityLocator.locateArrayDesign( this.platformName );
 
         ExpressionExperiment ee = ( ExpressionExperiment ) expressionExperiments.iterator().next();
 

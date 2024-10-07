@@ -90,8 +90,8 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
-        if ( expressionExperimentService.isTroubled( ee ) && !force ) {
-            log.info( "Skipping troubled experiment " + ee.getShortName() );
+        if ( expressionExperimentService.isTroubled( ee ) && !isForce() ) {
+            addErrorObject( ee, "Skipping troubled experiment " + ee.getShortName() + ", use -" + FORCE_OPTION + " to process." );
             return;
         }
         try {
