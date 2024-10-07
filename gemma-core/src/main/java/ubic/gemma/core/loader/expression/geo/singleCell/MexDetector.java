@@ -40,7 +40,7 @@ import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
  * @author poirigui
  */
 @Setter
-public class MexDetector extends AbstractSingleCellDetector implements SingleCellDetector {
+public class MexDetector extends AbstractSingleCellDetector implements ArchiveBasedSingleCellDetector {
 
     public static final String
             DEFAULT_BARCODES_FILE_SUFFIX = "barcodes.tsv",
@@ -57,12 +57,29 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
     private String genesFileSuffix = DEFAULT_GENES_FILE_SUFFIX;
     private String matrixFileSuffix = DEFAULT_MATRIX_FILE_SUFFIX;
 
+    private long maxEntrySizeInArchiveToSkip = DEFAULT_MAX_ENTRY_SIZE_IN_ARCHIVE_TO_SKIP;
+    private long maxNumberOfEntriesToSkip = DEFAULT_MAX_NUMBER_OF_ENTRIES_TO_SKIP;
+
     /**
-     * Set the maximum size of an archive entry to skip the supplementary file altogether.
-     * <p>
-     * Note that if a MEX file was previously found in the archive, it will not be skipped.
+     * A cache of previously skipped archives.
      */
-    private long maxEntrySizeInArchiveToSkip = 25_000_000L;
+    private final Set<String> skippedArchives = new HashSet<>();
+
+    @Override
+    public void setMaxEntrySizeInArchiveToSkip( long maxEntrySizeInArchiveToSkip ) {
+        if ( maxEntrySizeInArchiveToSkip < this.maxEntrySizeInArchiveToSkip ) {
+            skippedArchives.clear();
+        }
+        this.maxEntrySizeInArchiveToSkip = maxEntrySizeInArchiveToSkip;
+    }
+
+    @Override
+    public void setMaxNumberOfEntriesToSkip( long maxNumberOfEntriesToSkip ) {
+        if ( maxNumberOfEntriesToSkip < this.maxNumberOfEntriesToSkip ) {
+            skippedArchives.clear();
+        }
+        this.maxNumberOfEntriesToSkip = maxNumberOfEntriesToSkip;
+    }
 
     /**
      * {@inheritDoc}
@@ -135,7 +152,11 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
 
         // detect MEX (1 archive per GEO sample)
         for ( String file : supplementaryFiles ) {
-            if ( allowArchiveLookup && ( file.endsWith( ".tar" ) || file.endsWith( ".tar.gz" ) || file.endsWith( ".zip" ) ) ) {
+            if ( allowArchiveLookup && isSupportedArchive( file ) ) {
+                if ( skippedArchives.contains( file ) ) {
+                    log.debug( geoAccession + ": " + file + " was previously skipped, ignoring..." );
+                    continue;
+                }
                 log.info( "Looking up the content of " + file + " for MEX data..." );
                 try {
                     Boolean done = retry( ( attempt, lastAttempt ) -> {
@@ -144,6 +165,7 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                         String matrixT = null;
                         // we just have to read the header of the archive and not its content
                         try ( ArchiveInputStream<?> tis = openSupplementaryFileAsArchiveStream( file, attempt ) ) {
+                            int skipped = 0;
                             ArchiveEntry te;
                             while ( ( te = tis.getNextEntry() ) != null ) {
                                 if ( te.isDirectory() ) {
@@ -181,6 +203,10 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                                     }
                                 } else if ( skipForLargeArchiveEntry( geoAccession, file, te, barcodesT, featuresT, matrixT ) ) {
                                     break;
+                                } else if ( skipForTooManySkippedEntries( geoAccession, ++skipped, file, barcodesT, featuresT, matrixT ) ) {
+                                    break;
+                                } else {
+                                    log.debug( "Skipping " + file + "!" + te.getName() );
                                 }
                             }
                             if ( barcodesT != null && featuresT != null && matrixT != null ) {
@@ -307,14 +333,18 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
             String[] files = { barcodes, features, matrix };
             String[] dests = { "barcodes.tsv.gz", "features.tsv.gz", "matrix.mtx.gz" };
             for ( int i = 0; i < files.length; i++ ) {
+                String file = files[i];
                 Path dest = sampleDirectory.resolve( dests[i] );
-                if ( existsAndHasExpectedSize( dest, files[i], false ) ) {
+                long expectedContentLength = getSizeInBytes( file );
+                if ( existsAndHasExpectedSize( dest, file, expectedContentLength, false, true ) ) {
                     log.info( String.format( "%s: Skipping download of %s to %s because it already exists and has expected size.",
-                            geoAccession, files[i], dest ) );
+                            geoAccession, file, dest ) );
                     continue;
+                } else if ( Files.exists( dest ) ) {
+                    log.info( String.format( "%s: Re-downloading %s to %s because its size is mismatched.",
+                            geoAccession, file, dest ) );
                 }
                 try {
-                    String file = files[i];
                     retry( ( attempt, lastAttempt ) -> {
                         StopWatch timer = StopWatch.createStarted();
                         log.info( String.format( "%s: Downloading %s to %s...", geoAccession, file, dest ) );
@@ -322,9 +352,15 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                         try ( InputStream is = openSupplementaryFileAsStream( file, attempt, false );
                                 OutputStream os = openGzippedOutputStream( file, dest ) ) {
                             long downloadedBytes = IOUtils.copyLarge( is, os );
+                            // make sure we're done with the file I/O before checking its size
+                            os.close();
                             log.info( String.format( "%s: Done downloading %s (%s in %s @ %s/s).",
                                     geoAccession, file, byteCountToDisplaySize( downloadedBytes ), timer,
                                     byteCountToDisplaySize( 1000 * downloadedBytes / timer.getTime() ) ) );
+                            if ( !existsAndHasExpectedSize( dest, file, expectedContentLength, false, true ) ) {
+                                throw new IOException( String.format( "Unexpected size for %s: %d B were expected but %d were copied.",
+                                        dest, expectedContentLength, downloadedBytes ) );
+                            }
                             return null;
                         } catch ( Exception e ) {
                             log.warn( String.format( "%s: MEX files could not be downloaded successfully, removing %s...", geoAccession, dest ), e );
@@ -349,6 +385,9 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
             if ( !isSupportedArchive( file ) ) {
                 continue;
             }
+            if ( skippedArchives.contains( file ) ) {
+                continue;
+            }
             try {
                 Boolean found = retry( ( attempt, lastAttempt ) -> {
                     try ( ArchiveInputStream<?> tis = openSupplementaryFileAsArchiveStream( file, attempt ) ) {
@@ -357,15 +396,18 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                         String featuresT = null;
                         String matrixT = null;
                         long copiedBytes = 0L;
+                        int skipped = 0;
                         ArchiveEntry te;
                         while ( ( te = tis.getNextEntry() ) != null ) {
                             if ( te.isDirectory() ) {
                                 continue;
                             }
+                            // entry name, for display purposes
+                            String fullEntryName = file + "!" + te.getName();
                             Path dest;
                             if ( isMexFile( te.getName(), MexFileType.BARCODES ) ) {
                                 if ( barcodesT != null ) {
-                                    throw new UnsupportedOperationException( String.format( "%s: There is already an entry for barcodes: %s, %s cannot be downloaded.", geoAccession, barcodesT, te.getName() ) );
+                                    throw new UnsupportedOperationException( String.format( "%s: There is already an entry for barcodes: %s, %s cannot be downloaded.", geoAccession, barcodesT, fullEntryName ) );
                                 }
                                 if ( barcodeMetadataFileSuffix != null && ( te.getName().endsWith( barcodeMetadataFileSuffix ) || te.getName().endsWith( barcodeMetadataFileSuffix + ".gz" ) ) ) {
                                     throw new UnsupportedOperationException( "Barcode metadata files are not supported." );
@@ -374,25 +416,28 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                                 barcodesT = te.getName();
                             } else if ( isMexFile( te.getName(), MexFileType.FEATURES ) ) {
                                 if ( featuresT != null ) {
-                                    throw new UnsupportedOperationException( String.format( "%s: There is already an entry for features: %s, %s cannot be downloaded.", geoAccession, featuresT, te.getName() ) );
+                                    throw new UnsupportedOperationException( String.format( "%s: There is already an entry for features: %s, %s cannot be downloaded.", geoAccession, featuresT, fullEntryName ) );
                                 }
                                 featuresT = te.getName();
                                 dest = sampleDirectory.resolve( "features.tsv.gz" );
                             } else if ( isMexFile( te.getName(), MexFileType.MATRIX ) ) {
                                 if ( matrixT != null ) {
-                                    throw new UnsupportedOperationException( String.format( "%s: There is already an entry for matrix: %s, %s cannot be downloaded.", geoAccession, matrixT, te.getName() ) );
+                                    throw new UnsupportedOperationException( String.format( "%s: There is already an entry for matrix: %s, %s cannot be downloaded.", geoAccession, matrixT, fullEntryName ) );
                                 }
                                 matrixT = te.getName();
                                 dest = sampleDirectory.resolve( "matrix.mtx.gz" );
                             } else if ( skipForLargeArchiveEntry( geoAccession, file, te, barcodesT, featuresT, matrixT ) ) {
                                 break;
+                            } else if ( skipForTooManySkippedEntries( geoAccession, ++skipped, file, barcodesT, featuresT, matrixT ) ) {
+                                break;
                             } else {
                                 // skip to the next entry
+                                log.debug( "Skipping " + fullEntryName + "." );
                                 continue;
                             }
-                            if ( dest.toFile().exists() && dest.toFile().length() == te.getSize() ) {
+                            if ( existsAndHasExpectedSize( dest, fullEntryName, te.getSize(), false, true ) ) {
                                 log.info( String.format( "%s: Skipping copy of %s to %s because it already exists and has expected size of %s.",
-                                        geoAccession, te.getName(), dest, byteCountToDisplaySize( te.getSize() ) ) );
+                                        geoAccession, fullEntryName, dest, byteCountToDisplaySize( te.getSize() ) ) );
                                 if ( isMexFile( te.getName(), MexFileType.MATRIX ) && barcodesT != null && featuresT != null ) {
                                     // same kind of reasoning here that we use in hasSingleCellData(): if we have barcodes,
                                     // features and matrix is already on-disk, we can avoid reading the matrix
@@ -400,15 +445,24 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
                                 } else {
                                     continue;
                                 }
+                            } else if ( Files.exists( dest ) ) {
+                                log.info( String.format( "%s: Re-downloading %s to %s because its size is mismatched, was expecting a file of %s.",
+                                        geoAccession, fullEntryName, dest, byteCountToDisplaySize( te.getSize() ) ) );
                             }
-                            log.info( String.format( "%s: Copying %s from archive %s to %s...", geoAccession, te.getName(), file, dest ) );
+                            log.info( String.format( "%s: Copying %s to %s...", geoAccession, fullEntryName, dest ) );
                             PathUtils.createParentDirectories( dest );
                             try ( OutputStream os = openGzippedOutputStream( te.getName(), dest ) ) {
-                                String what = te.getName();
+                                String what = fullEntryName;
                                 if ( attempt > 0 ) {
                                     what += " (attempt #" + ( attempt + 1 ) + ")";
                                 }
-                                copiedBytes += IOUtils.copyLarge( new ProgressInputStream( tis, what, MexDetector.class.getName(), te.getSize() ), os );
+                                long c = IOUtils.copyLarge( new ProgressInputStream( tis, what, MexDetector.class.getName(), te.getSize() ), os );
+                                os.close();
+                                log.info( String.format( "%s: Done copying %s to %s.", geoAccession, fullEntryName, dest ) );
+                                if ( !existsAndHasExpectedSize( dest, fullEntryName, te.getSize(), false, true ) ) {
+                                    throw new IOException( String.format( "Unexpected size for %s: it should be %d B but %d B were copied.", dest, te.getSize(), c ) );
+                                }
+                                copiedBytes += c;
                             } catch ( Exception e ) {
                                 // only remove the affected file since we might be retrying, if not the whole directory will be removed
                                 log.warn( String.format( "%s: MEX file %s could not be downloaded successfully, removing %s...", geoAccession, file, dest ), e );
@@ -579,16 +633,37 @@ public class MexDetector extends AbstractSingleCellDetector implements SingleCel
      * Check if a supplementary file should be skipped given an archive entry that has to be consumed.
      */
     private boolean skipForLargeArchiveEntry( String geoAccession, String file, ArchiveEntry te, @Nullable String barcodesT, @Nullable String featuresT, @Nullable String matrixT ) {
-        if ( te.getSize() <= maxEntrySizeInArchiveToSkip )
+        if ( maxEntrySizeInArchiveToSkip == -1 || te.getSize() <= maxEntrySizeInArchiveToSkip )
             return false;
         String m = String.format( "%s: %s has an entry %s of %s exceeding %s",
                 geoAccession, file, te.getName(), byteCountToDisplaySize( te.getSize() ), byteCountToDisplaySize( maxEntrySizeInArchiveToSkip ) );
         if ( barcodesT == null && featuresT == null && matrixT == null ) {
             log.warn( m + ", the rest of the archive will be ignored." );
+            skippedArchives.add( file );
             return true;
         } else {
             log.warn( m + ", but a MEX file was already found, the rest of the archive will be read." );
             return false;
+        }
+    }
+
+    /**
+     * Check if enough entries have been skipped to ignore the whole archive.
+     */
+    private boolean skipForTooManySkippedEntries( String geoAccession, int skipped, String file, @Nullable String barcodesT, @Nullable String featuresT, @Nullable String matrixT ) {
+        if ( maxNumberOfEntriesToSkip == -1 || skipped < maxNumberOfEntriesToSkip ) {
+            return false;
+        }
+        String m = String.format( "%s: %d entries have been skipped from %s", geoAccession, skipped, file );
+        if ( barcodesT == null && featuresT == null && matrixT == null ) {
+            log.warn( m + ", the rest of the archive will be ignored." );
+            skippedArchives.add( file );
+            return true;
+        } else if ( skipped == maxNumberOfEntriesToSkip ) {
+            log.warn( m + ", but a MEX file was already found, the rest of the archive will be read." );
+            return false;
+        } else {
+            return false; // already warned
         }
     }
 

@@ -28,7 +28,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceProcessingServiceImpl;
 import ubic.gemma.core.loader.expression.geo.model.*;
 import ubic.gemma.core.loader.expression.geo.model.GeoDataset.ExperimentType;
@@ -36,6 +35,7 @@ import ubic.gemma.core.loader.expression.geo.model.GeoDataset.PlatformType;
 import ubic.gemma.core.loader.expression.geo.model.GeoReplication.ReplicationType;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries.SeriesType;
 import ubic.gemma.core.loader.expression.geo.model.GeoVariable.VariableType;
+import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
 import ubic.gemma.core.loader.expression.geo.util.GeoConstants;
 import ubic.gemma.core.loader.util.parser.ExternalDatabaseUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -92,8 +92,6 @@ import static ubic.gemma.persistence.util.ByteArrayUtils.*;
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 public class GeoConverterImpl implements GeoConverter {
 
-    private static final int DEFAULT_DEFINITION_OF_TOO_MANY_ELEMENTS = 100000;
-
     /**
      * This string is inserted into the descriptions of constructed biomaterials.
      */
@@ -118,43 +116,49 @@ public class GeoConverterImpl implements GeoConverter {
     private static final String RAT = "Rattus norvegicus";
     private static final Log log = LogFactory.getLog( ArrayDesignSequenceProcessingServiceImpl.class.getName() );
     private static final Map<String, String> organismDatabases = new HashMap<>();
+    private static final ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
 
     static {
         GeoConverterImpl.organismDatabases.put( "Saccharomyces cerevisiae", "SGD" );
         GeoConverterImpl.organismDatabases.put( "Schizosaccharomyces pombe", "GeneDB" );
     }
 
-    private final ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
-    private final Map<String, Taxon> taxonScientificNameMap = new HashMap<>();
-    private final Map<String, Taxon> taxonCommonNameMap = new HashMap<>();
-    /**
-     * More than this and we apply stricter selection criteria for choosing elements to keep on a platform.
-     */
-    @Value("${geo.platform.import.maxelements}")
-    private int tooManyElements = Settings
-            .getInt( "geo.platform.import.maxelements", GeoConverterImpl.DEFAULT_DEFINITION_OF_TOO_MANY_ELEMENTS );
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
     @Autowired
     private TaxonService taxonService;
-    private ExternalDatabase geoDatabase;
-    private Map<String, Map<String, CompositeSequence>> platformDesignElementMap = new HashMap<>();
-    private Collection<Object> results = new HashSet<>();
-    private Map<String, ArrayDesign> seenPlatforms = new HashMap<>();
-    private ExternalDatabase genbank;
+    private final GeoSingleCellDetector singleCellDetector = new GeoSingleCellDetector();
+
+    /**
+     * More than this and we apply stricter selection criteria for choosing elements to keep on a platform.
+     */
+    @Value("${geo.platform.import.maxelements}")
+    private int tooManyElements;
+
+    // configuration
     private boolean splitByPlatform = false;
     private boolean forceConvertElements = false;
     private boolean skipDataVectors = false;
 
+    // commonly used external databases
+    private ExternalDatabase geoDatabase;
+    private ExternalDatabase genbank;
+
+    // internal state of the converter, can be cleared with clear()
+    private final Map<String, Taxon> taxonScientificNameMap = new HashMap<>();
+    private final Map<String, Taxon> taxonCommonNameMap = new HashMap<>();
+    private final Map<String, Map<String, CompositeSequence>> platformDesignElementMap = new HashMap<>();
+    private final Collection<Object> results = new HashSet<>();
+    private final Map<String, ArrayDesign> seenPlatforms = new HashMap<>();
+
     @Override
     public void clear() {
-        results = new HashSet<>();
-        seenPlatforms = new HashMap<>();
-        platformDesignElementMap = new HashMap<>();
+        results.clear();
+        seenPlatforms.clear();
+        platformDesignElementMap.clear();
         taxonCommonNameMap.clear();
         taxonScientificNameMap.clear();
     }
-
 
     @Override
     public Collection<Object> convert( Collection<? extends GeoData> geoObjects ) {
@@ -539,6 +543,9 @@ public class GeoConverterImpl implements GeoConverter {
             }
         }
 
+        // compute it once to save time
+        boolean hasSingleCellDataInSeries = singleCellDetector.hasSingleCellData( series );
+
         for ( GeoSample sample : series.getSamples() ) {
             String reason;
             // this is apparently what we get for microarrays
@@ -561,18 +568,15 @@ public class GeoConverterImpl implements GeoConverter {
                     } else {
                         reason = "Unsupported transcriptomic library strategy.";
                     }
-                }
-                // single-cell RNA-Seq
-                // cannot be grouped with RNA-Seq because we retrieve data from supplementary files, not SRA
-                else if ( sample.getLibSource() != null && sample.getLibSource().equals( GeoLibrarySource.SINGLE_CELL_TRANSCRIPTOMIC ) ) {
-                    if ( sample.getLibStrategy() != null && sample.getLibStrategy().equals( GeoLibraryStrategy.RNA_SEQ ) ) {
-                        continue;
-                    } else {
-                        reason = "Unsupported single-cell transcriptomic library strategy.";
-                    }
                 } else {
                     reason = "Unsupported library source.";
                 }
+            }
+
+            // single-cell RNA-Seq
+            // cannot be grouped with RNA-Seq because we retrieve data from supplementary files, not SRA/MPSS
+            else if ( singleCellDetector.isSingleCell( sample, hasSingleCellDataInSeries ) ) {
+                continue;
             } else {
                 reason = "Unsupported sample type.";
             }

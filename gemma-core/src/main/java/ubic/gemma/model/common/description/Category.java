@@ -1,6 +1,5 @@
 package ubic.gemma.model.common.description;
 
-import lombok.Value;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
@@ -14,12 +13,28 @@ import java.util.Objects;
  * @author poirigui
  * @see Categories
  */
-@Value
 public class Category {
 
-    String category;
+    private final String category;
     @Nullable
-    String categoryUri;
+    private final String categoryUri;
+
+    public Category( String category, String categoryUri ) {
+        if ( category == null && categoryUri != null ) {
+            throw new IllegalArgumentException( "A category with a non-blank URI must have a label." );
+        }
+        this.category = category;
+        this.categoryUri = categoryUri;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    @Nullable
+    public String getCategoryUri() {
+        return categoryUri;
+    }
 
     public boolean equals( Object object ) {
         if ( this == object ) {

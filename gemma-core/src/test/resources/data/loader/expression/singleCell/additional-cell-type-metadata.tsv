@@ -1,0 +1,5 @@
+sample_id	cell_id	category	category_uri	value	value_uri
+A	c2	treatment	""	x	""
+A	c5	genotype	""	A/a	""
+B	c11	treatment	""	y	""
+B	c13	genotype	""	A/b	""

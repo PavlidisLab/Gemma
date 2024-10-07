@@ -5,12 +5,14 @@ import lombok.extern.apachecommons.CommonsLog;
 import no.uib.cipr.matrix.io.MatrixInfo;
 import no.uib.cipr.matrix.io.MatrixVectorReader;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
@@ -139,6 +141,8 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
     @Override
     public Set<QuantitationType> getQuantitationTypes() throws IOException {
         QuantitationType qt = new QuantitationType();
+        qt.setName( "10x MEX" );
+        qt.setDescription( "10x MEX data loaded from: " + matrixFiles.stream().map( Path::getFileName ).map( Path::toString ).collect( Collectors.joining( ", " ) ) + "." );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         boolean allCounts = true;
         for ( Path matrix : matrixFiles ) {
@@ -172,8 +176,13 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
      * MEX does not provide cell type labels.
      */
     @Override
-    public Optional<CellTypeAssignment> getCellTypeAssignment( SingleCellDimension dimension ) {
-        return Optional.empty();
+    public Set<CellTypeAssignment> getCellTypeAssignments( SingleCellDimension dimension ) {
+        throw new UnsupportedOperationException( "Loading cell-type assignments from MEX data is not supported." );
+    }
+
+    @Override
+    public Set<CellLevelCharacteristics> getOtherCellLevelCharacteristics( SingleCellDimension dimension ) {
+        throw new UnsupportedOperationException( "Loading cell-level characteristics from MEX data is not supported." );
     }
 
     /**
@@ -236,9 +245,9 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             for ( String s : readLinesFromPath( genesFile ) ) {
                 String[] pieces = s.split( "\t", 3 );
                 String geneId = pieces[0];
-                String geneSymbol = pieces[1];
                 CompositeSequence probe = elementsMapping.get( geneId );
-                if ( probe == null && allowMappingProbeNamesToGeneSymbols ) {
+                if ( probe == null && pieces.length > 1 && allowMappingProbeNamesToGeneSymbols ) {
+                    String geneSymbol = pieces[1];
                     probe = elementsMapping.get( geneSymbol );
                 }
                 if ( probe == null ) {
@@ -257,15 +266,17 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             }
 
             if ( elementsToSampleMatrixRow.isEmpty() ) {
-                throw new IllegalArgumentException( "None of the elements matched genes from " + genesFile.getFileName() + "." );
+                throw new IllegalArgumentException( "None of the elements matched genes from " + genesFile + "." );
             } else if ( !missingElements.isEmpty() ) {
                 String message;
                 if ( missingElements.size() > 10 ) {
-                    message = String.format( "The supplied mapping does not have elements for %d/%d genes from %s.",
-                            missingElements.size(), elements.size(), genesFile.getFileName() );
+                    ArrayList<String> randomizedMissingElements = new ArrayList<>( missingElements );
+                    Collections.shuffle( randomizedMissingElements );
+                    message = String.format( "The supplied mapping does not have elements for %d/%d genes from %s. Here's 10 random genes that were not mapped: %s",
+                            missingElements.size(), elements.size(), genesFile, randomizedMissingElements.stream().limit( 10 ).collect( Collectors.joining( ", " ) ) );
                 } else {
                     message = String.format( "The supplied mapping does not have elements for the following genes: %s from %s.",
-                            missingElements.stream().sorted().collect( Collectors.joining( ", " ) ), genesFile.getFileName() );
+                            missingElements.stream().sorted().collect( Collectors.joining( ", " ) ), genesFile );
                 }
                 if ( ignoreUnmatchedDesignElements ) {
                     log.warn( message );
@@ -277,14 +288,17 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             StopWatch timer = StopWatch.createStarted();
             CompRowMatrix matrix;
             try ( MatrixVectorReader mvr = readMatrixMarketFromPath( matrixFile ) ) {
+                log.info( "Reading " + matrixFile + "..." );
                 matrix = new CompRowMatrix( mvr );
+            } catch ( RuntimeException e ) {
+                throw new RuntimeException( "Failed to read " + matrixFile + ": " + ExceptionUtils.getRootCauseMessage( e ), e );
             }
-            log.info( String.format( "Loading %s took %d ms", matrixFile.getFileName(), timer.getTime() ) );
+            log.info( String.format( "Loading %s took %d ms", matrixFile, timer.getTime() ) );
 
             Assert.isTrue( matrix.numColumns() == scd.getNumberOfCellsBySample( j ),
-                    "Matrix file " + matrixFile.getFileName() + " does not have the expected number of columns: " + scd.getNumberOfCellsBySample( j ) + "." );
+                    "Matrix file " + matrixFile + " does not have the expected number of columns: " + scd.getNumberOfCellsBySample( j ) + "." );
             Assert.isTrue( matrix.numRows() == elements.size(),
-                    "Matrix file " + matrixFile.getFileName() + " does not have the expected number of rows." );
+                    "Matrix file " + matrixFile + " does not have the expected number of rows." );
 
             matrices.add( matrix );
         }

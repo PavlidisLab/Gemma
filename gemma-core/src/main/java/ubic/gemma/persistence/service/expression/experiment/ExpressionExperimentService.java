@@ -32,7 +32,10 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.*;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
@@ -102,6 +105,15 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void addFactorValues( ExpressionExperiment ee, Map<BioMaterial, FactorValue> fvs );
+
+    /**
+     * Obtain raw vectors for a given QT.
+     * <p>
+     * This is preferable to using {@link ExpressionExperiment#getRawExpressionDataVectors()} as it only loads vectors
+     * relevant to the given QT.
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, QuantitationType qt );
 
     /**
      * Used when we want to add data for a quantitation type. Does not remove any existing vectors.

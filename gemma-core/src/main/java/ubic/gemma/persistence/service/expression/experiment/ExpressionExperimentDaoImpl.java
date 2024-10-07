@@ -63,6 +63,7 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingLong;
+import static ubic.gemma.core.util.ListUtils.validateSparseRangeArray;
 import static ubic.gemma.model.common.description.CharacteristicUtils.*;
 import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialUtils.visitBioMaterials;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.*;
@@ -1966,6 +1967,17 @@ public class ExpressionExperimentDaoImpl
         for ( SingleCellDimension scd : singleCellDimensionsToRemove ) {
             log.info( "Removing " + scd + "..." );
             deleteSingleCellDimension( ee, scd );
+            for ( BioAssay ba : scd.getBioAssays() ) {
+                getSessionFactory().getCurrentSession().delete( ba );
+                BioMaterial bm = ba.getSampleUsed();
+                bm.getBioAssaysUsedIn().remove( ba );
+                bm.getFactorValues().removeAll( fvs );
+                if ( bm.getBioAssaysUsedIn().isEmpty() && bm.getFactorValues().isEmpty() ) {
+                    samplesToRemove.add( ba.getSampleUsed() );
+                } else {
+                    log.warn( bm + " is attached to more than one ExpressionExperiment (via one or more BioAssay or FactorValue), the sample will not be deleted." );
+                }
+            }
         }
 
         super.remove( ee );
@@ -1995,7 +2007,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public void thaw( final ExpressionExperiment expressionExperiment ) {
-        thawWithoutVectors( expressionExperiment );
+        thawLite( expressionExperiment );
         /*
          * Optional because this could be slow.
          */
@@ -2014,7 +2026,7 @@ public class ExpressionExperimentDaoImpl
 
     // "thawLite"
     @Override
-    public void thawWithoutVectors( final ExpressionExperiment ee ) {
+    public void thawLite( final ExpressionExperiment ee ) {
         thawForFrontEnd( ee );
 
         Hibernate.initialize( ee.getQuantitationTypes() );
@@ -2131,6 +2143,16 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public SingleCellDimension getSingleCellDimension( ExpressionExperiment ee, QuantitationType qt ) {
+        return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct scedv.singleCellDimension from SingleCellExpressionDataVector scedv "
+                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", qt )
+                .uniqueResult();
+    }
+
+    @Override
     public SingleCellDimension getPreferredSingleCellDimension( ExpressionExperiment ee ) {
         return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct scedv.singleCellDimension from SingleCellExpressionDataVector scedv "
@@ -2141,12 +2163,79 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public void createSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
+        validateSingleCellDimension( ee, singleCellDimension );
         getSessionFactory().getCurrentSession().persist( singleCellDimension );
     }
 
     @Override
     public void updateSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
+        validateSingleCellDimension( ee, singleCellDimension );
         getSessionFactory().getCurrentSession().update( singleCellDimension );
+    }
+
+    /**
+     * Validate single-cell dimension.
+     */
+    private void validateSingleCellDimension( ExpressionExperiment ee, SingleCellDimension scbad ) {
+        Assert.isTrue( !scbad.getCellIds().isEmpty(), "There must be at least one cell ID." );
+        for ( int i = 0; i < scbad.getBioAssays().size(); i++ ) {
+            List<String> sampleCellIds = scbad.getCellIdsBySample( i );
+            Assert.isTrue( sampleCellIds.stream().distinct().count() == sampleCellIds.size(),
+                    "Cell IDs must be unique for each sample." );
+        }
+        Assert.isTrue( scbad.getCellIds().size() == scbad.getNumberOfCells(),
+                "The number of cell IDs must match the number of cells." );
+        Assert.isTrue( scbad.getCellTypeAssignments().stream().filter( CellTypeAssignment::isPreferred ).count() <= 1,
+                "There must be at most one preferred cell type labelling." );
+        validateCellTypeAssignments( scbad );
+        validateCellLevelCharacteristics( scbad );
+        Assert.isTrue( !scbad.getBioAssays().isEmpty(), "There must be at least one BioAssay." );
+        Assert.isTrue( ee.getBioAssays().containsAll( scbad.getBioAssays() ), "Not all supplied BioAssays belong to " + ee );
+        validateSparseRangeArray( scbad.getBioAssays(), scbad.getBioAssaysOffset(), scbad.getNumberOfCells() );
+    }
+
+    private void validateCellTypeAssignments( SingleCellDimension scbad ) {
+        if ( !Hibernate.isInitialized( scbad.getCellTypeAssignments() ) ) {
+            return; // no need to validate if not initialized
+        }
+        for ( CellTypeAssignment labelling : scbad.getCellTypeAssignments() ) {
+            Assert.notNull( labelling.getCellTypes() );
+            Assert.isTrue( labelling.getCellTypeIndices().length == scbad.getCellIds().size(),
+                    "The number of cell types must match the number of cell IDs." );
+            int numberOfCellTypeLabels = labelling.getCellTypes().size();
+            Assert.isTrue( numberOfCellTypeLabels > 0,
+                    "There must be at least one cell type label declared in the cellTypes collection." );
+            Assert.isTrue( labelling.getCellTypes().stream().distinct().count() == labelling.getCellTypes().size(),
+                    "Cell type labels must be unique." );
+            Assert.isTrue( numberOfCellTypeLabels == labelling.getNumberOfCellTypes(),
+                    "The number of cell types must match the number of values the cellTypes collection." );
+            for ( int k : labelling.getCellTypeIndices() ) {
+                Assert.isTrue( ( k >= 0 && k < numberOfCellTypeLabels ) || k == CellLevelCharacteristics.UNKNOWN_CHARACTERISTIC,
+                        String.format( "Cell type vector values must be within the [%d, %d[ range or use %d as an unknown indicator.",
+                                0, numberOfCellTypeLabels, CellLevelCharacteristics.UNKNOWN_CHARACTERISTIC ) );
+            }
+            for ( Characteristic c : labelling.getCellTypes() ) {
+                Assert.isTrue( CharacteristicUtils.hasCategory( c, Categories.CELL_TYPE ), "All cell types must have the " + Categories.CELL_TYPE + " category." );
+            }
+        }
+    }
+
+    private void validateCellLevelCharacteristics( SingleCellDimension scbad ) {
+        if ( !Hibernate.isInitialized( scbad.getCellLevelCharacteristics() ) ) {
+            return; // no need to validate if not initialized
+        }
+        for ( CellLevelCharacteristics clc : scbad.getCellLevelCharacteristics() ) {
+            Assert.isTrue( clc.getIndices().length == scbad.getCellIds().size(),
+                    "The number of cell-level characteristics must match the number of cell IDs." );
+            int numberOfCharacteristics = clc.getCharacteristics().size();
+            Assert.isTrue( numberOfCharacteristics == clc.getNumberOfCharacteristics(),
+                    "The number of cell-level characteristics must match the size of the characteristics collection." );
+            for ( int k : clc.getIndices() ) {
+                Assert.isTrue( ( k >= 0 && k < numberOfCharacteristics ) || k == CellTypeAssignment.UNKNOWN_CELL_TYPE,
+                        String.format( "Cell-level characteristics vector values must be within the [%d, %d[ range or use %d as an unknown indicator.",
+                                0, numberOfCharacteristics, CellTypeAssignment.UNKNOWN_CELL_TYPE ) );
+            }
+        }
     }
 
     @Override
@@ -2201,12 +2290,6 @@ public class ExpressionExperimentDaoImpl
                 .setParameter( "c", category.getCategoryUri() != null ? category.getCategoryUri() : category.getCategory() )
                 .list() );
         return results;
-    }
-
-    @Override
-    public CellTypeAssignment createCellTypeAssignment( ExpressionExperiment ee, CellTypeAssignment assignment ) {
-        getSessionFactory().getCurrentSession().persist( assignment );
-        return assignment;
     }
 
     @Override
@@ -2545,6 +2628,16 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, QuantitationType qt ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select v from RawExpressionDataVector v where v.expressionExperiment = :ee and v.quantitationType = :qt" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", qt )
+                .list();
+    }
+
+    @Override
     public int addRawDataVectors( ExpressionExperiment ee, QuantitationType newQt, Collection<RawExpressionDataVector> newVectors ) {
         Assert.notNull( ee.getId(), "ExpressionExperiment must be persistent." );
         Assert.isTrue( !newVectors.isEmpty(), "At least one vectors must be provided, use removeAllRawDataVectors() to delete vectors instead." );
@@ -2782,7 +2875,12 @@ public class ExpressionExperimentDaoImpl
     private void checkVectors( ExpressionExperiment ee, QuantitationType qt, Collection<? extends BulkExpressionDataVector> vectors ) {
         BioAssayDimension bad = vectors.iterator().next().getBioAssayDimension();
         Assert.notNull( bad.getId(), "Vectors must have a persistent dimension." );
-        Assert.isTrue( ee.getBioAssays().containsAll( bad.getBioAssays() ), "The BioAssayDimension must be a subset of the experiment's BioAssays." );
+        // a BA might belong to a subset of the experiment for single-cell experiments, so we only check direct BAs that
+        // are not derived
+        Set<BioAssay> directBas = bad.getBioAssays().stream()
+                .filter( ba -> ba.getSampleUsed().getSourceBioMaterial() == null )
+                .collect( Collectors.toSet() );
+        Assert.isTrue( ee.getBioAssays().containsAll( directBas ), "The BioAssayDimension must be a subset of the experiment's BioAssays." );
         Assert.isTrue( vectors.stream().allMatch( v -> v.getId() == null ), "All vectors must be transient" );
         Assert.isTrue( vectors.stream().map( DataVector::getExpressionExperiment ).allMatch( e -> e == ee ), "All vectors must belong to " + ee );
         Assert.isTrue( vectors.stream().map( DesignElementDataVector::getQuantitationType ).allMatch( q -> q == qt ), "All vectors must use " + qt );
@@ -2793,6 +2891,7 @@ public class ExpressionExperimentDaoImpl
                     "All vectors must contain " + bad.getBioAssays().size() + " values, expected size is " + expectedVectorSizeInBytes + " B." );
         }
     }
+
 
     private void populateSingleCellMetadata( Collection<ExpressionExperimentValueObject> eevos ) {
         if ( eevos.isEmpty() ) {

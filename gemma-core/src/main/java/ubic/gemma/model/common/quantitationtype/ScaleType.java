@@ -25,6 +25,7 @@ public enum ScaleType {
     LINEAR,
     /**
      * Data is log-transformed with a natural log.
+     * @see Math#log(double)
      */
     LN,
     /**
@@ -33,10 +34,12 @@ public enum ScaleType {
     LOG2,
     /**
      * Data is log-transformed with a base 10 log.
+     * @see Math#log10(double)
      */
     LOG10,
     /**
      * Data is log-transformed as per {@code ln X + 1}
+     * @see Math#log1p(double)
      */
     LOG1P,
     /**

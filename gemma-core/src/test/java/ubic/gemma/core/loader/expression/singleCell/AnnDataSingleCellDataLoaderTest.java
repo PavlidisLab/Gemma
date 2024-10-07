@@ -3,6 +3,7 @@ package ubic.gemma.core.loader.expression.singleCell;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -47,7 +48,9 @@ public class AnnDataSingleCellDataLoaderTest {
                 .hasSize( 1000 )
                 .startsWith( "SLC4A1AP" );
 
-        assertThat( loader.getCellTypeAssignment( dimension ) ).hasValueSatisfying( assignment -> {
+        assertThat( loader.getCellTypeAssignments( dimension ) )
+                .singleElement()
+                .satisfies( assignment -> {
             assertThat( assignment.getCellTypes() )
                     .hasSize( 8 )
                     .extracting( Characteristic::getValue )
@@ -57,6 +60,17 @@ public class AnnDataSingleCellDataLoaderTest {
             assertThat( assignment.getCellTypeIndices() )
                     .startsWith( 7, 6, 6, 3, 4, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 6, 4, 6, 6, 0, 6 );
         } );
+
+        assertThat( loader.getOtherCellLevelCharacteristics( dimension ) )
+                .hasSize( 15 )
+                .allSatisfy( s -> {
+                    assertThat( s.getCharacteristics() )
+                            .allSatisfy( c -> {
+                                assertThat( c )
+                                        .satisfies( CharacteristicUtils::isUncategorized )
+                                        .satisfies( CharacteristicUtils::isFreeText );
+                            } );
+                } );
 
         assertThat( loader.getSamplesCharacteristics( bas ) )
                 .hasSize( 22 )

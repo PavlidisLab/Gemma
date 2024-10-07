@@ -108,22 +108,32 @@ public abstract class AbstractSingleFileInSeriesSingleCellDetector extends Abstr
         Assert.isTrue( series.getSupplementaryFiles().contains( file ), series.getGeoAccession() + " does not have a supplementary file named " + file );
 
         Path dest = getDest( series );
-        if ( existsAndHasExpectedSize( dest, file, true ) ) {
+        long expectedContentLength = getSizeInBytes( file );
+        if ( existsAndHasExpectedSize( dest, file, expectedContentLength, true, false ) ) {
             log.info( String.format( "%s: Skipping download of %s to %s because it already exists and has expected size.",
                     series.getGeoAccession(), file, dest ) );
             return dest;
+        } else if ( Files.exists( dest ) ) {
+            log.info( String.format( "%s: Re-downloading %s to %s because its size is mismatched.",
+                    series.getGeoAccession(), file, dest ) );
         }
 
         log.info( series.getGeoAccession() + ": Retrieving " + name + " file " + file + " to " + dest + "..." );
         return retry( ( attempt, lastAttempt ) -> {
             PathUtils.createParentDirectories( dest );
             StopWatch timer = StopWatch.createStarted();
-            try ( InputStream is = openSupplementaryFileAsStream( file, attempt, true ) ) {
-                OutputStream os = Files.newOutputStream( dest );
+            try ( InputStream is = openSupplementaryFileAsStream( file, attempt, true );
+                    OutputStream os = Files.newOutputStream( dest ); ) {
                 long downloadedBytes = IOUtils.copyLarge( is, os );
+                // make sure we're done with the file I/O before checking its size
+                os.close();
                 log.info( String.format( "%s: Retrieved " + name + " file (%s in %s @ %s/s).", series.getGeoAccession(),
                         byteCountToDisplaySize( downloadedBytes ), timer,
                         byteCountToDisplaySize( 1000.0 * downloadedBytes / timer.getTime() ) ) );
+                if ( !existsAndHasExpectedSize( dest, file, expectedContentLength, true, false ) ) {
+                    throw new IOException( String.format( "Unexpected size for %s: %d B were expected but %d B were copied.",
+                            dest, expectedContentLength, downloadedBytes ) );
+                }
                 return dest;
             } catch ( Exception e ) {
                 log.warn( String.format( "%s: %s file could not be downloaded successfully, removing %s...",

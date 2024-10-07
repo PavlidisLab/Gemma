@@ -277,7 +277,7 @@ public interface ExpressionExperimentDao
 
     void thaw( ExpressionExperiment expressionExperiment );
 
-    void thawWithoutVectors( ExpressionExperiment expressionExperiment );
+    void thawLite( ExpressionExperiment expressionExperiment );
 
     void thawBioAssays( ExpressionExperiment expressionExperiment );
 
@@ -352,6 +352,8 @@ public interface ExpressionExperimentDao
      */
     long countBioMaterials( @Nullable Filters filters );
 
+    Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, QuantitationType qt );
+
     /**
      * Add raw data vectors with the given quantitation type.
      * @return the number of raw data vectors created
@@ -410,13 +412,27 @@ public interface ExpressionExperimentDao
     List<SingleCellDimension> getSingleCellDimensions( ExpressionExperiment ee );
 
     /**
+     * Obtain the single-cell dimension used by a specific QT.
+     */
+    @Nullable
+    SingleCellDimension getSingleCellDimension( ExpressionExperiment ee, QuantitationType quantitationType );
+
+    /**
      * Obtain the preferred single cell dimension, that is the dimension associated to the preferred set of single-cell vectors.
      */
     @Nullable
     SingleCellDimension getPreferredSingleCellDimension( ExpressionExperiment ee );
 
+    /**
+     * Create a single-cell dimension for a given experiment.
+     * @throws IllegalArgumentException if the single-cell dimension is invalid
+     */
     void createSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
 
+    /**
+     * Update a single-cell dimensino for a given experiment.
+     * @throws IllegalArgumentException if the single-cell dimension is invalid
+     */
     void updateSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
 
     /**
@@ -444,13 +460,6 @@ public interface ExpressionExperimentDao
      * Obtain all cell-level characteristics from all single cell dimensions matching the given category.
      */
     List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee, Category category );
-
-    /**
-     * Add the given cell type assignment to the single-cell dimension.
-     * <p>
-     * If the new labelling is preferred, any existing one is marked as non-preferred.
-     */
-    CellTypeAssignment createCellTypeAssignment( ExpressionExperiment ee, CellTypeAssignment cellTypeAssignment );
 
     List<Characteristic> getCellTypes( ExpressionExperiment ee );
 

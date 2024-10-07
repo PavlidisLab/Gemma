@@ -41,15 +41,11 @@ public class SingleCellExpressionExperimentSplitServiceImpl implements SingleCel
     @Override
     @Transactional
     public List<ExpressionExperimentSubSet> splitByCellType( ExpressionExperiment ee ) {
-        CellTypeAssignment cta = singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee );
-        if ( cta == null ) {
-            throw new IllegalStateException( ee + " does not have a preferred cell type assignment." );
-        }
+        CellTypeAssignment cta = singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee )
+                .orElseThrow( () -> new IllegalStateException( ee + " does not have a preferred cell type assignment." ) );
         // the characteristics from the CTA have to be mapped with the statements from the factor values
-        ExperimentalFactor cellTypeFactor = singleCellExpressionExperimentService.getCellTypeFactor( ee );
-        if ( cellTypeFactor == null ) {
-            throw new IllegalStateException( ee + " does not have a cell type factor." );
-        }
+        ExperimentalFactor cellTypeFactor = singleCellExpressionExperimentService.getCellTypeFactor( ee )
+                .orElseThrow( () -> new IllegalStateException( ee + " does not have a cell type factor." ) );
         return splitByCellType( ee, cta, cellTypeFactor );
     }
 

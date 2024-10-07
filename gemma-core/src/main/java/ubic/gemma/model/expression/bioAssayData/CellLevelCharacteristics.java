@@ -9,6 +9,8 @@ import java.util.List;
 /**
  * Characteristics applicable to individual cells in a {@link SingleCellDimension}.
  * @author poirigui
+ * @see CellTypeAssignment
+ * @see GenericCellLevelCharacteristics
  */
 public interface CellLevelCharacteristics extends Identifiable {
 
@@ -16,6 +18,16 @@ public interface CellLevelCharacteristics extends Identifiable {
      * Indicator for an unknown characteristic.
      */
     int UNKNOWN_CHARACTERISTIC = -1;
+
+    /**
+     * List of characteristic.
+     */
+    List<Characteristic> getCharacteristics();
+
+    /**
+     * The number of characteristics in {@link #getCharacteristics()}.
+     */
+    int getNumberOfCharacteristics();
 
     /**
      * Each entry indicate which characteristic from {@link #getCharacteristics()} is applicable for a given cell.
@@ -27,11 +39,17 @@ public interface CellLevelCharacteristics extends Identifiable {
      */
     int[] getIndices();
 
-    /**
-     * List of characteristic.
-     */
-    List<Characteristic> getCharacteristics();
-
     @Nullable
     Characteristic getCharacteristic( int cellIndex );
+
+    class Factory {
+
+        public static CellLevelCharacteristics newInstance( List<Characteristic> characteristics, int[] indices ) {
+            GenericCellLevelCharacteristics ret = new GenericCellLevelCharacteristics();
+            ret.setCharacteristics( characteristics );
+            ret.setNumberOfCharacteristics( characteristics.size() );
+            ret.setIndices( indices );
+            return ret;
+        }
+    }
 }

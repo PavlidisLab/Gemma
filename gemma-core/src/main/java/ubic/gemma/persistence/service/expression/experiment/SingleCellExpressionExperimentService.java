@@ -16,22 +16,38 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface SingleCellExpressionExperimentService {
 
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    /**
+     * Load an experiment with its single-cell data vectors initialized.
+     * <p>
+     * The rest of the experiment is also initialized as per {@link ExpressionExperimentDao#thawLite(ExpressionExperiment)}.
+     */
+    @Nullable
+    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
+    ExpressionExperiment loadWithSingleCellVectors( Long id );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     List<QuantitationType> getSingleCellQuantitationTypes( ExpressionExperiment ee );
 
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
-    Collection<SingleCellExpressionDataVector> getPreferredSingleCellDataVectors( ExpressionExperiment ee );
+    /**
+     * Obtain preferred single-cell vectors.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Optional<Collection<SingleCellExpressionDataVector>> getPreferredSingleCellDataVectors( ExpressionExperiment ee );
 
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    /**
+     * Obtain single-cell vectors for a given quantitation type.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType );
 
     /**
      * Obtain a single-cell expression data matrix for the given quantitation type.
      */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     SingleCellExpressionDataMatrix<Double> getSingleCellExpressionDataMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType );
 
     /**
@@ -60,17 +76,30 @@ public interface SingleCellExpressionExperimentService {
     /**
      * Obtain all the single-cell dimensions used by a given dataset.
      */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     List<SingleCellDimension> getSingleCellDimensions( ExpressionExperiment ee );
 
     /**
-     * Obtain the single-cell dimension associated to the preferred set of single-cell vectors.
-     * <p>
-     * Cell type assignments are eagerly initialized.
+     * Obtain a single-cell dimension used for a given dataset and QT.
      */
-    @Nullable
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
-    SingleCellDimension getPreferredSingleCellDimensionWithCellTypeAssignments( ExpressionExperiment ee );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    SingleCellDimension getSingleCellDimensionWithCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt );
+
+    /**
+     * Obtain the preferred single-cell dimension.
+     * <p>
+     * Cell type assignments and other cell-level characteristics are eagerly initialized.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Optional<SingleCellDimension> getPreferredSingleCellDimension( ExpressionExperiment ee );
+
+    /**
+     * Obtain the preferred single-cell dimension.
+     * <p>
+     * Cell type assignments and other cell-level characteristics are eagerly initialized.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Optional<SingleCellDimension> getPreferredSingleCellDimensionWithCellLevelCharacteristics( ExpressionExperiment ee );
 
     /**
      * Relabel the cell types of an existing set of single-cell vectors.
@@ -79,38 +108,54 @@ public interface SingleCellExpressionExperimentService {
      * @param labellingProtocol the protocol used to generate the new labelling, or null if unknown
      * @return a new, preferred cell type labelling
      */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     CellTypeAssignment relabelCellTypes( ExpressionExperiment ee, SingleCellDimension dimension, List<String> newCellTypeLabels, @Nullable Protocol labellingProtocol, @Nullable String description );
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    CellTypeAssignment addCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment cellTypeAssignment );
 
     /**
      * Remove the given cell type assignment.
      * <p>
      * If the cell type labelling is preferred and applies to the preferred vectors as per {@link #getPreferredCellTypeAssignment(ExpressionExperiment)}, the cell type factor will be removed.
      */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension scd, CellTypeAssignment cellTypeAssignment );
 
     /**
      * Obtain all the cell type labellings from all single-cell vectors.
      */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     List<CellTypeAssignment> getCellTypeAssignments( ExpressionExperiment ee );
 
     /**
      * Obtain the preferred cell type labelling from the preferred single-cell vectors.
      */
-    @Nullable
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
-    CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Optional<CellTypeAssignment> getPreferredCellTypeAssignment( ExpressionExperiment ee );
+
+    /**
+     * Add new cell-level characteristics.
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    CellLevelCharacteristics addCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDimension scd, CellLevelCharacteristics clc );
+
+    /**
+     * Remove existing cell-level characteristics.
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void removeCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDimension scd, CellLevelCharacteristics clc );
 
     /**
      * @see ExpressionExperimentDao#getCellLevelCharacteristics(ExpressionExperiment)
      */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee );
 
     /**
      * Obtain CLC for given category.
      */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee, Category category );
 
     /**
@@ -118,7 +163,7 @@ public interface SingleCellExpressionExperimentService {
      * <p>
      * Only the cell types applicable to the preferred single-cell vectors and labelling are returned.
      */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     List<Characteristic> getCellTypes( ExpressionExperiment ee );
 
     /**
@@ -126,9 +171,8 @@ public interface SingleCellExpressionExperimentService {
      * @return a cell type factor, or null of none exist
      * @throws IllegalStateException if there is more than one such factor
      */
-    @Nullable
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
-    ExperimentalFactor getCellTypeFactor( ExpressionExperiment ee );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Optional<ExperimentalFactor> getCellTypeFactor( ExpressionExperiment ee );
 
     /**
      * Recreate the cell type factor based on the preferred labelling of the preferred single-cell vectors.

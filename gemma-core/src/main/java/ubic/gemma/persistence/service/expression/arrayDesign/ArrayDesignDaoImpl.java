@@ -51,6 +51,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.EE2AD_QUERY_SPACE;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
 import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
@@ -380,10 +381,12 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public Map<CompositeSequence, List<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign ) {
+        Map<Long, CompositeSequence> idMap = IdentifiableUtils.getIdMap( arrayDesign.getCompositeSequences() );
         //noinspection unchecked
-        List<Object[]> results = getSessionFactory().getCurrentSession().createSQLQuery(
-                        "select gene2cs.CS, gene2cs.GENE from GENE2CS gene2cs "
-                                + "where gene2cs.AD = :arrayDesignId" )
+        List<Object[]> results = getSessionFactory().getCurrentSession()
+                .createSQLQuery( "select gene2cs.CS, {G.*} from GENE2CS gene2cs join CHROMOSOME_FEATURE G on gene2cs.GENE = G.ID where gene2cs.AD = :arrayDesignId" )
+                .addScalar( "CS", StandardBasicTypes.LONG )
+                .addEntity( "G", Gene.class )
                 .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
                 .addSynchronizedEntityClass( ArrayDesign.class )
                 .addSynchronizedEntityClass( CompositeSequence.class )
@@ -393,8 +396,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 .list();
         return results.stream()
                 .collect( Collectors.groupingBy(
-                        row -> ( CompositeSequence ) getSessionFactory().getCurrentSession().load( CompositeSequence.class, ( Long ) row[0] ),
-                        Collectors.mapping( row -> ( Gene ) getSessionFactory().getCurrentSession().load( Gene.class, ( Long ) row[1] ), Collectors.toList() ) ) );
+                        row -> requireNonNull( idMap.get( ( Long ) row[0] ) ),
+                        Collectors.mapping( row -> ( Gene ) row[1], Collectors.toList() ) ) );
     }
 
     @Override

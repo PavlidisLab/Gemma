@@ -23,6 +23,7 @@ import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
+import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 
 import javax.annotation.Nullable;
@@ -172,9 +173,15 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
         }
 
         public static ExperimentalFactor newInstance( String name, FactorType factorType ) {
-            ExperimentalFactor experimentalFactor = new ExperimentalFactor();
+            ExperimentalFactor experimentalFactor = newInstance();
             experimentalFactor.setName( name );
             experimentalFactor.setType( factorType );
+            return experimentalFactor;
+        }
+
+        public static ExperimentalFactor newInstance( String name, FactorType factorType, Category category ) {
+            ExperimentalFactor experimentalFactor = newInstance( name, factorType );
+            experimentalFactor.setCategory( Characteristic.Factory.newInstance( category ) );
             return experimentalFactor;
         }
     }

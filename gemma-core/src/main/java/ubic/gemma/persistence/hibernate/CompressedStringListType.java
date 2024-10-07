@@ -11,6 +11,7 @@ import org.springframework.jdbc.support.lob.DefaultLobHandler;
 import org.springframework.jdbc.support.lob.LobHandler;
 import org.springframework.util.Assert;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -74,7 +75,7 @@ public class CompressedStringListType implements UserType, ParameterizedType {
     }
 
     @Override
-    public void nullSafeSet( PreparedStatement st, Object value, int index, SessionImplementor session ) throws HibernateException, SQLException {
+    public void nullSafeSet( PreparedStatement st, @Nullable Object value, int index, SessionImplementor session ) throws HibernateException, SQLException {
         Assert.notNull( delimiter, "The 'delimiter' parameter must be set." );
         byte[] blob;
         if ( value != null ) {
@@ -96,7 +97,8 @@ public class CompressedStringListType implements UserType, ParameterizedType {
     }
 
     @Override
-    public Object deepCopy( Object value ) throws HibernateException {
+    public Object deepCopy( @Nullable Object value ) throws HibernateException {
+        //noinspection unchecked
         return value != null ? new ArrayList<>( ( List<String> ) value ) : null;
     }
 
@@ -106,12 +108,13 @@ public class CompressedStringListType implements UserType, ParameterizedType {
     }
 
     @Override
-    public Serializable disassemble( Object value ) throws HibernateException {
+    public Serializable disassemble( @Nullable Object value ) throws HibernateException {
+        //noinspection unchecked
         return value != null ? String.join( delimiter, ( List<String> ) value ) : null;
     }
 
     @Override
-    public Object assemble( Serializable cached, Object owner ) throws HibernateException {
+    public Object assemble( @Nullable Serializable cached, Object owner ) throws HibernateException {
         return cached != null ? Arrays.asList( StringUtils.split( ( String ) cached, delimiter ) ) : null;
     }
 
@@ -121,8 +124,8 @@ public class CompressedStringListType implements UserType, ParameterizedType {
     }
 
     @Override
-    public void setParameterValues( Properties parameters ) {
-        this.delimiter = ( String ) requireNonNull( parameters.get( "delimiter" ),
-                "A non-null value must be used as delimiter." );
+    public void setParameterValues( @Nullable Properties parameters ) {
+        String m = "A non-null value must be used as delimiter.";
+        this.delimiter = ( String ) requireNonNull( requireNonNull( parameters, m ).get( "delimiter" ), m );
     }
 }

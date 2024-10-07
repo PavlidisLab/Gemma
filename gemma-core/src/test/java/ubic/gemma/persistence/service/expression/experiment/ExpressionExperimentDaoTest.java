@@ -98,7 +98,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         ee.setNumberOfDataVectors( 1 );
         expressionExperimentDao.thaw( ee );
         expressionExperimentDao.thawBioAssays( ee );
-        expressionExperimentDao.thawWithoutVectors( ee );
+        expressionExperimentDao.thawLite( ee );
         expressionExperimentDao.thawForFrontEnd( ee );
     }
 
@@ -131,11 +131,11 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     }
 
     @Test
-    public void testThawWithoutVectors() {
+    public void testThawLite() {
         ee = createExpressionExperiment();
         ee = reload( ee );
         assertFalse( Hibernate.isInitialized( ee.getExperimentalDesign() ) );
-        expressionExperimentDao.thawWithoutVectors( ee );
+        expressionExperimentDao.thawLite( ee );
         assertTrue( Hibernate.isInitialized( ee.getExperimentalDesign() ) );
     }
 

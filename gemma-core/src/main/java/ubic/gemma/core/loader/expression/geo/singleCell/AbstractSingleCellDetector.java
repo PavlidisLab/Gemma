@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.zip.GZIPInputStream;
 
@@ -58,19 +59,24 @@ public abstract class AbstractSingleCellDetector implements SingleCellDetector {
 
     /**
      * Check if a file at a given destination exists and has the size of a remote file.
-     * @param decompressIfNeeded if true and the remote file is gzipped, will only check if the local file has a size
-     *                           that is greater or equal
+     * @param dest                  file at destination
+     * @param remoteFile            filename at origin
+     * @param expectedContentLength expected size, or -1 if unknown
+     * @param decompressIfNeeded    if true and the remote file is gzipped, will only check if the local file exists
+     * @param storeCompressed       if true and the remote file is *not* gzipped, will only check if the local file exists
      */
-    protected boolean existsAndHasExpectedSize( Path dest, String remoteFile, boolean decompressIfNeeded ) throws IOException {
-        Assert.notNull( ftpClientFactory, "An FTP client factory must be set" );
-        if ( !dest.toFile().exists() ) {
+    protected boolean existsAndHasExpectedSize( Path dest, String remoteFile, long expectedContentLength, boolean decompressIfNeeded, boolean storeCompressed ) throws IOException {
+        if ( !Files.exists( dest ) ) {
             return false;
         }
         if ( decompressIfNeeded && remoteFile.endsWith( ".gz" ) ) {
             log.warn( "Cannot check if " + dest + " has expected size since it was decompressed." );
             return true;
         }
-        long expectedContentLength = getSizeInBytes( remoteFile );
+        if ( storeCompressed && !remoteFile.endsWith( ".gz" ) ) {
+            log.warn( "Cannot check if " + dest + " has expected size since it was compressed for storage." );
+            return true;
+        }
         return expectedContentLength != -1 && dest.toFile().length() == expectedContentLength;
     }
 
@@ -98,7 +104,8 @@ public abstract class AbstractSingleCellDetector implements SingleCellDetector {
         }
     }
 
-    private long getSizeInBytes( String remoteFile ) throws IOException {
+    protected long getSizeInBytes( String remoteFile ) throws IOException {
+        Assert.notNull( ftpClientFactory, "An FTP client factory must be set for checking remote file size." );
         URL url = new URL( remoteFile );
         long expectedContentLength;
         if ( url.getProtocol().equals( "ftp" ) ) {

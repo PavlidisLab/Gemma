@@ -60,16 +60,18 @@ public class AnnDataSingleCellDataLoaderIntegrationTest extends BaseIntegrationT
         loader.setUnknownCellTypeIndicator( "UNK_ALL" );
 
         loader.setCellTypeFactorName( "celltype1" );
-        assertThat( loader.getCellTypeAssignment( dimension ) )
-                .hasValueSatisfying( cta -> {
+        assertThat( loader.getCellTypeAssignments( dimension ) )
+                .singleElement()
+                .satisfies( cta -> {
                     assertThat( cta.getCellTypes() )
                             .extracting( Characteristic::getValue )
                             .containsExactlyInAnyOrder( "Astrocytes", "Endothelial", "Interneurons", "MSNs", "Microglia", "Mural/Fibroblast", "Oligos", "Oligos_Pre" );
                 } );
 
         loader.setCellTypeFactorName( "celltype2" );
-        assertThat( loader.getCellTypeAssignment( dimension ) )
-                .hasValueSatisfying( cta -> {
+        assertThat( loader.getCellTypeAssignments( dimension ) )
+                .singleElement()
+                .satisfies( cta -> {
                     assertThat( cta.getCellTypes() )
                             .extracting( Characteristic::getValue )
                             .containsExactlyInAnyOrder( "Astrocytes", "D1-Matrix", "D1-Striosome", "D1/D2-Hybrid", "D2-Matrix", "D2-Striosome", "Endothelial", "Interneurons", "Microglia", "Mural/Fibroblast", "Oligos", "Oligos_Pre", "UNK_MSN" );
@@ -77,8 +79,9 @@ public class AnnDataSingleCellDataLoaderIntegrationTest extends BaseIntegrationT
 
         loader.setCellTypeFactorName( "celltype3" );
         loader.setUnknownCellTypeIndicator( null );
-        assertThat( loader.getCellTypeAssignment( dimension ) )
-                .hasValueSatisfying( cta -> {
+        assertThat( loader.getCellTypeAssignments( dimension ) )
+                .singleElement()
+                .satisfies( cta -> {
                     assertThat( cta.getCellTypes() )
                             .extracting( Characteristic::getValue )
                             .containsExactlyInAnyOrder( "Astrocytes", "D1-Matrix", "D1-Striosome", "D1/D2-Hybrid", "D2-Matrix", "D2-Striosome", "Endothelial", "Int-CCK", "Int-PTHLH", "Int-SST", "Int-TH", "Microglia", "Mural", "Oligos", "Oligos_Pre" );

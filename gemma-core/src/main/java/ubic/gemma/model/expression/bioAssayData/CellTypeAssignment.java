@@ -13,7 +13,9 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * Represents the labelling of cell types.
+ * Represents a cell type assignment where cells from a given dataset are assigned cell types.
+ * @author poirigui
+ * @see SingleCellDimension
  */
 @Getter
 @Setter
@@ -25,7 +27,9 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
     public static final int UNKNOWN_CELL_TYPE = UNKNOWN_CHARACTERISTIC;
 
     /**
-     * Indicate if this labelling is the preferred one.
+     * Indicate if this assignment is the preferred one.
+     * <p>
+     * There can only be one preferred cell type assignment for a given {@link SingleCellDimension}.
      */
     private boolean preferred;
 
@@ -46,7 +50,7 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
      * <p>
      * This must always be equal to number of elements of {@link #cellTypes}.
      */
-    private Integer numberOfCellTypes;
+    private int numberOfCellTypes;
 
     /**
      * Obtain the type assignment of a given cell.
@@ -65,19 +69,27 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
     }
 
     /**
-     * Use {@link #getCellTypeIndices()} instead.
-     */
-    @Override
-    public int[] getIndices() {
-        return getCellTypeIndices();
-    }
-
-    /**
-     * Use {@link #getCellTypes()} instead.
+     * @deprecated Use {@link #getCellTypes()} instead.
      */
     @Override
     public List<Characteristic> getCharacteristics() {
         return getCellTypes();
+    }
+
+    /**
+     * @deprecated Use {@link #getNumberOfCellTypes()} instead.
+     */
+    @Override
+    public int getNumberOfCharacteristics() {
+        return getNumberOfCellTypes();
+    }
+
+    /**
+     * @deprecated Use {@link #getCellTypeIndices()} instead.
+     */
+    @Override
+    public int[] getIndices() {
+        return getCellTypeIndices();
     }
 
     /**
@@ -91,7 +103,7 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
 
     @Override
     public int hashCode() {
-        return Objects.hash( Arrays.hashCode( cellTypeIndices ), cellTypes );
+        return Objects.hash( super.hashCode(), Arrays.hashCode( cellTypeIndices ), cellTypes );
     }
 
     @Override
@@ -111,6 +123,18 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
     @Override
     public String toString() {
         return super.toString()
-                + ( cellTypes != null ? " Cell Types=" + cellTypes.stream().map( Characteristic::getValue ).collect( Collectors.joining( ", " ) ) : "" );
+                + ( cellTypes != null ? " Cell Types=" + cellTypes.stream().map( Characteristic::getValue ).collect( Collectors.joining( ", " ) ) : "" )
+                + ( preferred ? " [Preferred]" : "" );
+    }
+
+    public static class Factory {
+
+        public static CellTypeAssignment newInstance( List<Characteristic> characteristics, int[] indices ) {
+            CellTypeAssignment cta = new CellTypeAssignment();
+            cta.setCellTypes( characteristics );
+            cta.setCellTypeIndices( indices );
+            cta.setNumberOfCellTypes( characteristics.size() );
+            return cta;
+        }
     }
 }

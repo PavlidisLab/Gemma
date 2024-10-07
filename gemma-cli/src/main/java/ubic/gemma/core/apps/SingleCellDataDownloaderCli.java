@@ -147,6 +147,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         options.addOption( Option.builder( MEX_BARCODES_FILE_SUFFIX ).longOpt( "mex-barcodes-file" ).hasArg().desc( "Suffix to use to detect MEX barcodes file. Only works if -dataType/--data-type is set to MEX." ).build() );
         options.addOption( Option.builder( MEX_FEATURES_FILE_SUFFIX ).longOpt( "mex-features-file" ).hasArg().desc( "Suffix to use to detect MEX features file. Only works if -dataType/--data-type is set to MEX." ).build() );
         options.addOption( Option.builder( MEX_MATRIX_FILE_SUFFIX ).longOpt( "mex-matrix-file" ).hasArg().desc( "Suffix to use to detect MEX matrix file. Only works if -dataType/--data-type is set to MEX." ).build() );
+        addBatchOption( options );
         addThreadsOption( options );
     }
 

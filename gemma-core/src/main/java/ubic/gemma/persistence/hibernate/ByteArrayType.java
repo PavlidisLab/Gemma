@@ -9,6 +9,7 @@ import org.springframework.jdbc.support.lob.LobHandler;
 import org.springframework.util.Assert;
 import ubic.gemma.persistence.util.ByteArrayUtils;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -98,7 +99,7 @@ public class ByteArrayType implements UserType, ParameterizedType {
     }
 
     @Override
-    public void nullSafeSet( PreparedStatement st, Object value, int index, SessionImplementor session ) throws HibernateException, SQLException {
+    public void nullSafeSet( PreparedStatement st, @Nullable Object value, int index, SessionImplementor session ) throws HibernateException, SQLException {
         byte[] blob;
         if ( value != null ) {
             switch ( arrayType ) {
@@ -118,7 +119,7 @@ public class ByteArrayType implements UserType, ParameterizedType {
     }
 
     @Override
-    public Object deepCopy( Object value ) throws HibernateException {
+    public Object deepCopy( @Nullable Object value ) throws HibernateException {
         if ( value == null ) {
             return null;
         }
@@ -153,7 +154,7 @@ public class ByteArrayType implements UserType, ParameterizedType {
     }
 
     @Override
-    public void setParameterValues( Properties parameters ) {
+    public void setParameterValues( @Nullable Properties parameters ) {
         Assert.isTrue( parameters != null && parameters.containsKey( "arrayType" ),
                 "There must be an 'arrayType' parameter in the type declaration." );
         arrayType = ByteArrayTypes.valueOf( parameters.getProperty( "arrayType" ).toUpperCase() );

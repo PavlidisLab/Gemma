@@ -18,6 +18,7 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -77,6 +78,7 @@ public class SingleCellExpressionExperimentSplitServiceTest extends AbstractJUni
         CellTypeAssignment cta = new CellTypeAssignment();
         ExpressionExperiment ee = new ExpressionExperiment();
         ExperimentalFactor cf = new ExperimentalFactor();
+        cf.setType( FactorType.CATEGORICAL );
         ArrayDesign ad = new ArrayDesign();
         // create 4 samples
         for ( int i = 0; i < 4; i++ ) {
@@ -93,16 +95,14 @@ public class SingleCellExpressionExperimentSplitServiceTest extends AbstractJUni
         for ( int i = 0; i < 10; i++ ) {
             Characteristic ct = Characteristic.Factory.newInstance( Categories.CELL_TYPE, "ct" + i, null );
             cta.getCellTypes().add( ct );
-            FactorValue fv = new FactorValue();
-            fv.getCharacteristics().add( Statement.Factory.newInstance( Categories.CELL_TYPE, ct ) );
-            cf.getFactorValues().add( fv );
+            cf.getFactorValues().add( FactorValue.Factory.newInstance( cf, ct ) );
         }
         when( bioMaterialService.create( any( BioMaterial.class ) ) ).thenAnswer( a -> a.getArgument( 0 ) );
         when( bioAssayService.create( any( BioAssay.class ) ) ).thenAnswer( a -> a.getArgument( 0 ) );
         when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee ) )
-                .thenReturn( cta );
+                .thenReturn( Optional.of( cta ) );
         when( singleCellExpressionExperimentService.getCellTypeFactor( ee ) )
-                .thenReturn( cf );
+                .thenReturn( Optional.of( cf ) );
         when( expressionExperimentSubSetService.create( any( ExpressionExperimentSubSet.class ) ) )
                 .thenAnswer( a -> a.getArgument( 0 ) );
         List<ExpressionExperimentSubSet> subsets = service.splitByCellType( ee );

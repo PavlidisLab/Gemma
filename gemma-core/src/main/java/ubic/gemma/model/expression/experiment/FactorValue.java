@@ -21,6 +21,7 @@ package ubic.gemma.model.expression.experiment;
 import org.hibernate.search.annotations.DocumentId;
 import org.hibernate.search.annotations.Indexed;
 import org.hibernate.search.annotations.IndexedEmbedded;
+import org.springframework.util.Assert;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.Characteristic;
@@ -225,6 +226,35 @@ public class FactorValue implements Identifiable, SecuredChild, Serializable {
         public static FactorValue newInstance( ExperimentalFactor experimentalFactor ) {
             final FactorValue entity = new FactorValue();
             entity.setExperimentalFactor( experimentalFactor );
+            return entity;
+        }
+
+        /**
+         * Create a FactorValue with a single characteristic.
+         */
+        public static FactorValue newInstance( ExperimentalFactor factor, Characteristic c ) {
+            return newInstance( factor, c instanceof Statement ? ( Statement ) c : Statement.Factory.newInstance( c ) );
+        }
+
+        /**
+         * Create a FactorValue with a single statement.
+         */
+        public static FactorValue newInstance( ExperimentalFactor factor, Statement c ) {
+            Assert.isTrue( factor.getType() == FactorType.CATEGORICAL,
+                    "Only categorical factors can be created with a single characteristic." );
+            FactorValue entity = newInstance( factor );
+            entity.getCharacteristics().add( c );
+            return entity;
+        }
+
+
+        /**
+         * Create a FactorValue with a measurement.
+         */
+        public static FactorValue newInstance( ExperimentalFactor factor, Measurement measurement ) {
+            Assert.isTrue( factor.getType() == FactorType.CONTINUOUS, "Only continuous factors can have a measurement." );
+            FactorValue entity = newInstance( factor );
+            entity.setMeasurement( measurement );
             return entity;
         }
     }

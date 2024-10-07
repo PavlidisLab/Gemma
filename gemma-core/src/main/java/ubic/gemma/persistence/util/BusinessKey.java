@@ -28,7 +28,10 @@ import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.description.*;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.measurement.Unit;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.AlternateName;
@@ -284,29 +287,22 @@ public class BusinessKey {
         BusinessKey.attachCriteria( queryObject, gene2GOAssociation.getOntologyEntry() );
     }
 
+    /**
+     * @see QuantitationType#equals(Object)
+     */
     public static void addRestrictions( Criteria queryObject, QuantitationType quantitationType ) {
-        queryObject.add( Restrictions.eq( "name", quantitationType.getName() ) );
-
-        queryObject.add( Restrictions.eq( "description", quantitationType.getDescription() ) );
-
-        queryObject.add( Restrictions.eq( "generalType", quantitationType.getGeneralType() ) );
-
-        queryObject.add( Restrictions.eq( "type", quantitationType.getType() ) );
-
-        queryObject.add( Restrictions.eq( "isBackground", quantitationType.getIsBackground() ) );
-
-        if ( quantitationType.getRepresentation() != null )
-            queryObject.add( Restrictions.eq( "representation", quantitationType.getRepresentation() ) );
-
-        if ( quantitationType.getScale() != null )
-            queryObject.add( Restrictions.eq( "scale", quantitationType.getScale() ) );
-
-        queryObject.add( Restrictions.eq( "isBackgroundSubtracted", quantitationType.getIsBackgroundSubtracted() ) );
-
-        queryObject.add( Restrictions.eq( "isPreferred", quantitationType.getIsPreferred() ) );
-
-        queryObject.add( Restrictions.eq( "isNormalized", quantitationType.getIsNormalized() ) );
-
+        queryObject
+                .add( Restrictions.eq( "name", quantitationType.getName() ) )
+                .add( Restrictions.eq( "generalType", quantitationType.getGeneralType() ) )
+                .add( Restrictions.eq( "type", quantitationType.getType() ) )
+                .add( Restrictions.eq( "scale", quantitationType.getScale() ) )
+                .add( Restrictions.eq( "representation", quantitationType.getRepresentation() ) )
+                .add( Restrictions.eq( "isBackground", quantitationType.getIsBackground() ) )
+                .add( Restrictions.eq( "isBackgroundSubtracted", quantitationType.getIsBackgroundSubtracted() ) )
+                .add( Restrictions.eq( "isRatio", quantitationType.getIsRatio() ) )
+                .add( Restrictions.eq( "isNormalized", quantitationType.getIsNormalized() ) )
+                .add( Restrictions.eq( "isBatchCorrected", quantitationType.getIsBatchCorrected() ) )
+                .add( Restrictions.eq( "isRecomputedFromRawData", quantitationType.getIsRecomputedFromRawData() ) );
     }
 
     public static void addRestrictions( Criteria queryObject, Taxon taxon ) {

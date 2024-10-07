@@ -15,6 +15,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
@@ -197,6 +198,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     private QuantitationType createQt( AnnData h5File, Layer layer ) {
         QuantitationType qt = new QuantitationType();
         qt.setName( layer.getPath() );
+        qt.setDescription( "AnnData data from layer " + layer.getPath() + " in " + this.file.getFileName().toString() + "." );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         H5FundamentalType fundamentalType;
         try ( Matrix matrix = layer.getMatrix(); H5Type datasetType = matrix.getDataType() ) {
@@ -235,7 +237,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     @Override
-    public Optional<CellTypeAssignment> getCellTypeAssignment( SingleCellDimension dimension ) throws IOException {
+    public Set<CellTypeAssignment> getCellTypeAssignments( SingleCellDimension dimension ) throws IOException {
         Assert.notNull( cellTypeFactorName, "A cell type factor name must be set to determine cell type assignments." );
         try ( AnnData h5File = AnnData.open( file ); Dataframe<?> var = getCellsDataframe( h5File ) ) {
             // TODO: support cell types encoded as string-array
@@ -268,8 +270,85 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 }
             }
             assignment.setCellTypeIndices( cellTypes.getCodes() );
-            return Optional.of( assignment );
+            return Collections.singleton( assignment );
         }
+    }
+
+    @Override
+    public Set<CellLevelCharacteristics> getOtherCellLevelCharacteristics( SingleCellDimension dimension ) throws IOException {
+        Assert.notNull( sampleFactorName, "A sample factor name must be set." );
+        if ( cellTypeFactorName == null ) {
+            log.warn( "No cell type factor name is set, cell types might be treated as \"other cell-level characteristics\"." );
+        }
+        Set<CellLevelCharacteristics> results = new HashSet<>();
+        try ( AnnData h5File = AnnData.open( file ); Dataframe<?> vars = getCellsDataframe( h5File ) ) {
+            Dataframe.Column<?, String> sampleNames = vars.getColumn( sampleFactorName, String.class );
+            String indexColumn = vars.getIndexColumn();
+            for ( String factorName : vars.getColumns() ) {
+                if ( factorName.equals( indexColumn ) || factorName.equals( sampleFactorName ) || factorName.equals( cellTypeFactorName ) ) {
+                    // cell IDs, sample names, etc. are not useful as cell-level characteristics
+                    continue;
+                }
+                String encodingType = vars.getColumnEncodingType( factorName );
+                String[] values;
+                if ( "categorical".equals( encodingType ) ) {
+                    // to be valid for sample-level, a characteristic has to be the same for all cells
+                    try ( CategoricalArray<?> ca = vars.getCategoricalColumn( factorName ) ) {
+                        values = categoricalArrayToStringVector( ca );
+                    }
+                } else if ( "string-array".equals( encodingType ) ) {
+                    values = vars.getStringArrayColumn( factorName );
+                } else if ( "array".equals( encodingType ) ) {
+                    try ( H5Dataset vector = vars.getArrayColumn( factorName ) ) {
+                        switch ( vector.getType().getFundamentalType() ) {
+                            case INTEGER:
+                                values = Arrays.stream( vars.getArrayColumn( factorName ).toIntegerVector() ).mapToObj( Integer::toString ).toArray( String[]::new );
+                                break;
+                            case FLOAT:
+                                values = Arrays.stream( vars.getArrayColumn( factorName ).toDoubleVector() ).mapToObj( Double::toString ).toArray( String[]::new );
+                                break;
+                            default:
+                                log.warn( "Unsupported datatype for array encoding: " + vector.getType() );
+                                continue;
+                        }
+                    }
+                } else if ( "nullable-integer".equals( encodingType ) ) {
+                    values = Arrays.stream( vars.getNullableIntegerArrayColumn( factorName ) )
+                            .map( v -> v != null ? String.valueOf( v ) : null )
+                            .toArray( String[]::new );
+                } else if ( "nullable-boolean".equals( encodingType ) ) {
+                    values = Arrays.stream( vars.getNullableBooleanArrayColumn( factorName ) )
+                            .map( v -> v != null ? String.valueOf( v ) : null )
+                            .toArray( String[]::new );
+                } else {
+                    log.warn( "Unsupported encoding type: " + encodingType );
+                    continue;
+                }
+                if ( extractSingleValueBySampleName( sampleNames, values ).isPresent() ) {
+                    continue;
+                }
+                // conclusion, this is a cell-type factor
+                int[] indices = new int[values.length];
+                List<Characteristic> characteristics = new ArrayList<>();
+                for ( int i = 0; i < values.length; i++ ) {
+                    String val = values[i];
+                    if ( val != null ) {
+                        Characteristic c = Characteristic.Factory.newInstance( Categories.UNCATEGORIZED, val, null );
+                        c.setDescription( "Imported from column " + factorName + " in AnnData file " + h5File + "." );
+                        int j = characteristics.indexOf( c );
+                        if ( j == -1 ) {
+                            characteristics.add( c );
+                            j = characteristics.size() - 1;
+                        }
+                        indices[i] = j;
+                    } else {
+                        indices[i] = CellLevelCharacteristics.UNKNOWN_CHARACTERISTIC;
+                    }
+                }
+                results.add( CellLevelCharacteristics.Factory.newInstance( characteristics, indices ) );
+            }
+        }
+        return results;
     }
 
     @Override

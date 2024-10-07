@@ -23,6 +23,8 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
@@ -32,6 +34,7 @@ import ubic.gemma.persistence.util.BusinessKey;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -96,31 +99,56 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
         // remove bioassays that are solely owned by this subset
         // this is currently the case for single-cell population subsets
         for ( BioAssay ba : entity.getBioAssays() ) {
-            if ( !entity.getSourceExperiment().getBioAssays().contains( ba ) ) {
-                log.debug( "Removing " + ba + " as it does not belong to the source experiment." );
-                ba.getSampleUsed().getFactorValues().removeAll( factorValues );
-                ba.getSampleUsed().getBioAssaysUsedIn().removeAll( entity.getBioAssays() );
-                if ( ba.getSampleUsed().getBioAssaysUsedIn().isEmpty() && ba.getSampleUsed().getFactorValues().isEmpty() ) {
-                    samplesToRemove.add( ba.getSampleUsed() );
-                } else {
-                    log.warn( ba.getSampleUsed() + " is still attached to a BioAssay or FactorValue, it will not be deleted." );
-                }
-                bioAssaysToRemove.add( ba );
+            if ( entity.getSourceExperiment().getBioAssays().contains( ba ) ) {
+                continue;
             }
+            log.info( "Removing " + ba + " as it does not belong to the source experiment." );
+            if ( !getBioAssayDimensions( ba ).isEmpty() ) {
+                log.warn( ba + " is still attached to a BioAssayDimension, it will not be deleted." );
+                continue;
+            }
+            if ( !getSingleCellDimensions( ba ).isEmpty() ) {
+                log.warn( ba + " is still attached to a SingleCellDimension, it will not be deleted." );
+                continue;
+            }
+            ba.getSampleUsed().getFactorValues().removeAll( factorValues );
+            ba.getSampleUsed().getBioAssaysUsedIn().removeAll( entity.getBioAssays() );
+            if ( ba.getSampleUsed().getBioAssaysUsedIn().isEmpty() && ba.getSampleUsed().getFactorValues().isEmpty() ) {
+                samplesToRemove.add( ba.getSampleUsed() );
+            } else {
+                log.warn( ba.getSampleUsed() + " is still attached to a BioAssay or FactorValue, it will not be deleted." );
+            }
+            bioAssaysToRemove.add( ba );
         }
         super.remove( entity );
         if ( !bioAssaysToRemove.isEmpty() ) {
-            log.info( "Removing " + bioAssaysToRemove.size() + " BioAssay that are owned by " + entity + " (i.e. they do not belong the the source experiment)." );
-        }
-        for ( BioAssay ba : bioAssaysToRemove ) {
-            getSessionFactory().getCurrentSession().delete( ba );
+            log.info( "Removing " + bioAssaysToRemove.size() + " BioAssay that are owned by " + entity + " (i.e. they do not belong to the source experiment)." );
+            for ( BioAssay ba : bioAssaysToRemove ) {
+                getSessionFactory().getCurrentSession().delete( ba );
+            }
         }
         if ( !samplesToRemove.isEmpty() ) {
             log.info( "Removing " + samplesToRemove.size() + " BioMaterial that are no longer attached to any BioAssay." );
+            for ( BioMaterial bm : samplesToRemove ) {
+                getSessionFactory().getCurrentSession().delete( bm );
+            }
         }
-        for ( BioMaterial bm : samplesToRemove ) {
-            getSessionFactory().getCurrentSession().delete( bm );
-        }
+    }
+
+    private Collection<BioAssayDimension> getBioAssayDimensions( BioAssay ba ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct dim from BioAssayDimension dim join dim.bioAssays ba where ba = :ba" )
+                .setParameter( "ba", ba )
+                .list();
+    }
+
+    private Collection<SingleCellDimension> getSingleCellDimensions( BioAssay ba ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct dim from SingleCellDimension dim join dim.bioAssays ba where ba = :ba" )
+                .setParameter( "ba", ba )
+                .list();
     }
 
     /**

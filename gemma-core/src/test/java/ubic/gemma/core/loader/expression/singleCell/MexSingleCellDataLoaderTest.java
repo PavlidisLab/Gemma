@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static ubic.gemma.core.loader.expression.singleCell.MexTestUtils.createElementsMappingFromResourceFile;
 import static ubic.gemma.core.loader.expression.singleCell.MexTestUtils.createLoaderForResourceDir;
@@ -34,7 +35,8 @@ public class MexSingleCellDataLoaderTest {
         for ( String sampleName : loader.getSampleNames() ) {
             bas.add( BioAssay.Factory.newInstance( sampleName, null, BioMaterial.Factory.newInstance( sampleName ) ) );
         }
-        assertThat( loader.getCellTypeAssignment( mock() ) ).isEmpty();
+        assertThatThrownBy( () -> loader.getCellTypeAssignments( mock() ) )
+                .isInstanceOf( UnsupportedOperationException.class );
         QuantitationType qt = loader.getQuantitationTypes().iterator().next();
         assertThat( qt ).isNotNull();
         assertThat( qt.getGeneralType() ).isEqualTo( GeneralType.QUANTITATIVE );
@@ -90,7 +92,8 @@ public class MexSingleCellDataLoaderTest {
         ArrayList<BioAssay> bas = new ArrayList<>();
         bas.add( BioAssay.Factory.newInstance( "GSM7022370", null, BioMaterial.Factory.newInstance( "GSM7022370" ) ) );
         bas.add( BioAssay.Factory.newInstance( "GSM7022375", null, BioMaterial.Factory.newInstance( "GSM7022375" ) ) );
-        assertThat( loader.getCellTypeAssignment( mock() ) ).isEmpty();
+        assertThatThrownBy( () -> loader.getCellTypeAssignments( mock() ) )
+                .isInstanceOf( UnsupportedOperationException.class );
         QuantitationType qt = loader.getQuantitationTypes().iterator().next();
         SingleCellDimension dimension = loader.getSingleCellDimension( bas );
         assertThat( dimension.getCellIds() ).hasSize( 2000 );
@@ -161,7 +164,8 @@ public class MexSingleCellDataLoaderTest {
         // this sample does note exist
         bas.add( BioAssay.Factory.newInstance( "GSM7022354", null, BioMaterial.Factory.newInstance( "GSM7022354" ) ) );
         bas.add( BioAssay.Factory.newInstance( "GSM7022370", null, BioMaterial.Factory.newInstance( "GSM7022370" ) ) );
-        assertThat( loader.getCellTypeAssignment( mock() ) ).isEmpty();
+        assertThatThrownBy( () -> loader.getCellTypeAssignments( mock() ) )
+                .isInstanceOf( UnsupportedOperationException.class );
         QuantitationType qt = loader.getQuantitationTypes().iterator().next();
         SingleCellDimension dimension = loader.getSingleCellDimension( bas );
         assertThat( dimension.getCellIds() ).hasSize( 1000 );

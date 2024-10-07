@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.common.quantitationtype;
 
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.SessionFactory;
@@ -57,6 +58,13 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     @Autowired
     public QuantitationTypeDaoImpl( SessionFactory sessionFactory ) {
         super( QuantitationType.class, sessionFactory );
+    }
+
+    @Override
+    public QuantitationType create( QuantitationType entity ) {
+        Assert.isTrue( StringUtils.isNotBlank( entity.getName() ),
+                "Quantitation type name cannot be blank." );
+        return super.create( entity );
     }
 
     @Override

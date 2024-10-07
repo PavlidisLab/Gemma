@@ -11,9 +11,8 @@ import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
-import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -21,11 +20,9 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
+import static ubic.gemma.persistence.service.expression.experiment.SingleCellTestUtils.randomSingleCellVectors;
 
 public class SingleCellIntegrationTest extends BaseIntegrationTest {
 
@@ -65,6 +62,7 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
     @Test
     public void test() {
         QuantitationType qt = new QuantitationType();
+        qt.setName( "counts" );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.COUNT );
         qt.setRepresentation( PrimitiveType.DOUBLE );
@@ -72,7 +70,8 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
         qt.setIsSingleCellPreferred( true );
         singleCellExpressionExperimentService.addSingleCellDataVectors( ee, qt, randomSingleCellVectors( ee, ad, qt ) );
 
-        SingleCellDimension scd = singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithCellTypeAssignments( ee );
+        SingleCellDimension scd = singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithCellLevelCharacteristics( ee )
+                .orElse( null );
         assertThat( scd ).isNotNull();
         assertThat( scd.getCellIds() ).hasSize( 8000 );
         assertThat( scd.getNumberOfCells() ).isEqualTo( 8000 );
@@ -106,39 +105,21 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
         for ( ExpressionExperimentSubSet subset : subsets ) {
             cellBAs.addAll( subset.getBioAssays() );
         }
-        QuantitationType aggregatedQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, cellBAs );
-    }
+        QuantitationType aggregatedQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, cellBAs, true );
 
-    private Collection<SingleCellExpressionDataVector> randomSingleCellVectors( ExpressionExperiment ee, ArrayDesign ad, QuantitationType qt ) {
-        List<BioAssay> samples = new ArrayList<>( ee.getBioAssays() );
-        int numCells = 1000 * ee.getBioAssays().size();
-        SingleCellDimension dimension = new SingleCellDimension();
-        dimension.setCellIds( IntStream.rangeClosed( 1, numCells ).mapToObj( Integer::toString ).collect( Collectors.toList() ) );
-        dimension.setNumberOfCells( numCells );
-        dimension.setBioAssays( samples );
-        int[] offsets = new int[samples.size()];
-        for ( int i = 0; i < samples.size(); i++ ) {
-            offsets[i] = i * 1000;
-        }
-        dimension.setBioAssaysOffset( offsets );
-        Collection<SingleCellExpressionDataVector> results = new ArrayList<>();
-        for ( CompositeSequence cs : ad.getCompositeSequences() ) {
-            SingleCellExpressionDataVector vector = new SingleCellExpressionDataVector();
-            vector.setDesignElement( cs );
-            vector.setQuantitationType( qt );
-            vector.setSingleCellDimension( dimension );
-            // 10% sparsity
-            int N = 100;
-            double[] X = new double[N];
-            int[] IX = new int[X.length];
-            for ( int i = 0; i < N; i++ ) {
-                X[i] = RandomUtils.nextInt( 100000 );
-                IX[i] = ( 100 * i ) + RandomUtils.nextInt( 100 );
-            }
-            vector.setData( doubleArrayToBytes( X ) );
-            vector.setDataIndices( IX );
-            results.add( vector );
-        }
-        return results;
+        assertThat( aggregatedQt.getName() ).isEqualTo( "counts aggregated by cell type" );
+        assertThat( aggregatedQt.getDescription() ).isEqualTo( "Expression data has been aggregated by cell type using SUM." );
+        assertThat( aggregatedQt.getIsPreferred() ).isTrue();
+
+        Collection<RawExpressionDataVector> vectors = expressionExperimentService.getRawDataVectors( ee, aggregatedQt );
+        assertThat( vectors )
+                .hasSize( ad.getCompositeSequences().size() )
+                .allSatisfy( vec -> {
+                    assertThat( vec.getExpressionExperiment().getId() ).isEqualTo( ee.getId() );
+                    assertThat( vec.getBioAssayDimension().getName() ).isEqualTo( "Bunch of test cells aggregated by cell type" );
+                    assertThat( vec.getBioAssayDimension().getDescription() ).isNull();
+                    assertThat( vec.getBioAssayDimension().getBioAssays() ).isEqualTo( cellBAs );
+                    assertThat( vec.getQuantitationType() ).isEqualTo( aggregatedQt );
+                } );
     }
 }

@@ -153,7 +153,7 @@
                     <param name="arrayType">int</param>
                 </type>
             </property>
-            <list name="cellTypes" fetch="select" lazy="false" cascade="all-delete-orphan">
+            <list name="cellTypes" fetch="select" lazy="false" cascade="all" mutable="false">
                 <!-- this appears in the CHARACTERISTIC table, so it has to be spelled out for clarity -->
                 <key foreign-key="CHARACTERISTIC_CELL_TYPE_ASSIGNMENT_FKC">
                     <column name="CELL_TYPE_ASSIGNMENT_FK" sql-type="BIGINT"/>

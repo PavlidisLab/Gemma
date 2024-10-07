@@ -9,20 +9,26 @@ import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Generic cell-level characteristics.
  * <p>
  * For cell types, use {@link CellTypeAssignment} instead.
+ * <p>
+ * This is not meant to be used directly, prefer {@link CellLevelCharacteristics.Factory#newInstance} for creating
+ * cell-level characteristics or {@link CellTypeAssignment} for cell types.
  * @author poirigui
  */
 @Getter
 @Setter
-public class GenericCellLevelCharacteristics extends AbstractIdentifiable implements CellLevelCharacteristics {
-
-    private int[] indices;
+class GenericCellLevelCharacteristics extends AbstractIdentifiable implements CellLevelCharacteristics {
 
     private List<Characteristic> characteristics;
+
+    private int numberOfCharacteristics;
+
+    private int[] indices;
 
     @Nullable
     @Override
@@ -37,7 +43,7 @@ public class GenericCellLevelCharacteristics extends AbstractIdentifiable implem
 
     @Override
     public int hashCode() {
-        return Objects.hash( Arrays.hashCode( indices ), characteristics );
+        return Objects.hash( characteristics, Arrays.hashCode( indices ) );
     }
 
     @Override
@@ -52,5 +58,11 @@ public class GenericCellLevelCharacteristics extends AbstractIdentifiable implem
         }
         return Objects.equals( characteristics, that.characteristics )
                 && Arrays.equals( indices, that.indices );
+    }
+
+    @Override
+    public String toString() {
+        return super.toString()
+                + ( characteristics != null ? " Characteristics=" + characteristics.stream().map( Characteristic::getValue ).collect( Collectors.joining( ", " ) ) : "" );
     }
 }

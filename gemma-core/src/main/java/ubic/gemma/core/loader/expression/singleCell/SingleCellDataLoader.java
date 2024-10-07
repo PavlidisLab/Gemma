@@ -3,6 +3,7 @@ package ubic.gemma.core.loader.expression.singleCell;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
@@ -15,7 +16,6 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -72,9 +72,14 @@ public interface SingleCellDataLoader {
     Set<QuantitationType> getQuantitationTypes() throws IOException;
 
     /**
-     * Load single-cell type labelling present in the data.
+     * Load single-cell type assignments present in the data.
      */
-    Optional<CellTypeAssignment> getCellTypeAssignment( SingleCellDimension dimension ) throws IOException;
+    Set<CellTypeAssignment> getCellTypeAssignments( SingleCellDimension dimension ) throws IOException;
+
+    /**
+     * Load cell-level characteristics that are not cell type assignments present in the data.
+     */
+    Set<CellLevelCharacteristics> getOtherCellLevelCharacteristics( SingleCellDimension dimension ) throws IOException;
 
     /**
      * Load experimental factors present in the data.

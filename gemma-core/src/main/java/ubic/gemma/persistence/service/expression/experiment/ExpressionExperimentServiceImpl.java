@@ -248,6 +248,12 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional
+    public Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, QuantitationType qt ) {
+        return expressionExperimentDao.getRawDataVectors( ee, qt );
+    }
+
+    @Override
+    @Transactional
     public int addRawDataVectors( ExpressionExperiment ee,
             QuantitationType quantitationType,
             Collection<RawExpressionDataVector> newVectors ) {
@@ -731,7 +737,7 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public <T extends Exception> ExpressionExperiment loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
         ExpressionExperiment ee = loadOrFail( id, exceptionSupplier, message );
-        this.expressionExperimentDao.thawWithoutVectors( ee );
+        this.expressionExperimentDao.thawLite( ee );
         return ee;
     }
 
@@ -761,7 +767,7 @@ public class ExpressionExperimentServiceImpl
     public ExpressionExperiment loadAndThawLiteWithRefreshCacheMode( Long id ) {
         ExpressionExperiment ee = expressionExperimentDao.load( id, CacheMode.REFRESH );
         if ( ee != null ) {
-            this.expressionExperimentDao.thawWithoutVectors( ee );
+            this.expressionExperimentDao.thawLite( ee );
         }
         return ee;
     }
@@ -1327,7 +1333,7 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public ExpressionExperiment thawLite( final ExpressionExperiment expressionExperiment ) {
         ExpressionExperiment result = ensureInSession( expressionExperiment );
-        this.expressionExperimentDao.thawWithoutVectors( result );
+        this.expressionExperimentDao.thawLite( result );
         return result;
     }
 

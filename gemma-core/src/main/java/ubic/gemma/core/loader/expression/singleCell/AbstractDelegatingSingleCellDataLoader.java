@@ -3,6 +3,7 @@ package ubic.gemma.core.loader.expression.singleCell;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
@@ -15,7 +16,6 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -59,8 +59,13 @@ public abstract class AbstractDelegatingSingleCellDataLoader implements SingleCe
     }
 
     @Override
-    public Optional<CellTypeAssignment> getCellTypeAssignment( SingleCellDimension dimension ) throws IOException {
-        return delegate.getCellTypeAssignment( dimension );
+    public Set<CellTypeAssignment> getCellTypeAssignments( SingleCellDimension dimension ) throws IOException {
+        return delegate.getCellTypeAssignments( dimension );
+    }
+
+    @Override
+    public Set<CellLevelCharacteristics> getOtherCellLevelCharacteristics( SingleCellDimension dimension ) throws IOException {
+        return delegate.getOtherCellLevelCharacteristics( dimension );
     }
 
     @Override

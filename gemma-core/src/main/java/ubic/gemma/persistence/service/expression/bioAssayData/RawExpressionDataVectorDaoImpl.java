@@ -18,7 +18,6 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.util.BusinessKey;
 
 import java.util.Collection;
@@ -63,17 +62,6 @@ public class RawExpressionDataVectorDaoImpl extends AbstractDesignElementDataVec
                                 // no need for the fetch jointures since the design elements and biological characteristics are already in the session
                                 + "where dev.designElement in (:des) and dev.quantitationType = :qt" )
                 .setParameterList( "des", optimizeIdentifiableParameterList( designElements ) )
-                .setParameter( "qt", quantitationType )
-                .list();
-    }
-
-    @Override
-    public Collection<RawExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select v from RawExpressionDataVector as v "
-                                + "where v.expressionExperiment = :ee and v.quantitationType = :qt" )
-                .setParameter( "ee", ee )
                 .setParameter( "qt", quantitationType )
                 .list();
     }

@@ -44,13 +44,16 @@ public class SingleCellDimension extends AbstractDescribable implements Identifi
     /**
      * List of {@link BioAssay}s applicable to the cells.
      * <p>
-     * The {@link BioAssay} in {@code bioAssays[sampleIndex]} applies to all the cells in the interval {@code [bioAssaysOffset[sampleIndex], bioAssaysOffset[sampleIndex+1][}.
-     * To find the bioassay of a given cell, use {@link #getBioAssay(int)}.
+     * The {@link BioAssay} in {@code bioAssays[sampleIndex]} applies to all the cells in the interval
+     * {@code [bioAssaysOffset[sampleIndex], bioAssaysOffset[sampleIndex+1][} except for the last sample which owns the
+     * remaining cells.
+     * <p>
+     * To find the {@link BioAssay} of a given cell, use {@link #getBioAssay(int)}.
      */
     private List<BioAssay> bioAssays = new ArrayList<>();
 
     /**
-     * Offsets of the bioassays.
+     * Offsets of the {@link BioAssay} in {@link #cellIds}.
      * <p>
      * This must always contain {@code bioAssays.size()} elements.
      * <p>
@@ -81,6 +84,7 @@ public class SingleCellDimension extends AbstractDescribable implements Identifi
      * @throws IndexOutOfBoundsException if the index is out of bounds
      */
     public BioAssay getBioAssay( int cellIndex ) throws IndexOutOfBoundsException {
+        Assert.isTrue( cellIndex >= 0 && cellIndex < cellIds.size(), "The cell index must be in the range [0, " + cellIds.size() + "[." );
         return getSparseRangeArrayElement( bioAssays, bioAssaysOffset, cellIds.size(), cellIndex );
     }
 

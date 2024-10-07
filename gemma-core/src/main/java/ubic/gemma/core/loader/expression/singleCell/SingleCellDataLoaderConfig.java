@@ -9,6 +9,7 @@ import java.nio.file.Path;
 /**
  * Basic configuration for loading single-cell data.
  * @author poirigui
+ * @see SingleCellDataLoaderService
  */
 @Getter
 @SuperBuilder
@@ -18,7 +19,7 @@ public class SingleCellDataLoaderConfig {
      * Load single-cell data from that specific path instead of looking up standard locations.
      */
     @Nullable
-    private Path explicitPath;
+    private Path dataPath;
 
     /**
      * Name of the QT to use if more than one is present in the data as per {@link SingleCellDataLoader#getQuantitationTypes()}.
@@ -29,14 +30,19 @@ public class SingleCellDataLoaderConfig {
     private String quantitationTypeName;
 
     /**
-     * Make the QT primary.
-     */
-    private boolean primaryQt;
-   
-    /**
      * Replace the vectors of an existing QT.
+     * <p>
+     * Requires {@link #quantitationTypeName} to be set.
      */
-    private boolean replaceExistingQt;
+    private boolean replaceExistingQuantitationType;
+
+    /**
+     * Mark the QT as preferred.
+     * <p>
+     * All other single-cell QT will be set to non-preferred as a result.
+     * @see ubic.gemma.model.common.quantitationtype.QuantitationType#setIsSingleCellPreferred(boolean)
+     */
+    private boolean markQuantitationTypeAsPreferred;
 
     /**
      * A location where cell type can be found in a format covered by {@link GenericMetadataSingleCellDataLoader}.
@@ -48,7 +54,21 @@ public class SingleCellDataLoaderConfig {
     private Path cellTypeAssignmentPath;
 
     /**
-     * Make the CTA primary.
+     * A location where additional cell-level characteristics can be loaded.
      */
-    private boolean primaryCta;
+    @Nullable
+    private Path otherCellLevelCharacteristicsFile;
+
+    /**
+     * If only one CTA is present, mark it as preferred.
+     */
+    private boolean markSingleCellTypeAssignmentAsPreferred;
+
+    /**
+     * Name of the CTA to mark as preferred, or null to ignore.
+     * <p>
+     * This setting overrides {@link #markSingleCellTypeAssignmentAsPreferred}.
+     */
+    @Nullable
+    private String preferredCellTypeAssignmentName;
 }

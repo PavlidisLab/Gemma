@@ -39,7 +39,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
-import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.ArrayList;
@@ -61,9 +60,6 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-
-    @Autowired
-    private RawExpressionDataVectorService rawExpressionDataVectorService;
 
     @Autowired
     private ArrayDesignService arrayDesignService;
@@ -115,7 +111,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     @Override
     @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix getRawExpressionDataMatrix( ExpressionExperiment ee, QuantitationType quantitationType ) {
-        return new ExpressionDataDoubleMatrix( rawExpressionDataVectorService.findByExpressionExperiment( ee, quantitationType ) );
+        return new ExpressionDataDoubleMatrix( expressionExperimentService.getRawDataVectors( ee, quantitationType ) );
     }
 
     @Override

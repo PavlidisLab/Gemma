@@ -31,7 +31,7 @@ import static ubic.gemma.core.loader.expression.geo.singleCell.MexDetector.*;
  * @author poirigui
  */
 @CommonsLog
-public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable {
+public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSingleCellDetector, AutoCloseable {
 
 
     /**
@@ -143,13 +143,30 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
         mexDetector.setMatrixFileSuffix( DEFAULT_MATRIX_FILE_SUFFIX );
     }
 
+    @Override
+    public void setMaxEntrySizeInArchiveToSkip( long maxNumberOfEntriesToSkip ) {
+        for ( SingleCellDetector detector : detectors ) {
+            if ( detector instanceof ArchiveBasedSingleCellDetector ) {
+                ( ( ArchiveBasedSingleCellDetector ) detector ).setMaxEntrySizeInArchiveToSkip( maxNumberOfEntriesToSkip );
+            }
+        }
+    }
+
+    @Override
+    public void setMaxNumberOfEntriesToSkip( long maxNumberOfEntriesToSkip ) {
+        for ( SingleCellDetector detector : detectors ) {
+            if ( detector instanceof ArchiveBasedSingleCellDetector ) {
+                ( ( ArchiveBasedSingleCellDetector ) detector ).setMaxNumberOfEntriesToSkip( maxNumberOfEntriesToSkip );
+            }
+        }
+    }
+
     /**
      * Detects if a GEO series has single-cell data either at the series-level or in individual samples.
      */
     @Override
     public boolean hasSingleCellData( GeoSeries series ) {
-        boolean hasSingleCellDataInSeries = Arrays.stream( detectors )
-                .anyMatch( detector -> detector.hasSingleCellData( series ) );
+        boolean hasSingleCellDataInSeries = hasSingleCellDataInSeries( series );
 
         // don't bother checking if none of the sample is single-cell
         if ( series.getSamples().stream().noneMatch( s -> isSingleCell( s, hasSingleCellDataInSeries ) ) ) {
@@ -268,10 +285,8 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
      */
     @Override
     public Path downloadSingleCellData( GeoSeries series ) throws NoSingleCellDataFoundException, IOException {
-        boolean hasSingleCellDataInSeries = Arrays.stream( detectors )
-                .anyMatch( detector -> detector.hasSingleCellData( series ) );
-        Assert.isTrue( series.getSamples().stream().anyMatch( s -> isSingleCell( s, hasSingleCellDataInSeries ) ),
-                series.getGeoAccession() + " does not have any single-cell series." );
+        Assert.isTrue( series.getSamples().stream().anyMatch( s -> isSingleCell( s, hasSingleCellDataInSeries( series ) ) ),
+                series.getGeoAccession() + " does not have any single-cell sample." );
         for ( SingleCellDetector detector : detectors ) {
             try {
                 return detector.downloadSingleCellData( series );
@@ -346,9 +361,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
     public Path downloadSingleCellData( GeoSeries series, GeoSample sample, SingleCellDataType dataType ) throws NoSingleCellDataFoundException, IOException {
         Assert.isTrue( dataType.equals( SingleCellDataType.MEX ) || dataType.equals( SingleCellDataType.LOOM ),
                 "Only MEX and Loom data can be retrieved at the sample-level." );
-        boolean hasSingleCellDataInSeries = Arrays.stream( detectors )
-                .anyMatch( detector -> detector.hasSingleCellData( series ) );
-        Assert.isTrue( isSingleCell( sample, hasSingleCellDataInSeries ), sample.getGeoAccession() + " is not a single-cell sample." );
+        Assert.isTrue( isSingleCell( sample, hasSingleCellDataInSeries( series ) ), sample.getGeoAccession() + " is not a single-cell sample." );
         if ( dataType == SingleCellDataType.MEX ) {
             return download( () -> mexDetector.downloadSingleCellData( series, sample ) );
         } else {
@@ -501,7 +514,6 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
                 if ( firstUnsupported == null ) {
                     firstUnsupported = e;
                 }
-                log.warn( "Loading data from " + series.getGeoAccession() + " is not supported, will try the next detector.", e );
             } catch ( NoSingleCellDataFoundException e ) {
                 // ignored, we'll try the next detector
             }
@@ -532,9 +544,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
     }
 
     public List<String> getAdditionalSupplementaryFiles( GeoSeries series, GeoSample sample ) {
-        boolean hasSingleCellDataInSeries = Arrays.stream( detectors )
-                .anyMatch( detector -> detector.hasSingleCellData( series ) );
-        if ( !isSingleCell( sample, hasSingleCellDataInSeries ) ) {
+        if ( !isSingleCell( sample, hasSingleCellDataInSeries( series ) ) ) {
             log.warn( sample.getGeoAccession() + " is not a single-cell sample, ignoring its supplementary materials." );
             return Collections.emptyList();
         }
@@ -567,11 +577,19 @@ public class GeoSingleCellDetector implements SingleCellDetector, AutoCloseable 
     }
 
     /**
+     * Check if a GEO series has single-cell data at the series-level.
+     */
+    public boolean hasSingleCellDataInSeries( GeoSeries series ) {
+        return Arrays.stream( detectors ).anyMatch( detector -> detector.hasSingleCellData( series ) );
+    }
+
+    /**
      * Check if a GEO sample is single-cell by looking up its metadata.
      * @param hasSingleCellDataInSeries indicate if the series has single-cell data, this is used as a last resort to
-     *                                  determine if a given sample is single-cell
+     *                                  determine if a given sample is single-cell, use {@link #hasSingleCellDataInSeries(GeoSeries)}
+     *                                  to compute and reuse this value.
      */
-    private boolean isSingleCell( GeoSample sample, boolean hasSingleCellDataInSeries ) {
+    public boolean isSingleCell( GeoSample sample, boolean hasSingleCellDataInSeries ) {
         if ( Objects.equals( sample.getLibSource(), GeoLibrarySource.SINGLE_CELL_TRANSCRIPTOMIC )
                 && Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.RNA_SEQ ) ) {
             return true;

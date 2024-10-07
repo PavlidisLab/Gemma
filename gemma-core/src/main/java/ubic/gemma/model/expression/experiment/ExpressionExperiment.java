@@ -66,12 +66,17 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     @Nullable
     private String batchConfound;
     private CurationDetails curationDetails = new CurationDetails();
+    @Nullable
     private ExperimentalDesign experimentalDesign;
+    @Nullable
     private Geeq geeq;
+    @Nullable
     private MeanVarianceRelation meanVarianceRelation;
+    @Nullable
     private String metadata;
     private Integer numberOfDataVectors = 0;
     private Integer numberOfSamples = 0;
+    @Nullable
     private Taxon taxon;
 
     /**
@@ -156,14 +161,17 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         return super.getCharacteristics();
     }
 
+    @Nullable
     public String getBatchConfound() {
         return batchConfound;
     }
 
+    @Nullable
     public BatchEffectType getBatchEffect() {
         return batchEffect;
     }
 
+    @Nullable
     public String getBatchEffectStatistics() {
         return batchEffectStatistics;
     }
@@ -173,20 +181,23 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         return this.curationDetails;
     }
 
+    @Nullable
     @IndexedEmbedded
     public ExperimentalDesign getExperimentalDesign() {
         return this.experimentalDesign;
     }
 
-    @SuppressWarnings("unused")
+    @Nullable
     public Geeq getGeeq() {
         return geeq;
     }
 
+    @Nullable
     public MeanVarianceRelation getMeanVarianceRelation() {
         return this.meanVarianceRelation;
     }
 
+    @Nullable
     public String getMetadata() {
         return metadata;
     }
@@ -245,15 +256,15 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         return allCharacteristics;
     }
 
-    public void setBatchConfound( String batchConfound ) { // FIXME don't use a string for this
+    public void setBatchConfound( @Nullable String batchConfound ) { // FIXME don't use a string for this
         this.batchConfound = batchConfound;
     }
 
-    public void setBatchEffect( BatchEffectType batchEffect ) { // FIXME don't use a string for this
+    public void setBatchEffect( @Nullable BatchEffectType batchEffect ) { // FIXME don't use a string for this
         this.batchEffect = batchEffect;
     }
 
-    public void setBatchEffectStatistics( String batchEffectStatistics ) {
+    public void setBatchEffectStatistics( @Nullable String batchEffectStatistics ) {
         this.batchEffectStatistics = batchEffectStatistics;
     }
 
@@ -262,20 +273,19 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         this.curationDetails = curationDetails;
     }
 
-    public void setExperimentalDesign( ExperimentalDesign experimentalDesign ) {
+    public void setExperimentalDesign( @Nullable ExperimentalDesign experimentalDesign ) {
         this.experimentalDesign = experimentalDesign;
     }
 
-    @SuppressWarnings("unused")
-    public void setGeeq( Geeq geeq ) {
+    public void setGeeq( @Nullable Geeq geeq ) {
         this.geeq = geeq;
     }
 
-    public void setMeanVarianceRelation( MeanVarianceRelation meanVarianceRelation ) {
+    public void setMeanVarianceRelation( @Nullable MeanVarianceRelation meanVarianceRelation ) {
         this.meanVarianceRelation = meanVarianceRelation;
     }
 
-    public void setMetadata( String metadata ) {
+    public void setMetadata( @Nullable String metadata ) {
         this.metadata = metadata;
     }
 
@@ -318,16 +328,18 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     }
 
     /**
-     * This is a denormalization to speed up queries. For the definitive taxon, look at the bioAssays -{@literal >}
-     * sampleUsed -{@literal >} sourceTaxon
-     *
-     * @return the associated taxon
+     * Taxon of this dataset.
+     * <p>
+     * This is a denormalization to speed up queries. For the definitive taxon, look at the
+     * {@code bioAssays.sampleUsed.sourceTaxon}. It's possible that more than one distinct taxa can be found that way
+     * such experiments should eventually be split by taxon.
      */
+    @Nullable
     public Taxon getTaxon() {
         return taxon;
     }
 
-    public void setTaxon( Taxon taxon ) {
+    public void setTaxon( @Nullable Taxon taxon ) {
         this.taxon = taxon;
     }
 

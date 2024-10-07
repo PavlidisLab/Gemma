@@ -23,8 +23,8 @@ public abstract class AbstractSingleH5FileInSeriesSingleCellDetector extends Abs
      * In addition to size and existence, also check if the H5 is truncated.
      */
     @Override
-    protected boolean existsAndHasExpectedSize( Path dest, String remoteFile, boolean decompressIfNeeded ) throws IOException {
-        return super.existsAndHasExpectedSize( dest, remoteFile, decompressIfNeeded )
+    protected boolean existsAndHasExpectedSize( Path dest, String remoteFile, long expectedContentLength, boolean decompressIfNeeded, boolean storeCompressed ) throws IOException {
+        return super.existsAndHasExpectedSize( dest, remoteFile, expectedContentLength, decompressIfNeeded, storeCompressed )
                 && !isTruncated( dest );
     }
 

@@ -25,10 +25,13 @@ public class GenericMetadataSingleCellDataLoaderTest {
         dim.setBioAssaysOffset( new int[] { 0, 10 } );
         dim.setCellIds( IntStream.rangeClosed( 1, 20 ).mapToObj( c -> "c" + c ).collect( Collectors.toList() ) );
         SingleCellDataLoader delegate = mock();
-        GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate, Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata.tsv" ) ).toURI() ) );
+        GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
+                Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata.tsv" ) ).toURI() ),
+                Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/additional-cell-type-metadata.tsv" ) ).toURI() ) );
         loader.setBioAssayToSampleNameMatcher( ( bioAssays, sampleNameFromData ) -> bioAssays.stream().filter( ba -> ba.getName().equals( sampleNameFromData ) ).collect( Collectors.toSet() ) );
-        assertThat( loader.getCellTypeAssignment( dim ) )
-                .hasValueSatisfying( cta -> {
+        assertThat( loader.getCellTypeAssignments( dim ) )
+                .singleElement()
+                .satisfies( cta -> {
                     assertThat( cta.getCellTypes() ).extracting( Characteristic::getValue )
                             .containsExactlyInAnyOrder( "C", "D" );
                     assertThat( cta.getNumberOfCellTypes() )
@@ -38,6 +41,26 @@ public class GenericMetadataSingleCellDataLoaderTest {
                             .containsExactly( 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1 );
                     assertThat( cta.isPreferred() ).isFalse();
                     assertThat( cta.getProtocol() ).isNull();
+                } );
+        assertThat( loader.getOtherCellLevelCharacteristics( dim ) )
+                .hasSize( 2 )
+                .satisfiesExactlyInAnyOrder( clc -> {
+                    System.out.println( Arrays.toString( clc.getIndices() ) );
+                    assertThat( clc.getCharacteristics() )
+                            .allSatisfy( c -> assertThat( c.getCategory() ).isEqualTo( "treatment" ) )
+                            .extracting( Characteristic::getValue )
+                            .containsExactlyInAnyOrder( "x", "y" );
+                    assertThat( clc.getIndices() )
+                            .hasSize( 20 )
+                            .containsExactly( -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1 );
+                }, clc -> {
+                    assertThat( clc.getCharacteristics() )
+                            .allSatisfy( c -> assertThat( c.getCategory() ).isEqualTo( "genotype" ) )
+                            .extracting( Characteristic::getValue )
+                            .containsExactlyInAnyOrder( "A/a", "A/b" );
+                    assertThat( clc.getIndices() )
+                            .hasSize( 20 )
+                            .containsExactly( -1, -1, -1, -1, 0, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1 );
                 } );
     }
 }

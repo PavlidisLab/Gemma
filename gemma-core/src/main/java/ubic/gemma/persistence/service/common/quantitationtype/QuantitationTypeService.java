@@ -59,6 +59,7 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
      * @see QuantitationTypeDao#findByNameAndVectorType(ExpressionExperiment, String, Class)
      * @throws NonUniqueQuantitationTypeByNameException if more than one QT matches the given name and vector type
      */
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     QuantitationType findByNameAndVectorType( ExpressionExperiment ee, String name, Class<? extends DataVector> dataVectorType ) throws NonUniqueQuantitationTypeByNameException;
 
