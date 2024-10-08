@@ -5,9 +5,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
-import java.io.File;
 import java.io.PrintWriter;
-import java.nio.file.Path;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -17,12 +15,8 @@ import static ubic.gemma.core.util.ShellUtils.quoteIfNecessary;
  * Generates fish completion script.
  * @author poirigui
  */
-public class FishCompletionGenerator implements CompletionGenerator {
+public class FishCompletionGenerator extends AbstractCompletionGenerator implements CompletionGenerator {
 
-    /**
-     * List of keywords suggesting an option might allow a file as argument.
-     */
-    private static final String[] FILE_KEYWORDS = { "file", "directory", "folder" };
 
     private final String executableName;
     private final String allSubcommands;
@@ -71,14 +65,5 @@ public class FishCompletionGenerator implements CompletionGenerator {
                     isFileOption( o ) ? "" : " -f",
                     StringUtils.isNotBlank( o.getDescription() ) ? " --description " + quoteIfNecessary( o.getDescription() ) : "" );
         }
-    }
-
-    private boolean isFileOption( Option o ) {
-        return File.class.equals( o.getType() )
-                || Path.class.equals( o.getType() )
-                // FIXME: remove all these heuristics, all options should be either File or Path
-                || StringUtils.containsAnyIgnoreCase( o.getOpt(), FILE_KEYWORDS )
-                || StringUtils.containsAnyIgnoreCase( o.getLongOpt(), FILE_KEYWORDS )
-                || StringUtils.containsAnyIgnoreCase( o.getArgName(), FILE_KEYWORDS );
     }
 }
