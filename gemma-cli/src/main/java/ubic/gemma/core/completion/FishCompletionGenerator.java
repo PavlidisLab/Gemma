@@ -4,8 +4,10 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.PrintWriter;
+import java.nio.file.Path;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -16,6 +18,11 @@ import static ubic.gemma.core.util.ShellUtils.quoteIfNecessary;
  * @author poirigui
  */
 public class FishCompletionGenerator implements CompletionGenerator {
+
+    /**
+     * List of keywords suggesting an option might allow a file as argument.
+     */
+    private static final String[] FILE_KEYWORDS = { "file", "directory", "folder" };
 
     private final String executableName;
     private final String allSubcommands;
@@ -40,7 +47,7 @@ public class FishCompletionGenerator implements CompletionGenerator {
     }
 
     @Override
-    public void generateSubcommandCompletion( String subcommand, Options subcommandOptions, String subcommandDescription, boolean allowsPositionalArguments, PrintWriter writer ) {
+    public void generateSubcommandCompletion( String subcommand, Options subcommandOptions, @Nullable String subcommandDescription, boolean allowsPositionalArguments, PrintWriter writer ) {
         // -f prevents files from being suggested as subcommand
         // FIXME: add -k, but the order has to be reversed
         writer.printf( "complete -c %s -n %s -f -a %s%s%n",
@@ -68,7 +75,10 @@ public class FishCompletionGenerator implements CompletionGenerator {
 
     private boolean isFileOption( Option o ) {
         return File.class.equals( o.getType() )
-                || o.getOpt().toLowerCase().contains( "file" )
-                || ( o.getLongOpt() != null && o.getLongOpt().toLowerCase().contains( "file" ) );
+                || Path.class.equals( o.getType() )
+                // FIXME: remove all these heuristics, all options should be either File or Path
+                || StringUtils.containsAnyIgnoreCase( o.getOpt(), FILE_KEYWORDS )
+                || StringUtils.containsAnyIgnoreCase( o.getLongOpt(), FILE_KEYWORDS )
+                || StringUtils.containsAnyIgnoreCase( o.getArgName(), FILE_KEYWORDS );
     }
 }
