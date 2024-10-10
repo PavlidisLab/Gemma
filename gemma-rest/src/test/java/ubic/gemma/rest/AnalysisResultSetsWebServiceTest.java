@@ -81,7 +81,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest 
         dears = new ExpressionAnalysisResultSet();
         dears.setAnalysis( dea );
         PvalueDistribution pvalueDist = new PvalueDistribution();
-        pvalueDist.setBinCounts( new byte[0] );
+        pvalueDist.setBinCounts( new double[0] );
         pvalueDist.setNumBins( 0 );
         dears.setPvalueDistribution( pvalueDist );
         dea.getResultSets().add( dears );

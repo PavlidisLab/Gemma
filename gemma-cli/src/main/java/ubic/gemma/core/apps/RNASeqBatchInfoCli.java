@@ -61,6 +61,6 @@ public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
-        batchService.fillBatchInformation( ee, this.force );
+        batchService.fillBatchInformation( ee, isForce());
     }
 }

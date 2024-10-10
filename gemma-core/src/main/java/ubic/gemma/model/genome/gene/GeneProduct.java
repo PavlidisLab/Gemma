@@ -25,6 +25,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 
 import javax.persistence.Transient;
+import java.util.Objects;
 import java.util.Set;
 
 @Indexed
@@ -51,9 +52,11 @@ public class GeneProduct extends ChromosomeFeature {
 
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( this.getId() == null ? this.computeHashCode() : this.getId().hashCode() );
-        return hashCode;
+        if ( this.getNcbiGi() != null ) {
+            return this.getNcbiGi().hashCode();
+        } else {
+            return Objects.hash( super.hashCode(), getGene() );
+        }
     }
 
     @Override
@@ -65,23 +68,19 @@ public class GeneProduct extends ChromosomeFeature {
             return false;
         }
         final GeneProduct that = ( GeneProduct ) object;
-
-        if ( this.getId() == null || that.getId() == null || !this.getId().equals( that.getId() ) ) {
-
-            boolean bothHaveNcbiGi = this.getNcbiGi() != null && that.getNcbiGi() != null;
-
-            if ( bothHaveNcbiGi ) {
-                return this.getNcbiGi().equals( that.getNcbiGi() );
-            }
-
-            boolean bothHaveGene = this.getGene() != null && that.getGene() != null;
-            boolean bothHaveSymbol = this.getName() != null && that.getName() != null;
-
-            return bothHaveSymbol && bothHaveGene && this.getName().equals( that.getName() ) && this.getGene()
-                    .equals( that.getGene() );
-
+        if ( this.getId() != null && that.getId() != null ) {
+            return this.getId().equals( that.getId() );
         }
-        return true;
+
+        if ( this.getNcbiGi() != null && that.getNcbiGi() != null ) {
+            return this.getNcbiGi().equals( that.getNcbiGi() );
+        }
+
+        boolean bothHaveGene = this.getGene() != null && that.getGene() != null;
+        boolean bothHaveSymbol = this.getName() != null && that.getName() != null;
+        return bothHaveSymbol && bothHaveGene
+                && this.getName().equals( that.getName() )
+                && this.getGene().equals( that.getGene() );
     }
 
     @Override
@@ -169,19 +168,6 @@ public class GeneProduct extends ChromosomeFeature {
 
     public void setDummy( boolean dummy ) {
         this.dummy = dummy;
-    }
-
-    private int computeHashCode() {
-        int hashCode = 0;
-
-        if ( this.getNcbiGi() != null ) {
-            hashCode += this.getNcbiGi().hashCode();
-        } else if ( this.getName() != null && this.getGene() != null ) {
-            hashCode += this.getName().hashCode();
-            hashCode += this.getGene().hashCode();
-        }
-
-        return hashCode;
     }
 
     public static final class Factory {

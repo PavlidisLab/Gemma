@@ -29,6 +29,8 @@ public class NCBIUtil extends NetDatasourceUtil {
     @Override
     public void init() {
         this.setHost( Settings.getString( "ncbi.host" ) );
+        this.setLogin( Settings.getString( "ncbi.user" ) );
+        this.setPassword( Settings.getString( "ncbi.password" ) );
     }
 
 }

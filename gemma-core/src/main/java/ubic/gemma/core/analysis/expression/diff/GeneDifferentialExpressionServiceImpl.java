@@ -29,7 +29,7 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
 
@@ -113,7 +113,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
             return devos;
 
         Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = differentialExpressionResultService
-                .find( gene, EntityUtils.getIds( ees ) );
+                .find( gene, IdentifiableUtils.getIds( ees ) );
         timer.stop();
         if ( timer.getTime() > 1000 ) {
             GeneDifferentialExpressionServiceImpl.log.info( "Diff ex results: " + timer.getTime() + " ms" );
@@ -222,7 +222,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
          * for the meta analysis. The results returned are for all factors, not just the factors we are seeking.
          */
         Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> resultsMap = differentialExpressionResultService
-                .find( g, EntityUtils.getIds( activeExperiments ) );
+                .find( g, IdentifiableUtils.getIds( activeExperiments ) );
 
         GeneDifferentialExpressionServiceImpl.log
                 .debug( resultsMap.size() + " results for " + g + " in " + activeExperiments );

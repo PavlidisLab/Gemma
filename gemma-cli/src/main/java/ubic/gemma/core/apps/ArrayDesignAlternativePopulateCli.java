@@ -22,13 +22,13 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
@@ -39,8 +39,11 @@ import java.io.InputStreamReader;
  */
 public class ArrayDesignAlternativePopulateCli extends AbstractAuthenticatedCLI {
 
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+
     public ArrayDesignAlternativePopulateCli() {
-        setRequireLogin( true );
+        setRequireLogin();
     }
 
     @Override
@@ -64,9 +67,7 @@ public class ArrayDesignAlternativePopulateCli extends AbstractAuthenticatedCLI 
     }
 
     @Override
-    protected void doWork() throws Exception {
-        ArrayDesignService arrayDesignService = this.getBean( ArrayDesignService.class );
-
+    protected void doAuthenticatedWork() throws Exception {
         // Read in the mapping file, which is in the classpath. This is also used by GeoPlatform (and in the DataUpdater)
         InputStream r = new ClassPathResource( "/ubic/gemma/core/loader/affy.altmappings.txt" ).getInputStream();
         try ( BufferedReader in = new BufferedReader( new InputStreamReader( r ) ) ) {
@@ -97,7 +98,7 @@ public class ArrayDesignAlternativePopulateCli extends AbstractAuthenticatedCLI 
                 if ( fromAD.equals( toAD ) )
                     continue; // no need to self-map?
 
-                arrayDesignService.thawLite( fromAD );
+                fromAD = arrayDesignService.thawLite( fromAD );
                 if ( fromAD.getAlternativeTo() != null ) {
                     log.info( "Already has an alternative mapped: " + from );
                     continue;
@@ -107,8 +108,6 @@ public class ArrayDesignAlternativePopulateCli extends AbstractAuthenticatedCLI 
                 log.info( "Mapped " + from + " to " + to );
 
             }
-        } catch ( IOException e ) {
-            throw e;
         }
     }
 

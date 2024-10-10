@@ -105,7 +105,7 @@ public class ExperimentalDesignWriter {
             buf.append( externalId );
 
             /* columns 2 ... n where n+1 is the number of factors */
-            Collection<FactorValue> candidateFactorValues = bioMaterial.getFactorValues();
+            Collection<FactorValue> candidateFactorValues = bioMaterial.getAllFactorValues();
             for ( ExperimentalFactor ef : orderedFactors ) {
                 buf.append( "\t" );
                 for ( FactorValue candidateFactorValue : candidateFactorValues ) {

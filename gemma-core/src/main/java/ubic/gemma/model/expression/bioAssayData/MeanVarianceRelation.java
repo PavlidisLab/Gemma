@@ -36,8 +36,8 @@ public class MeanVarianceRelation implements SecuredChild, Serializable {
      */
     private static final long serialVersionUID = -1442923993171126882L;
     private Securable securityOwner;
-    private byte[] means;
-    private byte[] variances;
+    private double[] means;
+    private double[] variances;
     private Long id;
 
     /**
@@ -57,11 +57,11 @@ public class MeanVarianceRelation implements SecuredChild, Serializable {
         this.id = id;
     }
 
-    public byte[] getMeans() {
+    public double[] getMeans() {
         return this.means;
     }
 
-    public void setMeans( byte[] means ) {
+    public void setMeans( double[] means ) {
         this.means = means;
     }
 
@@ -75,11 +75,11 @@ public class MeanVarianceRelation implements SecuredChild, Serializable {
         this.securityOwner = ee;
     }
 
-    public byte[] getVariances() {
+    public double[] getVariances() {
         return this.variances;
     }
 
-    public void setVariances( byte[] variances ) {
+    public void setVariances( double[] variances ) {
         this.variances = variances;
     }
 

@@ -21,7 +21,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.util.CommonQueries;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -130,7 +130,7 @@ public class CachedProcessedExpressionDataVectorServiceImpl implements CachedPro
         if ( probes.isEmpty() )
             return new HashSet<>();
 
-        Collection<Long> probeIds = EntityUtils.getIds( probes );
+        Collection<Long> probeIds = IdentifiableUtils.getIds( probes );
 
         return this.getProcessedDataArraysByProbeIds( ees, probeIds );
 
@@ -285,12 +285,12 @@ public class CachedProcessedExpressionDataVectorServiceImpl implements CachedPro
                 + " experiments not in cache" );
 
         Collection<ArrayDesign> arrays = CommonQueries
-                .getArrayDesignsUsed( EntityUtils.getIds( this.getExperiments( ees ) ),
+                .getArrayDesignsUsed( IdentifiableUtils.getIds( this.getExperiments( ees ) ),
                         this.sessionFactory.getCurrentSession() )
                 .keySet();
         assert !arrays.isEmpty();
         Map<Long, Collection<Long>> cs2gene = CommonQueries
-                .getCs2GeneIdMap( genesToSearch, EntityUtils.getIds( arrays ),
+                .getCs2GeneIdMap( genesToSearch, IdentifiableUtils.getIds( arrays ),
                         this.sessionFactory.getCurrentSession() );
 
         if ( cs2gene.isEmpty() ) {
@@ -624,7 +624,7 @@ public class CachedProcessedExpressionDataVectorServiceImpl implements CachedPro
         bad.setDescription( "Subset slice" );
         bad.setSourceBioAssayDimension( exemplar.getBioAssayDimension() );
         bad.setIsSubset( true );
-        Collection<Long> subsetBioAssayIds = EntityUtils.getIds( ee.getBioAssays() );
+        Collection<Long> subsetBioAssayIds = IdentifiableUtils.getIds( ee.getBioAssays() );
 
         for ( BioAssayValueObject ba : exemplar.getBioAssays() ) {
             if ( !subsetBioAssayIds.contains( ba.getId() ) ) {

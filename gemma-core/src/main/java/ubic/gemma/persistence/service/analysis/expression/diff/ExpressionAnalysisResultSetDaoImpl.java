@@ -31,7 +31,6 @@ import org.hibernate.type.Type;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.Characteristic;
@@ -306,8 +305,8 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
 
     @Override
     public Map<ExpressionAnalysisResultSet, Baseline> getBaselinesForInteractions( Collection<ExpressionAnalysisResultSet> resultSets, boolean initializeFactorValues ) {
-        Map<Long, ExpressionAnalysisResultSet> idMap = EntityUtils.getIdMap( resultSets );
-        return getBaselinesForInteractionsByIds( EntityUtils.getIds( resultSets ), initializeFactorValues ).entrySet().stream()
+        Map<Long, ExpressionAnalysisResultSet> idMap = IdentifiableUtils.getIdMap( resultSets );
+        return getBaselinesForInteractionsByIds( IdentifiableUtils.getIds( resultSets ), initializeFactorValues ).entrySet().stream()
                 .collect( IdentifiableUtils.toIdentifiableMap( e -> idMap.get( e.getKey() ), Map.Entry::getValue ) );
     }
 
@@ -416,8 +415,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 .createQuery( "select rs.pvalueDistribution from ExpressionAnalysisResultSet rs where rs=:rs " )
                 .setParameter( "rs", resultSet )
                 .uniqueResult();
-        ByteArrayConverter bac = new ByteArrayConverter();
-        double[] counts = bac.byteArrayToDoubles( pvd.getBinCounts() );
+        double[] counts = pvd.getBinCounts();
         Integer numBins = pvd.getNumBins();
         assert numBins == counts.length;
         Histogram hist = new Histogram( resultSet.getId().toString(), numBins, 0.0, 1.0 );
@@ -535,7 +533,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
                 .setCacheable( true );
 
         if ( queryByResult ) {
-            query.setParameterList( "rids", EntityUtils.getIds( resultSet.getResults() ) );
+            query.setParameterList( "rids", IdentifiableUtils.getIds( resultSet.getResults() ) );
         } else {
             query.setParameter( "rsid", resultSet.getId() );
         }
@@ -564,7 +562,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             return;
         }
         // pick baseline groups from other result sets from the same analysis
-        Map<Long, Baseline> baselines = getBaselinesForInteractionsByIds( EntityUtils.getIds( vosWithMissingBaselines ), true );
+        Map<Long, Baseline> baselines = getBaselinesForInteractionsByIds( IdentifiableUtils.getIds( vosWithMissingBaselines ), true );
         for ( DifferentialExpressionAnalysisResultSetValueObject vo : vos ) {
             Baseline b = baselines.get( vo.getId() );
             if ( b != null ) {

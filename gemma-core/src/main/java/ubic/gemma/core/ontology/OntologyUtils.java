@@ -42,8 +42,6 @@ public class OntologyUtils {
     /**
      * Ensure that a given ontology is initialized, force-loading it via {@link OntologyService#initialize(boolean, boolean)}, but setting the language level to LITE,
      * Inferencing to NONE, processImports to false, and enable search to false, if the ontology isn't already loaded.
-     * @param service
-     * @throws InterruptedException
      */
     public static void ensureInitializedLite( OntologyService service ) throws InterruptedException {
         if ( service.isOntologyLoaded() )
@@ -59,11 +57,6 @@ public class OntologyUtils {
     /**
      * Ensure that a given ontology is initialized, force-loading it via {@link OntologyService#initialize(boolean, boolean)},
      * but first setting how we load it. However, those parameters are ignored if the ontology is already loaded or in progress.
-     * @param service
-     * @param mode
-     * @param level
-     * @param searchEnabled
-     * @param processImports
      * @throws InterruptedException  in case the ontology initialization thread is started, we will wait which implies a
      *      possible interrupt
      */

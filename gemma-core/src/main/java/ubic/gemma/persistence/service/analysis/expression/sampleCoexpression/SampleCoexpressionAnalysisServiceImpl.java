@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.MatrixRowStats;
 import ubic.basecode.math.MatrixStats;
 import ubic.basecode.math.linearmodels.DesignMatrix;
@@ -34,7 +33,6 @@ import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis;
@@ -45,6 +43,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -53,6 +52,9 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.*;
+
+import static ubic.gemma.persistence.util.ByteArrayUtils.bytesToDoubleMatrix;
+import static ubic.gemma.persistence.util.ByteArrayUtils.doubleMatrixToBytes;
 
 /**
  * Manage the "sample correlation/coexpression" matrices.
@@ -63,7 +65,6 @@ import java.util.*;
 @CommonsLog
 public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpressionAnalysisService {
 
-    private static final ByteArrayConverter bac = new ByteArrayConverter();
     private static final String MSG_ERR_NO_VECTORS = "No processed expression vectors available for experiment, can not compute sample correlation matrix.";
     private static final String MSG_ERR_NO_DESIGN = "Can not run factor regression! No experimental factors found.";
     private static final String MSG_ERR_NO_FACTORS = "Can not run factor regression! No factors to include in the regressed matrix.";
@@ -233,8 +234,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         }
 
         try {
-            double[][] rawMatrix = SampleCoexpressionAnalysisServiceImpl.bac
-                    .byteArrayToDoubleMatrix( matrixBytes, numBa );
+            double[][] rawMatrix = bytesToDoubleMatrix( matrixBytes, numBa );
             DoubleMatrix<BioAssay, BioAssay> result = new DenseDoubleMatrix<>( rawMatrix );
             result.setRowNames( bioAssays );
             result.setColumnNames( bioAssays );
@@ -266,8 +266,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
                     bestBioAssayDimension.getBioAssays().size(), cormat.rows() ) );
         }
 
-        return new SampleCoexpressionMatrix( bestBioAssayDimension,
-                SampleCoexpressionAnalysisServiceImpl.bac.doubleMatrixToBytes( cormat.getRawMatrix() ) );
+        return new SampleCoexpressionMatrix( bestBioAssayDimension, doubleMatrixToBytes( cormat.getRawMatrix() ) );
     }
 
     private DoubleMatrix<BioAssay, BioAssay> dataToDoubleMat( ExpressionDataDoubleMatrix matrix ) {

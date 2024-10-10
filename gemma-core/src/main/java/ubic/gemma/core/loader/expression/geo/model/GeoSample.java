@@ -20,12 +20,11 @@ package ubic.gemma.core.loader.expression.geo.model;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import ubic.gemma.core.loader.expression.geo.GeoLibrarySource;
+import ubic.gemma.core.loader.expression.geo.GeoSampleType;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  * Represents a sample (GSM) in GEO. The channels correspond to BioMaterials; the sample itself corresponds to a
@@ -36,35 +35,30 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class GeoSample extends GeoData implements Comparable<GeoData> {
 
-    public enum LibraryStrategy {
-        OTHER, RNASEQ
-    }
-
     private static final Log log = LogFactory.getLog( GeoSample.class.getName() );
     private static final long serialVersionUID = -8820012224856178673L;
 
     private String status;
     private String submissionDate;
-    private int channelCount;
     private String id;
     // SAGE item
     private String anchor;
-    private List<GeoChannel> channels;
+    private final List<GeoChannel> channels = new ArrayList<>();
     private String dataProcessing = "";
     private String description = "";
     private String hybProtocol = "";
     private boolean isGenePix = false;
     private String lastUpdateDate = "";
     @Nullable
-    private String libSource;
+    private GeoLibrarySource libSource = null;
     @Nullable
-    private String libStrategy;
+    private GeoLibraryStrategy libStrategy = null;
     private boolean mightNotHaveDataInFile = false;
-    private Collection<GeoPlatform> platforms;
-    private final Collection<GeoReplication> replicates;
+    private Collection<GeoPlatform> platforms = new HashSet<>();
+    private final Collection<GeoReplication> replicates = new HashSet<>();
     private String scanProtocol = "";
-    private Collection<String> seriesAppearsIn = new HashSet<>();
-    private String supplementaryFile = "";
+    private final Collection<String> seriesAppearsIn = new HashSet<>();
+    private final Collection<String> supplementaryFiles = new LinkedHashSet<>();
     private int tagCount;
     private int tagLength;
 
@@ -72,20 +66,16 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
      * This is used to store the title for the sample as found in the GDS file, if it differs from the one in the GSE
      * file
      */
+    @Nullable
     private String titleInDataset = null;
 
-    private String type = "DNA";
+    private GeoSampleType type;
 
-    private final Collection<GeoVariable> variables;
+    private final Collection<GeoVariable> variables = new HashSet<>();
     private boolean warnedAboutGenePix = false;
 
     public GeoSample() {
-        channels = new ArrayList<>();
         this.addChannel();
-        contact = new GeoContact();
-        platforms = new HashSet<>();
-        replicates = new HashSet<>();
-        variables = new HashSet<>();
     }
 
     public void addChannel() {
@@ -98,7 +88,7 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         if ( GeoSample.log.isDebugEnabled() )
             GeoSample.log.debug( this + " is on " + platform );
 
-        if ( this.platforms.size() > 0 && !this.platforms.contains( platform ) ) {
+        if ( !this.platforms.isEmpty() && !this.platforms.contains( platform ) ) {
             GeoSample.log.warn( "Multi-platform sample: " + this );
         }
 
@@ -164,7 +154,15 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
 
     @Override
     public int compareTo( GeoData o ) {
-        return o.getGeoAccession().compareTo( this.getGeoAccession() );
+        if ( getGeoAccession() != null && o.getGeoAccession() != null ) {
+            return o.getGeoAccession().compareTo( this.getGeoAccession() );
+        } else if ( getGeoAccession() != null ) {
+            return -1;
+        } else if ( o.getGeoAccession() != null ) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 
     public String getId() {
@@ -189,10 +187,6 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
 
     public void setSubmissionDate( String submissionDate ) {
         this.submissionDate = submissionDate;
-    }
-
-    public void setChannelCount( int channelCount ) {
-        this.channelCount = channelCount;
     }
 
     public void setGenePix( boolean genePix ) {
@@ -232,13 +226,6 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     }
 
     /**
-     * @return Returns the channelCount.
-     */
-    public int getChannelCount() {
-        return this.channels.size();
-    }
-
-    /**
      * @return Returns the channels.
      */
     public List<GeoChannel> getChannels() {
@@ -274,12 +261,12 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     }
 
     @Nullable
-    public String getLibSource() {
+    public GeoLibrarySource getLibSource() {
         return this.libSource;
     }
 
     @Nullable
-    public String getLibStrategy() {
+    public GeoLibraryStrategy getLibStrategy() {
         return this.libStrategy;
     }
 
@@ -340,11 +327,8 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         return seriesAppearsIn;
     }
 
-    /**
-     * @return String
-     */
-    public String getSupplementaryFile() {
-        return supplementaryFile;
+    public Collection<String> getSupplementaryFiles() {
+        return supplementaryFiles;
     }
 
     /**
@@ -361,6 +345,7 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         return this.tagLength;
     }
 
+    @Nullable
     public String getTitleInDataset() {
         return titleInDataset;
     }
@@ -370,7 +355,7 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
      *
      * @return String
      */
-    public String getType() {
+    public GeoSampleType getType() {
         return this.type;
     }
 
@@ -415,10 +400,6 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         this.anchor = anchor;
     }
 
-    public void setChannels( List<GeoChannel> channelData ) {
-        this.channels = channelData;
-    }
-
     /**
      * @param dataProcessing The dataProcessing to set.
      */
@@ -450,11 +431,11 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         this.lastUpdateDate = lastUpdateDate;
     }
 
-    public void setLibSource( @Nullable String libSource ) {
+    public void setLibSource( @Nullable GeoLibrarySource libSource ) {
         this.libSource = libSource;
     }
 
-    public void setLibStrategy( @Nullable String libStrategy ) {
+    public void setLibStrategy( @Nullable GeoLibraryStrategy libStrategy ) {
         this.libStrategy = libStrategy;
     }
 
@@ -469,12 +450,8 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         this.scanProtocol = scanProtocol;
     }
 
-    public void setSeriesAppearsIn( Collection<String> otherSeriesAppearsIn ) {
-        this.seriesAppearsIn = otherSeriesAppearsIn;
-    }
-
-    public void setSupplementaryFile( String supplementaryFile ) {
-        this.supplementaryFile = supplementaryFile;
+    public void addToSupplementaryFiles( String s ) {
+        this.supplementaryFiles.add( s );
     }
 
     /**
@@ -491,7 +468,7 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         this.tagLength = tagLength;
     }
 
-    public void setTitleInDataset( String titleInDataset ) {
+    public void setTitleInDataset( @Nullable String titleInDataset ) {
         this.titleInDataset = titleInDataset;
     }
 
@@ -500,13 +477,13 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
      *
      * @param type new type
      */
-    public void setType( String type ) {
+    public void setType( GeoSampleType type ) {
         this.type = type;
     }
 
     @Override
     public String toString() {
-        return super.toString() + ( this.getPlatforms().size() > 0
+        return super.toString() + ( !this.getPlatforms().isEmpty()
                 ? " on " + ( this.getPlatforms().size() == 1 ? this.getPlatforms().iterator().next() : ( this.getPlatforms().size() + " platforms" ) )
                 : "" );
     }

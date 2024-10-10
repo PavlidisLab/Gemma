@@ -26,7 +26,6 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Distance;
 import ubic.basecode.math.KruskalWallis;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
@@ -42,7 +41,7 @@ import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponent
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
 
@@ -94,7 +93,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
      */
     public static void populateBMFMap( Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap,
             BioMaterial bm ) {
-        for ( FactorValue fv : bm.getFactorValues() ) {
+        for ( FactorValue fv : bm.getAllFactorValues() ) {
             ExperimentalFactor experimentalFactor = fv.getExperimentalFactor();
             double valueToStore;
             if ( experimentalFactor.getType().equals( FactorType.CONTINUOUS ) ) {
@@ -274,7 +273,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
         if ( experimentalFactors.isEmpty() ) {
             return importantFactors;
         }
-        Map<Long, ExperimentalFactor> factors = EntityUtils.getIdMap( experimentalFactors );
+        Map<Long, ExperimentalFactor> factors = IdentifiableUtils.getIdMap( experimentalFactors );
         SVDValueObject svdFactorAnalysis = this.svdFactorAnalysis( ee );
         if ( svdFactorAnalysis == null ) {
             return importantFactors;

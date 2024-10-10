@@ -42,6 +42,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableFilteringVoEnabledService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -83,6 +84,12 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment loadWithAuditTrail( Long id );
 
+    /**
+     * Load troubled experiment IDs.
+     * @see CuratableDao#loadTroubledIds()
+     */
+    List<Long> loadTroubledIds();
+
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor );
 
@@ -98,6 +105,15 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void addFactorValues( ExpressionExperiment ee, Map<BioMaterial, FactorValue> fvs );
+
+    /**
+     * Obtain raw vectors for a given QT.
+     * <p>
+     * This is preferable to using {@link ExpressionExperiment#getRawExpressionDataVectors()} as it only loads vectors
+     * relevant to the given QT.
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, QuantitationType qt );
 
     /**
      * Used when we want to add data for a quantitation type. Does not remove any existing vectors.
@@ -627,10 +643,10 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "GROUP_ADMIN", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Slice<ExpressionExperimentValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 
-    @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> loadLackingFactors();
 
-    @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> loadLackingTags();
 
     /**
@@ -695,7 +711,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<ExpressionExperiment> getExperimentsLackingPublications();
 
-    @Secured({ "GROUP_USER" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr );
 
     /**

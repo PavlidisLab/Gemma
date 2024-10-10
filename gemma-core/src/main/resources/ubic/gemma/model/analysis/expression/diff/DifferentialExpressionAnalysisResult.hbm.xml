@@ -21,8 +21,7 @@
             <column name="RANK" not-null="false" unique="false" sql-type="DOUBLE"/>
         </property>
         <property name="correctedPValueBin" type="java.lang.Integer">
-            <column name="CORRECTED_P_VALUE_BIN" not-null="false" unique="false" sql-type="INTEGER"
-                    index="corrpvalbin"/>
+            <column name="CORRECTED_P_VALUE_BIN" not-null="false" unique="false" sql-type="INTEGER"/>
         </property>
         <!-- FIXME: use cascade="all" when https://github.com/PavlidisLab/Gemma/issues/825 is resolved -->
         <set name="contrasts" lazy="true" fetch="select" mutable="false">

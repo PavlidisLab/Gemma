@@ -26,7 +26,6 @@ import org.apache.tools.ant.taskdefs.Untar;
 import org.apache.tools.ant.taskdefs.Untar.UntarCompressionMethod;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.persistence.util.EntityUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -68,7 +67,7 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
     protected void cleanUp( File outputFile ) {
         if ( this.doDelete ) {
             AbstractFetcher.log.info( "Cleaning up " + outputFile.getName() );
-            EntityUtils.deleteFile( outputFile );
+            FileUtils.deleteQuietly( outputFile );
         }
     }
 

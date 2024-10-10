@@ -20,10 +20,12 @@ package ubic.gemma.persistence.service.expression.biomaterial;
 
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @see BioMaterial
@@ -32,7 +34,18 @@ public interface BioMaterialDao extends BaseVoEnabledDao<BioMaterial, BioMateria
 
     BioMaterial copy( BioMaterial bioMaterial );
 
+    /**
+     * Find all the sub-biomaterials for a given biomaterial related by {@link BioMaterial#getSourceBioMaterial()}.
+     * <p>
+     * All the sub-biomaterials are visited recursively.
+     */
+    List<BioMaterial> findSubBioMaterials( BioMaterial bioMaterial );
+
+    List<BioMaterial> findSubBioMaterials( Collection<BioMaterial> bioMaterial );
+
     Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment );
+
+    Collection<BioMaterial> findByFactor( ExperimentalFactor experimentalFactor );
 
     /**
      * @param bioMaterialId biomaterial id
@@ -44,6 +57,9 @@ public interface BioMaterialDao extends BaseVoEnabledDao<BioMaterial, BioMateria
      * Thaw the given BioMaterial.
      * <p>
      * The following fields are initialized: sourceTaxon, treatments and factorValues.experimentalFactor.
+     * <p>
+     * If the bioMaterial has a sourceBioMaterial, it is thawed as well, recursively. Circular references are detected
+     * and will result in a {@link IllegalStateException}.
      */
     void thaw( BioMaterial bioMaterial );
 }

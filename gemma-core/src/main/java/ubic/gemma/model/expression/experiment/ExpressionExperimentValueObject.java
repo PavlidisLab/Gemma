@@ -15,10 +15,13 @@ import org.hibernate.Hibernate;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
+import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimensionValueObject;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.genome.TaxonValueObject;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.SecurityUtils;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -86,6 +89,12 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<CharacteristicValueObject> characteristics;
+
+    /**
+     * The single-cell dimension of the preferred single-cell vectors.
+     */
+    @Nullable
+    private SingleCellDimensionValueObject singleCellDimension;
 
     /**
      * Required when using the class as a spring bean.
@@ -166,6 +175,11 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         }
     }
 
+    public ExpressionExperimentValueObject( ExpressionExperiment ee, SingleCellDimension singleCellDimension, CellTypeAssignment cellTypeAssignment ) {
+        this( ee );
+        this.singleCellDimension = new SingleCellDimensionValueObject( singleCellDimension, cellTypeAssignment );
+    }
+
     public ExpressionExperimentValueObject( ExpressionExperiment ee ) {
         this( ee, false, false );
     }
@@ -177,7 +191,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this( ee );
 
         // ACL
-        boolean[] permissions = EntityUtils.getPermissions( aoi );
+        boolean[] permissions = SecurityUtils.getPermissions( aoi );
         this.setIsPublic( permissions[0] );
         this.setUserCanWrite( permissions[1] );
         this.setIsShared( permissions[2] );
@@ -220,6 +234,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.isShared = vo.getIsShared();
         this.geeq = vo.getGeeq();
         this.suitableForDEA = vo.getSuitableForDEA();
+        this.singleCellDimension = vo.getSingleCellDimension();
         this.characteristics = vo.getCharacteristics();
     }
 

@@ -46,7 +46,7 @@ public class UpdateGene2CsCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         int updated = tableMaintenanceUtil.updateGene2CsEntries( force );
         if ( updated > 0 ) {
             try {

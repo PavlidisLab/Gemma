@@ -40,7 +40,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
-import ubic.gemma.persistence.util.EntityUtils;
 
 import java.io.*;
 import java.util.*;
@@ -651,7 +650,9 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
             if ( f.exists() ) {
                 ArrayDesignAnnotationServiceImpl.log.warn( "Will overwrite existing file " + f );
-                EntityUtils.deleteFile( f );
+                if ( !f.delete() ) {
+                    throw new IOException( "Could not delete file " + f.getPath() );
+                }
             } else {
                 ArrayDesignAnnotationServiceImpl.log.info( "Creating new annotation file " + f + " \n" );
             }

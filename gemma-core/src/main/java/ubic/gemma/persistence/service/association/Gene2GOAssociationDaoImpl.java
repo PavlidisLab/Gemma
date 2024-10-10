@@ -31,7 +31,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.hibernate.HibernateUtils;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.persistence.util.QueryUtils;
 
 import javax.annotation.Nullable;
@@ -89,7 +89,7 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
         timer.start();
         int i = 0;
         for ( Collection<Gene> batch : batchIdentifiableParameterList( genes, geneBatchSize ) ) {
-            Map<Long, Gene> giMap = EntityUtils.getIdMap( batch );
+            Map<Long, Gene> giMap = IdentifiableUtils.getIdMap( batch );
             //noinspection unchecked
             List<Object[]> o = this.getSessionFactory().getCurrentSession()
                     .createQuery( "select g.id, geneAss.ontologyEntry from Gene2GOAssociation as geneAss join geneAss.gene g where g.id in (:genes)" )

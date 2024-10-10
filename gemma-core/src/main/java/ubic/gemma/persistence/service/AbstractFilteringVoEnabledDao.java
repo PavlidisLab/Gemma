@@ -219,7 +219,12 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                     log.trace( String.format( "Property %s%s of type %s was excluded in %s: BLOBs and CLOBs are not exposed by default.",
                             prefix, propertyName, propertyType.getName(), entityClass.getName() ) );
                 } else if ( Filter.getConversionService().canConvert( String.class, propertyType.getReturnedClass() ) ) {
+                    // enum types
                     registerProperty( prefix + propertyName, useSubquery );
+                } else if ( propertyType instanceof CustomType ) {
+                    // TODO: handle custom types
+                    log.trace( String.format( "Property %s%s of type %s was excluded in %s: custom types are not exposed by default.",
+                            prefix, propertyName, propertyType.getName(), entityClass.getName() ) );
                 } else {
                     log.warn( String.format( "Property %s%s of type %s in %s is not supported and will be skipped.",
                             prefix, propertyName, propertyType.getReturnedClass().getName(), entityClass.getName() ) );

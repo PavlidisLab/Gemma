@@ -40,7 +40,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.basecode.util.ConfigUtils;
 import ubic.basecode.util.FileTools;
@@ -59,6 +58,8 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.core.config.Settings;
+
+import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 
 /**
  * @author paul
@@ -385,8 +386,6 @@ public class AffyPowerToolsProbesetSummarize {
     private Collection<RawExpressionDataVector> convertDesignElementDataVectors(
             ExpressionExperiment expressionExperiment, BioAssayDimension bioAssayDimension, ArrayDesign targetPlatform,
             DoubleMatrix<String, String> matrix ) {
-        ByteArrayConverter bArrayConverter = new ByteArrayConverter();
-
         Collection<RawExpressionDataVector> vectors = new HashSet<>();
 
         Map<String, CompositeSequence> csMap = new HashMap<>();
@@ -398,7 +397,7 @@ public class AffyPowerToolsProbesetSummarize {
                 .info( "Target platform has " + csMap.size() + " elements, apt data matrix has " + matrix.rows() );
 
         for ( int i = 0; i < matrix.rows(); i++ ) {
-            byte[] bdata = bArrayConverter.doubleArrayToBytes( matrix.getRow( i ) );
+            byte[] bdata = doubleArrayToBytes( matrix.getRow( i ) );
 
             RawExpressionDataVector vector = RawExpressionDataVector.Factory.newInstance();
             vector.setData( bdata );

@@ -44,17 +44,6 @@ public abstract class AnalysisResultSet<R extends AnalysisResult> implements Ide
     }
 
     /**
-     * Returns a hash code based on this entity's identifiers.
-     */
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
-    }
-
-    /**
      * Returns <code>true</code> if the argument is an AnalysisResultSet instance and all identifiers for this entity
      * equal the identifiers of the argument entity. Returns <code>false</code> otherwise.
      */
@@ -66,8 +55,11 @@ public abstract class AnalysisResultSet<R extends AnalysisResult> implements Ide
         if ( !( object instanceof AnalysisResultSet ) ) {
             return false;
         }
-        final AnalysisResultSet that = ( AnalysisResultSet ) object;
-        return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
+        final AnalysisResultSet<?> that = ( AnalysisResultSet<?> ) object;
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        }
+        return false;
     }
 
     @Override

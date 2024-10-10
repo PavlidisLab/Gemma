@@ -65,6 +65,20 @@ public class DifferentialExpressionAnalysis extends SingleExperimentAnalysis {
         this.subsetFactorValue = subsetFactorValue;
     }
 
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof DifferentialExpressionAnalysis ) )
+            return false;
+        DifferentialExpressionAnalysis that = ( DifferentialExpressionAnalysis ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return this.getId().equals( that.getId() );
+        } else {
+            return false;
+        }
+    }
+
     public static final class Factory {
 
         public static DifferentialExpressionAnalysis newInstance() {

@@ -167,6 +167,12 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<Long> loadTroubledIds() {
+        return expressionExperimentDao.loadTroubledIds();
+    }
+
+    @Override
     @Transactional
     public ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor ) {
         ExpressionExperiment experiment = expressionExperimentDao.load( ee.getId() );
@@ -176,6 +182,10 @@ public class ExpressionExperimentServiceImpl
         factor.setExperimentalDesign( experiment.getExperimentalDesign() );
         factor.setSecurityOwner( experiment );
         factor = experimentalFactorService.create( factor ); // to make sure we get acls.
+        if ( experiment.getExperimentalDesign() == null ) {
+            log.info( "Creating missing experimental design for " + experiment );
+            experiment.setExperimentalDesign( new ExperimentalDesign() );
+        }
         experiment.getExperimentalDesign().getExperimentalFactors().add( factor );
         expressionExperimentDao.update( experiment );
         return factor;
@@ -187,6 +197,10 @@ public class ExpressionExperimentServiceImpl
         assert fv.getExperimentalFactor() != null;
         ExpressionExperiment experiment = requireNonNull( expressionExperimentDao.load( ee.getId() ) );
         fv.setSecurityOwner( experiment );
+        if ( experiment.getExperimentalDesign() == null ) {
+            log.info( "Creating missing experimental design for " + experiment );
+            experiment.setExperimentalDesign( new ExperimentalDesign() );
+        }
         Collection<ExperimentalFactor> efs = experiment.getExperimentalDesign().getExperimentalFactors();
         fv = this.factorValueService.create( fv );
         for ( ExperimentalFactor ef : efs ) {
@@ -204,6 +218,10 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     public void addFactorValues( ExpressionExperiment ee, Map<BioMaterial, FactorValue> fvs ) {
         ExpressionExperiment experiment = requireNonNull( expressionExperimentDao.load( ee.getId() ) );
+        if ( experiment.getExperimentalDesign() == null ) {
+            log.info( "Creating missing experimental design for " + experiment );
+            experiment.setExperimentalDesign( new ExperimentalDesign() );
+        }
         Collection<ExperimentalFactor> efs = experiment.getExperimentalDesign().getExperimentalFactors();
         int count = 0;
         for ( BioMaterial bm : fvs.keySet() ) {
@@ -226,6 +244,12 @@ public class ExpressionExperimentServiceImpl
         log.info( "Processed: " + count + " biomaterials for new factor values, updating ..." );
         //  expressionExperimentDao.update( experiment );
         bioMaterialService.update( fvs.keySet() );
+    }
+
+    @Override
+    @Transactional
+    public Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, QuantitationType qt ) {
+        return expressionExperimentDao.getRawDataVectors( ee, qt );
     }
 
     @Override
@@ -713,7 +737,7 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public <T extends Exception> ExpressionExperiment loadAndThawLiteOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
         ExpressionExperiment ee = loadOrFail( id, exceptionSupplier, message );
-        this.expressionExperimentDao.thawWithoutVectors( ee );
+        this.expressionExperimentDao.thawLite( ee );
         return ee;
     }
 
@@ -743,7 +767,7 @@ public class ExpressionExperimentServiceImpl
     public ExpressionExperiment loadAndThawLiteWithRefreshCacheMode( Long id ) {
         ExpressionExperiment ee = expressionExperimentDao.load( id, CacheMode.REFRESH );
         if ( ee != null ) {
-            this.expressionExperimentDao.thawWithoutVectors( ee );
+            this.expressionExperimentDao.thawLite( ee );
         }
         return ee;
     }
@@ -784,8 +808,10 @@ public class ExpressionExperimentServiceImpl
      */
     @Value(staticConstructor = "from")
     private static class SubClauseKey {
+        @Nullable
         String objectAlias;
         String propertyName;
+        @Nullable
         String originalProperty;
     }
 
@@ -905,6 +931,7 @@ public class ExpressionExperimentServiceImpl
         private final OntologyTerm categoryTerm;
 
         public OntologyTermSimpleWithCategory( @Nullable String uri, String term, @Nullable OntologyTerm categoryTerm ) {
+            //noinspection DataFlowIssue
             super( uri, term );
             this.categoryTerm = categoryTerm;
         }
@@ -1306,7 +1333,7 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public ExpressionExperiment thawLite( final ExpressionExperiment expressionExperiment ) {
         ExpressionExperiment result = ensureInSession( expressionExperiment );
-        this.expressionExperimentDao.thawWithoutVectors( result );
+        this.expressionExperimentDao.thawLite( result );
         return result;
     }
 

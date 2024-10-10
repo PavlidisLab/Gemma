@@ -25,7 +25,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.loader.expression.geo.*;
 import ubic.gemma.core.loader.expression.geo.model.*;
@@ -40,14 +39,14 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentPrePersistService;
+import ubic.gemma.persistence.persister.ArrayDesignsForExperimentCache;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentPrePersistService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.persister.ArrayDesignsForExperimentCache;
 
 import java.io.File;
 import java.util.*;
@@ -71,13 +70,9 @@ public class GeoServiceImpl extends AbstractGeoService {
     private final ExpressionExperimentService expressionExperimentService;
     private final ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
     private final TaxonService taxonService;
-
     private final CharacteristicService characteristicService;
-
     private final BioMaterialService bioMaterialService;
-    private BibliographicReferenceService bibliographicReferenceService;
-
-    private AuditTrailService auditTrailService;
+    private final AuditTrailService auditTrailService;
 
 
     @Autowired
@@ -87,7 +82,7 @@ public class GeoServiceImpl extends AbstractGeoService {
             ExpressionExperimentPrePersistService expressionExperimentPrePersistService,
             TaxonService taxonService,
             CharacteristicService characteristicService,
-            BioMaterialService bioMaterialSerivce, BibliographicReferenceService bibliographicReferenceService, AuditTrailService auditTrailService ) {
+            BioMaterialService bioMaterialSerivce, AuditTrailService auditTrailService ) {
         this.arrayDesignReportService = arrayDesignReportService;
         this.bioAssayService = bioAssayService;
         this.expressionExperimentReportService = expressionExperimentReportService;
@@ -95,7 +90,6 @@ public class GeoServiceImpl extends AbstractGeoService {
         this.expressionExperimentPrePersistService = expressionExperimentPrePersistService;
         this.characteristicService = characteristicService;
         this.bioMaterialService = bioMaterialSerivce;
-        this.bibliographicReferenceService = bibliographicReferenceService;
         this.taxonService = taxonService;
         this.auditTrailService = auditTrailService;
     }
@@ -110,8 +104,8 @@ public class GeoServiceImpl extends AbstractGeoService {
 
         String geoAccession = targetPlatform.getExternalReferences().iterator().next().getAccession();
         Collection<? extends GeoData> platforms = geoDomainObjectGenerator.generate( geoAccession );
-        if ( platforms.size() == 0 ) {
-            throw new IllegalStateException();
+        if ( platforms.isEmpty() ) {
+            throw new IllegalStateException( "No GEO data was generated for " + geoAccession + "." );
         }
 
         /*
@@ -194,7 +188,7 @@ public class GeoServiceImpl extends AbstractGeoService {
 
         if ( loadPlatformOnly ) {
             Collection<? extends GeoData> platforms = geoDomainObjectGenerator.generate( geoAccession );
-            if ( platforms.size() == 0 ) {
+            if ( platforms.isEmpty() ) {
                 AbstractGeoService.log
                         .warn( "GeoService.fetchAndLoad( targetPlatformAcc, true, false, false, false );t no results" );
                 return null;
@@ -202,7 +196,7 @@ public class GeoServiceImpl extends AbstractGeoService {
             geoConverter.setForceConvertElements( true );
 
             for ( GeoData d : platforms ) {
-                if ( expressionExperimentService.isBlackListed( d.getGeoAccession() ) ) {
+                if ( d.getGeoAccession() != null && expressionExperimentService.isBlackListed( d.getGeoAccession() ) ) {
                     throw new IllegalArgumentException(
                             "Entity with accession " + d.getGeoAccession() + " is blacklisted" );
                 }
@@ -213,8 +207,8 @@ public class GeoServiceImpl extends AbstractGeoService {
         }
 
         Collection<? extends GeoData> parseResult = geoDomainObjectGenerator.generate( geoAccession );
-        if ( parseResult.size() == 0 ) {
-            AbstractGeoService.log.warn( "Got no results" );
+        if ( parseResult.isEmpty() ) {
+            AbstractGeoService.log.warn( "Got no results for " + geoAccession );
             return null;
         }
         AbstractGeoService.log.debug( "Generated GEO domain objects for " + geoAccession );
@@ -314,6 +308,7 @@ public class GeoServiceImpl extends AbstractGeoService {
         Collection<? extends GeoData> parseResult = geoDomainObjectGenerator.generate( geoAccession );
         Object obj = parseResult.iterator().next();
         GeoSeries series = ( GeoSeries ) obj;
+        //noinspection unchecked
         Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoConverter.convert( series, true );
 
         /*
@@ -403,13 +398,14 @@ public class GeoServiceImpl extends AbstractGeoService {
                 }
 
 
-                if (numNewCharacteristics == 0 ) {
-                    // that's okay but probably shouldn't do anything
-                } else {
+                if ( numNewCharacteristics > 0 ) {
                     expressionExperimentService.update( ee );
                     String message = " Updated from GEO; " + numNewCharacteristics + " characteristics added/replaced" + ( pubUpdate ? "; Publication added" : "" );
                     log.info( ee.getShortName() + message );
                     auditTrailService.addUpdateEvent( ee, ExpressionExperimentUpdateFromGEOEvent.class, message );
+                } else {
+                    // that's okay but probably shouldn't do anything
+                    log.debug( "No new characteristics for " + ee );
                 }
 
             }
@@ -442,7 +438,7 @@ public class GeoServiceImpl extends AbstractGeoService {
                     + ee.getShortName() + ", has " + ee.getBioAssays().size() + ", minimum is  " + MINIMUM_SAMPLE_COUNT_TO_LOAD );
         }
 
-        if ( ee.getRawExpressionDataVectors().size() == 0 ) {
+        if ( ee.getRawExpressionDataVectors().isEmpty() ) {
             /*
              * This is okay if the platform is MPSS or Exon arrays for which we load data later.
              */
@@ -452,7 +448,7 @@ public class GeoServiceImpl extends AbstractGeoService {
     }
 
     private void checkForExisting( Collection<DatabaseEntry> projectedAccessions ) {
-        if ( projectedAccessions == null || projectedAccessions.size() == 0 ) {
+        if ( projectedAccessions == null || projectedAccessions.isEmpty() ) {
             return; // that's okay, it might have been a GPL.
         }
         for ( DatabaseEntry entry : projectedAccessions ) {
@@ -520,6 +516,10 @@ public class GeoServiceImpl extends AbstractGeoService {
         Collection<GeoSample> toSkip = new HashSet<>();
 
         for ( GeoSample sample : series.getSamples() ) {
+            if ( sample.getGeoAccession() == null ) {
+                log.warn( "Ignoring sample without GEO accession in " + series );
+                continue;
+            }
             if ( !sample.appearsInMultipleSeries() ) {
                 // nothing to worry about: if this series is not loaded, then we're guaranteed to be new.
                 continue;
@@ -562,14 +562,14 @@ public class GeoServiceImpl extends AbstractGeoService {
         }
 
         // update the description, so we keep some kind of record.
-        if ( toSkip.size() > 0 ) {
+        if ( !toSkip.isEmpty() ) {
             series.setSummaries( series.getSummaries() + ( StringUtils.isBlank( series.getSummaries() ) ? "" : "\n" ) + "Note: " + toSkip.size()
                     + " samples from this series, which appear in other Expression Experiments in Gemma, "
                     + "were not imported from the GEO source. The following samples were removed: " + StringUtils
                     .join( toSkip, "," ) );
         }
 
-        if ( series.getSamples().size() == 0 ) {
+        if ( series.getSamples().isEmpty() ) {
             throw new AlreadyExistsInSystemException(
                     "All the samples in " + series + " are in the system already (in other ExpressionExperiments)" );
         }
@@ -782,7 +782,7 @@ public class GeoServiceImpl extends AbstractGeoService {
     private Set<GeoPlatform> getPlatforms( GeoSeries series ) {
         Set<GeoPlatform> platforms = new HashSet<>();
 
-        if ( series.getDataSets().size() > 0 ) {
+        if ( !series.getDataSets().isEmpty() ) {
             for ( GeoDataset dataset : series.getDataSets() ) {
                 platforms.add( dataset.getPlatform() );
             }
@@ -829,7 +829,7 @@ public class GeoServiceImpl extends AbstractGeoService {
             AbstractGeoService.log.info( "Processing subseries " + subSeriesAccession );
             geoDomainObjectGenerator.initialize();
             Collection<? extends GeoData> parseResult = geoDomainObjectGenerator.generate( subSeriesAccession );
-            if ( parseResult.size() == 0 ) {
+            if ( parseResult.isEmpty() ) {
                 AbstractGeoService.log.warn( "Got no results for " + subSeriesAccession );
                 continue;
             }
@@ -916,11 +916,11 @@ public class GeoServiceImpl extends AbstractGeoService {
             ArrayDesignsForExperimentCache c ) {
 
         Set<GeoPlatform> platforms = this.getPlatforms( series );
-        if ( platforms.size() == 0 )
-            throw new IllegalStateException( "Series has no platforms" );
+        if ( platforms.isEmpty() )
+            throw new IllegalStateException( "Series " + series + " has no platforms" );
         for ( GeoPlatform pl : platforms ) {
 
-            if ( expressionExperimentService.isBlackListed( pl.getGeoAccession() ) ) {
+            if ( pl.getGeoAccession() != null && expressionExperimentService.isBlackListed( pl.getGeoAccession() ) ) {
                 throw new IllegalArgumentException(
                         "A platform used by " + series.getGeoAccession() + " is blacklisted: " + pl.getGeoAccession() );
             }

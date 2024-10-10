@@ -54,6 +54,7 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
     private String factorName;
 
     public SplitExperimentCli() {
+        super();
         setSingleExperimentMode();
     }
 

@@ -23,11 +23,12 @@ import cern.colt.list.DoubleArrayList;
 import cern.colt.list.IntArrayList;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import ubic.basecode.io.ByteArrayConverter;
 
 import java.io.Serializable;
 import java.util.List;
 import java.util.TreeMap;
+
+import static ubic.gemma.persistence.util.ByteArrayUtils.*;
 
 /**
  * Represents a GeneCoexpressionNodeDegree
@@ -36,7 +37,6 @@ import java.util.TreeMap;
  */
 public class GeneCoexpressionNodeDegreeValueObject implements Serializable {
 
-    private static final ByteArrayConverter bac = new ByteArrayConverter();
     private Long geneId;
     private TreeMap<Integer, Integer> nodeDegreesNeg = new TreeMap<>();
     private TreeMap<Integer, Integer> nodeDegreesPos = new TreeMap<>();
@@ -88,9 +88,9 @@ public class GeneCoexpressionNodeDegreeValueObject implements Serializable {
      */
     public Integer getLinksWithExactSupport( Integer support, boolean positive ) {
         if ( positive ) {
-            return nodeDegreesPos.containsKey( support ) ? nodeDegreesPos.get( support ) : 0;
+            return nodeDegreesPos.getOrDefault( support, 0 );
         }
-        return nodeDegreesNeg.containsKey( support ) ? nodeDegreesNeg.get( support ) : 0;
+        return nodeDegreesNeg.getOrDefault( support, 0 );
 
     }
 
@@ -115,12 +115,12 @@ public class GeneCoexpressionNodeDegreeValueObject implements Serializable {
         if ( positive ) {
             int maxSupportPos = this.getMaxSupportPos();
             for ( Integer i = support; i <= maxSupportPos; i++ ) {
-                sum += nodeDegreesPos.containsKey( i ) ? nodeDegreesPos.get( i ) : 0;
+                sum += nodeDegreesPos.getOrDefault( i, 0 );
             }
         } else {
             int maxSupportNeg = this.getMaxSupportNeg();
             for ( Integer i = support; i <= maxSupportNeg; i++ ) {
-                sum += nodeDegreesNeg.containsKey( i ) ? nodeDegreesNeg.get( i ) : 0;
+                sum += nodeDegreesNeg.getOrDefault( i, 0 );
             }
         }
 
@@ -218,40 +218,40 @@ public class GeneCoexpressionNodeDegreeValueObject implements Serializable {
         r.setGeneId( this.geneId );
 
         r.setRelativeLinkRanksPositive(
-                GeneCoexpressionNodeDegreeValueObject.bac.doubleArrayToBytes( this.asDoubleArrayPosRanks() ) );
+                doubleArrayToBytes( this.asDoubleArrayPosRanks() ) );
         r.setRelativeLinkRanksNegative(
-                GeneCoexpressionNodeDegreeValueObject.bac.doubleArrayToBytes( this.asDoubleArrayNegRanks() ) );
+                doubleArrayToBytes( this.asDoubleArrayNegRanks() ) );
 
-        r.setLinkCountsPositive( GeneCoexpressionNodeDegreeValueObject.bac.intArrayToBytes( this.asIntArrayPos() ) );
-        r.setLinkCountsNegative( GeneCoexpressionNodeDegreeValueObject.bac.intArrayToBytes( this.asIntArrayNeg() ) );
+        r.setLinkCountsPositive( intArrayToBytes( this.asIntArrayPos() ) );
+        r.setLinkCountsNegative( intArrayToBytes( this.asIntArrayNeg() ) );
 
         return r;
     }
 
     private void initLinkCounts( byte[] linkCountBytes, boolean isPositive ) {
-        int[] byteArrayToInts = GeneCoexpressionNodeDegreeValueObject.bac.byteArrayToInts( linkCountBytes );
+        int[] linkCounts = byteArrayToInts( linkCountBytes );
 
-        if ( byteArrayToInts.length < 2 ) {
+        if ( linkCounts.length < 2 ) {
             return;
         }
 
         //noinspection Duplicates // Can not extract method, arrays have diferent primitive types
         if ( isPositive ) {
             nodeDegreesPos = new TreeMap<>();
-            for ( int i = 1; i < byteArrayToInts.length; i++ ) {
-                nodeDegreesPos.put( i, byteArrayToInts[i] );
+            for ( int i = 1; i < linkCounts.length; i++ ) {
+                nodeDegreesPos.put( i, linkCounts[i] );
             }
         } else {
             nodeDegreesNeg = new TreeMap<>();
-            for ( int i = 1; i < byteArrayToInts.length; i++ ) {
-                nodeDegreesNeg.put( i, byteArrayToInts[i] );
+            for ( int i = 1; i < linkCounts.length; i++ ) {
+                nodeDegreesNeg.put( i, linkCounts[i] );
             }
         }
 
     }
 
     private void initRelRanks( byte[] relativeLinkRanks, boolean isPositive ) {
-        double[] ranks = GeneCoexpressionNodeDegreeValueObject.bac.byteArrayToDoubles( relativeLinkRanks );
+        double[] ranks = byteArrayToDoubles( relativeLinkRanks );
 
         if ( ranks.length < 2 ) {
             return;
@@ -300,12 +300,8 @@ public class GeneCoexpressionNodeDegreeValueObject implements Serializable {
             return this.toPrimitive( list );
         Integer maxSupport = nodedeg.lastKey();
         list.setSize( maxSupport + 1 );
-        for ( Integer s = 0; s <= maxSupport; s++ ) {
-            if ( nodedeg.containsKey( s ) ) {
-                list.set( s, nodedeg.get( s ) );
-            } else {
-                list.set( s, 0 );
-            }
+        for ( int s = 0; s <= maxSupport; s++ ) {
+            list.set( s, nodedeg.getOrDefault( s, 0 ) );
         }
         return this.toPrimitive( list );
     }
