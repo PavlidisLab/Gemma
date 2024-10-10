@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.util.test.category.PubMedTest;
@@ -37,6 +38,7 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatExceptionIsDueToNe
 /**
  * @author pavlidis
  */
+@Ignore("This is failing with 400 errors on the CI (see https://github.com/PavlidisLab/Gemma/issues/1246)")
 @Category({ PubMedTest.class, SlowTest.class })
 public class PubMedXMLFetcherTest {
     private static final Log log = LogFactory.getLog( PubMedXMLFetcherTest.class.getName() );
