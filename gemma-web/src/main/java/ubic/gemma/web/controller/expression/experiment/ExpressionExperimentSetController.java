@@ -342,7 +342,7 @@ public class ExpressionExperimentSetController extends BaseController {
         return removedSets;
     }
 
-    @RequestMapping(value = "/showExpressionExperimentSet.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/showExpressionExperimentSet.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showExpressionExperimentSet( HttpServletRequest request ) {
 
         ModelAndView mav = new ModelAndView( "expressionExperimentSet.detail" );

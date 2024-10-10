@@ -79,7 +79,7 @@ public class ExpressionDataFileUploadController {
         return taskRunningService.submitTask( new SimpleEELoadLocalTask( loadEECommand ) );
     }
 
-    @RequestMapping(value = "/expressionExperiment/upload.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/expressionExperiment/upload.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView show() {
         return new ModelAndView( "dataUpload" );
     }

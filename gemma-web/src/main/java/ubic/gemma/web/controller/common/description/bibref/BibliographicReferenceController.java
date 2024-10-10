@@ -25,7 +25,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
@@ -38,6 +37,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.JsonReaderResponse;
@@ -198,12 +198,12 @@ public class BibliographicReferenceController extends BaseController {
         }
     }
 
-    @RequestMapping(value = "/searchBibRefs.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/searchBibRefs.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView searchBibRefs() {
         return new ModelAndView( "bibRefList" );
     }
 
-    @RequestMapping(value = "/bibRefView.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/bibRefView.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView show( @RequestParam(value = "accession", required = false) String pubMedId, @RequestParam(value = "id", required = false) String gemmaId, HttpServletRequest request ) {
         // FIXME: allow use of the primary key as well.
 
@@ -219,6 +219,8 @@ public class BibliographicReferenceController extends BaseController {
         if ( bibRef == null ) {
             try {
                 bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+            } catch ( NumberFormatException e ) {
+                // ignore, this will be treated as an EntityNotFoundException
             } catch ( IOException e ) {
                 throw new RuntimeException( "Failed to retrieve publication with PubMed ID: " + pubMedId, e );
             }
@@ -238,7 +240,7 @@ public class BibliographicReferenceController extends BaseController {
                 .addObject( "byAccession", Boolean.TRUE ).addObject( "accession", pubMedId );
     }
 
-    @RequestMapping(value = "/showAllEeBibRefs.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/showAllEeBibRefs.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showAllForExperiments() {
         Map<ExpressionExperiment, BibliographicReference> eeToBibRefs = bibliographicReferenceService
                 .getAllExperimentLinkedReferences();

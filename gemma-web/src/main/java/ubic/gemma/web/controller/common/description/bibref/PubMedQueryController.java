@@ -48,7 +48,7 @@ public class PubMedQueryController extends BaseController {
 
     private final PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
 
-    @RequestMapping(method = RequestMethod.GET)
+    @RequestMapping(method = { RequestMethod.GET, RequestMethod.HEAD })
     public String getView() {
         return "bibRefSearch";
     }

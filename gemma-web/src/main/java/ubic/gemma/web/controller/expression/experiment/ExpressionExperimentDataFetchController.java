@@ -80,7 +80,7 @@ public class ExpressionExperimentDataFetchController {
      * Regular spring MVC request to fetch a file that already has been generated. It is assumed that the file is in the
      * DATA_DIR.
      */
-    @RequestMapping(value = "/getData.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/getData.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void downloadFile( @RequestParam("file") String filename, HttpServletResponse response ) throws IOException {
         if ( StringUtils.isBlank( filename ) ) {
             throw new IllegalArgumentException( "The 'file' parameter must not be empty." );
@@ -90,7 +90,7 @@ public class ExpressionExperimentDataFetchController {
         this.download( dataDir.resolve( filename ).toFile(), null, MediaType.APPLICATION_OCTET_STREAM_VALUE, response );
     }
 
-    @RequestMapping(value = "/getMetaData.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/getMetaData.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void downloadMetaFile( @RequestParam("eeId") Long eeId, @RequestParam("typeId") Integer typeId, HttpServletResponse response ) throws IOException {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId );
         ExpressionExperimentMetaFileType type = this.getType( typeId );

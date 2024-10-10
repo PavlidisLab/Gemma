@@ -361,7 +361,7 @@ public class GeneSetController {
      * @param request request
      * @return model and view
      */
-    @RequestMapping(value = "/showGeneSet.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/showGeneSet.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showGeneSet( HttpServletRequest request ) {
 
         ModelAndView mav = new ModelAndView( "geneSet.detail" );

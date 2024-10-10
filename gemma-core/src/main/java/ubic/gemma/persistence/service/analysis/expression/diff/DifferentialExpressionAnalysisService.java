@@ -32,6 +32,7 @@ import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisService;
 
 import javax.annotation.CheckReturnValue;
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,9 @@ import java.util.Map;
  * @author kelsey
  */
 public interface DifferentialExpressionAnalysisService extends BaseService<DifferentialExpressionAnalysis>, SingleExperimentAnalysisService<DifferentialExpressionAnalysis> {
+
+    @Nullable
+    DifferentialExpressionAnalysis loadWithExperimentAnalyzed( Long id );
 
     @Secured({ "GROUP_USER" })
     DifferentialExpressionAnalysis create( DifferentialExpressionAnalysis analysis );

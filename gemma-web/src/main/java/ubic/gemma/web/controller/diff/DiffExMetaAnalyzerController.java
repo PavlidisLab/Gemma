@@ -104,7 +104,7 @@ public class DiffExMetaAnalyzerController {
         return taskRunningService.submitTaskCommand( cmd );
     }
 
-    @RequestMapping(value = { "/metaAnalysisManager.html" }, method = RequestMethod.GET)
+    @RequestMapping(value = { "/metaAnalysisManager.html" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showMetaAnalysisManager() {
         return new ModelAndView( "metaAnalysisManager" );
     }

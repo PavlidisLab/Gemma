@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,16 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
     public ExpressionAnalysisResultSetServiceImpl( ExpressionAnalysisResultSetDao voDao ) {
         super( voDao );
         this.voDao = voDao;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionAnalysisResultSet loadWithAnalysis( Long id ) {
+        ExpressionAnalysisResultSet rs = load( id );
+        if ( rs != null ) {
+            Hibernate.initialize( rs.getAnalysis() );
+        }
+        return rs;
     }
 
     @Override

@@ -159,7 +159,7 @@ public class ArrayDesignController {
 
     }
 
-    @RequestMapping(value = "/downloadAnnotationFile.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/downloadAnnotationFile.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void downloadAnnotationFile( @RequestParam("id") Long arrayDesignId, @RequestParam(value = "fileType", required = false) String fileType, HttpServletResponse response ) throws IOException {
         if ( fileType == null || fileType.equalsIgnoreCase( "allParents" ) ) {
             fileType = ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX;
@@ -203,7 +203,7 @@ public class ArrayDesignController {
         }
     }
 
-    @RequestMapping(value = "/filterArrayDesigns.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/filterArrayDesigns.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView filter( @RequestParam("filter") String filter ) {
         StopWatch overallWatch = new StopWatch();
         overallWatch.start();
@@ -252,7 +252,7 @@ public class ArrayDesignController {
 
     }
 
-    @RequestMapping(value = "/generateArrayDesignSummary.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/generateArrayDesignSummary.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView generateSummary( @RequestParam(value = "id", required = false) Long id ) {
         // if no IDs are specified, then load all expressionExperiments and show the summary (if available)
         GenerateArraySummaryLocalTask job;
@@ -466,17 +466,17 @@ public class ArrayDesignController {
 
     }
 
-    @RequestMapping(value = "/showAllArrayDesigns.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/showAllArrayDesigns.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showAllArrayDesigns() {
         return new ModelAndView( "arrayDesigns" );
     }
 
-    @RequestMapping(value = { "/showArrayDesign.html", "/" }, params = { "id" }, method = RequestMethod.GET)
+    @RequestMapping(value = { "/showArrayDesign.html", "/" }, params = { "id" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showArrayDesign( @RequestParam("id") Long id ) {
         return showArrayDesignInternal( arrayDesignService.loadOrFail( id, EntityNotFoundException::new, "No platform was found for ID " + id + "." ) );
     }
 
-    @RequestMapping(value = { "/showArrayDesign.html", "/" }, params = { "name" }, method = RequestMethod.GET)
+    @RequestMapping(value = { "/showArrayDesign.html", "/" }, params = { "name" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showArrayDesignByName( @RequestParam("name") String name ) {
         ArrayDesign arrayDesign = arrayDesignService.findByShortName( name );
         if ( arrayDesign == null ) {
@@ -495,7 +495,7 @@ public class ArrayDesignController {
                 .addObject( "arrayDesignName", arrayDesign.getName() );
     }
 
-    @RequestMapping(value = "/showCompositeSequenceSummary.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/showCompositeSequenceSummary.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showCompositeSequences( @RequestParam("id") Long id ) {
         ArrayDesign arrayDesign = arrayDesignService.loadOrFail( id,
                 EntityNotFoundException::new, "No platform was found for ID " + id + "." );
@@ -515,7 +515,7 @@ public class ArrayDesignController {
         return mav;
     }
 
-    @RequestMapping(value = "/showExpressionExperiments.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/showExpressionExperiments.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showExpressionExperiments( @RequestParam("id") Long id ) {
         ArrayDesign arrayDesign = arrayDesignService.load( id );
         if ( arrayDesign == null ) {

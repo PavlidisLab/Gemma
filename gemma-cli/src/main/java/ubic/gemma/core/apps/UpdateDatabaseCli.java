@@ -5,28 +5,22 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
-import org.springframework.jdbc.datasource.init.CompositeDatabasePopulator;
 import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.persistence.hibernate.LocalSessionFactoryBean;
-import ubic.gemma.persistence.initialization.CreateDatabasePopulator;
-import ubic.gemma.persistence.initialization.DatabaseSchemaPopulator;
-import ubic.gemma.persistence.initialization.InitialDataPopulator;
+import ubic.gemma.persistence.initialization.DatabaseSchemaUpdatePopulator;
 
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
 
-import static ubic.gemma.persistence.initialization.BootstrappedDataSourceFactory.createBootstrappedDataSource;
-
 /**
- * Initialize the database.
+ * Update the database.
  * <p>
  * This is exclusively available for the test database.
  */
 @Profile("testdb")
-public class InitializeDatabaseCli extends AbstractCLI {
+public class UpdateDatabaseCli extends AbstractCLI {
 
     @Autowired
     private DataSource dataSource;
@@ -34,21 +28,18 @@ public class InitializeDatabaseCli extends AbstractCLI {
     @Autowired
     private LocalSessionFactoryBean factory;
 
-    @Value("${gemma.testdb.name}")
-    private String databaseName;
-
     private boolean force;
 
     @Nullable
     @Override
     public String getCommandName() {
-        return "initializeDatabase";
+        return "updateDatabase";
     }
 
     @Nullable
     @Override
     public String getShortDesc() {
-        return "Initialize the database";
+        return "Update the database";
     }
 
     @Override
@@ -74,20 +65,12 @@ public class InitializeDatabaseCli extends AbstractCLI {
         } else {
             jdbcUrl = dataSource.toString();
         }
+        DatabaseSchemaUpdatePopulator pop = new DatabaseSchemaUpdatePopulator( factory.getConfiguration(), "mysql" );
         if ( force ) {
-            log.info( "The following data source will be initialized: " + jdbcUrl );
+            log.info( "The following database will be updated: " + jdbcUrl );
         } else {
-            promptConfirmationOrAbort( "The following data source will be initialized: " + jdbcUrl );
+            promptConfirmationOrAbort( "The following database will be updated: " + jdbcUrl );
         }
-        try ( HikariDataSource bootstrappedDataSource = createBootstrappedDataSource( dataSource ) ) {
-            CreateDatabasePopulator cdb = new CreateDatabasePopulator( databaseName );
-            cdb.setDropIfExists( true );
-            DatabasePopulatorUtils.execute( cdb, bootstrappedDataSource );
-        }
-        CompositeDatabasePopulator cdp = new CompositeDatabasePopulator();
-        cdp.addPopulators(
-                new DatabaseSchemaPopulator( factory, "mysql" ),
-                new InitialDataPopulator( false ) );
-        DatabasePopulatorUtils.execute( cdp, dataSource );
+        DatabasePopulatorUtils.execute( pop, dataSource );
     }
 }

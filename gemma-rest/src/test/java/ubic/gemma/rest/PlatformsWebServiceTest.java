@@ -1,5 +1,6 @@
 package ubic.gemma.rest;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -82,7 +83,8 @@ public class PlatformsWebServiceTest extends BaseJerseyIntegrationTest {
         assertThat( response )
                 .hasFieldOrPropertyWithValue( "offset", 0 )
                 .hasFieldOrPropertyWithValue( "limit", 20 );
-        assertThat( response.getData() ).asList()
+        assertThat( response.getData() )
+                .asInstanceOf( InstanceOfAssertFactories.LIST )
                 .hasSize( 1 )
                 .first().hasFieldOrPropertyWithValue( "id", expressionExperiment.getId() );
     }

@@ -106,7 +106,7 @@ public class SystemMonitorController {
         this.hibernateMonitor = hibernateMonitor;
     }
 
-    @RequestMapping(value = "/admin/systemStats.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/admin/systemStats.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public String show() {
         return "/admin/systemStats";
     }

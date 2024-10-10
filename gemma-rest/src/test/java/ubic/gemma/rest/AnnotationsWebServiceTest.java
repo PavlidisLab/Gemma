@@ -177,8 +177,8 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest {
                 .thenAnswer( a -> Filter.by( "t", "scientificName", String.class, Filter.Operator.eq, a.getArgument( 3, String.class ), a.getArgument( 0 ) ) );
         when( expressionExperimentService.getIdentifierPropertyName() ).thenReturn( "id" );
         when( expressionExperimentService.getFilter( "id", Filter.Operator.eq, "1" ) ).thenReturn( Filter.by( "ee", "id", Long.class, Filter.Operator.in, Collections.singleton( 1L ), "id" ) );
-        when( expressionExperimentService.getSort( "id", Sort.Direction.ASC ) ).thenReturn( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) );
-        when( expressionExperimentService.loadValueObjects( any( Filters.class ), eq( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) ), eq( 0 ), eq( 20 ) ) )
+        when( expressionExperimentService.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ) ).thenReturn( Sort.by( "ee", "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" ) );
+        when( expressionExperimentService.loadValueObjects( any( Filters.class ), eq( Sort.by( "ee", "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" ) ), eq( 0 ), eq( 20 ) ) )
                 .thenAnswer( a -> new Slice<>( Collections.singletonList( new ExpressionExperimentValueObject( ee ) ), a.getArgument( 1 ), a.getArgument( 2, Integer.class ), a.getArgument( 3, Integer.class ), 10000L ) );
         when( expressionExperimentService.getFiltersWithInferredAnnotations( any(), any(), any(), anyLong(), any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
         QueriedAndFilteredAndPaginatedResponseDataObject<ExpressionExperimentValueObject> payload = annotationsWebService.searchTaxonDatasets(
@@ -191,7 +191,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest {
         assertThat( payload )
                 .hasFieldOrPropertyWithValue( "query", "bipolar" )
                 .hasFieldOrPropertyWithValue( "filter", "commonName = human or scientificName = human" )
-                .hasFieldOrPropertyWithValue( "sort", new SortValueObject( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) ) )
+                .hasFieldOrPropertyWithValue( "sort", new SortValueObject( Sort.by( "ee", "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" ) ) )
                 .hasFieldOrPropertyWithValue( "offset", 0 )
                 .hasFieldOrPropertyWithValue( "limit", 20 )
                 .hasFieldOrPropertyWithValue( "totalElements", 10000L );
@@ -199,8 +199,8 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest {
         verify( taxonService ).getFilter( "commonName", String.class, Filter.Operator.eq, "human" );
         verify( taxonService ).getFilter( "scientificName", String.class, Filter.Operator.eq, "human" );
         verify( expressionExperimentService ).getFilter( "id", Filter.Operator.eq, "1" );
-        verify( expressionExperimentService ).getSort( "id", Sort.Direction.ASC );
-        verify( expressionExperimentService ).loadValueObjects( any( Filters.class ), eq( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) ), eq( 0 ), eq( 20 ) );
+        verify( expressionExperimentService ).getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST );
+        verify( expressionExperimentService ).loadValueObjects( any( Filters.class ), eq( Sort.by( "ee", "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" ) ), eq( 0 ), eq( 20 ) );
     }
 
     @Test

@@ -11,6 +11,7 @@ import java.util.List;
 public class MySQL57InnoDBDialect extends org.hibernate.dialect.MySQL57InnoDBDialect {
 
     public MySQL57InnoDBDialect() {
+        super();
         registerFunction( "bitwise_and", new MySQLBitwiseAnd() );
     }
 

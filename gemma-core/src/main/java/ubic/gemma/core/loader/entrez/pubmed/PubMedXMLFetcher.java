@@ -21,13 +21,14 @@ package ubic.gemma.core.loader.entrez.pubmed;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.model.common.description.BibliographicReference;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 /**
  * Class that can retrieve pubmed records (in XML format) via HTTP. The url used is configured via a resource.
@@ -52,11 +53,7 @@ public class PubMedXMLFetcher {
     }
 
     public Collection<BibliographicReference> retrieveByHTTP( Collection<Integer> pubMedIds ) throws IOException {
-        StringBuilder buf = new StringBuilder();
-        for ( Integer integer : pubMedIds ) {
-            buf.append( integer ).append( "," );
-        }
-        URL toBeGotten = new URL( uri + StringUtils.chomp( buf.toString() ) );
+        URL toBeGotten = new URL( uri + pubMedIds.stream().map( String::valueOf ).collect( Collectors.joining( "," ) ) );
         log.debug( "Fetching " + toBeGotten );
         PubMedXMLParser pmxp = new PubMedXMLParser();
         try ( InputStream is = toBeGotten.openStream() ) {

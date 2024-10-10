@@ -95,7 +95,7 @@ public class BioAssayController {
         return taskRunningService.submitTaskCommand( new BioAssayOutlierProcessingTaskCommand( ids, true ) );
     }
 
-    @RequestMapping(value = { "/showBioAssay.html", "/" }, method = RequestMethod.GET)
+    @RequestMapping(value = { "/showBioAssay.html", "/" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView show( @RequestParam("id") Long id ) {
         BioAssay bioAssay = bioAssayService.load( id );
         if ( bioAssay == null ) {
@@ -106,7 +106,7 @@ public class BioAssayController {
                 .addObject( "bioAssay", new BioAssayValueObject( bioAssay, false ) );
     }
 
-    @RequestMapping(value = "/showAllBioAssays.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/showAllBioAssays.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showAllBioAssays( @RequestParam(value = "id", required = false) String sId ) {
         Collection<BioAssay> bioAssays = new ArrayList<>();
         if ( StringUtils.isBlank( sId ) ) {

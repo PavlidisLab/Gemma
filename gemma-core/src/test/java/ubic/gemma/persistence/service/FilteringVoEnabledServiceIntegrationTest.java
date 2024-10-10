@@ -70,7 +70,7 @@ public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextT
                     log.warn( "Skipping collection size test with the Criteria API." );
                     continue;
                 }
-                Sort sort = filteringService.getSort( property, Sort.Direction.ASC );
+                Sort sort = filteringService.getSort( property, Sort.Direction.ASC, Sort.NullMode.LAST );
                 log.info( String.format( "%s.loadValueObjects(null, %s, 0, 1)", entry.getKey(), sort ) );
                 filteringService.loadValueObjects( null, sort, 0, 1 );
             }
