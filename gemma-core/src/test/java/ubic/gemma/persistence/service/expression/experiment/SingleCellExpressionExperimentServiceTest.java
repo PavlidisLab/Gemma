@@ -76,6 +76,16 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         }
 
         @Bean
+        public ExperimentalDesignService experimentalDesignService( ExperimentalDesignDao experimentalDesignDao ) {
+            return new ExperimentalDesignServiceImpl( experimentalDesignDao );
+        }
+
+        @Bean
+        public ExperimentalDesignDao experimentalDesignDao( SessionFactory sessionFactory ) {
+            return new ExperimentalDesignDaoImpl( sessionFactory );
+        }
+
+        @Bean
         public AuditTrailService auditTrailService() {
             return mock();
         }
@@ -214,7 +224,10 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
         scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors );
         sessionFactory.getCurrentSession().flush();
-        ExperimentalFactor ctf = scExpressionExperimentService.getCellTypeFactor( ee ).get();
+        CellTypeAssignment ctl = scd.getCellTypeAssignments().iterator().next();
+        ExperimentalFactor ctf = scExpressionExperimentService.getCellTypeFactor( ee ).orElseThrow( AssertionError::new );
+        assertThat( ctf.getName() ).isEqualTo( "cell type" );
+        assertThat( ctf.getDescription() ).isEqualTo( "Cell type factor pre-populated from " + ctl + "." );
         Collection<SingleCellExpressionDataVector> vectors2 = createSingleCellVectors( true );
         QuantitationType qt2 = vectors2.iterator().next().getQuantitationType();
         SingleCellDimension scd2 = vectors2.iterator().next().getSingleCellDimension();
@@ -224,12 +237,15 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThat( ee.getQuantitationTypes() )
                 .hasSize( 2 )
                 .satisfiesOnlyOnce( quantitationType -> assertThat( quantitationType.getIsSingleCellPreferred() ).isTrue() );
-        ExperimentalFactor ctf2 = scExpressionExperimentService.getCellTypeFactor( ee ).get();
+        CellTypeAssignment ctl2 = scd2.getCellTypeAssignments().iterator().next();
+        ExperimentalFactor ctf2 = scExpressionExperimentService.getCellTypeFactor( ee ).orElseThrow( AssertionError::new );
+        assertThat( ctf2.getName() ).isEqualTo( "cell type" );
+        assertThat( ctf2.getDescription() ).isEqualTo( "Cell type factor pre-populated from " + ctl2 + "." );
         verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " [Preferred] with dimension " + scd + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + ctf + " from preferred cell type assignment CellTypeAssignment Id=1 Cell Types=A, B [Preferred]." );
+        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + ctf + " from preferred cell type assignment " + ctl + "." );
         verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt2 + " with dimension " + scd2 + "." );
         verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Removed the cell type factor " + ctf + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + ctf2 + " from preferred cell type assignment CellTypeAssignment Id=2 Cell Types=A, B [Preferred]." );
+        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + ctf2 + " from preferred cell type assignment " + ctl2 + "." );
     }
 
     @Test
@@ -323,11 +339,14 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         sessionFactory.getCurrentSession().flush();
         assertThat( scExpressionExperimentService.getCellTypeAssignments( ee ) )
                 .hasSize( 1 );
-        assertThat( scExpressionExperimentService.getPreferredCellTypeAssignment( ee ) ).isNotNull();
+        CellTypeAssignment cta = scExpressionExperimentService.getPreferredCellTypeAssignment( ee ).orElseThrow( AssertionError::new );
         assertThat( scExpressionExperimentService.getCellTypes( ee ) ).hasSize( 2 )
                 .extracting( Characteristic::getValue )
                 .containsExactlyInAnyOrder( "A", "B" );
-        ExperimentalFactor ctf = scExpressionExperimentService.getCellTypeFactor( ee ).get();
+        ExperimentalFactor ctf = scExpressionExperimentService.getCellTypeFactor( ee ).orElse( null );
+        assertThat( ctf ).isNotNull();
+        assertThat( ctf.getName() ).isEqualTo( "cell type" );
+        assertThat( ctf.getDescription() ).isEqualTo( "Cell type factor pre-populated from " + cta + "." );
         String[] ct = new String[100];
         for ( int i = 0; i < ct.length; i++ ) {
             ct[i] = i < 75 ? "A" : "B";
@@ -381,18 +400,22 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
     public void testRecreateCellTypeFactor() {
         Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
         scExpressionExperimentService.addSingleCellDataVectors( ee, vectors.iterator().next().getQuantitationType(), vectors );
+        CellTypeAssignment ctl = scExpressionExperimentService.getPreferredCellTypeAssignment( ee )
+                .orElseThrow( AssertionError::new );
         assertThat( ee.getExperimentalDesign() ).isNotNull();
         ExperimentalFactor factor = ee.getExperimentalDesign().getExperimentalFactors().stream()
                 .filter( ef -> ef.getCategory() != null && CharacteristicUtils.hasCategory( ef.getCategory(), Categories.CELL_TYPE ) )
                 .findFirst()
                 .orElseThrow( AssertionError::new );
         ExperimentalFactor recreatedFactor = scExpressionExperimentService.recreateCellTypeFactor( ee );
+        assertThat( recreatedFactor.getName() ).isEqualTo( "cell type" );
+        assertThat( recreatedFactor.getDescription() ).isEqualTo( "Cell type factor pre-populated from " + ctl + "." );
         assertThat( recreatedFactor.getCategory() ).isNotNull().satisfies( f -> {
             assertThat( f.getCategory() ).isEqualTo( "cell type" );
             assertThat( f.getCategoryUri() ).isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0000324" );
         } );
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + factor + " from preferred cell type assignment CellTypeAssignment Id=12 Cell Types=A, B [Preferred]." );
-        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + recreatedFactor + " from preferred cell type assignment CellTypeAssignment Id=12 Cell Types=A, B [Preferred]." );
+        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + factor + " from preferred cell type assignment " + ctl + "." );
+        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + recreatedFactor + " from preferred cell type assignment " + ctl + "." );
     }
 
     @Test
@@ -406,7 +429,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         for ( int i = 0; i < 100; i++ ) {
             indices[i] = RandomUtils.nextInt( characteristics.size() + 1 ) - 1;
         }
-        CellLevelCharacteristics cellTreatments = CellLevelCharacteristics.Factory.newInstance(characteristics, indices);
+        CellLevelCharacteristics cellTreatments = CellLevelCharacteristics.Factory.newInstance( characteristics, indices );
         dimension.getCellLevelCharacteristics().add( cellTreatments );
         Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( dimension );
         scExpressionExperimentService.addSingleCellDataVectors( ee, vectors.iterator().next().getQuantitationType(), vectors );

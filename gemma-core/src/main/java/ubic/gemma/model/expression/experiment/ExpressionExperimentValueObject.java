@@ -94,6 +94,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
      * The single-cell dimension of the preferred single-cell vectors.
      */
     @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private SingleCellDimensionValueObject singleCellDimension;
 
     /**

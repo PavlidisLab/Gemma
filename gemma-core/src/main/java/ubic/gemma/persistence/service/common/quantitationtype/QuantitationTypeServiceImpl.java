@@ -86,4 +86,16 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
             throw new NonUniqueQuantitationTypeByNameException( String.format( "More than one QuantitationType uses %s as name in %s for vectors of type %s.", name, ee, dataVectorType ), e );
         }
     }
+
+    @Override
+    @Transactional
+    public QuantitationType findOrCreate( QuantitationType quantitationType, Class<? extends DataVector> dataVectorType ) {
+        return quantitationTypeDao.findOrCreate( quantitationType, dataVectorType );
+    }
+
+    @Override
+    @Transactional
+    public QuantitationType create( QuantitationType quantitationType, Class<? extends DataVector> dataVectorType ) {
+        return this.quantitationTypeDao.create( quantitationType, dataVectorType );
+    }
 }

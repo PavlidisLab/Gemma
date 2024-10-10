@@ -5,12 +5,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
+import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.common.protocol.ProtocolService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Locate various entities using identifiers supplied by the CLI.
@@ -26,6 +30,8 @@ public class EntityLocator {
     private TaxonService taxonService;
     @Autowired
     private ArrayDesignService arrayDesignService;
+    @Autowired
+    private ProtocolService protocolService;
 
     public Taxon locateTaxon( String identifier ) {
         Assert.isTrue( StringUtils.isNotBlank( identifier ), "Taxon name must be be blank." );
@@ -65,8 +71,9 @@ public class EntityLocator {
             if ( ( arrayDesign = arrayDesignService.load( id ) ) != null ) {
                 log.info( "Found " + arrayDesign + " by ID." );
                 return arrayDesign;
+            } else {
+                throw new NullPointerException( "No platform with ID " + id );
             }
-            throw new NullPointerException( "No platform with ID " + id );
         } catch ( NumberFormatException e ) {
             // ignore
         }
@@ -82,7 +89,7 @@ public class EntityLocator {
             log.info( "Found " + arrayDesign + " by alternate name." );
             return arrayDesign;
         }
-        throw new NullPointerException( "No platform found with ID or name " + identifier );
+        throw new NullPointerException( "No platform found with ID or name matching " + identifier );
     }
 
     /**
@@ -101,7 +108,7 @@ public class EntityLocator {
                 log.debug( "Found " + ee + " by ID" );
                 return ee;
             } else {
-                return null;
+                throw new NullPointerException( "No experiment found with ID " + id );
             }
         } catch ( NumberFormatException e ) {
             // can be safely ignored, we'll attempt to use it as a short name
@@ -118,6 +125,17 @@ public class EntityLocator {
             log.debug( "Found " + ee + " by name" );
             return ee;
         }
-        throw new NullPointerException( "Could not locate any experiment with identifier or name " + identifier );
+        throw new NullPointerException( "Could not locate any experiment with identifier or name matching " + identifier );
+    }
+
+    public Protocol locateProtocol( String protocolName ) {
+        try {
+            long id = Long.parseLong( protocolName );
+            return protocolService.load( id );
+        } catch ( NumberFormatException e ) {
+            // ignore
+        }
+        return requireNonNull( protocolService.findByName( protocolName ),
+                "Could not locate any protocol with identifier or name matching " + protocolName );
     }
 }

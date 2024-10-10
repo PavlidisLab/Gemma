@@ -71,9 +71,23 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
     @Secured({ "GROUP_USER" })
     QuantitationType findOrCreate( QuantitationType quantitationType );
 
+    /**
+     * @see QuantitationTypeDao#findOrCreate(QuantitationType, Class)
+     */
+    @Secured("GROUP_USER")
+    QuantitationType findOrCreate( QuantitationType quantitationType, Class<? extends DataVector> dataVectorType );
+
     @Override
     @Secured({ "GROUP_USER" })
     QuantitationType create( QuantitationType quantitationType );
+
+    /**
+     * Create a new QuantitationType for the given vector type.
+     * <p>
+     * For now, this is just doing the same thing as {@link #create(QuantitationType)}, but with extra validations.
+     */
+    @Secured({ "GROUP_USER" })
+    QuantitationType create( QuantitationType quantitationType, Class<? extends DataVector> dataVectorType );
 
     @Override
     @Secured({ "GROUP_USER" })

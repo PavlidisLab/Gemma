@@ -75,13 +75,17 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public Collection<CellTypeAssignment> loadCellTypeAssignments( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
+        ee = expressionExperimentService.loadOrFail( ee.getId() );
         try {
             SingleCellDimension dimension = getSingleCellDimension( ee, config );
-            Collection<CellTypeAssignment> created = new HashSet<>();
-            for ( CellTypeAssignment cta : getLoader( ee, config ).getCellTypeAssignments( dimension ) ) {
-                created.add( singleCellExpressionExperimentService.addCellTypeAssignment( ee, dimension, cta ) );
+            Set<CellTypeAssignment> ctas = getLoader( ee, config ).getCellTypeAssignments( dimension );
+            applyPreferredCellTypeAssignment( ctas, config );
+            Set<CellTypeAssignment> set = new HashSet<>();
+            for ( CellTypeAssignment cta : ctas ) {
+                CellTypeAssignment cellTypeAssignment = singleCellExpressionExperimentService.addCellTypeAssignment( ee, dimension, cta );
+                set.add( cellTypeAssignment );
             }
-            return created;
+            return set;
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -90,13 +94,17 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public Collection<CellTypeAssignment> loadCellTypeAssignments( ExpressionExperiment ee, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
+        ee = expressionExperimentService.loadOrFail( ee.getId() );
         try {
             SingleCellDimension dimension = getSingleCellDimension( ee, config );
-            Collection<CellTypeAssignment> created = new HashSet<>();
-            for ( CellTypeAssignment cta : getLoader( ee, dataType, config ).getCellTypeAssignments( dimension ) ) {
-                created.add( singleCellExpressionExperimentService.addCellTypeAssignment( ee, dimension, cta ) );
+            Set<CellTypeAssignment> ctas = getLoader( ee, dataType, config ).getCellTypeAssignments( dimension );
+            applyPreferredCellTypeAssignment( ctas, config );
+            Set<CellTypeAssignment> set = new HashSet<>();
+            for ( CellTypeAssignment cta : ctas ) {
+                CellTypeAssignment cellTypeAssignment = singleCellExpressionExperimentService.addCellTypeAssignment( ee, dimension, cta );
+                set.add( cellTypeAssignment );
             }
-            return created;
+            return set;
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -105,6 +113,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
+        ee = expressionExperimentService.loadOrFail( ee.getId() );
         try {
             SingleCellDimension dimension = getSingleCellDimension( ee, config );
             Collection<CellLevelCharacteristics> created = new HashSet<>();
@@ -120,6 +129,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
+        ee = expressionExperimentService.loadOrFail( ee.getId() );
         try {
             SingleCellDimension dimension = getSingleCellDimension( ee, config );
             Collection<CellLevelCharacteristics> created = new HashSet<>();
@@ -215,29 +225,33 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
 
         }
         if ( config.isMarkQuantitationTypeAsPreferred() ) {
-            log.info( "Marking " + qt + " as preferred." );
-            qt.setIsPreferred( true );
+            log.info( "Marking " + qt + " as preferred for single-cell." );
+            qt.setIsSingleCellPreferred( true );
         }
         return qt;
     }
 
     private void loadCellTypeAssignments( SingleCellDataLoader loader, SingleCellDimension dim, SingleCellDataLoaderConfig config ) {
         try {
-            dim.getCellTypeAssignments().addAll( loader.getCellTypeAssignments( dim ) );
+            Set<CellTypeAssignment> ctas = loader.getCellTypeAssignments( dim );
+            applyPreferredCellTypeAssignment( dim.getCellTypeAssignments(), config );
+            dim.getCellTypeAssignments().addAll( ctas );
         } catch ( UnsupportedOperationException e ) {
             log.info( e.getMessage() ); // no need for the stacktrace
-            return;
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
+    }
+
+    private void applyPreferredCellTypeAssignment( Collection<CellTypeAssignment> cellTypeAssignments, SingleCellDataLoaderConfig config ) {
         CellTypeAssignment preferredCta;
         if ( config.getPreferredCellTypeAssignmentName() != null ) {
             String name = config.getPreferredCellTypeAssignmentName();
-            Set<CellTypeAssignment> preferredCtas = dim.getCellTypeAssignments().stream()
+            Set<CellTypeAssignment> preferredCtas = cellTypeAssignments.stream()
                     .filter( cta -> name.equals( cta.getName() ) )
                     .collect( Collectors.toSet() );
             if ( preferredCtas.isEmpty() ) {
-                String possibleNames = dim.getCellTypeAssignments().stream()
+                String possibleNames = cellTypeAssignments.stream()
                         .map( CellTypeAssignment::getName )
                         .collect( Collectors.joining( ", " ) );
                 throw new IllegalStateException( "No cell type assignment with name " + name + ", possible values are: " + possibleNames + "." );
@@ -248,12 +262,12 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
             log.info( "Marking " + preferredCta + " as preferred." );
             preferredCta.setPreferred( true );
         } else if ( config.isMarkSingleCellTypeAssignmentAsPreferred() ) {
-            if ( dim.getCellTypeAssignments().isEmpty() ) {
+            if ( cellTypeAssignments.isEmpty() ) {
                 throw new IllegalStateException( "No cell type assignment." );
-            } else if ( dim.getCellTypeAssignments().size() > 1 ) {
+            } else if ( cellTypeAssignments.size() > 1 ) {
                 throw new IllegalStateException( "More than one cell type assignment." );
             }
-            preferredCta = dim.getCellTypeAssignments().iterator().next();
+            preferredCta = cellTypeAssignments.iterator().next();
             log.info( "Marking the only cell-type assignment " + preferredCta + " as preferred." );
             preferredCta.setPreferred( true );
         }
@@ -386,14 +400,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     }
 
     private SingleCellDataLoader configureLoader( SingleCellDataLoader loader, ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
-        // apply GEO strategy for matching
-        if ( ee.getAccession() != null && ee.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
-            loader.setBioAssayToSampleNameMatcher( new GeoBioAssayToSampleNameMatcher() );
-        } else {
-            log.info( String.format( "%s does not have a GEO accession, using %s for matching sample names to BioAssays.",
-                    ee, SimpleBioAssayToSampleNameMatcher.class.getSimpleName() ) );
-            loader.setBioAssayToSampleNameMatcher( new SimpleBioAssayToSampleNameMatcher() );
-        }
+        // wrap with a generic loader to load additional metadata
         Path cellTypeAssignmentPath = config.getCellTypeAssignmentPath();
         Path otherCellCharacteristicsPath = config.getOtherCellLevelCharacteristicsFile();
         if ( cellTypeAssignmentPath != null || otherCellCharacteristicsPath != null ) {
@@ -403,7 +410,24 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
             if ( otherCellCharacteristicsPath != null ) {
                 log.info( "Loading additional cell-level characteristics from " + otherCellCharacteristicsPath );
             }
-            return new GenericMetadataSingleCellDataLoader( loader, cellTypeAssignmentPath, otherCellCharacteristicsPath );
+            loader = new GenericMetadataSingleCellDataLoader( loader, cellTypeAssignmentPath, otherCellCharacteristicsPath ) {
+                {
+                    if ( config.getCellTypeAssignmentName() != null ) {
+                        setCellTypeAssignmentName( config.getCellTypeAssignmentName() );
+                    }
+                    if ( config.getCellTypeAssignmentProtocol() != null ) {
+                        setCellTypeAssignmentProtocol( config.getCellTypeAssignmentProtocol() );
+                    }
+                }
+            };
+        }
+        // apply GEO strategy for matching
+        if ( ee.getAccession() != null && ee.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
+            loader.setBioAssayToSampleNameMatcher( new GeoBioAssayToSampleNameMatcher() );
+        } else {
+            log.info( String.format( "%s does not have a GEO accession, using %s for matching sample names to BioAssays.",
+                    ee, SimpleBioAssayToSampleNameMatcher.class.getSimpleName() ) );
+            loader.setBioAssayToSampleNameMatcher( new SimpleBioAssayToSampleNameMatcher() );
         }
         return loader;
     }

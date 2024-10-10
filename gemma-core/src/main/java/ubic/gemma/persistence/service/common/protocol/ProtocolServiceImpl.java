@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,8 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.persistence.service.AbstractService;
 
+import javax.annotation.Nullable;
+
 /**
  * @author keshav
  * @author pavlidis
@@ -31,9 +33,17 @@ import ubic.gemma.persistence.service.AbstractService;
 @Service
 public class ProtocolServiceImpl extends AbstractService<Protocol> implements ProtocolService {
 
+    private final ProtocolDao protocolDao;
+
     @Autowired
     public ProtocolServiceImpl( ProtocolDao protocolDao ) {
         super( protocolDao );
+        this.protocolDao = protocolDao;
     }
 
+    @Nullable
+    @Override
+    public Protocol findByName( String protocolName ) {
+        return protocolDao.findByName( protocolName );
+    }
 }

@@ -18,13 +18,11 @@
  */
 package ubic.gemma.persistence.service.common.quantitationtype;
 
-import org.hibernate.Criteria;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
-import ubic.gemma.persistence.util.BusinessKey;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -35,6 +33,7 @@ import java.util.Set;
  * @see QuantitationType
  */
 public interface QuantitationTypeDao extends FilteringVoEnabledDao<QuantitationType, QuantitationTypeValueObject> {
+
 
     /**
      * Load a QT from an experiment by ID and vector type.
@@ -52,7 +51,21 @@ public interface QuantitationTypeDao extends FilteringVoEnabledDao<QuantitationT
     Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee );
 
     /**
-     * Find a QT matching the given template as per {@link BusinessKey#addRestrictions(Criteria, QuantitationType)}.
+     * Find a QT matching the given template as per {@link QuantitationType#equals(Object)}.
+     */
+    @Nullable
+    @Override
+    QuantitationType find( QuantitationType entity );
+
+    /**
+     * Find a QT matching the given template for the given data vector type as per {@link #find(QuantitationType)}.
+     */
+    @Nullable
+    QuantitationType find( QuantitationType entity, Class<? extends DataVector> dataVectorType );
+
+    /**
+     * Find a QT matching the given template as per {@link #find(QuantitationType)} in a given experiment for and for a
+     * given data vector type.
      * @param ee               experiment to restrict the search to
      * @param quantitationType QT template to find
      * @param dataVectorTypes  types of data vectors to look into, if non-null
@@ -67,6 +80,13 @@ public interface QuantitationTypeDao extends FilteringVoEnabledDao<QuantitationT
      */
     @Nullable
     QuantitationType findByNameAndVectorType( ExpressionExperiment ee, String name, Class<? extends DataVector> dataVectorType );
+
+    /**
+     * Find a QT as per {@link #find(QuantitationType, Class)} and if none is found, create a new one with {@link #create(QuantitationType, Class)}.
+     */
+    QuantitationType findOrCreate( QuantitationType quantitationType, Class<? extends DataVector> dataVectorType );
+
+    QuantitationType create( QuantitationType quantitationType, Class<? extends DataVector> dataVectorType );
 
     /**
      * Load {@link QuantitationTypeValueObject} in the context of an associated expression experiment.

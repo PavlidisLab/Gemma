@@ -2964,26 +2964,39 @@ public class ExpressionExperimentDaoImpl
         if ( eevos.isEmpty() ) {
             return;
         }
-        //noinspection unchecked
-        List<Object[]> results = getSessionFactory().getCurrentSession()
-                .createQuery( "select scedv.expressionExperiment.id, scd, cta from ExpressionExperiment ee "
-                        + "join ee.singleCellExpressionDataVectors scedv "
-                        + "join scedv.quantitationType qt "
-                        + "join scedv.singleCellDimension scd "
-                        + "left join scd.cellTypeAssignments cta "
-                        + "where scedv.expressionExperiment.id in :ees "
-                        + "and qt.isSingleCellPreferred = true and (cta is null or cta.preferred = true) "
-                        + "group by scedv.expressionExperiment" )
-                .setParameterList( "ees", IdentifiableUtils.getIds( eevos ) )
-                .list();
-        if ( !results.isEmpty() ) {
-            Map<Long, ExpressionExperimentValueObject> voById = IdentifiableUtils.getIdMap( eevos );
-            for ( Object[] row : results ) {
-                Long id = ( Long ) row[0];
-                SingleCellDimension scd = ( SingleCellDimension ) row[1];
-                CellTypeAssignment cta = ( CellTypeAssignment ) row[2];
-                voById.get( id ).setSingleCellDimension( new SingleCellDimensionValueObject( scd, cta ) );
-            }
+        Map<Long, SingleCellDimension> dims = getPreferredSingleCellDimensions( IdentifiableUtils.getIds( eevos ) );
+        Map<SingleCellDimension, CellTypeAssignment> ctas = getPreferredCellTypeAssignments( dims.values() );
+        Map<Long, ExpressionExperimentValueObject> voById = IdentifiableUtils.getIdMap( eevos );
+        dims.forEach( ( eeId, dim ) -> {
+            voById.get( eeId ).setSingleCellDimension( new SingleCellDimensionValueObject( dim, ctas.get( dim ) ) );
+        } );
+    }
+
+    private Map<Long, SingleCellDimension> getPreferredSingleCellDimensions( Collection<Long> eeIds ) {
+        if ( eeIds.isEmpty() ) {
+            return Collections.emptyMap();
         }
+        return QueryUtils.streamByBatch( getSessionFactory().getCurrentSession()
+                        .createQuery( "select scedv.expressionExperiment.id, scd from SingleCellExpressionDataVector scedv "
+                                + "join scedv.quantitationType qt "
+                                + "join scedv.singleCellDimension scd "
+                                + "where scedv.expressionExperiment.id in :eeIds and qt.isSingleCellPreferred = true "
+                                + "group by scedv.expressionExperiment"
+                        ), "eeIds", eeIds, 2048, Object[].class )
+                .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( SingleCellDimension ) row[1] ) );
+    }
+
+    private Map<SingleCellDimension, CellTypeAssignment> getPreferredCellTypeAssignments( Collection<SingleCellDimension> values ) {
+        if ( values.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        Map<Long, SingleCellDimension> idmap = IdentifiableUtils.getIdMap( values );
+        return QueryUtils.streamByBatch( getSessionFactory().getCurrentSession()
+                        .createQuery( "select dim.id, cta from SingleCellDimension dim "
+                                + "join dim.cellTypeAssignments cta "
+                                + "where dim.id in :dimIds and cta.preferred = true "
+                                + "group by dim"
+                        ), "dimIds", IdentifiableUtils.getIds( values ), 2048, Object[].class )
+                .collect( Collectors.toMap( row -> idmap.get( ( Long ) row[0] ), row -> ( CellTypeAssignment ) row[1] ) );
     }
 }

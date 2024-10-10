@@ -2,6 +2,7 @@ package ubic.gemma.core.loader.expression.singleCell;
 
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
+import ubic.gemma.model.common.protocol.Protocol;
 
 import javax.annotation.Nullable;
 import java.nio.file.Path;
@@ -52,6 +53,22 @@ public class SingleCellDataLoaderConfig {
      */
     @Nullable
     private Path cellTypeAssignmentPath;
+
+    /**
+     * A name to use for the cell type assignment.
+     * <p>
+     * If null, it is left to the specific loader to decide the name.
+     */
+    @Nullable
+    private String cellTypeAssignmentName;
+
+    /**
+     * A protocol to use for the cell type assignment.
+     * <p>
+     * If non-null, this must be persistent.
+     */
+    @Nullable
+    private Protocol cellTypeAssignmentProtocol;
 
     /**
      * A location where additional cell-level characteristics can be loaded.

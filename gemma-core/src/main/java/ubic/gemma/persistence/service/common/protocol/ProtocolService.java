@@ -23,6 +23,7 @@ import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.persistence.service.BaseImmutableService;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -33,6 +34,10 @@ public interface ProtocolService extends BaseImmutableService<Protocol> {
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     Protocol find( Protocol protocol );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    Protocol findByName( String protocolName );
 
     @Override
     @Nonnull

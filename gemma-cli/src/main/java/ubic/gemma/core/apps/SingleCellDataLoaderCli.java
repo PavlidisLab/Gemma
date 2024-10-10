@@ -1,9 +1,6 @@
 package ubic.gemma.core.apps;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.loader.expression.singleCell.AnnDataSingleCellDataLoaderConfig;
@@ -27,8 +24,8 @@ import java.util.stream.Collectors;
 public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI {
 
     private static final String
-            LOAD_CELL_TYPE_ASSIGNMENT = "loadCta",
-            LOAD_CELL_LEVEL_CHARACTERISTICS = "loadClc",
+            LOAD_CELL_TYPE_ASSIGNMENT_OPTION = "loadCta",
+            LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION = "loadClc",
             DATA_TYPE_OPTION = "dataType",
             DATA_PATH_OPTION = "p",
             PLATFORM_OPTION = "a",
@@ -36,6 +33,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             PREFERRED_QT_OPTION = "preferredQt",
             REPLACE_OPTION = "replace",
             CELL_TYPE_ASSIGNMENT_FILE_OPTION = "ctaFile",
+            CELL_TYPE_ASSIGNMENT_NAME_OPTION = "ctaName",
+            CELL_TYPE_ASSIGNMENT_PROTOCOL_NAME_OPTION = "ctaProtocol",
             PREFERRED_CELL_TYPE_ASSIGNMENT = "preferredCta",
             OTHER_CELL_LEVEL_CHARACTERISTICS_FILE = "clcFile";
 
@@ -59,6 +58,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         LOAD_EVERYTHING
     }
 
+    @Nullable
     private String platformName;
     @Nullable
     private Path dataPath;
@@ -70,6 +70,10 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private boolean replaceQt;
     @Nullable
     private Path cellTypeAssignmentFile;
+    @Nullable
+    private String cellTypeAssignmentName;
+    @Nullable
+    private String cellTypeAssignmentProtocolName;
     private boolean preferredCellTypeAssignment;
     @Nullable
     private Path otherCellLevelCharacteristicsFile;
@@ -94,8 +98,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     @Override
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
-        options.addOption( LOAD_CELL_TYPE_ASSIGNMENT, "load-cell-type-assignment", false, "Only load cell type assignment. Use -" + QT_NAME_OPTION + " to specify which set of vectors this is applicable to." );
-        options.addOption( LOAD_CELL_LEVEL_CHARACTERISTICS, "load-cell-level-characteristics", false, "Only load cell-level characteristics. Use -" + QT_NAME_OPTION + " to specify which set of vectors this is applicable to." );
+        options.addOption( LOAD_CELL_TYPE_ASSIGNMENT_OPTION, "load-cell-type-assignment", false, "Only load cell type assignment. Use -" + QT_NAME_OPTION + " to specify which set of vectors this is applicable to." );
+        options.addOption( LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION, "load-cell-level-characteristics", false, "Only load cell-level characteristics. Use -" + QT_NAME_OPTION + " to specify which set of vectors this is applicable to." );
         options.addOption( DATA_TYPE_OPTION, "data-type", true, "Data type to import. Must be one of " + Arrays.stream( SingleCellDataType.values() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) + "." );
         options.addOption( Option.builder( DATA_PATH_OPTION )
                 .longOpt( "data-path" )
@@ -103,7 +107,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .type( Path.class )
                 .desc( "Load single-cell data from the given path instead of looking up the download directory. For AnnData and Seurat Disk, it is a file. For MEX it is a directory. Requires the -" + DATA_TYPE_OPTION + " option to be set." )
                 .build() );
-        options.addRequiredOption( PLATFORM_OPTION, "platform", true, "Target platform (must already exist in the system)" );
+        options.addOption( PLATFORM_OPTION, "platform", true, "Target platform (must already exist in the system)" );
         options.addOption( QT_NAME_OPTION, "quantitation-type-name", true, "Quantitation type to import (optional, use if more than one is present in data)" );
         options.addOption( PREFERRED_QT_OPTION, "preferred-quantitation-type", false, "Make the quantitation type the preferred one." );
         options.addOption( REPLACE_OPTION, "replace", false, "Replace an existing quantitation type. The -" + QT_NAME_OPTION + "/--quantitation-type-name option must be set." );
@@ -112,6 +116,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .hasArg().type( Path.class )
                 .desc( "Path to a cell type assignment file. If missing, cell type importing will be delegated to a specific loader. For AnnData, you must supply the -" + ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION + " option." )
                 .build() );
+        options.addOption( CELL_TYPE_ASSIGNMENT_NAME_OPTION, "cell-type-assignment-name", true, "Name to use for the cell type assignment. This require the -" + CELL_TYPE_ASSIGNMENT_FILE_OPTION + " option to be set." );
+        options.addOption( CELL_TYPE_ASSIGNMENT_PROTOCOL_NAME_OPTION, "cell-type-assignment-protocol", true, "An identifier for a protocol describing the cell type assignment. This require the -" + CELL_TYPE_ASSIGNMENT_FILE_OPTION + " option to be set." );
         options.addOption( PREFERRED_CELL_TYPE_ASSIGNMENT, "preferred-cell-type-assignment", false, "Make the cell type assignment the preferred one." );
         options.addOption( Option.builder( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE )
                 .longOpt( "cell-level-characteristics-file" )
@@ -127,15 +133,25 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     @Override
     protected void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
-        if ( commandLine.hasOption( LOAD_CELL_TYPE_ASSIGNMENT ) && commandLine.hasOption( LOAD_CELL_LEVEL_CHARACTERISTICS ) ) {
-            throw new IllegalArgumentException( "Can only choose one of -" + LOAD_CELL_TYPE_ASSIGNMENT + " and -" + LOAD_CELL_LEVEL_CHARACTERISTICS + " at a time." );
+        if ( commandLine.hasOption( LOAD_CELL_TYPE_ASSIGNMENT_OPTION ) && commandLine.hasOption( LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION ) ) {
+            throw new IllegalArgumentException( "Can only choose one of -" + LOAD_CELL_TYPE_ASSIGNMENT_OPTION + " and -" + LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION + " at a time." );
         }
-        if ( commandLine.hasOption( LOAD_CELL_TYPE_ASSIGNMENT ) ) {
+        if ( commandLine.hasOption( LOAD_CELL_TYPE_ASSIGNMENT_OPTION ) ) {
             mode = Mode.LOAD_CELL_TYPE_ASSIGNMENTS;
-        } else if ( commandLine.hasOption( LOAD_CELL_LEVEL_CHARACTERISTICS ) ) {
+            if ( commandLine.hasOption( PLATFORM_OPTION ) ) {
+                throw new IllegalArgumentException( "The -" + PLATFORM_OPTION + " cannot be used with -" + LOAD_CELL_TYPE_ASSIGNMENT_OPTION + "." );
+            }
+        } else if ( commandLine.hasOption( LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION ) ) {
             mode = Mode.LOAD_CELL_LEVEL_CHARACTERISTICS;
+            if ( commandLine.hasOption( PLATFORM_OPTION ) ) {
+                throw new IllegalArgumentException( "The -" + PLATFORM_OPTION + " cannot be used with -" + LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION + "." );
+            }
         } else {
             mode = Mode.LOAD_EVERYTHING;
+            platformName = commandLine.getOptionValue( PLATFORM_OPTION );
+            if ( platformName == null ) {
+                throw new MissingArgumentException( "The -" + PLATFORM_OPTION + " option is required when loading vectors." );
+            }
         }
         if ( commandLine.hasOption( DATA_TYPE_OPTION ) ) {
             dataType = SingleCellDataType.valueOf( commandLine.getOptionValue( DATA_TYPE_OPTION ) );
@@ -146,7 +162,6 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             }
             dataPath = commandLine.getParsedOptionValue( DATA_PATH_OPTION );
         }
-        platformName = commandLine.getOptionValue( PLATFORM_OPTION );
         qtName = commandLine.getOptionValue( QT_NAME_OPTION );
         if ( commandLine.hasOption( REPLACE_OPTION ) ) {
             if ( qtName == null ) {
@@ -156,6 +171,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         }
         preferredQt = commandLine.hasOption( PREFERRED_QT_OPTION );
         cellTypeAssignmentFile = commandLine.getParsedOptionValue( CELL_TYPE_ASSIGNMENT_FILE_OPTION );
+        cellTypeAssignmentName = commandLine.getOptionValue( CELL_TYPE_ASSIGNMENT_NAME_OPTION );
+        cellTypeAssignmentProtocolName = commandLine.getOptionValue( CELL_TYPE_ASSIGNMENT_PROTOCOL_NAME_OPTION );
         otherCellLevelCharacteristicsFile = commandLine.getParsedOptionValue( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE );
         preferredCellTypeAssignment = commandLine.hasOption( PREFERRED_CELL_TYPE_ASSIGNMENT );
         if ( dataType == SingleCellDataType.ANNDATA ) {
@@ -174,14 +191,6 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 }
             }
         }
-    }
-
-    private ArrayDesign platform;
-
-    @Override
-    protected Collection<BioAssaySet> preprocessBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
-        platform = entityLocator.locateArrayDesign( platformName );
-        return super.preprocessBioAssaySets( expressionExperiments );
     }
 
     @Override
@@ -217,15 +226,31 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             case LOAD_EVERYTHING:
                 QuantitationType qt;
                 if ( dataType != null ) {
-                    qt = singleCellDataLoaderService.load( ee, platform, dataType, config );
+                    qt = singleCellDataLoaderService.load( ee, getPlatform(), dataType, config );
                 } else {
-                    qt = singleCellDataLoaderService.load( ee, platform, config );
+                    qt = singleCellDataLoaderService.load( ee, getPlatform(), config );
                 }
                 addSuccessObject( ee, "Loaded vectors for " + qt.toString() );
                 break;
             default:
                 throw new IllegalArgumentException( "Unknown operation mode " + mode );
         }
+    }
+
+    /**
+     * Cached platform object.
+     */
+    @Nullable
+    private ArrayDesign platform;
+
+    private ArrayDesign getPlatform() {
+        if ( platformName == null ) {
+            throw new IllegalStateException( "A platform name must be set." );
+        }
+        if ( platform == null ) {
+            platform = entityLocator.locateArrayDesign( platformName );
+        }
+        return platform;
     }
 
     private SingleCellDataLoaderConfig getConfigForDataType( @Nullable SingleCellDataType dataType ) {
@@ -251,6 +276,14 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             configBuilder
                     .cellTypeAssignmentPath( cellTypeAssignmentFile )
                     .markSingleCellTypeAssignmentAsPreferred( preferredCellTypeAssignment );
+            if ( cellTypeAssignmentName != null ) {
+                configBuilder
+                        .cellTypeAssignmentName( cellTypeAssignmentName );
+            }
+            if ( cellTypeAssignmentProtocolName != null ) {
+                configBuilder
+                        .cellTypeAssignmentProtocol( entityLocator.locateProtocol( cellTypeAssignmentProtocolName ) );
+            }
         }
         if ( otherCellLevelCharacteristicsFile != null ) {
             configBuilder.otherCellLevelCharacteristicsFile( otherCellLevelCharacteristicsFile );

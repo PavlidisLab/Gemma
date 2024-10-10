@@ -2,7 +2,9 @@ package ubic.gemma.core.loader.expression.singleCell;
 
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
+import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -25,8 +27,14 @@ import java.util.Set;
 @CommonsLog
 public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingleCellDataLoader implements SingleCellDataLoader {
 
+    private static final String DEFAULT_CELL_TYPE_ASSIGNMENT_NAME = "cell type";
+
     @Nullable
     private final Path cellTypeMetadataFile;
+    private String cellTypeAssignmentName = DEFAULT_CELL_TYPE_ASSIGNMENT_NAME;
+    @Nullable
+    private Protocol cellTypeAssignmentProtocol;
+
     @Nullable
     private final Path otherCellCharacteristicsMetadataFile;
 
@@ -36,6 +44,19 @@ public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingl
         super( delegate );
         this.cellTypeMetadataFile = cellTypeMetadataFile;
         this.otherCellCharacteristicsMetadataFile = otherCellCharacteristicsMetadataFile;
+    }
+
+    public void setCellTypeAssignmentName( String cellTypeAssignmentName ) {
+        Assert.notNull( cellTypeMetadataFile, "A cell type metadata file must be set to configure a name." );
+        Assert.isTrue( StringUtils.isNotBlank( cellTypeAssignmentName ) );
+        this.cellTypeAssignmentName = cellTypeAssignmentName;
+    }
+
+    public void setCellTypeAssignmentProtocol( @Nullable Protocol cellTypeAssignmentProtocol ) {
+        Assert.notNull( cellTypeMetadataFile, "A cell type metadata file must be set to configure a protocol." );
+        Assert.isTrue( cellTypeAssignmentProtocol == null || cellTypeAssignmentProtocol.getId() != null,
+                "The protocol must be either null or persistent." );
+        this.cellTypeAssignmentProtocol = cellTypeAssignmentProtocol;
     }
 
     @Override
@@ -50,7 +71,7 @@ public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingl
             return super.getCellTypeAssignments( singleCellDimension );
         }
         Assert.notNull( bioAssayToSampleNameMatcher, "A bioAssayToSampleNameMatcher must be set" );
-        return new CellTypeAssignmentMetadataParser( singleCellDimension, bioAssayToSampleNameMatcher )
+        return new CellTypeAssignmentMetadataParser( singleCellDimension, bioAssayToSampleNameMatcher, cellTypeAssignmentName, cellTypeAssignmentProtocol )
                 .parse( cellTypeMetadataFile );
     }
 

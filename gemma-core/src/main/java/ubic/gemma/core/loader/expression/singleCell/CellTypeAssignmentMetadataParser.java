@@ -4,9 +4,11 @@ import org.apache.commons.csv.CSVRecord;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -24,8 +26,14 @@ import java.util.List;
  */
 public class CellTypeAssignmentMetadataParser extends AbstractCellLevelCharacteristicsMetadataParser<CellTypeAssignment> {
 
-    public CellTypeAssignmentMetadataParser( SingleCellDimension singleCellDimension, BioAssayToSampleNameMatcher bioAssayToSampleNameMatcher ) {
+    private final String cellTypeAssignmentName;
+    @Nullable
+    private final Protocol cellTypeAssignmentProtocol;
+
+    public CellTypeAssignmentMetadataParser( SingleCellDimension singleCellDimension, BioAssayToSampleNameMatcher bioAssayToSampleNameMatcher, String cellTypeAssignmentName, @Nullable Protocol cellTypeAssignmentProtocol ) {
         super( singleCellDimension, bioAssayToSampleNameMatcher );
+        this.cellTypeAssignmentName = cellTypeAssignmentName;
+        this.cellTypeAssignmentProtocol = cellTypeAssignmentProtocol;
     }
 
     @Override
@@ -50,6 +58,8 @@ public class CellTypeAssignmentMetadataParser extends AbstractCellLevelCharacter
 
     @Override
     protected CellTypeAssignment createCellLevelCharacteristics( List<Characteristic> characteristics, int[] indices ) {
-        return CellTypeAssignment.Factory.newInstance( characteristics, indices );
+        CellTypeAssignment cta = CellTypeAssignment.Factory.newInstance( cellTypeAssignmentName, characteristics, indices );
+        cta.setProtocol( cellTypeAssignmentProtocol );
+        return cta;
     }
 }

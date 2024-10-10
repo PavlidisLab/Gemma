@@ -33,7 +33,6 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.measurement.Unit;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.AlternateName;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -285,24 +284,6 @@ public class BusinessKey {
     public static void addRestrictions( Criteria queryObject, Gene2GOAssociation gene2GOAssociation ) {
         BusinessKey.attachCriteria( queryObject, gene2GOAssociation.getGene(), "gene" );
         BusinessKey.attachCriteria( queryObject, gene2GOAssociation.getOntologyEntry() );
-    }
-
-    /**
-     * @see QuantitationType#equals(Object)
-     */
-    public static void addRestrictions( Criteria queryObject, QuantitationType quantitationType ) {
-        queryObject
-                .add( Restrictions.eq( "name", quantitationType.getName() ) )
-                .add( Restrictions.eq( "generalType", quantitationType.getGeneralType() ) )
-                .add( Restrictions.eq( "type", quantitationType.getType() ) )
-                .add( Restrictions.eq( "scale", quantitationType.getScale() ) )
-                .add( Restrictions.eq( "representation", quantitationType.getRepresentation() ) )
-                .add( Restrictions.eq( "isBackground", quantitationType.getIsBackground() ) )
-                .add( Restrictions.eq( "isBackgroundSubtracted", quantitationType.getIsBackgroundSubtracted() ) )
-                .add( Restrictions.eq( "isRatio", quantitationType.getIsRatio() ) )
-                .add( Restrictions.eq( "isNormalized", quantitationType.getIsNormalized() ) )
-                .add( Restrictions.eq( "isBatchCorrected", quantitationType.getIsBatchCorrected() ) )
-                .add( Restrictions.eq( "isRecomputedFromRawData", quantitationType.getIsRecomputedFromRawData() ) );
     }
 
     public static void addRestrictions( Criteria queryObject, Taxon taxon ) {

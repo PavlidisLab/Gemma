@@ -39,6 +39,37 @@ public class QuantitationTypeDaoTest extends BaseDatabaseTest {
     private QuantitationTypeDao quantitationTypeDao;
 
     @Test
+    public void testFind() {
+        QuantitationType qt = createQuantitationType();
+        assertThat( quantitationTypeDao.find( qt ) )
+                .isEqualTo( qt );
+    }
+
+    @Test
+    public void testFindByVectorType() {
+        ArrayDesign ad = createPlatform();
+
+        QuantitationType qt = createQuantitationType();
+        ExpressionExperiment ee = new ExpressionExperiment();
+
+        BioAssayDimension bad = new BioAssayDimension();
+        sessionFactory.getCurrentSession().persist( bad );
+        RawExpressionDataVector vector = new RawExpressionDataVector();
+        vector.setBioAssayDimension( bad );
+        vector.setDesignElement( ad.getCompositeSequences().iterator().next() );
+        vector.setQuantitationType( qt );
+        vector.setData( new byte[0] );
+        vector.setExpressionExperiment( ee );
+
+        ee.getQuantitationTypes().add( qt );
+        ee.getRawExpressionDataVectors().add( vector );
+
+        sessionFactory.getCurrentSession().persist( ee );
+        assertThat( quantitationTypeDao.find( qt, RawExpressionDataVector.class ) )
+                .isEqualTo( qt );
+    }
+
+    @Test
     public void testLoadValueObjects() {
         Filters filters = Filters.by( Filter.parse( null, "name", String.class, Filter.Operator.eq, "FPKM" ) );
         assertThat( quantitationTypeDao.loadValueObjects( filters, null ) ).isEmpty();
@@ -48,7 +79,7 @@ public class QuantitationTypeDaoTest extends BaseDatabaseTest {
     public void testFindAllByExperiment() {
         ArrayDesign ad = createPlatform();
 
-        QuantitationType qt = createQuantitationType( "test" );
+        QuantitationType qt = createQuantitationType();
         ExpressionExperiment ee = new ExpressionExperiment();
 
         BioAssayDimension bad = new BioAssayDimension();
@@ -72,7 +103,7 @@ public class QuantitationTypeDaoTest extends BaseDatabaseTest {
     public void testLoadByIdAndVectorType() {
         ArrayDesign ad = createPlatform();
 
-        QuantitationType qt = createQuantitationType( "test" );
+        QuantitationType qt = createQuantitationType();
         ExpressionExperiment ee = new ExpressionExperiment();
 
         BioAssayDimension bad = new BioAssayDimension();
@@ -101,7 +132,7 @@ public class QuantitationTypeDaoTest extends BaseDatabaseTest {
         BioAssayDimension bad = new BioAssayDimension();
         sessionFactory.getCurrentSession().persist( bad );
 
-        QuantitationType qt = createQuantitationType( "test" );
+        QuantitationType qt = createQuantitationType();
         RawExpressionDataVector vector = new RawExpressionDataVector();
         vector.setBioAssayDimension( bad );
         vector.setDesignElement( ad.getCompositeSequences().iterator().next() );
@@ -127,7 +158,7 @@ public class QuantitationTypeDaoTest extends BaseDatabaseTest {
         BioAssayDimension bad = new BioAssayDimension();
         sessionFactory.getCurrentSession().persist( bad );
 
-        QuantitationType qt = createQuantitationType( "test" );
+        QuantitationType qt = createQuantitationType();
         RawExpressionDataVector vector = new RawExpressionDataVector();
         vector.setBioAssayDimension( bad );
         vector.setDesignElement( ad.getCompositeSequences().iterator().next() );
@@ -138,7 +169,7 @@ public class QuantitationTypeDaoTest extends BaseDatabaseTest {
         ee.getQuantitationTypes().add( qt );
         ee.getRawExpressionDataVectors().add( vector );
 
-        QuantitationType qt2 = createQuantitationType( "test" );
+        QuantitationType qt2 = createQuantitationType();
         RawExpressionDataVector vector2 = new RawExpressionDataVector();
         vector2.setBioAssayDimension( bad );
         vector2.setDesignElement( ad.getCompositeSequences().iterator().next() );
@@ -161,7 +192,7 @@ public class QuantitationTypeDaoTest extends BaseDatabaseTest {
         ExpressionExperiment ee = new ExpressionExperiment();
         BioAssayDimension bad = new BioAssayDimension();
         sessionFactory.getCurrentSession().persist( bad );
-        QuantitationType qt = createQuantitationType( "test" );
+        QuantitationType qt = createQuantitationType();
         RawExpressionDataVector vector = new RawExpressionDataVector();
         vector.setBioAssayDimension( bad );
         vector.setDesignElement( ad.getCompositeSequences().iterator().next() );
@@ -187,9 +218,9 @@ public class QuantitationTypeDaoTest extends BaseDatabaseTest {
         return ad;
     }
 
-    private QuantitationType createQuantitationType( String name ) {
+    private QuantitationType createQuantitationType() {
         QuantitationType newQt = new QuantitationType();
-        newQt.setName( name );
+        newQt.setName( "test" );
         newQt.setGeneralType( GeneralType.QUANTITATIVE );
         newQt.setType( StandardQuantitationType.AMOUNT );
         newQt.setScale( ScaleType.LOG2 );

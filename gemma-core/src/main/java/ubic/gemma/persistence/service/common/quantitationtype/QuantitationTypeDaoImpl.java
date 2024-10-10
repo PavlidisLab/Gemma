@@ -19,9 +19,9 @@
 package ubic.gemma.persistence.service.common.quantitationtype;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.Criteria;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.metadata.ClassMetadata;
@@ -33,9 +33,12 @@ import org.springframework.util.MultiValueMap;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.hibernate.TypedResultTransformer;
 import ubic.gemma.persistence.service.AbstractCriteriaFilteringVoEnabledDao;
-import ubic.gemma.persistence.util.BusinessKey;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -79,11 +82,45 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     }
 
     @Override
+    public QuantitationType create( QuantitationType quantitationType, Class<? extends DataVector> dataVectorType ) {
+        Assert.isTrue( !quantitationType.getIsPreferred() || RawExpressionDataVector.class.isAssignableFrom( dataVectorType ),
+                "The isPreferred can only be set for RawExpressionDataVector." );
+        Assert.isTrue( !quantitationType.getIsMaskedPreferred() || ProcessedExpressionDataVector.class.isAssignableFrom( dataVectorType ),
+                "The isMaskedPreferred can only be set for ProcessedExpressionDataVector." );
+        Assert.isTrue( !quantitationType.getIsSingleCellPreferred() || SingleCellExpressionDataVector.class.isAssignableFrom( dataVectorType ),
+                "The isSingleCellPreferred can only be set for SingleCellExpressionDataVector." );
+        return create( quantitationType );
+    }
+
+    @Override
     public QuantitationType find( QuantitationType quantitationType ) {
         // find all matching QTs; not necessarily for this experiment. This is lazy - we could go through the above to check each for a match.
-        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( QuantitationType.class );
-        BusinessKey.addRestrictions( queryObject, quantitationType );
-        return ( QuantitationType ) queryObject.uniqueResult();
+        return ( QuantitationType ) this.getSessionFactory().getCurrentSession().createCriteria( QuantitationType.class )
+                .add( createRestrictions( quantitationType ) )
+                .uniqueResult();
+    }
+
+    @Override
+    public QuantitationType find( QuantitationType entity, Class<? extends DataVector> dataVectorType ) {
+        // find all matching QTs; not necessarily for this experiment. This is lazy - we could go through the above to check each for a match.
+        return ( QuantitationType ) getSessionFactory().getCurrentSession()
+                .createCriteria( dataVectorType )
+                .createCriteria( "quantitationType" )
+                .add( createRestrictions( entity ) )
+                .setProjection( Projections.distinct( Projections.property( "id" ) ) )
+                .setResultTransformer( new TypedResultTransformer<QuantitationType>() {
+                    @Override
+                    public QuantitationType transformTuple( Object[] tuple, String[] aliases ) {
+                        Long id = ( Long ) tuple[0];
+                        return ( QuantitationType ) getSessionFactory().getCurrentSession().load( QuantitationType.class, id );
+                    }
+
+                    @Override
+                    public List<QuantitationType> transformListTyped( List<QuantitationType> collection ) {
+                        return collection;
+                    }
+                } )
+                .uniqueResult();
     }
 
     @Override
@@ -91,10 +128,11 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
         Assert.isTrue( dataVectorTypes == null || !dataVectorTypes.isEmpty(), "At lease one type of data vector must be supplied." );
 
         // find all matching QTs; not necessarily for this experiment. This is lazy - we could go through the above to check each for a match.
-        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( QuantitationType.class );
-        BusinessKey.addRestrictions( queryObject, quantitationType );
         //noinspection unchecked
-        Collection<QuantitationType> qts = queryObject.list();
+        Collection<QuantitationType> qts = this.getSessionFactory().getCurrentSession()
+                .createCriteria( QuantitationType.class )
+                .add( createRestrictions( quantitationType ) )
+                .list();
 
         // find all QTs for the experiment
         //noinspection unchecked
@@ -136,6 +174,15 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
                 .setParameter( "ee", ee )
                 .setParameter( "name", name )
                 .uniqueResult();
+    }
+
+    @Override
+    public QuantitationType findOrCreate( QuantitationType quantitationType, Class<? extends DataVector> dataVectorType ) {
+        QuantitationType found = find( quantitationType, dataVectorType );
+        if ( found != null ) {
+            return found;
+        }
+        return create( quantitationType, dataVectorType );
     }
 
     @Override
@@ -189,6 +236,24 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
             }
         }
         return null;
+    }
+
+    /**
+     * Create a restriction that matches the fields of a QT as per {@link QuantitationType#equals(Object)}.
+     */
+    private Criterion createRestrictions( QuantitationType quantitationType ) {
+        return Restrictions.and(
+                Restrictions.eq( "name", quantitationType.getName() ),
+                Restrictions.eq( "generalType", quantitationType.getGeneralType() ),
+                Restrictions.eq( "type", quantitationType.getType() ),
+                Restrictions.eq( "scale", quantitationType.getScale() ),
+                Restrictions.eq( "representation", quantitationType.getRepresentation() ),
+                Restrictions.eq( "isBackground", quantitationType.getIsBackground() ),
+                Restrictions.eq( "isBackgroundSubtracted", quantitationType.getIsBackgroundSubtracted() ),
+                Restrictions.eq( "isRatio", quantitationType.getIsRatio() ),
+                Restrictions.eq( "isNormalized", quantitationType.getIsNormalized() ),
+                Restrictions.eq( "isBatchCorrected", quantitationType.getIsBatchCorrected() ),
+                Restrictions.eq( "isRecomputedFromRawData", quantitationType.getIsRecomputedFromRawData() ) );
     }
 
     private void populateVectorType( Collection<QuantitationTypeValueObject> quantitationTypeValueObjects, ExpressionExperiment ee ) {
