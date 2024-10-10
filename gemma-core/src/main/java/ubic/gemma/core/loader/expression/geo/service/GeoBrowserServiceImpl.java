@@ -24,12 +24,13 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.entrez.EutilFetch;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -43,16 +44,17 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.*;
 import java.io.*;
-import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
+import static ubic.gemma.core.util.XMLUtils.createDocumentBuilder;
 
 /**
  * This is marked as {@link Lazy} since we don't use it outside Gemma Web, so it won't be loaded unless it's needed.
@@ -97,6 +99,12 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
 
+    @Value("${entrez.efetch.apikey}")
+    private String ncbiApiKey;
+
+    @Value("${gemma.download.path}")
+    private String downloadPath;
+
     private final Map<String, GeoRecord> localInfo = new ConcurrentHashMap<>();
 
     private final ExecutorService es = Executors.newSingleThreadExecutor();
@@ -125,7 +133,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
          * The maxrecords is > 1 because it return platforms as well (and there are series with as many as 13 platforms
          * ... leaving some headroom)
          */
-        String details = EutilFetch.fetch( "gds", accession, 25 );
+        String details = new EutilFetch( ncbiApiKey ).fetch( "gds", accession, 25 );
 
         if ( details == null ) {
             throw new IOException( "No results from GEO" );
@@ -143,8 +151,8 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
     }
 
     @Override
-    public List<GeoRecord> getRecentGeoRecords( int start, int count ) throws IOException, ParseException {
-        GeoBrowser browser = new GeoBrowser();
+    public List<GeoRecord> getRecentGeoRecords( int start, int count ) throws IOException {
+        GeoBrowser browser = new GeoBrowser( ncbiApiKey );
         List<GeoRecord> records = browser.getRecentGeoRecords( start, count );
 
         if ( records.isEmpty() )
@@ -155,9 +163,8 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
 
     @Override
     public List<GeoRecord> searchGeoRecords( String searchString, int start, int count, boolean detailed ) throws IOException {
-        GeoBrowser browser = new GeoBrowser();
-        List<GeoRecord> records = browser.getGeoRecordsBySearchTerm( searchString, start, count, detailed, null, null );
-
+        GeoBrowser browser = new GeoBrowser( ncbiApiKey );
+        List<GeoRecord> records = browser.searchGeoRecords( searchString, null, null, null, null, start, count, detailed );
         return this.filterGeoRecords( records );
     }
 
@@ -185,7 +192,8 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
         details = details.replaceAll( "encoding=\"UTF-8\"", "" );
 
         try {
-            Document document = EutilFetch.parseStringInputStream( details );
+            DocumentBuilder builder = createDocumentBuilder();
+            Document document = builder.parse( new InputSource( new StringReader( details ) ) );
 
             String gse = "GSE" + xgse.evaluate( document, XPathConstants.STRING );
             String title = ( String ) xtitle.evaluate( document, XPathConstants.STRING );
@@ -233,7 +241,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
             }
 
             Collection<String> organisms = record.getOrganisms();
-            if ( organisms == null || organisms.size() == 0 ) {
+            if ( organisms == null || organisms.isEmpty() ) {
                 continue;
             }
             int i = 0;
@@ -307,8 +315,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
     }
 
     private File getInfoStoreFile() {
-        String path = Settings.getDownloadPath();
-        return new File( path + File.separatorChar + GeoBrowserServiceImpl.GEO_DATA_STORE_FILE_NAME );
+        return new File( downloadPath + File.separatorChar + GeoBrowserServiceImpl.GEO_DATA_STORE_FILE_NAME );
     }
 
     /**

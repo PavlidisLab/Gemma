@@ -18,6 +18,7 @@ import org.junit.After;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -58,6 +59,9 @@ public class ExpressionExperimentPlatformSwitchTest extends AbstractGeoServiceTe
 
     @Autowired
     private ArrayDesignService arrayDesignService;
+
+    @Value("${entrez.efetch.apikey}")
+    private String ncbiApiKey;
 
     /**
      * for bug 3451

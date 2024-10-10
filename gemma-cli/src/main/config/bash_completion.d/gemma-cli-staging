@@ -352,8 +352,11 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' listGEOData ' ]]; then
-        if ! [[ "$current_option" =~ (-date|-gselimit|-output|-platformLimit|-startat|-startdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-date' '-gselimit' '-h' '-output' '-platformLimit' '-platforms' '-startat' '-startdate'" -- "$2")
+        if ! [[ "$current_option" =~ (--accession|--accession-file|-accession|-accessionFile|-date|-gselimit|-output|-platformLimit|-startat|-startdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--accession' '--accession-file' '--help' '-accession' '-accessionFile' '-date' '-gselimit' '-h' '-output' '-platformLimit' '-platforms' '-startat' '-startdate'" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--accession-file|-accessionFile|-output) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' platformMapSummary ' ]]; then

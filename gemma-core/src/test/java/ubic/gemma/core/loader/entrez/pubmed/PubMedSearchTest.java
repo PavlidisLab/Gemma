@@ -22,6 +22,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.util.test.category.PubMedTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -39,6 +40,8 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailabl
 @Category(PubMedTest.class)
 public class PubMedSearchTest {
 
+    private final PubMedSearch pms = new PubMedSearch( Settings.getString( "entrez.efetch.apikey" ) );
+
     @Before
     public void setUp() throws Exception {
         assumeThatResourceIsAvailable( "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi" );
@@ -50,7 +53,6 @@ public class PubMedSearchTest {
     @Test
     @Category(SlowTest.class)
     public void testSearchAndRetrieveByHTTP() throws Exception {
-        PubMedSearch pms = new PubMedSearch();
         Collection<String> searchTerms = new HashSet<>();
         searchTerms.add( "brain" );
         searchTerms.add( "hippocampus" );
@@ -72,7 +74,6 @@ public class PubMedSearchTest {
     @Test
     @Category(SlowTest.class)
     public void testSearchAndRetrieveByHTTPInChunks() throws Exception {
-        PubMedSearch pms = new PubMedSearch();
         Collection<String> searchTerms = new HashSet<>();
         searchTerms.add( "brain" );
         searchTerms.add( "hippocampus" );
@@ -87,7 +88,6 @@ public class PubMedSearchTest {
     @Test
     @Category(SlowTest.class)
     public void testSearchAndRetrieveIdByHTTPBookshelf() throws Exception {
-        PubMedSearch pms = new PubMedSearch();
         Collection<String> searchTerms = new HashSet<>();
         searchTerms.add( "23865096" );
         Collection<BibliographicReference> actualResult = pms.searchAndRetrieveIdByHTTP( searchTerms );
@@ -96,7 +96,6 @@ public class PubMedSearchTest {
 
     @Test
     public void testSearchAndRetrieveIdsByHTTP() throws Exception {
-        PubMedSearch pms = new PubMedSearch();
         Collection<String> searchTerms = new HashSet<>();
         searchTerms.add( "brain" );
         searchTerms.add( "hippocampus" );

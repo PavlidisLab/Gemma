@@ -23,13 +23,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.AllenBrainAtlasTest;
+import ubic.gemma.core.util.test.category.IntegrationTest;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assume.assumeNotNull;
 
 /**
@@ -37,7 +39,7 @@ import static org.junit.Assume.assumeNotNull;
  *
  * @author kelsey
  */
-@Category(AllenBrainAtlasTest.class)
+@Category({ AllenBrainAtlasTest.class, IntegrationTest.class })
 public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
 
     @Autowired

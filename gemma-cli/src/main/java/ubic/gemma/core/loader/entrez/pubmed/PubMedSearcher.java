@@ -21,6 +21,7 @@ package ubic.gemma.core.loader.entrez.pubmed;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -34,10 +35,14 @@ import java.util.Collection;
  * @author pavlidis
  */
 public class PubMedSearcher extends AbstractAuthenticatedCLI {
-    private static final PubMedSearch pms = new PubMedSearch();
+
     @Autowired
     private PersisterHelper persisterHelper;
+    @Value("${entrez.efetch.apikey}")
+    private String ncbiApiKey;
+
     private Collection<String> args;
+
     private boolean persist = false;
 
     public PubMedSearcher() {
@@ -67,8 +72,8 @@ public class PubMedSearcher extends AbstractAuthenticatedCLI {
 
     @Override
     protected void doWork() throws Exception {
-        @SuppressWarnings("unchecked")
-        Collection<BibliographicReference> refs = PubMedSearcher.pms
+        PubMedSearch pubMedSearcher = new PubMedSearch( ncbiApiKey );
+        Collection<BibliographicReference> refs = pubMedSearcher
                 .searchAndRetrieveByHTTP( this.args );
 
         System.out.println( refs.size() + " references found" );
