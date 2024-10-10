@@ -354,7 +354,8 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                                 additionalSupplementaryFiles.addAll( detector.getAdditionalSupplementaryFiles( series, sample ) );
                             }
                             if ( dataType != null && supplementaryFile != null ) {
-                                detector.downloadSingleCellData( series, dataType, supplementaryFile );
+                                detector.downloadSingleCellData( series, dataType,
+                                        matchSupplementaryFile( series.getSupplementaryFiles(), supplementaryFile ) );
                             } else if ( dataType != null ) {
                                 detector.downloadSingleCellData( series, dataType );
                             } else {
@@ -409,6 +410,27 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             }
             awaitBatchExecutorService();
         }
+    }
+
+    /**
+     * Pick a supplementary file from a user-supplied string.
+     */
+    private String matchSupplementaryFile( Collection<String> supplementaryFiles, String supplementaryFile ) {
+        // 1. check for a complete match
+        for ( String f : supplementaryFiles ) {
+            if ( f.equals( supplementaryFile ) ) {
+                return f;
+            }
+        }
+
+        // 2. check for the last component
+        for ( String f : supplementaryFiles ) {
+            if ( FilenameUtils.getName( f ).equals( supplementaryFile ) ) {
+                return f;
+            }
+        }
+
+        throw new IllegalStateException( "No supplementary file matching " + supplementaryFile + " found in: " + StringUtils.join( ", ", supplementaryFiles ) + "." );
     }
 
     /**
