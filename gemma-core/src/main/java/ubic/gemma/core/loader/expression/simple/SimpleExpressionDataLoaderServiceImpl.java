@@ -21,7 +21,9 @@ package ubic.gemma.core.loader.expression.simple;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
@@ -55,7 +57,7 @@ import java.util.*;
  * @author pavlidis
  */
 @Component
-public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDataLoaderService {
+public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDataLoaderService, InitializingBean {
 
     private static final Log log = LogFactory.getLog( SimpleExpressionDataLoaderServiceImpl.class.getName() );
     @Autowired
@@ -66,6 +68,16 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
     private PreprocessorService preprocessorService;
     @Autowired
     private TaxonService taxonService;
+
+    @Value("${entrez.efetch.apikey")
+    private String ncbiApiKey;
+
+    private PubMedXMLFetcher pubfetch;
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        pubfetch = new PubMedXMLFetcher( ncbiApiKey );
+    }
 
     @Override
     public ExpressionExperiment convert( SimpleExpressionExperimentMetaData metaData,
@@ -91,7 +103,6 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         experiment.setExperimentalDesign( ed );
 
         if ( metaData.getPubMedId() != null ) {
-            PubMedXMLFetcher pubfetch = new PubMedXMLFetcher();
             try {
                 experiment.setPrimaryPublication( pubfetch.retrieveByHTTP( metaData.getPubMedId() ) );
             } catch ( IOException e ) {

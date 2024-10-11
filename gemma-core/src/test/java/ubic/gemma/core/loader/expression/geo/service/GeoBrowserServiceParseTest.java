@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -41,7 +42,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatExceptionIsDueToNetworkIssue;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * @author paul
@@ -147,9 +147,9 @@ public class GeoBrowserServiceParseTest extends AbstractJUnit4SpringContextTests
     @Test
     public void testMINiMLParse() throws Exception {
         ClassPathResource resource = new ClassPathResource( "/data/loader/expression/geo/GSE180363.miniml.xml" );
-        GeoBrowser serv = new GeoBrowser();
+        GeoBrowser serv = new GeoBrowser( Settings.getString( "entrez.efetch.apikey" ) );
         GeoRecord rec = new GeoRecord();
-        serv.parseMINiML( rec, serv.parseMiniMLDocument( resource.getURL() ) );
+        serv.fillSubSeriesStatus( rec, serv.parseMiniMLDocument( resource.getURL() ) );
         assertTrue( rec.isSubSeries() );
     }
 
@@ -157,9 +157,9 @@ public class GeoBrowserServiceParseTest extends AbstractJUnit4SpringContextTests
     @Category(SlowTest.class)
     public void testSampleMINiMLParse() throws Exception {
         ClassPathResource resource = new ClassPathResource( "/data/loader/expression/geo/GSE171682.xml" );
-        GeoBrowser serv = new GeoBrowser();
+        GeoBrowser serv = new GeoBrowser( Settings.getString( "entrez.efetch.apikey" ) );
         GeoRecord rec = new GeoRecord();
-        serv.parseSampleMiNIML( rec, serv.parseMiniMLDocument( resource.getURL() ) );
+        serv.fillSampleDetails( rec, serv.parseMiniMLDocument( resource.getURL() ) );
         assertTrue( rec.getSampleDetails().contains( "colorectal cancer" ) );
         assertTrue( rec.getSampleDetails().contains( "Large intestine" ) );
         assertEquals( "RNA-Seq", rec.getLibraryStrategy() );

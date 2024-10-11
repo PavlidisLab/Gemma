@@ -43,6 +43,7 @@ import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.report.WhatsNew;
 import ubic.gemma.core.analysis.report.WhatsNewService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
@@ -1621,7 +1622,7 @@ public class ExpressionExperimentController {
                 ExpressionExperimentController.log.info( "Searching pubmed on line .." );
 
                 // search for pubmedId
-                PubMedSearch pms = new PubMedSearch();
+                PubMedSearch pms = new PubMedSearch( Settings.getString( "entrez.efetch.apikey" ));
                 Collection<String> searchTerms = new ArrayList<>();
                 searchTerms.add( pubmedId );
                 Collection<BibliographicReference> publications;

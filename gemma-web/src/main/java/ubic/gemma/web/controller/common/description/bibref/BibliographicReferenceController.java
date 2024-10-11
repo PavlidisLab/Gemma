@@ -19,7 +19,9 @@
 package ubic.gemma.web.controller.common.description.bibref;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -56,10 +58,10 @@ import java.util.Map.Entry;
  * @author keshav
  */
 @Controller
-public class BibliographicReferenceController extends BaseController {
+public class BibliographicReferenceController extends BaseController implements InitializingBean {
 
-    private final String messagePrefix = "Reference with PubMed Id";
-    private final PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
+    private static final String messagePrefix = "Reference with PubMed Id";
+
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService = null;
     @Autowired
@@ -68,6 +70,15 @@ public class BibliographicReferenceController extends BaseController {
     private PhenotypeAssociationService phenotypeAssociationService;
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+    @Value("${entrez.efetch.apikey}")
+    private String ncbiApiKey;
+
+    private PubMedXMLFetcher pubMedXmlFetcher;
+
+    @Override
+    public void afterPropertiesSet() {
+        this.pubMedXmlFetcher = new PubMedXMLFetcher( ncbiApiKey );
+    }
 
     @RequestMapping(value = "/bibRefAdd.html", method = RequestMethod.POST)
     public ModelAndView add( @RequestParam("accession") String pubMedId, HttpServletRequest request ) {
