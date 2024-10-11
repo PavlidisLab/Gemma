@@ -232,8 +232,12 @@ public class ExpressionExperimentDataFetchController {
                         "No data available (either due to lack of authorization, or use of an invalid entity identifier)" );
             }
 
-            File f = expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, false )
-                    .orElseThrow( () -> new IllegalStateException( "There is no coexpression data for " + ee ) );
+            File f;
+            try {
+                f = expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, false );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
 
             watch.stop();
             log.debug( "Finished getting co-expression file; done in " + watch.getTime() + " milliseconds" );
@@ -324,19 +328,29 @@ public class ExpressionExperimentDataFetchController {
 
                 /* the design file */
                 if ( eedId != null ) {
-                    f = expressionDataFileService.writeOrLocateDesignFile( ee, false );
+                    try {
+                        f = expressionDataFileService.writeOrLocateDesignFile( ee, false );
+                    } catch ( IOException e ) {
+                        throw new RuntimeException( e );
+                    }
                 }
                 /* the data file */
                 else {
                     if ( qType != null ) {
                         log.debug( "Using quantitation type to create matrix." );
-                        f = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qType, false );
+                        try {
+                            f = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qType, false );
+                        } catch ( IOException e ) {
+                            throw new RuntimeException( e );
+                        }
                     } else {
 
                         try {
                             f = expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, filtered ).orElse( null );
                         } catch ( FilteringException e ) {
                             throw new IllegalStateException( "The expression experiment data matrix could not be filtered for " + ee + ".", e );
+                        } catch ( IOException e ) {
+                            throw new RuntimeException( e );
                         }
 
                     }
@@ -347,12 +361,18 @@ public class ExpressionExperimentDataFetchController {
             else if ( usedFormat.equals( "json" ) ) {
 
                 if ( qType != null ) {
-                    f = expressionDataFileService.writeOrLocateJSONRawExpressionDataFile( ee, qType, false );
+                    try {
+                        f = expressionDataFileService.writeOrLocateJSONRawExpressionDataFile( ee, qType, false );
+                    } catch ( IOException e ) {
+                        throw new RuntimeException( e );
+                    }
                 } else {
                     try {
                         f = expressionDataFileService.writeOrLocateJSONProcessedExpressionDataFile( ee, false, filtered ).orElse( null );
                     } catch ( FilteringException e ) {
                         throw new IllegalStateException( "The expression experiment data matrix could not be filtered for " + ee + ".", e );
+                    } catch ( IOException e ) {
+                        throw new RuntimeException( e );
                     }
                 }
             }
@@ -390,8 +410,13 @@ public class ExpressionExperimentDataFetchController {
 
             if ( this.taskCommand.getAnalysisId() != null ) {
 
-                File f = expressionDataFileService.getDiffExpressionAnalysisArchiveFile( taskCommand.getAnalysisId(),
-                        taskCommand.isForceRewrite() );
+                File f;
+                try {
+                    f = expressionDataFileService.getDiffExpressionAnalysisArchiveFile( taskCommand.getAnalysisId(),
+                            taskCommand.isForceRewrite() );
+                } catch ( IOException e ) {
+                    throw new RuntimeException( e );
+                }
 
                 files.add( f );
 

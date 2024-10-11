@@ -6,6 +6,7 @@ import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -16,7 +17,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public interface SingleCellExpressionExperimentService {
 
@@ -32,6 +35,13 @@ public interface SingleCellExpressionExperimentService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     List<QuantitationType> getSingleCellQuantitationTypes( ExpressionExperiment ee );
 
+
+    /**
+     * Obtain the preferred single cell quantitation type.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Optional<QuantitationType> getPreferredSingleCellQuantitationType( ExpressionExperiment ee );
+
     /**
      * Obtain preferred single-cell vectors.
      */
@@ -43,6 +53,24 @@ public interface SingleCellExpressionExperimentService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType );
+
+    /**
+     * Obtain a stream over single-cell vectors for a given quantitation type.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize );
+
+    /**
+     * Obtain the number of single-cell vectors for a given quantitation type.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    long getNumberOfSingleCellDataVectors( ExpressionExperiment ee, QuantitationType qt );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    long getNumberOfNonZeroes( ExpressionExperiment ee, QuantitationType qt );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt );
 
     /**
      * Obtain a single-cell expression data matrix for the given quantitation type.

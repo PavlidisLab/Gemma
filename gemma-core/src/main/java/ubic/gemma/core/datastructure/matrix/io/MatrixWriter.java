@@ -16,11 +16,13 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.datastructure.matrix;
+package ubic.gemma.core.datastructure.matrix.io;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.analysis.service.AbstractFileService;
+import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataWriterUtils;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -36,12 +38,21 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import static ubic.gemma.core.datastructure.matrix.io.TsvUtils.SUB_DELIMITER;
+import static ubic.gemma.core.datastructure.matrix.io.TsvUtils.format;
+
 /**
+ * Writes {@link BulkExpressionDataMatrix} to various tabular formats.
  * @author pavlidis
  */
 @CommonsLog
 @ParametersAreNonnullByDefault
-public class MatrixWriter extends AbstractFileService<BulkExpressionDataMatrix<?>> {
+public class MatrixWriter implements BulkExpressionDataMatrixWriter {
+
+    @Override
+    public void write( BulkExpressionDataMatrix<?> matrix, Writer writer ) throws IOException {
+        write( writer, matrix, null, true, false );
+    }
 
     public void write( Writer writer, BulkExpressionDataMatrix<?> matrix,
             @Nullable Map<CompositeSequence, Collection<Gene>> geneAnnotations, boolean writeHeader, boolean orderByDesign )
@@ -94,7 +105,7 @@ public class MatrixWriter extends AbstractFileService<BulkExpressionDataMatrix<?
 
         for ( int j = 0; j < rows; j++ ) {
             CompositeSequence probeForRow = matrix.getDesignElementForRow( j );
-            buf.append( escapeTsv( probeForRow.getName() ) ).append( "\t" );
+            buf.append( format( probeForRow.getName() ) ).append( "\t" );
             this.writeSequence( writeSequence, buf, probeForRow );
 
             if ( writeGeneInfo ) {
@@ -149,7 +160,7 @@ public class MatrixWriter extends AbstractFileService<BulkExpressionDataMatrix<?
 
         for ( int j = 0; j < rows; j++ ) {
             CompositeSequence probeForRow = matrix.getDesignElementForRow( j );
-            buf.append( escapeTsv( probeForRow.getName() ) ).append( "\t" );
+            buf.append( format( probeForRow.getName() ) ).append( "\t" );
             this.writeSequence( writeSequence, buf, probeForRow );
 
             if ( writeGeneInfo ) {
@@ -244,7 +255,7 @@ public class MatrixWriter extends AbstractFileService<BulkExpressionDataMatrix<?
             int i = matrix.getColumnIndex( bioMaterial );
             buf.append( "\t" );
             String colName = ExpressionDataWriterUtils.constructBioAssayName( matrix, i );
-            buf.append( escapeTsv( colName ) );
+            buf.append( format( colName ) );
         }
         buf.append( "\n" );
     }
@@ -296,10 +307,10 @@ public class MatrixWriter extends AbstractFileService<BulkExpressionDataMatrix<?
             names = names.replaceAll( "#", "_" );
 
             // initial tab has already been added before
-            buf.append( escapeTsv( symbols ) ).append( "\t" )
-                    .append( escapeTsv( names ) ).append( "\t" )
-                    .append( escapeTsv( gemmaID ) ).append( "\t" )
-                    .append( escapeTsv( ncbiID ) ).append( "\t" );
+            buf.append( format( symbols ) ).append( "\t" )
+                    .append( format( names ) ).append( "\t" )
+                    .append( format( gemmaID ) ).append( "\t" )
+                    .append( format( ncbiID ) ).append( "\t" );
         } else {
             buf.append( "\t\t\t\t" );
         }
@@ -320,29 +331,29 @@ public class MatrixWriter extends AbstractFileService<BulkExpressionDataMatrix<?
             if ( genes.size() == 1 ) {
                 // simple case, avoid some overhead.
                 Gene g = genes.iterator().next();
-                buf.append( escapeTsv( g.getOfficialSymbol() ) ).append( "\t" )
-                        .append( escapeTsv( g.getOfficialName() ) ).append( "\t" )
-                        .append( g.getId() ).append( "\t" )
-                        .append( g.getNcbiGeneId() == null ? "" : g.getNcbiGeneId().toString() );
+                buf.append( format( g.getOfficialSymbol() ) ).append( "\t" )
+                        .append( format( g.getOfficialName() ) ).append( "\t" )
+                        .append( format( g.getId() ) ).append( "\t" )
+                        .append( format( g.getNcbiGeneId() ) );
             } else {
                 List<String> gs = new ArrayList<>();
                 List<String> gn = new ArrayList<>();
-                List<Long> ids = new ArrayList<>();
+                List<String> ids = new ArrayList<>();
                 List<String> ncbiIds = new ArrayList<>();
                 for ( Gene gene : genes ) {
-                    gs.add( gene.getOfficialSymbol() );
-                    gn.add( gene.getOfficialName() );
-                    ids.add( gene.getId() );
-                    ncbiIds.add( gene.getNcbiGeneId() == null ? "" : gene.getNcbiGeneId().toString() );
+                    gs.add( format( gene.getOfficialSymbol() ) );
+                    gn.add( format( gene.getOfficialName() ) );
+                    ids.add( format( gene.getId() ) );
+                    ncbiIds.add( format( gene.getNcbiGeneId() ) );
                 }
 
-                buf.append( escapeTsv( StringUtils.join( gs.toArray(), '|' ) ) );
+                buf.append( StringUtils.join( gs, SUB_DELIMITER ) );
                 buf.append( "\t" );
-                buf.append( escapeTsv( StringUtils.join( gn.toArray(), '|' ) ) );
+                buf.append( StringUtils.join( gn, SUB_DELIMITER ) );
                 buf.append( "\t" );
-                buf.append( StringUtils.join( ids.toArray(), '|' ) );
+                buf.append( StringUtils.join( ids, SUB_DELIMITER ) );
                 buf.append( "\t" );
-                buf.append( StringUtils.join( ncbiIds.toArray(), '|' ) );
+                buf.append( StringUtils.join( ncbiIds, SUB_DELIMITER ) );
             }
         } else {
             buf.append( "\t\t\t" );
@@ -353,24 +364,9 @@ public class MatrixWriter extends AbstractFileService<BulkExpressionDataMatrix<?
         if ( writeSequence ) {
             BioSequence biologicalCharacteristic = probeForRow.getBiologicalCharacteristic();
             if ( biologicalCharacteristic != null )
-                buf.append( escapeTsv( biologicalCharacteristic.getName() ) );
+                buf.append( format( biologicalCharacteristic.getName() ) );
 
             buf.append( "\t" );
-        }
-    }
-
-    @Override
-    public void writeTsv( BulkExpressionDataMatrix<?> entity, Writer writer ) throws IOException {
-        write( writer, entity, null, true, true, true, true );
-    }
-
-    private String format( @Nullable Object object ) {
-        if ( object instanceof Double ) {
-            return format( ( Double ) object );
-        } else if ( object != null ) {
-            return escapeTsv( object.toString() );
-        } else {
-            return "";
         }
     }
 }

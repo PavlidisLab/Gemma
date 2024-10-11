@@ -40,7 +40,7 @@ public interface ExpressionAnalysisResultSetService extends AnalysisResultSetSer
 
     DifferentialExpressionAnalysisResultSetValueObject loadValueObjectWithResults( ExpressionAnalysisResultSet ears, boolean includeFactorValuesInContrasts, boolean queryByResult, boolean includeTaxonInGenes );
 
-    Map<Long, List<Gene>> loadResultIdToGenesMap( ExpressionAnalysisResultSet ears );
+    Map<Long, Set<Gene>> loadResultIdToGenesMap( ExpressionAnalysisResultSet ears );
 
     Slice<DifferentialExpressionAnalysisResultSetValueObject> findByBioAssaySetInAndDatabaseEntryInLimit( @Nullable Collection<BioAssaySet> bioAssaySets, @Nullable Collection<DatabaseEntry> externalIds, @Nullable Filters filters, int offset, int limit, @Nullable Sort sort );
 

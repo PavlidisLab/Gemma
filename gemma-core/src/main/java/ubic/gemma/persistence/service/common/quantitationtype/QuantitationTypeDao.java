@@ -45,6 +45,13 @@ public interface QuantitationTypeDao extends FilteringVoEnabledDao<QuantitationT
     QuantitationType loadByIdAndVectorType( Long id, ExpressionExperiment ee, Class<? extends DataVector> dataVectorType );
 
     /**
+     * Retrieve all the QTs associated with the given experiment.
+     * <p>
+     * This method will scan through all the vector types and also the denormalized QTs in {@link ExpressionExperiment#getQuantitationTypes()}.
+     */
+    Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee );
+
+    /**
      * Find a QT matching the given template as per {@link BusinessKey#addRestrictions(Criteria, QuantitationType)}.
      * @param ee               experiment to restrict the search to
      * @param quantitationType QT template to find
@@ -68,4 +75,10 @@ public interface QuantitationTypeDao extends FilteringVoEnabledDao<QuantitationT
      * @see QuantitationTypeValueObject#QuantitationTypeValueObject(QuantitationType, ExpressionExperiment, Class)
      */
     List<QuantitationTypeValueObject> loadValueObjectsWithExpressionExperiment( Collection<QuantitationType> qts, ExpressionExperiment ee );
+
+    /**
+     * @return a data vector type, or null if the QT is not associated to any vectors
+     */
+    @Nullable
+    Class<? extends DataVector> getVectorType( QuantitationType qt );
 }

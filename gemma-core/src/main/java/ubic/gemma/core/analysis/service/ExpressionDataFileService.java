@@ -16,6 +16,7 @@ package ubic.gemma.core.analysis.service;
 
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.datastructure.matrix.io.TsvUtils;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -28,22 +29,20 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Writer;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author paul
  */
 @SuppressWarnings("unused") // Possible external use
 @ParametersAreNonnullByDefault
-public interface ExpressionDataFileService extends TsvFileService<ExpressionExperiment> {
+public interface ExpressionDataFileService {
 
-    String DISCLAIMER = "# If you use this file for your research, please cite: \n"
-            + "# Lim et al. (2021) Curation of over 10 000 transcriptomic studies to enable data reuse. \n"
-            + "# Database, baab006 (doi:10.1093/database/baab006). \n";
+    String DISCLAIMER = Arrays.stream( TsvUtils.GEMMA_CITATION_NOTICE ).map( line -> "# " + line + "\n" ).collect( Collectors.joining() );
 
     void analysisResultSetsToString( Collection<ExpressionAnalysisResultSet> results,
             Map<Long, String[]> geneAnnotations, StringBuilder buf );
@@ -54,8 +53,8 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
 
     /**
      * Delete any existing coexpression, data, or differential expression data files.
-     *
-     * @param ee the experiment
+     * <p>
+     * Experiment metadata are not deleted.
      */
     void deleteAllFiles( ExpressionExperiment ee );
 
@@ -68,7 +67,7 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * @param forceCreate whether to force creation
      * @return file
      */
-    File getDiffExpressionAnalysisArchiveFile( Long analysisId, boolean forceCreate );
+    File getDiffExpressionAnalysisArchiveFile( Long analysisId, boolean forceCreate ) throws IOException;
 
     /**
      * Locate a metadata file.
@@ -88,6 +87,39 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      */
     Optional<File> writeProcessedExpressionDataFile( ExpressionExperiment ee, boolean filtered, String fileName, boolean compress )
             throws IOException, FilteringException;
+
+    /**
+     * @see ubic.gemma.core.datastructure.matrix.io.TabularMatrixWriter
+     */
+    void writeTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, Writer writer ) throws IOException;
+
+    /**
+     * Write single-cell expression data to a standard location for a given quantitation type.
+     * @return a path where the vectors were written
+     */
+    Path writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt ) throws IOException;
+
+    /**
+     * Write single-cell expression data to a given output stream for a given quantitation type.
+     * <p>
+     * Note: this method is memory intensive because the whole matrix needs to be in-memory to write each individual
+     * sample matrices.
+     * @see ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter
+     */
+    void writeMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useEnsemblIds, OutputStream stream ) throws IOException;
+
+    /**
+     * Write single-cell expression data to a given output stream for a given quantitation type.
+     * @see ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter
+     * @param useEnsemblIds use Ensembl IDs instead of official gene symbols
+     */
+    void writeMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useEnsemblIds, Path destDir ) throws IOException;
+
+    /**
+     * Write single-cell expression data to a standard location for a given quantitation type.
+     * @return a path where the vectors were written
+     */
+    Path writeOrLocateMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt ) throws IOException;
 
     /**
      * Write raw expression data to a given writer for a given quantitation type.
@@ -121,7 +153,7 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * @param forceWrite whether to force write
      * @return file
      */
-    Optional<File> writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite );
+    File writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException;
 
     /**
      * Locate or create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
@@ -134,7 +166,7 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * @param ee         the experiment
      * @return file, or empty if the experiment has no processed vectors
      */
-    Optional<File> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException;
+    Optional<File> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException, IOException;
 
     /**
      * Locate or create a new data file for the given quantitation type. The output will include gene information if it
@@ -144,7 +176,7 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * @param type       the quantitation type
      * @return file
      */
-    File writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite );
+    File writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException;
 
     /**
      * Locate or create an experimental design file for a given experiment.
@@ -155,7 +187,7 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * @param forceWrite force re-write even if file already exists and is up to date
      * @return file
      */
-    File writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite );
+    File writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException;
 
     /**
      * Locate or create the differential expression data file(s) for a given experiment.
@@ -164,17 +196,17 @@ public interface ExpressionDataFileService extends TsvFileService<ExpressionExpe
      * @param forceWrite whether to force write
      * @return collection of files, one per analysis.
      */
-    Collection<File> writeOrLocateDiffExpressionDataFiles( ExpressionExperiment ee, boolean forceWrite );
+    Collection<File> writeOrLocateDiffExpressionDataFiles( ExpressionExperiment ee, boolean forceWrite ) throws IOException;
 
     /**
      * @see #writeOrLocateProcessedDataFile(ExpressionExperiment, boolean, boolean)
      */
-    Optional<File> writeOrLocateJSONProcessedExpressionDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException;
+    Optional<File> writeOrLocateJSONProcessedExpressionDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException, IOException;
 
     /**
      * @see #writeOrLocateRawExpressionDataFile(ExpressionExperiment, QuantitationType, boolean)
      */
-    File writeOrLocateJSONRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite );
+    File writeOrLocateJSONRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException;
 
     void deleteDiffExArchiveFile( DifferentialExpressionAnalysis analysis );
 

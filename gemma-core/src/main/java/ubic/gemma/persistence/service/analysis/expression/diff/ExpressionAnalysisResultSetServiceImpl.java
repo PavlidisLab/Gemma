@@ -91,7 +91,7 @@ public class ExpressionAnalysisResultSetServiceImpl extends AbstractFilteringVoE
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, List<Gene>> loadResultIdToGenesMap( ExpressionAnalysisResultSet resultSet ) {
+    public Map<Long, Set<Gene>> loadResultIdToGenesMap( ExpressionAnalysisResultSet resultSet ) {
         return voDao.loadResultToGenesMap( resultSet, false );
     }
 

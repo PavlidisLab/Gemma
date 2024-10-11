@@ -40,7 +40,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.util.CommonQueries;
-import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
 
@@ -192,10 +191,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
     public Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method ) {
 
-        Collection<ArrayDesign> arrayDesigns = CommonQueries
-                .getArrayDesignsUsed( IdentifiableUtils.getIds( expressionExperiments ),
-                        this.getSessionFactory().getCurrentSession() )
-                .keySet();
+        Collection<ArrayDesign> arrayDesigns = CommonQueries.getArrayDesignsUsed( expressionExperiments, this.getSessionFactory().getCurrentSession() );
 
         // this could be further improved by getting probes specific to experiments in batches.
         Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries
@@ -427,8 +423,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
     private boolean isTwoChannel( ExpressionExperiment expressionExperiment ) {
 
         boolean isTwoChannel = false;
-        Collection<ArrayDesign> arrayDesignsUsed = CommonQueries
-                .getArrayDesignsUsed( expressionExperiment, this.getSessionFactory().getCurrentSession() );
+        Collection<ArrayDesign> arrayDesignsUsed = CommonQueries.getArrayDesignsUsed( expressionExperiment, this.getSessionFactory().getCurrentSession() );
         for ( ArrayDesign ad : arrayDesignsUsed ) {
             TechnologyType technologyType = ad.getTechnologyType();
 

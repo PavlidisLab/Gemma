@@ -20,6 +20,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
 import java.io.File;
 import java.io.IOException;
@@ -87,6 +88,11 @@ public class ExpressionDataFileServiceTest extends AbstractJUnit4SpringContextTe
         @Bean
         public RawAndProcessedExpressionDataVectorService rawAndProcessedExpressionDataVectorService() {
             return mock( RawAndProcessedExpressionDataVectorService.class );
+        }
+
+        @Bean
+        public SingleCellExpressionExperimentService singleCellExpressionExperimentService() {
+            return mock();
         }
     }
 

@@ -63,6 +63,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -73,6 +74,7 @@ import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysi
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
@@ -153,6 +155,8 @@ public class DatasetsWebService {
     private DifferentialExpressionAnalysisResultListFileService differentialExpressionAnalysisResultListFileService;
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
+    @Autowired
+    private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
 
     @Context
     private UriInfo uriInfo;
@@ -1183,6 +1187,32 @@ public class DatasetsWebService {
         StreamingOutput stream = ( output ) -> expressionDataFileService.writeRawExpressionData( ee, qt, new OutputStreamWriter( output ) );
         return Response.ok( stream )
                 .header( "Content-Disposition", String.format( "attachment; filename=%d_%s_expmat.unfilt.raw.data.txt", ee.getId(), ee.getShortName() ) )
+                .build();
+    }
+
+    @GZIP
+    @GET
+    @Path("/{dataset}/data/singleCell")
+    @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
+    @Operation(summary = "Retrieve single-cell expression data of a dataset")
+    public Response getDatasetSingleCellExpression( @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        QuantitationType qt;
+        if ( quantitationTypeArg != null ) {
+            qt = quantitationTypeArgService.getEntity( quantitationTypeArg, ee, SingleCellExpressionDataVector.class );
+        } else {
+            qt = singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee )
+                    .orElseThrow( () -> new NotFoundException( "No preferred single-cell quantitation type could be found for " + ee + "." ) );
+        }
+        java.nio.file.Path p;
+        try {
+            p = expressionDataFileService.writeOrLocateTabularSingleCellExpressionData( ee, qt );
+        } catch ( IOException e ) {
+            throw new InternalServerErrorException( e );
+        }
+        return Response.ok( p )
+                .header( "Content-Disposition", "attachment; filename=" + p.getFileName() )
                 .build();
     }
 

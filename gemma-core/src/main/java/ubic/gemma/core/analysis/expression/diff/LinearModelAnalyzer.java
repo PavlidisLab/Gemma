@@ -39,7 +39,7 @@ import ubic.basecode.math.linearmodels.*;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
-import ubic.gemma.core.datastructure.matrix.MatrixWriter;
+import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;

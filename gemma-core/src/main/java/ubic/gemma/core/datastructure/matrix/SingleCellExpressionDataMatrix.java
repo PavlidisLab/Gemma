@@ -12,7 +12,6 @@ import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
  *
  * @author poirigui
  */
-@SuppressWarnings("unused")
 public interface SingleCellExpressionDataMatrix<T> extends ExpressionDataMatrix<T> {
 
     /**

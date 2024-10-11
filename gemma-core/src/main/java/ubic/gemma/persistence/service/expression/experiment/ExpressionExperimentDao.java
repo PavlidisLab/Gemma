@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * Created by tesarst on 13/03/17.
@@ -107,7 +108,9 @@ public interface ExpressionExperimentDao
 
     Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet bas );
 
-    Map<ArrayDesign, Collection<Long>> getArrayDesignsUsed( Collection<Long> eeids );
+    Collection<ArrayDesign> getArrayDesignsUsed( Collection<? extends BioAssaySet> ees );
+
+    Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, QuantitationType qt, Class<? extends DataVector> dataVectorType );
 
     /**
      * Obtain genes used by the processed vectors of this dataset.
@@ -202,8 +205,6 @@ public interface ExpressionExperimentDao
     Map<Long, Long> getPopulatedFactorCountsExcludeBatch( Collection<Long> ids );
 
     Map<QuantitationType, Long> getQuantitationTypeCount( ExpressionExperiment ee );
-
-    Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment );
 
     /**
      * Obtain the preferred quantitation type for single cell data, if available.
@@ -472,6 +473,31 @@ public interface ExpressionExperimentDao
      * Obtain a set of single-cell data vectors for the given quantitation type.
      */
     List<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment expressionExperiment, QuantitationType quantitationType );
+
+    /**
+     * Obtain a stream over the vectors for a given QT.
+     * <p>
+     * Make absolutely sure that the resulting stream is closed because it is attached to a {@link org.hibernate.Session}
+     * object.
+     */
+    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize );
+
+    /**
+     * Obtain the number of single-cell vectors for a given QT.
+     */
+    long getNumberOfSingleCellDataVectors( ExpressionExperiment ee, QuantitationType qt );
+
+    /**
+     * Obtain the number of non-zeroes.
+     */
+    long getNumberOfNonZeroes( ExpressionExperiment ee, QuantitationType qt );
+
+    /**
+     * Obtain the number of non-zeroes by sample.
+     * <p>
+     * This is quite costly because the indices of each vector has to be examined.
+     */
+    Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt );
 
     /**
      * Remove the given single-cell data vectors.

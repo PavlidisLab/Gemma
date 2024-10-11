@@ -293,7 +293,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     private Map<String, CompositeSequence> createElementsMapping( ArrayDesign platform ) {
         platform = arrayDesignService.thawCompositeSequences( platform );
         // create mapping by precedence of ID type
-        Map<CompositeSequence, List<Gene>> cs2g = arrayDesignService.getGenesByCompositeSequence( platform );
+        Map<CompositeSequence, Set<Gene>> cs2g = arrayDesignService.getGenesByCompositeSequence( platform );
         // highest precedence is the probe name
         Map<String, CompositeSequence> elementsMapping = new HashMap<>();
         for ( CompositeSequence cs : platform.getCompositeSequences() ) {
@@ -307,8 +307,8 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         return elementsMapping;
     }
 
-    private void addMappings( Map<String, CompositeSequence> elementsMapping, Map<CompositeSequence, List<Gene>> cs2g, Function<Gene, String> g2s ) {
-        for ( Map.Entry<CompositeSequence, List<Gene>> e : cs2g.entrySet() ) {
+    private void addMappings( Map<String, CompositeSequence> elementsMapping, Map<CompositeSequence, Set<Gene>> cs2g, Function<Gene, String> g2s ) {
+        for ( Map.Entry<CompositeSequence, Set<Gene>> e : cs2g.entrySet() ) {
             for ( Gene g : e.getValue() ) {
                 String k = g2s.apply( g );
                 if ( k != null ) {

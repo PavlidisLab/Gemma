@@ -2,6 +2,7 @@ package ubic.gemma.core.datastructure.matrix;
 
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.springframework.util.Assert;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
@@ -32,6 +33,7 @@ public class DoubleSingleCellExpressionDataMatrix implements SingleCellExpressio
         Assert.isTrue( vectors.stream().map( SingleCellExpressionDataVector::getSingleCellDimension ).distinct().count() == 1,
                 "All vectors must have the same single-cell dimension." );
         SingleCellExpressionDataVector vector = vectors.iterator().next();
+        Assert.isTrue( vector.getQuantitationType().getRepresentation().equals( PrimitiveType.DOUBLE ), "Vectors must use the " + PrimitiveType.DOUBLE + " representation." );
         expressionExperiment = vector.getExpressionExperiment();
         quantitationType = vector.getQuantitationType();
         singleCellDimension = vector.getSingleCellDimension();
@@ -56,6 +58,13 @@ public class DoubleSingleCellExpressionDataMatrix implements SingleCellExpressio
             }
             i++;
         }
+    }
+
+    /**
+     * Obtain the sparse matrix underlying this.
+     */
+    public CompRowMatrix getMatrix() {
+        return matrix;
     }
 
     @Override
@@ -132,4 +141,5 @@ public class DoubleSingleCellExpressionDataMatrix implements SingleCellExpressio
     public SingleCellDimension getSingleCellDimension() {
         return singleCellDimension;
     }
+
 }

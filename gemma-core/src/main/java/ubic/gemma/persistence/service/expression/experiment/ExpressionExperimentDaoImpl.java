@@ -24,6 +24,7 @@ import lombok.Value;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.StandardBasicTypes;
@@ -979,22 +980,28 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet bas ) {
-
-        ExpressionExperiment ee;
-        if ( bas instanceof ExpressionExperimentSubSet ) {
-            ee = ( ( ExpressionExperimentSubSet ) bas ).getSourceExperiment();
-        } else {
-            ee = ( ExpressionExperiment ) bas;
-        }
-
-        assert ee != null;
-
-        return CommonQueries.getArrayDesignsUsed( ee, this.getSessionFactory().getCurrentSession() );
+        return CommonQueries.getArrayDesignsUsed( bas, this.getSessionFactory().getCurrentSession() );
     }
 
     @Override
-    public Map<ArrayDesign, Collection<Long>> getArrayDesignsUsed( Collection<Long> eeids ) {
-        return CommonQueries.getArrayDesignsUsed( eeids, this.getSessionFactory().getCurrentSession() );
+    public Collection<ArrayDesign> getArrayDesignsUsed( Collection<? extends BioAssaySet> ees ) {
+        return CommonQueries.getArrayDesignsUsed( ees, this.getSessionFactory().getCurrentSession() );
+    }
+
+    @Override
+    public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, QuantitationType qt, Class<? extends DataVector> dataVectorType ) {
+        //noinspection unchecked
+        List<Long> adIds = getSessionFactory().getCurrentSession()
+                .createCriteria( dataVectorType )
+                .add( Restrictions.eq( "expressionExperiment", ee ) )
+                .add( Restrictions.eq( "quantitationType", qt ) )
+                .createAlias( "designElement", "de" )
+                .createAlias( "de.arrayDesign", "ad" )
+                .setProjection( Projections.groupProperty( "ad.id" ) )
+                .list();
+        return adIds.stream()
+                .map( id -> ( ArrayDesign ) getSessionFactory().getCurrentSession().load( ArrayDesign.class, id ) )
+                .collect( Collectors.toList() );
     }
 
     @Override
@@ -1383,17 +1390,6 @@ public class ExpressionExperimentDaoImpl
         }
 
         return qtCounts;
-    }
-
-    @Override
-    public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment ) {
-        //language=HQL
-        final String queryString = "select distinct quantType " + "from ExpressionExperiment ee "
-                + "inner join ee.quantitationTypes as quantType fetch all properties where ee  = :ee ";
-
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "ee", expressionExperiment ).list();
     }
 
     @Override
@@ -2324,6 +2320,76 @@ public class ExpressionExperimentDaoImpl
                 .setParameter( "ee", expressionExperiment )
                 .setParameter( "qt", quantitationType )
                 .list();
+    }
+
+    @Override
+    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize ) {
+        Session session = getSessionFactory().openSession();
+        Query query = session.createQuery( "select scedv from SingleCellExpressionDataVector scedv "
+                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", quantitationType );
+        return QueryUtils.<SingleCellExpressionDataVector>stream( query, fetchSize ).onClose( session::close );
+    }
+
+    @Override
+    public long getNumberOfSingleCellDataVectors( ExpressionExperiment ee, QuantitationType qt ) {
+        return ( Long ) getSessionFactory().getCurrentSession().createQuery( "select count(scedv) from SingleCellExpressionDataVector scedv "
+                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", qt )
+                .uniqueResult();
+    }
+
+    @Override
+    public long getNumberOfNonZeroes( ExpressionExperiment ee, QuantitationType qt ) {
+        return ( Long ) getSessionFactory().getCurrentSession().createQuery( "select sum(length(scedv.dataIndices)) from SingleCellExpressionDataVector scedv "
+                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", qt )
+                .uniqueResult() / 4;
+    }
+
+    @Override
+    public Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt ) {
+        SingleCellDimension dimension = getSingleCellDimension( ee, qt );
+        if ( dimension == null ) {
+            throw new IllegalStateException( qt + " from " + ee + " does not have an associated single-cell dimension." );
+        }
+        try ( Stream<int[]> stream = QueryUtils.stream( getSessionFactory().getCurrentSession()
+                .createQuery( "select scedv.dataIndices from SingleCellExpressionDataVector scedv "
+                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", qt ) ) ) {
+            long[] nnzs = new long[dimension.getBioAssays().size()];
+            Iterator<int[]> it = stream.iterator();
+            StopWatch timer = StopWatch.createStarted();
+            int done = 0;
+            while ( it.hasNext() ) {
+                int[] row = it.next();
+                // the first sample starts at zero, the use the end as the start of the next one
+                int start = 0;
+                int end;
+                for ( int i = 0; i < dimension.getBioAssays().size(); i++ ) {
+                    int sampleOffset = dimension.getBioAssaysOffset()[i];
+                    int nextSampleOffset = sampleOffset + dimension.getNumberOfCellsBySample( i );
+                    end = Arrays.binarySearch( row, start, row.length, nextSampleOffset );
+                    if ( end < 0 ) {
+                        end = -end - 1;
+                    }
+                    nnzs[i] += end - start;
+                    start = end;
+                }
+                if ( ++done % 100 == 0 ) {
+                    log.debug( String.format( "Processed %d vectors at %.2f vectors/sec", done, 1000.0 * done / timer.getTime() ) );
+                }
+            }
+            Map<BioAssay, Long> result = new HashMap<>();
+            for ( int i = 0; i < dimension.getBioAssays().size(); i++ ) {
+                result.put( dimension.getBioAssays().get( i ), nnzs[i] );
+            }
+            return result;
+        }
     }
 
     @Override

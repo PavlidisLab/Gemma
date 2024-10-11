@@ -24,6 +24,7 @@ import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.Multifunctionality;
 
+import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -40,6 +41,7 @@ public class Gene extends ChromosomeFeature {
     private String officialSymbol;
     private String officialName;
     private Integer ncbiGeneId;
+    @Nullable
     private String ensemblId; //Non-unique for roughly 2000 genes as of Aug 11th 2017
     private Set<GeneProduct> products = new HashSet<>();
     private Set<GeneAlias> aliases = new HashSet<>();
@@ -146,12 +148,13 @@ public class Gene extends ChromosomeFeature {
     /**
      * @return An Ensembl ID for the gene.
      */
+    @Nullable
     @Field(analyze = Analyze.NO)
     public String getEnsemblId() {
         return this.ensemblId;
     }
 
-    public void setEnsemblId( String ensemblId ) {
+    public void setEnsemblId( @Nullable String ensemblId ) {
         this.ensemblId = ensemblId;
     }
 

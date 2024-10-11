@@ -22,7 +22,9 @@ import ubic.gemma.model.analysis.AnalysisResultValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -67,8 +69,8 @@ public class DifferentialExpressionAnalysisResultValueObject extends AnalysisRes
         }
     }
 
-    public DifferentialExpressionAnalysisResultValueObject( DifferentialExpressionAnalysisResult result, boolean includeFactorValuesInContrasts, List<Gene> genes, boolean includeTaxonInGenes ) {
+    public DifferentialExpressionAnalysisResultValueObject( DifferentialExpressionAnalysisResult result, boolean includeFactorValuesInContrasts, Set<Gene> genes, boolean includeTaxonInGenes ) {
         this( result, includeFactorValuesInContrasts );
-        this.genes = genes.stream().map( g -> new GeneValueObject( g, includeTaxonInGenes ) ).collect( Collectors.toList() );
+        this.genes = genes.stream().sorted( Comparator.comparing( Gene::getOfficialSymbol ) ).map( g -> new GeneValueObject( g, includeTaxonInGenes ) ).collect( Collectors.toList() );
     }
 }

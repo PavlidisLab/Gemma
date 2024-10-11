@@ -143,6 +143,13 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThat( matrix.getSingleCellDimension() ).isEqualTo( scd );
         assertThat( matrix.columns() ).isEqualTo( 100 );
         assertThat( matrix.rows() ).isEqualTo( 10 );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30 )
+                .forEach( System.out::println );
+        assertThat( scExpressionExperimentService.getNumberOfNonZeroes( ee, qt ) )
+                .isEqualTo( 1000L );
+        assertThat( scExpressionExperimentService.getNumberOfNonZeroesBySample( ee, qt ) )
+                .containsOnlyKeys( ee.getBioAssays() )
+                .containsValues( 250L, 250L, 250L, 250L );
     }
 
     @Test

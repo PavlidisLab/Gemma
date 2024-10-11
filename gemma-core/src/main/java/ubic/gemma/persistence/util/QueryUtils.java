@@ -1,6 +1,7 @@
 package ubic.gemma.persistence.util;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.stream.Streams;
 import org.hibernate.Query;
 import org.springframework.util.Assert;
 import ubic.gemma.core.util.ListUtils;
@@ -25,6 +26,11 @@ public class QueryUtils {
      * no padding will be performed and a warning will be emitted.
      */
     public static final int MAX_PARAMETER_LIST_SIZE = 2048;
+
+    /**
+     * Default fetch size to use when streaming results with {@link #stream(Query, int)}
+     */
+    public static final int DEFAULT_FETCH_SIZE = 30;
 
     /**
      * Optimize a given parameter list by sorting, removing duplicates and padding to the next power of two.
@@ -182,6 +188,70 @@ public class QueryUtils {
     }
 
     /**
+     * Stream the result of a query with the given fetch size.
+     * <p>
+     * This uses offset/limit under the hood because MySQL JDBC does not support scrolling with {@link Query#scroll()}.
+     */
+    public static <T> Stream<T> stream( Query query, int fetchSize ) {
+        return Streams.of( new ScrollableResultsIterator<>( query, fetchSize ) );
+    }
+
+    public static <T> Stream<T> stream( Query query ) {
+        return stream( query, DEFAULT_FETCH_SIZE );
+    }
+
+    private static class ScrollableResultsIterator<T> implements Iterator<T> {
+
+        private final Query query;
+        private final int fetchSize;
+
+        private boolean _init = false;
+        private int offset;
+        private List<T> results;
+
+        public ScrollableResultsIterator( Query query, int fetchSize ) {
+            Assert.isTrue( fetchSize >= 1 );
+            this.query = query;
+            this.fetchSize = fetchSize;
+        }
+
+        @Override
+        public boolean hasNext() {
+            if ( !_init ) {
+                fetchResults();
+                _init = true;
+            }
+            return ( offset % fetchSize ) < results.size();
+        }
+
+        @Override
+        public T next() {
+            if ( !_init ) {
+                fetchResults();
+                _init = true;
+            } else if ( offset % fetchSize == 0 ) {
+                fetchResults();
+            }
+            if ( offset % fetchSize >= results.size() ) {
+                throw new NoSuchElementException();
+            }
+            try {
+                return results.get( offset % fetchSize );
+            } finally {
+                offset++;
+            }
+        }
+
+        private void fetchResults() {
+            //noinspection unchecked
+            results = query
+                    .setFirstResult( offset )
+                    .setMaxResults( fetchSize )
+                    .list();
+        }
+    }
+
+    /**
      * Execute an update query by a fixed batch size.
      * @see Query#executeUpdate()
      * @return the sum of all performed update executions
@@ -192,11 +262,6 @@ public class QueryUtils {
             updated += query.setParameterList( batchParam, batch ).executeUpdate();
         }
         return updated;
-    }
-
-    public static <T> Stream<T> stream( Query query, Class<T> clazz ) {
-        //noinspection unchecked
-        return query.list().stream();
     }
 
     public static String escapeLike( String s ) {

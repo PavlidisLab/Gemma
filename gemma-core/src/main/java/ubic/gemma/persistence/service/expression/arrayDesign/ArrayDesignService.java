@@ -40,6 +40,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 @SuppressWarnings("unused") // Possible external use
@@ -140,7 +141,10 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
      * @see ArrayDesignDao#getGenesByCompositeSequence(ArrayDesign)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Map<CompositeSequence, List<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign );
+    Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( Collection<ArrayDesign> arrayDesign );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Long getCompositeSequenceCount( ArrayDesign arrayDesign );

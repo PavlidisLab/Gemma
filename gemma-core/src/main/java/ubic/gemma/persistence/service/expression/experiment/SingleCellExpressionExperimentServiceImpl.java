@@ -17,6 +17,7 @@ import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -29,6 +30,7 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @CommonsLog
@@ -65,6 +67,30 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
+    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize ) {
+        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long getNumberOfSingleCellDataVectors( ExpressionExperiment ee, QuantitationType qt ) {
+        return expressionExperimentDao.getNumberOfSingleCellDataVectors( ee, qt );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long getNumberOfNonZeroes( ExpressionExperiment ee, QuantitationType qt ) {
+        return expressionExperimentDao.getNumberOfNonZeroes( ee, qt );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt ) {
+        return expressionExperimentDao.getNumberOfNonZeroesBySample(ee, qt );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<Collection<SingleCellExpressionDataVector>> getPreferredSingleCellDataVectors( ExpressionExperiment ee ) {
         QuantitationType qt = expressionExperimentDao.getPreferredSingleCellQuantitationType( ee );
         if ( qt == null ) {
@@ -77,6 +103,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Transactional(readOnly = true)
     public List<QuantitationType> getSingleCellQuantitationTypes( ExpressionExperiment ee ) {
         return expressionExperimentDao.getSingleCellQuantitationTypes( ee );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<QuantitationType> getPreferredSingleCellQuantitationType( ExpressionExperiment ee ) {
+        return Optional.ofNullable( expressionExperimentDao.getPreferredSingleCellQuantitationType( ee ) );
     }
 
     @Override

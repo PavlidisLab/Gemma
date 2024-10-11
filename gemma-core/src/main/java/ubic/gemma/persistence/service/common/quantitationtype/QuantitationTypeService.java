@@ -29,7 +29,6 @@ import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author kelsey
@@ -63,6 +62,11 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     QuantitationType findByNameAndVectorType( ExpressionExperiment ee, String name, Class<? extends DataVector> dataVectorType ) throws NonUniqueQuantitationTypeByNameException;
 
+    /**
+     * Find all the QT associated to the given experiment.
+     */
+    Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee );
+
     @Override
     @Secured({ "GROUP_USER" })
     QuantitationType findOrCreate( QuantitationType quantitationType );
@@ -92,4 +96,6 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
     void update( QuantitationType quantitationType );
 
     List<QuantitationTypeValueObject> loadValueObjectsWithExpressionExperiment( Collection<QuantitationType> qts, ExpressionExperiment expressionExperiment );
+
+    Class<? extends DataVector> getDataVectorType( QuantitationType qt );
 }

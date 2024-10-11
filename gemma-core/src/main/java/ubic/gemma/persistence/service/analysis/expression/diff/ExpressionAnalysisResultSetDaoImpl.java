@@ -514,7 +514,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     }
 
     @Override
-    public Map<Long, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet, boolean queryByResult ) {
+    public Map<Long, Set<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet, boolean queryByResult ) {
         String q = "select result.ID as RESULT_ID, {gene.*} from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT result "
                 + "join GENE2CS on GENE2CS.CS = result.PROBE_FK "
                 + "join CHROMOSOME_FEATURE as {gene} on {gene}.ID = GENE2CS.GENE "
@@ -545,7 +545,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
         return list.stream()
                 .collect( Collectors.groupingBy(
                         l -> ( Long ) l[0],
-                        Collectors.mapping( l -> ( Gene ) l[1], Collectors.toList() ) ) );
+                        Collectors.mapping( l -> ( Gene ) l[1], Collectors.toSet() ) ) );
     }
 
     /**

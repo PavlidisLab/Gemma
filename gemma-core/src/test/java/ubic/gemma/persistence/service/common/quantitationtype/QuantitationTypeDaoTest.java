@@ -45,6 +45,30 @@ public class QuantitationTypeDaoTest extends BaseDatabaseTest {
     }
 
     @Test
+    public void testFindAllByExperiment() {
+        ArrayDesign ad = createPlatform();
+
+        QuantitationType qt = createQuantitationType( "test" );
+        ExpressionExperiment ee = new ExpressionExperiment();
+
+        BioAssayDimension bad = new BioAssayDimension();
+        sessionFactory.getCurrentSession().persist( bad );
+        RawExpressionDataVector vector = new RawExpressionDataVector();
+        vector.setBioAssayDimension( bad );
+        vector.setDesignElement( ad.getCompositeSequences().iterator().next() );
+        vector.setQuantitationType( qt );
+        vector.setData( new byte[0] );
+        vector.setExpressionExperiment( ee );
+
+        ee.getQuantitationTypes().add( qt );
+        ee.getRawExpressionDataVectors().add( vector );
+
+        sessionFactory.getCurrentSession().persist( ee );
+
+        assertThat( quantitationTypeDao.findByExpressionExperiment( ee ) ).containsExactly( qt );
+    }
+
+    @Test
     public void testLoadByIdAndVectorType() {
         ArrayDesign ad = createPlatform();
 
@@ -129,6 +153,26 @@ public class QuantitationTypeDaoTest extends BaseDatabaseTest {
 
         assertThatThrownBy( () -> quantitationTypeDao.findByNameAndVectorType( ee, "test", RawExpressionDataVector.class ) )
                 .isInstanceOf( NonUniqueResultException.class );
+    }
+
+    @Test
+    public void testGetVectorType() {
+        ArrayDesign ad = createPlatform();
+        ExpressionExperiment ee = new ExpressionExperiment();
+        BioAssayDimension bad = new BioAssayDimension();
+        sessionFactory.getCurrentSession().persist( bad );
+        QuantitationType qt = createQuantitationType( "test" );
+        RawExpressionDataVector vector = new RawExpressionDataVector();
+        vector.setBioAssayDimension( bad );
+        vector.setDesignElement( ad.getCompositeSequences().iterator().next() );
+        vector.setQuantitationType( qt );
+        vector.setData( new byte[0] );
+        vector.setExpressionExperiment( ee );
+        ee.getQuantitationTypes().add( qt );
+        ee.getRawExpressionDataVectors().add( vector );
+        sessionFactory.getCurrentSession().persist( ee );
+        // attach some vectors to it
+        assertThat( quantitationTypeDao.getVectorType( qt ) ).isEqualTo( RawExpressionDataVector.class );
     }
 
     private ArrayDesign createPlatform() {

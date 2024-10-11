@@ -4,6 +4,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.csv.CSVPrinter;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import ubic.gemma.core.datastructure.matrix.io.TsvUtils;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
@@ -16,25 +17,18 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static java.util.function.Function.identity;
+import static ubic.gemma.core.datastructure.matrix.io.TsvUtils.*;
 
 @Service
 @CommonsLog
-public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractFileService<ExpressionAnalysisResultSet> implements ExpressionAnalysisResultSetFileService {
+public class ExpressionAnalysisResultSetFileServiceImpl implements ExpressionAnalysisResultSetFileService {
 
     @Override
-    public void writeTsv( ExpressionAnalysisResultSet entity, Writer writer ) throws IOException {
-        writeTsvInternal( entity, null, null, writer );
-    }
-
-    @Override
-    public void writeTsv( ExpressionAnalysisResultSet analysisResultSet, @Nullable Baseline baseline, Map<Long, List<Gene>> resultId2Genes, Writer appendable ) throws IOException {
-        writeTsvInternal( analysisResultSet, baseline, resultId2Genes, appendable );
-    }
-
-    private void writeTsvInternal( ExpressionAnalysisResultSet analysisResultSet, @Nullable Baseline baseline, @Nullable Map<Long, List<Gene>> resultId2Genes, Writer appendable ) throws IOException {
+    public void writeTsv( ExpressionAnalysisResultSet analysisResultSet, @Nullable Baseline baseline, @Nullable Map<Long, Set<Gene>> resultId2Genes, Writer writer ) throws IOException {
         List<String> extraHeaderComments = new ArrayList<>();
 
         String experimentalFactorsMetadata = "[" + analysisResultSet.getExperimentalFactors().stream()
@@ -53,7 +47,7 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractFileServ
         List<String> header = new ArrayList<>( Arrays.asList( "id", "probe_id", "probe_name" ) );
 
         if ( resultId2Genes != null ) {
-            header.addAll( Arrays.asList( "gene_id", "gene_name", "gene_ncbi_id", "gene_official_symbol", "gene_official_name" ) );
+            header.addAll( Arrays.asList( "gene_id", "gene_name", "gene_ncbi_id", "gene_ensembl_id", "gene_official_symbol", "gene_official_name" ) );
         }
 
         header.addAll( Arrays.asList( "pvalue", "corrected_pvalue", "rank" ) );
@@ -103,19 +97,22 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractFileServ
         try ( CSVPrinter printer = getTsvFormatBuilder( extraHeaderComments.toArray( new String[0] ) )
                 .setHeader( header.toArray( new String[0] ) )
                 .build()
-                .print( appendable ) ) {
+                .print( writer ) ) {
             for ( DifferentialExpressionAnalysisResult analysisResult : analysisResultSet.getResults() ) {
                 final List<Object> record = new ArrayList<>( Arrays.asList( analysisResult.getId(),
                         analysisResult.getProbe().getId(),
                         analysisResult.getProbe().getName() ) );
                 if ( resultId2Genes != null ) {
-                    final List<Gene> genes = resultId2Genes.getOrDefault( analysisResult.getId(), Collections.emptyList() );
+                    List<Gene> genes = resultId2Genes.getOrDefault( analysisResult.getId(), Collections.emptySet() )
+                            .stream().sorted( Comparator.comparing( Gene::getOfficialSymbol ) )
+                            .collect( Collectors.toList() );
                     record.addAll( Arrays.asList(
-                            genes.stream().map( Gene::getId ).map( String::valueOf ).collect( Collectors.joining( getSubDelimiter() ) ),
-                            genes.stream().map( Gene::getName ).collect( Collectors.joining( getSubDelimiter() ) ),
-                            genes.stream().map( Gene::getNcbiGeneId ).map( String::valueOf ).collect( Collectors.joining( getSubDelimiter() ) ),
-                            genes.stream().map( Gene::getOfficialSymbol ).collect( Collectors.joining( getSubDelimiter() ) ),
-                            genes.stream().map( Gene::getOfficialName ).collect( Collectors.joining( getSubDelimiter() ) ) ) );
+                            formatGenesLongAttribute( genes, Gene::getId ),
+                            formatGenesAttribute( genes, Gene::getName ),
+                            formatGenesIntAttribute( genes, Gene::getNcbiGeneId ),
+                            formatGenesAttribute( genes, Gene::getEnsemblId ),
+                            formatGenesAttribute( genes, Gene::getOfficialSymbol ),
+                            formatGenesAttribute( genes, Gene::getOfficialName ) ) );
                 }
                 record.addAll( Arrays.asList(
                         format( analysisResult.getPvalue() ),
@@ -141,6 +138,18 @@ public class ExpressionAnalysisResultSetFileServiceImpl extends AbstractFileServ
                 printer.printRecord( record );
             }
         }
+    }
+
+    private String formatGenesLongAttribute( List<Gene> genes, Function<Gene, Long> func ) {
+        return genes.stream().map( func ).map( TsvUtils::format ).collect( Collectors.joining( String.valueOf( SUB_DELIMITER ) ) );
+    }
+
+    private String formatGenesIntAttribute( List<Gene> genes, Function<Gene, Integer> func ) {
+        return genes.stream().map( func ).map( TsvUtils::format ).collect( Collectors.joining( String.valueOf( SUB_DELIMITER ) ) );
+    }
+
+    private String formatGenesAttribute( List<Gene> genes, Function<Gene, String> func ) {
+        return genes.stream().map( func ).map( TsvUtils::format ).collect( Collectors.joining( String.valueOf( SUB_DELIMITER ) ) );
     }
 
     /**
