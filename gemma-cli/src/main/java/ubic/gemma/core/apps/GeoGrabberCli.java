@@ -436,11 +436,11 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
     /**
      * Check if a give date is before or exactly on another one.
      */
-    private boolean beforeOrEquals( Date a, Date b ) {
+    private boolean beforeOrEquals( @Nullable Date a, Date b ) {
         return a != null && ( a.equals( b ) || a.before( b ) );
     }
 
-    private Slice<GeoRecord> getGeoRecords( int start, int chunkSize, Collection<String> allowedTaxa, boolean fetchDetails, Collection<String> limitPlatform, Collection<String> seriesTypes ) throws IOException {
+    private Slice<GeoRecord> getGeoRecords( int start, int chunkSize, Collection<String> allowedTaxa, boolean fetchDetails, @Nullable Collection<String> limitPlatform, Collection<String> seriesTypes ) throws IOException {
         return retryTemplate.execute( ( attempt, lastAttempt ) -> gbs.searchGeoRecords( null, null, allowedTaxa, limitPlatform, seriesTypes, start, chunkSize, fetchDetails ), "fetching GEO records" );
     }
 
