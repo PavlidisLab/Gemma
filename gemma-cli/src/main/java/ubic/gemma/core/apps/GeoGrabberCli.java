@@ -151,7 +151,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
 
         // for browsing datasets
         options.addOption(
-                Option.builder( "date" ).longOpt( null ).desc( "A release date to stop the search in format yyyy.MM.dd e.g. 2010.01.12" )
+                Option.builder( "date" ).longOpt( null ).desc( "A release date to stop the search in format yyyy-MM-dd or yyyy.MM.dd (e.g. 2010.01.12)" )
                         .argName( "date limit" ).hasArg().build() );
         options.addOption(
                 Option.builder( "gselimit" ).longOpt( null ).desc( "A GSE at which to stop the search" ).argName( "GSE identifier" ).hasArg()
@@ -160,11 +160,11 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                 .argName( "comma-delimited list of GPLs" ).hasArg().build() );
 
         options.addOption(
-                Option.builder( "startat" ).hasArg().argName( "GSE ID" ).desc( "Attempt to 'fast-rewind' to the given GSE ID and continue retreiving from there " ).build() );
+                Option.builder( "startat" ).hasArg().argName( "GSE ID" ).desc( "Attempt to 'fast-rewind' to the given GSE ID and continue retrieving from there " ).build() );
 
         options.addOption(
-                Option.builder( "startdate" ).hasArg().argName( "date" ).desc( "Attempt to 'fast-rewind' to the given date (yyyy.MM.dd) " +
-                        "and continue retreiving from there " ).build() );
+                Option.builder( "startdate" ).hasArg().argName( "date" ).desc( "Attempt to 'fast-rewind' to the given date in format yyyy-MM-dd or yyyy.MM.dd " +
+                        "and continue retrieving from there " ).build() );
 
         options.addOption( Option.builder( "chunkSize" ).hasArg().type( Number.class ).desc( "Chunk size to use when retrieving GEO records (defaults to " + NCBI_CHUNK_SIZE + ")" ).build() );
     }
@@ -189,9 +189,9 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         if ( commandLine.hasOption( "date" ) ) {
             try {
                 // this is a user input, so we have to respect its locale
-                this.dateLimit = DateUtils.parseDate( commandLine.getOptionValue( "date" ), "yyyy.MM.dd" );
+                this.dateLimit = DateUtils.parseDate( commandLine.getOptionValue( "date" ), "yyyy-MM-dd", "yyyy.MM.dd" );
             } catch ( ParseException e ) {
-                throw new IllegalArgumentException( "Could not parse date " + commandLine.getOptionValue( "date" ) );
+                throw new IllegalArgumentException( "Could not parse date " + commandLine.getOptionValue( "date" ) + ", use the yyyy-MM-dd or yyyy.MM.dd format." );
             }
         }
         if ( commandLine.hasOption( "gselimit" ) ) {
@@ -212,9 +212,9 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         if ( commandLine.hasOption( "startdate" ) ) {
             try {
                 // this is a user input, so we have to respect its locale
-                this.startDate = DateUtils.parseDate( commandLine.getOptionValue( "startdate" ), "yyyy.MM.dd" );
+                this.startDate = DateUtils.parseDate( commandLine.getOptionValue( "startdate" ), "yyyy-MM-dd", "yyyy.MM.dd" );
             } catch ( ParseException e ) {
-                throw new IllegalArgumentException( "Could not parse date " + commandLine.getOptionValue( "startdate" ) );
+                throw new IllegalArgumentException( "Could not parse date " + commandLine.getOptionValue( "startdate" ) + ", use the yyyy-MM-dd or yyyy.MM.dd format." );
             }
             if ( dateLimit != null ) {
                 if ( dateLimit.after( startDate ) ) {
