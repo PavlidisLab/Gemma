@@ -32,8 +32,6 @@ import java.util.List;
 @SuppressWarnings("unused") // Possible external use
 public class GeoRecord extends GeoData {
 
-    private static final long serialVersionUID = 2060148205381855991L;
-
     private String contactName = "";
     private Collection<Long> correspondingExperiments;
     @Nullable
