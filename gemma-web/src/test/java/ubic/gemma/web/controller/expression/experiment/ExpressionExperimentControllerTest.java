@@ -20,7 +20,6 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
@@ -96,7 +95,6 @@ public class ExpressionExperimentControllerTest extends BaseSpringWebTest {
     }
 
     @Test
-    @Ignore("This test is failing on the CI (see https://github.com/PavlidisLab/Gemma/issues/1246 for details)")
     public void testUpdatePubMed() throws Exception {
         ExpressionExperiment ee = getTestPersistentExpressionExperiment();
         ees.add( ee );
