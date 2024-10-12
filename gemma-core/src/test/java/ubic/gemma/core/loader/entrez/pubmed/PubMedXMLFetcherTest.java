@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.config.Settings;
@@ -35,7 +34,6 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatExceptionIsDueToNe
 /**
  * @author pavlidis
  */
-@Ignore("This is failing with 400 errors on the CI (see https://github.com/PavlidisLab/Gemma/issues/1246)")
 @Category({ PubMedTest.class, SlowTest.class })
 public class PubMedXMLFetcherTest {
 
