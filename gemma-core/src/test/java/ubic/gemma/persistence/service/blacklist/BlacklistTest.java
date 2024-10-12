@@ -24,9 +24,9 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.model.blacklist.BlacklistedExperiment;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.blacklist.BlacklistedExperiment;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 
 import static org.junit.Assert.*;
@@ -61,7 +61,7 @@ public class BlacklistTest extends BaseSpringContextTest {
 
         ExternalDatabase geo = externalDatabaseService.findByName( "geo" );
 
-        DatabaseEntry d = DatabaseEntry.Factory.newInstance( acc, null, null, geo );
+        DatabaseEntry d = DatabaseEntry.Factory.newInstance( acc, geo );
         blee.setExternalAccession( d );
 
         blacklistedEntityService.create( blee );

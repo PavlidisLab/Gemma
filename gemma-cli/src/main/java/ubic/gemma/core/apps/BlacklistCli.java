@@ -153,7 +153,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
             b.setShortName( accession );
             b.setReason( reason );
 
-            DatabaseEntry d = DatabaseEntry.Factory.newInstance( accession, null, null, geo );
+            DatabaseEntry d = DatabaseEntry.Factory.newInstance( accession, geo );
             b.setExternalAccession( d );
 
             blacklistedEntityService.create( b );
@@ -223,7 +223,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
                 blee.setShortName( accession );
                 blee.setReason( reason );
 
-                DatabaseEntry d = DatabaseEntry.Factory.newInstance( accession, null, null, geo );
+                DatabaseEntry d = DatabaseEntry.Factory.newInstance( accession, geo );
                 blee.setExternalAccession( d );
 
                 /*
@@ -350,7 +350,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
 
                 log.info( "Blacklisting: " + eeAcc + " " + geoRecord.getTitle() + " (" + geoRecord.getPlatform() + ")" );
                 BlacklistedEntity b = new BlacklistedExperiment();
-                DatabaseEntry d = DatabaseEntry.Factory.newInstance( eeAcc, null, null, geo );
+                DatabaseEntry d = DatabaseEntry.Factory.newInstance( eeAcc, geo );
                 b.setExternalAccession( d );
                 b.setDescription( geoRecord.getTitle() );
                 b.setReason( "Unsupported platform" );
