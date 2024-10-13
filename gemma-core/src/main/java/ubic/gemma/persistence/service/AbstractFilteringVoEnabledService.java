@@ -208,9 +208,9 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     }
 
     @Override
-    public Sort getSort( String property, @Nullable Sort.Direction direction ) throws IllegalArgumentException {
+    public Sort getSort( String property, @Nullable Sort.Direction direction, Sort.NullMode nullMode ) throws IllegalArgumentException {
         checkIfPropertyIsAccessible( property );
-        return voDao.getSort( property, direction );
+        return voDao.getSort( property, direction, nullMode );
     }
 
     private void checkIfPropertyIsAccessible( String property ) {

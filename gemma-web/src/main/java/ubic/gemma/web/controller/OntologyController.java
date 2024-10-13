@@ -49,7 +49,7 @@ public class OntologyController {
     @Autowired
     private FactorValueOntologyService factorValueOntologyService;
 
-    @RequestMapping(value = "/TGEMO.OWL", method = RequestMethod.GET)
+    @RequestMapping(value = "/TGEMO.OWL", method = { RequestMethod.GET, RequestMethod.HEAD })
     public RedirectView getOntology() {
         String gemmaOntologyUrl = gemmaOntologyService.getOntologyUrl();
         RedirectView redirectView = new RedirectView( gemmaOntologyUrl );
@@ -57,7 +57,7 @@ public class OntologyController {
         return redirectView;
     }
 
-    @RequestMapping(value = "/{termId}", method = RequestMethod.GET)
+    @RequestMapping(value = "/{termId}", method = { RequestMethod.GET, RequestMethod.HEAD })
     public RedirectView getTerm( @PathVariable("termId") String termId ) {
         if ( !gemmaOntologyService.isOntologyLoaded() ) {
             throw new ServiceUnavailableException( "TGEMO is not loaded." );
@@ -78,7 +78,7 @@ public class OntologyController {
     }
 
     @ResponseBody
-    @RequestMapping(value = "/TGFVO/{factorValueId}", method = RequestMethod.GET, produces = { MediaType.TEXT_HTML_VALUE, "application/rdf+xml" })
+    @RequestMapping(value = "/TGFVO/{factorValueId}", method = { RequestMethod.GET, RequestMethod.HEAD }, produces = { MediaType.TEXT_HTML_VALUE, "application/rdf+xml" })
     public String getFactorValue( @PathVariable("factorValueId") Long factorValueId, @RequestHeader(value = "Accept", required = false) String acceptHeader ) {
         String iri = TGFVO_URI_PREFIX + factorValueId;
         OntologyIndividual oi = factorValueOntologyService.getIndividual( iri );
@@ -117,7 +117,7 @@ public class OntologyController {
     }
 
     @ResponseBody
-    @RequestMapping(value = "/TGFVO/{factorValueId}/{annotationId}", method = RequestMethod.GET, produces = { MediaType.TEXT_HTML_VALUE, "application/rdf+xml" })
+    @RequestMapping(value = "/TGFVO/{factorValueId}/{annotationId}", method = { RequestMethod.GET, RequestMethod.HEAD }, produces = { MediaType.TEXT_HTML_VALUE, "application/rdf+xml" })
     public String getFactorValueAnnotation( @PathVariable("factorValueId") Long factorValueId, @PathVariable("annotationId") Long annotationId, @RequestHeader(value = "Accept", required = false) String acceptHeader ) {
         String iri = TGFVO_URI_PREFIX + factorValueId + "/" + annotationId;
         OntologyIndividual oi = factorValueOntologyService.getIndividual( iri );

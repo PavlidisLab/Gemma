@@ -114,7 +114,7 @@ public class TaxaWebService {
     @Operation(summary = "Retrieve taxa by their identifiers")
     public ResponseDataObject<List<TaxonValueObject>> getTaxaByIds( @PathParam("taxa") TaxonArrayArg taxaArg ) {
         Filters filters = taxonArgService.getFilters( taxaArg );
-        Sort sort = taxonService.getSort( "id", null );
+        Sort sort = taxonService.getSort( "id", null, Sort.NullMode.LAST );
         return respond( taxonService.loadValueObjects( filters, sort ) );
     }
 

@@ -33,7 +33,6 @@ import java.util.HashSet;
 @SuppressWarnings("unused") // Possible external use
 public class GeoDataset extends GeoData {
 
-    private static final long serialVersionUID = 2659028881509672793L;
     private static final Log log = LogFactory.getLog( GeoDataset.class.getName() );
     public ExperimentType experimentType;
     private String completeness;

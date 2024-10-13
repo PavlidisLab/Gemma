@@ -18,40 +18,43 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.xml.sax.SAXException;
+import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.core.config.Settings;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.Collection;
-import java.util.HashSet;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Search PubMed for terms, retrieve document records.
  *
  * @author pavlidis
  */
-@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class PubMedSearch {
-    private static final Log log = LogFactory.getLog( PubMedSearch.class );
-    private static final int CHUNK_SIZE = 10; // don't retrive too many at once, it isn't nice.
-    private static final int MAX_TRIES = 3;
-    private final String uri;
 
-    public PubMedSearch() {
-        String baseURL = ( String ) Settings.getProperty( "entrez.esearch.baseurl" );
-        String db = ( String ) Settings.getProperty( "entrez.efetch.pubmed.db" );
-        // String idtag = ( String ) config.getProperty( "entrez.efetch.pubmed.idtag" );
-        String retmode = ( String ) Settings.getProperty( "entrez.efetch.pubmed.retmode" );
-        String rettype = ( String ) Settings.getProperty( "entrez.efetch.pubmed.rettype" );
-        String apikey = Settings.getString( "entrez.efetch.apikey" );
-        uri = baseURL + "&" + db + "&" + retmode + "&" + rettype + ( StringUtils.isNotBlank( apikey ) ? "&api_key=" + apikey : "" );
+    private static final Log log = LogFactory.getLog( PubMedSearch.class );
+    private static final int CHUNK_SIZE = 10; // don't retrieve too many at once, it isn't nice.
+    private static final int MAX_TRIES = 3;
+
+    private final String uri;
+    private final SimpleRetry<IOException> retryTemplate = new SimpleRetry<>( MAX_TRIES, 1000, 1.5, IOException.class, PubMedSearch.class.getName() );
+    private final ESearchXMLParser parser = new ESearchXMLParser();
+    private final PubMedXMLFetcher fetcher;
+
+    public PubMedSearch( String apiKey ) {
+        this.uri = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=xml&rettype=full" + ( StringUtils.isNotBlank( apiKey ) ? "&api_key=" + urlEncode( apiKey ) : "" );
+        this.fetcher = new PubMedXMLFetcher( apiKey );
     }
 
     /**
@@ -60,37 +63,23 @@ public class PubMedSearch {
      * @param  searchTerms                  search terms
      * @return BibliographicReference representing the publication
      * @throws IOException                  IO problems
-     * @throws SAXException                 sax exception
-     * @throws ParserConfigurationException parser config exception
      */
-    public Collection<BibliographicReference> searchAndRetrieveByHTTP( Collection<String> searchTerms )
-            throws IOException, SAXException, ParserConfigurationException, ESearchException {
-        StringBuilder builder = new StringBuilder();
-        builder.append( uri );
-        builder.append( "&term=" );
-        for ( String string : searchTerms ) {
-            builder.append( string );
-            builder.append( "+" );
-        }
-        URL toBeGotten = new URL( StringUtils.chomp( builder.toString() ) );
+    public Collection<BibliographicReference> searchAndRetrieveByHTTP( Collection<String> searchTerms ) throws IOException {
+        URL toBeGotten = new URL( uri + "&term=" + urlEncode( StringUtils.join( " ", searchTerms ) ) );
         log.info( "Fetching " + toBeGotten );
-
-        ESearchXMLParser parser = new ESearchXMLParser();
-        Collection<String> ids = null;
-        int numTries = 0;
-        while ( ids == null && numTries < MAX_TRIES ) {
-            try {
-                numTries++;
-                ids = parser.parse( toBeGotten.openStream() );
-            } catch ( IOException e ) {
-                if ( numTries == MAX_TRIES ) throw e;
-                log.warn( "Failed attempt (" + numTries + "/" + MAX_TRIES + ") " + e.getMessage() );
-                try {
-                    // be nice
-                    Thread.sleep( 200 );
-                } catch ( InterruptedException e1 ) {
-                }
+        Collection<String> ids = retryTemplate.execute( ( retryCount, lastAttempt ) -> {
+            try ( InputStream is = toBeGotten.openStream() ) {
+                return parser.parse( is );
+            } catch ( ParserConfigurationException | ESearchException | SAXException e ) {
+                throw new RuntimeException( e );
             }
+        }, "fetching " + toBeGotten );
+
+        try {
+            Thread.sleep( 100 );
+        } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
+            return Collections.emptyList();
         }
 
         Collection<BibliographicReference> results = fetchById( ids );
@@ -100,15 +89,9 @@ public class PubMedSearch {
         return results;
     }
 
-    public Collection<BibliographicReference> searchAndRetrieveIdByHTTP( Collection<String> searchTerms )
-            throws IOException {
-
-        Collection<BibliographicReference> results;
-
-        results = fetchById( searchTerms );
-
+    public Collection<BibliographicReference> searchAndRetrieveIdByHTTP( Collection<String> searchTerms ) throws IOException {
+        Collection<BibliographicReference> results = fetchById( searchTerms );
         log.info( "Fetched " + results.size() + " references" );
-
         return results;
     }
 
@@ -118,18 +101,10 @@ public class PubMedSearch {
      * @param  searchTerms                  search terms
      * @return The PubMed ids (as strings) for the search results.
      * @throws IOException                  IO problems
-     * @throws SAXException                 SAX exception
-     * @throws ParserConfigurationException config problems
      */
-    public Collection<String> searchAndRetrieveIdsByHTTP( Collection<String> searchTerms )
-            throws IOException, SAXException, ParserConfigurationException, ESearchException {
-        StringBuilder builder = new StringBuilder();
-        for ( String word : searchTerms ) {
-            // space them out, then let the overloaded method urlencode them
-            builder.append( word );
-            builder.append( " " );
-        }
-        return searchAndRetrieveIdsByHTTP( builder.toString() );
+    public Collection<String> searchAndRetrieveIdsByHTTP( Collection<String> searchTerms ) throws IOException {
+        // space them out, then let the overloaded method urlencode them
+        return searchAndRetrieveIdsByHTTP( String.join( " ", searchTerms ) );
     }
 
     /**
@@ -139,67 +114,67 @@ public class PubMedSearch {
      *                                      Pathways"[MeSH]
      * @return The PubMed ids (as strings) for the search results.
      * @throws IOException                  IO problems
-     * @throws SAXException                 SAX exception
-     * @throws ParserConfigurationException config problems
      */
-    public Collection<String> searchAndRetrieveIdsByHTTP( String searchQuery )
-            throws IOException, SAXException, ParserConfigurationException, ESearchException {
-        ESearchXMLParser parser = new ESearchXMLParser();
-        // encode it
-        searchQuery = URLEncoder.encode( searchQuery, "UTF-8" );
-
+    public Collection<String> searchAndRetrieveIdsByHTTP( String searchQuery ) throws IOException {
         // build URL
-        String URLString = uri + "&term=" + searchQuery;
-        // builder.append("&retmax=" + 70000);
-        URL toBeGotten = new URL( URLString );
-        // log.info( "Fetching " + toBeGotten );
-        // parse how many
-        int count = parser.getCount( toBeGotten.openStream() );
+        String URLString = uri + "&term=" + urlEncode( searchQuery );
 
-        // now get them all
-        URLString += "&retmax=" + count;
-        toBeGotten = new URL( URLString );
-        log.info( "Fetching " + count + " IDs from:" + toBeGotten );
+        int count = retryTemplate.execute( ( attempt, lastAttempt ) -> {
+            // log.info( "Fetching " + toBeGotten );
+            // builder.append("&retmax=" + 70000);
+            URL toBeGotten = new URL( URLString );
+            // parse how many
+            try ( InputStream is = toBeGotten.openStream() ) {
+                return parser.getCount( is );
+            } catch ( ParserConfigurationException | SAXException | ESearchException e ) {
+                throw new RuntimeException( e );
+            }
+        }, "retrieving the number of results of " + searchQuery );
 
-        return parser.parse( toBeGotten.openStream() );
+        // be nice
+        try {
+            Thread.sleep( 100 );
+        } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
+            return Collections.emptyList();
+        }
+
+        return retryTemplate.execute( ( attempt, lastAttempt ) -> {
+            // now get them all
+            URL toBeGotten = new URL( URLString + "&retmax=" + count );
+            log.info( "Fetching " + count + " IDs from:" + toBeGotten );
+            try ( InputStream is = toBeGotten.openStream() ) {
+                return parser.parse( is );
+            } catch ( ParserConfigurationException | SAXException | ESearchException e ) {
+                throw new RuntimeException( e );
+            }
+        }, "retrieving " + searchQuery );
     }
 
-    /**
-     *
-     */
     private Collection<BibliographicReference> fetchById( Collection<String> ids ) throws IOException {
         Collection<BibliographicReference> results = new HashSet<>();
 
         if ( ids == null || ids.isEmpty() ) return results;
 
-        PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
-        Collection<Integer> ints = new HashSet<>();
-        int count = 0;
-
-        for ( String str : ids ) {
-            log.debug( "Fetching pubmed " + str );
-
-            ints.add( Integer.parseInt( str ) );
-
-            count++;
-
-            if ( count >= CHUNK_SIZE ) {
-                results.addAll( fetcher.retrieveByHTTP( ints ) );
-                ints = new HashSet<>();
-                count = 0;
-            }
-
-            // be nice
+        for ( List<String> batch : ListUtils.partition( new ArrayList<>( ids ), CHUNK_SIZE ) ) {
+            log.debug( "Fetching PubMed IDs " + batch );
+            results.addAll( fetcher.retrieveByHTTP( batch.stream().map( Integer::parseInt ).collect( Collectors.toSet() ) ) );
             try {
                 Thread.sleep( 100 );
             } catch ( InterruptedException e ) {
-
+                Thread.currentThread().interrupt();
+                return results;
             }
         }
 
-        if ( count > 0 ) {
-            results.addAll( fetcher.retrieveByHTTP( ints ) );
-        }
         return results;
+    }
+
+    private String urlEncode( String s ) {
+        try {
+            return URLEncoder.encode( s, StandardCharsets.UTF_8.name() );
+        } catch ( UnsupportedEncodingException e ) {
+            throw new RuntimeException( e );
+        }
     }
 }

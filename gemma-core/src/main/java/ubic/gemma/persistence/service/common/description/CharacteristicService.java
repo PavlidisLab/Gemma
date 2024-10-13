@@ -25,9 +25,7 @@ import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.BaseService;
-import ubic.gemma.persistence.service.BaseVoEnabledService;
-import ubic.gemma.persistence.service.FilteringVoEnabledDao;
+import ubic.gemma.persistence.service.*;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Sort;
 
@@ -40,7 +38,7 @@ import java.util.Set;
 /**
  * @author paul
  */
-public interface CharacteristicService extends BaseService<Characteristic>, BaseVoEnabledService<Characteristic, CharacteristicValueObject> {
+public interface CharacteristicService extends BaseService<Characteristic>, FilteringVoEnabledService<Characteristic, CharacteristicValueObject> {
 
     /**
      * Browse through the characteristics, excluding GO annotations.
@@ -163,35 +161,4 @@ public interface CharacteristicService extends BaseService<Characteristic>, Base
     @Override
     @Secured({ "GROUP_USER" })
     void remove( Characteristic c );
-
-    /**
-     * @see FilteringVoEnabledDao#getFilterableProperties()
-     */
-    Set<String> getFilterableProperties();
-
-    /**
-     * @see FilteringVoEnabledDao#getFilterablePropertyType(String)
-     */
-    Class<?> getFilterablePropertyType( String property );
-
-    /**
-     * @see FilteringVoEnabledDao#getFilterablePropertyDescription(String)
-     */
-    @Nullable
-    String getFilterablePropertyDescription( String property );
-
-    /**
-     * @see FilteringVoEnabledDao#getFilterableProperties()
-     */
-    Filter getFilter( String property, Filter.Operator operator, String value ) throws IllegalArgumentException;
-
-    /**
-     * @see FilteringVoEnabledDao#getFilter(String, Filter.Operator, Collection)
-     */
-    Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException;
-
-    /**
-     * @see FilteringVoEnabledDao#getSort(String, Sort.Direction)
-     */
-    Sort getSort( String property, @Nullable Sort.Direction direction ) throws IllegalArgumentException;
 }

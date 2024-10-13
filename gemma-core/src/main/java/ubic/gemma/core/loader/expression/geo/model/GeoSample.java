@@ -41,7 +41,6 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     }
 
     private static final Log log = LogFactory.getLog( GeoSample.class.getName() );
-    private static final long serialVersionUID = -8820012224856178673L;
 
     private String status;
     private String submissionDate;

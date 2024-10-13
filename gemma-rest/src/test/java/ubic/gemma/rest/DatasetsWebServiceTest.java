@@ -248,7 +248,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         when( expressionExperimentService.getFilterableProperties() ).thenReturn( universe );
         when( expressionExperimentService.load( 1L ) ).thenReturn( ee );
         when( expressionExperimentService.getFiltersWithInferredAnnotations( any(), any(), any(), anyLong(), any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
-        when( expressionExperimentService.getSort( any(), any() ) ).thenAnswer( a -> Sort.by( null, a.getArgument( 0 ), a.getArgument( 1 ), a.getArgument( 0 ) ) );
+        when( expressionExperimentService.getSort( any(), any(), any() ) ).thenAnswer( a -> Sort.by( null, a.getArgument( 0 ), a.getArgument( 1 ), a.getArgument( 2 ) ) );
     }
 
     @After
@@ -340,9 +340,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                     assertThat( s.isFillResults() ).isFalse();
                     assertThat( s.getHighlighter() ).isNotNull();
                 } );
-        verify( expressionExperimentService ).getSort( "lastUpdated", Sort.Direction.DESC );
+        verify( expressionExperimentService ).getSort( "lastUpdated", Sort.Direction.DESC, Sort.NullMode.LAST );
         verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, Collections.emptySet(), 30, TimeUnit.SECONDS );
-        verify( expressionExperimentService ).loadIdsWithCache( Filters.empty(), Sort.by( null, "lastUpdated", Sort.Direction.DESC ) );
+        verify( expressionExperimentService ).loadIdsWithCache( Filters.empty(), Sort.by( null, "lastUpdated", Sort.Direction.DESC, Sort.NullMode.LAST ) );
         verify( expressionExperimentService ).loadValueObjectsByIdsWithRelationsAndCache( ids );
         verifyNoMoreInteractions( expressionExperimentService );
     }
@@ -385,12 +385,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasFieldOrPropertyWithValue( "offset", 0 )
                 .hasFieldOrPropertyWithValue( "limit", 20 )
                 .hasFieldOrPropertyWithValue( "totalElements", null );
-        verify( expressionExperimentService ).getSort( "geeq.publicQualityScore", Sort.Direction.ASC );
+        verify( expressionExperimentService ).getSort( "geeq.publicQualityScore", Sort.Direction.ASC, Sort.NullMode.LAST );
         verify( expressionExperimentService )
                 .loadValueObjectsWithCache(
                         any(),
-                        eq( Sort.by( null, "(case when geeq.publicQualityScore is not null then 0 else 1 end)", Sort.Direction.ASC )
-                                .andThen( Sort.by( null, "geeq.publicQualityScore", Sort.Direction.ASC, "geeq.publicQualityScore" ) ) ),
+                        eq( Sort.by( null, "geeq.publicQualityScore", Sort.Direction.ASC, Sort.NullMode.LAST, "geeq.publicQualityScore" ) ),
                         eq( 0 ),
                         eq( 20 ) );
     }
@@ -585,12 +584,12 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     public void testGetBlacklistedDatasets() {
         when( expressionExperimentService.loadBlacklistedValueObjects( any(), any(), anyInt(), anyInt() ) )
                 .thenAnswer( a -> new Slice<>( Collections.emptyList(), a.getArgument( 1 ), a.getArgument( 2 ), a.getArgument( 3 ), 0L ) );
-        when( expressionExperimentService.getSort( "id", Sort.Direction.ASC ) ).thenReturn( Sort.by( "ee", "id", Sort.Direction.ASC, "id" ) );
+        when( expressionExperimentService.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ) ).thenReturn( Sort.by( "ee", "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" ) );
         Response res = target( "/datasets/blacklisted" )
                 .queryParam( "filter", "" ).request().get();
         assertThat( res ).hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
-        verify( expressionExperimentService ).loadBlacklistedValueObjects( Filters.empty(), Sort.by( "ee", "id", Sort.Direction.ASC, "id" ), 0, 20 );
+        verify( expressionExperimentService ).loadBlacklistedValueObjects( Filters.empty(), Sort.by( "ee", "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" ), 0, 20 );
     }
 
     @Test

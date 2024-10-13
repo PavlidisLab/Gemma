@@ -179,9 +179,9 @@ public class ExperimentQCTag extends TagSupport {
             /*
              * popupImage is defined in ExpressinExperimentDetails.js
              */
-            int scaleLarge = 3;
-            int width = scaleLarge * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX + 50;
-            int height = scaleLarge * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX + 50;
+            int scaleLarge = 2;
+            int width = scaleLarge * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX;
+            int height = scaleLarge * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX;
             String bigImageUrl = "visualizeMeanVariance.html?id=" + this.eeid + "&size=" + scaleLarge;
             buf.append(
                     "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><a style='cursor:pointer' "

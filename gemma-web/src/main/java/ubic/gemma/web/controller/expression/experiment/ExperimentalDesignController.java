@@ -618,18 +618,18 @@ public class ExperimentalDesignController extends BaseController {
         return result;
     }
 
-    @RequestMapping(value = "/showExperimentalDesign.html", params = { "edid" }, method = RequestMethod.GET)
+    @RequestMapping(value = "/showExperimentalDesign.html", params = { "edid" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showById( @RequestParam("edid") Long edId ) {
         ExperimentalDesign ed = experimentalDesignService.loadOrFail( edId, EntityNotFoundException::new );
         return show( experimentalDesignService.getExpressionExperiment( ed ) );
     }
 
-    @RequestMapping(value = "/showExperimentalDesign.html", params = { "eeid" }, method = RequestMethod.GET)
+    @RequestMapping(value = "/showExperimentalDesign.html", params = { "eeid" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showByExperimentId( @RequestParam("eeid") Long eeId ) {
         return show( expressionExperimentService.loadOrFail( eeId, EntityNotFoundException::new ) );
     }
 
-    @RequestMapping(value = "/showExperimentalDesign.html", params = { "shortName" }, method = RequestMethod.GET)
+    @RequestMapping(value = "/showExperimentalDesign.html", params = { "shortName" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showByExperimentShortName( @RequestParam("shortName") String shortName ) {
         ExpressionExperiment ee = expressionExperimentService.findByShortName( shortName );
         if ( ee == null ) {

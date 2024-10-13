@@ -16,6 +16,7 @@ package ubic.gemma.core.loader.expression.geo.service;
 
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.List;
@@ -35,8 +36,8 @@ public interface GeoBrowserService {
     String getDetails( String accession, String contextPath ) throws IOException;
 
     /**
-     * @param  start          page number, not starting record
-     * @param  count          page size
+     * @param start page number, not starting record
+     * @param count page size
      * @return geo records
      * @throws IOException    if there is a problem while manipulating the file
      * @throws ParseException if there is a problem with parsing
@@ -44,14 +45,13 @@ public interface GeoBrowserService {
     List<GeoRecord> getRecentGeoRecords( int start, int count ) throws IOException, ParseException;
 
     /**
-     *
-     * @param  searchString can be null
-     * @param  start        first record to retrieve
-     * @param  count        how many records to retrieve
-     * @param  detailed     if true, more information is retrieved (slow)
+     * @param searchString can be null
+     * @param start        first record to retrieve
+     * @param count        how many records to retrieve
+     * @param detailed     if true, more information is retrieved (slow)
      * @return collection of GeoRecords
      */
-    List<GeoRecord> searchGeoRecords( String searchString, int start, int count, boolean detailed ) throws IOException;
+    List<GeoRecord> searchGeoRecords( @Nullable String searchString, int start, int count, boolean detailed ) throws IOException;
 
     boolean toggleUsability( String accession );
 

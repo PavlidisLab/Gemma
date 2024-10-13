@@ -15,6 +15,7 @@
 package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Value;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
@@ -23,18 +24,21 @@ import ubic.gemma.rest.util.MalformedArgException;
 import javax.annotation.Nullable;
 
 /**
- * Class representing an API argument that should be an integer.
+ * Represents an API argument for sorting.
  *
  * @author tesarst
  */
-@Schema(type = "string", pattern = "^(\\+|-?)(\\w+)$", description = "Order results by the given property and direction. The '+' sign indicate ascending order whereas the '-' indicate descending.")
+@Schema(type = "string", pattern = "^(\\+|-?)(\\w+)$",
+        description = "Order results by the given property and direction. The '+' sign indicate ascending order "
+                + "whereas the '-' indicate descending. If no indicator is used, the default order is applied which is "
+                + "generally ascending. Nulls always appear last.")
 public class SortArg<O extends Identifiable> extends AbstractArg<SortArg.Sort> {
     private static final String ERROR_MSG =
             "Value '%s' can not be interpreted as a sort argument. Correct syntax is: [+,-][field]. E.g: '-id' means 'order by ID descending. "
                     + "Make sure you URL encode the arguments, for example '+' has to be encoded to '%%2B'.";
 
-    private SortArg( String field, Sort.Direction direction ) {
-        super( new Sort( field, direction ) );
+    private SortArg( String field, Sort.Direction direction, Sort.NullMode nullMode ) {
+        super( new Sort( field, direction, nullMode ) );
     }
 
     /**
@@ -54,8 +58,22 @@ public class SortArg<O extends Identifiable> extends AbstractArg<SortArg.Sort> {
         } else {
             direction = null;
         }
+        ubic.gemma.persistence.util.Sort.NullMode nullMode;
+        switch ( getValue().nullMode ) {
+            case DEFAULT:
+                nullMode = ubic.gemma.persistence.util.Sort.NullMode.DEFAULT;
+                break;
+            case FIRST:
+                nullMode = ubic.gemma.persistence.util.Sort.NullMode.FIRST;
+                break;
+            case LAST:
+                nullMode = ubic.gemma.persistence.util.Sort.NullMode.LAST;
+                break;
+            default:
+                throw new IllegalArgumentException( "Invalid null mode " + getValue().nullMode );
+        }
         try {
-            return service.getSort( this.getValue().orderBy, direction );
+            return service.getSort( this.getValue().orderBy, direction, nullMode );
         } catch ( IllegalArgumentException e ) {
             throw new MalformedArgException( e );
         }
@@ -73,7 +91,8 @@ public class SortArg<O extends Identifiable> extends AbstractArg<SortArg.Sort> {
         try {
             Sort.Direction direction = parseDirection( s.charAt( 0 ) );
             String orderBy = direction == null ? s : s.substring( 1 );
-            return new SortArg<>( orderBy, direction );
+            Sort.NullMode nullMode = parseNullMode( s );
+            return new SortArg<>( orderBy, direction, nullMode );
         } catch ( NullPointerException | IndexOutOfBoundsException | IllegalArgumentException e ) {
             throw new MalformedArgException( String.format( ERROR_MSG, s ), e );
         }
@@ -97,31 +116,36 @@ public class SortArg<O extends Identifiable> extends AbstractArg<SortArg.Sort> {
         }
     }
 
+    /**
+     * TODO: add syntax for the null mode.
+     */
+    private static Sort.NullMode parseNullMode( String s ) {
+        return Sort.NullMode.LAST;
+    }
+
+    @Value
     public static class Sort {
 
-        private final String orderBy;
+        String orderBy;
         @Nullable
-        private final Direction direction;
+        Direction direction;
+        NullMode nullMode;
 
-        private Sort( String orderBy, @Nullable Direction direction ) {
+        private Sort( String orderBy, @Nullable Direction direction, NullMode nullMode ) {
             if ( StringUtils.isBlank( orderBy ) ) {
                 throw new IllegalArgumentException( "The 'orderBy' attribute cannot be blank or empty." );
             }
             this.orderBy = orderBy;
             this.direction = direction;
-        }
-
-        public String getOrderBy() {
-            return orderBy;
-        }
-
-        @Nullable
-        public Direction getDirection() {
-            return direction;
+            this.nullMode = nullMode;
         }
 
         public enum Direction {
             ASC, DESC
+        }
+
+        public enum NullMode {
+            DEFAULT, FIRST, LAST
         }
     }
 }

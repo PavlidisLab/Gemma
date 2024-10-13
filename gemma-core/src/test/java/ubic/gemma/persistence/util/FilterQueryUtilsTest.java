@@ -85,7 +85,7 @@ public class FilterQueryUtilsTest {
     @Test
     public void testFormRestrictionAndGroupByAndOrderByClauses() {
         Filters filters = Filters.by( null, "id", Long.class, Filter.Operator.eq, 12L );
-        Sort sort = Sort.by( "ee", "shortName", null );
+        Sort sort = Sort.by( "ee", "shortName", null, Sort.NullMode.DEFAULT );
         String queryString = "";
         queryString += FilterQueryUtils.formRestrictionClause( filters );
         queryString += FilterQueryUtils.formOrderByClause( sort );
@@ -101,7 +101,7 @@ public class FilterQueryUtilsTest {
 
     @Test
     public void testSortByCollectionSize() {
-        assertThat( formOrderByClause( Sort.by( "ee", "bioAssays.size", null ) ) )
+        assertThat( formOrderByClause( Sort.by( "ee", "bioAssays.size", null, Sort.NullMode.DEFAULT ) ) )
                 .isEqualTo( " order by size(ee.bioAssays)" );
     }
 

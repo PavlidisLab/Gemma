@@ -21,6 +21,8 @@ import javax.sql.DataSource;
 import static ubic.gemma.persistence.initialization.BootstrappedDataSourceFactory.createBootstrappedDataSource;
 
 /**
+ * Initialize the database.
+ * <p>
  * This is exclusively available for the test database.
  */
 @Profile("testdb")
@@ -35,6 +37,8 @@ public class InitializeDatabaseCli extends AbstractCLI {
     @Value("${gemma.testdb.name}")
     private String databaseName;
 
+    private boolean force;
+
     @Nullable
     @Override
     public String getCommandName() {
@@ -44,7 +48,7 @@ public class InitializeDatabaseCli extends AbstractCLI {
     @Nullable
     @Override
     public String getShortDesc() {
-        return "";
+        return "Initialize the database";
     }
 
     @Override
@@ -54,10 +58,12 @@ public class InitializeDatabaseCli extends AbstractCLI {
 
     @Override
     protected void buildOptions( Options options ) {
+        options.addOption( "force", "Force the update, ignoring confirmation prompt." );
     }
 
     @Override
     protected void processOptions( CommandLine commandLine ) throws ParseException {
+        this.force = getOptions().hasOption( "force" );
     }
 
     @Override
@@ -68,7 +74,11 @@ public class InitializeDatabaseCli extends AbstractCLI {
         } else {
             jdbcUrl = dataSource.toString();
         }
-        promptConfirmationOrAbort( "The following data source will be initialized: " + jdbcUrl );
+        if ( force ) {
+            log.info( "The following data source will be initialized: " + jdbcUrl );
+        } else {
+            promptConfirmationOrAbort( "The following data source will be initialized: " + jdbcUrl );
+        }
         try ( HikariDataSource bootstrappedDataSource = createBootstrappedDataSource( dataSource ) ) {
             CreateDatabasePopulator cdb = new CreateDatabasePopulator( databaseName );
             cdb.setDropIfExists( true );

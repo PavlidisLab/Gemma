@@ -19,10 +19,10 @@
 package ubic.gemma.core.association.phenotype;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -33,10 +33,12 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.*;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryDao;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 
 import java.io.IOException;
 import java.util.*;
@@ -46,39 +48,37 @@ import java.util.*;
  * @see    PhenotypeAssoManagerServiceHelper
  */
 @Component
-
 @Deprecated
-public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManagerServiceHelper {
-
-    private final PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
-    private final BibliographicReferenceService bibliographicReferenceService;
-    private final CharacteristicService characteristicService;
-    private final DatabaseEntryDao databaseEntryDao;
-    private final ExternalDatabaseService externalDatabaseService;
-    private final GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
-    private final GeneService geneService;
-    private final PhenotypeAssoOntologyHelper ontologyHelper;
-    private final Persister persisterHelper;
-    private final PhenotypeAssociationService phenotypeAssociationService;
-    private final QuantitationTypeService quantitationTypeService;
+public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManagerServiceHelper, InitializingBean {
 
     @Autowired
-    public PhenotypeAssoManagerServiceHelperImpl( BibliographicReferenceService bibliographicReferenceService,
-            CharacteristicService characteristicService, DatabaseEntryDao databaseEntryDao,
-            ExternalDatabaseService externalDatabaseService,
-            GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService, GeneService geneService,
-            PhenotypeAssoOntologyHelper ontologyHelper, Persister persisterHelper,
-            PhenotypeAssociationService phenotypeAssociationService, QuantitationTypeService quantitationTypeService ) {
-        this.bibliographicReferenceService = bibliographicReferenceService;
-        this.characteristicService = characteristicService;
-        this.databaseEntryDao = databaseEntryDao;
-        this.externalDatabaseService = externalDatabaseService;
-        this.geneDiffExMetaAnalysisService = geneDiffExMetaAnalysisService;
-        this.geneService = geneService;
-        this.ontologyHelper = ontologyHelper;
-        this.persisterHelper = persisterHelper;
-        this.phenotypeAssociationService = phenotypeAssociationService;
-        this.quantitationTypeService = quantitationTypeService;
+    private BibliographicReferenceService bibliographicReferenceService;
+    @Autowired
+    private CharacteristicService characteristicService;
+    @Autowired
+    private DatabaseEntryDao databaseEntryDao;
+    @Autowired
+    private ExternalDatabaseService externalDatabaseService;
+    @Autowired
+    private GeneDiffExMetaAnalysisService geneDiffExMetaAnalysisService;
+    @Autowired
+    private GeneService geneService;
+    @Autowired
+    private PhenotypeAssoOntologyHelper ontologyHelper;
+    @Autowired
+    private Persister persisterHelper;
+    @Autowired
+    private PhenotypeAssociationService phenotypeAssociationService;
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
+    @Value("${entrez.efetch.apikey}")
+    private String ncbiApiKey;
+
+    private PubMedXMLFetcher pubMedXmlFetcher;
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        pubMedXmlFetcher = new PubMedXMLFetcher( ncbiApiKey );
     }
 
     @Override

@@ -23,6 +23,8 @@ import java.util.Set;
 
 public interface ExpressionAnalysisResultSetService extends AnalysisResultSetService<DifferentialExpressionAnalysisResult, ExpressionAnalysisResultSet>, FilteringVoEnabledService<ExpressionAnalysisResultSet, DifferentialExpressionAnalysisResultSetValueObject> {
 
+    ExpressionAnalysisResultSet loadWithAnalysis( Long id );
+
     ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value );
 
     ExpressionAnalysisResultSet loadWithResultsAndContrasts( Long value, int offset, int limit );
@@ -52,5 +54,4 @@ public interface ExpressionAnalysisResultSetService extends AnalysisResultSetSer
 
     @Nullable
     Histogram loadPvalueDistribution( ExpressionAnalysisResultSet resulSet );
-
 }

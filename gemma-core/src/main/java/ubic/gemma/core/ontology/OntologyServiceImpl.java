@@ -302,8 +302,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         if ( StringUtils.isBlank( queryString ) )
             return Collections.emptySet();
 
-        StopWatch watch = new StopWatch();
-        watch.start();
+        StopWatch watch = StopWatch.createStarted();
 
         if ( StringUtils.isBlank( queryString ) ) {
             OntologyServiceImpl.log.warn( "The query was not valid (ended up being empty): " + queryString );
@@ -332,7 +331,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             if ( results2.isEmpty() )
                 return Collections.emptySet();
             return CharacteristicValueObject.characteristic2CharacteristicVO( this.termsToCharacteristics( results2 ) );
-        }, queryString, timeUnit.toMillis( timeout ) ) );
+        }, queryString, Math.max( timeUnit.toMillis( timeout ) - watch.getTime(), 0 ) ) );
 
         // get GO terms, if we don't already have a lot of possibilities. (might have to adjust this)
         StopWatch findGoTerms = StopWatch.createStarted();
@@ -887,14 +886,14 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      * Allow us to store gene information as a characteristic associated with our entities. This doesn't work so well
      * for non-ncbi genes.
      */
-    private Characteristic gene2Characteristic( GeneValueObject g ) {
+    private Characteristic gene2Characteristic( Gene g ) {
         Characteristic vc = Characteristic.Factory.newInstance();
         vc.setCategory( "gene" );
         vc.setCategoryUri( "http://purl.org/commons/hcls/gene" );
-        vc.setValue( g.getOfficialSymbol() + " [" + g.getTaxonCommonName() + "]" + " " + g.getOfficialName() );
+        vc.setValue( g.getOfficialSymbol() + " [" + g.getTaxon().getCommonName() + "]" + " " + g.getOfficialName() );
         vc.setDescription( g.toString() );
-        if ( g.getNcbiId() != null ) {
-            vc.setValueUri( "http://purl.org/commons/record/ncbi_gene/" + g.getNcbiId() );
+        if ( g.getNcbiGeneId() != null ) {
+            vc.setValueUri( "http://purl.org/commons/record/ncbi_gene/" + g.getNcbiGeneId() );
         }
         return vc;
     }
@@ -990,13 +989,10 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                         sr.getResultId(), queryString ) );
                 continue;
             }
-            GeneValueObject g = this.geneService.loadValueObject( sr.getResultObject() );
+            Gene g = sr.getResultObject();
             if ( OntologyServiceImpl.log.isDebugEnabled() )
                 OntologyServiceImpl.log.debug( "Search for " + queryString + " returned: " + g );
-            if ( g != null ) {
-                Characteristic c = this.gene2Characteristic( g );
-                searchResults.put( c.getValue(), new CharacteristicValueObject( c ) );
-            }
+            searchResults.put( this.gene2Characteristic( g ).getValue(), new CharacteristicValueObject( this.gene2Characteristic( g ) ) );
         }
     }
 

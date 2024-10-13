@@ -16,8 +16,8 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
@@ -49,6 +49,9 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
     private BibliographicReferenceService bibliographicReferenceService;
     @Autowired
     private PersisterHelper persisterHelper;
+
+    @Value("${entrez.efetch.apikey")
+    private String ncbiApiKey;
 
     @Override
     public String getCommandName() {
@@ -82,12 +85,12 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
         }
         log.info( "Found " + toFetch.size() + " experiments lacking publications in Gemma.." );
 
-        GeoBrowser gbs = new GeoBrowser();
-        Collection<GeoRecord> geoRecords = gbs.getGeoRecords( toFetch.keySet() );
+        GeoBrowser gbs = new GeoBrowser( ncbiApiKey );
+        Collection<GeoRecord> geoRecords = gbs.getGeoRecords( toFetch.keySet(), false );
 
         int numFound = 0;
         for ( GeoRecord rec : geoRecords ) {
-            if ( StringUtils.isBlank( rec.getPubMedIds() ) ) {
+            if ( rec.getPubMedIds() == null || rec.getPubMedIds().isEmpty() ) {
                 continue;
             }
             log.info( "New PubMed(s) for " + rec.getGeoAccession() );
@@ -97,9 +100,9 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
             expressionExperiment = eeserv.thawLite( expressionExperiment );
 
             try {
-                String[] pmids = rec.getPubMedIds().split( "," );
+                Collection<String> pmids = rec.getPubMedIds();
 
-                String pubmedId = pmids[0];
+                String pubmedId = pmids.iterator().next();
 
                 BibliographicReference publication = getBibliographicReference( pubmedId );
 
@@ -107,8 +110,8 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
                     expressionExperiment.setPrimaryPublication( publication );
                 }
 
-                if ( pmids.length > 1 ) {
-                    for ( int i = 1; i < pmids.length; i++ ) {
+                if ( pmids.size() > 1 ) {
+                    for ( int i = 1; i < pmids.size(); i++ ) {
                         publication = getBibliographicReference( pubmedId );
 
                         if ( publication != null ) {
@@ -150,7 +153,7 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
         // check if it already in the system
         BibliographicReference publication = bibliographicReferenceService.findByExternalId( pubmedId );
         if ( publication == null ) {
-            PubMedSearch pms = new PubMedSearch();
+            PubMedSearch pms = new PubMedSearch( ncbiApiKey );
             Collection<String> searchTerms = new ArrayList<>();
             searchTerms.add( pubmedId );
             Collection<BibliographicReference> publications;

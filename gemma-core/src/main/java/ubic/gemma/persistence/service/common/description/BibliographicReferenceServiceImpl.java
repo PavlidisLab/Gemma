@@ -15,7 +15,9 @@
 package ubic.gemma.persistence.service.common.description;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
@@ -50,10 +52,9 @@ import java.util.*;
 @ParametersAreNonnullByDefault
 public class BibliographicReferenceServiceImpl
         extends AbstractVoEnabledService<BibliographicReference, BibliographicReferenceValueObject>
-        implements BibliographicReferenceService {
+        implements BibliographicReferenceService, InitializingBean {
 
     private static final String PUB_MED_DATABASE_NAME = "PubMed";
-    private final PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
     private final BibliographicReferenceDao bibliographicReferenceDao;
 
     @Autowired
@@ -65,10 +66,20 @@ public class BibliographicReferenceServiceImpl
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    @Value("${entrez.efetch.apikey}")
+    private String ncbiApiKey;
+
+    private PubMedXMLFetcher pubMedXmlFetcher;
+
     @Autowired
     public BibliographicReferenceServiceImpl( BibliographicReferenceDao bibliographicReferenceDao ) {
         super( bibliographicReferenceDao );
         this.bibliographicReferenceDao = bibliographicReferenceDao;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        this.pubMedXmlFetcher = new PubMedXMLFetcher( ncbiApiKey );
     }
 
     @Override

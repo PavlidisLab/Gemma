@@ -33,8 +33,6 @@ import java.util.*;
 @CommonsLog
 public class GeoSeries extends GeoData {
 
-    private static final long serialVersionUID = -1058350558444775537L;
-
     private String seriesId;
     private String status;
     private String submissionDate;

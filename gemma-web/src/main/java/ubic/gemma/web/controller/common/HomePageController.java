@@ -73,7 +73,7 @@ public class HomePageController {
     @Autowired
     private BuildInfo buildInfo;
 
-    @RequestMapping(value = "/", method = RequestMethod.GET)
+    @RequestMapping(value = "/", method = { RequestMethod.GET, RequestMethod.HEAD })
     public RedirectView redirectToHomePage( HttpServletRequest request ) {
         String uri = ServletUriComponentsBuilder.fromRequest( request )
                 .scheme( null ).host( null ).port( -1 )
@@ -83,7 +83,7 @@ public class HomePageController {
         return new RedirectView( uri );
     }
 
-    @RequestMapping(value = WebConstants.HOME_PAGE, method = RequestMethod.GET)
+    @RequestMapping(value = WebConstants.HOME_PAGE, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showHomePage() {
         ModelAndView mav = new ModelAndView( "home" );
         mav.addObject( "buildInfo", buildInfo );

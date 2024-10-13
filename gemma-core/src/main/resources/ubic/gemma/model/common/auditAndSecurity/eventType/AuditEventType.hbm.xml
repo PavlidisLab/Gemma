@@ -114,6 +114,22 @@
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.MeanVarianceUpdateEvent"/>
             <subclass abstract="false" discriminator-value="SampleCorrelationAnalysisEvent"
                       name="ubic.gemma.model.common.auditAndSecurity.eventType.SampleCorrelationAnalysisEvent"/>
+
+            <!-- single-cell events -->
+            <subclass abstract="true" name="ubic.gemma.model.common.auditAndSecurity.eventType.CellTypeAssignmentEvent">
+                <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.CellTypeAssignmentAddedEvent"
+                          discriminator-value="CellTypeAssignmentAddedEvent"/>
+                <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.CellTypeAssignmentRemovedEvent"
+                          discriminator-value="CellTypeAssignmentRemovedEvent"/>
+            </subclass>
+
+            <subclass abstract="true"
+                      name="ubic.gemma.model.common.auditAndSecurity.eventType.CellLevelCharacteristicsEvent">
+                <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.CellLevelCharacteristicsAddedEvent"
+                          discriminator-value="CellLevelCharacteristicsAddedEvent"/>
+                <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.CellLevelCharacteristicsRemovedEvent"
+                          discriminator-value="CellLevelCharacteristicsRemovedEvent"/>
+            </subclass>
         </subclass>
         <subclass abstract="false" discriminator-value="CommentedEvent"
                   name="ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent"/>

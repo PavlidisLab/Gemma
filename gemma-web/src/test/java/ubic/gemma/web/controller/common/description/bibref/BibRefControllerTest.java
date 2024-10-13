@@ -21,21 +21,23 @@ package ubic.gemma.web.controller.common.description.bibref;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLParser;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.CitationValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.web.util.BaseSpringWebTest;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assume.assumeNoException;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Tests the BibliographicReferenceController
@@ -45,11 +47,9 @@ import static org.junit.Assert.assertNotNull;
  */
 public class BibRefControllerTest extends BaseSpringWebTest {
 
-    boolean ready = false;
-    @Autowired
-    private BibliographicReferenceController brc;
     @Autowired
     private BibliographicReferenceService brs;
+
     private BibliographicReference br = null;
 
     /*
@@ -62,13 +62,16 @@ public class BibRefControllerTest extends BaseSpringWebTest {
 
         PubMedXMLParser pmp = new PubMedXMLParser();
 
+        ExternalDatabase pubmed = externalDatabaseService.findByName( ExternalDatabases.PUBMED );
+        assertNotNull( pubmed );
+
         try {
             Collection<BibliographicReference> brl = pmp
                     .parse( this.getClass().getResourceAsStream( "/data/pubmed-test.xml" ) );
             br = brl.iterator().next();
 
             /* set the bib ref's pubmed accession number to the database entry. */
-            br.setPubAccession( this.getTestPersistentDatabaseEntry() );
+            br.setPubAccession( this.getTestPersistentDatabaseEntry( pubmed ) );
 
             /* bibref is now set. Call service to persist to database. */
             br = brs.findOrCreate( br );
@@ -76,17 +79,13 @@ public class BibRefControllerTest extends BaseSpringWebTest {
             assert br.getId() != null;
         } catch ( IOException e ) {
             if ( e.getCause() instanceof java.net.ConnectException ) {
-                log.warn( "Test skipped due to connection exception" );
-                return;
+                assumeNoException( "Test skipped due to connection exception", e );
             } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
-                log.warn( "Test skipped due to unknown host exception" );
-                return;
+                assumeNoException( "Test skipped due to unknown host exception", e );
             } else {
                 throw ( e );
             }
         }
-
-        ready = true;
     }
 
     /*
@@ -94,17 +93,13 @@ public class BibRefControllerTest extends BaseSpringWebTest {
      */
     @Test
     public void testDelete() throws Exception {
-        if ( !ready ) {
-            log.error( "Test skipped due to failure to connect to NIH" );
-            return;
-        }
-        log.debug( "testing remove" );
-
-        MockHttpServletRequest req = new MockHttpServletRequest( "POST", "/bibRef/deleteBibRef.html" );
-        req.addParameter( "_eventId", "delete" );
-        ModelAndView mav = brc.delete( br.getPubAccession().getAccession(), req );
-        assertNotNull( mav );
-        assertEquals( "bibRefView", mav.getViewName() );
+        String accession = br.getPubAccession().getAccession();
+        perform( post( "/deleteBibRef.html" ).param( "acc", accession ) )
+                .andExpect( status().isOk() )
+                .andExpect( view().name( "bibRefView" ) )
+                .andExpect( model().attribute( "bibliographicReference", br ) );
+        assertThat( brs.findByExternalId( accession, ExternalDatabases.PUBMED ) )
+                .isNull();
     }
 
     /*
@@ -112,53 +107,49 @@ public class BibRefControllerTest extends BaseSpringWebTest {
      */
     @Test
     public void testDeleteOfNonExistingEntry() throws Exception {
-        if ( !ready ) {
-            log.error( "Test skipped due to failure to connect to NIH" );
-            return;
-        }
         /* set pubMedId to a non-existent id in gemdtest. */
-        MockHttpServletRequest req = new MockHttpServletRequest( "POST", "/bibRef/deleteBibRef.html" );
-        String nonexistentpubmedid = "00000000";
-        req.addParameter( "acc", nonexistentpubmedid );
-
-        ModelAndView b = brc.delete( nonexistentpubmedid, req );
-        assert b != null; // ?
-        assertEquals( "bibRefView", b.getViewName() );
-        // in addition there should be a message "0000000 not found".
-        // Collection<String> errors = ( Collection<String> ) req.getAttribute( "errors" );
-        // assertTrue( errors != null && errors.size() > 0 );
-        // assertTrue( "Got: " + errors.iterator().next(), errors.iterator().next().startsWith( nonexistentpubmedid ) );
-
-    }
-
-    /*
-     * Tests viewing
-     */
-    @Test
-    public void testShow() throws Exception {
-        if ( !ready ) {
-            log.error( "Test skipped due to failure to connect to NIH" );
-            return;
-        }
-        try {
-            ModelAndView mav = brc.show( "1294000", null, new MockHttpServletRequest() );
-            assertNotNull( mav );
-            assertEquals( "bibRefView", mav.getViewName() );
-        } catch ( RuntimeException e ) {
-            if ( e.getCause() instanceof IOException && e.getMessage().contains( "503" ) ) {
-                log.warn( "503 error from NCBI, skipping test: ", e );
-            } else {
-                throw e;
-            }
-        }
+        perform( post( "/deleteBibRef.html" ).param( "acc", "00000000" ) )
+                .andExpect( status().isNotFound() );
     }
 
     @Test
-    public void testShowAllForExperiments() {
-        ModelAndView mv = brc.showAllForExperiments();
-        @SuppressWarnings("unchecked") Map<CitationValueObject, Collection<ExpressionExperimentValueObject>> citationToEEs = ( Map<CitationValueObject, Collection<ExpressionExperimentValueObject>> ) mv
-                .getModel().get( "citationToEEs" );
-        assertNotNull( citationToEEs );
+    public void testShowById() throws Exception {
+        perform( get( "/bibRefView.html" ).param( "id", String.valueOf( br.getId() ) ) )
+                .andExpect( status().isOk() )
+                .andExpect( view().name( "bibRefView" ) )
+                .andExpect( model().attribute( "bibliographicReferenceId", br.getId() ) )
+                .andExpect( model().attribute( "existsInSystem", Boolean.TRUE ) )
+                .andExpect( model().attribute( "byAccession", Boolean.FALSE ) )
+                .andExpect( model().attributeDoesNotExist( "accession" ) );
+    }
 
+    @Test
+    public void testShowByPubMedId() throws Exception {
+        perform( get( "/bibRefView.html" ).param( "accession", br.getPubAccession().getAccession() ) )
+                .andExpect( status().isOk() )
+                .andExpect( view().name( "bibRefView" ) )
+                .andExpect( model().attribute( "bibliographicReferenceId", br.getId() ) )
+                .andExpect( model().attribute( "existsInSystem", Boolean.TRUE ) )
+                .andExpect( model().attribute( "byAccession", Boolean.TRUE ) )
+                .andExpect( model().attribute( "accession", br.getPubAccession().getAccession() ) );
+    }
+
+    @Test
+    public void testShowByPubMedIdThatDoesNotExistInSystem() throws Exception {
+        perform( get( "/bibRefView.html" ).param( "accession", "1294000" ) )
+                .andExpect( status().isOk() )
+                .andExpect( view().name( "bibRefView" ) )
+                .andExpect( model().attribute( "bibliographicReferenceId", nullValue() ) )
+                .andExpect( model().attribute( "existsInSystem", Boolean.FALSE ) )
+                .andExpect( model().attribute( "byAccession", Boolean.TRUE ) )
+                .andExpect( model().attribute( "accession", "1294000" ) );
+    }
+
+    @Test
+    public void testShowAllForExperiments() throws Exception {
+        perform( get( "/showAllEeBibRefs.html" ) )
+                .andExpect( status().isOk() )
+                .andExpect( view().name( "bibRefAllExperiments" ) )
+                .andExpect( model().attributeExists( "citationToEEs" ) );
     }
 }

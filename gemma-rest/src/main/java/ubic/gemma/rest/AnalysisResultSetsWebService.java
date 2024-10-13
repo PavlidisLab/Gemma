@@ -283,7 +283,7 @@ public class AnalysisResultSetsWebService {
         public PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject( DifferentialExpressionAnalysisResultSetValueObject resultSet, @Nullable Double threshold, int offset, int limit, long totalElements ) {
             super( resultSet );
             this.filter = threshold != null ? "results.correctedPvalue <= " + threshold : "";
-            this.sort = new SortValueObject( Sort.by( null, "correctedPvalue", Sort.Direction.ASC, "results.correctedPvalue" ) );
+            this.sort = new SortValueObject( Sort.by( null, "correctedPvalue", Sort.Direction.ASC, Sort.NullMode.LAST, "results.correctedPvalue" ) );
             this.groupBy = new String[] { "results.id" };
             this.offset = offset;
             this.limit = limit;
