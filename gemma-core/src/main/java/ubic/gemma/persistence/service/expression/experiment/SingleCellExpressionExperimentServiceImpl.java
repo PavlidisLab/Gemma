@@ -204,6 +204,9 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         Assert.isTrue( singleCellDimension.getId() == null
                         || ee.getSingleCellExpressionDataVectors().stream().map( SingleCellExpressionDataVector::getSingleCellDimension ).anyMatch( singleCellDimension::equals ),
                 singleCellDimension + " is persistent, but does not belong any single-cell vector of this dataset: " + ee );
+        // make sure that the platform used by the BAs is the same as the platform for the design elements
+        Assert.isTrue( singleCellDimension.getBioAssays().stream().allMatch( ba -> ba.getArrayDesignUsed().equals( platform ) ),
+                "All the BioAssays must use a platform that match that of the vectors: " + platform );
         // we only support double for storage
         // TODO: support counting data using integers too
         Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.DOUBLE,

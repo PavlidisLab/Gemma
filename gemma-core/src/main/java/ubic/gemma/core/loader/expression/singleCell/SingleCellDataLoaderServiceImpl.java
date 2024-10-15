@@ -21,6 +21,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.common.quantitationtype.NonUniqueQuantitationTypeByNameException;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
@@ -45,6 +46,9 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private BioAssayService bioAssayService;
 
     @Autowired
     private QuantitationTypeService quantitationTypeService;
@@ -149,15 +153,11 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         ee = requireNonNull( singleCellExpressionExperimentService.loadWithSingleCellVectors( ee.getId() ) );
         Assert.isTrue( platform.getPrimaryTaxon().equals( expressionExperimentService.getTaxon( ee ) ),
                 "Platform primary taxon does not match dataset." );
-
-        // TODO: reuse elements mappings when loading multiple datasets
-        Map<String, CompositeSequence> elementsMapping = createElementsMapping( platform );
-
         SingleCellDimension dim = loadSingleCellDimension( loader, ee.getBioAssays() );
         QuantitationType qt = loadQuantitationType( loader, ee, config );
         loadCellTypeAssignments( loader, dim, config );
         loadCellLevelCharacteristics( loader, dim );
-        loadVectors( loader, ee, dim, qt, elementsMapping, config );
+        loadVectors( loader, ee, dim, qt, platform, config );
         return qt;
     }
 
@@ -269,12 +269,17 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         }
     }
 
-    private void loadVectors( SingleCellDataLoader loader, ExpressionExperiment ee, SingleCellDimension dim, QuantitationType qt, Map<String, CompositeSequence> elementsMapping, SingleCellDataLoaderConfig config ) {
+    private void loadVectors( SingleCellDataLoader loader, ExpressionExperiment ee, SingleCellDimension dim, QuantitationType qt, ArrayDesign platform, SingleCellDataLoaderConfig config ) {
+        Map<String, CompositeSequence> elementsMapping = createElementsMapping( platform );
         Set<SingleCellExpressionDataVector> vectors;
         try {
             vectors = loader.loadVectors( elementsMapping, dim, qt ).collect( Collectors.toSet() );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
+        }
+        int switched = switchBioAssaysToTargetPlatform( dim, platform );
+        if ( switched > 0 ) {
+            log.info( String.format( "Switched %d bioassays to %s.", switched, platform ) );
         }
         if ( config.isReplaceExistingQuantitationType() ) {
             int replacedVectors = singleCellExpressionExperimentService.replaceSingleCellDataVectors( ee, qt, vectors );
@@ -286,6 +291,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     }
 
     private Map<String, CompositeSequence> createElementsMapping( ArrayDesign platform ) {
+        platform = arrayDesignService.thawCompositeSequences( platform );
         // create mapping by precedence of ID type
         Map<CompositeSequence, List<Gene>> cs2g = arrayDesignService.getGenesByCompositeSequence( platform );
         // highest precedence is the probe name
@@ -310,6 +316,30 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
                 }
             }
         }
+    }
+
+    /**
+     * Switch the BioAssays from the single-cell dimension to be onto the given target platform.
+     * <p>
+     * This must be done prior to adding vector so that the expression data is in a reasonable state (i.e. platforms
+     * of a BioAssay matches the platform used by the design elements of the vectors).
+     * TODO: unify that logic with DataUpdaterImpl.switchBioAssaysToTargetPlatform()
+     */
+    private int switchBioAssaysToTargetPlatform( SingleCellDimension dimension, ArrayDesign targetPlatform ) {
+        int switched = 0;
+        for ( BioAssay ba : dimension.getBioAssays() ) {
+            if ( !ba.getArrayDesignUsed().equals( targetPlatform ) ) {
+                ArrayDesign previousPlatform = ba.getArrayDesignUsed();
+                if ( ba.getOriginalPlatform() == null ) {
+                    ba.setOriginalPlatform( previousPlatform );
+                }
+                ba.setArrayDesignUsed( targetPlatform );
+                bioAssayService.update( ba );
+                log.info( "Switched " + ba + " from " + previousPlatform + " to " + targetPlatform + "." );
+                switched++;
+            }
+        }
+        return switched;
     }
 
     /**
