@@ -33,7 +33,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -50,6 +50,8 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.persistence.util.ByteArrayUtils.toBytes;
 
 /**
  * Switch an expression experiment from one array design to another. This is valuable when the EE uses more than on AD,
@@ -72,6 +74,7 @@ import java.util.stream.Collectors;
  * @see    VectorMergingService
  */
 @Service
+
 public class ExpressionExperimentPlatformSwitchService extends ExpressionExperimentVectorManipulatingService {
 
     /**
@@ -600,7 +603,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * @param vector vector
      * @param bad    to be used as the replacement.
      */
-    private void vectorReWrite( DesignElementDataVector vector, BioAssayDimension bad ) {
+    private void vectorReWrite( BulkExpressionDataVector vector, BioAssayDimension bad ) {
         List<BioAssay> desiredOrder = bad.getBioAssays();
         List<BioAssay> currentOrder = vector.getBioAssayDimension().getBioAssays();
         if ( this.equivalent( currentOrder, desiredOrder ) ) {
@@ -651,7 +654,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
             newData.set( loc, oldData.get( j++ ) );
         }
 
-        byte[] newDataAr = converter.toBytes( newData.toArray() );
+        byte[] newDataAr = toBytes( newData.toArray() );
         vector.setData( newDataAr );
         vector.setBioAssayDimension( bad );
     }

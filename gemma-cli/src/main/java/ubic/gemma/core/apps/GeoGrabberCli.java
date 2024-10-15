@@ -19,6 +19,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
@@ -48,6 +49,14 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI {
     private static final int NCBI_CHUNK_SIZE = 100;
     private static final int MAX_RETRIES = 5; // on failures
     private static final int MAX_EMPTY_CHUNKS_IN_A_ROW = 50; // stop condition when we stop seeing useful records
+
+    @Autowired
+    private ExpressionExperimentService ees;
+    @Autowired
+    private TaxonService ts;
+    @Autowired
+    private ArrayDesignService ads;
+
     private Date dateLimit;
     private String gseLimit;
     private String outputFileName = "";
@@ -151,12 +160,9 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         Set<String> seen = new HashSet<>();
         GeoBrowser gbs = new GeoBrowser();
-        ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
-        TaxonService ts = this.getBean( TaxonService.class );
-        ArrayDesignService ads = this.getBean( ArrayDesignService.class );
         DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd", Locale.ENGLISH );
 
         int start = 0;

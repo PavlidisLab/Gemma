@@ -39,7 +39,7 @@ public class ExternalDatabaseUpdaterCli extends AbstractAuthenticatedCLI {
     private Date lastUpdated;
 
     public ExternalDatabaseUpdaterCli() {
-        setRequireLogin( true );
+        setRequireLogin();
     }
 
     @Override
@@ -114,7 +114,7 @@ public class ExternalDatabaseUpdaterCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         ExternalDatabase ed = requireNonNull( externalDatabaseService.findByNameWithAuditTrail( name ),
                 String.format( "No database with name %s.", name ) );
         if ( description != null ) {

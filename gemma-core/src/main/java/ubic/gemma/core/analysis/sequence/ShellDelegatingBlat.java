@@ -31,7 +31,6 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.core.config.Settings;
 
 import java.io.*;
@@ -176,7 +175,9 @@ public class ShellDelegatingBlat implements Blat {
         File querySequenceFile = File.createTempFile( "sequences-for-blat", ".fa" );
         int count = SequenceWriter.writeSequencesToFile( sequences, querySequenceFile );
         if ( count == 0 ) {
-            EntityUtils.deleteFile( querySequenceFile );
+            if ( !querySequenceFile.delete() ) {
+                throw new IOException( "Could not delete file " + querySequenceFile.getPath() );
+            }
             throw new IllegalArgumentException( "No sequences!" );
         }
 
@@ -207,7 +208,9 @@ public class ShellDelegatingBlat implements Blat {
 
             results.get( query ).add( blatResult );
         }
-        EntityUtils.deleteFile( querySequenceFile );
+        if ( !querySequenceFile.delete() ) {
+            throw new IOException( "Could not delete file " + querySequenceFile.getPath() );
+        }
         return results;
     }
 

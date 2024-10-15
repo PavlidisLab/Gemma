@@ -56,9 +56,9 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
-import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
@@ -526,7 +526,7 @@ public class ArrayDesignController {
         // seems inefficient? but need security filtering.
         Collection<ExpressionExperiment> ees = arrayDesignService.getExpressionExperiments( arrayDesign );
 
-        String ids = StringUtils.join( EntityUtils.getIds( ees ).toArray(), "," );
+        String ids = StringUtils.join( IdentifiableUtils.getIds( ees ).toArray(), "," );
         return new ModelAndView(
                 new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html?id=" + ids, true ) );
     }

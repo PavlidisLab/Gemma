@@ -39,14 +39,6 @@ public class JobInfo implements Identifiable, Serializable, SecuredNotChild {
     private User user;
 
     @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
-    }
-
-    @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
             return true;

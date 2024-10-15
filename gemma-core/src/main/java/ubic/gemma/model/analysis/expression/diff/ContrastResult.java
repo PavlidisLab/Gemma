@@ -131,14 +131,6 @@ public class ContrastResult implements Identifiable, Serializable {
     }
 
     /**
-     * @return a hash code based on this entity's identifiers.
-     */
-    @Override
-    public int hashCode() {
-        return Objects.hash( id );
-    }
-
-    /**
      * @return <code>true</code> if the argument is an ContrastResult instance and all identifiers for this entity equal
      * the identifiers of the argument entity. Returns <code>false</code> otherwise.
      */
@@ -151,7 +143,7 @@ public class ContrastResult implements Identifiable, Serializable {
             return false;
         }
         final ContrastResult that = ( ContrastResult ) object;
-        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+        return this.getId() != null && that.getId() != null && this.getId().equals( that.getId() );
     }
 
     @Override

@@ -25,7 +25,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisConfig;
 import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisConfig.NormalizationMethod;
@@ -49,7 +48,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,6 +56,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+
+import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 
 /**
  * Commandline tool to conduct link (coexpression) analysis.
@@ -215,7 +216,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
         if ( commandLine.hasOption( "delete" ) ) {
             this.deleteAnalyses = true;
-            this.force = true;
+            setForce();
             return;
         } else if ( commandLine.hasOption( "init" ) ) {
             initializeFromOldData = true;
@@ -363,7 +364,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
             QuantitationType qtype = this.makeQuantitationType();
 
-            ByteArrayConverter bArrayConverter = new ByteArrayConverter();
             try ( InputStream data = Files.newInputStream( this.dataFileName ) ) {
 
                 DoubleMatrix<String, String> matrix = simpleExpressionDataLoaderService.parse( data );
@@ -371,7 +371,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 BioAssayDimension bad = this.makeBioAssayDimension( arrayDesign, matrix );
 
                 for ( int i = 0; i < matrix.rows(); i++ ) {
-                    byte[] bData = bArrayConverter.doubleArrayToBytes( matrix.getRow( i ) );
+                    byte[] bData = doubleArrayToBytes( matrix.getRow( i ) );
 
                     ProcessedExpressionDataVector vector = ProcessedExpressionDataVector.Factory.newInstance();
                     vector.setData( bData );
@@ -406,8 +406,8 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 log.info( "Sorting data sets by number of samples, doing large data sets first." );
 
                 Collection<ExpressionExperimentValueObject> vos = eeService
-                        .loadValueObjectsByIds( EntityUtils.getIds( expressionExperiments ), true );
-                final Map<Long, ExpressionExperimentValueObject> idMap = EntityUtils.getIdMap( vos );
+                        .loadValueObjectsByIds( IdentifiableUtils.getIds( expressionExperiments ), true );
+                final Map<Long, ExpressionExperimentValueObject> idMap = IdentifiableUtils.getIdMap( vos );
 
                 sees.sort( ( o1, o2 ) -> {
 
@@ -535,8 +535,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         /*
          * If we're not using the database, always run it.
          */
-        if ( linkAnalysisConfig.isUseDb() && !force && this.noNeedToRun( ee, LinkAnalysisEvent.class ) ) {
-            log.info( "Can't or Don't need to run " + ee );
+        if ( linkAnalysisConfig.isUseDb() && this.noNeedToRun( ee, LinkAnalysisEvent.class ) ) {
             return;
         }
 

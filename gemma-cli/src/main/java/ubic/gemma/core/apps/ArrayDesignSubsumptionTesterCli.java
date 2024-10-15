@@ -45,7 +45,38 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
     }
 
     @Override
-    protected void doWork() throws Exception {
+    public String getShortDesc() {
+        return "Test microarray designs to see if one subsumes other(s) (in terms of probe sequences)"
+                + ", and if so update their information";
+    }
+
+
+    @Override
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
+        Option otherArrayDesignOption = Option.builder( "o" ).required().hasArg().argName( "Other platform" )
+                .desc( "Short name(s) of platforms to compare to the first one, comma-delimited" )
+                .longOpt( "other" ).build();
+        Option allways = Option.builder( "all" ).desc( "Test all platforms listed against all (not just to the first one)" ).build();
+
+        options.addOption( otherArrayDesignOption );
+        options.addOption( allways );
+    }
+
+    @Override
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
+        super.processOptions( commandLine );
+        if ( commandLine.hasOption( 'o' ) ) {
+            String otherArrayDesignName = commandLine.getOptionValue( 'o' );
+            String[] names = StringUtils.split( otherArrayDesignName, ',' );
+            this.otherArrayDesignNames = new HashSet<>();
+            this.otherArrayDesignNames.addAll( Arrays.asList( names ) );
+        }
+        this.allWays = commandLine.hasOption( "all" );
+    }
+
+    @Override
+    protected void doAuthenticatedWork() throws Exception {
         if ( this.getArrayDesignsToProcess().size() > 1 ) {
             throw new IllegalArgumentException(
                     "Cannot be applied to more than one array design given to the '-a' option" );
@@ -62,16 +93,11 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
         allToCompare.add( arrayDesign );
 
         for ( String otherArrayDesignName : otherArrayDesignNames ) {
-            ArrayDesign otherArrayDesign = this.locateArrayDesign( otherArrayDesignName );
-
-            if ( otherArrayDesign == null ) {
-                throw new Exception( "No arrayDesign " + otherArrayDesignName + " found" );
-            }
+            ArrayDesign otherArrayDesign = entityLocator.locateArrayDesign( otherArrayDesignName );
 
             if ( arrayDesign.equals( otherArrayDesign ) ) {
                 continue;
             }
-
 
             otherArrayDesign = getArrayDesignService().thaw( otherArrayDesign );
 
@@ -119,39 +145,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
 //        this.audit( arrayDesign, "Tested to see if it subsumes: " + StringUtils.join( otherArrayDesignNames, ',' ) );
     }
 
-    @Override
-    public String getShortDesc() {
-        return "Test microarray designs to see if one subsumes other(s) (in terms of probe sequences)"
-                + ", and if so update their information";
-    }
-
-    @SuppressWarnings("static-access")
-    @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
-        Option otherArrayDesignOption = Option.builder( "o" ).required().hasArg().argName( "Other platform" )
-                .desc( "Short name(s) of platforms to compare to the first one, comma-delimited" )
-                .longOpt( "other" ).build();
-        Option allways = Option.builder( "all" ).desc( "Test all platforms listed against all (not just to the first one)" ).build();
-
-        options.addOption( otherArrayDesignOption );
-        options.addOption( allways );
-    }
-
-    @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
-        if ( commandLine.hasOption( 'o' ) ) {
-            String otherArrayDesignName = commandLine.getOptionValue( 'o' );
-            String[] names = StringUtils.split( otherArrayDesignName, ',' );
-            this.otherArrayDesignNames = new HashSet<>();
-            this.otherArrayDesignNames.addAll( Arrays.asList( names ) );
-        }
-        this.allWays = commandLine.hasOption( "all" );
-    }
-
     private void audit( ArrayDesign arrayDesign, String note ) {
         auditTrailService.addUpdateEvent( arrayDesign, ArrayDesignSubsumeCheckEvent.class, note );
     }
-
 }

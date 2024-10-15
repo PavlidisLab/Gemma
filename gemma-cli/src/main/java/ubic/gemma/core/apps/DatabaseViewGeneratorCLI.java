@@ -21,6 +21,7 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.report.DatabaseViewGenerator;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 
@@ -31,6 +32,9 @@ import ubic.gemma.core.util.AbstractAuthenticatedCLI;
  */
 @SuppressWarnings({ "FieldCanBeLocal", "unused" }) // Possible external use
 public class DatabaseViewGeneratorCLI extends AbstractAuthenticatedCLI {
+
+    @Autowired
+    private DatabaseViewGenerator v;
 
     private boolean generateDatasetSummary = false;
     private boolean generateDiffExpressionSummary = false;
@@ -78,8 +82,7 @@ public class DatabaseViewGeneratorCLI extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
-        DatabaseViewGenerator v = this.getBean( DatabaseViewGenerator.class );
+    protected void doAuthenticatedWork() throws Exception {
         v.runAll();
     }
 

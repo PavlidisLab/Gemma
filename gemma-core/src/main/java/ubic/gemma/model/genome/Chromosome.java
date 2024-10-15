@@ -23,6 +23,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Immutable representation of a chromosome
@@ -67,15 +68,7 @@ public class Chromosome implements Identifiable, Serializable {
 
     @Override
     public int hashCode() {
-        int hashCode = 0;
-
-        assert this.getId() != null || this.getName() != null;
-
-        hashCode = 29 * hashCode + ( this.getId() == null ?
-                this.getName().hashCode() + ( this.getTaxon() != null ? this.getTaxon().hashCode() : 0 ) :
-                this.getId().hashCode() );
-
-        return hashCode;
+        return Objects.hash( getName(), getTaxon() );
     }
 
     @Override
@@ -87,10 +80,11 @@ public class Chromosome implements Identifiable, Serializable {
             return false;
         }
         final Chromosome that = ( Chromosome ) object;
-
-        return !( this.getId() == null || that.getId() == null || !this.getId().equals( that.getId() ) )
-                || this.getTaxon().equals( that.getTaxon() ) && this.getName().equals( that.getName() );
-
+        if ( this.getId() != null && that.getId() != null ) {
+            return this.getId().equals( that.getId() );
+        }
+        return Objects.equals( getName(), that.getName() )
+                && Objects.equals( getTaxon(), that.getTaxon() );
     }
 
     @Override

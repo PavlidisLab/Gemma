@@ -24,7 +24,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
@@ -293,8 +292,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         PvalueDistribution pvd = PvalueDistribution.Factory.newInstance();
         pvd.setNumBins( 100 );
-        ByteArrayConverter bac = new ByteArrayConverter();
-        pvd.setBinCounts( bac.doubleArrayToBytes( pvalHist.getArray() ) );
+        pvd.setBinCounts( pvalHist.getArray() );
         resultSet.setPvalueDistribution( pvd ); // do not save yet.
     }
 

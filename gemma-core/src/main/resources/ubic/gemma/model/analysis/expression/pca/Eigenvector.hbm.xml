@@ -12,8 +12,11 @@
         <property name="componentNumber" type="java.lang.Integer">
             <column name="COMPONENT_NUMBER" not-null="true" unique="false" sql-type="INTEGER"/>
         </property>
-        <property name="vector" type="org.hibernate.type.MaterializedBlobType">
+        <property name="vector">
             <column name="VECTOR" not-null="true" unique="false" sql-type="LONGBLOB"/>
+            <type name="ubic.gemma.persistence.hibernate.ByteArrayType">
+                <param name="arrayType">double</param>
+            </type>
         </property>
     </class>
 </hibernate-mapping>

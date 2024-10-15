@@ -23,6 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
@@ -44,8 +45,10 @@ import java.util.HashSet;
  */
 public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
 
-    private ArrayDesign arrayDesign;
+    @Autowired
     private ArrayDesignMergeService arrayDesignMergeService;
+
+    private ArrayDesign arrayDesign;
     private String newName;
     private String newShortName;
     private Collection<ArrayDesign> otherArrayDesigns;
@@ -57,7 +60,7 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() {
         arrayDesignMergeService.merge( arrayDesign, otherArrayDesigns, newName, newShortName, add );
     }
 
@@ -66,7 +69,6 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
         return "Make a new array design that combines the reporters from others.";
     }
 
-    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
@@ -103,10 +105,7 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
             String[] names = StringUtils.split( otherArrayDesignName, ',' );
             this.otherArrayDesigns = new HashSet<>();
             for ( String string : names ) {
-                ArrayDesign o = this.locateArrayDesign( string );
-                if ( o == null ) {
-                    throw new IllegalArgumentException( "Array design " + string + " not found" );
-                }
+                ArrayDesign o = entityLocator.locateArrayDesign( string );
                 this.otherArrayDesigns.add( o );
             }
             this.otherArrayDesigns = getArrayDesignService().thaw( this.otherArrayDesigns );
@@ -139,7 +138,6 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
                         "You must provide a short name for the new design unless using -add" );
             }
         }
-        arrayDesignMergeService = this.getBean( ArrayDesignMergeService.class );
 
         this.add = commandLine.hasOption( "add" );
     }

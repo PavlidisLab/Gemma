@@ -23,6 +23,7 @@ import gemma.gsec.model.GroupAuthority;
 import gemma.gsec.model.User;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -65,6 +66,19 @@ public class UserGroup extends AbstractAuditable implements gemma.gsec.model.Use
     @SuppressWarnings("unchecked")
     public void setGroupMembers( Set<User> groupMembers ) {
         this.groupMembers = groupMembers;
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof UserGroup ) )
+            return false;
+        UserGroup that = ( UserGroup ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        }
+        return Objects.equals( getName(), that.getName() );
     }
 
     public static final class Factory {

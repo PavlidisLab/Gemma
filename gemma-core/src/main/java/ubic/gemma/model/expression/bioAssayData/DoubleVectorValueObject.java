@@ -30,6 +30,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
 import java.util.*;
 
+import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToDoubles;
+
 /**
  * Simple wrapper for a double[] that is derived from a DesignElementDataVector.
  *
@@ -48,7 +50,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
     private Double rankByMax;
     private Double rankByMean;
 
-    public DoubleVectorValueObject( DesignElementDataVector dedv, Collection<Long> genes,
+    public DoubleVectorValueObject( BulkExpressionDataVector dedv, Collection<Long> genes,
             BioAssayDimensionValueObject badVo ) {
         super( dedv, genes, badVo );
         QuantitationType qt = dedv.getQuantitationType();
@@ -59,7 +61,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         if ( qt.getIsMaskedPreferred() ) {
             this.masked = true;
         }
-        this.data = DataVectorValueObject.byteArrayConverter.byteArrayToDoubles( dedv.getData() );
+        this.data = byteArrayToDoubles( dedv.getData() );
         if ( dedv instanceof ProcessedExpressionDataVector ) {
             this.rankByMax = ( ( ProcessedExpressionDataVector ) dedv ).getRankByMax();
             this.rankByMean = ( ( ProcessedExpressionDataVector ) dedv ).getRankByMean();
@@ -74,7 +76,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         }
     }
 
-    public DoubleVectorValueObject( DesignElementDataVector dedv, BioAssayDimensionValueObject badVo ) {
+    public DoubleVectorValueObject( BulkExpressionDataVector dedv, BioAssayDimensionValueObject badVo ) {
         this( dedv, null, badVo );
     }
 
@@ -87,7 +89,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      * @param dedv dedv
      * @param vectorsBadVo BA dimension vo
      */
-    public DoubleVectorValueObject( DesignElementDataVector dedv, BioAssayDimensionValueObject vectorsBadVo,
+    public DoubleVectorValueObject( BulkExpressionDataVector dedv, BioAssayDimensionValueObject vectorsBadVo,
             Collection<Long> genes, BioAssayDimension dimToMatch ) {
         this( dedv, genes, vectorsBadVo );
 

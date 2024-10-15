@@ -47,7 +47,7 @@ public class ExternalDatabaseOverviewCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         externalDatabaseService.loadAllWithAuditTrail().stream()
                 .sorted( Comparator.comparing( ExternalDatabase::getLastUpdated, Comparator.nullsLast( Comparator.reverseOrder() ) ) )
                 .forEachOrdered( ed -> addSuccessObject( ed, summarize( ed ) ) );

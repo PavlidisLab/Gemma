@@ -23,7 +23,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.basecode.util.r.RClient;
 import ubic.basecode.util.r.RConnectionFactory;
@@ -47,6 +46,7 @@ import java.util.*;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 
 /**
  * Other tests can extend this class if they want an expression experiment with complete block design and biological
@@ -58,7 +58,6 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
     static final int NUM_DESIGN_ELEMENTS = 100;
     static final int NUM_TWA_RESULT_SETS = 3;
-    private final ByteArrayConverter bac = new ByteArrayConverter();
 
     @Autowired
     protected ExpressionDataMatrixService expressionDataMatrixService = null;
@@ -480,7 +479,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
                 dvals[j] = dataMatrix.get( i, j );
             }
 
-            byte[] bvals = bac.doubleArrayToBytes( dvals );
+            byte[] bvals = doubleArrayToBytes( dvals );
             vector.setData( bvals );
 
             vectors.add( vector );

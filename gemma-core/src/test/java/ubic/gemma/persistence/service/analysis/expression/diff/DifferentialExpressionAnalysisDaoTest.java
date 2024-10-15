@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -13,7 +14,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.context.TestComponent;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -87,7 +87,7 @@ public class DifferentialExpressionAnalysisDaoTest extends BaseDatabaseTest {
             resultSet.setAnalysis( analysis );
             PvalueDistribution pvalueDist = new PvalueDistribution();
             pvalueDist.setNumBins( 2 );
-            pvalueDist.setBinCounts( new byte[2] );
+            pvalueDist.setBinCounts( new double[2] );
             for ( int i = 0; i < 100; i++ ) {
                 DifferentialExpressionAnalysisResult der = new DifferentialExpressionAnalysisResult();
                 der.setProbe( probes.get( i ) );
@@ -147,7 +147,7 @@ public class DifferentialExpressionAnalysisDaoTest extends BaseDatabaseTest {
             resultSet.setAnalysis( analysis );
             PvalueDistribution pvalueDist = new PvalueDistribution();
             pvalueDist.setNumBins( 2 );
-            pvalueDist.setBinCounts( new byte[2] );
+            pvalueDist.setBinCounts( new double[2] );
             for ( int i = 0; i < numResults; i++ ) {
                 DifferentialExpressionAnalysisResult der = new DifferentialExpressionAnalysisResult();
                 der.setProbe( probes.get( i ) );
