@@ -70,7 +70,7 @@ public interface SingleCellExpressionExperimentService {
     long getNumberOfNonZeroes( ExpressionExperiment ee, QuantitationType qt );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt );
+    Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt, int fetchSize );
 
     /**
      * Obtain a single-cell expression data matrix for the given quantitation type.

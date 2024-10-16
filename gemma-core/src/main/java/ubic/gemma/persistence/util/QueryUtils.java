@@ -193,23 +193,22 @@ public class QueryUtils {
      * This uses offset/limit under the hood because MySQL JDBC does not support scrolling with {@link Query#scroll()}.
      */
     public static <T> Stream<T> stream( Query query, int fetchSize ) {
-        return Streams.of( new ScrollableResultsIterator<>( query, fetchSize ) );
+        return Streams.of( new QueryIterator<>( query, fetchSize ) );
     }
 
     public static <T> Stream<T> stream( Query query ) {
         return stream( query, DEFAULT_FETCH_SIZE );
     }
 
-    private static class ScrollableResultsIterator<T> implements Iterator<T> {
+    private static class QueryIterator<T> implements Iterator<T> {
 
         private final Query query;
         private final int fetchSize;
 
-        private boolean _init = false;
         private int offset;
         private List<T> results;
 
-        public ScrollableResultsIterator( Query query, int fetchSize ) {
+        public QueryIterator( Query query, int fetchSize ) {
             Assert.isTrue( fetchSize >= 1 );
             this.query = query;
             this.fetchSize = fetchSize;
@@ -217,19 +216,16 @@ public class QueryUtils {
 
         @Override
         public boolean hasNext() {
-            if ( !_init ) {
+            if ( offset == 0 && results == null ) {
                 fetchResults();
-                _init = true;
             }
             return ( offset % fetchSize ) < results.size();
         }
 
         @Override
         public T next() {
-            if ( !_init ) {
-                fetchResults();
-                _init = true;
-            } else if ( offset % fetchSize == 0 ) {
+            // either at the first record, or at the end of the current batch
+            if ( ( offset == 0 && results == null ) || ( offset > 0 && offset % fetchSize == 0 ) ) {
                 fetchResults();
             }
             if ( offset % fetchSize >= results.size() ) {

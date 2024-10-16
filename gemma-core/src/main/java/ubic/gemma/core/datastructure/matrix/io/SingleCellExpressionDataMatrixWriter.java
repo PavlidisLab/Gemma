@@ -13,20 +13,20 @@ import java.nio.charset.StandardCharsets;
 public interface SingleCellExpressionDataMatrixWriter extends ExpressionDataMatrixWriter {
 
     @Override
-    default void write( ExpressionDataMatrix<?> matrix, Writer writer ) throws IOException {
+    default int write( ExpressionDataMatrix<?> matrix, Writer writer ) throws IOException {
         Assert.isInstanceOf( SingleCellExpressionDataMatrix.class, matrix );
-        write( ( SingleCellExpressionDataMatrix<?> ) matrix, writer );
+        return write( ( SingleCellExpressionDataMatrix<?> ) matrix, writer );
     }
 
-    void write( SingleCellExpressionDataMatrix<?> matrix, Writer writer ) throws IOException;
+    int write( SingleCellExpressionDataMatrix<?> matrix, Writer writer ) throws IOException;
 
     @Override
-    default void write( ExpressionDataMatrix<?> matrix, OutputStream stream ) throws IOException {
+    default int write( ExpressionDataMatrix<?> matrix, OutputStream stream ) throws IOException {
         Assert.isInstanceOf( SingleCellExpressionDataMatrix.class, matrix );
-        write( ( SingleCellExpressionDataMatrix<?> ) matrix, stream );
+        return write( ( SingleCellExpressionDataMatrix<?> ) matrix, stream );
     }
 
-    default void write( SingleCellExpressionDataMatrix<?> matrix, OutputStream stream ) throws IOException {
-        write( matrix, new OutputStreamWriter( stream, StandardCharsets.UTF_8 ) );
+    default int write( SingleCellExpressionDataMatrix<?> matrix, OutputStream stream ) throws IOException {
+        return write( matrix, new OutputStreamWriter( stream, StandardCharsets.UTF_8 ) );
     }
 }

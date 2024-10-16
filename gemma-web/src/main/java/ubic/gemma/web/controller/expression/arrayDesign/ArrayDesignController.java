@@ -192,7 +192,7 @@ public class ArrayDesignController {
 
         try ( InputStream is = new FileInputStream( f ) ) {
             response.setContentType( MediaType.APPLICATION_OCTET_STREAM_VALUE );
-            response.setHeader( "Content-Disposition", "attachment; filename=" + fileName );
+            response.setHeader( "Content-Disposition", "attachment; filename=\"" + fileName + "\"" );
             // response.setContentType( "application/x-gzip" ); // see Bug4206
             response.setContentLength( ( int ) f.length() );
             IOUtils.copy( is, response.getOutputStream() );

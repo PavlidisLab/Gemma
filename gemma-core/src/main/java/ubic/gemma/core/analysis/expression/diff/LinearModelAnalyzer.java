@@ -597,7 +597,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         try ( FileWriter writer = new FileWriter( File.createTempFile( "data.", ".txt" ) );
                 FileWriter out = new FileWriter( File.createTempFile( "design.", ".txt" ) ) ) {
 
-            mw.write( writer, dmatrix, null, true, false );
+            mw.write( dmatrix, writer );
 
             ubic.basecode.io.writer.MatrixWriter<String, String> dem = new ubic.basecode.io.writer.MatrixWriter<>(
                     out );

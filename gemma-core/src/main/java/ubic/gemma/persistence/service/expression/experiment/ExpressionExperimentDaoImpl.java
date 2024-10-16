@@ -2351,16 +2351,17 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt ) {
+    public Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt, int fetchSize ) {
         SingleCellDimension dimension = getSingleCellDimension( ee, qt );
         if ( dimension == null ) {
             throw new IllegalStateException( qt + " from " + ee + " does not have an associated single-cell dimension." );
         }
+        long numVecs = getNumberOfSingleCellDataVectors( ee, qt );
         try ( Stream<int[]> stream = QueryUtils.stream( getSessionFactory().getCurrentSession()
                 .createQuery( "select scedv.dataIndices from SingleCellExpressionDataVector scedv "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
                 .setParameter( "ee", ee )
-                .setParameter( "qt", qt ) ) ) {
+                .setParameter( "qt", qt ), fetchSize ) ) {
             long[] nnzs = new long[dimension.getBioAssays().size()];
             Iterator<int[]> it = stream.iterator();
             StopWatch timer = StopWatch.createStarted();
@@ -2381,7 +2382,7 @@ public class ExpressionExperimentDaoImpl
                     start = end;
                 }
                 if ( ++done % 100 == 0 ) {
-                    log.debug( String.format( "Processed %d vectors at %.2f vectors/sec", done, 1000.0 * done / timer.getTime() ) );
+                    log.debug( String.format( "Processed %d/%d vectors at %.2f vectors/sec", done, numVecs, 1000.0 * done / timer.getTime() ) );
                 }
             }
             Map<BioAssay, Long> result = new HashMap<>();

@@ -56,8 +56,9 @@ import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataV
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 
-import java.io.File;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
 
@@ -250,10 +251,10 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         ee = this.eeService.thawLite( ee );
         qts = eeService.getQuantitationTypes( ee );
         assertEquals( 18, qts.size() );
-        File f = dataFileService.writeOrLocateProcessedDataFile( ee, true, true ).orElse( null );
+        Path f = dataFileService.writeOrLocateProcessedDataFile( ee, true, true ).orElse( null );
         assertNotNull( f );
-        assertTrue( f.canRead() );
-        assertTrue( f.length() > 0 );
+        assertTrue( Files.exists( f ) );
+        assertTrue( Files.size( f ) > 0 );
     }
 
     /*

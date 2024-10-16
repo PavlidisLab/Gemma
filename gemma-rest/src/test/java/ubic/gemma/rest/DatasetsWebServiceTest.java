@@ -45,6 +45,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
@@ -215,6 +216,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
         @Bean
         public DifferentialExpressionAnalysisResultListFileService differentialExpressionAnalysisResultListFileService() {
+            return mock();
+        }
+
+        @Bean
+        public SingleCellExpressionExperimentService singleCellExpressionExperimentService() {
             return mock();
         }
     }

@@ -41,17 +41,18 @@ import static ubic.gemma.core.datastructure.matrix.io.TsvUtils.*;
 public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter {
 
     @Override
-    public void write( SingleCellExpressionDataMatrix<?> matrix, Writer writer ) throws IOException {
-        write( matrix, null, writer );
+    public int write( SingleCellExpressionDataMatrix<?> matrix, Writer writer ) throws IOException {
+        return write( matrix, null, writer );
     }
 
-    public void write( SingleCellExpressionDataMatrix<?> matrix, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer writer ) throws IOException {
+    public int write( SingleCellExpressionDataMatrix<?> matrix, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer writer ) throws IOException {
         Assert.isInstanceOf( DoubleSingleCellExpressionDataMatrix.class, matrix,
                 "Only single-cell matrices of doubles are supported." );
         CompRowMatrix mat = ( ( DoubleSingleCellExpressionDataMatrix ) matrix ).getMatrix();
         int[] rowptr = mat.getRowPointers();
         int[] colind = mat.getColumnIndices();
         double[] data = mat.getData();
+        int written = 0;
         try ( PrintWriter pwriter = new PrintWriter( writer ) ) {
             writeHeader( matrix.getExpressionExperiment(), matrix.getQuantitationType(), matrix.getSingleCellDimension(), cs2gene, pwriter );
             for ( int i = 0; i < rowptr.length - 1; i++ ) {
@@ -62,21 +63,34 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
                     BioAssay ba = matrix.getSingleCellDimension().getBioAssay( j );
                     String cellId = matrix.getSingleCellDimension().getCellIds().get( j );
                     writeRow( cs, ba, cellId, format( val ), cs2gene, pwriter );
+                    written++;
                 }
             }
         }
+        return written;
     }
 
-    public void write( Stream<SingleCellExpressionDataVector> vectors, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer writer ) throws IOException {
+    public int write( Collection<SingleCellExpressionDataVector> vectors, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer writer ) throws IOException {
+        return write( vectors.iterator(), cs2gene, writer );
+    }
+
+    public int write( Stream<SingleCellExpressionDataVector> vectors, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer writer ) throws IOException {
+        return write( vectors.iterator(), cs2gene, writer );
+    }
+
+    private int write( Iterator<SingleCellExpressionDataVector> it, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer writer ) {
+        int written = 0;
         try ( PrintWriter pwriter = new PrintWriter( writer ) ) {
-            Iterator<SingleCellExpressionDataVector> it = vectors.iterator();
             SingleCellExpressionDataVector firstVec = it.next();
             writeHeader( firstVec.getExpressionExperiment(), firstVec.getQuantitationType(), firstVec.getSingleCellDimension(), cs2gene, pwriter );
             writeVector( firstVec, cs2gene, pwriter );
+            written++;
             while ( it.hasNext() ) {
                 writeVector( it.next(), cs2gene, pwriter );
+                written++;
             }
         }
+        return written;
     }
 
     private void writeHeader( ExpressionExperiment ee, QuantitationType qt, SingleCellDimension scd, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, PrintWriter pwriter ) {

@@ -48,8 +48,9 @@ import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashSet;
@@ -87,7 +88,7 @@ public class ExpressionExperimentDataFetchController {
         }
         // exclude any paths leading to the filename
         filename = FilenameUtils.getName( filename );
-        this.download( dataDir.resolve( filename ).toFile(), null, MediaType.APPLICATION_OCTET_STREAM_VALUE, response );
+        this.download( dataDir.resolve( filename ), null, MediaType.APPLICATION_OCTET_STREAM_VALUE, response );
     }
 
     @RequestMapping(value = "/getMetaData.html", method = RequestMethod.GET)
@@ -97,7 +98,7 @@ public class ExpressionExperimentDataFetchController {
         if ( type == null ) {
             throw new IllegalArgumentException( "The experiment ID and file type ID parameters must be valid identifiers." );
         }
-        File file = expressionDataFileService.getMetadataFile( ee, type );
+        Path file = expressionDataFileService.getMetadataFile( ee, type );
         this.download( file, type.getDownloadName( ee ), type.getContentType(), response );
     }
 
@@ -117,10 +118,10 @@ public class ExpressionExperimentDataFetchController {
         for ( ExpressionExperimentMetaFileType type : ExpressionExperimentMetaFileType.values() ) {
 
             // Some files are prefixed with the experiments accession
-            File file = expressionDataFileService.getMetadataFile( ee, type );
+            Path file = expressionDataFileService.getMetadataFile( ee, type );
 
             // Check if we can read the file
-            if ( !file.canRead() ) {
+            if ( !Files.isReadable( file ) ) {
                 continue;
             }
 
@@ -184,21 +185,16 @@ public class ExpressionExperimentDataFetchController {
      * @param response     the http response to download to.
      * @throws IOException if the file in the given path can not be read.
      */
-    private void download( File f, String downloadName, String contentType, HttpServletResponse response ) throws IOException {
-        if ( !f.canRead() ) {
-            throw new IOException( "Cannot read from " + f.getPath() );
-        }
+    private void download( Path f, String downloadName, String contentType, HttpServletResponse response ) throws IOException {
         if ( StringUtils.isBlank( downloadName ) ) {
-            downloadName = f.getName();
+            downloadName = f.getFileName().toString();
         }
         response.setContentType( contentType );
-        response.setContentLength( ( int ) f.length() );
+        response.setContentLength( ( int ) Files.size( f ) );
         response.addHeader( "Content-disposition", "attachment; filename=\"" + downloadName + "\"" );
-        try ( FileInputStream in = new FileInputStream( f ) ) {
+        try ( InputStream in = Files.newInputStream( f ) ) {
             FileCopyUtils.copy( in, response.getOutputStream() );
             response.flushBuffer();
-        } catch ( IOException ignored ) {
-
         }
     }
 
@@ -232,7 +228,7 @@ public class ExpressionExperimentDataFetchController {
                         "No data available (either due to lack of authorization, or use of an invalid entity identifier)" );
             }
 
-            File f;
+            Path f;
             try {
                 f = expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, false );
             } catch ( IOException e ) {
@@ -242,7 +238,7 @@ public class ExpressionExperimentDataFetchController {
             watch.stop();
             log.debug( "Finished getting co-expression file; done in " + watch.getTime() + " milliseconds" );
 
-            ModelAndView mav = new ModelAndView( new RedirectView( "/getData.html?file=" + f.getName(), true ) );
+            ModelAndView mav = new ModelAndView( new RedirectView( "/getData.html?file=" + f.getFileName(), true ) );
 
             return new TaskResult( taskCommand, mav );
         }
@@ -321,7 +317,7 @@ public class ExpressionExperimentDataFetchController {
 
             ee = expressionExperimentService.thawLite( ee );
 
-            File f = null;
+            Path f = null;
 
             /* write out the file using text format */
             if ( usedFormat.equals( "text" ) ) {
@@ -383,7 +379,7 @@ public class ExpressionExperimentDataFetchController {
             watch.stop();
             log.debug( "Finished writing and downloading a file; done in " + watch.getTime() + " milliseconds" );
 
-            ModelAndView mav = new ModelAndView( new RedirectView( "/getData.html?file=" + f.getName(), true ) );
+            ModelAndView mav = new ModelAndView( new RedirectView( "/getData.html?file=" + f.getFileName(), true ) );
 
             return new TaskResult( taskCommand, mav );
 
@@ -404,13 +400,13 @@ public class ExpressionExperimentDataFetchController {
 
             StopWatch watch = new StopWatch();
             watch.start();
-            Collection<File> files = new HashSet<>();
+            Collection<Path> files = new HashSet<>();
 
             assert this.taskCommand != null;
 
             if ( this.taskCommand.getAnalysisId() != null ) {
 
-                File f;
+                Path f;
                 try {
                     f = expressionDataFileService.getDiffExpressionAnalysisArchiveFile( taskCommand.getAnalysisId(),
                             taskCommand.isForceRewrite() );
@@ -450,12 +446,11 @@ public class ExpressionExperimentDataFetchController {
             }
 
             ModelAndView mav = new ModelAndView(
-                    new RedirectView( "/getData.html?file=" + files.iterator().next().getName(), true ) );
+                    new RedirectView( "/getData.html?file=" + files.iterator().next().getFileName(), true ) );
             return new TaskResult( taskCommand, mav );
 
         }
 
     }
-
 }
 

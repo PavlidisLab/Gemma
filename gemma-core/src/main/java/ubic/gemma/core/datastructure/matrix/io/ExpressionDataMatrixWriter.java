@@ -14,9 +14,9 @@ import java.nio.charset.StandardCharsets;
  */
 public interface ExpressionDataMatrixWriter {
 
-    void write( ExpressionDataMatrix<?> matrix, Writer writer ) throws IOException, UnsupportedOperationException;
+    int write( ExpressionDataMatrix<?> matrix, Writer writer ) throws IOException, UnsupportedOperationException;
 
-    default void write( ExpressionDataMatrix<?> matrix, OutputStream stream ) throws IOException {
-        write( matrix, new OutputStreamWriter( stream, StandardCharsets.UTF_8 ) );
+    default int write( ExpressionDataMatrix<?> matrix, OutputStream stream ) throws IOException {
+        return write( matrix, new OutputStreamWriter( stream, StandardCharsets.UTF_8 ) );
     }
 }

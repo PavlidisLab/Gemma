@@ -497,7 +497,7 @@ public interface ExpressionExperimentDao
      * <p>
      * This is quite costly because the indices of each vector has to be examined.
      */
-    Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt );
+    Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt, int fetchSize );
 
     /**
      * Remove the given single-cell data vectors.

@@ -147,7 +147,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
                 .forEach( System.out::println );
         assertThat( scExpressionExperimentService.getNumberOfNonZeroes( ee, qt ) )
                 .isEqualTo( 1000L );
-        assertThat( scExpressionExperimentService.getNumberOfNonZeroesBySample( ee, qt ) )
+        assertThat( scExpressionExperimentService.getNumberOfNonZeroesBySample( ee, qt, 30 ) )
                 .containsOnlyKeys( ee.getBioAssays() )
                 .containsValues( 250L, 250L, 250L, 250L );
     }

@@ -50,8 +50,9 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import java.io.File;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 import static org.junit.Assert.*;
@@ -309,14 +310,14 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
         processedDataVectorService.computeProcessedExpressionData( newee );
 
-        File f1 = expressionDataFileService
+        Path f1 = expressionDataFileService
                 .writeOrLocateProcessedDataFile( expressionExperimentService.load( newee.getId() ), true, true )
                 .orElse( null );
         assertNotNull( f1 );
-        assertTrue( f1.exists() );
+        assertTrue( Files.exists( f1 ) );
 
         expressionDataFileService.deleteAllFiles( newee );
-        assertFalse( f1.exists() );
+        assertFalse( Files.exists( f1 ) );
 
         /*
          * outlier removal.

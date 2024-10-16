@@ -43,9 +43,9 @@ import ubic.gemma.rest.util.args.*;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
@@ -298,21 +298,19 @@ public class PlatformsWebService {
         String fileName = arrayDesign.getShortName().replaceAll( Pattern.quote( "/" ), "_" )
                 + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
-        File file = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
-        if ( !file.exists() ) {
+        java.nio.file.Path file = Paths.get( ArrayDesignAnnotationService.ANNOT_DATA_DIR ).resolve( fileName );
+        if ( !Files.exists( file ) ) {
             try {
                 // generate it. This will cause a delay, and potentially a time-out, but better than a 404
                 // To speed things up, we don't delete other files
                 annotationFileService.create( arrayDesign, true, false ); // include GO by default.
-                file = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
-                if ( !file.canRead() ) throw new IOException( "Annotation file created but cannot read?" );
             } catch ( IOException e ) {
                 throw new NotFoundException( String.format( ERROR_ANNOTATION_FILE_NOT_AVAILABLE, arrayDesign.getShortName() ) );
             }
         }
-        return Response.ok( new GZIPInputStream( new FileInputStream( file ) ) )
+        return Response.ok( new GZIPInputStream( Files.newInputStream( file ) ) )
                 .header( "Content-Encoding", "gzip" )
-                .header( "Content-Disposition", "attachment; filename=" + FilenameUtils.removeExtension( file.getName() ) )
+                .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( file.getFileName().toString() ) + "\"" )
                 .build();
     }
 

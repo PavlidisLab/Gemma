@@ -88,7 +88,6 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.URI;
@@ -1108,11 +1107,11 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg, // Required
             @QueryParam("filter") @DefaultValue("false") Boolean filterData // Optional, default false
     ) {
-        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        ExpressionExperiment ee = expressionExperimentService.thawLite( datasetArgService.getEntity( datasetArg ) );
         try {
-            ee = expressionExperimentService.thawLite( ee );
-            File file = expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, filterData ).orElse( null );
-            if ( file == null || !file.exists() ) {
+            java.nio.file.Path file = expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, filterData )
+                    .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have processed vectors." ) );
+            if ( !Files.exists( file ) ) {
                 throw new NotFoundException( String.format( DatasetsWebService.ERROR_DATA_FILE_NOT_AVAILABLE, ee.getShortName() ) );
             }
             return this.outputFile( file );
@@ -1150,7 +1149,7 @@ public class DatasetsWebService {
         }
         StreamingOutput stream = ( output ) -> expressionDataFileService.writeProcessedExpressionData( ee, new OutputStreamWriter( output ) );
         return Response.ok( stream )
-                .header( "Content-Disposition", String.format( "attachment; filename=%d_%s_expmat.unfilt.data.txt", ee.getId(), ee.getShortName() ) )
+                .header( "Content-Disposition", String.format( "attachment; filename=\"%d_%s_expmat.unfilt.data.txt\"", ee.getId(), ee.getShortName() ) )
                 .build();
     }
 
@@ -1186,7 +1185,7 @@ public class DatasetsWebService {
         }
         StreamingOutput stream = ( output ) -> expressionDataFileService.writeRawExpressionData( ee, qt, new OutputStreamWriter( output ) );
         return Response.ok( stream )
-                .header( "Content-Disposition", String.format( "attachment; filename=%d_%s_expmat.unfilt.raw.data.txt", ee.getId(), ee.getShortName() ) )
+                .header( "Content-Disposition", String.format( "attachment; filename=\"%d_%s_expmat.unfilt.raw.data.txt\"", ee.getId(), ee.getShortName() ) )
                 .build();
     }
 
@@ -1207,12 +1206,12 @@ public class DatasetsWebService {
         }
         java.nio.file.Path p;
         try {
-            p = expressionDataFileService.writeOrLocateTabularSingleCellExpressionData( ee, qt );
+            p = expressionDataFileService.writeOrLocateTabularSingleCellExpressionData( ee, qt, true, 30, false );
         } catch ( IOException e ) {
             throw new InternalServerErrorException( e );
         }
         return Response.ok( p )
-                .header( "Content-Disposition", "attachment; filename=" + p.getFileName() )
+                .header( "Content-Disposition", "attachment; filename=\"" + p.getFileName() + "\"" )
                 .build();
     }
 
@@ -1236,8 +1235,8 @@ public class DatasetsWebService {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         try {
             ee = expressionExperimentService.thawLite( ee );
-            File file = expressionDataFileService.writeOrLocateDesignFile( ee, false );
-            if ( file == null || !file.exists() ) {
+            java.nio.file.Path file = expressionDataFileService.writeOrLocateDesignFile( ee, false );
+            if ( file == null || !Files.exists( file ) ) {
                 throw new NotFoundException( String.format( DatasetsWebService.ERROR_DESIGN_FILE_NOT_AVAILABLE, ee.getShortName() ) );
             }
             return this.outputFile( file );
@@ -1651,11 +1650,11 @@ public class DatasetsWebService {
         }
     }
 
-    private Response outputFile( File file ) throws IOException {
+    private Response outputFile( java.nio.file.Path file ) throws IOException {
         // we remove the .gz extension because we use HTTP Content-Encoding
-        return Response.ok( new GZIPInputStream( Files.newInputStream( file.toPath() ) ) )
+        return Response.ok( new GZIPInputStream( Files.newInputStream( file ) ) )
                 .header( "Content-Encoding", "gzip" )
-                .header( "Content-Disposition", "attachment; filename=" + FilenameUtils.removeExtension( file.getName() ) )
+                .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( file.getFileName().toString() ) + "\"" )
                 .build();
     }
 

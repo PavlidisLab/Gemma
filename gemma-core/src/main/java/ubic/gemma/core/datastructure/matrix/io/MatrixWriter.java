@@ -50,14 +50,40 @@ import static ubic.gemma.core.datastructure.matrix.io.TsvUtils.format;
 public class MatrixWriter implements BulkExpressionDataMatrixWriter {
 
     @Override
-    public void write( BulkExpressionDataMatrix<?> matrix, Writer writer ) throws IOException {
-        write( writer, matrix, null, true, false );
+    public int write( BulkExpressionDataMatrix<?> matrix, Writer writer ) throws IOException {
+        return this.write( matrix, null, writer );
     }
 
-    public void write( Writer writer, BulkExpressionDataMatrix<?> matrix,
-            @Nullable Map<CompositeSequence, Collection<Gene>> geneAnnotations, boolean writeHeader, boolean orderByDesign )
-            throws IOException {
-        this.write( writer, matrix, geneAnnotations, writeHeader, true, true, orderByDesign );
+    /**
+     * @param writer          the writer to use
+     * @param matrix          the matrix
+     * @param geneAnnotations Map of composite sequences to an array of delimited strings: [probe name,genes symbol,
+     *                        gene Name] -- these include the "|" to indicate multiple genes, and originate in the platform annotation
+     *                        files.
+     * @throws IOException when the write failed
+     */
+    public int write( BulkExpressionDataMatrix<?> matrix, @Nullable Map<CompositeSequence, Collection<Gene>> geneAnnotations, Writer writer ) throws IOException {
+        int rows = matrix.rows();
+
+        List<BioMaterial> bioMaterials = this.getBioMaterialsInRequestedOrder( matrix, false );
+        this.writeHeader( bioMaterials, matrix, geneAnnotations, writer );
+
+        for ( int j = 0; j < rows; j++ ) {
+            CompositeSequence probeForRow = matrix.getDesignElementForRow( j );
+            writer.append( format( probeForRow.getName() ) ).append( "\t" );
+            this.writeSequence( probeForRow, writer );
+            if ( geneAnnotations != null ) {
+                this.writeGeneInfo( probeForRow, geneAnnotations, writer );
+            }
+            // print the data.
+            for ( BioMaterial bioMaterial : bioMaterials ) {
+                int i = matrix.getColumnIndex( bioMaterial );
+                writer.append( "\t" ).append( format( matrix.get( j, i ) ) );
+            }
+            writer.append( "\n" );
+        }
+        log.debug( "Done writing" );
+        return rows;
     }
 
     /**
@@ -67,49 +93,23 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
      *                        gene Name] -- these include the "|" to indicate multiple genes, and originate in the platform annotation
      *                        files.
      * @param matrix          the matrix to write
-     * @param writeHeader     the writer header
      * @param writer          the writer to use
      * @throws IOException when the write failed
      * @see ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl#readAnnotationFileAsString(ArrayDesign)
      */
-    public void writeWithStringifiedGeneAnnotations( Writer writer, BulkExpressionDataMatrix<?> matrix,
-            Map<CompositeSequence, String[]> geneAnnotations, boolean writeHeader ) throws IOException {
-        this.writeWithStringifiedGeneAnnotations( writer, matrix, geneAnnotations, writeHeader, true, true, true );
-    }
-
-    /**
-     * @param geneAnnotations Map of composite sequences to an array of delimited strings: [probe name,genes symbol,
-     *                        gene Name] -- these include the "|" to indicate multiple genes, and originate in the platform annotation
-     *                        files.
-     * @param writeHeader     the writer header
-     * @param matrix          the matrix
-     * @param orderByDesign   if true, the columns are in the order defined by
-     *                        ExpressionDataMatrixColumnSort.orderByExperimentalDesign
-     * @param writeGeneInfo   whether to write gene info
-     * @param writer          the writer to use
-     * @param writeSequence   whether to write sequence
-     * @throws IOException when the write failed
-     */
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public void writeWithStringifiedGeneAnnotations( Writer writer, BulkExpressionDataMatrix<?> matrix,
-            @Nullable Map<CompositeSequence, String[]> geneAnnotations, boolean writeHeader, boolean writeSequence,
-            boolean writeGeneInfo, boolean orderByDesign ) throws IOException {
+    public int writeWithStringifiedGeneAnnotations( Writer writer, BulkExpressionDataMatrix<?> matrix, @Nullable Map<CompositeSequence, String[]> geneAnnotations ) throws IOException {
         int rows = matrix.rows();
 
-        List<BioMaterial> orderedBioMaterials = this.getBioMaterialsInRequestedOrder( matrix, orderByDesign );
+        List<BioMaterial> orderedBioMaterials = this.getBioMaterialsInRequestedOrder( matrix, true );
 
-        StringBuffer buf = new StringBuffer();
-        if ( writeHeader ) {
-            this.writeHeader( orderedBioMaterials, matrix, geneAnnotations, writeSequence, writeGeneInfo, buf );
-        }
+        this.writeHeader( orderedBioMaterials, matrix, geneAnnotations, writer );
 
         for ( int j = 0; j < rows; j++ ) {
             CompositeSequence probeForRow = matrix.getDesignElementForRow( j );
-            buf.append( format( probeForRow.getName() ) ).append( "\t" );
-            this.writeSequence( writeSequence, buf, probeForRow );
-
-            if ( writeGeneInfo ) {
-                this.addGeneInfoFromStrings( buf, probeForRow, geneAnnotations );
+            writer.append( format( probeForRow.getName() ) ).append( "\t" );
+            this.writeSequence( probeForRow, writer );
+            if ( geneAnnotations != null ) {
+                this.writeStringifiedGeneInfo( probeForRow, geneAnnotations, writer );
             }
 
             int orderedBioMLastIndex = orderedBioMaterials.size() - 1;
@@ -117,73 +117,21 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
             for ( BioMaterial bioMaterial : orderedBioMaterials ) {
                 int i = matrix.getColumnIndex( bioMaterial );
                 Object val = matrix.get( j, i );
-                buf.append( format( val ) );
+                writer.append( format( val ) );
                 // Don't want line to contain a trailing unnecessary tab
                 if ( orderedBioMaterials.indexOf( bioMaterial ) != orderedBioMLastIndex ) {
-                    buf.append( "\t" );
+                    writer.append( "\t" );
                 }
             }
 
-            buf.append( "\n" );
+            writer.append( "\n" );
 
         }
-        writer.write( buf.toString() );
-        writer.flush();
         log.debug( "Done writing" );
+        return rows;
     }
 
-    /**
-     * @param orderByDesign   if true, the columns are in the order defined by
-     *                        ExpressionDataMatrixColumnSort.orderByExperimentalDesign
-     * @param writeSequence   whether to write sequence
-     * @param writer          the writer to use
-     * @param writeGeneInfo   whether to write gene info
-     * @param matrix          the matrix
-     * @param writeHeader     the writer header
-     * @param geneAnnotations Map of composite sequences to an array of delimited strings: [probe name,genes symbol,
-     *                        gene Name] -- these include the "|" to indicate multiple genes, and originate in the platform annotation
-     *                        files.
-     * @throws IOException when the write failed
-     */
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public void write( Writer writer, BulkExpressionDataMatrix<?> matrix,
-            @Nullable Map<CompositeSequence, Collection<Gene>> geneAnnotations, boolean writeHeader, boolean writeSequence,
-            boolean writeGeneInfo, boolean orderByDesign ) throws IOException {
-        int rows = matrix.rows();
-
-        List<BioMaterial> bioMaterials = this.getBioMaterialsInRequestedOrder( matrix, orderByDesign );
-
-        StringBuffer buf = new StringBuffer();
-        if ( writeHeader ) {
-            this.writeHeader( bioMaterials, matrix, geneAnnotations, writeSequence, writeGeneInfo, buf );
-        }
-
-        for ( int j = 0; j < rows; j++ ) {
-            CompositeSequence probeForRow = matrix.getDesignElementForRow( j );
-            buf.append( format( probeForRow.getName() ) ).append( "\t" );
-            this.writeSequence( writeSequence, buf, probeForRow );
-
-            if ( writeGeneInfo ) {
-                this.addGeneInfo( buf, probeForRow, geneAnnotations );
-            }
-
-            // print the data.
-            for ( BioMaterial bioMaterial : bioMaterials ) {
-                buf.append( "\t" );
-
-                int i = matrix.getColumnIndex( bioMaterial );
-                buf.append( format( matrix.get( j, i ) ) );
-            }
-
-            buf.append( "\n" );
-
-        }
-        writer.write( buf.toString() );
-        writer.flush();
-        log.debug( "Done writing" );
-    }
-
-    public void writeJSON( Writer writer, BulkExpressionDataMatrix<?> matrix ) throws IOException {
+    public int writeJSON( Writer writer, BulkExpressionDataMatrix<?> matrix ) throws IOException {
         int columns = matrix.columns();
         int rows = matrix.rows();
 
@@ -216,6 +164,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
         }
         buf.append( "\n]}" );
         writer.write( buf.toString() );
+        return rows;
     }
 
     private List<BioMaterial> getBioMaterialsInRequestedOrder( BulkExpressionDataMatrix<?> matrix, boolean orderByDesign ) {
@@ -235,29 +184,24 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
      * @see ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl#readAnnotationFileAsString(ArrayDesign)
      */
     private void writeHeader( List<BioMaterial> orderedBioMaterials, BulkExpressionDataMatrix<?> matrix,
-            @Nullable Map<CompositeSequence, ?> geneAnnotations, boolean writeSequence, boolean writeGeneInfo,
-            StringBuffer buf ) {
+            @Nullable Map<CompositeSequence, ?> geneAnnotations, Writer writer ) throws IOException {
 
+        StringBuffer buf = new StringBuffer();
         ExpressionDataWriterUtils.appendBaseHeader( matrix.getExpressionExperiment(), false, buf );
-        buf.append( "Probe" );
-        if ( writeSequence )
-            buf.append( "\tSequence" );
+        writer.append( buf );
 
-        if ( writeGeneInfo && geneAnnotations != null && !geneAnnotations.isEmpty() ) {
-            buf.append( "\tGeneSymbol\tGeneName" );
-            Object o = geneAnnotations.values().iterator().next();
-            if ( o instanceof Collection /* genes */ || ( ( String[] ) o ).length > 4 ) {
-                buf.append( "\tGemmaId\tNCBIid" );
-            }
+        writer.append( "Probe\tSequence" );
+
+        if ( geneAnnotations != null ) {
+            writer.append( "\tGeneSymbol\tGeneName\tGemmaId\tNCBIid" );
         }
 
         for ( BioMaterial bioMaterial : orderedBioMaterials ) {
             int i = matrix.getColumnIndex( bioMaterial );
-            buf.append( "\t" );
             String colName = ExpressionDataWriterUtils.constructBioAssayName( matrix, i );
-            buf.append( format( colName ) );
+            writer.append( "\t" ).append( format( colName ) );
         }
-        buf.append( "\n" );
+        writer.append( "\n" );
     }
 
     /**
@@ -268,10 +212,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
      *                        The array of annotations is like this: [probe name,genes symbol, gene Name, gemma gene id, ncbi id]
      * @see ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl#readAnnotationFileAsString(ArrayDesign)
      */
-    private void addGeneInfoFromStrings( StringBuffer buf, CompositeSequence probe,
-            @Nullable Map<CompositeSequence, String[]> geneAnnotations ) {
-        if ( geneAnnotations == null || geneAnnotations.isEmpty() )
-            return;
+    private void writeStringifiedGeneInfo( CompositeSequence probe, Map<CompositeSequence, String[]> geneAnnotations, Writer buf ) throws IOException {
         if ( geneAnnotations.containsKey( probe ) ) {
 
             String[] geneStrings = geneAnnotations.get( probe );
@@ -321,52 +262,44 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
      * @param geneAnnotations Map of composite sequence ids to genes. If null, nothing will be added to the text. If
      *                        there are no genes for the probe, then blanks will be added.
      */
-    private void addGeneInfo( StringBuffer buf, CompositeSequence probe,
-            @Nullable Map<CompositeSequence, Collection<Gene>> geneAnnotations ) {
-        if ( geneAnnotations == null || geneAnnotations.isEmpty() )
-            return;
+    private void writeGeneInfo( CompositeSequence probe, Map<CompositeSequence, Collection<Gene>> geneAnnotations, Writer writer ) throws IOException {
         Collection<Gene> genes = geneAnnotations.get( probe );
-        if ( genes != null && !genes.isEmpty() ) {
-
-            if ( genes.size() == 1 ) {
-                // simple case, avoid some overhead.
-                Gene g = genes.iterator().next();
-                buf.append( format( g.getOfficialSymbol() ) ).append( "\t" )
-                        .append( format( g.getOfficialName() ) ).append( "\t" )
-                        .append( format( g.getId() ) ).append( "\t" )
-                        .append( format( g.getNcbiGeneId() ) );
-            } else {
-                List<String> gs = new ArrayList<>();
-                List<String> gn = new ArrayList<>();
-                List<String> ids = new ArrayList<>();
-                List<String> ncbiIds = new ArrayList<>();
-                for ( Gene gene : genes ) {
-                    gs.add( format( gene.getOfficialSymbol() ) );
-                    gn.add( format( gene.getOfficialName() ) );
-                    ids.add( format( gene.getId() ) );
-                    ncbiIds.add( format( gene.getNcbiGeneId() ) );
-                }
-
-                buf.append( StringUtils.join( gs, SUB_DELIMITER ) );
-                buf.append( "\t" );
-                buf.append( StringUtils.join( gn, SUB_DELIMITER ) );
-                buf.append( "\t" );
-                buf.append( StringUtils.join( ids, SUB_DELIMITER ) );
-                buf.append( "\t" );
-                buf.append( StringUtils.join( ncbiIds, SUB_DELIMITER ) );
-            }
+        if ( genes == null || genes.isEmpty() ) {
+            writer.append( "\t\t\t" );
+        } else if ( genes.size() == 1 ) {
+            // simple case, avoid some overhead.
+            Gene g = genes.iterator().next();
+            writer.append( format( g.getOfficialSymbol() ) ).append( "\t" )
+                    .append( format( g.getOfficialName() ) ).append( "\t" )
+                    .append( format( g.getId() ) ).append( "\t" )
+                    .append( format( g.getNcbiGeneId() ) );
         } else {
-            buf.append( "\t\t\t" );
+            List<String> gs = new ArrayList<>();
+            List<String> gn = new ArrayList<>();
+            List<String> ids = new ArrayList<>();
+            List<String> ncbiIds = new ArrayList<>();
+            for ( Gene gene : genes ) {
+                gs.add( format( gene.getOfficialSymbol() ) );
+                gn.add( format( gene.getOfficialName() ) );
+                ids.add( format( gene.getId() ) );
+                ncbiIds.add( format( gene.getNcbiGeneId() ) );
+            }
+            writer
+                    .append( StringUtils.join( gs, SUB_DELIMITER ) )
+                    .append( "\t" )
+                    .append( StringUtils.join( gn, SUB_DELIMITER ) )
+                    .append( "\t" )
+                    .append( StringUtils.join( ids, SUB_DELIMITER ) )
+                    .append( "\t" )
+                    .append( StringUtils.join( ncbiIds, SUB_DELIMITER ) );
         }
     }
 
-    private void writeSequence( boolean writeSequence, StringBuffer buf, CompositeSequence probeForRow ) {
-        if ( writeSequence ) {
-            BioSequence biologicalCharacteristic = probeForRow.getBiologicalCharacteristic();
-            if ( biologicalCharacteristic != null )
-                buf.append( format( biologicalCharacteristic.getName() ) );
+    private void writeSequence( CompositeSequence probeForRow, Writer buf ) throws IOException {
+        BioSequence biologicalCharacteristic = probeForRow.getBiologicalCharacteristic();
+        if ( biologicalCharacteristic != null )
+            buf.append( format( biologicalCharacteristic.getName() ) );
 
-            buf.append( "\t" );
-        }
+        buf.append( "\t" );
     }
 }

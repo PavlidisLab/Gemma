@@ -12,20 +12,20 @@ import java.io.Writer;
 public interface BulkExpressionDataMatrixWriter extends ExpressionDataMatrixWriter {
 
     @Override
-    default void write( ExpressionDataMatrix<?> matrix, Writer writer ) throws IOException {
+    default int write( ExpressionDataMatrix<?> matrix, Writer writer ) throws IOException {
         Assert.isInstanceOf( BulkExpressionDataMatrix.class, matrix );
-        write( ( BulkExpressionDataMatrix<?> ) matrix, writer );
+        return write( ( BulkExpressionDataMatrix<?> ) matrix, writer );
     }
 
-    void write( BulkExpressionDataMatrix<?> matrix, Writer writer ) throws IOException;
+    int write( BulkExpressionDataMatrix<?> matrix, Writer writer ) throws IOException;
 
     @Override
-    default void write( ExpressionDataMatrix<?> matrix, OutputStream stream ) throws IOException {
+    default int write( ExpressionDataMatrix<?> matrix, OutputStream stream ) throws IOException {
         Assert.isInstanceOf( BulkExpressionDataMatrix.class, matrix );
-        write( ( BulkExpressionDataMatrix<?> ) matrix, stream );
+        return write( ( BulkExpressionDataMatrix<?> ) matrix, stream );
     }
 
-    default void write( BulkExpressionDataMatrix<?> matrix, OutputStream stream ) throws IOException {
-        write( matrix, new OutputStreamWriter( stream ) );
+    default int write( BulkExpressionDataMatrix<?> matrix, OutputStream stream ) throws IOException {
+        return write( matrix, new OutputStreamWriter( stream ) );
     }
 }

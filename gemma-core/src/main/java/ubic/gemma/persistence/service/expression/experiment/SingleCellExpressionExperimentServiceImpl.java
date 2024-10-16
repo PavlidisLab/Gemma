@@ -85,8 +85,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
-    public Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt ) {
-        return expressionExperimentDao.getNumberOfNonZeroesBySample(ee, qt );
+    public Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt, int fetchSize ) {
+        return expressionExperimentDao.getNumberOfNonZeroesBySample(ee, qt, fetchSize );
     }
 
     @Override

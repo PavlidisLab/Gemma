@@ -54,19 +54,19 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
     private boolean useEnsemblIds = false;
 
     @Override
-    public void write( SingleCellExpressionDataMatrix<?> matrix, Writer stream ) throws IOException {
+    public int write( SingleCellExpressionDataMatrix<?> matrix, Writer stream ) throws IOException {
         throw new UnsupportedOperationException( "MEX is a binary format as it bundles the files in a TAR archive." );
     }
 
     @Override
-    public void write( SingleCellExpressionDataMatrix<?> matrix, OutputStream stream ) throws IOException {
-        write( matrix, null, stream );
+    public int write( SingleCellExpressionDataMatrix<?> matrix, OutputStream stream ) throws IOException {
+        return write( matrix, null, stream );
     }
 
     /**
      * Write a MEX matrix as a TAR archive to the given output stream.
      */
-    public void write( SingleCellExpressionDataMatrix<?> matrix, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, OutputStream stream ) throws IOException {
+    public int write( SingleCellExpressionDataMatrix<?> matrix, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, OutputStream stream ) throws IOException {
         try ( TarArchiveOutputStream aos = new TarArchiveOutputStream( stream ) ) {
             List<BioAssay> bioAssays = matrix.getSingleCellDimension().getBioAssays();
             for ( int i = 0; i < bioAssays.size(); i++ ) {
@@ -97,6 +97,32 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
                 }
             }
         }
+        return matrix.rows();
+    }
+
+    /**
+     * Write a matrix to a directory.
+     */
+    public int write( SingleCellExpressionDataMatrix<?> matrix, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Path outputDir ) throws IOException {
+        if ( Files.exists( outputDir ) ) {
+            throw new IllegalArgumentException( "Output directory " + outputDir + " already exists." );
+        }
+        List<BioAssay> bioAssays = matrix.getSingleCellDimension().getBioAssays();
+        for ( int i = 0; i < bioAssays.size(); i++ ) {
+            BioAssay ba = bioAssays.get( i );
+            Path sampleDir = outputDir.resolve( ba.getName() );
+            Files.createDirectories( sampleDir );
+            try ( OutputStream baos = new GZIPOutputStream( Files.newOutputStream( sampleDir.resolve( "barcodes.tsv.gz" ) ) ) ) {
+                writeBarcodes( matrix.getSingleCellDimension(), i, baos );
+            }
+            try ( OutputStream baos = new GZIPOutputStream( Files.newOutputStream( sampleDir.resolve( "features.tsv.gz" ) ) ) ) {
+                writeFeatures( matrix, cs2gene, baos );
+            }
+            try ( OutputStream baos = new GZIPOutputStream( Files.newOutputStream( sampleDir.resolve( "matrix.mtx.gz" ) ) ) ) {
+                writeMatrix( matrix, i, baos );
+            }
+        }
+        return matrix.rows();
     }
 
     /**
@@ -107,7 +133,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
      * @param nnzBySample the number of non-zeroes by sample
      * @param cs2gene     a mapping of design elements to their corresponding gene(s)
      */
-    public void write( Stream<SingleCellExpressionDataVector> vectors, int numVecs, Map<BioAssay, Long> nnzBySample, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Path outputDir ) throws IOException {
+    public int write( Stream<SingleCellExpressionDataVector> vectors, int numVecs, Map<BioAssay, Long> nnzBySample, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Path outputDir ) throws IOException {
         if ( Files.exists( outputDir ) ) {
             throw new IllegalArgumentException( "Output directory " + outputDir + " already exists." );
         }
@@ -142,7 +168,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
             for ( int i = 0; i < dimension.getBioAssays().size(); i++ ) {
                 BioAssay ba = dimension.getBioAssays().get( i );
                 int numberOfCells = dimension.getNumberOfCellsBySample( i );
-                matrices[i] = new MatrixVectorWriter( new GZIPOutputStream( Files.newOutputStream( outputDir.resolve( ba.getName() ).resolve( "matrix.mtx.gz" ) ) ) );
+                matrices[i] = new MatrixVectorWriter( new GZIPOutputStream( Files.newOutputStream( outputDir.resolve( ba.getName() ).resolve( "matrix.mtx.gz" ) ), 8192 ) );
                 MatrixInfo.MatrixField field;
                 switch ( firstVec.getQuantitationType().getRepresentation() ) {
                     case DOUBLE:
@@ -168,6 +194,8 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
                 writeFeature( vec.getDesignElement(), cs2gene, false, features );
                 writeVector( vec, row++, matrices );
             }
+
+            return row;
         } finally {
             if ( features != null ) {
                 features.close();
