@@ -216,6 +216,7 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
      * @param arrayDesign The id of the array design
      * @return The Set of Taxons for array design.
      */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<Taxon> getTaxa( ArrayDesign arrayDesign );
 
     Taxon getTaxon( Long id );
