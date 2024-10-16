@@ -152,6 +152,10 @@ public abstract class AbstractAutoSeekingCLI<T extends Auditable> extends Abstra
         }
 
         this.autoSeek = commandLine.hasOption( AUTO_OPTION_NAME );
+
+        if ( commandLine.hasOption( FORCE_OPTION ) ) {
+            this.force = true;
+        }
     }
 
     /**
