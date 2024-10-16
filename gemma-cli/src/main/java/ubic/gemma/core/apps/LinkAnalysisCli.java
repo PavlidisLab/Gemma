@@ -330,18 +330,15 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
+    protected void doAuthenticatedWork() throws Exception {
         if ( initializeFromOldData ) {
             log.info( "Initializing links from old data for " + taxon );
             linkAnalysisPersister.initializeLinksFromOldData( taxon );
-            return;
         } else if ( updateNodeDegree ) {
             // we waste some time here getting the experiments.
             this.loadTaxon();
             coexpressionService.updateNodeDegrees( taxon );
-        }
-
-        if ( this.dataFileName != null ) {
+        } else if ( this.dataFileName != null ) {
             /*
              * Read vectors from file. Could provide as a matrix, but it's easier to provide vectors (less mess in later
              * code)
@@ -396,40 +393,74 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
             this.linkAnalysisService.processVectors( taxon, dataVectors, filterConfig, linkAnalysisConfig );
         } else {
-
-            /*
-             * Do in decreasing order of size, to help capture more links earlier - reduces fragmentation.
-             */
-            List<BioAssaySet> sees = new ArrayList<>( expressionExperiments );
-
-            if ( expressionExperiments.size() > 1 ) {
-                log.info( "Sorting data sets by number of samples, doing large data sets first." );
-
-                Collection<ExpressionExperimentValueObject> vos = eeService
-                        .loadValueObjectsByIds( IdentifiableUtils.getIds( expressionExperiments ), true );
-                final Map<Long, ExpressionExperimentValueObject> idMap = IdentifiableUtils.getIdMap( vos );
-
-                sees.sort( ( o1, o2 ) -> {
-
-                    ExpressionExperimentValueObject e1 = idMap.get( o1.getId() );
-                    ExpressionExperimentValueObject e2 = idMap.get( o2.getId() );
-
-                    assert e1 != null : "No valueobject: " + e2;
-                    assert e2 != null : "No valueobject: " + e1;
-
-                    return -e1.getBioMaterialCount().compareTo( e2.getBioMaterialCount() );
-
-                } );
-            }
-
-            for ( BioAssaySet ee : sees ) {
-                if ( ee instanceof ExpressionExperiment ) {
-                    this.processExperiment( ( ExpressionExperiment ) ee );
-                } else {
-                    throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
-                }
-            }
+            super.doAuthenticatedWork();
         }
+    }
+
+    @Override
+    protected Collection<BioAssaySet> preprocessBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
+        /*
+         * Do in decreasing order of size, to help capture more links earlier - reduces fragmentation.
+         */
+        List<BioAssaySet> sees = new ArrayList<>( expressionExperiments );
+
+        if ( expressionExperiments.size() > 1 ) {
+            log.info( "Sorting data sets by number of samples, doing large data sets first." );
+
+            Collection<ExpressionExperimentValueObject> vos = eeService
+                    .loadValueObjectsByIds( IdentifiableUtils.getIds( expressionExperiments ), true );
+            final Map<Long, ExpressionExperimentValueObject> idMap = IdentifiableUtils.getIdMap( vos );
+
+            sees.sort( ( o1, o2 ) -> {
+
+                ExpressionExperimentValueObject e1 = idMap.get( o1.getId() );
+                ExpressionExperimentValueObject e2 = idMap.get( o2.getId() );
+
+                assert e1 != null : "No valueobject: " + e2;
+                assert e2 != null : "No valueobject: " + e1;
+
+                return -e1.getBioMaterialCount().compareTo( e2.getBioMaterialCount() );
+
+            } );
+        }
+
+        return sees;
+    }
+
+    @Override
+    protected void processExpressionExperiment( ExpressionExperiment ee ) {
+        ee = eeService.thaw( ee );
+
+        if ( this.deleteAnalyses ) {
+            log.info( "======= Deleting coexpression analysis (if any) for: " + ee );
+            if ( !linkAnalysisPersister.deleteAnalyses( ee ) ) {
+                throw new RuntimeException( "Seems to not have any eligible link analysis to remove" );
+            }
+            return;
+        }
+
+        /*
+         * If we're not using the database, always run it.
+         */
+        if ( linkAnalysisConfig.isUseDb() && this.noNeedToRun( ee, LinkAnalysisEvent.class ) ) {
+            return;
+        }
+
+        /*
+         * Note that auditing is handled by the service.
+         */
+        StopWatch sw = new StopWatch();
+        sw.start();
+
+        if ( linkAnalysisConfig.isTextOut() ) {
+            linkAnalysisConfig.setOutputFile( new File( FileTools.cleanForFileName( ee.getShortName() ) + "-links.txt" ) );
+        }
+
+        log.info( "==== Starting: [" + ee.getShortName() + "] ======" );
+
+        linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
+        log.info( "==== Done: [" + ee.getShortName() + "] ======" );
+        log.info( "Time elapsed: " + String.format( "%.2f", sw.getTime() / 1000.0 / 60.0 ) + " minutes" );
     }
 
     private void buildFilterConfigOptions( Options options ) {
@@ -520,41 +551,4 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         qtype.setIsRatio( false ); // this shouldn't get used, just filled in to keep everybody happy.
         return qtype;
     }
-
-    private void processExperiment( ExpressionExperiment ee ) {
-        ee = eeService.thaw( ee );
-
-        if ( this.deleteAnalyses ) {
-            log.info( "======= Deleting coexpression analysis (if any) for: " + ee );
-            if ( !linkAnalysisPersister.deleteAnalyses( ee ) ) {
-                throw new RuntimeException( "Seems to not have any eligible link analysis to remove" );
-            }
-            return;
-        }
-
-        /*
-         * If we're not using the database, always run it.
-         */
-        if ( linkAnalysisConfig.isUseDb() && this.noNeedToRun( ee, LinkAnalysisEvent.class ) ) {
-            return;
-        }
-
-        /*
-         * Note that auditing is handled by the service.
-         */
-        StopWatch sw = new StopWatch();
-        sw.start();
-
-        if ( linkAnalysisConfig.isTextOut() ) {
-            linkAnalysisConfig.setOutputFile( new File( FileTools.cleanForFileName( ee.getShortName() ) + "-links.txt" ) );
-        }
-
-        log.info( "==== Starting: [" + ee.getShortName() + "] ======" );
-
-        linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
-        log.info( "==== Done: [" + ee.getShortName() + "] ======" );
-        log.info( "Time elapsed: " + String.format( "%.2f", sw.getTime() / 1000.0 / 60.0 ) + " minutes" );
-
-    }
-
 }

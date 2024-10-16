@@ -73,7 +73,7 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
     @Override
     protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
-        if ( expressionExperiments.size() > 1 && StringUtils.isNotBlank( outFileName ) ) {
+        if ( StringUtils.isNotBlank( outFileName ) ) {
             throw new IllegalArgumentException( "Output file name can only be used for single experiment output" );
         }
         super.processBioAssaySets( expressionExperiments );

@@ -216,14 +216,13 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     @Override
     protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
-        if ( type != null && expressionExperiments.size() > 1 ) {
+        if ( type != null ) {
             throw new IllegalArgumentException( "You can only specify the analysis type when analyzing a single experiment" );
         }
-        if ( subsetFactorId != null && expressionExperiments.size() > 1 ) {
+        if ( subsetFactorId != null ) {
             throw new IllegalArgumentException( "You can only specify the subset factor when analyzing a single experiment" );
         }
-
-        if ( !factorIds.isEmpty() && expressionExperiments.size() > 1 ) {
+        if ( !factorIds.isEmpty() ) {
             throw new IllegalArgumentException( "You can only specify the factors when analyzing a single experiment" );
         }
         super.processBioAssaySets( expressionExperiments );

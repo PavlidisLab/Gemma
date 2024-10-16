@@ -104,6 +104,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     private boolean useReferencesIfPossible = false;
 
     /**
+     * Abort processing experiments if an error occurs.
+     */
+    private boolean abortOnError = false;
+
+    /**
      * Process all experiments.
      */
     private boolean all;
@@ -203,9 +208,9 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     }
 
     @Override
-    protected final void doAuthenticatedWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         // intentionally a TreeSet over IDs, to prevent proxy initialization via hashCode()
-        Set<BioAssaySet> expressionExperiments = new TreeSet<>( Comparator.comparing( BioAssaySet::getId ) );
+        Collection<BioAssaySet> expressionExperiments = new TreeSet<>( Comparator.comparing( BioAssaySet::getId ) );
 
         if ( all ) {
             if ( useReferencesIfPossible ) {
@@ -266,32 +271,41 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
             this.removeTroubledExperiments( expressionExperiments );
         }
 
+        expressionExperiments = preprocessBioAssaySets( expressionExperiments );
+
         if ( expressionExperiments.isEmpty() ) {
             throw new RuntimeException( "No expression experiments matched the given options." );
         } else if ( expressionExperiments.size() == 1 ) {
             BioAssaySet ee = expressionExperiments.iterator().next();
             log.info( "Final dataset: " + experimentToString( ee ) );
+            processBioAssaySet( expressionExperiments.iterator().next() );
         } else {
             log.info( String.format( "Final list: %d expression experiments", expressionExperiments.size() ) );
+            processBioAssaySets( expressionExperiments );
         }
-
-        processBioAssaySets( expressionExperiments );
     }
 
-    private boolean successObjectAdded, errorObjectAdded;
+    /**
+     * Pre-process BioAssays.
+     */
+    protected Collection<BioAssaySet> preprocessBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
+        return expressionExperiments;
+    }
 
+    /**
+     * Process multiple {@link BioAssaySet}.
+     * <p>
+     * This only called if more than one experiment was found.
+     */
     protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
         for ( BioAssaySet bas : expressionExperiments ) {
-            successObjectAdded = false;
-            errorObjectAdded = false;
             try {
                 processBioAssaySet( bas );
-                if ( !successObjectAdded ) {
-                    addSuccessObject( bas );
-                }
             } catch ( Exception e ) {
-                if ( !errorObjectAdded ) {
-                    addErrorObject( bas, e );
+                if ( abortOnError ) {
+                    throw e;
+                } else {
+                    log.error( "An error occurred while processing " + bas + ".", e );
                 }
             }
         }
@@ -324,48 +338,18 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     /**
      * Process an {@link ExpressionExperimentSubSet}.
      */
-    protected void processExpressionExperimentSubSet( ExpressionExperimentSubSet expressionExperimentSubSet ) {
+    protected void processExpressionExperimentSubSet( @SuppressWarnings("unused") ExpressionExperimentSubSet expressionExperimentSubSet ) {
         throw new UnsupportedOperationException( "This command line does support experiment subsets." );
     }
 
     /**
      * Process other kinds of {@link BioAssaySet} that are neither experiment nor subset.
      */
-    protected void processOtherBioAssaySet( BioAssaySet bas ) {
+    protected void processOtherBioAssaySet( @SuppressWarnings("unused") BioAssaySet bas ) {
         throw new UnsupportedOperationException( "This command line does support other kinds of BioAssaySet." );
     }
 
-    @Override
-    protected void addSuccessObject( Object successObject, String message ) {
-        super.addSuccessObject( successObject, message );
-        successObjectAdded = true;
-    }
-
-    @Override
-    protected void addSuccessObject( Object successObject ) {
-        super.addSuccessObject( successObject );
-        successObjectAdded = true;
-    }
-
-    @Override
-    protected void addErrorObject( @Nullable Object errorObject, String message ) {
-        super.addErrorObject( errorObject, message );
-        errorObjectAdded = true;
-    }
-
-    @Override
-    protected void addErrorObject( @Nullable Object errorObject, String message, Throwable throwable ) {
-        super.addErrorObject( errorObject, message, throwable );
-        errorObjectAdded = true;
-    }
-
-    @Override
-    protected void addErrorObject( @Nullable Object errorObject, Exception exception ) {
-        super.addErrorObject( errorObject, exception );
-        errorObjectAdded = true;
-    }
-
-    private void excludeFromFile( Set<BioAssaySet> expressionExperiments, Path excludeEeFileName ) throws IOException {
+    private void excludeFromFile( Collection<BioAssaySet> expressionExperiments, Path excludeEeFileName ) throws IOException {
         assert !expressionExperiments.isEmpty();
         Collection<ExpressionExperiment> excludeExperiments;
         excludeExperiments = this.readExpressionExperimentListFile( excludeEeFileName );
@@ -540,7 +524,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     }
 
     /**
-     * Set this to true to allow reference to be retrieved instead of actual entities.
+     * Set this to allow reference to be retrieved instead of actual entities.
      * <p>
      * This only works for entities retrieved by ID.
      * <p>
@@ -551,6 +535,13 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      */
     protected void setUseReferencesIfPossible() {
         this.useReferencesIfPossible = true;
+    }
+
+    /**
+     * Set this to stop processing experiments if an error occurs.
+     */
+    protected void setAbortOnError() {
+        this.abortOnError = true;
     }
 
     /**
@@ -569,7 +560,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     }
 
     @Override
-    protected boolean noNeedToRun( ExpressionExperiment auditable, Class<? extends AuditEventType> eventClass ) {
+    protected boolean noNeedToRun( ExpressionExperiment auditable, @Nullable Class<? extends AuditEventType> eventClass ) {
         if ( super.noNeedToRun( auditable, eventClass ) ) {
             return true;
         }

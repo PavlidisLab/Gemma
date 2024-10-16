@@ -88,23 +88,26 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
     protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
-        // This can be done for multiple experiments under some conditions; we get this one just  to test for some multi-platform situations
-        Collection<ArrayDesign> arrayDesignsUsed = this.eeService
-                .getArrayDesignsUsed( expressionExperiments.iterator().next() );
-
         if ( StringUtils.isNotBlank( aptFile ) ) {
-            if ( expressionExperiments.size() > 1 ) {
-                throw new IllegalArgumentException(
-                        "Can't use " + AffyDataFromCelCli.APT_FILE_OPT + " unless you are doing just one experiment" );
-            }
+            throw new IllegalArgumentException(
+                    "Can't use " + AffyDataFromCelCli.APT_FILE_OPT + " unless you are doing just one experiment" );
+        }
+        super.processBioAssaySets( expressionExperiments );
+    }
 
+    @Override
+    protected void processExpressionExperiment( ExpressionExperiment ee ) {
+
+        // This can be done for multiple experiments under some conditions; we get this one just  to test for some multi-platform situations
+        if ( StringUtils.isNotBlank( aptFile ) ) {
             if ( this.celchip != null ) {
                 throw new UnsupportedOperationException( "celchip not supported with aptFile yet" );
             }
 
-            ExpressionExperiment thawedEe = ( ExpressionExperiment ) expressionExperiments.iterator().next();
-            thawedEe = this.eeService.thawLite( thawedEe );
+            ee = this.eeService.thawLite( ee );
 
+            Collection<ArrayDesign> arrayDesignsUsed = this.eeService
+                    .getArrayDesignsUsed( ee );
             if ( arrayDesignsUsed.size() > 1 ) {
                 throw new IllegalArgumentException( "Cannot use " + AffyDataFromCelCli.APT_FILE_OPT
                         + " for experiment that uses multiple platforms" );
@@ -118,17 +121,13 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
 
             log.info( "Loading data from " + aptFile );
             try {
-                serv.addAffyDataFromAPTOutput( thawedEe, aptFile );
+                serv.addAffyDataFromAPTOutput( ee, aptFile );
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
             }
-        } else {
-            super.processBioAssaySets( expressionExperiments );
+            return;
         }
-    }
 
-    @Override
-    protected void processExpressionExperiment( ExpressionExperiment ee ) {
         ee = this.eeService.thawLite( ee );
         Collection<ArrayDesign> adsUsed = this.eeService.getArrayDesignsUsed( ee );
 
