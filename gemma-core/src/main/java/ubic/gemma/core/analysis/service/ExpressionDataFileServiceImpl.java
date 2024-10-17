@@ -318,6 +318,9 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             log.info( "Will write tabular data for " + qt + " to " + dest + "." );
             doWriteTabularSingleCellExpressionData( ee, qt, useStreaming, fetchSize, writer );
             return dest;
+        } catch ( Exception e ) {
+            Files.deleteIfExists( dest );
+            throw e;
         }
     }
 
@@ -371,10 +374,20 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 log.info( destDir + " already exists, removing..." );
                 PathUtils.deleteDirectory( destDir );
             }
-            return writer.write( vectors.peek( createStreamMonitor( numVecs ) ), ( int ) numVecs, nnzBySample, cs2gene, destDir );
+            try {
+                return writer.write( vectors.peek( createStreamMonitor( numVecs ) ), ( int ) numVecs, nnzBySample, cs2gene, destDir );
+            } catch ( Exception e ) {
+                PathUtils.deleteDirectory( destDir );
+                throw e;
+            }
         } else {
             SingleCellExpressionDataMatrix<Double> matrix = singleCellExpressionExperimentService.getSingleCellExpressionDataMatrix( ee, qt );
-            return writer.write( matrix, cs2gene, destDir );
+            try {
+                return writer.write( matrix, cs2gene, destDir );
+            } catch ( Exception e ) {
+                PathUtils.deleteDirectory( destDir );
+                throw e;
+            }
         }
     }
 
@@ -412,6 +425,9 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         log.info( "Creating differential expression analysis archive file: " + f );
         try ( OutputStream stream = Files.newOutputStream( f ) ) {
             new DiffExAnalysisResultSetWriter().write( analysis, geneAnnotations, config, hasSignificantBatchConfound, stream );
+        } catch ( Exception e ) {
+            Files.deleteIfExists( f );
+            throw e;
         }
     }
 
@@ -498,8 +514,11 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         ExpressionDataFileServiceImpl.log.info( "Creating new coexpression data file: " + f.toAbsolutePath() );
 
         // Write coexpression data to file (zipped of course)
-        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( f ) ) ) ) {
+        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( f ) ), StandardCharsets.UTF_8 ) ) {
             new CoexpressionWriter().write( ee, geneLinks, writer );
+        } catch ( Exception e ) {
+            Files.deleteIfExists( f );
+            throw e;
         }
         return f;
     }
@@ -557,8 +576,11 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         if ( check != null && this.checkFileOkToReturn( forceWrite, f, check ) ) {
             return Optional.of( f );
         }
-        try ( Writer writer = Files.newBufferedWriter( f ) ) {
+        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( f ) ), StandardCharsets.UTF_8 ) ) {
             writeDesignMatrix( ee, writer );
+        } catch ( Exception e ) {
+            Files.deleteIfExists( f );
+            throw e;
         }
         return Optional.of( f );
     }
@@ -785,7 +807,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         return fullFilePath;
     }
 
-
     /**
      * @param compress if true, file will be output in GZIP format.
      */
@@ -806,16 +827,22 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     private int writeJson( Path file, Collection<BulkExpressionDataVector> vectors ) throws IOException {
         BulkExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
-        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( file ) ) ) ) {
+        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( file ) ), StandardCharsets.UTF_8 ) ) {
             MatrixWriter matrixWriter = new MatrixWriter();
             return matrixWriter.writeJSON( writer, expressionDataMatrix );
+        } catch ( Exception e ) {
+            Files.deleteIfExists( file );
+            throw e;
         }
     }
 
     private int writeJson( Path file, BulkExpressionDataMatrix<?> expressionDataMatrix ) throws IOException {
-        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( file ) ) ) ) {
+        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( file ) ), StandardCharsets.UTF_8 ) ) {
             MatrixWriter matrixWriter = new MatrixWriter();
             return matrixWriter.writeJSON( writer, expressionDataMatrix );
+        } catch ( Exception e ) {
+            Files.deleteIfExists( file );
+            throw e;
         }
     }
 
@@ -826,15 +853,11 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     private int writeMatrix( Path file, Map<CompositeSequence, String[]> geneAnnotations,
             BulkExpressionDataMatrix<?> expressionDataMatrix, boolean gzipped ) throws IOException {
-        MatrixWriter matrixWriter = new MatrixWriter();
-        if ( gzipped ) {
-            try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( file ) ) ) ) {
-                return matrixWriter.writeWithStringifiedGeneAnnotations( writer, expressionDataMatrix, geneAnnotations );
-            }
-        } else {
-            try ( Writer writer = new OutputStreamWriter( Files.newOutputStream( file ) ) ) {
-                return matrixWriter.writeWithStringifiedGeneAnnotations( writer, expressionDataMatrix, geneAnnotations );
-            }
+        try ( Writer writer = new OutputStreamWriter( gzipped ? new GZIPOutputStream( Files.newOutputStream( file ) ) : Files.newOutputStream( file ), StandardCharsets.UTF_8 ) ) {
+            return new MatrixWriter().writeWithStringifiedGeneAnnotations( writer, expressionDataMatrix, geneAnnotations );
+        } catch ( Exception e ) {
+            Files.deleteIfExists( file );
+            throw e;
         }
     }
 
