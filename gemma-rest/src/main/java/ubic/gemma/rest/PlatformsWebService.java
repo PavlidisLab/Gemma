@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
@@ -34,6 +35,7 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
 import ubic.gemma.rest.util.MediaTypeUtils;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
@@ -47,7 +49,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.regex.Pattern;
-import java.util.zip.GZIPInputStream;
 
 import static ubic.gemma.rest.util.Responders.paginate;
 import static ubic.gemma.rest.util.Responders.respond;
@@ -59,6 +60,7 @@ import static ubic.gemma.rest.util.Responders.respond;
  */
 @Service
 @Path("/platforms")
+@CommonsLog
 public class PlatformsWebService {
 
     private static final String ERROR_ANNOTATION_FILE_NOT_AVAILABLE = "Annotation file for platform %s does not exist or can not be accessed.";
@@ -269,6 +271,7 @@ public class PlatformsWebService {
      *                    is more efficient. Only platforms that user has access to will be available.
      * @return the content of the annotation file of the given platform.
      */
+    @GZIP(alreadyCompressed = true)
     @GET
     @Path("/{platform}/annotations")
     @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
@@ -281,20 +284,7 @@ public class PlatformsWebService {
     public Response getPlatformAnnotations( // Params:
             @PathParam("platform") PlatformArg<?> platformArg // Optional, default null
     ) {
-        try {
-            return outputAnnotationFile( arrayDesignArgService.getEntity( platformArg ) );
-        } catch ( IOException e ) {
-            throw new InternalServerErrorException( e );
-        }
-    }
-
-    /**
-     * Creates a response with the annotation file for given array design
-     *
-     * @param arrayDesign the platform to fetch and output the annotation file for.
-     * @return a Response object containing the annotation file.
-     */
-    private Response outputAnnotationFile( ArrayDesign arrayDesign ) throws IOException {
+        ArrayDesign arrayDesign = arrayDesignArgService.getEntity( platformArg );
         String fileName = arrayDesign.getShortName().replaceAll( Pattern.quote( "/" ), "_" )
                 + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
@@ -305,13 +295,12 @@ public class PlatformsWebService {
                 // To speed things up, we don't delete other files
                 annotationFileService.create( arrayDesign, true, false ); // include GO by default.
             } catch ( IOException e ) {
+                log.error( "Failed to generate annotation file for " + arrayDesign, e );
                 throw new NotFoundException( String.format( ERROR_ANNOTATION_FILE_NOT_AVAILABLE, arrayDesign.getShortName() ) );
             }
         }
-        return Response.ok( new GZIPInputStream( Files.newInputStream( file ) ) )
-                .header( "Content-Encoding", "gzip" )
+        return Response.ok( file.toFile() )
                 .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( file.getFileName().toString() ) + "\"" )
                 .build();
     }
-
 }

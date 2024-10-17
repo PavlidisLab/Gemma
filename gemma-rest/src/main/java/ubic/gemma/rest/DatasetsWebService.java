@@ -98,7 +98,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-import java.util.zip.GZIPInputStream;
 
 import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectType;
 import static ubic.gemma.persistence.util.IdentifiableUtils.toIdentifiableSet;
@@ -1092,6 +1091,7 @@ public class DatasetsWebService {
      *                   is more efficient. Only datasets that user has access to will be available.
      * @param filterData return filtered the expression data.
      */
+    @GZIP(alreadyCompressed = true)
     @GET
     @Path("/{dataset}/data")
     @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
@@ -1118,7 +1118,7 @@ public class DatasetsWebService {
      * The payload is transparently compressed via a <code>Content-Encoding</code> header and streamed to avoid dumping
      * the whole payload in memory.
      */
-    @GZIP
+    @GZIP(alreadyCompressed = true)
     @GET
     @Path("/{dataset}/data/processed")
     @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
@@ -1140,7 +1140,7 @@ public class DatasetsWebService {
             try {
                 java.nio.file.Path p = expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, filtered )
                         .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have any processed vectors." ) );
-                return Response.ok( new GZIPInputStream( Files.newInputStream( p ) ) )
+                return Response.ok( p.toFile() )
                         .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( p.getFileName().toString() ) + "\"" )
                         .build();
             } catch ( IOException e ) {
@@ -1164,7 +1164,7 @@ public class DatasetsWebService {
      * The payload is transparently compressed via a <code>Content-Encoding</code> header and streamed to avoid dumping
      * the whole payload in memory.
      */
-    @GZIP
+    @GZIP(alreadyCompressed = true)
     @GET
     @Path("/{dataset}/data/raw")
     @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
@@ -1190,7 +1190,7 @@ public class DatasetsWebService {
         }
         try {
             java.nio.file.Path p = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, false );
-            return Response.ok( new GZIPInputStream( Files.newInputStream( p ) ) )
+            return Response.ok( p.toFile() )
                     .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( p.getFileName().toString() ) + "\"" )
                     .build();
         } catch ( IOException e ) {
@@ -1202,7 +1202,7 @@ public class DatasetsWebService {
         }
     }
 
-    @GZIP
+    @GZIP(alreadyCompressed = true)
     @GET
     @Path("/{dataset}/data/singleCell")
     @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
@@ -1219,7 +1219,7 @@ public class DatasetsWebService {
         }
         try {
             java.nio.file.Path p = expressionDataFileService.writeOrLocateTabularSingleCellExpressionData( ee, qt, true, 30, false );
-            return Response.ok( new GZIPInputStream( Files.newInputStream( p ) ) )
+            return Response.ok( p.toFile() )
                     .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( p.getFileName().toString() ) + "\"" )
                     .build();
         } catch ( IOException e ) {
@@ -1237,7 +1237,7 @@ public class DatasetsWebService {
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.
      */
-    @GZIP
+    @GZIP(alreadyCompressed = true)
     @GET
     @Path("/{dataset}/design")
     @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
@@ -1257,7 +1257,7 @@ public class DatasetsWebService {
                 throw new NotFoundException( String.format( DatasetsWebService.ERROR_DESIGN_FILE_NOT_AVAILABLE, ee.getShortName() ) );
             }
             // we remove the .gz extension because we use HTTP Content-Encoding
-            return Response.ok( new GZIPInputStream( Files.newInputStream( file ) ) )
+            return Response.ok( file.toFile() )
                     .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( file.getFileName().toString() ) + "\"" )
                     .build();
         } catch ( IOException e ) {
