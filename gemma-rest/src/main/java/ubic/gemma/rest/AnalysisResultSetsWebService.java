@@ -52,7 +52,11 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.OutputStreamWriter;
-import java.util.*;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 
 import static ubic.gemma.rest.util.MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8;
 import static ubic.gemma.rest.util.MediaTypeUtils.negotiate;
@@ -252,11 +256,7 @@ public class AnalysisResultSetsWebService {
         }
         final Map<Long, Set<Gene>> resultId2Genes = expressionAnalysisResultSetService.loadResultIdToGenesMap( ears );
         Baseline baseline = expressionAnalysisResultSetService.getBaseline( ears );
-        return outputStream -> {
-            try ( OutputStreamWriter writer = new OutputStreamWriter( outputStream ) ) {
-                expressionAnalysisResultSetFileService.writeTsv( ears, baseline, resultId2Genes, writer );
-            }
-        };
+        return outputStream -> expressionAnalysisResultSetFileService.writeTsv( ears, baseline, resultId2Genes, new OutputStreamWriter( outputStream, StandardCharsets.UTF_8 ) );
     }
 
     private PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject paginateResults( DifferentialExpressionAnalysisResultSetValueObject resultSet, @Nullable Double threshold, int offset, int limit, long totalElements ) {
