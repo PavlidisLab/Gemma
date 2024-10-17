@@ -20,6 +20,7 @@ package ubic.gemma.core.datastructure.matrix;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.util.Assert;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporterImpl;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -64,6 +65,8 @@ public class ExperimentalDesignWriter {
      */
     public void write( Writer writer, ExpressionExperiment ee, Collection<BioAssay> bioAssays, boolean writeBaseHeader,
             boolean writeHeader ) throws IOException {
+        Assert.isTrue( ee.getExperimentalDesign() != null && ee.getExperimentalDesign().getExperimentalFactors().isEmpty(),
+                ee + " does not have an experimental design." );
 
         ExperimentalDesign ed = ee.getExperimentalDesign();
 
@@ -75,7 +78,7 @@ public class ExperimentalDesignWriter {
         for ( BioAssay bioAssay : bioAssays ) {
             BioMaterial bm = bioAssay.getSampleUsed();
             if ( !bioMaterials.containsKey( bm ) ) {
-                bioMaterials.put( bm, new HashSet<BioAssay>() );
+                bioMaterials.put( bm, new HashSet<>() );
             }
             bioMaterials.get( bm ).add( bioAssay );
         }

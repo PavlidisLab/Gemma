@@ -540,7 +540,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
                 .hasEncoding( "gzip" );
         verify( expressionExperimentService ).hasProcessedExpressionData( eq( ee ) );
-        verify( expressionDataFileService ).writeProcessedExpressionData( eq( ee ), any() );
+        verify( expressionDataFileService ).writeProcessedExpressionData( eq( ee ), anyBoolean(), any() );
     }
 
     @Test
@@ -590,6 +590,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         qt.setId( 12L );
         when( quantitationTypeService.load( 12L ) ).thenReturn( qt );
         when( quantitationTypeService.loadByIdAndVectorType( 12L, ee, RawExpressionDataVector.class ) ).thenReturn( qt );
+        when( expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, false ) )
+                .thenThrow( new IOException() );
         Response res = target( "/datasets/1/data/raw" )
                 .queryParam( "quantitationType", "12" ).request().get();
         verify( quantitationTypeService ).loadByIdAndVectorType( 12L, ee, RawExpressionDataVector.class );

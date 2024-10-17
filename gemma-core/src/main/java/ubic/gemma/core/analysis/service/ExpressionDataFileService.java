@@ -16,6 +16,7 @@ package ubic.gemma.core.analysis.service;
 
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
 import ubic.gemma.core.datastructure.matrix.io.TsvUtils;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -24,7 +25,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
@@ -37,8 +37,6 @@ import java.util.stream.Collectors;
 /**
  * @author paul
  */
-@SuppressWarnings("unused") // Possible external use
-@ParametersAreNonnullByDefault
 public interface ExpressionDataFileService {
 
     String DISCLAIMER = Arrays.stream( TsvUtils.GEMMA_CITATION_NOTICE ).map( line -> "# " + line + "\n" ).collect( Collectors.joining() );
@@ -65,6 +63,24 @@ public interface ExpressionDataFileService {
      * Locate a metadata file.
      */
     Path getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type );
+
+    /**
+     * Locate an data file.
+     * @see #writeOrLocateRawExpressionDataFile(ExpressionExperiment, QuantitationType, boolean)
+     */
+    Optional<Path> getDataFile( ExpressionExperiment ee, boolean filtered, ExpressionExperimentDataFileType type );
+
+    /**
+     * Locate an data file.
+     * @see #writeOrLocateRawExpressionDataFile(ExpressionExperiment, QuantitationType, boolean)
+     */
+    Path getDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type );
+
+    /**
+     * Locate an experimental design file.
+     * @see #writeOrLocateDesignFile(ExpressionExperiment, boolean)
+     */
+    Optional<Path> getExperimentalDesignFile( ExpressionExperiment ee );
 
     /**
      * Create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
@@ -155,7 +171,15 @@ public interface ExpressionDataFileService {
      * @param writer the destination for the raw expression data
      * @throws IOException if operations with the writer fails
      */
-    int writeProcessedExpressionData( ExpressionExperiment ee, Writer writer ) throws IOException;
+    int writeProcessedExpressionData( ExpressionExperiment ee, boolean filtered, Writer writer ) throws FilteringException, IOException;
+
+    /**
+     * Writes out the experimental design for the given experiment.
+     * <p>
+     * The bioassays (col 0) matches the header row of the data matrix printed out by the {@link MatrixWriter}.
+     * @see ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter
+     */
+    void writeDesignMatrix( ExpressionExperiment ee, Writer writer ) throws IOException;
 
     /**
      * Write or located the coexpression data file for a given experiment
@@ -196,9 +220,10 @@ public interface ExpressionDataFileService {
      *
      * @param ee         the experiment
      * @param forceWrite force re-write even if file already exists and is up to date
-     * @return file
+     * @return a file or empty if the experiment does not have a design
+     * @see #writeDesignMatrix(ExpressionExperiment, Writer)
      */
-    Path writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException;
+    Optional<Path> writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException;
 
     /**
      * Locate or create the differential expression data file(s) for a given experiment.

@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
@@ -42,6 +43,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -53,6 +55,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
@@ -87,11 +90,14 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     private static final Log log = LogFactory.getLog( ExpressionDataFileServiceImpl.class.getName() );
 
-    private static final String SC_MEX_SUFFIX = "";
-    private static final String SC_TABULAR_SUFFIX = ".tsv.gz";
-    private static final String DATA_ARCHIVE_FILE_SUFFIX = ".zip";
-    private static final String DATA_FILE_SUFFIX = ".data.txt.gz";
-    private static final String JSON_FILE_SUFFIX = ".data.json.gz";
+    // for single-cell vectors
+    private static final String SC_DATA_SUFFIX = ".scdata";
+    private static final String MEX_SC_DATA_SUFFIX = SC_DATA_SUFFIX;
+    private static final String TABULAR_SC_DATA_SUFFIX = SC_DATA_SUFFIX + ".tsv.gz";
+    // for bulk (raw or processed vectors)
+    private static final String BULK_DATA_SUFFIX = ".data";
+    private static final String TABULAR_BULK_DATA_FILE_SUFFIX = BULK_DATA_SUFFIX + ".txt.gz";
+    private static final String JSON_BULK_DATA_FILE_SUFFIX = BULK_DATA_SUFFIX + ".json.gz";
 
     private static final String MSG_FILE_EXISTS = " File (%s) exists, not regenerating";
     private static final String MSG_FILE_FORCED = "Forcing file (%s) regeneration";
@@ -128,17 +134,17 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         //       Gemma
 
         // data files.
-        this.deleteAndLog( dataDir.resolve( getDataOutputFilename( ee, true, ExpressionDataFileServiceImpl.DATA_FILE_SUFFIX ) ) );
-        this.deleteAndLog( dataDir.resolve( getDataOutputFilename( ee, false, ExpressionDataFileServiceImpl.DATA_FILE_SUFFIX ) ) );
-        this.deleteAndLog( dataDir.resolve( getDataOutputFilename( ee, true, ExpressionDataFileServiceImpl.JSON_FILE_SUFFIX ) ) );
-        this.deleteAndLog( dataDir.resolve( getDataOutputFilename( ee, false, ExpressionDataFileServiceImpl.JSON_FILE_SUFFIX ) ) );
+        this.deleteAndLog( dataDir.resolve( getDataOutputFilename( ee, true, ExpressionDataFileServiceImpl.TABULAR_BULK_DATA_FILE_SUFFIX ) ) );
+        this.deleteAndLog( dataDir.resolve( getDataOutputFilename( ee, false, ExpressionDataFileServiceImpl.TABULAR_BULK_DATA_FILE_SUFFIX ) ) );
+        this.deleteAndLog( dataDir.resolve( getDataOutputFilename( ee, true, ExpressionDataFileServiceImpl.JSON_BULK_DATA_FILE_SUFFIX ) ) );
+        this.deleteAndLog( dataDir.resolve( getDataOutputFilename( ee, false, ExpressionDataFileServiceImpl.JSON_BULK_DATA_FILE_SUFFIX ) ) );
 
         // per-QT output file
         for ( QuantitationType qt : expressionExperimentService.getQuantitationTypes( ee ) ) {
-            this.deleteAndLog( dataDir.resolve( getDataOutputFilename( ee, qt, SC_MEX_SUFFIX ) ) );
-            this.deleteAndLog( dataDir.resolve( getDataOutputFilename( ee, qt, SC_TABULAR_SUFFIX ) ) );
-            this.deleteAndLog( dataDir.resolve( getDataOutputFilename( ee, qt, DATA_FILE_SUFFIX ) ) );
-            this.deleteAndLog( dataDir.resolve( getDataOutputFilename( ee, qt, JSON_FILE_SUFFIX ) ) );
+            this.deleteAndLog( dataDir.resolve( getDataOutputFilename( ee, qt, MEX_SC_DATA_SUFFIX ) ) );
+            this.deleteAndLog( dataDir.resolve( getDataOutputFilename( ee, qt, TABULAR_SC_DATA_SUFFIX ) ) );
+            this.deleteAndLog( dataDir.resolve( getDataOutputFilename( ee, qt, TABULAR_BULK_DATA_FILE_SUFFIX ) ) );
+            this.deleteAndLog( dataDir.resolve( getDataOutputFilename( ee, qt, JSON_BULK_DATA_FILE_SUFFIX ) ) );
         }
 
         // diff ex files
@@ -225,6 +231,66 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Optional<Path> getDataFile( ExpressionExperiment ee, boolean filtered, ExpressionExperimentDataFileType type ) {
+        if ( !expressionExperimentService.hasProcessedExpressionData( ee ) ) {
+            return Optional.empty();
+        }
+        String suffix;
+        switch ( type ) {
+            case TABULAR:
+                suffix = TABULAR_BULK_DATA_FILE_SUFFIX;
+                break;
+            case JSON:
+                suffix = JSON_BULK_DATA_FILE_SUFFIX;
+                break;
+            default:
+                throw new IllegalArgumentException( "Unsupported data file type: " + type );
+        }
+        return Optional.of( dataDir.resolve( getDataOutputFilename( ee, filtered, suffix ) ) );
+    }
+
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
+
+    @Override
+    @Transactional(readOnly = true)
+    public Path getDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type ) {
+        Class<? extends DataVector> dataType = quantitationTypeService.getDataVectorType( qt );
+        String suffix;
+        switch ( type ) {
+            case TABULAR:
+                if ( BulkExpressionDataVector.class.isAssignableFrom( dataType ) ) {
+                    suffix = TABULAR_BULK_DATA_FILE_SUFFIX;
+                } else if ( SingleCellExpressionDataVector.class.isAssignableFrom( dataType ) ) {
+                    suffix = TABULAR_SC_DATA_SUFFIX;
+                } else {
+                    throw new IllegalArgumentException( "Unknown vector type: " + dataType );
+                }
+                break;
+            case JSON:
+                Assert.isAssignable( BulkExpressionDataVector.class, dataType );
+                suffix = JSON_BULK_DATA_FILE_SUFFIX;
+                break;
+            case MEX:
+                Assert.isAssignable( SingleCellExpressionDataVector.class, dataType );
+                suffix = MEX_SC_DATA_SUFFIX;
+                break;
+            default:
+                throw new IllegalArgumentException( "Unsupported data file type: " + type );
+        }
+        return dataDir.resolve( getDataOutputFilename( ee, qt, suffix ) );
+    }
+
+    @Override
+    public Optional<Path> getExperimentalDesignFile( ExpressionExperiment ee ) {
+        if ( ee.getExperimentalDesign() == null ) {
+            return Optional.empty();
+        }
+        return Optional.of( dataDir.resolve( getDesignFileName( ee ) ) );
+    }
+
+    @Override
     public Optional<Path> writeProcessedExpressionDataFile( ExpressionExperiment ee, boolean filtered, String fileName, boolean compress )
             throws IOException, FilteringException {
         return this.writeDataFile( ee, filtered, Paths.get( fileName ), compress );
@@ -244,7 +310,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Override
     @Transactional(readOnly = true)
     public Path writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) throws IOException {
-        Path dest = dataDir.resolve( getDataOutputFilename( ee, qt, SC_TABULAR_SUFFIX ) );
+        Path dest = getOutputFile( getDataOutputFilename( ee, qt, TABULAR_SC_DATA_SUFFIX ) );
         if ( !forceWrite && Files.exists( dest ) ) {
             return dest;
         }
@@ -315,7 +381,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Override
     @Transactional(readOnly = true)
     public Path writeOrLocateMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) throws IOException {
-        Path dest = dataDir.resolve( getDataOutputFilename( ee, qt, SC_MEX_SUFFIX ) );
+        Path dest = getOutputFile( getDataOutputFilename( ee, qt, MEX_SC_DATA_SUFFIX ) );
         if ( !forceWrite && Files.exists( dest ) ) {
             return dest;
         }
@@ -387,16 +453,25 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
+    public void writeDesignMatrix( ExpressionExperiment ee, Writer writer ) throws IOException {
+        ee = expressionExperimentService.thawLite( ee );
+        if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+            throw new IllegalStateException( "No experimental design for " + ee );
+        }
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
+        edWriter.write( writer, ee, true );
+    }
+
+    @Override
     @Transactional(readOnly = true)
-    public int writeProcessedExpressionData( ExpressionExperiment ee, Writer writer ) throws IOException {
+    public int writeProcessedExpressionData( ExpressionExperiment ee, boolean filtered, Writer writer ) throws FilteringException, IOException {
         ee = expressionExperimentService.find( ee );
         if ( ee == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment has been removed." );
         }
-        ExpressionDataDoubleMatrix matrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
-        if ( matrix == null ) {
-            throw new IllegalArgumentException( "ExpressionExperiment has no processed data vectors." );
-        }
+        ExpressionExperiment finalEe = ee;
+        ExpressionDataDoubleMatrix matrix = getDataMatrix( ee, filtered )
+                .orElseThrow( () -> new IllegalArgumentException( finalEe + " has no processed data vectors." ) );
         Set<ArrayDesign> ads = matrix.getDesignElements().stream()
                 .map( CompositeSequence::getArrayDesign )
                 .collect( Collectors.toSet() );
@@ -434,9 +509,9 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         // randomize file name if temporary in case of access by more than one user at once
         String result;
         if ( filtered ) {
-            result = getDataOutputFilename( ee, true, ExpressionDataFileServiceImpl.DATA_FILE_SUFFIX );
+            result = getDataOutputFilename( ee, true, ExpressionDataFileServiceImpl.TABULAR_BULK_DATA_FILE_SUFFIX );
         } else {
-            result = getDataOutputFilename( ee, false, ExpressionDataFileServiceImpl.DATA_FILE_SUFFIX );
+            result = getDataOutputFilename( ee, false, ExpressionDataFileServiceImpl.TABULAR_BULK_DATA_FILE_SUFFIX );
         }
         Path f = this.getOutputFile( result );
         Date check = expressionExperimentService.getLastArrayDesignUpdate( ee );
@@ -450,7 +525,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public Path writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException {
-        Path f = this.getOutputFile( this.getDataOutputFilename( ee, type, DATA_FILE_SUFFIX ) );
+        Path f = this.getOutputFile( this.getDataOutputFilename( ee, type, TABULAR_BULK_DATA_FILE_SUFFIX ) );
         if ( !forceWrite && Files.exists( f ) ) {
             ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
             return f;
@@ -460,8 +535,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 .info( "Creating new quantitation type expression data file: " + f );
 
         Collection<BulkExpressionDataVector> vectors = rawAndProcessedExpressionDataVectorService.findAndThaw( type );
-        Collection<ArrayDesign> arrayDesigns = this.getArrayDesigns( vectors );
-        Map<CompositeSequence, String[]> geneAnnotations = this.getGeneAnnotationsAsStringsByProbe( arrayDesigns );
+        Map<CompositeSequence, String[]> geneAnnotations = this.getGeneAnnotationsAsStringsByProbe( this.getArrayDesigns( vectors ) );
 
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( "No vectors for " + type );
@@ -473,16 +547,20 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public Path writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException {
+    public Optional<Path> writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException {
         ee = expressionExperimentService.thawLite( ee );
+        if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+            return Optional.empty();
+        }
         Path f = this.getOutputFile( this.getDesignFileName( ee ) );
         Date check = ee.getCurationDetails().getLastUpdated();
-
         if ( check != null && this.checkFileOkToReturn( forceWrite, f, check ) ) {
-            return f;
+            return Optional.of( f );
         }
-
-        return this.writeDesignMatrix( f, ee );
+        try ( Writer writer = Files.newBufferedWriter( f ) ) {
+            writeDesignMatrix( ee, writer );
+        }
+        return Optional.of( f );
     }
 
     @Override
@@ -505,7 +583,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Override
     public Optional<Path> writeOrLocateJSONProcessedExpressionDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException, IOException {
         // randomize file name if temporary in case of access by more than one user at once
-        Path f = this.getOutputFile( getDataOutputFilename( ee, filtered, ExpressionDataFileServiceImpl.JSON_FILE_SUFFIX ) );
+        Path f = this.getOutputFile( getDataOutputFilename( ee, filtered, ExpressionDataFileServiceImpl.JSON_BULK_DATA_FILE_SUFFIX ) );
         if ( !forceWrite && Files.exists( f ) ) {
             ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
             return Optional.of( f );
@@ -524,7 +602,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public Path writeOrLocateJSONRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException {
-        Path f = getOutputFile( getDataOutputFilename( ee, type, ExpressionDataFileServiceImpl.JSON_FILE_SUFFIX ) );
+        Path f = getOutputFile( getDataOutputFilename( ee, type, ExpressionDataFileServiceImpl.JSON_BULK_DATA_FILE_SUFFIX ) );
         if ( !forceWrite && Files.exists( f ) ) {
             ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
             return f;
@@ -599,7 +677,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     private String getDesignFileName( ExpressionExperiment ee ) {
         return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_expdesign"
-                + ExpressionDataFileServiceImpl.DATA_FILE_SUFFIX;
+                + ExpressionDataFileServiceImpl.TABULAR_BULK_DATA_FILE_SUFFIX;
     }
 
     private String getDiffExArchiveFileName( DifferentialExpressionAnalysis diff ) {
@@ -617,7 +695,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
         return experimentAnalyzed.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_diffExpAnalysis"
                 + ( diff.getId() != null ? "_" + diff.getId() : "" )
-                + ExpressionDataFileServiceImpl.DATA_ARCHIVE_FILE_SUFFIX;
+                + ".zip";
     }
 
     private Path getDiffExpressionAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, boolean forceCreate ) throws IOException {
@@ -679,20 +757,21 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     /**
      * Obtain the filename for writing a specific QT.
-     * @return Name, without full path.
      */
-    private String getDataOutputFilename( @SuppressWarnings("unused") ExpressionExperiment ee, QuantitationType type, String suffix ) {
-        // TODO: include the EE ID in the filename
-        return type.getId() + "_" + FileTools.cleanForFileName( type.getName() ) + suffix;
-    }
-
-    private String getCoexpressionDataFilename( ExpressionExperiment ee ) {
-        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_coExp"
-                + ExpressionDataFileServiceImpl.DATA_FILE_SUFFIX;
+    private String getDataOutputFilename( ExpressionExperiment ee, QuantitationType type, String suffix ) {
+        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_" + type.getId() + FileTools.cleanForFileName( type.getName() ) + "_expmat.unfilt" + suffix;
     }
 
     /**
-     * Resolve a filename in the {@link #dataDir} directory.
+     * Obtain the filename for writing coexpression data.
+     */
+    private String getCoexpressionDataFilename( ExpressionExperiment ee ) {
+        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_coExp"
+                + ExpressionDataFileServiceImpl.TABULAR_BULK_DATA_FILE_SUFFIX;
+    }
+
+    /**
+     * Resolve a filename in the {@link #dataDir} directory and create its parent directories.
      * @param filename without the path - that is, just the name of the file
      * @return File, with location in the appropriate target directory.
      */
@@ -723,20 +802,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         } else {
             return Optional.empty();
         }
-    }
-
-    /**
-     * Writes out the experimental design for the given experiment. The bioassays (col 0) matches match the header row
-     * of the data matrix printed out by the {@link MatrixWriter}.
-     *
-     * @return file that was written
-     */
-    private Path writeDesignMatrix( Path file, ExpressionExperiment expressionExperiment ) throws IOException {
-        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( file ) ) ) ) {
-            ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
-            edWriter.write( writer, expressionExperiment, true );
-        }
-        return file;
     }
 
     private int writeJson( Path file, Collection<BulkExpressionDataVector> vectors ) throws IOException {

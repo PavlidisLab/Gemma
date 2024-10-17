@@ -317,7 +317,7 @@ public class ExpressionExperimentDataFetchController {
 
             ee = expressionExperimentService.thawLite( ee );
 
-            Path f = null;
+            Path f;
 
             /* write out the file using text format */
             if ( usedFormat.equals( "text" ) ) {
@@ -325,7 +325,9 @@ public class ExpressionExperimentDataFetchController {
                 /* the design file */
                 if ( eedId != null ) {
                     try {
-                        f = expressionDataFileService.writeOrLocateDesignFile( ee, false );
+                        ExpressionExperiment finalEe = ee;
+                        f = expressionDataFileService.writeOrLocateDesignFile( ee, false )
+                                .orElseThrow( () -> new IllegalStateException( finalEe + " does not have an experimental design" ) );
                     } catch ( IOException e ) {
                         throw new RuntimeException( e );
                     }
@@ -342,7 +344,9 @@ public class ExpressionExperimentDataFetchController {
                     } else {
 
                         try {
-                            f = expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, filtered ).orElse( null );
+                            ExpressionExperiment finalEe1 = ee;
+                            f = expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, filtered )
+                                    .orElseThrow( () -> new IllegalStateException( finalEe1 + " does not have an experimental design" ) );
                         } catch ( FilteringException e ) {
                             throw new IllegalStateException( "The expression experiment data matrix could not be filtered for " + ee + ".", e );
                         } catch ( IOException e ) {
@@ -354,8 +358,7 @@ public class ExpressionExperimentDataFetchController {
 
             }
             /* json format */
-            else if ( usedFormat.equals( "json" ) ) {
-
+            else {
                 if ( qType != null ) {
                     try {
                         f = expressionDataFileService.writeOrLocateJSONRawExpressionDataFile( ee, qType, false );
@@ -364,7 +367,9 @@ public class ExpressionExperimentDataFetchController {
                     }
                 } else {
                     try {
-                        f = expressionDataFileService.writeOrLocateJSONProcessedExpressionDataFile( ee, false, filtered ).orElse( null );
+                        ExpressionExperiment finalEe2 = ee;
+                        f = expressionDataFileService.writeOrLocateJSONProcessedExpressionDataFile( ee, false, filtered )
+                                .orElseThrow( () -> new IllegalStateException( finalEe2 + " does not have processed vectors." ) );
                     } catch ( FilteringException e ) {
                         throw new IllegalStateException( "The expression experiment data matrix could not be filtered for " + ee + ".", e );
                     } catch ( IOException e ) {
