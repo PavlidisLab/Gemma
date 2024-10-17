@@ -781,7 +781,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * Obtain the filename for writing a specific QT.
      */
     private String getDataOutputFilename( ExpressionExperiment ee, QuantitationType type, String suffix ) {
-        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_" + type.getId() + FileTools.cleanForFileName( type.getName() ) + "_expmat.unfilt" + suffix;
+        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_" + type.getId() + "_" + FileTools.cleanForFileName( type.getName() ) + "_expmat.unfilt" + suffix;
     }
 
     /**
