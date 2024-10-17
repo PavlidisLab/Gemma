@@ -1128,13 +1128,13 @@ public class DatasetsWebService {
                     @ApiResponse(content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
                             schema = @Schema(type = "string", format = "binary"),
                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-processed-data.tsv") })),
-                    @ApiResponse(responseCode = "204", description = "The dataset expression matrix is empty."),
-                    @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
+                    @ApiResponse(responseCode = "204", description = "The dataset expression matrix is empty. Only applicable if filter is set to true."),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public Response getDatasetProcessedExpression( @PathParam("dataset") DatasetArg<?> datasetArg, @QueryParam("filtered") @DefaultValue("false") Boolean filtered ) {
+    public Response getDatasetProcessedExpression( @PathParam("dataset") DatasetArg<?> datasetArg, @QueryParam("filter") @DefaultValue("false") Boolean filtered ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         if ( !expressionExperimentService.hasProcessedExpressionData( ee ) ) {
-            throw new NotFoundException( String.format( "No preferred quantitation type could be for found processed expression data data of %s.", ee ) );
+            throw new NotFoundException( ee.getShortName() + " does not have any processed vectors." );
         }
         try {
             try {
