@@ -15,10 +15,21 @@ import static org.junit.Assert.assertEquals;
 public class AnnDataTest {
 
     @Test
-    public void test() throws IOException {
+    public void test() throws Exception {
         Path dataPath = new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath();
         try ( AnnData ad = AnnData.open( dataPath ) ) {
             try ( Dataframe<?> var = ad.getVar() ) {
+                // iterator
+                assertThat( var ).hasSize( 56 );
+
+                // exercise cache behavior
+                Dataframe.Column<?, ?> col = var.getColumn( "Age" );
+                assertThat( var.getColumn( "Age" ) ).isSameAs( col );
+                assertThat( var.getColumn( "Age", Double.class ) ).isSameAs( col );
+
+                // column iterator
+                assertThat( var.getColumn( "Age" ) ).hasSize( 1000 );
+
                 assertThat( var.getIndexColumn() )
                         .isEqualTo( "_index" );
                 assertThat( var.getColumns() )
@@ -32,7 +43,7 @@ public class AnnDataTest {
                                 "miQC.probability", "nCount_RNA", "nCount_SCT", "nFeature_RNA", "nFeature_SCT", "n_genes",
                                 "orig.ident", "pH", "percent.mt", "scds.hybrid_score", "scds.keep", "seurat_clusters" );
                 for ( String c : var.getColumns() ) {
-                    Dataframe.Column<?, ?> col = var.getColumn( c );
+                    col = var.getColumn( c );
                     System.out.println( col );
                     assertThat( col.size() ).isEqualTo( 1000 );
                     assertThat( col.uniqueValues() ).isNotEmpty();

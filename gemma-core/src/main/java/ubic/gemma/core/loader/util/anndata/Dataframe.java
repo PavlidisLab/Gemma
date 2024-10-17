@@ -1,13 +1,17 @@
 package ubic.gemma.core.loader.util.anndata;
 
+import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.collections4.iterators.ArrayIterator;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.util.hdf5.H5Dataset;
 import ubic.gemma.core.loader.util.hdf5.H5Group;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
@@ -20,7 +24,7 @@ import static java.util.Objects.requireNonNull;
  * @author poirigui
  */
 @CommonsLog
-public class Dataframe<K> implements AutoCloseable {
+public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoCloseable {
 
     /**
      * Lits of supported encoding types.
@@ -32,6 +36,20 @@ public class Dataframe<K> implements AutoCloseable {
     private final Class<K> indexClass;
 
     private IndexedColumn index;
+
+    /**
+     * Mapping of cached columns.
+     * <p>
+     * It's important to keep track of the class of the column because some column (i.e. enum) can use different
+     * representation.
+     */
+    private final Map<ColumnKey, Column<K, ?>> cachedColumns = new ConcurrentHashMap<>();
+
+    @Value(staticConstructor = "of")
+    private static class ColumnKey {
+        String columnName;
+        Class<?> desiredRepresentation;
+    }
 
     /**
      * Create a new dataframe from an H5 group.
@@ -149,40 +167,52 @@ public class Dataframe<K> implements AutoCloseable {
      */
     public <T> Column<K, T> getColumn( String columnName, Class<T> clazz ) {
         checkIfColumnExists( columnName, null );
+        //noinspection unchecked
+        return ( Column<K, T> ) cachedColumns.computeIfAbsent( ColumnKey.of( columnName, clazz ), k -> getColumnInternal( columnName, clazz ) );
+    }
+
+    private <T> Column<K, T> getColumnInternal( String columnName, Class<T> clazz ) {
+        Column<K, T> column;
         switch ( getColumnEncodingType( columnName ) ) {
             case "categorical":
-                return new CategoricalColumn<>( columnName, getCategoricalColumn( columnName, clazz ) );
+                column = new CategoricalColumn<>( columnName, getCategoricalColumn( columnName, clazz ) );
+                break;
             case "string-array":
                 Assert.isTrue( String.class.isAssignableFrom( clazz ) );
                 //noinspection unchecked
-                return ( Column<K, T> ) new ArrayColumn<>( columnName, getStringArrayColumn( columnName ) );
+                column = ( Column<K, T> ) new ArrayColumn<>( columnName, getStringArrayColumn( columnName ) );
+                break;
             case "array":
                 if ( Boolean.class.isAssignableFrom( clazz ) ) {
                     //noinspection unchecked
-                    return ( Column<K, T> ) new BooleanArrayColumn( columnName, getArrayColumn( columnName ).toBooleanVector() );
+                    column = ( Column<K, T> ) new BooleanArrayColumn( columnName, getArrayColumn( columnName ).toBooleanVector() );
                 } else if ( Integer.class.isAssignableFrom( clazz ) ) {
                     //noinspection unchecked
-                    return ( Column<K, T> ) new IntArrayColumn( columnName, getArrayColumn( columnName ).toIntegerVector() );
+                    column = ( Column<K, T> ) new IntArrayColumn( columnName, getArrayColumn( columnName ).toIntegerVector() );
                 } else if ( Double.class.isAssignableFrom( clazz ) ) {
                     //noinspection unchecked
-                    return ( Column<K, T> ) new DoubleArrayColumn( columnName, getArrayColumn( columnName ).toDoubleVector() );
+                    column = ( Column<K, T> ) new DoubleArrayColumn( columnName, getArrayColumn( columnName ).toDoubleVector() );
                 } else if ( String.class.isAssignableFrom( clazz ) ) {
                     //noinspection unchecked
-                    return ( Column<K, T> ) new ArrayColumn<>( columnName, getArrayColumn( columnName ).toStringVector() );
+                    column = ( Column<K, T> ) new ArrayColumn<>( columnName, getArrayColumn( columnName ).toStringVector() );
                 } else {
                     throw new UnsupportedOperationException( "Unsupported scalar type for array column:  " + clazz.getName() );
                 }
+                break;
             case "nullable-integer":
                 Assert.isTrue( Integer.class.isAssignableFrom( clazz ) );
                 //noinspection unchecked
-                return new ArrayColumn<>( columnName, ( T[] ) getNullableIntegerArrayColumn( columnName ) );
+                column = new ArrayColumn<>( columnName, ( T[] ) getNullableIntegerArrayColumn( columnName ) );
+                break;
             case "nullable-boolean":
                 Assert.isTrue( Boolean.class.isAssignableFrom( clazz ) );
                 //noinspection unchecked
-                return new ArrayColumn<>( columnName, ( T[] ) getNullableBooleanArrayColumn( columnName ) );
+                column = new ArrayColumn<>( columnName, ( T[] ) getNullableBooleanArrayColumn( columnName ) );
+                break;
             default:
                 throw new UnsupportedOperationException( "Unsupported column encoding type: " + getColumnEncodingType( columnName ) );
         }
+        return column;
     }
 
     /**
@@ -268,19 +298,49 @@ public class Dataframe<K> implements AutoCloseable {
     }
 
     @Override
+    @Nonnull
+    public Iterator<Column<K, ?>> iterator() {
+        List<String> columnNames = getColumns();
+        return new Iterator<Column<K, ?>>() {
+
+            private int i = 0;
+
+            @Override
+            public boolean hasNext() {
+                return i < columnNames.size();
+            }
+
+            @Override
+            public Column<K, ?> next() {
+                return getColumn( columnNames.get( i++ ) );
+            }
+        };
+    }
+
+    @Override
     public void close() {
+        cachedColumns.forEach( ( name, col ) -> {
+            if ( col instanceof AutoCloseable ) {
+                try {
+                    ( ( AutoCloseable ) col ).close();
+                } catch ( Exception e ) {
+                    log.error( "Error while closing column " + name + " from " + this, e );
+                }
+            }
+        } );
+        cachedColumns.clear();
         group.close();
     }
 
-    public interface Column<K, T> {
+    public interface Column<K, T> extends Iterable<T> {
 
-        T get( int i );
+        T get( int i ) throws IndexOutOfBoundsException;
 
-        boolean getBool( int i );
+        boolean getBool( int i ) throws IndexOutOfBoundsException;
 
-        int getInt( int i );
+        int getInt( int i ) throws IndexOutOfBoundsException;
 
-        double getDouble( int i );
+        double getDouble( int i ) throws IndexOutOfBoundsException;
 
         T get( K key );
 
@@ -357,12 +417,34 @@ public class Dataframe<K> implements AutoCloseable {
         }
 
         @Override
+        @Nonnull
+        public Iterator<T> iterator() {
+            return new Iterator<T>() {
+                private int i = 0;
+
+                @Override
+                public boolean hasNext() {
+                    return i < size();
+                }
+
+                @Override
+                public T next() {
+                    try {
+                        return get( i++ );
+                    } catch ( IndexOutOfBoundsException e ) {
+                        throw new NoSuchElementException();
+                    }
+                }
+            };
+        }
+
+        @Override
         public String toString() {
             return name;
         }
     }
 
-    private class CategoricalColumn<T> extends AbstractColumn<T> {
+    private class CategoricalColumn<T> extends AbstractColumn<T> implements AutoCloseable {
 
         private final CategoricalArray<T> c;
 
@@ -393,6 +475,11 @@ public class Dataframe<K> implements AutoCloseable {
         }
 
         @Override
+        public void close() {
+            c.close();
+        }
+
+        @Override
         public String toString() {
             return super.toString() + " " + c;
         }
@@ -420,6 +507,12 @@ public class Dataframe<K> implements AutoCloseable {
         @Override
         public int indexOf( T element ) {
             return ArrayUtils.indexOf( arr, element );
+        }
+
+        @Override
+        @Nonnull
+        public Iterator<T> iterator() {
+            return new ArrayIterator<>( arr );
         }
 
         @Override
@@ -465,6 +558,12 @@ public class Dataframe<K> implements AutoCloseable {
         @Override
         public int size() {
             return arr.length;
+        }
+
+        @Override
+        @Nonnull
+        public Iterator<Boolean> iterator() {
+            return new ArrayIterator<>( arr );
         }
 
         @Override
@@ -534,6 +633,12 @@ public class Dataframe<K> implements AutoCloseable {
         }
 
         @Override
+        @Nonnull
+        public Iterator<Integer> iterator() {
+            return new ArrayIterator<>( arr );
+        }
+
+        @Override
         public String toString() {
             return super.toString() + " " + arr.length + " integers";
         }
@@ -571,6 +676,12 @@ public class Dataframe<K> implements AutoCloseable {
         @Override
         public int indexOf( Double element ) {
             return ArrayUtils.indexOf( arr, element );
+        }
+
+        @Override
+        @Nonnull
+        public Iterator<Double> iterator() {
+            return new ArrayIterator<>( arr );
         }
 
         @Override
@@ -662,6 +773,12 @@ public class Dataframe<K> implements AutoCloseable {
         public int indexOf( K element ) {
             Integer i = index.get( element );
             return i != null ? i : -1;
+        }
+
+        @Override
+        @Nonnull
+        public Iterator<K> iterator() {
+            return column.iterator();
         }
 
         @Override
