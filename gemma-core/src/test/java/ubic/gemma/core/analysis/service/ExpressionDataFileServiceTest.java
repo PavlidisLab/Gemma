@@ -16,6 +16,7 @@ import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
@@ -93,6 +94,11 @@ public class ExpressionDataFileServiceTest extends AbstractJUnit4SpringContextTe
         public SingleCellExpressionExperimentService singleCellExpressionExperimentService() {
             return mock();
         }
+
+        @Bean
+        public QuantitationTypeService quantitationTypeService() {
+            return mock();
+        }
     }
 
     @Autowired
@@ -110,19 +116,19 @@ public class ExpressionDataFileServiceTest extends AbstractJUnit4SpringContextTe
         PathUtils.touch( reportFile );
         assertThat( reportFile ).exists();
 
-        Path f = expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT );
-        assertThat( f )
-                .exists()
-                .isEqualTo( reportFile );
+        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT ) )
+                .hasValueSatisfying( p -> {
+                    assertThat( p )
+                            .exists()
+                            .isEqualTo( reportFile );
+                } );
 
         ee.setShortName( "test.1" );
-        f = expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT );
-        assertThat( f )
-                .isEqualTo( reportFile );
+        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT ) )
+                .hasValue( reportFile );
 
         ee.setShortName( "test.1.2" );
-        f = expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT );
-        assertThat( f )
-                .isEqualTo( appdataHome.resolve( "metadata/test.1/MultiQCReports/multiqc_report.html" ) );
+        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT ) )
+                .isEmpty();
     }
 }

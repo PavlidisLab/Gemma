@@ -25,6 +25,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import static ubic.gemma.core.datastructure.matrix.io.TsvUtils.format;
+import static ubic.gemma.core.datastructure.matrix.io.TsvUtils.formatComment;
 
 /**
  * Writer for {@link DifferentialExpressionAnalysis}.
@@ -51,9 +52,7 @@ public class DiffExAnalysisResultSetWriter {
 
             // top-level analysis results - ANOVA-style
             zipOut.putNextEntry( new ZipEntry( "analysis.results.txt" ) );
-            try ( Writer writer = new OutputStreamWriter( zipOut, StandardCharsets.UTF_8 ) ) {
-                new DiffExAnalysisResultSetWriter().writeDiffExpressionAnalysisData( analysis, geneAnnotations, config, timestamp, writer );
-            }
+            writeDiffExpressionAnalysisData( analysis, geneAnnotations, config, timestamp, new OutputStreamWriter( zipOut, StandardCharsets.UTF_8 ) );
             zipOut.closeEntry();
 
             // Add a file for each result set with contrasts information.
@@ -71,9 +70,7 @@ public class DiffExAnalysisResultSetWriter {
                 } else {
                     zipOut.putNextEntry( new ZipEntry( "resultset_ID" + resultSet.getId() + ".data.txt" ) );
                 }
-                try ( Writer writer = new OutputStreamWriter( zipOut, StandardCharsets.UTF_8 ) ) {
-                    new DiffExAnalysisResultSetWriter().writeDiffExpressionResultSetData( resultSet, geneAnnotations, config, hasSignificantBatchConfound, timestamp, writer );
-                }
+                writeDiffExpressionResultSetData( resultSet, geneAnnotations, config, hasSignificantBatchConfound, timestamp, new OutputStreamWriter( zipOut, StandardCharsets.UTF_8 ) );
                 zipOut.closeEntry();
             }
         }
@@ -113,10 +110,9 @@ public class DiffExAnalysisResultSetWriter {
         }
 
         if ( config != null ) {
-            buf.append( config.toString() );
-        } else if ( analysis.getProtocol() != null && StringUtils
-                .isNotBlank( analysis.getProtocol().getDescription() ) ) {
-            buf.append( analysis.getProtocol().getDescription() );
+            buf.append( formatComment( config.toString() ) );
+        } else if ( analysis.getProtocol() != null && StringUtils.isNotBlank( analysis.getProtocol().getDescription() ) ) {
+            buf.append( formatComment( analysis.getProtocol().getDescription() ) );
         } else {
             // This can happen if we are re-writing files for a stored analysis that didn't get proper protocol information saved.
             // Basically this is here for backwards compatibility.
@@ -285,10 +281,10 @@ public class DiffExAnalysisResultSetWriter {
          */
         buf.append( "# Analysis configuration:\n" );
         if ( config != null ) {
-            buf.append( config.toString() );
+            buf.append( formatComment( config.toString() ) );
         } else if ( resultSet.getAnalysis().getProtocol() != null && StringUtils
                 .isNotBlank( resultSet.getAnalysis().getProtocol().getDescription() ) ) {
-            buf.append( format( resultSet.getAnalysis().getProtocol().getDescription() ) );
+            buf.append( formatComment( resultSet.getAnalysis().getProtocol().getDescription() ) );
         } else {
             log.warn( "Full configuration not available, adding available analysis information to header" );
             if ( resultSet.getAnalysis().getSubsetFactorValue() != null ) {

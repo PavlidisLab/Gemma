@@ -2,6 +2,7 @@ package ubic.gemma.core.datastructure.matrix.io;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 import java.math.RoundingMode;
@@ -118,5 +119,12 @@ public class TsvUtils {
         } else {
             return "";
         }
+    }
+
+    public static String formatComment( @Nullable String comment ) {
+        if ( StringUtils.isBlank( comment ) ) {
+            return "";
+        }
+        return ( comment.charAt( 0 ) != '#' ? "# " : "" ) + comment.replaceAll( "\n([^#])", "\n# $1" );
     }
 }

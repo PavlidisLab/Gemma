@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static ubic.gemma.core.datastructure.matrix.io.TsvUtils.format;
+import static ubic.gemma.core.datastructure.matrix.io.TsvUtils.formatComment;
 
 public class TsvUtilsTest {
 
@@ -40,5 +41,14 @@ public class TsvUtilsTest {
     public void testFormat() {
         assertEquals( "\\t\\n\\r\\\\", format( "\t\n\r\\" ) );
         assertEquals( "", format( ( String ) null ) );
+    }
+
+    @Test
+    public void testFormatComment() {
+        assertEquals( "# abc", formatComment( "abc" ) );
+        assertEquals( "# abc\n# def", formatComment( "abc\ndef" ) );
+        assertEquals( "# abc", formatComment( "# abc" ) );
+        assertEquals( "# abc\n# def", formatComment( "# abc\n# def" ) );
+        assertEquals( "# abc\n# def\n# test\n#ghi", formatComment( "# abc\n# def\ntest\n#ghi" ) );
     }
 }

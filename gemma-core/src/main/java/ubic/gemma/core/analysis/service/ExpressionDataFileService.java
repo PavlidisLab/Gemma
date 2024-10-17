@@ -62,7 +62,7 @@ public interface ExpressionDataFileService {
     /**
      * Locate a metadata file.
      */
-    Path getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type );
+    Optional<Path> getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type ) throws IOException;
 
     /**
      * Locate an data file.

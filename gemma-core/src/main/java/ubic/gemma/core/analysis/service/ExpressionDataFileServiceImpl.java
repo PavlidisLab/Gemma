@@ -65,11 +65,15 @@ import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.io.*;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -120,6 +124,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     private RawAndProcessedExpressionDataVectorService rawAndProcessedExpressionDataVectorService;
     @Autowired
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
 
     @Value("${gemma.appdata.home}/metadata")
     private Path metadataDir;
@@ -177,22 +183,36 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Path getDiffExpressionAnalysisArchiveFile( Long analysisId, boolean forceCreate ) throws IOException {
         DifferentialExpressionAnalysis analysis = this.differentialExpressionAnalysisService.loadOrFail( analysisId );
         return getDiffExpressionAnalysisArchiveFile( analysis, forceCreate );
     }
 
     @Override
-    public Path getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type ) {
+    public Optional<Path> getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type ) throws IOException {
         Path file = metadataDir.resolve( this.getEEFolderName( ee ) ).resolve( type.getFileName( ee ) );
-        // If this is a directory, check if we can read the most recent file.
-        if ( type.isDirectory() ) {
-            Path fNew = this.getNewestFile( file );
-            if ( fNew != null ) {
-                file = fNew;
-            }
+        if ( !Files.exists( file ) ) {
+            return Optional.empty();
         }
-        return file;
+        if ( type.isDirectory() ) {
+            // If this is a directory, check if we can read the most recent file.
+            try ( Stream<Path> files = Files.list( file ) ) {
+                return files
+                        // ignore sub-directories
+                        .filter( f -> !Files.isDirectory( f ) )
+                        // Sort by last modified, we only want the newest file
+                        .max( Comparator.comparing( path -> {
+                            try {
+                                return Files.getLastModifiedTime( path );
+                            } catch ( IOException e ) {
+                                return FileTime.fromMillis( 0 );
+                            }
+                        } ) );
+            }
+        } else {
+            return Optional.of( file );
+        }
     }
 
     /**
@@ -211,27 +231,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         return sName.replaceAll( "\\.\\d+$", "" );
     }
 
-    /**
-     * @param file a directory to scan
-     * @return the file in the directory that was last modified, or null, if such file doesn't exist or is not readable.
-     */
-    private Path getNewestFile( Path file ) {
-        File[] files = file.toFile().listFiles();
-        if ( files != null && files.length > 0 ) {
-            List<File> fList = Arrays.asList( files );
-
-            // Sort by last modified, we only want the newest file
-            fList.sort( Comparator.comparingLong( File::lastModified ) );
-
-            if ( fList.get( 0 ).canRead() ) {
-                return fList.get( 0 ).toPath();
-            }
-        }
-        return null;
-    }
-
     @Override
-    @Transactional(readOnly = true)
     public Optional<Path> getDataFile( ExpressionExperiment ee, boolean filtered, ExpressionExperimentDataFileType type ) {
         if ( !expressionExperimentService.hasProcessedExpressionData( ee ) ) {
             return Optional.empty();
@@ -250,11 +250,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         return Optional.of( dataDir.resolve( getDataOutputFilename( ee, filtered, suffix ) ) );
     }
 
-    @Autowired
-    private QuantitationTypeService quantitationTypeService;
-
     @Override
-    @Transactional(readOnly = true)
     public Path getDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type ) {
         Class<? extends DataVector> dataType = quantitationTypeService.getDataVectorType( qt );
         String suffix;
@@ -291,6 +287,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Path> writeProcessedExpressionDataFile( ExpressionExperiment ee, boolean filtered, String fileName, boolean compress )
             throws IOException, FilteringException {
         return this.writeDataFile( ee, filtered, Paths.get( fileName ), compress );
@@ -404,6 +401,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void writeDiffExArchiveFile( BioAssaySet experimentAnalyzed, DifferentialExpressionAnalysis analysis,
             @Nullable DifferentialExpressionAnalysisConfig config ) throws IOException {
         ExpressionExperiment ee = experimentForBioAssaySet( experimentAnalyzed );
@@ -469,6 +467,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void writeDesignMatrix( ExpressionExperiment ee, Writer writer ) throws IOException {
         ee = expressionExperimentService.thawLite( ee );
         if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
@@ -495,6 +494,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Path writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException {
         ee = expressionExperimentService.thawLite( ee );
         Path f = this.getOutputFile( this.getCoexpressionDataFilename( ee ) );
@@ -524,6 +524,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Path> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException, IOException {
         // randomize file name if temporary in case of access by more than one user at once
         String result;
@@ -543,6 +544,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Path writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException {
         Path f = this.getOutputFile( this.getDataOutputFilename( ee, type, TABULAR_BULK_DATA_FILE_SUFFIX ) );
         if ( !forceWrite && Files.exists( f ) ) {
@@ -566,6 +568,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Path> writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException {
         ee = expressionExperimentService.thawLite( ee );
         if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
@@ -586,23 +589,20 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<Path> writeOrLocateDiffExpressionDataFiles( ExpressionExperiment ee, boolean forceWrite ) throws IOException {
-
         ee = this.expressionExperimentService.thawLite( ee );
-
         Collection<DifferentialExpressionAnalysis> analyses = this.differentialExpressionAnalysisService
                 .getAnalyses( ee );
-
         Collection<Path> result = new HashSet<>();
         for ( DifferentialExpressionAnalysis analysis : analyses ) {
             result.add( this.getDiffExpressionAnalysisArchiveFile( analysis, forceWrite ) );
         }
-
         return result;
-
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Path> writeOrLocateJSONProcessedExpressionDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException, IOException {
         // randomize file name if temporary in case of access by more than one user at once
         Path f = this.getOutputFile( getDataOutputFilename( ee, filtered, ExpressionDataFileServiceImpl.JSON_BULK_DATA_FILE_SUFFIX ) );
@@ -623,6 +623,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Path writeOrLocateJSONRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException {
         Path f = getOutputFile( getDataOutputFilename( ee, type, ExpressionDataFileServiceImpl.JSON_BULK_DATA_FILE_SUFFIX ) );
         if ( !forceWrite && Files.exists( f ) ) {
@@ -773,7 +774,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     /**
      * Obtain a filename for writing the processed data.
      */
-    public String getDataOutputFilename( ExpressionExperiment ee, boolean filtered, String suffix ) {
+    private String getDataOutputFilename( ExpressionExperiment ee, boolean filtered, String suffix ) {
         return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_expmat" + ( filtered ? "" : ".unfilt" ) + suffix;
     }
 

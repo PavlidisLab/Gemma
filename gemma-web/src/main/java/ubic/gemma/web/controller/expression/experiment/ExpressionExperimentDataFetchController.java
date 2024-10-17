@@ -52,8 +52,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * For the download of data files from the browser. We can send the 'raw' data for any one quantitation type, with gene
@@ -98,7 +100,8 @@ public class ExpressionExperimentDataFetchController {
         if ( type == null ) {
             throw new IllegalArgumentException( "The experiment ID and file type ID parameters must be valid identifiers." );
         }
-        Path file = expressionDataFileService.getMetadataFile( ee, type );
+        Path file = expressionDataFileService.getMetadataFile( ee, type )
+                .orElseThrow( () -> new EntityNotFoundException( ee.getShortName() + " does not have metadata of type " + type + "." ) );
         this.download( file, type.getDownloadName( ee ), type.getContentType(), response );
     }
 
@@ -108,27 +111,18 @@ public class ExpressionExperimentDataFetchController {
      * @param eeId the id of the experiment to scan for the metadata for.
      * @return an array of files available in the metadata directory for the given experiment.
      */
-    public MetaFile[] getMetadataFiles( Long eeId ) {
+    public MetaFile[] getMetadataFiles( Long eeId ) throws IOException {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId,
                 EntityNotFoundException::new, "Experiment with given ID does not exist." );
-
-        MetaFile[] metaFiles = new MetaFile[ExpressionExperimentMetaFileType.values().length];
-
-        int i = 0;
+        List<MetaFile> metaFiles = new ArrayList<>( ExpressionExperimentMetaFileType.values().length );
         for ( ExpressionExperimentMetaFileType type : ExpressionExperimentMetaFileType.values() ) {
-
             // Some files are prefixed with the experiments accession
-            Path file = expressionDataFileService.getMetadataFile( ee, type );
-
-            // Check if we can read the file
-            if ( !Files.isReadable( file ) ) {
-                continue;
-            }
-
-            metaFiles[i++] = new MetaFile( type.getId(), type.getDisplayName() );
+            expressionDataFileService.getMetadataFile( ee, type )
+                    .filter( Files::isReadable )
+                    .map( f -> new MetaFile( type.getId(), type.getDisplayName() ) )
+                    .ifPresent( metaFiles::add );
         }
-
-        return metaFiles;
+        return metaFiles.toArray( new MetaFile[0] );
     }
 
     /**
