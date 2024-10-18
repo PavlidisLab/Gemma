@@ -84,6 +84,12 @@ public interface ExpressionDataFileService {
     Path getDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type );
 
     /**
+     * Delete a data file if it exists.
+     * @return true if the file was deleted, false if it did not exist
+     */
+    boolean deleteDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type ) throws IOException;
+
+    /**
      * Locate an experimental design file.
      * @see #writeOrLocateDesignFile(ExpressionExperiment, boolean)
      */

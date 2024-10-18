@@ -3,6 +3,8 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
 import ubic.gemma.core.loader.expression.singleCell.AnnDataSingleCellDataLoaderConfig;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderService;
@@ -15,6 +17,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
@@ -46,6 +49,9 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
 
     @Autowired
     private SingleCellDataLoaderService singleCellDataLoaderService;
+
+    @Autowired
+    private ExpressionDataFileService expressionDataFileService;
 
     /**
      * Operation mode when loading data.
@@ -230,7 +236,24 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 } else {
                     qt = singleCellDataLoaderService.load( ee, getPlatform(), config );
                 }
-                addSuccessObject( ee, "Loaded vectors for " + qt.toString() );
+                if ( qt.getIsSingleCellPreferred() ) {
+                    try {
+                        log.info( "Generating MEX data files for preferred QT: " + qt + "..." );
+                        expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, true, 500, true );
+                    } catch ( IOException e ) {
+                        throw new RuntimeException( "Failed to generate MEX data files for " + qt + ".", e );
+                    }
+                } else if ( replaceQt ) {
+                    // attempt to delete the MEX files if they exist since the data was replaced
+                    try {
+                        expressionDataFileService.deleteDataFile( ee, qt, ExpressionExperimentDataFileType.MEX );
+                    } catch ( IOException e ) {
+                        throw new RuntimeException( "Failed to delete MEX data files for " + qt + ".", e );
+                    }
+                } else {
+                    log.info( "Adding a non-preferred QT, no need to generate MEX files." );
+                }
+                addSuccessObject( ee, "Loaded vectors for " + qt );
                 break;
             default:
                 throw new IllegalArgumentException( "Unknown operation mode " + mode );

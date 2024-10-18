@@ -275,6 +275,23 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
+    public boolean deleteDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type ) throws IOException {
+        Path file = getDataFile( ee, qt, type );
+        Lock lock = acquirePathLock( file, true );
+        try {
+            if ( Files.exists( file ) ) {
+                log.info( "Deleting data file: " + file );
+                PathUtils.delete( file );
+                return true;
+            } else {
+                return false;
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
     public Optional<Path> getExperimentalDesignFile( ExpressionExperiment ee ) {
         if ( ee.getExperimentalDesign() == null ) {
             return Optional.empty();
