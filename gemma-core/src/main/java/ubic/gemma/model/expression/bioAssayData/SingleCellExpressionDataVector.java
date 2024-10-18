@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.persistence.hibernate.ByteArrayType;
 
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 /**
@@ -18,6 +19,9 @@ import java.util.Objects;
 @Getter
 @Setter
 public class SingleCellExpressionDataVector extends DesignElementDataVector {
+
+    @Nullable
+    private String originalDesignElement;
 
     /**
      * The dimension of the single cell data which is shared among all the vectors.

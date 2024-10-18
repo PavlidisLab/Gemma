@@ -18,6 +18,9 @@
                      lazy="false" fetch="select" foreign-key="SINGLE_CELL_EXPRESSION_DATA_VECTOR_DESIGN_ELEMENT_FKC">
             <column name="DESIGN_ELEMENT_FK" not-null="true" sql-type="BIGINT"/>
         </many-to-one>
+        <property name="originalDesignElement" type="java.lang.String">
+            <column name="ORIGINAL_DESIGN_ELEMENT" not-null="false" sql-type="VARCHAR(255)"/>
+        </property>
         <property name="data" type="org.hibernate.type.MaterializedBlobType">
             <column name="DATA" not-null="true" unique="false" sql-type="LONGBLOB"/>
         </property>

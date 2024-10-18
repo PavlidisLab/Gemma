@@ -656,6 +656,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 .mapToObj( i -> {
                     assert matrix.getIndptr()[i] < matrix.getIndptr()[i + 1];
                     SingleCellExpressionDataVector vector = new SingleCellExpressionDataVector();
+                    vector.setOriginalDesignElement( genes.get( i ) );
                     vector.setDesignElement( elementsMapping.get( genes.get( i ) ) );
                     vector.setSingleCellDimension( scd );
                     vector.setQuantitationType( qt );

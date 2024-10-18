@@ -51,15 +51,15 @@ public class AnnDataSingleCellDataLoaderTest {
         assertThat( loader.getCellTypeAssignments( dimension ) )
                 .singleElement()
                 .satisfies( assignment -> {
-            assertThat( assignment.getCellTypes() )
-                    .hasSize( 8 )
-                    .extracting( Characteristic::getValue )
-                    .containsExactly( "Astrocytes", "Endothelial", "Interneurons", "MSNs", "Microglia", "Mural/Fibroblast", "Oligos", "Oligos_Pre" );
-            assertThat( assignment.getNumberOfCellTypes() )
-                    .isEqualTo( 8 );
-            assertThat( assignment.getCellTypeIndices() )
-                    .startsWith( 7, 6, 6, 3, 4, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 6, 4, 6, 6, 0, 6 );
-        } );
+                    assertThat( assignment.getCellTypes() )
+                            .hasSize( 8 )
+                            .extracting( Characteristic::getValue )
+                            .containsExactly( "Astrocytes", "Endothelial", "Interneurons", "MSNs", "Microglia", "Mural/Fibroblast", "Oligos", "Oligos_Pre" );
+                    assertThat( assignment.getNumberOfCellTypes() )
+                            .isEqualTo( 8 );
+                    assertThat( assignment.getCellTypeIndices() )
+                            .startsWith( 7, 6, 6, 3, 4, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 6, 4, 6, 6, 0, 6 );
+                } );
 
         assertThat( loader.getOtherCellLevelCharacteristics( dimension ) )
                 .hasSize( 15 )
@@ -148,6 +148,7 @@ public class AnnDataSingleCellDataLoaderTest {
                     .hasSize( 1 )
                     .satisfiesExactly( vector -> {
                         assertThat( vector.getDesignElement().getName() ).isEqualTo( "SLCO3A1" );
+                        assertThat( vector.getOriginalDesignElement() ).isEqualTo( "SLCO3A1" );
                         assertThat( ByteArrayUtils.byteArrayToDoubles( vector.getData() ) )
                                 .hasSize( 779 )
                                 .usingComparatorWithPrecision( 0.00000001 )
@@ -255,6 +256,7 @@ public class AnnDataSingleCellDataLoaderTest {
                     .hasSize( 1 )
                     .satisfiesExactly( vector -> {
                         assertThat( vector.getDesignElement().getName() ).isEqualTo( "SLCO3A1" );
+                        assertThat( vector.getOriginalDesignElement() ).isEqualTo( "SLCO3A1" );
                         assertThat( ByteArrayUtils.byteArrayToDoubles( vector.getData() ) )
                                 .hasSize( 779 )
                                 .usingComparatorWithPrecision( 0.00000001 )

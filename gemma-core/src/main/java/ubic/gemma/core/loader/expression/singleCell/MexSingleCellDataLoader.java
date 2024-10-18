@@ -216,6 +216,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
     public Stream<SingleCellExpressionDataVector> loadVectors( Map<String, CompositeSequence> elementsMapping, SingleCellDimension scd, QuantitationType quantitationType ) throws IOException {
         // location of a given element in individual matrices
         Map<CompositeSequence, int[]> elementsToSampleMatrixRow = new HashMap<>();
+        Map<CompositeSequence, String[]> elementsToOriginalGeneIds = new HashMap<>();
         ArrayList<CompRowMatrix> matrices = new ArrayList<>( scd.getBioAssays().size() );
 
         List<BioAssay> bioAssays = scd.getBioAssays();
@@ -255,12 +256,12 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
                 }
                 elements.add( probe );
                 if ( probe != null ) {
-                    if ( !elementsToSampleMatrixRow.containsKey( probe ) ) {
+                    elementsToSampleMatrixRow.computeIfAbsent( probe, ignored -> {
                         int[] W = new int[scd.getBioAssays().size()];
                         Arrays.fill( W, -1 );
-                        elementsToSampleMatrixRow.put( probe, W );
-                    }
-                    elementsToSampleMatrixRow.get( probe )[j] = k;
+                        return W;
+                    } )[j] = k;
+                    elementsToOriginalGeneIds.computeIfAbsent( probe, ignored -> new String[scd.getBioAssays().size()] )[j] = geneId;
                 }
                 k++;
             }
@@ -308,6 +309,13 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             int[] I = e.getValue();
             SingleCellExpressionDataVector vector = new SingleCellExpressionDataVector();
             vector.setDesignElement( probe );
+            // it should all be the same, with nulls if the gene is not present in the sample
+            String[] geneIds = elementsToOriginalGeneIds.get( probe );
+            Set<String> uniqueGeneIDs = Arrays.stream( geneIds ).filter( Objects::nonNull ).collect( Collectors.toSet() );
+            if ( uniqueGeneIDs.size() > 1 ) {
+                log.warn( "More than one gene ID was matched for " + probe + ": " + String.join( ", ", uniqueGeneIDs ) + ", will retain an arbitrary one as original gene ID." );
+            }
+            vector.setOriginalDesignElement( uniqueGeneIDs.iterator().next() );
             vector.setQuantitationType( quantitationType );
             vector.setSingleCellDimension( scd );
             // number of non-zero in the vector

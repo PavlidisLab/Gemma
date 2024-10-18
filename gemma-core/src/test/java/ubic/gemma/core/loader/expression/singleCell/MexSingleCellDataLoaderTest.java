@@ -56,12 +56,14 @@ public class MexSingleCellDataLoaderTest {
                 .hasSize( 1000 )
                 .allSatisfy( v -> {
                     assertThat( v.getDesignElement() ).isNotNull();
+                    assertThat( v.getOriginalDesignElement() ).isNotNull();
                     assertThat( v.getSingleCellDimension() ).isEqualTo( dimension );
                     assertThat( v.getQuantitationType() ).isEqualTo( qt );
                 } );
 
         assertThat( vectors.stream().filter( v -> v.getDesignElement().getName().equals( "ENSMUSG00000074782" ) ).findFirst() )
                 .hasValueSatisfying( v -> {
+                    assertThat( v.getOriginalDesignElement() ).isEqualTo( "ENSMUSG00000074782" );
                     assertThat( ByteArrayUtils.byteArrayToDoubles( v.getData() ) )
                             .containsExactly( 1, 1, 1, 1, 1, 1, 1 );
                     assertThat( v.getDataIndices() )

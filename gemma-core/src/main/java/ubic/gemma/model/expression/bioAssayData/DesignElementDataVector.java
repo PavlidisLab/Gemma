@@ -22,6 +22,7 @@ import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 /**
@@ -32,6 +33,15 @@ import java.util.Objects;
 public abstract class DesignElementDataVector extends DataVector {
 
     private CompositeSequence designElement;
+
+    /**
+     * The original design element that was used to create this vector.
+     * <p>
+     * This is generally null, but if the data was imported and a mapping was done between some external data source and
+     * one of Gemma's platform, this will contain the original ID.
+     */
+    @Nullable
+    public abstract String getOriginalDesignElement();
 
     @Override
     public int hashCode() {
