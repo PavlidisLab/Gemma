@@ -1,5 +1,6 @@
 package ubic.gemma.core.analysis.service;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +43,7 @@ import java.util.stream.Stream;
  */
 @Service
 @Transactional(readOnly = true)
+@CommonsLog
 class ExpressionDataFileHelperService {
 
     @Autowired
@@ -109,29 +111,22 @@ class ExpressionDataFileHelperService {
         return matrix;
     }
 
-    public Stream<SingleCellExpressionDataVector> getSingleCellVectors( ExpressionExperiment ee, QuantitationType qt, Map<CompositeSequence, Set<Gene>> cs2gene, boolean useStreaming, int fetchSize ) {
-        cs2gene.putAll( getCs2Gene( ee, qt ) );
-        if ( useStreaming ) {
-            long numVecs = singleCellExpressionExperimentService.getNumberOfSingleCellDataVectors( ee, qt );
-            if ( numVecs == 0 ) {
-                throw new IllegalStateException( "There are no vectors for " + qt + " in " + ee + "." );
-            }
-            return singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, fetchSize );
-        } else {
-            Collection<SingleCellExpressionDataVector> vectors = singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt );
-            if ( vectors.isEmpty() ) {
-                throw new IllegalStateException( "There are no vectors for " + qt + " in " + ee + "." );
-            }
-            return vectors.stream();
+    public Stream<SingleCellExpressionDataVector> getSingleCellVectors( ExpressionExperiment ee, QuantitationType qt, Map<CompositeSequence, Set<Gene>> cs2gene, AtomicLong numVecs1, int fetchSize ) {
+        long numVecs = singleCellExpressionExperimentService.getNumberOfSingleCellDataVectors( ee, qt );
+        if ( numVecs == 0 ) {
+            throw new IllegalStateException( "There are no vectors for " + qt + " in " + ee + "." );
         }
+        cs2gene.putAll( getCs2Gene( ee, qt ) );
+        numVecs1.set( numVecs );
+        return singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, fetchSize );
     }
 
     public Collection<SingleCellExpressionDataVector> getSingleCellVectors( ExpressionExperiment ee, QuantitationType qt, Map<CompositeSequence, Set<Gene>> cs2gene ) {
-        cs2gene.putAll( getCs2Gene( ee, qt ) );
         Collection<SingleCellExpressionDataVector> vectors = singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt );
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( "There are no vectors associated to " + qt + " in " + ee + "." );
         }
+        cs2gene.putAll( getCs2Gene( ee, qt ) );
         return vectors;
     }
 
@@ -142,13 +137,16 @@ class ExpressionDataFileHelperService {
         }
         cs2gene.putAll( getCs2Gene( ee, qt ) );
         numVecs1.set( numVecs );
+        log.info( "Counting the number of non-zeroes per sample for " + qt + "..." );
         nnzBySample.putAll( singleCellExpressionExperimentService.getNumberOfNonZeroesBySample( ee, qt, fetchSize ) );
+        log.info( "Streaming vectors for " + qt + " with a fetch size of " + fetchSize + "." );
         return singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, fetchSize );
     }
 
     public SingleCellExpressionDataMatrix<Double> getSingleCellMatrix( ExpressionExperiment ee, QuantitationType qt, Map<CompositeSequence, Set<Gene>> cs2gene ) {
+        SingleCellExpressionDataMatrix<Double> matrix = singleCellExpressionExperimentService.getSingleCellExpressionDataMatrix( ee, qt );
         cs2gene.putAll( getCs2Gene( ee, qt ) );
-        return singleCellExpressionExperimentService.getSingleCellExpressionDataMatrix( ee, qt );
+        return matrix;
     }
 
     private Map<CompositeSequence, Set<Gene>> getCs2Gene( ExpressionExperiment ee, QuantitationType qt ) {
