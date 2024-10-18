@@ -537,9 +537,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetProcessedExpression() throws IOException, URISyntaxException {
+    public void testGetDatasetProcessedExpression() throws IOException, URISyntaxException, InterruptedException, TimeoutException {
         when( expressionExperimentService.hasProcessedExpressionData( eq( ee ) ) ).thenReturn( true );
-        when( expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, false ) )
+        when( expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, false, 5, TimeUnit.SECONDS ) )
                 .thenReturn( Optional.of( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ) ) );
         assertThat( target( "/datasets/1/data/processed" ).request().get() )
                 .hasStatus( Response.Status.OK )
@@ -547,7 +547,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasHeader( "Content-Disposition", "attachment; filename=\"data.txt\"" )
                 .hasEncoding( "gzip" );
         verify( expressionExperimentService ).hasProcessedExpressionData( ee );
-        verify( expressionDataFileService ).writeOrLocateProcessedDataFile( ee, false, false );
+        verify( expressionDataFileService ).writeOrLocateProcessedDataFile( ee, false, false, 5, TimeUnit.SECONDS );
     }
 
     @Test
@@ -563,11 +563,11 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetRawExpression() throws IOException, URISyntaxException {
+    public void testGetDatasetRawExpression() throws IOException, URISyntaxException, InterruptedException, TimeoutException {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         when( expressionExperimentService.getPreferredQuantitationType( ee ) )
                 .thenReturn( qt );
-        when( expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, false ) )
+        when( expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, false, 5, TimeUnit.SECONDS ) )
                 .thenReturn( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ) );
         assertThat( target( "/datasets/1/data/raw" ).request().get() )
                 .hasStatus( Response.Status.OK )
@@ -576,7 +576,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasEncoding( "gzip" );
         verify( expressionExperimentService ).getPreferredQuantitationType( ee );
         verifyNoInteractions( quantitationTypeService );
-        verify( expressionDataFileService ).writeOrLocateRawExpressionDataFile( ee, qt, false );
+        verify( expressionDataFileService ).writeOrLocateRawExpressionDataFile( ee, qt, false, 5, TimeUnit.SECONDS );
     }
 
     @Test
@@ -595,18 +595,18 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetRawExpressionByQuantitationType() throws IOException, URISyntaxException {
+    public void testGetDatasetRawExpressionByQuantitationType() throws IOException, URISyntaxException, InterruptedException, TimeoutException {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setId( 12L );
         when( quantitationTypeService.load( 12L ) ).thenReturn( qt );
         when( quantitationTypeService.loadByIdAndVectorType( 12L, ee, RawExpressionDataVector.class ) ).thenReturn( qt );
 
-        when( expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, false ) )
+        when( expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, false, 5, TimeUnit.SECONDS ) )
                 .thenReturn( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ) );
         Response res = target( "/datasets/1/data/raw" )
                 .queryParam( "quantitationType", "12" ).request().get();
         verify( quantitationTypeService ).loadByIdAndVectorType( 12L, ee, RawExpressionDataVector.class );
-        verify( expressionDataFileService ).writeOrLocateRawExpressionDataFile( ee, qt, false );
+        verify( expressionDataFileService ).writeOrLocateRawExpressionDataFile( ee, qt, false, 5, TimeUnit.SECONDS );
         assertThat( res ).hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                 .hasHeader( "Content-Disposition", "attachment; filename=\"data.txt\"" )
