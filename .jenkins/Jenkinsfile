@@ -134,7 +134,9 @@ pipeline {
                     branch 'release-*'
                     branch 'development'
                     expression { params.FORCE_INTEGRATION_TESTS }
+                    expression { params.FORCE_SLOW_TESTS }
                     expression { params.FORCE_SONARQUBE }
+                    expression { params.FORCE_DEPLOY }
                 }
             }
             parallel {
