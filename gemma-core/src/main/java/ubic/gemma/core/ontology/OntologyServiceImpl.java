@@ -1059,7 +1059,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         } finally {
             for ( Future<?> future : futures ) {
                 if ( !future.isDone() ) {
-                    future.cancel( true );
+                    // a thread cannot be interrupted as it might close the Lucene index, see https://github.com/PavlidisLab/Gemma/issues/1257 for details
+                    future.cancel( false );
                 }
             }
         }
@@ -1130,7 +1131,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         } finally {
             for ( Future<?> future : futures ) {
                 if ( !future.isDone() ) {
-                    future.cancel( true );
+                    // a thread cannot be interrupted as it might close the Lucene index, see https://github.com/PavlidisLab/Gemma/issues/1257 for details
+                    future.cancel( false );
                 }
             }
         }
