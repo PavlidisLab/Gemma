@@ -1221,7 +1221,7 @@ public class DatasetsWebService {
                             schema = @Schema(type = "string", format = "binary"))),
                     @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
-                    @ApiResponse(responseCode = "503", description = "The quantitation file is being written.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+                    @ApiResponse(responseCode = "503", description = "The quantitation file is being written.", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetSingleCellExpression( @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
