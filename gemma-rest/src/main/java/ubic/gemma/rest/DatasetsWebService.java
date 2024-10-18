@@ -1138,11 +1138,13 @@ public class DatasetsWebService {
         }
         try {
             try {
-                java.nio.file.Path p = expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, filtered )
+                java.nio.file.Path p = expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, filtered, 5, TimeUnit.SECONDS )
                         .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have any processed vectors." ) );
                 return Response.ok( p.toFile() )
                         .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( p.getFileName().toString() ) + "\"" )
                         .build();
+            } catch ( TimeoutException e ) {
+                throw new ServiceUnavailableException( "Processed data for " + ee.getShortName() + " is still being generated.", 30L, e );
             } catch ( IOException e ) {
                 log.error( "Failed to create processed expression data for " + ee + ", will have to stream it as a fallback.", e );
                 java.nio.file.Path p = expressionDataFileService.getDataFile( ee, filtered, ExpressionExperimentDataFileType.TABULAR )
@@ -1150,6 +1152,8 @@ public class DatasetsWebService {
                 return Response.ok( ( StreamingOutput ) output -> expressionDataFileService.writeProcessedExpressionData( ee, filtered, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) ) )
                         .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( p.getFileName().toString() ) + "\"" )
                         .build();
+            } catch ( InterruptedException e ) {
+                throw new InternalServerErrorException( e );
             }
         } catch ( NoRowsLeftAfterFilteringException e ) {
             return Response.noContent().build();
@@ -1189,16 +1193,21 @@ public class DatasetsWebService {
             }
         }
         try {
-            java.nio.file.Path p = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, false );
+            java.nio.file.Path p = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, false, 5, TimeUnit.SECONDS );
             return Response.ok( p.toFile() )
                     .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( p.getFileName().toString() ) + "\"" )
                     .build();
+        } catch ( TimeoutException e ) {
+            // file is being written, recommend to the user to wait a little bit
+            throw new ServiceUnavailableException( "Raw data for " + qt + " is still being generated.", 30L, e );
         } catch ( IOException e ) {
             log.error( "Failed to write raw expression data for " + qt + " to disk, will resort to stream it.", e );
             java.nio.file.Path p = expressionDataFileService.getDataFile( ee, qt, ExpressionExperimentDataFileType.TABULAR );
             return Response.ok( ( StreamingOutput ) output -> expressionDataFileService.writeRawExpressionData( ee, qt, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) ) )
                     .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( p.getFileName().toString() ) + "\"" )
                     .build();
+        } catch ( InterruptedException e ) {
+            throw new InternalServerErrorException( e );
         }
     }
 
@@ -1206,7 +1215,13 @@ public class DatasetsWebService {
     @GET
     @Path("/{dataset}/data/singleCell")
     @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
-    @Operation(summary = "Retrieve single-cell expression data of a dataset")
+    @Operation(summary = "Retrieve single-cell expression data of a dataset",
+            responses = {
+                    @ApiResponse(content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
+                            schema = @Schema(type = "string", format = "binary"))),
+                    @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = "The quantitation file is being written.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetSingleCellExpression( @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
@@ -1218,16 +1233,21 @@ public class DatasetsWebService {
                     .orElseThrow( () -> new NotFoundException( "No preferred single-cell quantitation type could be found for " + ee + "." ) );
         }
         try {
-            java.nio.file.Path p = expressionDataFileService.writeOrLocateTabularSingleCellExpressionData( ee, qt, true, 30, false );
+            java.nio.file.Path p = expressionDataFileService.writeOrLocateTabularSingleCellExpressionData( ee, qt, true, 30, false, 5, TimeUnit.SECONDS );
             return Response.ok( p.toFile() )
                     .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( p.getFileName().toString() ) + "\"" )
                     .build();
+        } catch ( TimeoutException e ) {
+            // file is being written, recommend to the user to wait a little bit
+            throw new ServiceUnavailableException( "Single-cell data for " + qt + " is still being generated.", 30L, e );
         } catch ( IOException e ) {
             log.error( "Failed to write single-cell data for " + qt + " to disk, will resort to stream it.", e );
             java.nio.file.Path p = expressionDataFileService.getDataFile( ee, qt, ExpressionExperimentDataFileType.TABULAR );
             return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, true, 30, new OutputStreamWriter( stream, StandardCharsets.UTF_8 ) ) )
                     .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( p.getFileName().toString() ) + "\"" )
                     .build();
+        } catch ( InterruptedException e ) {
+            throw new InternalServerErrorException( e );
         }
     }
 
@@ -1251,7 +1271,7 @@ public class DatasetsWebService {
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         try {
-            java.nio.file.Path file = expressionDataFileService.writeOrLocateDesignFile( ee, false )
+            java.nio.file.Path file = expressionDataFileService.writeOrLocateDesignFile( ee, false, 5, TimeUnit.SECONDS )
                     .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have an experimental design." ) );
             if ( !Files.exists( file ) ) {
                 throw new NotFoundException( String.format( DatasetsWebService.ERROR_DESIGN_FILE_NOT_AVAILABLE, ee.getShortName() ) );
@@ -1260,6 +1280,8 @@ public class DatasetsWebService {
             return Response.ok( file.toFile() )
                     .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( file.getFileName().toString() ) + "\"" )
                     .build();
+        } catch ( TimeoutException e ) {
+            throw new ServiceUnavailableException( "Experimental design for " + ee.getShortName() + " is still being generated.", 30L, e );
         } catch ( IOException e ) {
             log.error( "Failed to write design for " + ee + " to disk, will resort to stream it.", e );
             java.nio.file.Path file = expressionDataFileService.getExperimentalDesignFile( ee )
@@ -1267,6 +1289,8 @@ public class DatasetsWebService {
             return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeDesignMatrix( ee, new OutputStreamWriter( stream, StandardCharsets.UTF_8 ) ) )
                     .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( file.getFileName().toString() ) + "\"" )
                     .build();
+        } catch ( InterruptedException e ) {
+            throw new InternalServerErrorException( e );
         }
     }
 

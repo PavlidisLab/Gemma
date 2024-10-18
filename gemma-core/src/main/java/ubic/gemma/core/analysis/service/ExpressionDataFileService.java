@@ -30,6 +30,8 @@ import java.io.Writer;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author paul
@@ -118,6 +120,8 @@ public interface ExpressionDataFileService {
      * @see ubic.gemma.core.datastructure.matrix.io.TabularMatrixWriter
      */
     Path writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) throws IOException;
+
+    Path writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException, IOException;
 
     /**
      * Write single-cell expression data to a given output stream for a given quantitation type.
@@ -208,6 +212,8 @@ public interface ExpressionDataFileService {
      */
     Optional<Path> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException, IOException;
 
+    Optional<Path> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean b, boolean filtered, int i, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException;
+
     /**
      * Locate or create a new data file for the given quantitation type. The output will include gene information if it
      * can be located from its own file.
@@ -217,6 +223,8 @@ public interface ExpressionDataFileService {
      * @return file
      */
     Path writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException;
+
+    Path writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType qt, boolean b, long i, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException;
 
     /**
      * Locate or create an experimental design file for a given experiment.
@@ -229,6 +237,8 @@ public interface ExpressionDataFileService {
      * @see #writeDesignMatrix(ExpressionExperiment, Writer)
      */
     Optional<Path> writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException;
+
+    Optional<Path> writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException;
 
     /**
      * Locate or create the differential expression data file(s) for a given experiment.

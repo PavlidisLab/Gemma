@@ -66,6 +66,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -333,6 +335,36 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
+    public Path writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException, IOException {
+        Path dest = getOutputFile( getDataOutputFilename( ee, qt, TABULAR_SC_DATA_SUFFIX ), timeout, timeUnit );
+        if ( !forceWrite && Files.exists( dest ) ) {
+            return dest;
+        }
+        Map<CompositeSequence, Set<Gene>> cs2gene = new HashMap<>();
+        Stream<SingleCellExpressionDataVector> vectors;
+        AtomicLong numVecs = new AtomicLong();
+        if ( useStreaming ) {
+            vectors = helperService.getSingleCellVectors( ee, qt, cs2gene, numVecs, fetchSize );
+        } else {
+            Collection<SingleCellExpressionDataVector> col = helperService.getSingleCellVectors( ee, qt, cs2gene );
+            numVecs.set( col.size() );
+            vectors = col.stream();
+        }
+        Lock lock = tryAcquirePathLock( dest, true, timeout, timeUnit );
+        try ( Writer writer = new OutputStreamWriter( openFile( dest, true ), StandardCharsets.UTF_8 ) ) {
+            log.info( "Will write tabular data for " + qt + " to " + dest + "." );
+            int written = new TabularMatrixWriter().write( vectors.peek( createStreamMonitor( numVecs.get() ) ), cs2gene, writer );
+            log.info( "Wrote " + written + " vectors to " + dest + "." );
+            return dest;
+        } catch ( Exception e ) {
+            Files.deleteIfExists( dest );
+            throw e;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
     public int writeMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useEnsemblIds, OutputStream stream ) throws IOException {
         Map<CompositeSequence, Set<Gene>> cs2gene = new HashMap<>();
         Collection<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, qt, cs2gene );
@@ -507,6 +539,25 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
+    public Optional<Path> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered, int timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException {
+        // randomize file name if temporary in case of access by more than one user at once
+        String result;
+        if ( filtered ) {
+            result = getDataOutputFilename( ee, true, ExpressionDataFileServiceImpl.TABULAR_BULK_DATA_FILE_SUFFIX );
+        } else {
+            result = getDataOutputFilename( ee, false, ExpressionDataFileServiceImpl.TABULAR_BULK_DATA_FILE_SUFFIX );
+        }
+        Path f = this.getOutputFile( result, timeout, timeUnit );
+        Date check = expressionExperimentService.getLastArrayDesignUpdate( ee );
+
+        if ( this.checkFileOkToReturn( forceWrite, f, check ) ) {
+            return Optional.of( f );
+        }
+
+        return this.writeDataFile( ee, filtered, f, true );
+    }
+
+    @Override
     public Path writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException {
         Path f = this.getOutputFile( this.getDataOutputFilename( ee, type, TABULAR_BULK_DATA_FILE_SUFFIX ) );
         if ( !forceWrite && Files.exists( f ) ) {
@@ -521,7 +572,29 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             throw new IllegalStateException( "No vectors for " + type );
         }
 
-        int written = this.writeMatrix( f, geneAnnotations, ExpressionDataMatrixBuilder.getMatrix( vectors ) );
+        BulkExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
+        int written = this.writeMatrix( f, geneAnnotations, expressionDataMatrix, true );
+        log.info( "Wrote " + written + " vectors for " + type + "." );
+        return f;
+    }
+
+    @Override
+    public Path writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException {
+        Path f = this.getOutputFile( this.getDataOutputFilename( ee, type, TABULAR_BULK_DATA_FILE_SUFFIX ), timeout, timeUnit );
+        if ( !forceWrite && Files.exists( f ) ) {
+            ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
+            return f;
+        }
+
+        Map<CompositeSequence, String[]> geneAnnotations = new HashMap<>();
+        Collection<BulkExpressionDataVector> vectors = helperService.getVectors( ee, type, geneAnnotations );
+
+        if ( vectors.isEmpty() ) {
+            throw new IllegalStateException( "No vectors for " + type );
+        }
+
+        BulkExpressionDataMatrix<?> matrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
+        int written = this.writeMatrix( f, geneAnnotations, matrix, timeout, timeUnit );
         log.info( "Wrote " + written + " vectors for " + type + "." );
         return f;
     }
@@ -538,6 +611,29 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             return Optional.of( f );
         }
         Lock lock = acquirePathLock( f, true );
+        try ( Writer writer = new OutputStreamWriter( openFile( f, true ), StandardCharsets.UTF_8 ) ) {
+            writeDesignMatrix( ee, writer );
+            return Optional.of( f );
+        } catch ( Exception e ) {
+            Files.deleteIfExists( f );
+            throw e;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public Optional<Path> writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException {
+        ee = expressionExperimentService.thawLite( ee );
+        if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+            return Optional.empty();
+        }
+        Path f = this.getOutputFile( this.getDesignFileName( ee ), timeout, timeUnit );
+        Date check = ee.getCurationDetails().getLastUpdated();
+        if ( check != null && this.checkFileOkToReturn( forceWrite, f, check ) ) {
+            return Optional.of( f );
+        }
+        Lock lock = tryAcquirePathLock( f, true, timeout, timeUnit );
         try ( Writer writer = new OutputStreamWriter( openFile( f, true ), StandardCharsets.UTF_8 ) ) {
             writeDesignMatrix( ee, writer );
             return Optional.of( f );
@@ -712,6 +808,19 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         }
     }
 
+    private Path getOutputFile( String filename, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException {
+        Path fullFilePath = dataDir.resolve( filename );
+        Lock lock = tryAcquirePathLock( fullFilePath, false, timeout, timeUnit );
+        try {
+            if ( Files.exists( fullFilePath ) ) {
+                return fullFilePath;
+            }
+            return fullFilePath;
+        } finally {
+            lock.unlock();
+        }
+    }
+
     /**
      * @param compress if true, file will be output in GZIP format.
      */
@@ -743,14 +852,23 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     private int writeMatrix( Path file, Map<CompositeSequence, String[]> geneAnnotations,
-            BulkExpressionDataMatrix<?> expressionDataMatrix ) throws IOException {
-        return this.writeMatrix( file, geneAnnotations, expressionDataMatrix, true );
-    }
-
-    private int writeMatrix( Path file, Map<CompositeSequence, String[]> geneAnnotations,
             BulkExpressionDataMatrix<?> expressionDataMatrix, boolean gzipped ) throws IOException {
         Lock lock = acquirePathLock( file, true );
         try ( Writer writer = new OutputStreamWriter( openFile( file, gzipped ), StandardCharsets.UTF_8 ) ) {
+            ExpressionDataFileServiceImpl.log.info( "Creating new expression data file: " + file );
+            return new MatrixWriter().writeWithStringifiedGeneAnnotations( writer, expressionDataMatrix, geneAnnotations );
+        } catch ( Exception e ) {
+            Files.deleteIfExists( file );
+            throw e;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private int writeMatrix( Path file, Map<CompositeSequence, String[]> geneAnnotations,
+            BulkExpressionDataMatrix<?> expressionDataMatrix, long timeout, TimeUnit timeUnit ) throws IOException, InterruptedException, TimeoutException {
+        Lock lock = tryAcquirePathLock( file, true, timeout, timeUnit );
+        try ( Writer writer = new OutputStreamWriter( openFile( file, true ), StandardCharsets.UTF_8 ) ) {
             ExpressionDataFileServiceImpl.log.info( "Creating new expression data file: " + file );
             return new MatrixWriter().writeWithStringifiedGeneAnnotations( writer, expressionDataMatrix, geneAnnotations );
         } catch ( Exception e ) {
@@ -805,6 +923,26 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         } else {
             rwLock.readLock().lock();
             return rwLock.readLock();
+        }
+    }
+
+    /**
+     * Attempt to lock a path.
+     */
+    private synchronized Lock tryAcquirePathLock( Path path, boolean exclusive, long timeout, TimeUnit timeUnit ) throws TimeoutException, InterruptedException {
+        ReadWriteLock rwLock = fileLocks.computeIfAbsent( path, k -> new ReentrantReadWriteLock() );
+        if ( exclusive ) {
+            if ( rwLock.writeLock().tryLock( timeout, timeUnit ) ) {
+                return rwLock.writeLock();
+            } else {
+                throw new TimeoutException();
+            }
+        } else {
+            if ( rwLock.readLock().tryLock( timeout, timeUnit ) ) {
+                return rwLock.readLock();
+            } else {
+                throw new TimeoutException();
+            }
         }
     }
 }
