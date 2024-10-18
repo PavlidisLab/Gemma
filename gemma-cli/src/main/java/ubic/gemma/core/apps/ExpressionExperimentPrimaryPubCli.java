@@ -25,6 +25,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.loader.entrez.pubmed.ExpressionExperimentBibRefFinder;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -52,9 +53,18 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     private ExpressionExperimentService ees;
     @Autowired
     private PersisterHelper persisterHelper;
+    private PubMedXMLFetcher fetcher;
+    private ExpressionExperimentBibRefFinder finder;
 
-    private final PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
-    private final ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder();
+    @Value("${entrez.efetch.apikey}")
+    private String ncbiApiKey;
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        super.afterPropertiesSet();
+        this.fetcher = new PubMedXMLFetcher( ncbiApiKey );
+        this.finder = new ExpressionExperimentBibRefFinder( ncbiApiKey );
+    }
 
     private String pubmedIdFilename;
     private Map<String, Integer> pubmedIds = new HashMap<>();

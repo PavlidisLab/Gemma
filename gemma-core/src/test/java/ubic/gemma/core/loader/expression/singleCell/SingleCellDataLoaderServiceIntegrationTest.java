@@ -4,6 +4,7 @@ import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
@@ -45,7 +46,7 @@ public class SingleCellDataLoaderServiceIntegrationTest extends BaseIntegrationT
 
     @Test
     public void testGSE208742() throws NoSingleCellDataFoundException, IOException {
-        GeoSeries series = ( GeoSeries ) geoService.getGeoDomainObjectGenerator().generate( "GSE208472" )
+        GeoSeries series = ( GeoSeries ) new GeoDomainObjectGenerator().generate( "GSE208472" )
                 .iterator().next();
         try ( GeoSingleCellDetector detector = new GeoSingleCellDetector() ) {
             detector.setDownloadDirectory( downloadDir );

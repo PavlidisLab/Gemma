@@ -23,12 +23,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.task.TaskExecutor;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.sequence.Blat;
 import ubic.gemma.core.analysis.sequence.ShellDelegatingBlat;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperServiceImpl;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
@@ -49,6 +48,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 
 import java.io.File;
 import java.io.IOException;
@@ -91,13 +91,13 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
     private ArrayDesignSequenceProcessingService sequenceProcessingService;
 
     @Autowired
-    private TaskExecutor taskExecutor;
-
-    @Autowired
     private ArrayDesignSequenceAlignmentService aligner;
 
     @Autowired
     private ArrayDesignProbeMapperService arrayDesignProbeMapperService;
+
+    @Value("${entrez.efetch.apikey}")
+    private String ncbiApiKey;
 
     @After
     public void cleanup() {

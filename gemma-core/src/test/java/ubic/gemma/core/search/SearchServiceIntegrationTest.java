@@ -25,6 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.annotation.DirtiesContext;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.FMAOntologyService;
@@ -88,6 +89,9 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
 
+    @Value("${entrez.efetch.apikey}")
+    private String ncbiApiKey;
+
     /* fixtures */
     private ExpressionExperiment ee;
     private Gene gene;
@@ -128,7 +132,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
         gene = this.getTestPersistentGene();
 
         this.geneNcbiId = RandomStringUtils.randomNumeric( 8 );
-        gene.setNcbiGeneId( new Integer( geneNcbiId ) );
+        gene.setNcbiGeneId( Integer.valueOf( geneNcbiId ) );
         geneService.update( gene );
 
         tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
@@ -205,8 +209,9 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
     @Test
     @Category(SlowTest.class)
     public void testSearchByBibRefIdProblems() throws SearchException, IOException {
-        PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
+        PubMedXMLFetcher fetcher = new PubMedXMLFetcher( ncbiApiKey );
         BibliographicReference bibref = fetcher.retrieveByHTTP( 9600966 );
+        assertNotNull( bibref );
         bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
         assertTrue( bibref.getAbstractText().contains(
                 "ase proved to be a de novo mutation. In the third kindred, affected brothers both have a" ) );
@@ -240,8 +245,9 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
     @Test
     @Category(SlowTest.class)
     public void testSearchByBibRefIdProblemsB() throws SearchException, IOException {
-        PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
+        PubMedXMLFetcher fetcher = new PubMedXMLFetcher( ncbiApiKey );
         BibliographicReference bibref = fetcher.retrieveByHTTP( 22780917 );
+        assertNotNull( bibref );
         bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
         assertTrue( bibref.getAbstractText().contains(
                 "d to chromosome 22q12. Our results confirm chromosome 22q12 as the solitary locus for FFEVF" ) );

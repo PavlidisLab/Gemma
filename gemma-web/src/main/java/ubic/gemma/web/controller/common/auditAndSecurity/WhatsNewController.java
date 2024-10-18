@@ -40,7 +40,7 @@ public class WhatsNewController {
     @Autowired
     private WhatsNewService whatsNewService;
 
-    @RequestMapping(value = "/daily.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/daily.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView daily() {
         ModelAndView mav = new ModelAndView( "wnDay" );
         WhatsNew wn = whatsNewService.getDailyReport();
@@ -49,7 +49,7 @@ public class WhatsNewController {
         return mav;
     }
 
-    @RequestMapping(value = "/generateCache.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/generateCache.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView generateCache() {
         ModelAndView mav = new ModelAndView( new RedirectView( WebConstants.HOME_PAGE, true ) );
 
@@ -59,7 +59,7 @@ public class WhatsNewController {
         return mav;
     }
 
-    @RequestMapping(value = "/weekly.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/weekly.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView weekly() {
         ModelAndView mav = new ModelAndView( "wnWeek" );
         WhatsNew wn = whatsNewService.getWeeklyReport();

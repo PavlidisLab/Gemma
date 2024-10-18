@@ -4,14 +4,13 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
 import javax.annotation.Nullable;
-import java.io.File;
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.core.util.ShellUtils.quoteIfNecessary;
 
-public class BashCompletionGenerator extends AbstractCompletionGenerator implements CompletionGenerator {
+public class BashCompletionGenerator extends AbstractCompletionGenerator {
 
     private static final String INDENT = "    ";
 

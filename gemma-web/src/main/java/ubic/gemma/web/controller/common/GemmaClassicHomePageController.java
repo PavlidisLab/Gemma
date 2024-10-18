@@ -67,7 +67,7 @@ public class GemmaClassicHomePageController {
         otherTaxa.setIsGenesUsable( false );
     }
 
-    @RequestMapping(value = WebConstants.CLASSIC_HOME_PAGE, method = RequestMethod.GET)
+    @RequestMapping(value = WebConstants.CLASSIC_HOME_PAGE, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showHomePage() {
 
         /*

@@ -36,14 +36,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.persistence.util.Pointcuts;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.AuditAction;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.*;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.GenericCuratableDao;
+import ubic.gemma.persistence.util.Pointcuts;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
@@ -78,6 +74,8 @@ public class AuditAdvice {
 
     @Autowired
     private SessionFactory sessionFactory;
+
+    private final AuditLogger auditLogger = new AuditLogger();
 
     /**
      * Perform the audit advice on when entities are created.
@@ -327,10 +325,7 @@ public class AuditAdvice {
         if ( auditable instanceof Curatable && auditAction == AuditAction.UPDATE ) {
             curatableDao.updateCurationDetailsFromAuditEvent( ( Curatable ) auditable, auditEvent );
         }
-        if ( AuditAdvice.log.isTraceEnabled() ) {
-            AuditAdvice.log.trace( String.format( "Audited event: %s on %s:%d by %s",
-                    note.length() > 0 ? note : "[no note]", auditable.getClass().getSimpleName(), auditable.getId(), user.getUserName() ) );
-        }
+        auditLogger.log( auditable, auditEvent );
     }
 
     /**

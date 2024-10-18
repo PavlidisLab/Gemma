@@ -69,6 +69,16 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
 
     @Override
     @Transactional(readOnly = true)
+    public DifferentialExpressionAnalysis loadWithExperimentAnalyzed( Long id ) {
+        DifferentialExpressionAnalysis analysis = load( id );
+        if ( analysis != null ) {
+            Hibernate.initialize( analysis.getExperimentAnalyzed() );
+        }
+        return analysis;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<DifferentialExpressionAnalysis> find( Gene gene, ExpressionAnalysisResultSet resultSet,
             double threshold ) {
         return this.differentialExpressionAnalysisDao.find( gene, resultSet, threshold );

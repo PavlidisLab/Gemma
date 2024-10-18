@@ -46,6 +46,12 @@ public class ExpressionExperimentBibRefFinder {
 
     private static final String PUBMEDREF_REGEX = "class=\"pubmed_id\" id=\"(\\d+)";
 
+    private final String ncbiApiKey;
+
+    public ExpressionExperimentBibRefFinder( String ncbiApiKey ) {
+        this.ncbiApiKey = ncbiApiKey;
+    }
+
     public BibliographicReference locatePrimaryReference( ExpressionExperiment ee ) throws IOException {
 
         if ( ee.getPrimaryPublication() != null )
@@ -72,7 +78,7 @@ public class ExpressionExperimentBibRefFinder {
         if ( pubMedId < 0 )
             return null;
 
-        PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
+        PubMedXMLFetcher fetcher = new PubMedXMLFetcher( ncbiApiKey );
         return fetcher.retrieveByHTTP( pubMedId );
     }
 

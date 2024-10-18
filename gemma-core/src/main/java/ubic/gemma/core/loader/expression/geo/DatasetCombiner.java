@@ -31,16 +31,9 @@ import ubic.gemma.core.loader.entrez.EutilFetch;
 import ubic.gemma.core.loader.expression.geo.model.*;
 
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.*;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -80,8 +73,6 @@ public class DatasetCombiner {
      * Careful, GEO changes this sometimes.
      */
     private static final String GSE_RECORD_REGEXP = "(GSE\\d+)";
-    private static final String ENTREZ_GEO_QUERY_URL_SUFFIX = "[Accession]&cmd=search";
-    private static final String ENTREZ_GEO_QUERY_URL_BASE = "https://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=";
     private static final Log log = LogFactory.getLog( DatasetCombiner.class.getName() );
     /**
      * Threshold normalized similarity between two strings before we bother to make a match. The normalized similarity
@@ -129,7 +120,7 @@ public class DatasetCombiner {
     private final LinkedHashMap<String, String> accToDataset = new LinkedHashMap<>();
     private final LinkedHashMap<String, String> accToOrganism = new LinkedHashMap<>();
     private final LinkedHashMap<String, String> accToSecondaryTitle = new LinkedHashMap<>();
-    private boolean doSampleMatching;
+    private final boolean doSampleMatching;
 
     public DatasetCombiner() {
         this.doSampleMatching = true;
@@ -145,7 +136,7 @@ public class DatasetCombiner {
      * @param seriesAccessions accessions
      * @return a collection of associated GDS accessions. If no GDS is found, the collection will be empty.
      */
-    public static Collection<String> findGDSforGSE( Collection<String> seriesAccessions ) {
+    public static Collection<String> findGDSforGSE( Collection<String> seriesAccessions, String ncbiApiKey ) {
         /*
          * go from GSE to GDS, using screen scraping.
          */
@@ -154,7 +145,7 @@ public class DatasetCombiner {
         Collection<String> associatedDatasetAccessions = new HashSet<>();
 
         for ( String seriesAccession : seriesAccessions ) {
-            associatedDatasetAccessions.addAll( DatasetCombiner.findGDSforGSE( seriesAccession ) );
+            associatedDatasetAccessions.addAll( DatasetCombiner.findGDSforGSE( seriesAccession, ncbiApiKey ) );
         }
         return associatedDatasetAccessions;
 
@@ -164,11 +155,11 @@ public class DatasetCombiner {
      * @param seriesAccession series accession
      * @return GDSs that correspond to the given series. It will be empty if there is no GDS matching.
      */
-    public static Collection<String> findGDSforGSE( String seriesAccession ) {
+    public static Collection<String> findGDSforGSE( String seriesAccession, String ncbiApiKey ) {
 
         Collection<String> associatedDatasetAccessions = new HashSet<>();
         try {
-            String details = EutilFetch.fetch( "gds", seriesAccession, 100 );
+            String details = new EutilFetch( ncbiApiKey ).fetch( "gds", seriesAccession, 100 );
             if ( details.equalsIgnoreCase( "no results" ) ) {
                 return associatedDatasetAccessions;
             }
@@ -215,45 +206,29 @@ public class DatasetCombiner {
      * @param datasetAccession dataset accession
      * @return Collection of series this data set is derived from (this is almost always just a single item).
      */
-    public static Collection<String> findGSEforGDS( String datasetAccession ) {
+    public static Collection<String> findGSEforGDS( String datasetAccession, String ncbiApiKey ) {
         /*
          * go from GDS to GSE, using screen scraping.
          */
         // http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=GSE674[Accession]&cmd=search
         // grep on "GDS[[digits]] record"
-        URL url = null;
-
         Pattern pat = Pattern.compile( DatasetCombiner.GSE_RECORD_REGEXP );
 
         Collection<String> associatedSeriesAccession = new HashSet<>();
-
         try {
-            url = new URL( DatasetCombiner.ENTREZ_GEO_QUERY_URL_BASE + datasetAccession
-                    + DatasetCombiner.ENTREZ_GEO_QUERY_URL_SUFFIX );
-            URLConnection conn = url.openConnection();
-            conn.connect();
-
-            try (InputStream is = conn.getInputStream();
-                    BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
-
-                String line;
-                while ( ( line = br.readLine() ) != null ) {
-                    Matcher mat = pat.matcher( line );
-                    if ( mat.find() ) {
-                        String capturedAccession = mat.group( 1 );
-                        associatedSeriesAccession.add( capturedAccession );
-                    }
+            Collection<String> lines = new EutilFetch( ncbiApiKey ).query( "gds", datasetAccession + "[Accession]" );
+            for ( String line : lines ) {
+                Matcher mat = pat.matcher( line );
+                if ( mat.find() ) {
+                    String capturedAccession = mat.group( 1 );
+                    associatedSeriesAccession.add( capturedAccession );
                 }
             }
-        } catch ( MalformedURLException e ) {
-            DatasetCombiner.log.error( e, e );
-            throw new RuntimeException( "Invalid URL " + url, e );
         } catch ( IOException e ) {
-            DatasetCombiner.log.error( e, e );
             throw new RuntimeException( "Could not get data from remote server", e );
         }
 
-        if ( associatedSeriesAccession.size() == 0 ) {
+        if ( associatedSeriesAccession.isEmpty() ) {
             throw new IllegalStateException( "No GSE found for " + datasetAccession );
         }
 
@@ -282,8 +257,8 @@ public class DatasetCombiner {
      * @param datasetAccession the geo accession
      * @return all GDS associated with the given accession
      */
-    public Collection<String> findGDSforGDS( String datasetAccession ) {
-        return DatasetCombiner.findGDSforGSE( DatasetCombiner.findGSEforGDS( datasetAccession ) );
+    public Collection<String> findGDSforGDS( String datasetAccession, String ncbiApiKey ) {
+        return DatasetCombiner.findGDSforGSE( DatasetCombiner.findGSEforGDS( datasetAccession, ncbiApiKey ), ncbiApiKey );
     }
 
     /**

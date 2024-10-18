@@ -91,11 +91,11 @@ public class ExternalDatabase extends AbstractDescribable implements Auditable, 
         this.localInstallDbName = localInstallDbName;
     }
 
-    public ubic.gemma.model.common.description.DatabaseType getType() {
+    public DatabaseType getType() {
         return this.type;
     }
 
-    public void setType( ubic.gemma.model.common.description.DatabaseType type ) {
+    public void setType( DatabaseType type ) {
         this.type = type;
     }
 
@@ -169,8 +169,8 @@ public class ExternalDatabase extends AbstractDescribable implements Auditable, 
 
     public static final class Factory {
 
-        public static ubic.gemma.model.common.description.ExternalDatabase newInstance() {
-            return new ubic.gemma.model.common.description.ExternalDatabase();
+        public static ExternalDatabase newInstance() {
+            return new ExternalDatabase();
         }
 
         public static ExternalDatabase newInstance( String name, DatabaseType other ) {

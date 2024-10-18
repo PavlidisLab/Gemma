@@ -47,6 +47,19 @@ public class FilterQueryUtils {
                 ret.append( " desc" );
             }
 
+            switch ( sort.getNullMode() ) {
+                case DEFAULT:
+                    break;
+                case FIRST:
+                    ret.append( " nulls first" );
+                    break;
+                case LAST:
+                    ret.append( " nulls last" );
+                    break;
+                default:
+                    throw new UnsupportedOperationException( "Unsupported null mode " + sort.getNullMode() + "." );
+            }
+
             if ( sort.getAndThen() != null ) {
                 ret.append( ", " );
             }

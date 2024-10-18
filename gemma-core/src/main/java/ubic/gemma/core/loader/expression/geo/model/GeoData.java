@@ -31,7 +31,6 @@ import java.util.Objects;
  */
 public abstract class GeoData implements Serializable {
 
-    private static final long serialVersionUID = -859220901359581113L;
     private final List<String> columnNames = new ArrayList<>();
     private final List<String> columnDescriptions = new ArrayList<>();
     private GeoContact contact = new GeoContact();

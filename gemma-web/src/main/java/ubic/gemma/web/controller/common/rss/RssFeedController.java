@@ -51,7 +51,7 @@ public class RssFeedController {
     /**
      * Show all experiments
      */
-    @RequestMapping(value = { "/rssfeed" }, method = RequestMethod.GET)
+    @RequestMapping(value = { "/rssfeed" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView getLatestExperiments( HttpServletRequest request, HttpServletResponse response ) {
 
         WhatsNew wn = whatsNewService.getLatestWeeklyReport();

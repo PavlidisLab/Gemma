@@ -29,7 +29,7 @@ public class ExpressionAnalysisResultSetServiceTest extends BaseSpringContextTes
     @Test
     public void testLoadValueObjects() {
         Filters filters = Filters.by( expressionAnalysisResultSetService.getFilter( "id", Filter.Operator.in, Collections.singletonList( "1123898912" ) ) );
-        Sort sort = expressionAnalysisResultSetService.getSort( "id", Sort.Direction.DESC );
+        Sort sort = expressionAnalysisResultSetService.getSort( "id", Sort.Direction.DESC, Sort.NullMode.LAST );
         List<DifferentialExpressionAnalysisResultSetValueObject> results = expressionAnalysisResultSetService.loadValueObjects( filters, sort );
         assertThat( results ).isEmpty();
     }
@@ -37,7 +37,7 @@ public class ExpressionAnalysisResultSetServiceTest extends BaseSpringContextTes
     @Test
     public void testLoadValueObjectsWithPagination() {
         Filters filters = Filters.by( expressionAnalysisResultSetService.getFilter( "id", Filter.Operator.in, Collections.singletonList( "1123898912" ) ) );
-        Sort sort = expressionAnalysisResultSetService.getSort( "id", Sort.Direction.DESC );
+        Sort sort = expressionAnalysisResultSetService.getSort( "id", Sort.Direction.DESC, Sort.NullMode.LAST );
         Slice<DifferentialExpressionAnalysisResultSetValueObject> results = expressionAnalysisResultSetService.loadValueObjects( filters, sort, 10, 20 );
         assertThat( results ).isEmpty();
     }

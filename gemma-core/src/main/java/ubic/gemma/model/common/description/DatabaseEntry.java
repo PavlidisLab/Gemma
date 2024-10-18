@@ -152,21 +152,17 @@ public class DatabaseEntry implements Identifiable, Serializable {
             return new DatabaseEntry();
         }
 
-        public static DatabaseEntry newInstance( String accession, String accessionVersion, String Uri,
-                ExternalDatabase externalDatabase ) {
-            final DatabaseEntry entity = new DatabaseEntry();
-            entity.setAccession( accession );
-            entity.setAccessionVersion( accessionVersion );
-            entity.setUri( Uri );
+        public static DatabaseEntry newInstance( ExternalDatabase externalDatabase ) {
+            final DatabaseEntry entity = newInstance();
             entity.setExternalDatabase( externalDatabase );
             return entity;
         }
 
-        public static DatabaseEntry newInstance( ExternalDatabase externalDatabase ) {
-            final DatabaseEntry entity = new DatabaseEntry();
+        public static DatabaseEntry newInstance( String accession, ExternalDatabase externalDatabase ) {
+            final DatabaseEntry entity = newInstance( externalDatabase );
+            entity.setAccession( accession );
             entity.setExternalDatabase( externalDatabase );
             return entity;
         }
     }
-
 }

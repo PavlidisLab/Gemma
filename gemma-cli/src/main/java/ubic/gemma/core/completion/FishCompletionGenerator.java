@@ -15,8 +15,7 @@ import static ubic.gemma.core.util.ShellUtils.quoteIfNecessary;
  * Generates fish completion script.
  * @author poirigui
  */
-public class FishCompletionGenerator extends AbstractCompletionGenerator implements CompletionGenerator {
-
+public class FishCompletionGenerator extends AbstractCompletionGenerator {
 
     private final String executableName;
     private final String allSubcommands;

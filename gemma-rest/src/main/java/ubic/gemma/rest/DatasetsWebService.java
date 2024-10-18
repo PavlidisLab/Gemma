@@ -227,7 +227,7 @@ public class DatasetsWebService {
                 } else {
                     direction = Sort.Direction.DESC;
                 }
-                sort = Sort.by( null, "searchResult.score", direction );
+                sort = Sort.by( null, "searchResult.score", direction, Sort.NullMode.LAST );
                 ids = new ArrayList<>( expressionExperimentService.loadIdsWithCache( filters, null ) );
                 Map<Long, Double> scoreById = new HashMap<>();
                 ids.retainAll( datasetArgService.getIdsForSearchQuery( query, scoreById, warnings ) );
@@ -338,7 +338,7 @@ public class DatasetsWebService {
                         .map( e -> new ArrayDesignWithUsageStatisticsValueObject( e, countsById.get( e.getId() ), tts.getOrDefault( TechnologyType.valueOf( e.getTechnologyType() ), 0L ) ) )
                         .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                         .collect( Collectors.toList() );
-        return top( results, query != null ? query.getValue() : null, filters, new String[] { "id" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ), l, inferredTerms )
+        return top( results, query != null ? query.getValue() : null, filters, new String[] { "id" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, Sort.NullMode.LAST, "numberOfExpressionExperiments" ), l, inferredTerms )
                 .addWarnings( warnings, "query", LocationType.QUERY );
     }
 
@@ -417,7 +417,7 @@ public class DatasetsWebService {
                 .map( e -> new CategoryWithUsageStatisticsValueObject( e.getKey().getCategoryUri(), e.getKey().getCategory(), e.getValue() ) )
                 .sorted( Comparator.comparing( UsageStatistics::getNumberOfExpressionExperiments, Comparator.reverseOrder() ) )
                 .collect( Collectors.toList() );
-        return top( results, query != null ? query.getValue() : null, filters, new String[] { "classUri", "className" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ), maxResults, inferredTerms )
+        return top( results, query != null ? query.getValue() : null, filters, new String[] { "classUri", "className" }, Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, Sort.NullMode.LAST, "numberOfExpressionExperiments" ), maxResults, inferredTerms )
                 .addWarnings( warnings, "query", LocationType.QUERY );
     }
 
@@ -526,7 +526,7 @@ public class DatasetsWebService {
             }
         }
         return top( results, query != null ? query.getValue() : null, filters, new String[] { "classUri", "className", "termUri", "termName" },
-                Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ),
+                Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, Sort.NullMode.LAST, "numberOfExpressionExperiments" ),
                 limit, inferredTerms )
                 .addWarnings( queryWarnings, "query", LocationType.QUERY );
     }
@@ -666,7 +666,7 @@ public class DatasetsWebService {
                 .map( e -> new TaxonWithUsageStatisticsValueObject( e.getKey(), e.getValue() ) )
                 .collect( Collectors.toList() );
         return all( payload, query != null ? query.getValue() : null, filters, new String[] { "id" },
-                Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, "numberOfExpressionExperiments" ),
+                Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, Sort.NullMode.LAST, "numberOfExpressionExperiments" ),
                 inferredTerms )
                 .addWarnings( warnings, "query", LocationType.QUERY );
     }
@@ -917,7 +917,7 @@ public class DatasetsWebService {
         if ( threshold < 0 || threshold > 1 ) {
             throw new BadRequestException( "The threshold must be in the [0, 1] interval." );
         }
-        List<Long> ids = new ArrayList<>( expressionExperimentService.loadIdsWithCache( filters, expressionExperimentService.getSort( "id", Sort.Direction.ASC ) ) );
+        List<Long> ids = new ArrayList<>( expressionExperimentService.loadIdsWithCache( filters, expressionExperimentService.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ) ) );
         if ( query != null ) {
             ids.retainAll( datasetArgService.getIdsForSearchQuery( query, warnings ) );
         }
@@ -949,7 +949,7 @@ public class DatasetsWebService {
             }
         }
 
-        return paginate( new Slice<>( payload, Sort.by( null, "sourceExperimentId", Sort.Direction.ASC, "sourceExperimentId" ), offset, limit, ( long ) ids.size() ),
+        return paginate( new Slice<>( payload, Sort.by( null, "sourceExperimentId", Sort.Direction.ASC, Sort.NullMode.LAST, "sourceExperimentId" ), offset, limit, ( long ) ids.size() ),
                 query != null ? query.getValue() : null, filters, new String[] { "sourceExperimentId", "experimentAnalyzedId", "resultSetId" }, inferredTerms )
                 .addWarnings( warnings, "query", LocationType.QUERY );
     }
@@ -1006,7 +1006,7 @@ public class DatasetsWebService {
         if ( threshold < 0 || threshold > 1 ) {
             throw new BadRequestException( "The threshold must be in the [0, 1] interval." );
         }
-        Set<Long> ids = new HashSet<>( expressionExperimentService.loadIdsWithCache( filters, expressionExperimentService.getSort( "id", Sort.Direction.ASC ) ) );
+        Set<Long> ids = new HashSet<>( expressionExperimentService.loadIdsWithCache( filters, expressionExperimentService.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ) ) );
         if ( query != null ) {
             ids.retainAll( datasetArgService.getIdsForSearchQuery( query, null ) );
         }
