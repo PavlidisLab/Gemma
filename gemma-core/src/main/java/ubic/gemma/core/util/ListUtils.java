@@ -53,8 +53,9 @@ public class ListUtils {
      * Get an element of a sparse array.
      */
     public static <T> T getSparseArrayElement( List<T> array, int[] indices, int numberOfElements, int index, T defaultValue ) {
-        Assert.isTrue( array.size() == indices.length,
-                String.format( "Invalid size for sparse array, it must contain %d indices.", array.size() ) );
+        if ( array.size() != indices.length ) {
+            throw new IllegalArgumentException( String.format( "Invalid size for sparse array, it must contain %d indices.", array.size() ) );
+        }
         // special case for dense array
         if ( indices.length == numberOfElements ) {
             return array.get( index );
@@ -98,9 +99,12 @@ public class ListUtils {
      * @see #validateSparseRangeArray(List, int[], int)
      */
     public static <T> T getSparseRangeArrayElement( List<T> array, int[] offsets, int numberOfElements, int index ) throws IllegalArgumentException, IndexOutOfBoundsException {
-        Assert.isTrue( array.size() == offsets.length,
-                String.format( "Invalid size for sparse range array, it must contain %d indices.", array.size() ) );
-        Assert.isTrue( array.isEmpty() || offsets[0] == 0, "The first offset of a non-empty sparse range array must be zero." );
+        if ( array.size() != offsets.length ) {
+            throw new IllegalArgumentException( String.format( "Invalid size for sparse range array, it must contain %d indices.", array.size() ) );
+        }
+        if ( !array.isEmpty() && offsets[0] != 0 ) {
+            throw new IllegalArgumentException( "The first offset of a non-empty sparse range array must be zero." );
+        }
         if ( index < 0 ) {
             // FIXME: add support for negative indexing
             throw new UnsupportedOperationException( "Negative indexing of sparse range arrays is not supported." );
