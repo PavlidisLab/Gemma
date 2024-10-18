@@ -238,7 +238,6 @@ public abstract class AbstractCLI implements CLI {
     }
 
     private void buildStandardOptions( Options options ) {
-        log.debug( "Creating standard options" );
         options.addOption( HELP_OPTION, "help", false, "Print this message" );
     }
 

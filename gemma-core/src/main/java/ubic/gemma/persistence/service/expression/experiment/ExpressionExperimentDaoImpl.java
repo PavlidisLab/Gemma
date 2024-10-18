@@ -2381,7 +2381,7 @@ public class ExpressionExperimentDaoImpl
                     nnzs[i] += end - start;
                     start = end;
                 }
-                if ( ++done % 100 == 0 ) {
+                if ( ++done % 1000 == 0 ) {
                     log.debug( String.format( "Processed %d/%d vectors at %.2f vectors/sec", done, numVecs, 1000.0 * done / timer.getTime() ) );
                 }
             }
