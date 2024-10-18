@@ -23,6 +23,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
@@ -54,6 +55,9 @@ import java.util.List;
 public class BlacklistCli extends AbstractAuthenticatedCLI {
 
     private static final int MAX_RETRIES = 3;
+
+    @Value("${entrez.efetch.apikey}")
+    private String ncbiApiKey;
 
     // accessions of file containing accessions to blacklist
     private String accession = null;
@@ -149,7 +153,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
             b.setShortName( accession );
             b.setReason( reason );
 
-            DatabaseEntry d = DatabaseEntry.Factory.newInstance( accession, null, null, geo );
+            DatabaseEntry d = DatabaseEntry.Factory.newInstance( accession, geo );
             b.setExternalAccession( d );
 
             blacklistedEntityService.create( b );
@@ -219,7 +223,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
                 blee.setShortName( accession );
                 blee.setReason( reason );
 
-                DatabaseEntry d = DatabaseEntry.Factory.newInstance( accession, null, null, geo );
+                DatabaseEntry d = DatabaseEntry.Factory.newInstance( accession, geo );
                 blee.setExternalAccession( d );
 
                 /*
@@ -247,7 +251,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
      *
      */
     private void proactivelyBlacklistExperiments( ExternalDatabase geo ) throws Exception {
-        GeoBrowser gbs = new GeoBrowser();
+        GeoBrowser gbs = new GeoBrowser( ncbiApiKey );
         BlacklistedEntityService blacklistedEntityDao = this.getBean( BlacklistedEntityService.class );
 
         Collection<String> candidates = new ArrayList<>();
@@ -295,7 +299,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
             List<GeoRecord> recs = null;
 
             try {
-                recs = gbs.getGeoRecordsBySearchTerm( null, start, 100, false /* details */, null, candidates );
+                recs = gbs.searchGeoRecords( null, null, null, candidates, null, start, 100, false /* details */ );
                 retries = 0;
             } catch ( IOException e ) {
                 // this definitely can happen, occasional 500s from NCBI
@@ -346,7 +350,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
 
                 log.info( "Blacklisting: " + eeAcc + " " + geoRecord.getTitle() + " (" + geoRecord.getPlatform() + ")" );
                 BlacklistedEntity b = new BlacklistedExperiment();
-                DatabaseEntry d = DatabaseEntry.Factory.newInstance( eeAcc, null, null, geo );
+                DatabaseEntry d = DatabaseEntry.Factory.newInstance( eeAcc, geo );
                 b.setExternalAccession( d );
                 b.setDescription( geoRecord.getTitle() );
                 b.setReason( "Unsupported platform" );

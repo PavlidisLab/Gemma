@@ -228,7 +228,7 @@ public class PlatformsWebService {
         probesArg.setPlatform( arrayDesignArgService.getEntity( platformArg ) );
         Filters filters = Filters.by( probesArg.getPlatformFilter() );
         return paginate( compositeSequenceService::loadValueObjects, filters, new String[] { "id" },
-                compositeSequenceService.getSort( "id", Sort.Direction.ASC ), offset.getValue(), limit.getValue() );
+                compositeSequenceService.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), offset.getValue(), limit.getValue() );
     }
 
     /**

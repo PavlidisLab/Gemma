@@ -155,9 +155,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Value("${load.ontologies}")
     private boolean autoLoadOntologies;
 
+    @Value("${entrez.efetch.apikey}")
+    private String ncbiApiKey;
+
     @Override
     public void afterPropertiesSet() {
-        this.pubMedXmlFetcher = new PubMedXMLFetcher();
+        this.pubMedXmlFetcher = new PubMedXMLFetcher( ncbiApiKey );
         Set<ubic.basecode.ontology.providers.OntologyService> disabledOntologies = ontologyHelper.getOntologyServices().stream()
                 .filter( os -> !os.isEnabled() )
                 .collect( Collectors.toSet() );

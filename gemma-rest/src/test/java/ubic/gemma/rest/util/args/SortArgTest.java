@@ -23,7 +23,7 @@ public class SortArgTest {
     @Test
     public void testGetSort() {
         FilteringService<Identifiable> filteringService = mock( FilteringService.class );
-        when( filteringService.getSort( "id", Sort.Direction.ASC ) ).thenReturn( Sort.by( "entity", "id", Sort.Direction.ASC, "id" ) );
+        when( filteringService.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ) ).thenReturn( Sort.by( "entity", "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" ) );
         assertThat( SortArg.valueOf( "+id" ).getSort( filteringService ) )
                 .hasFieldOrPropertyWithValue( "objectAlias", "entity" )
                 .hasFieldOrPropertyWithValue( "propertyName", "id" )
@@ -33,7 +33,7 @@ public class SortArgTest {
     @Test(expected = MalformedArgException.class)
     public void testGetSortWhenFieldDoesNotExistThenRaiseMalformedArgumentException() {
         FilteringService<Identifiable> filteringService = mock( FilteringService.class );
-        when( filteringService.getSort( "wut", Sort.Direction.ASC ) ).thenThrow( IllegalArgumentException.class );
+        when( filteringService.getSort( "wut", Sort.Direction.ASC, Sort.NullMode.LAST ) ).thenThrow( IllegalArgumentException.class );
         SortArg.valueOf( "+wut" ).getSort( filteringService );
     }
 

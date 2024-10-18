@@ -66,7 +66,7 @@ public class CompositeSequenceController extends BaseController {
     @Autowired
     private GeneService geneService;
 
-    @RequestMapping(value = "/filter", method = RequestMethod.GET)
+    @RequestMapping(value = "/filter", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView filter( @RequestParam("filter") String filter, @RequestParam("arid") String arid ) {
         ModelAndView mav = new ModelAndView( "compositeSequences.geneMap" );
 
@@ -180,7 +180,7 @@ public class CompositeSequenceController extends BaseController {
         return getSummaries( css );
     }
 
-    @RequestMapping(value = "/show", method = RequestMethod.GET)
+    @RequestMapping(value = "/show", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView show( @RequestParam("id") Long id, HttpServletRequest request ) {
         ModelAndView mav = new ModelAndView( "compositeSequence.detail" );
         CompositeSequence cs = compositeSequenceService.load( id );

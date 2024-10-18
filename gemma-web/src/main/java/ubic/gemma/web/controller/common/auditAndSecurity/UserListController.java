@@ -71,7 +71,7 @@ public class UserListController {
         return userValueObjects;
     }
 
-    @RequestMapping(value = "/admin/activeUsers.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/admin/activeUsers.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView getActiveUsers() {
         /*
          * FIXME: this lists all users, not the ones who are active.
