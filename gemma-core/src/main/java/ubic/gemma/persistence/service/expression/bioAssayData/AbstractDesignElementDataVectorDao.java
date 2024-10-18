@@ -82,6 +82,7 @@ public abstract class AbstractDesignElementDataVectorDao<T extends BulkExpressio
         Set<ExpressionExperiment> ees = new HashSet<>( designElementDataVectors.size() );
         Set<BioAssayDimension> dims = new HashSet<>( designElementDataVectors.size() );
         for ( T vector : designElementDataVectors ) {
+            Hibernate.initialize( vector.getDesignElement().getBiologicalCharacteristic() );
             dims.add( vector.getBioAssayDimension() );
             ees.add( vector.getExpressionExperiment() );
         }

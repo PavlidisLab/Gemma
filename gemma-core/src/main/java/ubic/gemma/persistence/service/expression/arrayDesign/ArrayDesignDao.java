@@ -21,6 +21,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by tesarst on 13/03/17.
@@ -69,7 +70,9 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
     /**
      * Obtain all the genes associated to the platform organized by corresponding design elements.
      */
-    Map<CompositeSequence, List<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign );
+    Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign );
+
+    Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( Collection<ArrayDesign> arrayDesign );
 
     Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
 

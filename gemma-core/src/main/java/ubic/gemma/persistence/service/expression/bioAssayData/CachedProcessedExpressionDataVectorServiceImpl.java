@@ -284,13 +284,10 @@ public class CachedProcessedExpressionDataVectorServiceImpl implements CachedPro
         log.info( "Searching for vectors for " + genes.size() + " genes from " + needToSearch.size()
                 + " experiments not in cache" );
 
-        Collection<ArrayDesign> arrays = CommonQueries
-                .getArrayDesignsUsed( IdentifiableUtils.getIds( this.getExperiments( ees ) ),
-                        this.sessionFactory.getCurrentSession() )
-                .keySet();
+        Collection<ArrayDesign> arrays = CommonQueries.getArrayDesignsUsed( ees, this.sessionFactory.getCurrentSession() );
         assert !arrays.isEmpty();
         Map<Long, Collection<Long>> cs2gene = CommonQueries
-                .getCs2GeneIdMap( genesToSearch, IdentifiableUtils.getIds( arrays ),
+                .getCs2GeneIdMapForGenes( genesToSearch, IdentifiableUtils.getIds( arrays ),
                         this.sessionFactory.getCurrentSession() );
 
         if ( cs2gene.isEmpty() ) {

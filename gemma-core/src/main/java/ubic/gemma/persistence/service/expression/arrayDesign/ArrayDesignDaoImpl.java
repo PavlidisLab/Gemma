@@ -380,7 +380,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    public Map<CompositeSequence, List<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign ) {
+    public Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign ) {
         Map<Long, CompositeSequence> idMap = IdentifiableUtils.getIdMap( arrayDesign.getCompositeSequences() );
         //noinspection unchecked
         List<Object[]> results = getSessionFactory().getCurrentSession()
@@ -397,7 +397,17 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         return results.stream()
                 .collect( Collectors.groupingBy(
                         row -> requireNonNull( idMap.get( ( Long ) row[0] ) ),
-                        Collectors.mapping( row -> ( Gene ) row[1], Collectors.toList() ) ) );
+                        Collectors.mapping( row -> ( Gene ) row[1], Collectors.toSet() ) ) );
+    }
+
+    @Override
+    public Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( Collection<ArrayDesign> arrayDesign ) {
+        return arrayDesign.stream()
+                .map( this::getGenesByCompositeSequence )
+                .reduce( new HashMap<>(), ( m1, m2 ) -> {
+                    m1.putAll( m2 );
+                    return m1;
+                } );
     }
 
     @Override
@@ -595,10 +605,16 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public List<ArrayDesignValueObject> loadValueObjectsForEE( @Nullable Long eeId ) {
         if ( eeId == null ) {
-            return new ArrayList<>();
+            return Collections.emptyList();
         }
-        Collection<Long> ids = CommonQueries.getArrayDesignIdsUsed( eeId,
-                this.getSessionFactory().getCurrentSession() );
+        //noinspection unchecked
+        List<Long> ids = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct ad.id from ExpressionExperiment as ee "
+                        + "join ee.bioAssays b join b.arrayDesignUsed ad "
+                        + "where ee.id = :eeId" )
+                .setParameter( "eeId", eeId )
+                .setCacheable( true )
+                .list();
         return this.loadValueObjectsByIds( ids );
     }
 

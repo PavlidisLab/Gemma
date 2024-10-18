@@ -982,7 +982,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             assert arrayDesignsUsed != null;
             adUsed.addAll( arrayDesignsUsed );
         }
-        return CommonQueries.getCs2GeneIdMap( geneIds, adUsed, session );
+        return CommonQueries.getCs2GeneIdMapForGenes( geneIds, adUsed, session );
     }
 
     /**

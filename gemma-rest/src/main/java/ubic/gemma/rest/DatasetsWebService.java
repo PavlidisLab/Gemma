@@ -47,6 +47,7 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.DifferentialExpressionAnalysisResultListFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchResult;
@@ -63,6 +64,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -73,6 +75,7 @@ import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysi
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
@@ -86,16 +89,15 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-import java.util.zip.GZIPInputStream;
 
 import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectType;
 import static ubic.gemma.persistence.util.IdentifiableUtils.toIdentifiableSet;
@@ -153,6 +155,8 @@ public class DatasetsWebService {
     private DifferentialExpressionAnalysisResultListFileService differentialExpressionAnalysisResultListFileService;
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
+    @Autowired
+    private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
 
     @Context
     private UriInfo uriInfo;
@@ -1087,6 +1091,7 @@ public class DatasetsWebService {
      *                   is more efficient. Only datasets that user has access to will be available.
      * @param filterData return filtered the expression data.
      */
+    @GZIP(alreadyCompressed = true)
     @GET
     @Path("/{dataset}/data")
     @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
@@ -1104,21 +1109,7 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg, // Required
             @QueryParam("filter") @DefaultValue("false") Boolean filterData // Optional, default false
     ) {
-        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        try {
-            ee = expressionExperimentService.thawLite( ee );
-            File file = expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, filterData ).orElse( null );
-            if ( file == null || !file.exists() ) {
-                throw new NotFoundException( String.format( DatasetsWebService.ERROR_DATA_FILE_NOT_AVAILABLE, ee.getShortName() ) );
-            }
-            return this.outputFile( file );
-        } catch ( NoRowsLeftAfterFilteringException e ) {
-            return Response.noContent().build();
-        } catch ( FilteringException e ) {
-            throw new InternalServerErrorException( String.format( "Filtering of dataset %s failed.", ee.getShortName() ), e );
-        } catch ( IOException e ) {
-            throw new InternalServerErrorException( e );
-        }
+        return getDatasetProcessedExpression( datasetArg, filterData );
     }
 
     /**
@@ -1127,7 +1118,7 @@ public class DatasetsWebService {
      * The payload is transparently compressed via a <code>Content-Encoding</code> header and streamed to avoid dumping
      * the whole payload in memory.
      */
-    @GZIP
+    @GZIP(alreadyCompressed = true)
     @GET
     @Path("/{dataset}/data/processed")
     @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
@@ -1137,17 +1128,34 @@ public class DatasetsWebService {
                     @ApiResponse(content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
                             schema = @Schema(type = "string", format = "binary"),
                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-processed-data.tsv") })),
-                    @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
+                    @ApiResponse(responseCode = "204", description = "The dataset expression matrix is empty. Only applicable if filter is set to true."),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public Response getDatasetProcessedExpression( @PathParam("dataset") DatasetArg<?> datasetArg ) {
+    public Response getDatasetProcessedExpression( @PathParam("dataset") DatasetArg<?> datasetArg, @QueryParam("filter") @DefaultValue("false") Boolean filtered ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         if ( !expressionExperimentService.hasProcessedExpressionData( ee ) ) {
-            throw new NotFoundException( String.format( "No preferred quantitation type could be for found processed expression data data of %s.", ee ) );
+            throw new NotFoundException( ee.getShortName() + " does not have any processed vectors." );
         }
-        StreamingOutput stream = ( output ) -> expressionDataFileService.writeProcessedExpressionData( ee, new OutputStreamWriter( output ) );
-        return Response.ok( stream )
-                .header( "Content-Disposition", String.format( "attachment; filename=%d_%s_expmat.unfilt.data.txt", ee.getId(), ee.getShortName() ) )
-                .build();
+        try {
+            try {
+                java.nio.file.Path p = expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, filtered )
+                        .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have any processed vectors." ) );
+                return Response.ok( p.toFile() )
+                        .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( p.getFileName().toString() ) + "\"" )
+                        .build();
+            } catch ( IOException e ) {
+                log.error( "Failed to create processed expression data for " + ee + ", will have to stream it as a fallback.", e );
+                java.nio.file.Path p = expressionDataFileService.getDataFile( ee, filtered, ExpressionExperimentDataFileType.TABULAR )
+                        .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have any processed vectors." ) );
+                return Response.ok( ( StreamingOutput ) output -> expressionDataFileService.writeProcessedExpressionData( ee, filtered, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) ) )
+                        .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( p.getFileName().toString() ) + "\"" )
+                        .build();
+            }
+        } catch ( NoRowsLeftAfterFilteringException e ) {
+            return Response.noContent().build();
+        } catch ( FilteringException e ) {
+            throw new InternalServerErrorException( String.format( "Filtering of dataset %s failed.", ee.getShortName() ), e );
+        }
     }
 
     /**
@@ -1156,7 +1164,7 @@ public class DatasetsWebService {
      * The payload is transparently compressed via a <code>Content-Encoding</code> header and streamed to avoid dumping
      * the whole payload in memory.
      */
-    @GZIP
+    @GZIP(alreadyCompressed = true)
     @GET
     @Path("/{dataset}/data/raw")
     @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
@@ -1180,10 +1188,47 @@ public class DatasetsWebService {
                 throw new NotFoundException( String.format( "No preferred quantitation type could be found for raw expression data data of %s.", ee ) );
             }
         }
-        StreamingOutput stream = ( output ) -> expressionDataFileService.writeRawExpressionData( ee, qt, new OutputStreamWriter( output ) );
-        return Response.ok( stream )
-                .header( "Content-Disposition", String.format( "attachment; filename=%d_%s_expmat.unfilt.raw.data.txt", ee.getId(), ee.getShortName() ) )
-                .build();
+        try {
+            java.nio.file.Path p = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, false );
+            return Response.ok( p.toFile() )
+                    .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( p.getFileName().toString() ) + "\"" )
+                    .build();
+        } catch ( IOException e ) {
+            log.error( "Failed to write raw expression data for " + qt + " to disk, will resort to stream it.", e );
+            java.nio.file.Path p = expressionDataFileService.getDataFile( ee, qt, ExpressionExperimentDataFileType.TABULAR );
+            return Response.ok( ( StreamingOutput ) output -> expressionDataFileService.writeRawExpressionData( ee, qt, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) ) )
+                    .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( p.getFileName().toString() ) + "\"" )
+                    .build();
+        }
+    }
+
+    @GZIP(alreadyCompressed = true)
+    @GET
+    @Path("/{dataset}/data/singleCell")
+    @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
+    @Operation(summary = "Retrieve single-cell expression data of a dataset")
+    public Response getDatasetSingleCellExpression( @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        QuantitationType qt;
+        if ( quantitationTypeArg != null ) {
+            qt = quantitationTypeArgService.getEntity( quantitationTypeArg, ee, SingleCellExpressionDataVector.class );
+        } else {
+            qt = singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee )
+                    .orElseThrow( () -> new NotFoundException( "No preferred single-cell quantitation type could be found for " + ee + "." ) );
+        }
+        try {
+            java.nio.file.Path p = expressionDataFileService.writeOrLocateTabularSingleCellExpressionData( ee, qt, true, 30, false );
+            return Response.ok( p.toFile() )
+                    .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( p.getFileName().toString() ) + "\"" )
+                    .build();
+        } catch ( IOException e ) {
+            log.error( "Failed to write single-cell data for " + qt + " to disk, will resort to stream it.", e );
+            java.nio.file.Path p = expressionDataFileService.getDataFile( ee, qt, ExpressionExperimentDataFileType.TABULAR );
+            return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, true, 30, new OutputStreamWriter( stream, StandardCharsets.UTF_8 ) ) )
+                    .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( p.getFileName().toString() ) + "\"" )
+                    .build();
+        }
     }
 
     /**
@@ -1192,6 +1237,7 @@ public class DatasetsWebService {
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.
      */
+    @GZIP(alreadyCompressed = true)
     @GET
     @Path("/{dataset}/design")
     @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
@@ -1205,14 +1251,22 @@ public class DatasetsWebService {
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         try {
-            ee = expressionExperimentService.thawLite( ee );
-            File file = expressionDataFileService.writeOrLocateDesignFile( ee, false );
-            if ( file == null || !file.exists() ) {
+            java.nio.file.Path file = expressionDataFileService.writeOrLocateDesignFile( ee, false )
+                    .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have an experimental design." ) );
+            if ( !Files.exists( file ) ) {
                 throw new NotFoundException( String.format( DatasetsWebService.ERROR_DESIGN_FILE_NOT_AVAILABLE, ee.getShortName() ) );
             }
-            return this.outputFile( file );
+            // we remove the .gz extension because we use HTTP Content-Encoding
+            return Response.ok( file.toFile() )
+                    .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( file.getFileName().toString() ) + "\"" )
+                    .build();
         } catch ( IOException e ) {
-            throw new InternalServerErrorException( e.getMessage(), e );
+            log.error( "Failed to write design for " + ee + " to disk, will resort to stream it.", e );
+            java.nio.file.Path file = expressionDataFileService.getExperimentalDesignFile( ee )
+                    .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have an experimental design." ) );
+            return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeDesignMatrix( ee, new OutputStreamWriter( stream, StandardCharsets.UTF_8 ) ) )
+                    .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( file.getFileName().toString() ) + "\"" )
+                    .build();
         }
     }
 
@@ -1619,14 +1673,6 @@ public class DatasetsWebService {
         public ResponseDataObjectExpressionExperimentValueObject( ExpressionExperimentValueObject payload ) {
             super( payload );
         }
-    }
-
-    private Response outputFile( File file ) throws IOException {
-        // we remove the .gz extension because we use HTTP Content-Encoding
-        return Response.ok( new GZIPInputStream( Files.newInputStream( file.toPath() ) ) )
-                .header( "Content-Encoding", "gzip" )
-                .header( "Content-Disposition", "attachment; filename=" + FilenameUtils.removeExtension( file.getName() ) )
-                .build();
     }
 
     @Value

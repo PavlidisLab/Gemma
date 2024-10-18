@@ -51,10 +51,7 @@ import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
@@ -964,6 +961,18 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, QuantitationType qt ) {
+        return this.expressionExperimentDao.getArrayDesignsUsed( ee, qt, quantitationTypeService.getDataVectorType( qt ) );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, QuantitationType qt, Class<? extends DataVector> vectorType ) {
+        return this.expressionExperimentDao.getArrayDesignsUsed( ee, qt, vectorType );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<Gene> getGenesUsedByPreferredVectors( ExpressionExperiment experimentConstraint ) {
         return this.expressionExperimentDao.getGenesUsedByPreferredVectors( experimentConstraint );
     }
@@ -1142,7 +1151,7 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.getQuantitationTypes( expressionExperiment );
+        return this.quantitationTypeService.findByExpressionExperiment( expressionExperiment );
     }
 
     @Override

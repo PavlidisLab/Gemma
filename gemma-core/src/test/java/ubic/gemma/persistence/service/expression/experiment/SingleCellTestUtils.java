@@ -4,7 +4,6 @@ import cern.jet.random.NegativeBinomial;
 import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
 import org.springframework.util.Assert;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -33,6 +32,27 @@ public class SingleCellTestUtils {
     public static void setSeed( int seed ) {
         countDistribution.reseedRandomGenerator( seed );
         uniform100Distribution.reseedRandomGenerator( seed );
+    }
+
+    public static Collection<SingleCellExpressionDataVector> randomSingleCellVectors() {
+        return randomSingleCellVectors( 100, 4, 1000, 0.9 );
+    }
+
+    public static Collection<SingleCellExpressionDataVector> randomSingleCellVectors( int numDesignElements, int numSamples, int numCellsPerBioAssay, double sparsity ) {
+        ArrayDesign arrayDesign = new ArrayDesign();
+        for ( int i = 0; i < numDesignElements; i++ ) {
+            arrayDesign.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "cs" + i ) );
+        }
+        ExpressionExperiment ee = new ExpressionExperiment();
+        for ( int i = 0; i < numSamples; i++ ) {
+            ee.getBioAssays().add( BioAssay.Factory.newInstance( "ba" + i ) );
+        }
+        QuantitationType qt = new QuantitationType();
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.COUNT );
+        qt.setScale( ScaleType.COUNT );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        return randomSingleCellVectors( ee, arrayDesign, qt, numCellsPerBioAssay, sparsity );
     }
 
     /**
@@ -74,11 +94,12 @@ public class SingleCellTestUtils {
         Collection<SingleCellExpressionDataVector> results = new ArrayList<>();
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
             SingleCellExpressionDataVector vector = new SingleCellExpressionDataVector();
+            vector.setExpressionExperiment( ee );
             vector.setDesignElement( cs );
             vector.setQuantitationType( qt );
             vector.setSingleCellDimension( dimension );
             double density = 1.0 - sparsity;
-            int N = ( int ) ( density * numCells );
+            int N = ( int ) Math.ceil( density * numCells );
             double[] X = new double[N];
             int[] IX = new int[X.length];
             int step = ( int ) ( 1.0 / density );

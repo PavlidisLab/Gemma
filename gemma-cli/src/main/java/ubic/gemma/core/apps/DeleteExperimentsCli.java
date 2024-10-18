@@ -21,12 +21,10 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -77,8 +75,7 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
         }
     }
 
-    @Override
-    protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
+    protected void doAuthenticatedWork() throws Exception {
         if ( platformAccs != null ) {
 
             log.info( "Deleting " + platformAccs.size() + " platform(s)" );
@@ -113,18 +110,20 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
                     addErrorObject( a, e );
                 }
             }
-            return;
+        } else {
+            super.doAuthenticatedWork();
         }
+    }
 
-        for ( BioAssaySet bas : expressionExperiments ) {
-            try {
-                log.info( "--------- Deleting " + bas + " --------" );
-                this.eeService.remove( ( ExpressionExperiment ) bas );
-                addSuccessObject( bas );
-                log.info( "--------- Finished Deleting " + bas + " -------" );
-            } catch ( Exception ex ) {
-                addErrorObject( bas, ex );
-            }
+    @Override
+    protected void processExpressionExperiment( ExpressionExperiment ee ) {
+        try {
+            log.info( "--------- Deleting " + ee + " --------" );
+            this.eeService.remove( ee );
+            addSuccessObject( ee );
+            log.info( "--------- Finished Deleting " + ee + " -------" );
+        } catch ( Exception ex ) {
+            addErrorObject( ee, ex );
         }
     }
 }

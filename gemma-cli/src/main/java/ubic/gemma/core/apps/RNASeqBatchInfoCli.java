@@ -54,13 +54,13 @@ public class RNASeqBatchInfoCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
+    protected Collection<BioAssaySet> preprocessBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
         log.info( "Checking folders for existing experiments in " + fastqRootDir );
-        super.processBioAssaySets( expressionExperiments );
+        return super.preprocessBioAssaySets( expressionExperiments );
     }
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
-        batchService.fillBatchInformation( ee, isForce());
+        batchService.fillBatchInformation( ee, isForce() );
     }
 }

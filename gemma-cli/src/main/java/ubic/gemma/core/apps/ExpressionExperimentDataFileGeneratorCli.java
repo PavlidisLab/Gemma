@@ -78,9 +78,10 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
         getBatchTaskExecutor().submit( () -> {
             log.info( "Processing Experiment: " + ee1.getName() );
             ExpressionExperiment ee = this.eeService.thawLite( ee1 );
-            expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, forceWrite );
+                expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, forceWrite );
             ats.addUpdateEvent( ee, CommentedEvent.class, "Generated Flat data files for downloading" );
             addSuccessObject( ee, "Success:  generated data file for " + ee.getShortName() + " ID=" + ee.getId() );
+            return null;
         } );
     }
 }

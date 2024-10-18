@@ -179,11 +179,16 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private ArrayDesign platform;
 
     @Override
+    protected Collection<BioAssaySet> preprocessBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
+        platform = entityLocator.locateArrayDesign( platformName );
+        return super.preprocessBioAssaySets( expressionExperiments );
+    }
+
+    @Override
     protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
-        if ( expressionExperiments.size() > 1 && ( dataPath != null || qtName != null || cellTypeAssignmentFile != null || otherCellLevelCharacteristicsFile != null ) ) {
+        if ( dataPath != null || qtName != null || cellTypeAssignmentFile != null || otherCellLevelCharacteristicsFile != null ) {
             throw new IllegalArgumentException( "Cannot specify a data path, quantitation type name, cell type assignment file or cell-level characteristics file when processing more than one experiment." );
         }
-        platform = entityLocator.locateArrayDesign( platformName );
         super.processBioAssaySets( expressionExperiments );
     }
 

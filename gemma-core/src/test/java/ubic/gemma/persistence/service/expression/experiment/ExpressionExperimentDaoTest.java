@@ -784,6 +784,18 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
                 .isEmpty();
     }
 
+    @Test
+    public void testGetArrayDesignUsed() {
+        ExpressionExperiment ee = createExpressionExperimentWithProcessedVectors();
+        QuantitationType qt = ee.getQuantitationTypes().iterator().next();
+        // EE does not have any sample
+        Assertions.assertThat( expressionExperimentDao.getArrayDesignsUsed( ee ) )
+                .isEmpty();
+        // but the vectors can be used to determine the platform
+        Assertions.assertThat( expressionExperimentDao.getArrayDesignsUsed( ee, qt, ProcessedExpressionDataVector.class ) )
+                .hasSize( 1 );
+    }
+
     private ExpressionExperiment reload( ExpressionExperiment e ) {
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().evict( e );

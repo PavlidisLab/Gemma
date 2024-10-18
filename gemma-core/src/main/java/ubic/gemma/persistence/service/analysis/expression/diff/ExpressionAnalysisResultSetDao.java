@@ -35,6 +35,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @see ExpressionAnalysisResultSet
@@ -97,7 +98,7 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
      * @param queryByResult query by results instead of result set, this is considerably faster if the results are
      *                      sliced (i.e. from {@link #loadWithResultsAndContrasts(Long, int, int)})
      */
-    Map<Long, List<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet, boolean queryByResult );
+    Map<Long, Set<Gene>> loadResultToGenesMap( ExpressionAnalysisResultSet resultSet, boolean queryByResult );
 
     /**
      * Retrieve result sets associated to a set of {@link BioAssaySet} and external database entries.

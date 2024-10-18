@@ -18,7 +18,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.file.PathUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
@@ -29,11 +29,12 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.MessageFormat;
 import java.util.Collection;
@@ -57,14 +58,12 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     private Integer readLength = null;
     private String rpkmFile = null;
     private boolean justbackfillLog2cpm = false;
-    private File qualityControlReportFile = null;
+    private Path qualityControlReportFile = null;
 
     @Autowired
     private DataUpdater serv;
     @Autowired
     private ExpressionDataFileService expressionDataFileService;
-    @Autowired
-    private ArrayDesignService arrayDesignService;
 
     @Override
     public String getCommandName() {
@@ -151,55 +150,47 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
         this.platformName = commandLine.getOptionValue( "a" );
 
         if ( commandLine.hasOption( RNASeqDataAddCli.MULTIQC_METADATA_FILE_OPT ) ) {
-            qualityControlReportFile = new File( commandLine.getOptionValue( RNASeqDataAddCli.MULTIQC_METADATA_FILE_OPT ) );
-            if ( !qualityControlReportFile.isFile() || !qualityControlReportFile.canRead() ) {
+            qualityControlReportFile = Paths.get( commandLine.getOptionValue( RNASeqDataAddCli.MULTIQC_METADATA_FILE_OPT ) );
+            if ( !Files.exists( qualityControlReportFile ) || !Files.isReadable( qualityControlReportFile ) ) {
                 throw new IllegalArgumentException( "The MultiQC report file must exist and be readable." );
             }
         }
     }
 
     @Override
-    protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
-        if ( expressionExperiments.isEmpty() ) {
-            throw new RuntimeException( "No experiment to be processed. Check in the logs above for troubled experiments." );
+    protected void processBioAssaySets( Collection<BioAssaySet> bas ) {
+        if ( !justbackfillLog2cpm ) {
+            throw new IllegalArgumentException( "Sorry, can only process one experiment with this tool, unless -log2cpm is used." );
         }
+        super.processBioAssaySets( bas );
+    }
 
+    @Override
+    protected void processExpressionExperiment( ExpressionExperiment ee ) {
         if ( this.justbackfillLog2cpm ) {
-            for ( BioAssaySet bas : expressionExperiments ) {
-                try {
-                    ExpressionExperiment ee = ( ExpressionExperiment ) bas;
-                    QuantitationType qt = this.eeService.getPreferredQuantitationType( ee );
-                    if ( qt == null )
-                        throw new IllegalArgumentException( "No preferred quantitation type for " + ee.getShortName() );
-                    if ( !qt.getType().equals( StandardQuantitationType.COUNT ) ) {
-                        log.warn( "Preferred data is not counts for " + ee );
-                        addErrorObject( ee.getShortName(), "Preferred data is not counts" );
-                        continue;
-                    }
-                    serv.log2cpmFromCounts( ee, qt );
-                    addSuccessObject( ee );
-                } catch ( Exception e ) {
-                    addErrorObject( bas, e );
+            try {
+                QuantitationType qt = this.eeService.getPreferredQuantitationType( ee );
+                if ( qt == null )
+                    throw new IllegalArgumentException( "No preferred quantitation type for " + ee.getShortName() );
+                if ( !qt.getType().equals( StandardQuantitationType.COUNT ) ) {
+                    log.warn( "Preferred data is not counts for " + ee );
+                    addErrorObject( ee.getShortName(), "Preferred data is not counts" );
                 }
+                serv.log2cpmFromCounts( ee, qt );
+                addSuccessObject( ee );
+            } catch ( Exception e ) {
+                addErrorObject( ee, e );
             }
+            return;
         }
 
         /*
          * Usual cases.
          */
-        if ( expressionExperiments.size() > 1 ) {
-            throw new IllegalArgumentException( "Sorry, can only process one experiment with this tool." );
-        }
         ArrayDesign targetArrayDesign = entityLocator.locateArrayDesign( this.platformName );
 
-        ExpressionExperiment ee = ( ExpressionExperiment ) expressionExperiments.iterator().next();
-
-        if ( expressionExperiments.size() > 1 ) {
-            log
-                    .warn( "This CLI can only deal with one experiment at a time; only the first one will be processed" );
-        }
-        DoubleMatrixReader reader = new DoubleMatrixReader();
         try {
+            DoubleMatrixReader reader = new DoubleMatrixReader();
             DoubleMatrix<String, String> countMatrix = null;
             DoubleMatrix<String, String> rpkmMatrix = null;
             if ( this.countFile != null ) {
@@ -212,20 +203,20 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
 
             serv.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, readLength, isPairedReads,
                     allowMissingSamples );
-
         } catch ( IOException e ) {
-            throw new RuntimeException( "Failed while processing " + ee, e );
+            addErrorObject( ee, "Failed to add count and RPKM data.", e );
+            return;
         }
 
         /* copy metadata files */
         if ( qualityControlReportFile != null ) {
-            File destinationFile = expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT );
-            if ( destinationFile.exists() ) {
+            Path destinationFile = expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT );
+            if ( Files.exists( destinationFile ) ) {
                 log.warn( MessageFormat.format( "Replacing existing RNA-Seq quality control report located at {0}.", destinationFile ) );
             }
             try {
-                FileUtils.forceMkdirParent( destinationFile );
-                FileUtils.copyFile( qualityControlReportFile, destinationFile, StandardCopyOption.REPLACE_EXISTING );
+                PathUtils.createParentDirectories( destinationFile );
+                Files.copy( qualityControlReportFile, destinationFile, StandardCopyOption.REPLACE_EXISTING );
             } catch ( IOException e ) {
                 addErrorObject( ee, String.format( "Could not copy the MultiQC report from %s to %s", qualityControlReportFile, destinationFile ), e );
             }

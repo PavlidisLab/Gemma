@@ -28,11 +28,9 @@ import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author keshav
@@ -52,8 +50,19 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee ) {
+        return quantitationTypeDao.findByExpressionExperiment( ee );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<QuantitationTypeValueObject> loadValueObjectsWithExpressionExperiment( Collection<QuantitationType> qts, ExpressionExperiment expressionExperiment ) {
         return this.quantitationTypeDao.loadValueObjectsWithExpressionExperiment( qts, expressionExperiment );
+    }
+
+    @Override
+    public Class<? extends DataVector> getDataVectorType( QuantitationType qt ) {
+        return quantitationTypeDao.getVectorType( qt );
     }
 
     @Override
