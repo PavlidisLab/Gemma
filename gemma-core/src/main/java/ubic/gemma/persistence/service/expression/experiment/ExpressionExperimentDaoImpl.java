@@ -1000,7 +1000,7 @@ public class ExpressionExperimentDaoImpl
                 .setProjection( Projections.groupProperty( "ad.id" ) )
                 .list();
         return adIds.stream()
-                .map( id -> ( ArrayDesign ) getSessionFactory().getCurrentSession().load( ArrayDesign.class, id ) )
+                .map( id -> ( ArrayDesign ) getSessionFactory().getCurrentSession().get( ArrayDesign.class, id ) )
                 .collect( Collectors.toList() );
     }
 

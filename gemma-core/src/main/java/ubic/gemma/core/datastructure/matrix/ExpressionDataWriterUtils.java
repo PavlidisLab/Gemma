@@ -20,7 +20,7 @@ package ubic.gemma.core.datastructure.matrix;
 
 import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.util.DateUtil;
-import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.datastructure.matrix.io.TsvUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -28,10 +28,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.core.config.Settings;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -62,7 +59,7 @@ public class ExpressionDataWriterUtils {
                     .append( experiment.getId() ).append( "\n" );
         }
 
-        buf.append( ExpressionDataFileService.DISCLAIMER );
+        buf.append( Arrays.stream( TsvUtils.GEMMA_CITATION_NOTICE ).map( line -> "# " + line + "\n" ).collect( Collectors.joining() ) );
 
     }
 

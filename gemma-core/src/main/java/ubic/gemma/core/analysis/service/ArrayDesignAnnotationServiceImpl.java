@@ -29,6 +29,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.datastructure.matrix.io.TsvUtils;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyUtils;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
@@ -44,6 +45,7 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import java.io.*;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -668,7 +670,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         if ( !useGO ) {
             buf.append( "# " ).append( "GO terms not included in this file as per settings.\n" );
         }
-        buf.append( ExpressionDataFileService.DISCLAIMER );
+        buf.append( Arrays.stream( TsvUtils.GEMMA_CITATION_NOTICE ).map( line -> "# " + line + "\n" ).collect( Collectors.joining() ) );
         // FIXME: add the contextPath
         buf.append( "# Gemma link for this platform: " ).append( Settings.getHostUrl() )
                 .append( "/arrays/showArrayDesign.html?id=" ).append( arrayDesign.getId().toString() ).append( "\n" );

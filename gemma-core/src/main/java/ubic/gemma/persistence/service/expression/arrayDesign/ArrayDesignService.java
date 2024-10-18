@@ -376,6 +376,10 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ArrayDesign thawCompositeSequences( ArrayDesign arrayDesign );
 
+    @CheckReturnValue
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ArrayDesign> thawCompositeSequences( Collection<ArrayDesign> ads );
+
     /**
      * Perform a less intensive thaw of an array design: not the composite sequences.
      *

@@ -18,7 +18,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.io.file.PathUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
@@ -35,8 +34,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.text.MessageFormat;
 import java.util.Collection;
 
 /**
@@ -210,15 +207,10 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
 
         /* copy metadata files */
         if ( qualityControlReportFile != null ) {
-            Path destinationFile = expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT );
-            if ( Files.exists( destinationFile ) ) {
-                log.warn( MessageFormat.format( "Replacing existing RNA-Seq quality control report located at {0}.", destinationFile ) );
-            }
             try {
-                PathUtils.createParentDirectories( destinationFile );
-                Files.copy( qualityControlReportFile, destinationFile, StandardCopyOption.REPLACE_EXISTING );
+                expressionDataFileService.copyMetadataFile( ee, qualityControlReportFile, ExpressionExperimentMetaFileType.MUTLQC_REPORT, true );
             } catch ( IOException e ) {
-                addErrorObject( ee, String.format( "Could not copy the MultiQC report from %s to %s", qualityControlReportFile, destinationFile ), e );
+                addErrorObject( ee, "Could not copy the MultiQC report.", e );
             }
         }
     }

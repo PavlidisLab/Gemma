@@ -17,7 +17,6 @@ package ubic.gemma.core.analysis.service;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
-import ubic.gemma.core.datastructure.matrix.io.TsvUtils;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -29,17 +28,13 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * @author paul
  */
 public interface ExpressionDataFileService {
-
-    String DISCLAIMER = Arrays.stream( TsvUtils.GEMMA_CITATION_NOTICE ).map( line -> "# " + line + "\n" ).collect( Collectors.joining() );
 
     /**
      * Delete any existing coexpression, data, or differential expression data files.
@@ -63,6 +58,16 @@ public interface ExpressionDataFileService {
      * Locate a metadata file.
      */
     Optional<Path> getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type ) throws IOException;
+
+    /**
+     * Copy a metadata file to the location of a given metadata type.
+     * <p>
+     * Writing to a directory (i.e. {@link ExpressionExperimentMetaFileType#isDirectory()} is true) is not supported.
+     * @param existingFile file to copy, must exist
+     * @param forceWrite   override any existing metadata file
+     * @return the resulting metadata file, which can also be retrieved with {@link #getMetadataFile(ExpressionExperiment, ExpressionExperimentMetaFileType)}
+     */
+    Path copyMetadataFile( ExpressionExperiment ee, Path existingFile, ExpressionExperimentMetaFileType type, boolean forceWrite ) throws IOException;
 
     /**
      * Locate an data file.
