@@ -46,7 +46,7 @@ public class DiffExAnalysisResultSetWriter {
      *                                    in the file if it is the case
      * @param stream                      a stream where to write the resulting ZIP archive
      */
-    public void write( DifferentialExpressionAnalysis analysis, Map<Long, String[]> geneAnnotations,
+    public void write( DifferentialExpressionAnalysis analysis, Map<CompositeSequence, String[]> geneAnnotations,
             @Nullable DifferentialExpressionAnalysisConfig config, boolean hasSignificantBatchConfound, OutputStream stream ) throws IOException {
         Date timestamp = new Date( System.currentTimeMillis() );
         try ( ZipOutputStream zipOut = new ZipOutputStream( stream ) ) {
@@ -82,7 +82,7 @@ public class DiffExAnalysisResultSetWriter {
      *
      * @param analysis (might not be persistent)
      */
-    private void writeDiffExpressionAnalysisData( DifferentialExpressionAnalysis analysis, Map<Long, String[]> geneAnnotations,
+    private void writeDiffExpressionAnalysisData( DifferentialExpressionAnalysis analysis, Map<CompositeSequence, String[]> geneAnnotations,
             @Nullable DifferentialExpressionAnalysisConfig config, Date timestamp, Writer writer ) throws IOException {
         Collection<ExpressionAnalysisResultSet> results = analysis.getResultSets();
         if ( results == null || results.isEmpty() ) {
@@ -93,7 +93,7 @@ public class DiffExAnalysisResultSetWriter {
         writeAnalysisResultSets( results, geneAnnotations, writer );
     }
 
-    private void makeDiffExpressionFileHeader( DifferentialExpressionAnalysis analysis, Collection<ExpressionAnalysisResultSet> resultSets, Map<Long, String[]> geneAnnotations,
+    private void makeDiffExpressionFileHeader( DifferentialExpressionAnalysis analysis, Collection<ExpressionAnalysisResultSet> resultSets, Map<CompositeSequence, String[]> geneAnnotations,
             @Nullable DifferentialExpressionAnalysisConfig config, Date timestamp, Writer buf ) throws IOException {
         BioAssaySet bas = analysis.getExperimentAnalyzed();
 
@@ -149,8 +149,8 @@ public class DiffExAnalysisResultSetWriter {
         // Note we don't put a newline here, because the rest of the headers have to be added for the pvalue columns.
     }
 
-    private void writeAnalysisResultSets( Collection<ExpressionAnalysisResultSet> results, Map<Long, String[]> geneAnnotations, Writer buf ) throws IOException {
-        Map<Long, StringBuilder> probe2String = new HashMap<>();
+    private void writeAnalysisResultSets( Collection<ExpressionAnalysisResultSet> results, Map<CompositeSequence, String[]> geneAnnotations, Writer buf ) throws IOException {
+        Map<CompositeSequence, StringBuilder> probe2String = new HashMap<>();
         List<DifferentialExpressionAnalysisResult> sortedFirstColumnOfResults = null;
 
         for ( ExpressionAnalysisResultSet ears : results ) {
@@ -169,9 +169,9 @@ public class DiffExAnalysisResultSetWriter {
         for ( DifferentialExpressionAnalysisResult sortedResult : sortedFirstColumnOfResults ) {
 
             CompositeSequence cs = sortedResult.getProbe();
-            StringBuilder sb = probe2String.get( cs.getId() );
+            StringBuilder sb = probe2String.get( cs );
             if ( sb == null ) {
-                log.warn( "Unable to find element " + cs.getId() + " in map" );
+                log.warn( "Unable to find element " + cs + " in map" );
                 break;
             }
             buf.append( sb );
@@ -180,8 +180,8 @@ public class DiffExAnalysisResultSetWriter {
         }
     }
 
-    private List<DifferentialExpressionAnalysisResult> writeAnalysisResultSet( ExpressionAnalysisResultSet ears, Map<Long, String[]> geneAnnotations,
-            Map<Long, StringBuilder> probe2String, @Nullable List<DifferentialExpressionAnalysisResult> sortedFirstColumnOfResults, Writer buf ) throws IOException {
+    private List<DifferentialExpressionAnalysisResult> writeAnalysisResultSet( ExpressionAnalysisResultSet ears, Map<CompositeSequence, String[]> geneAnnotations,
+            Map<CompositeSequence, StringBuilder> probe2String, @Nullable List<DifferentialExpressionAnalysisResult> sortedFirstColumnOfResults, Writer buf ) throws IOException {
 
         if ( sortedFirstColumnOfResults == null ) { // Sort P values in ears (because 1st column)
             sortedFirstColumnOfResults = new ArrayList<>( ears.getResults() );
@@ -207,13 +207,12 @@ public class DiffExAnalysisResultSetWriter {
 
             // Make a hashMap so we can organize the data by probe with factors as columns
             // Need to cache the information until we have it organized in the correct format to write
-            Long csid = cs.getId();
-            if ( probe2String.containsKey( csid ) ) {
-                probeBuffer = probe2String.get( csid );
+            if ( probe2String.containsKey( cs ) ) {
+                probeBuffer = probe2String.get( cs );
             } else {// no entry for probe yet
                 probeBuffer.append( format( cs.getName() ) );
-                if ( geneAnnotations.containsKey( csid ) ) {
-                    String[] annotationStrings = geneAnnotations.get( csid );
+                if ( geneAnnotations.containsKey( cs ) ) {
+                    String[] annotationStrings = geneAnnotations.get( cs );
                     /*
                      * Fields:
                      *
@@ -229,7 +228,7 @@ public class DiffExAnalysisResultSetWriter {
                     probeBuffer.append( "\t\t\t" );
                 }
 
-                probe2String.put( csid, probeBuffer );
+                probe2String.put( cs, probeBuffer );
             }
 
             Double correctedPvalue = dear.getCorrectedPvalue();
@@ -248,13 +247,13 @@ public class DiffExAnalysisResultSetWriter {
      * associated with each contrast.
      * eneAnnotations
      */
-    private void writeDiffExpressionResultSetData( ExpressionAnalysisResultSet resultSet, Map<Long, String[]> geneAnnotations,
+    private void writeDiffExpressionResultSetData( ExpressionAnalysisResultSet resultSet, Map<CompositeSequence, String[]> geneAnnotations,
             @Nullable DifferentialExpressionAnalysisConfig config, boolean hasSignificantBatchConfound, Date timestamp, Writer writer ) throws IOException {
         this.writeDiffExpressionResultSetFileHeader( resultSet, geneAnnotations, config, hasSignificantBatchConfound, timestamp, writer );
         this.writeAnalysisResultSetWithContrasts( resultSet, geneAnnotations, writer );
     }
 
-    private void writeDiffExpressionResultSetFileHeader( ExpressionAnalysisResultSet resultSet, Map<Long, String[]> geneAnnotations,
+    private void writeDiffExpressionResultSetFileHeader( ExpressionAnalysisResultSet resultSet, Map<CompositeSequence, String[]> geneAnnotations,
             @Nullable DifferentialExpressionAnalysisConfig config, boolean hasSignificantBatchConfound, Date timestamp, Writer buf ) throws IOException {
         BioAssaySet bas = resultSet.getAnalysis().getExperimentAnalyzed();
 
@@ -319,7 +318,7 @@ public class DiffExAnalysisResultSetWriter {
     }
 
     private void writeAnalysisResultSetWithContrasts( ExpressionAnalysisResultSet resultSet,
-            Map<Long, String[]> geneAnnotations, Writer buf ) throws IOException {
+            Map<CompositeSequence, String[]> geneAnnotations, Writer buf ) throws IOException {
         Assert.isTrue( resultSet.getExperimentalFactors().size() == 1,
                 resultSet + " should have exactly one experimental factor." );
         ExperimentalFactor ef = resultSet.getExperimentalFactors().iterator().next();
@@ -419,10 +418,10 @@ public class DiffExAnalysisResultSetWriter {
         }
     }
 
-    private void writeGeneAnnotations( DifferentialExpressionAnalysisResult dear, Map<Long, String[]> geneAnnotations, Writer writer ) throws IOException {
+    private void writeGeneAnnotations( DifferentialExpressionAnalysisResult dear, Map<CompositeSequence, String[]> geneAnnotations, Writer writer ) throws IOException {
         CompositeSequence cs = dear.getProbe();
         writer.append( format( cs.getName() ) );
-        String[] annotationStrings = geneAnnotations.get( cs.getId() );
+        String[] annotationStrings = geneAnnotations.get( cs );
         if ( annotationStrings != null ) {
             writer
                     .append( "\t" ).append( format( annotationStrings[1] ) )

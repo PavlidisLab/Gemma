@@ -54,16 +54,20 @@ import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
 import ubic.gemma.rest.util.BaseJerseyTest;
 import ubic.gemma.rest.util.JacksonConfig;
+import ubic.gemma.rest.util.MediaTypeUtils;
 import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.list;
 import static org.mockito.Mockito.*;
@@ -533,14 +537,17 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetProcessedExpression() throws IOException {
+    public void testGetDatasetProcessedExpression() throws IOException, URISyntaxException {
         when( expressionExperimentService.hasProcessedExpressionData( eq( ee ) ) ).thenReturn( true );
+        when( expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, false ) )
+                .thenReturn( Optional.of( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ) ) );
         assertThat( target( "/datasets/1/data/processed" ).request().get() )
                 .hasStatus( Response.Status.OK )
-                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .hasMediaTypeCompatibleWith( MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                .hasHeader( "Content-Disposition", "attachment; filename=\"data.txt\"" )
                 .hasEncoding( "gzip" );
-        verify( expressionExperimentService ).hasProcessedExpressionData( eq( ee ) );
-        verify( expressionDataFileService ).writeProcessedExpressionData( eq( ee ), anyBoolean(), any() );
+        verify( expressionExperimentService ).hasProcessedExpressionData( ee );
+        verify( expressionDataFileService ).writeOrLocateProcessedDataFile( ee, false, false );
     }
 
     @Test
@@ -556,17 +563,20 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetRawExpression() throws IOException {
+    public void testGetDatasetRawExpression() throws IOException, URISyntaxException {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         when( expressionExperimentService.getPreferredQuantitationType( ee ) )
                 .thenReturn( qt );
+        when( expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, false ) )
+                .thenReturn( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ) );
         assertThat( target( "/datasets/1/data/raw" ).request().get() )
                 .hasStatus( Response.Status.OK )
-                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .hasMediaTypeCompatibleWith( MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                .hasHeader( "Content-Disposition", "attachment; filename=\"data.txt\"" )
                 .hasEncoding( "gzip" );
         verify( expressionExperimentService ).getPreferredQuantitationType( ee );
         verifyNoInteractions( quantitationTypeService );
-        verify( expressionDataFileService ).writeRawExpressionData( eq( ee ), eq( qt ), any() );
+        verify( expressionDataFileService ).writeOrLocateRawExpressionDataFile( ee, qt, false );
     }
 
     @Test
@@ -585,19 +595,21 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetRawExpressionByQuantitationType() throws IOException {
+    public void testGetDatasetRawExpressionByQuantitationType() throws IOException, URISyntaxException {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setId( 12L );
         when( quantitationTypeService.load( 12L ) ).thenReturn( qt );
         when( quantitationTypeService.loadByIdAndVectorType( 12L, ee, RawExpressionDataVector.class ) ).thenReturn( qt );
+
         when( expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, false ) )
-                .thenThrow( new IOException() );
+                .thenReturn( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ) );
         Response res = target( "/datasets/1/data/raw" )
                 .queryParam( "quantitationType", "12" ).request().get();
         verify( quantitationTypeService ).loadByIdAndVectorType( 12L, ee, RawExpressionDataVector.class );
-        verify( expressionDataFileService ).writeRawExpressionData( eq( ee ), eq( qt ), any() );
+        verify( expressionDataFileService ).writeOrLocateRawExpressionDataFile( ee, qt, false );
         assertThat( res ).hasStatus( Response.Status.OK )
-                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .hasMediaTypeCompatibleWith( MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                .hasHeader( "Content-Disposition", "attachment; filename=\"data.txt\"" )
                 .hasEncoding( "gzip" );
     }
 

@@ -114,7 +114,11 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional(readOnly = true)
     public SingleCellExpressionDataMatrix<Double> getSingleCellExpressionDataMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
-        return new DoubleSingleCellExpressionDataMatrix( expressionExperimentDao.getSingleCellDataVectors( expressionExperiment, quantitationType ) );
+        List<SingleCellExpressionDataVector> vectors = expressionExperimentDao.getSingleCellDataVectors( expressionExperiment, quantitationType );
+        if ( vectors.isEmpty() ) {
+            throw new IllegalStateException( "No vector for " + quantitationType + " in " + expressionExperiment );
+        }
+        return new DoubleSingleCellExpressionDataMatrix( vectors );
     }
 
     @Override

@@ -56,6 +56,11 @@ public class ExpressionDataFileServiceTest extends AbstractJUnit4SpringContextTe
         }
 
         @Bean
+        public ExpressionDataFileHelperService expressionDataFileHelperService() {
+            return new ExpressionDataFileHelperService();
+        }
+
+        @Bean
         public ArrayDesignService arrayDesignService() {
             return mock( ArrayDesignService.class );
         }
@@ -97,6 +102,11 @@ public class ExpressionDataFileServiceTest extends AbstractJUnit4SpringContextTe
 
         @Bean
         public QuantitationTypeService quantitationTypeService() {
+            return mock();
+        }
+
+        @Bean
+        public ArrayDesignAnnotationService arrayDesignAnnotationService() {
             return mock();
         }
     }

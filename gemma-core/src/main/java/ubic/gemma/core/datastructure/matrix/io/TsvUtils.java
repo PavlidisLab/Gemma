@@ -20,6 +20,8 @@ public class TsvUtils {
             "Lim et al. (2021) Curation of over 10 000 transcriptomic studies to enable data reuse.",
             "Database, baab006 (doi:10.1093/database/baab006)." };
 
+    public static final char COMMENT = '#';
+
     /**
      * Delimiter used when printing a list of strings in a column.
      */
@@ -54,8 +56,7 @@ public class TsvUtils {
      *                            after the {@link #GEMMA_CITATION_NOTICE}
      */
     public static CSVFormat.Builder getTsvFormatBuilder( String... extraHeaderComments ) {
-        return CSVFormat.Builder.create( CSVFormat.TDF )
-                .setCommentMarker( '#' )
+        return CSVFormat.Builder.create( CSVFormat.TDF ).setCommentMarker( COMMENT )
                 .setHeaderComments( ArrayUtils.addAll( GEMMA_CITATION_NOTICE, extraHeaderComments ) );
     }
 
@@ -121,10 +122,15 @@ public class TsvUtils {
         }
     }
 
+    /**
+     * Format a string as a TSV comment.
+     * <p>
+     * This will prepend a {@link #COMMENT} on each line that do not start with the character.
+     */
     public static String formatComment( @Nullable String comment ) {
         if ( StringUtils.isBlank( comment ) ) {
             return "";
         }
-        return ( comment.charAt( 0 ) != '#' ? "# " : "" ) + comment.replaceAll( "\n([^#])", "\n# $1" );
+        return ( comment.charAt( 0 ) != COMMENT ? COMMENT + " " : "" ) + comment.replaceAll( "\n([^" + COMMENT + "])", "\n" + COMMENT + " $1" );
     }
 }

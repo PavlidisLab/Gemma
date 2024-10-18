@@ -95,7 +95,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
      * @param matrix          the matrix to write
      * @param writer          the writer to use
      * @throws IOException when the write failed
-     * @see ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl#readAnnotationFileAsString(ArrayDesign)
+     * @see ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl#readAnnotationFile(ArrayDesign)
      */
     public int writeWithStringifiedGeneAnnotations( Writer writer, BulkExpressionDataMatrix<?> matrix, @Nullable Map<CompositeSequence, String[]> geneAnnotations ) throws IOException {
         int rows = matrix.rows();
@@ -181,7 +181,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
 
     /**
      * @param geneAnnotations just passed in to check it is there.
-     * @see ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl#readAnnotationFileAsString(ArrayDesign)
+     * @see ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl#readAnnotationFile(ArrayDesign)
      */
     private void writeHeader( List<BioMaterial> orderedBioMaterials, BulkExpressionDataMatrix<?> matrix,
             @Nullable Map<CompositeSequence, ?> geneAnnotations, Writer writer ) throws IOException {
@@ -210,7 +210,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
      *                        the text. If there are no genes for the probe, then blanks will be added. In each array, the first string
      *                        is expected to represent the gene symbols, the second the names. Any other array elements are ignored.
      *                        The array of annotations is like this: [probe name,genes symbol, gene Name, gemma gene id, ncbi id]
-     * @see ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl#readAnnotationFileAsString(ArrayDesign)
+     * @see ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl#readAnnotationFile(ArrayDesign)
      */
     private void writeStringifiedGeneInfo( CompositeSequence probe, Map<CompositeSequence, String[]> geneAnnotations, Writer buf ) throws IOException {
         if ( geneAnnotations.containsKey( probe ) ) {
