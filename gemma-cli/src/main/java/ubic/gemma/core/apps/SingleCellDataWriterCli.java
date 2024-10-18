@@ -147,13 +147,16 @@ public class SingleCellDataWriterCli extends ExpressionExperimentManipulatingCLI
                     if ( standardLocation ) {
                         Path path = expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, useStreaming, fetchSize, isForce() );
                         addSuccessObject( ee, "Successfully written vectors for " + qt + " to " + path + "." );
-                    } else if ( outputFile == null || outputFile.endsWith( ".tar" ) || outputFile.endsWith( ".tar.gz" ) ) {
+                    } else if ( outputFile == null || outputFile.toString().endsWith( ".tar" ) || outputFile.toString().endsWith( ".tar.gz" ) ) {
                         log.warn( "Writing MEX to a stream requires a lot of memory and cannot be streamed, you can cancel this any anytime with Ctrl-C." );
                         try ( OutputStream stream = openOutputFile( isForce() ) ) {
                             int written = expressionDataFileService.writeMexSingleCellExpressionData( ee, qt, useEnsemblIds, stream );
                             addSuccessObject( ee, "Wrote " + written + " vectors for " + qt + ( useEnsemblIds ? " using Ensembl IDs " : "" ) + "." );
                         }
                     } else {
+                        if ( !isForce() && Files.exists( outputFile ) ) {
+                            throw new RuntimeException( outputFile + " already exists, use -force/--force to override." );
+                        }
                         int written = expressionDataFileService.writeMexSingleCellExpressionData( ee, qt, useEnsemblIds, useStreaming, fetchSize, isForce(), outputFile );
                         addSuccessObject( ee, "Wrote " + written + " vectors for " + qt + ( useEnsemblIds ? " using Ensembl IDs " : "" ) + "." );
                     }
@@ -166,7 +169,10 @@ public class SingleCellDataWriterCli extends ExpressionExperimentManipulatingCLI
 
     private OutputStream openOutputFile( boolean overwriteExisting ) throws IOException {
         if ( outputFile != null ) {
-            if ( outputFile.endsWith( ".gz" ) ) {
+            if ( !overwriteExisting && Files.exists( outputFile ) ) {
+                throw new RuntimeException( outputFile + " already exists, use -force/--force to override." );
+            }
+            if ( outputFile.toString().endsWith( ".gz" ) ) {
                 return new GZIPOutputStream( Files.newOutputStream( outputFile ) );
             } else {
                 return Files.newOutputStream( outputFile );
