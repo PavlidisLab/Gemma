@@ -105,21 +105,6 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
         return service.getFiltersWithInferredAnnotations( super.getFilters( filterArg ), mentionedTerms, inferredTerms, timeout, timeUnit );
     }
 
-    @Override
-    public Sort getSort( SortArg<ExpressionExperiment> sortArg ) throws BadRequestException {
-        Sort sort = super.getSort( sortArg );
-        // always show non-null GEEQ scores first
-        // there are two special cases in ExpressionExperimentDaoImpl to handle manual overrides of public quality and
-        // suitability scores that need special treatment
-        if ( "geeq".equals( sort.getObjectAlias() ) || "geeq.publicQualityScore".equals( sort.getOriginalProperty() ) || "geeq.publicSuitabilityScore".equals( sort.getOriginalProperty() ) ) {
-            String alias = ( sort.getObjectAlias() != null ? sort.getObjectAlias() + "." : "" ) + sort.getPropertyName();
-            return Sort.by( null, "(case when " + alias + " is not null then 0 else 1 end)", Sort.Direction.ASC )
-                    .andThen( sort );
-        } else {
-            return sort;
-        }
-    }
-
     /**
      * Obtain the search results for a given query and highlighter.
      *

@@ -82,7 +82,7 @@ public class GeneController extends BaseController {
     }
 
     @SuppressWarnings("unused") // Required
-    @RequestMapping(value = { "/showGene.html", "/" }, method = RequestMethod.GET)
+    @RequestMapping(value = { "/showGene.html", "/" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView show( HttpServletRequest request ) {
 
         String idString = request.getParameter( "id" );
@@ -150,7 +150,7 @@ public class GeneController extends BaseController {
         return mav;
     }
 
-    @RequestMapping(value = "/downloadGeneList.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/downloadGeneList.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView handleRequestInternal( HttpServletRequest request ) {
 
         StopWatch watch = new StopWatch();

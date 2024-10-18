@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.core.security.audit.AuditLogger;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -52,6 +53,7 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
     private final GenericCuratableDao curatableDao;
     private final UserManager userManager;
     private final SessionFactory sessionFactory;
+    private final AuditLogger auditLogger = new AuditLogger();
 
     @Autowired
     public AuditTrailServiceImpl( AuditTrailDao auditTrailDao, GenericCuratableDao curatableDao, UserManager userManager,
@@ -123,6 +125,7 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
         trail.getEvents().add( auditEvent );
         // event will be created in cascade
         auditTrailDao.update( trail );
+        auditLogger.log( auditable, auditEvent );
         return auditEvent;
     }
 

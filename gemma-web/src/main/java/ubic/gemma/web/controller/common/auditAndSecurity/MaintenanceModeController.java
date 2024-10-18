@@ -42,7 +42,7 @@ import java.util.Map;
 @RequestMapping("/admin/maintenanceMode.html")
 public class MaintenanceModeController {
 
-    @RequestMapping(method = RequestMethod.GET)
+    @RequestMapping(method = { RequestMethod.GET, RequestMethod.HEAD })
     public String getForm() {
         return "admin/maintenanceMode";
     }

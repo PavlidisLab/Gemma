@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.GeoTest;
+import ubic.gemma.core.util.test.category.IntegrationTest;
 
 import java.net.UnknownHostException;
 import java.util.List;
@@ -34,13 +35,13 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailabl
 /**
  * @author paul
  */
-@Category(GeoTest.class)
+@Category({ GeoTest.class, IntegrationTest.class })
 public class GeoBrowserServiceTest extends BaseSpringContextTest {
     @Autowired
     GeoBrowserService gbs;
 
     @Test
-    public final void testGetDetails() throws Exception {
+    public final void testFillDetails() throws Exception {
         assumeThatResourceIsAvailable( "https://www.ncbi.nlm.nih.gov/geo/browse/" );
 
         try {

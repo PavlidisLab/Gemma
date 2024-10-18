@@ -25,6 +25,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.loader.entrez.pubmed.ExpressionExperimentBibRefFinder;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -52,6 +53,9 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     private ExpressionExperimentService ees;
     @Autowired
     private PersisterHelper persisterHelper;
+
+    @Value("${entrez.efetch.apikey}")
+    private String ncbiApiKey;
 
     private String pubmedIdFilename;
     private Map<String, Integer> pubmedIds = new HashMap<>();
@@ -95,7 +99,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
 
     @Override
     protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
-        PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
+        PubMedXMLFetcher fetcher = new PubMedXMLFetcher( ncbiApiKey );
 
         // collect some statistics
         Collection<String> nullPubCount = new ArrayList<>();
@@ -103,7 +107,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
         Collection<String> diffPubCount = new ArrayList<>();
         Collection<String> failedEe = new ArrayList<>();
 
-        ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder();
+        ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder( ncbiApiKey );
         for ( BioAssaySet bioassay : expressionExperiments ) {
             if ( !( bioassay instanceof ExpressionExperiment ) ) {
                 log.info( bioassay.getName() + " is not an ExpressionExperiment" );

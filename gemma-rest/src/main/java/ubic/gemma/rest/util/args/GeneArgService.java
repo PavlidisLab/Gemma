@@ -88,11 +88,11 @@ public class GeneArgService extends AbstractEntityArgService<Gene, GeneService> 
     }
 
     public Slice<GeneValueObject> getGenes( int offset, int limit ) {
-        return service.loadValueObjects( null, service.getSort( "id", Sort.Direction.ASC ), offset, limit );
+        return service.loadValueObjects( null, service.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), offset, limit );
     }
 
     public Slice<GeneValueObject> getGenesInTaxon( Taxon taxon, int offset, int limit ) {
-        return service.loadValueObjects( Filters.by( service.getFilter( "taxon.id", Long.class, Filter.Operator.eq, taxon.getId() ) ), service.getSort( "id", Sort.Direction.ASC ), offset, limit );
+        return service.loadValueObjects( Filters.by( service.getFilter( "taxon.id", Long.class, Filter.Operator.eq, taxon.getId() ) ), service.getSort( "id", Sort.Direction.ASC, Sort.NullMode.LAST ), offset, limit );
     }
 
     /**

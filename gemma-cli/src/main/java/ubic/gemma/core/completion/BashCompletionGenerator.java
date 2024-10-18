@@ -4,14 +4,13 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
 import javax.annotation.Nullable;
-import java.io.File;
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.core.util.ShellUtils.quoteIfNecessary;
 
-public class BashCompletionGenerator implements CompletionGenerator {
+public class BashCompletionGenerator extends AbstractCompletionGenerator {
 
     private static final String INDENT = "    ";
 
@@ -100,12 +99,6 @@ public class BashCompletionGenerator implements CompletionGenerator {
             popIndent();
             writer.append( indent ).println( "fi" );
         }
-    }
-
-    private boolean isFileOption( Option option ) {
-        return option.getType().equals( File.class )
-                || option.getOpt().toLowerCase().contains( "file" )
-                || ( option.getLongOpt() != null && option.getLongOpt().toLowerCase().contains( "file" ) );
     }
 
     private void generateWordsFromStrings( Collection<String> strings, PrintWriter writer ) {

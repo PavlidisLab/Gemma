@@ -220,7 +220,7 @@ public class CharacteristicBrowserController {
         return results.subList( 0, Math.min( results.size(), MAX_RESULTS ) );
     }
 
-    @RequestMapping(value = "/characteristicBrowser.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/characteristicBrowser.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public String getView() {
         return "characteristics";
     }

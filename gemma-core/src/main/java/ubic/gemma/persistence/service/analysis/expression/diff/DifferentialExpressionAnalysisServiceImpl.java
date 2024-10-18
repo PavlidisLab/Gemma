@@ -25,7 +25,6 @@ import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTask;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -63,6 +62,16 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
     public DifferentialExpressionAnalysisServiceImpl( DifferentialExpressionAnalysisDao mainDao ) {
         super( mainDao );
         this.differentialExpressionAnalysisDao = mainDao;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DifferentialExpressionAnalysis loadWithExperimentAnalyzed( Long id ) {
+        DifferentialExpressionAnalysis analysis = load( id );
+        if ( analysis != null ) {
+            Hibernate.initialize( analysis.getExperimentAnalyzed() );
+        }
+        return analysis;
     }
 
     @Override

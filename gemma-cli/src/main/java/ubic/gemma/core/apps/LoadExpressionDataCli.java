@@ -133,8 +133,6 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
 
     @Override
     protected void doWork() throws Exception {
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-
         if ( accessions == null && accessionFile == null ) {
             throw new IllegalArgumentException(
                     "You must specific either a file or accessions on the command line" );

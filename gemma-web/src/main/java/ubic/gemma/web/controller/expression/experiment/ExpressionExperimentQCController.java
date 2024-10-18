@@ -72,14 +72,16 @@ import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataWriterUtils;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -88,7 +90,6 @@ import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.view.TextView;
 
-import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
@@ -108,8 +109,25 @@ import java.util.*;
 @Controller
 public class ExpressionExperimentQCController extends BaseController {
 
-    public static final int DEFAULT_QC_IMAGE_SIZE_PX = 200;
-    private static final int MAX_HEATMAP_CELLSIZE = 12;
+    /**
+     * Default size for an image, in pixel.
+     */
+    public static final int DEFAULT_QC_IMAGE_SIZE_PX = 300;
+
+    /**
+     * Maximum size for an image, in pixels.
+     */
+    private static final int MAX_QC_IMAGE_SIZE_PX = 800;
+
+    /**
+     * Maximum size of a thumbnail, in pixels.
+     */
+    private static final int MAX_QC_IMAGE_THUMBNAIL_SIZE_PX = 128;
+
+    /**
+     * Maximum factor size when up-scaling an image.
+     */
+    private static final int MAX_IMAGE_SIZE_FACTOR = 5;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -120,6 +138,8 @@ public class ExpressionExperimentQCController extends BaseController {
     @Autowired
     private OutlierDetectionService outlierDetectionService;
     @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
     @Autowired
     private CoexpressionAnalysisService coexpressionAnalysisService;
@@ -127,26 +147,17 @@ public class ExpressionExperimentQCController extends BaseController {
     @Value("${gemma.analysis.dir}")
     private Path analysisStoragePath;
 
-    @RequestMapping(value = "/expressionExperiment/detailedFactorAnalysis.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/expressionExperiment/detailedFactorAnalysis.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void detailedFactorAnalysis( @RequestParam("id") Long id, HttpServletResponse response ) throws Exception {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            log.warn( "Could not load experiment with id " + id );
-            return;
-        }
-
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
         this.writeDetailedFactorAnalysis( ee, response );
     }
 
-    @RequestMapping(value = "/expressionExperiment/outliersRemoved.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/expressionExperiment/outliersRemoved.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView identifyOutliersRemoved( @RequestParam("id") Long id ) throws IOException {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            log.warn( "Could not load experiment with id " + id );
-            return null;
-        }
-
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
         ee = expressionExperimentService.thawLite( ee );
+
         Collection<BioAssay> bioAssays = new HashSet<>();
         for ( BioAssay assay : ee.getBioAssays() ) {
             if ( assay.getIsOutlier() ) {
@@ -169,13 +180,9 @@ public class ExpressionExperimentQCController extends BaseController {
         return mav;
     }
 
-    @RequestMapping(value = "/expressionExperiment/possibleOutliers.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/expressionExperiment/possibleOutliers.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView identifyPossibleOutliers( @RequestParam("id") Long id ) throws IOException {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            log.warn( "Could not load experiment with id " + id );
-            return null;
-        }
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
 
         // identify outliers
         if ( !sampleCoexpressionAnalysisService.hasAnalysis( ee ) ) {
@@ -201,7 +208,6 @@ public class ExpressionExperimentQCController extends BaseController {
         if ( !outliers.isEmpty() ) {
             for ( OutlierDetails details : outliers ) {
                 bioAssays.add( details.getBioAssay() );
-
             }
         }
 
@@ -215,19 +221,13 @@ public class ExpressionExperimentQCController extends BaseController {
         ee = expressionExperimentService.thawLiter( ee );
         edWriter.write( writer, ee, bioAssays, false, true );
 
-        ModelAndView mav = new ModelAndView( new TextView() );
-        mav.addObject( TextView.TEXT_PARAM, buf.toString() );
-        return mav;
+        return new ModelAndView( new TextView( "tab-separated-values" ) )
+                .addObject( TextView.TEXT_PARAM, buf.toString() );
     }
 
-    @RequestMapping(value = "/expressionExperiment/pcaFactors.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/expressionExperiment/pcaFactors.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void pcaFactors( @RequestParam("id") Long id, HttpServletResponse response ) throws Exception {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            log.warn( "Could not load experiment with id " + id ); // or access denied.
-            this.writePlaceholderImage( response );
-            return;
-        }
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
 
         SVDValueObject svdo = null;
         try {
@@ -240,57 +240,48 @@ public class ExpressionExperimentQCController extends BaseController {
         if ( svdo != null ) {
             this.writePCAFactors( ee, svdo, response );
         } else {
-            this.writePlaceholderImage( response );
+            this.writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
         }
     }
 
-    @RequestMapping(value = "/expressionExperiment/pcaScree.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/expressionExperiment/pcaScree.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void pcaScree( @RequestParam("id") Long id, HttpServletResponse response ) throws Exception {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            log.warn( "Could not load experiment with id " + id ); // or access deined.
-            this.writePlaceholderImage( response );
-            return;
-        }
-
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
         SVDValueObject svdo = svdService.getSvd( ee.getId() );
-
         if ( svdo != null ) {
             this.writePCAScree( svdo, response );
         } else {
-            this.writePlaceholderImage( response );
+            this.writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
         }
     }
 
     /**
      * @param id of experiment
-     * @param size Multiplier on the cell size. 1 or null for standard small size.
+     * @param sizeFactor Multiplier on the cell size. 1 or null for standard small size.
      * @param text if true, output a tabbed file instead of a png
      * @param showLabels if the row and column labels of the matrix should be shown.
      * @param forceShowLabels forces the display of labels in the picture
      * @param reg uses the regressed matrix (if available).
      */
-    @RequestMapping(value = "/expressionExperiment/visualizeCorrMat.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/expressionExperiment/visualizeCorrMat.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void visualizeCorrMat(
             @RequestParam("id") Long id,
-            @RequestParam(value = "size", required = false) Double size,
+            @RequestParam(value = "size", required = false) Double sizeFactor,
             @RequestParam(value = "text", required = false) Boolean text,
             @RequestParam(value = "showLabels", required = false) Boolean showLabels,
             @RequestParam(value = "forceShowLabels", required = false) Boolean forceShowLabels,
             @RequestParam(value = "reg", required = false) Boolean reg,
             HttpServletResponse response ) throws Exception {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            log.warn( "Could not load experiment with id " + id );
-            return;
-        }
-
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
         ee = expressionExperimentService.thawLiter( ee );
         DoubleMatrix<BioAssay, BioAssay> omatrix = ( reg != null && reg ) ? sampleCoexpressionAnalysisService.loadBestMatrix( ee )
                 : sampleCoexpressionAnalysisService.loadFullMatrix( ee );
         if ( omatrix == null ) {
-            log.warn( "No correlation matrix for ee " + id );
-            return;
+            throw new EntityNotFoundException( "No correlation matrix for ee " + id );
+        }
+
+        if ( sizeFactor == null ) {
+            sizeFactor = 1.0;
         }
 
         List<String> stringNames = new ArrayList<>();
@@ -321,8 +312,7 @@ public class ExpressionExperimentQCController extends BaseController {
         ColorMatrix<String, String> cm = new ColorMatrix<>( matrix );
 
         int row = matrix.rows();
-        int cellsize = ( int ) Math.min( ExpressionExperimentQCController.MAX_HEATMAP_CELLSIZE,
-                Math.max( 1, size * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX / row ) );
+        int cellsize = ( int ) Math.min( 12, Math.max( 1, sizeFactor * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX / row ) );
 
         MatrixDisplay<String, String> writer = new MatrixDisplay<>( cm );
 
@@ -336,27 +326,26 @@ public class ExpressionExperimentQCController extends BaseController {
         }
 
         writer.setCellSize( new Dimension( cellsize, cellsize ) );
-        boolean showScalebar = size > 2;
+        boolean showScalebar = sizeFactor > 2;
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         writer.writeToPng( cm, response.getOutputStream(), reallyShowLabels, showScalebar );
     }
 
     /**
      * @param id of experiment
-     * @param size Multiplier on the cell size. 1 or null for standard small size.
+     * @param sizeFactor Multiplier on the cell size. 1 or null for standard small size.
      * @param text if true, output a tabbed file instead of a png
      * @return ModelAndView object if text is true, otherwise null
      */
-    @RequestMapping(value = "/expressionExperiment/visualizeMeanVariance.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/expressionExperiment/visualizeMeanVariance.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView visualizeMeanVariance(
             @RequestParam("id") Long id,
-            @RequestParam(value = "size", required = false) Double size,
+            @RequestParam(value = "size", required = false) Double sizeFactor,
             @RequestParam(value = "text", required = false) Boolean text,
             HttpServletResponse response ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.loadWithMeanVarianceRelation( id );
         if ( ee == null ) {
-            log.warn( "Could not load experiment with id " + id );
-            return null;
+            throw new EntityNotFoundException( "Could not load experiment with id " + id );
         }
 
         MeanVarianceRelation mvr = ee.getMeanVarianceRelation();
@@ -384,11 +373,11 @@ public class ExpressionExperimentQCController extends BaseController {
 
         // FIXME might be something better to do
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        writeMeanVariance( mvr, size, response );
+        writeMeanVariance( mvr, sizeFactor != null ? sizeFactor : 1.0, response );
         return null;
     }
 
-    @RequestMapping(value = "/expressionExperiment/visualizeProbeCorrDist.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/expressionExperiment/visualizeProbeCorrDist.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void visualizeProbeCorrDist( @RequestParam("id") Long id, HttpServletResponse response ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) {
@@ -405,28 +394,28 @@ public class ExpressionExperimentQCController extends BaseController {
      * @param size of the image.
      * @param response stream to write the image to.
      */
-    @RequestMapping(value = "/expressionExperiment/visualizePvalueDist.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/expressionExperiment/visualizePvalueDist.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void visualizePvalueDist(
             @RequestParam("id") Long id,
             @RequestParam("analysisId") Long analysisId,
             @RequestParam("rsid") Long rsid,
             @RequestParam(value = "size", required = false) Integer size,
             HttpServletResponse response ) throws Exception {
-        ExpressionAnalysisResultSet rs = expressionAnalysisResultSetService.loadOrFail( rsid, EntityNotFoundException::new );
-        if ( !rs.getAnalysis().getId().equals( analysisId ) ) {
-            throw new EntityNotFoundException( "Result set with ID " + id + " does not belong to analysis with ID " + analysisId );
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
+        DifferentialExpressionAnalysis analysis = differentialExpressionAnalysisService.loadWithExperimentAnalyzed( analysisId );
+        if ( analysis == null ) {
+            throw new EntityNotFoundException( "No analysis with ID " + analysisId );
         }
-        // check the experiment ID
-        ExpressionExperiment ee;
-        if ( rs.getAnalysis().getExperimentAnalyzed() instanceof ExpressionExperimentSubSet ) {
-            ee = ( ( ExpressionExperimentSubSet ) rs.getAnalysis().getExperimentAnalyzed() ).getSourceExperiment();
-        } else if ( rs.getAnalysis().getExperimentAnalyzed() instanceof ExpressionExperiment ) {
-            ee = ( ExpressionExperiment ) rs.getAnalysis().getExperimentAnalyzed();
-        } else {
-            throw new UnsupportedOperationException( "Unsupported type of analyzed experiment for analysis with ID " + analysisId );
+        // check the associated experiment
+        if ( !getExpressionExperiment( analysis ).equals( ee ) ) {
+            throw new IllegalArgumentException( "Analysis with ID " + analysisId + " does not belong to experiment with ID " + id );
         }
-        if ( !ee.getId().equals( id ) ) {
-            throw new EntityNotFoundException( "Analysis with ID " + analysisId + " does not belong to experiment with ID " + id );
+        ExpressionAnalysisResultSet rs = expressionAnalysisResultSetService.loadWithAnalysis( rsid );
+        if ( rs == null ) {
+            throw new EntityNotFoundException( "No result set with ID " + rsid + "." );
+        }
+        if ( !rs.getAnalysis().equals( analysis ) ) {
+            throw new IllegalArgumentException( "Result set with ID " + id + " does not belong to analysis with ID " + analysisId );
         }
         if ( size == null ) {
             writePValueHistImage( rs, response );
@@ -435,7 +424,17 @@ public class ExpressionExperimentQCController extends BaseController {
         }
     }
 
-    @RequestMapping(value = "/expressionExperiment/eigenGenes.html", method = RequestMethod.GET)
+    private ExpressionExperiment getExpressionExperiment( DifferentialExpressionAnalysis analysis ) {
+        if ( analysis.getExperimentAnalyzed() instanceof ExpressionExperimentSubSet ) {
+            return ( ( ExpressionExperimentSubSet ) analysis.getExperimentAnalyzed() ).getSourceExperiment();
+        } else if ( analysis.getExperimentAnalyzed() instanceof ExpressionExperiment ) {
+            return ( ExpressionExperiment ) analysis.getExperimentAnalyzed();
+        } else {
+            throw new UnsupportedOperationException( "Unsupported type of analyzed experiment for analysis with ID " + analysis.getId() );
+        }
+    }
+
+    @RequestMapping(value = "/expressionExperiment/eigenGenes.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView writeEigenGenes( @RequestParam("eeid") Long eeid ) throws IOException {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeid,
                 EntityNotFoundException::new, "Could not load experiment with id " + eeid );// or access deined.
@@ -695,12 +694,12 @@ public class ExpressionExperimentQCController extends BaseController {
     private void writeDetailedFactorAnalysis( ExpressionExperiment ee, HttpServletResponse os ) throws Exception {
         SVDValueObject svdo = svdService.getSvdFactorAnalysis( ee.getId() );
         if ( svdo == null ) {
-            writePlaceholderImage( os );
+            writePlaceholderImage( os, DEFAULT_QC_IMAGE_SIZE_PX );
             return;
         }
 
         if ( svdo.getFactors().isEmpty() && svdo.getDates().isEmpty() ) {
-            writePlaceholderImage( os );
+            writePlaceholderImage( os, DEFAULT_QC_IMAGE_SIZE_PX );
             return;
         }
         Map<Integer, Map<Long, Double>> factorCorrelations = svdo.getFactorCorrelations();
@@ -965,11 +964,7 @@ public class ExpressionExperimentQCController extends BaseController {
         ChartUtils.writeBufferedImageAsPNG( os.getOutputStream(), image );
     }
 
-    /**
-     * @param mvr MeanVarianceRelation object to plot
-     * @param response  response output stream
-     */
-    private void writeMeanVariance( MeanVarianceRelation mvr, Double size, HttpServletResponse response ) throws Exception {
+    private void writeMeanVariance( MeanVarianceRelation mvr, double sizeFactor, HttpServletResponse response ) throws Exception {
         // if number of datapoints > THRESHOLD then alpha = TRANSLUCENT, else alpha = OPAQUE
         final int THRESHOLD = 1000;
         final int TRANSLUCENT = 50;
@@ -978,11 +973,8 @@ public class ExpressionExperimentQCController extends BaseController {
         // Set maximum plot range to Y_MAX + YRANGE * OFFSET to leave some extra white space
         final double OFFSET_FACTOR = 0.05f;
 
-        // set the final image size to be the minimum of MAX_IMAGE_SIZE_PX or size
-        final int MAX_IMAGE_SIZE_PX = 5;
-
         if ( mvr == null ) {
-            writePlaceholderImage( response );
+            writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
             return;
         }
 
@@ -990,7 +982,7 @@ public class ExpressionExperimentQCController extends BaseController {
         XYSeriesCollection collection = this.getMeanVariance( mvr );
 
         if ( collection.getSeries().isEmpty() ) {
-            writePlaceholderImage( response );
+            writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
             return;
         }
 
@@ -1023,7 +1015,7 @@ public class ExpressionExperimentQCController extends BaseController {
         double xRange = series.getMaxX() - series.getMinX();
         if ( xRange < 0 ) {
             log.warn( "Min X was greater than Max X: Max=" + series.getMaxY() + " Min= " + series.getMinY() );
-            writePlaceholderImage( response );
+            writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
             return;
         }
         double ybuffer = ( yRange ) * OFFSET_FACTOR;
@@ -1040,8 +1032,7 @@ public class ExpressionExperimentQCController extends BaseController {
         chart.getXYPlot().setRangeAxis( yAxis );
         chart.getXYPlot().setDomainAxis( xAxis );
 
-        int finalSize = ( int ) Math.min( MAX_IMAGE_SIZE_PX * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX,
-                size * ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX );
+        int finalSize = ( int ) Math.min( sizeFactor, MAX_IMAGE_SIZE_FACTOR ) * DEFAULT_QC_IMAGE_SIZE_PX;
 
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, finalSize, finalSize );
@@ -1115,7 +1106,7 @@ public class ExpressionExperimentQCController extends BaseController {
         assert ee.getId().equals( svdo.getId() );
 
         if ( factorCorrelations.isEmpty() && dateCorrelations.isEmpty() ) {
-            this.writePlaceholderImage( response );
+            this.writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
             return;
         }
         ee = expressionExperimentService.thawLite( ee ); // need the experimental design
@@ -1183,7 +1174,6 @@ public class ExpressionExperimentQCController extends BaseController {
         if ( chart.getCategoryPlot().getCategories().size() > 3 ) {
             width = width + 40 * ( chart.getCategoryPlot().getCategories().size() - 2 );
         }
-        int MAX_QC_IMAGE_SIZE_PX = 500;
         width = Math.min( width, MAX_QC_IMAGE_SIZE_PX );
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, width, ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX );
@@ -1217,45 +1207,45 @@ public class ExpressionExperimentQCController extends BaseController {
     /**
      * Write a blank image so user doesn't see the broken icon.
      */
-    private void writePlaceholderImage( HttpServletResponse response ) throws IOException {
-        int placeholderSize = ( int ) ( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * 0.75 );
-        BufferedImage buffer = new BufferedImage( placeholderSize, placeholderSize, BufferedImage.TYPE_INT_RGB );
+    private void writePlaceholderImage( HttpServletResponse response, @SuppressWarnings("SameParameterValue") int size ) throws IOException {
+        BufferedImage buffer = new BufferedImage( size, size, BufferedImage.TYPE_INT_RGB );
         Graphics g = buffer.createGraphics();
         g.setColor( Color.lightGray );
-        g.fillRect( 0, 0, placeholderSize, placeholderSize );
+        g.fillRect( 0, 0, size, size );
         g.setColor( Color.black );
-        g.drawString( "Not available", placeholderSize / 4, placeholderSize / 4 );
+        g.drawString( "Not available", size / 4, size / 4 );
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ImageIO.write( buffer, "png", response.getOutputStream() );
+        ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), buffer );
     }
 
     /**
      * Write a blank thumbnail image so user doesn't see the broken icon.
      */
-    private void writePlaceholderThumbnailImage( HttpServletResponse response, int placeholderSize ) throws IOException {
+    private void writePlaceholderThumbnailImage( HttpServletResponse response, int size ) throws IOException {
+        size = Math.min( size, MAX_QC_IMAGE_THUMBNAIL_SIZE_PX );
         // Make the image a bit bigger to account for the empty space around the generated image.
         // If we can find a way to remove this empty space, we don't need to make the chart bigger.
-        BufferedImage buffer = new BufferedImage( placeholderSize + 16, placeholderSize + 9,
+        BufferedImage buffer = new BufferedImage( size + 16, size + 9,
                 BufferedImage.TYPE_INT_RGB );
         Graphics g = buffer.createGraphics();
         g.setColor( Color.white );
-        g.fillRect( 0, 0, placeholderSize + 16, placeholderSize + 9 );
+        g.fillRect( 0, 0, size + 16, size + 9 );
         g.setColor( Color.gray );
-        g.drawLine( 8, placeholderSize + 5, placeholderSize + 8, placeholderSize + 5 ); // x-axis
-        g.drawLine( 8, 5, 8, placeholderSize + 5 ); // y-axis
+        g.drawLine( 8, size + 5, size + 8, size + 5 ); // x-axis
+        g.drawLine( 8, 5, 8, size + 5 ); // y-axis
         g.setColor( Color.black );
         Font font = g.getFont();
         g.setFont( new Font( font.getName(), font.getStyle(), 8 ) );
-        g.drawString( "N/A", 9, placeholderSize );
+        g.drawString( "N/A", 9, size );
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ImageIO.write( buffer, "png", response.getOutputStream() );
+        ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), buffer );
     }
 
     private void writeProbeCorrHistImage( ExpressionExperiment ee, HttpServletResponse response ) throws IOException {
         XYSeries series = this.getCorrelHist( ee );
 
         if ( series == null || series.getItemCount() == 0 ) {
-            writePlaceholderImage( response );
+            writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
             return;
         }
 
@@ -1270,9 +1260,8 @@ public class ExpressionExperimentQCController extends BaseController {
         XYItemRenderer renderer = chart.getXYPlot().getRenderer();
         renderer.setDefaultPaint( Color.white );
 
-        int size = ( int ) ( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * 0.8 );
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, size, size );
+        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, DEFAULT_QC_IMAGE_SIZE_PX, DEFAULT_QC_IMAGE_SIZE_PX );
     }
 
     /**
@@ -1282,7 +1271,7 @@ public class ExpressionExperimentQCController extends BaseController {
         XYSeries series = this.getDiffExPvalueHistXYSeries( rs );
 
         if ( series == null ) {
-            writePlaceholderImage( response );
+            writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
             return;
         }
 
@@ -1298,9 +1287,7 @@ public class ExpressionExperimentQCController extends BaseController {
         renderer.setDefaultPaint( Color.white );
 
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart,
-                ( int ) ( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * 1.4 ),
-                ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX );
+        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, ( int ) ( 1.4 * DEFAULT_QC_IMAGE_SIZE_PX ), DEFAULT_QC_IMAGE_SIZE_PX );
     }
 
     /**
@@ -1338,7 +1325,8 @@ public class ExpressionExperimentQCController extends BaseController {
         // Make the chart a bit bigger to account for the empty space around the generated image.
         // If we can find a way to remove this empty space, we don't need to make the chart bigger.
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
-        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, size + 16, size + 9 );
+        int finalSize = Math.min( size, MAX_QC_IMAGE_THUMBNAIL_SIZE_PX );
+        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, finalSize + 16, finalSize + 9 );
     }
 
     /**

@@ -167,7 +167,7 @@ public class GeneralSearchController {
         return new JsonReaderResponse<>( finalResults );
     }
 
-    @RequestMapping(value = "/searcher.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/searcher.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView search(
             @RequestParam(value = "query", required = false) String query,
             @RequestParam(value = "termUri", required = false) String termUri,

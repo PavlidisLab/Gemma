@@ -22,6 +22,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.core.util.CLI;
@@ -44,6 +45,10 @@ import java.util.List;
 public class MeshTermFetcherCli extends AbstractCLI {
 
     private static final int CHUNK_SIZE = 10;
+
+    @Value("${entrez.efetch.apikey}")
+    private String ncbiApiKey;
+
     private String file;
     private boolean majorTopicsOnly = false;
 
@@ -77,7 +82,7 @@ public class MeshTermFetcherCli extends AbstractCLI {
 
     @Override
     protected void doWork() throws Exception {
-        PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
+        PubMedXMLFetcher fetcher = new PubMedXMLFetcher( ncbiApiKey );
 
         Collection<Integer> ids = this.readIdsFromFile( file );
         Collection<Integer> chunk = new ArrayList<>();

@@ -395,14 +395,14 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             subqueryOp = Filter.Operator.inSubquery;
         }
         return Filter.by( objectAlias, getIdentifierPropertyName(), Long.class, subqueryOp,
-                    new Subquery( entityName, getIdentifierPropertyName(), aliases, f ),
-                    propertyName );
+                new Subquery( entityName, getIdentifierPropertyName(), aliases, f ),
+                propertyName );
     }
 
     @Override
-    public final Sort getSort( String property, @Nullable Sort.Direction direction ) {
+    public final Sort getSort( String property, @Nullable Sort.Direction direction, Sort.NullMode nullMode ) {
         FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
-        return Sort.by( propertyMeta.objectAlias, propertyMeta.propertyName, direction, property );
+        return Sort.by( propertyMeta.objectAlias, propertyMeta.propertyName, direction, nullMode, property );
     }
 
     /**
@@ -443,12 +443,12 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     /**
      * Obtain various meta-information used to infer what to use in a {@link Filter} or {@link Sort}.
      * <p>
-     * This is used by {@link #getFilter(String, Filter.Operator, String)} and {@link #getSort(String, Sort.Direction)}.
+     * This is used by {@link #getFilter(String, Filter.Operator, String)} and {@link FilteringDao#getSort(String, Sort.Direction, Sort.NullMode)}.
      *
      * @throws IllegalArgumentException if no such propertyName exists in {@link O}
      * @see #getFilter(String, Filter.Operator, String)
      * @see #getFilter(String, Filter.Operator, Collection)
-     * @see #getSort(String, Sort.Direction)
+     * @see FilteringDao#getSort(String, Sort.Direction, Sort.NullMode)
      */
     protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
         // replace longer prefix first

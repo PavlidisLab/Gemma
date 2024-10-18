@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service;
 import lombok.Value;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Criteria;
+import org.hibernate.NullPrecedence;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
@@ -306,7 +307,19 @@ public abstract class AbstractCriteriaFilteringVoEnabledDao<O extends Identifiab
                 // FIXME: find a workaround for sorting by collection size (see https://github.com/PavlidisLab/Gemma/issues/520)
                 throw new UnsupportedOperationException( "Ordering by collection size is not supported for the Criteria API." );
             }
-            query.addOrder( sort.getDirection() == Sort.Direction.DESC ? Order.desc( property ) : Order.asc( property ) );
+            Order order = sort.getDirection() == Sort.Direction.DESC ? Order.desc( property ) : Order.asc( property );
+            switch ( sort.getNullMode() ) {
+                case DEFAULT:
+                    order.nulls( NullPrecedence.NONE );
+                    break;
+                case FIRST:
+                    order.nulls( NullPrecedence.FIRST );
+                    break;
+                case LAST:
+                    order.nulls( NullPrecedence.LAST );
+                    break;
+            }
+            query.addOrder( order );
         }
     }
 }

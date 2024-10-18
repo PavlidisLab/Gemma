@@ -44,6 +44,7 @@ import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.report.WhatsNew;
 import ubic.gemma.core.analysis.report.WhatsNewService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
@@ -260,7 +261,7 @@ public class ExpressionExperimentController {
         return userOwnsGroup;
     }
 
-    @RequestMapping(value = "/filterExpressionExperiments.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/filterExpressionExperiments.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView filter( @RequestParam("filter") String searchString ) {
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( searchString ) ) {
@@ -860,17 +861,17 @@ public class ExpressionExperimentController {
     /**
      * Show all experiments (optionally conditioned on either a taxon, a list of ids, or a platform)
      */
-    @RequestMapping(value = { "/showAllExpressionExperiments.html", "/showAll" }, method = RequestMethod.GET)
+    @RequestMapping(value = { "/showAllExpressionExperiments.html", "/showAll" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showAllExpressionExperiments() {
         return new ModelAndView( "expressionExperiments" );
     }
 
-    @RequestMapping(value = { "/showAllExpressionExperimentLinkSummaries.html", "/manage.html" }, method = RequestMethod.GET)
+    @RequestMapping(value = { "/showAllExpressionExperimentLinkSummaries.html", "/manage.html" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showAllLinkSummaries() {
         return new ModelAndView( "expressionExperimentLinkSummary" );
     }
 
-    @RequestMapping(value = { "/showBioAssaysFromExpressionExperiment.html", "/bioAssays" }, method = RequestMethod.GET)
+    @RequestMapping(value = { "/showBioAssaysFromExpressionExperiment.html", "/bioAssays" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showBioAssays( @RequestParam("id") Long id ) {
         ExpressionExperiment expressionExperiment = getExperimentById( id, true );
         ModelAndView mv = new ModelAndView( "bioAssays" ).addObject( "bioAssays", bioAssayService.thaw( expressionExperiment.getBioAssays() ) );
@@ -879,7 +880,7 @@ public class ExpressionExperimentController {
         return mv;
     }
 
-    @RequestMapping(value = { "/showBioMaterialsFromExpressionExperiment.html", "/bioMaterials" }, method = RequestMethod.GET)
+    @RequestMapping(value = { "/showBioMaterialsFromExpressionExperiment.html", "/bioMaterials" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showBioMaterials( @RequestParam("id") Long id ) {
         ExpressionExperiment expressionExperiment = getExperimentById( id, true );
 
@@ -906,7 +907,7 @@ public class ExpressionExperimentController {
         return mav;
     }
 
-    @RequestMapping(value = { "/showExpressionExperiment.html", "/", "/show" }, params = { "id" }, method = RequestMethod.GET)
+    @RequestMapping(value = { "/showExpressionExperiment.html", "/", "/show" }, params = { "id" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showExpressionExperimentById( @RequestParam(value = "id") Long id ) {
         ExpressionExperiment expressionExperiment;
         expressionExperiment = expressionExperimentService.load( id );
@@ -916,7 +917,7 @@ public class ExpressionExperimentController {
         return showExpressionExperiment( expressionExperiment );
     }
 
-    @RequestMapping(value = { "/showExpressionExperiment.html", "/", "/show" }, params = { "shortName" }, method = RequestMethod.GET)
+    @RequestMapping(value = { "/showExpressionExperiment.html", "/", "/show" }, params = { "shortName" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showExpressionExperimentByShortName( @RequestParam(value = "shortName") String shortName ) {
         ExpressionExperiment experimentExperiment = expressionExperimentService.findByShortName( shortName );
         if ( experimentExperiment == null ) {
@@ -935,7 +936,7 @@ public class ExpressionExperimentController {
     /**
      * Shows a list of BioAssays for an expression experiment subset.
      */
-    @RequestMapping(value = { "/showExpressionExperimentSubSet.html", "/showSubset" })
+    @RequestMapping(value = { "/showExpressionExperimentSubSet.html", "/showSubset" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showSubSet( @RequestParam("id") Long id ) {
         ExpressionExperimentSubSet subset = expressionExperimentSubSetService.load( id );
         if ( subset == null ) {
@@ -1060,7 +1061,7 @@ public class ExpressionExperimentController {
         return taskRunningService.submitTask( task );
     }
 
-    @RequestMapping(value = "/downloadExpressionExperimentList.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/downloadExpressionExperimentList.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView handleRequestInternal(
             @RequestParam(value = "e", required = false) String e,
             @RequestParam(value = "es", required = false) String es,
@@ -1448,7 +1449,7 @@ public class ExpressionExperimentController {
     private Collection<ExpressionExperimentDetailsValueObject> getFilteredExpressionExperimentValueObjects( Taxon taxon, Collection<Long> eeIds, int limit, boolean showPublic ) {
 
         Sort.Direction direction = limit < 0 ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService.loadDetailsValueObjectsWithCache( eeIds, taxon, expressionExperimentService.getSort( "curationDetails.lastUpdated", direction ), 0, Math.abs( limit ) );
+        Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService.loadDetailsValueObjectsWithCache( eeIds, taxon, expressionExperimentService.getSort( "curationDetails.lastUpdated", direction, Sort.NullMode.LAST ), 0, Math.abs( limit ) );
         // Hide public data sets if desired.
         if ( !vos.isEmpty() && !showPublic ) {
             Collection<ExpressionExperimentDetailsValueObject> publicEEs = securityService.choosePublic( vos );
@@ -1482,7 +1483,7 @@ public class ExpressionExperimentController {
         }
         int limit = batch.getLimit();
         int start = batch.getStart();
-        return expressionExperimentService.loadDetailsValueObjectsWithCache( ids, taxon, expressionExperimentService.getSort( o, direction ), start, limit );
+        return expressionExperimentService.loadDetailsValueObjectsWithCache( ids, taxon, expressionExperimentService.getSort( o, direction, Sort.NullMode.LAST ), start, limit );
     }
 
     /**
@@ -1627,7 +1628,7 @@ public class ExpressionExperimentController {
                 ExpressionExperimentController.log.info( "Searching pubmed on line .." );
 
                 // search for pubmedId
-                PubMedSearch pms = new PubMedSearch();
+                PubMedSearch pms = new PubMedSearch( Settings.getString( "entrez.efetch.apikey" ));
                 Collection<String> searchTerms = new ArrayList<>();
                 searchTerms.add( pubmedId );
                 Collection<BibliographicReference> publications;

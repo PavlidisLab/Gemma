@@ -26,6 +26,8 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.tools.tar.TarEntry;
+import org.apache.tools.tar.TarInputStream;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -34,20 +36,21 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.StringUtil;
-import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.core.util.SimpleRetry;
+import ubic.gemma.core.util.SimpleRetryCallable;
 import ubic.gemma.core.util.XMLUtils;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
+import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.*;
 import java.io.*;
 import java.lang.reflect.Array;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -57,6 +60,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 
 import static ubic.gemma.core.util.XMLUtils.createDocumentBuilder;
 
@@ -72,9 +76,9 @@ import static ubic.gemma.core.util.XMLUtils.createDocumentBuilder;
 public class GeoBrowser {
 
     /**
-     * Maximum number of retries when retrieving a document.
+     * Retry policy for I/O exception.
      */
-    private static final int MAX_RETRIES = 3;
+    private static final SimpleRetry<IOException> retryTemplate = new SimpleRetry<>( 3, 1001, 1.5, IOException.class, GeoBrowser.class.getName() );
 
     /**
      * Maximum size of a MINiML record in bytes.
@@ -82,18 +86,12 @@ public class GeoBrowser {
      */
     private static final long MAX_MINIML_RECORD_SIZE = 100_000_000;
 
-    private static final String EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=gds&";
-    private static final String EPLATRETRIEVE = "https://eutls.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=gpl[ETYP]+AND+(mouse[orgn]+OR+human[orgn]+OR+rat[orgn])";
-    private static final String ERETRIEVE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=gse[ETYP]"; //no extra search term
-    // Used by getGeoRecordsBySearchTerm (will look for GSE entries only)
-    private static final String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=gse[ETYP]+AND+";
+    private static final String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds";
+    private static final String ESUMMARY = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=gds";
+    private static final String GEO_BROWSE = "https://www.ncbi.nlm.nih.gov/geo/browse/";
+    private static final String GEO_FTP = "https://ftp.ncbi.nlm.nih.gov/geo/series/";
     private static final String FLANKING_QUOTES_REGEX = "^\"|\"$";
-    // mode=tsv : tells GEO to give us tab delimited file -- PP changed to csv
-    // because of garbled tabbed lines returned
-    // from GEO.
-    private static final String GEO_BROWSE_URL = "https://www.ncbi.nlm.nih.gov/geo/browse/?view=series&zsort=date&mode=csv&page=";
     private static final Log log = LogFactory.getLog( GeoBrowser.class.getName() );
-    private static final String NCBI_API_KEY = Settings.getString( "entrez.efetch.apikey" );
 
     private static final XPathExpression characteristics;
     private static final XPathExpression source;
@@ -116,9 +114,6 @@ public class GeoBrowser {
     /* locale */
     private static final Locale GEO_LOCALE = Locale.ENGLISH;
     private static final String[] GEO_DATE_FORMATS = new String[] { "MMM dd, yyyy" };
-
-    @SuppressWarnings("FieldCanBeLocal") // Constant is better
-    private static final String GEO_BROWSE_SUFFIX = "&display=";
 
     static {
         XPathFactory xFactory = XPathFactory.newInstance();
@@ -148,43 +143,70 @@ public class GeoBrowser {
         }
     }
 
-    private final PubMedXMLFetcher pubmedFetcher = new PubMedXMLFetcher();
+    private final String ncbiApiKey;
+    private final PubMedXMLFetcher pubmedFetcher;
+
+    public GeoBrowser( String ncbiApiKey ) {
+        this.ncbiApiKey = ncbiApiKey;
+        this.pubmedFetcher = new PubMedXMLFetcher( ncbiApiKey );
+    }
+
+    /**
+     * Retrieve a single GEO record.
+     */
+    @Nullable
+    public GeoRecord getGeoRecord( String accession, boolean detailed ) throws IOException {
+        List<GeoRecord> records = new ArrayList<>();
+        String searchUrl = ESEARCH
+                + "&term=" + urlEncode( "gse[ETYP] AND " + quoteTerm( accession ) + "[accn]" )
+                + "&usehistory=y";
+        getGeoBasicRecords( searchUrl, records );
+        if ( detailed ) {
+            records.forEach( this::fillDetails );
+        }
+        if ( records.size() > 1 ) {
+            throw new IllegalStateException( "More than one record found for " + accession );
+        }
+        return records.iterator().next();
+    }
 
     /**
      * Retrieve records for experiments
      * @param accessions of experiments
      * @return collection of records
      */
-    public Collection<GeoRecord> getGeoRecords( Collection<String> accessions ) throws IOException {
+    public Collection<GeoRecord> getGeoRecords( Collection<String> accessions, boolean detailed ) throws IOException {
         List<GeoRecord> records = new ArrayList<>();
         //https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=GSE[ETYP]+AND+(GSE100[accn]+OR+GSE101[accn])&retmax=5000&usehistory=y
 
         for ( List<String> chunk : ListUtils.partition( new ArrayList<>( accessions ), 10 ) ) {
-            String searchUrlString = GeoBrowser.ESEARCH + "(" + chunk.stream().map( this::urlEncode ).collect( Collectors.joining( "[accn]+OR+" ) ) + "[accn])&usehistory=y";
-            if ( StringUtils.isNotBlank( NCBI_API_KEY ) ) {
-                searchUrlString = searchUrlString + "&api_key=" + urlEncode( NCBI_API_KEY );
+            String searchUrl = ESEARCH
+                    + "&term=" + urlEncode( "gse[ETYP] AND (" + chunk.stream().map( c -> quoteTerm( c ) + "[accn]" ).collect( Collectors.joining( " OR " ) ) + ")" )
+                    + "&usehistory=y";
+            if ( StringUtils.isNotBlank( ncbiApiKey ) ) {
+                searchUrl = searchUrl + "&api_key=" + urlEncode( ncbiApiKey );
             }
-            getGeoBasicRecords( records, searchUrlString );
+            getGeoBasicRecords( searchUrl, records );
+        }
+
+        if ( detailed ) {
+            records.forEach( this::fillDetails );
         }
 
         return records;
     }
 
-    private void getGeoBasicRecords( List<GeoRecord> records, String searchUrlString ) throws IOException {
-        URL searchUrl = new URL( searchUrlString );
-        Document searchDocument;
-        try {
-            searchDocument = parseMiniMLDocument( searchUrl );
-        } catch ( EmptyXmlDocumentException e ) {
-            throw new RuntimeException( "Empty MINiML document for " + searchUrl, e );
-        }
+    private void getGeoBasicRecords( String searchUrl, List<GeoRecord> records ) throws IOException {
+        Document searchDocument = parseMiniMLDocument( new URL( searchUrl ) );
 
         NodeList countNode = searchDocument.getElementsByTagName( "Count" );
         Node countEl = countNode.item( 0 );
 
         int count = Integer.parseInt( XMLUtils.getTextValue( ( Element ) countEl ) );
-        if ( count == 0 )
-            throw new RuntimeException( "Got no records from: " + searchUrl );
+        if ( count == 0 ) {
+            log.warn( "Got no records from: " + searchUrl );
+            return;
+        }
 
         NodeList qnode = searchDocument.getElementsByTagName( "QueryKey" );
 
@@ -196,30 +218,25 @@ public class GeoBrowser {
         String queryId = XMLUtils.getTextValue( queryIdEl );
         String cookie = XMLUtils.getTextValue( cookieEl );
 
-        URL fetchUrl = new URL(
-                GeoBrowser.EFETCH + "&mode=mode.text&query_key=" + urlEncode( queryId ) + "&WebEnv=" + urlEncode( cookie )
-                        + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + urlEncode( NCBI_API_KEY ) : "" ) );
+        String fetchUrl = GeoBrowser.ESUMMARY
+                + "&mode=mode.text"
+                + "&query_key=" + urlEncode( queryId )
+                + "&WebEnv=" + urlEncode( cookie )
+                + ( StringUtils.isNotBlank( ncbiApiKey ) ? "&api_key=" + urlEncode( ncbiApiKey ) : "" );
 
         StopWatch t = new StopWatch();
         t.start();
 
-        NodeList accNodes, titleNodes, sampleNodes, dateNodes, orgnNodes, platformNodes, summaryNodes, typeNodes, pubmedNodes;
-        try {
-            Document summaryDocument = parseMiniMLDocument( fetchUrl );
-            accNodes = ( NodeList ) xaccession.evaluate( summaryDocument, XPathConstants.NODESET );
-            titleNodes = ( NodeList ) xtitle.evaluate( summaryDocument, XPathConstants.NODESET );
-            sampleNodes = ( NodeList ) xnumSamples.evaluate( summaryDocument, XPathConstants.NODESET );
-            dateNodes = ( NodeList ) xreleaseDate.evaluate( summaryDocument, XPathConstants.NODESET );
-            orgnNodes = ( NodeList ) xorganisms.evaluate( summaryDocument, XPathConstants.NODESET );
-            platformNodes = ( NodeList ) xgpl.evaluate( summaryDocument, XPathConstants.NODESET );
-            summaryNodes = ( NodeList ) xsummary.evaluate( summaryDocument, XPathConstants.NODESET );
-            typeNodes = ( NodeList ) xtype.evaluate( summaryDocument, XPathConstants.NODESET );
-            pubmedNodes = ( NodeList ) xpubmed.evaluate( summaryDocument, XPathConstants.NODESET );
-        } catch ( EmptyXmlDocumentException e ) {
-            throw new RuntimeException( "Empty MINiML document for " + fetchUrl, e );
-        } catch ( XPathExpressionException e ) {
-            throw new RuntimeException( String.format( "Failed to parse XML for %s", fetchUrl ), e );
-        }
+        Document summaryDocument = parseMiniMLDocument( new URL( fetchUrl ) );
+        NodeList accNodes = evaluate( xaccession, summaryDocument );
+        NodeList titleNodes = evaluate( xtitle, summaryDocument );
+        NodeList sampleNodes = evaluate( xnumSamples, summaryDocument );
+        NodeList dateNodes = evaluate( xreleaseDate, summaryDocument );
+        NodeList orgnNodes = evaluate( xorganisms, summaryDocument );
+        NodeList platformNodes = evaluate( xgpl, summaryDocument );
+        NodeList summaryNodes = evaluate( xsummary, summaryDocument );
+        NodeList typeNodes = evaluate( xtype, summaryDocument );
+        NodeList pubmedNodes = evaluate( xpubmed, summaryDocument );
 
         // Create GeoRecords using information parsed from XML file
         log.debug( "Got " + accNodes.getLength() + " XML records" );
@@ -233,9 +250,8 @@ public class GeoBrowser {
             if ( !record.getSeriesType().contains( "Expression profiling" ) ) {
                 continue;
             }
-            Collection<String> taxa = this.getTaxonCollection( orgnNodes.item( i ).getTextContent() );
 
-            record.setOrganisms( taxa );
+            fillOrganisms( record, orgnNodes.item( i ) );
 
             record.setTitle( titleNodes.item( i ).getTextContent() );
 
@@ -257,8 +273,8 @@ public class GeoBrowser {
 
             String platformS = StringUtils.join( finalPlatformIds, ";" );
             record.setPlatform( platformS );
-            record.setSummary( summaryNodes.item( i ).getTextContent() );
-            record.setPubMedIds( StringUtils.strip( pubmedNodes.item( i ).getTextContent() ).replaceAll( "\\n", "," ).replaceAll( "\\s*", "" ) );
+            record.setSummary( StringUtils.strip( summaryNodes.item( i ).getTextContent() ) );
+            fillPubMedIds( record, pubmedNodes.item( i ) );
             record.setSuperSeries( record.getTitle().contains( "SuperSeries" ) || record.getSummary().contains( "SuperSeries" ) );
             records.add( record );
         }
@@ -274,25 +290,25 @@ public class GeoBrowser {
      * A bit hacky, can be improved. Limited to human, mouse, rat, is not guaranteed to get everything, though as of
      * 7/2021, this is sufficient (~8000 platforms)
      *
+     * @param allowedTaxa a collection of allowed taxa, ignored if null or empty
      * @return all relevant platforms up to single-query limit of NCBI
      */
-    public Collection<GeoRecord> getAllGEOPlatforms() throws IOException {
-
-        String searchUrlString;
-
-        searchUrlString = GeoBrowser.EPLATRETRIEVE + "&retmax=" + 10000 + "&usehistory=y"; //10k is the limit.
-
-        if ( StringUtils.isNotBlank( NCBI_API_KEY ) ) {
-            searchUrlString = searchUrlString + "&api_key=" + urlEncode( NCBI_API_KEY );
+    public Collection<GeoRecord> getAllGEOPlatforms( @Nullable Collection<String> allowedTaxa ) throws IOException {
+        String term = "gpl[ETYPE]";
+        if ( allowedTaxa != null && !allowedTaxa.isEmpty() ) {
+            term += " AND (" + allowedTaxa.stream().map( t -> quoteTerm( t ) + "[ORGN]" ).collect( Collectors.joining( " OR " ) ) + ")";
         }
 
-        URL searchUrl = new URL( searchUrlString );
-        Document searchDocument;
-        try {
-            searchDocument = parseMiniMLDocument( searchUrl );
-        } catch ( EmptyXmlDocumentException e ) {
-            throw new RuntimeException( "Got an empty MINiML document for " + searchUrl, e );
+        String searchUrl = ESEARCH
+                + "&term=" + urlEncode( term )
+                + "&retmax=" + 10000
+                + "&usehistory=y"; //10k is the limit.
+
+        if ( StringUtils.isNotBlank( ncbiApiKey ) ) {
+            searchUrl += "&api_key=" + urlEncode( ncbiApiKey );
         }
+
+        Document searchDocument = parseMiniMLDocument( new URL( searchUrl ) );
 
         NodeList countNode = searchDocument.getElementsByTagName( "Count" );
         Node countEl = countNode.item( 0 );
@@ -311,28 +327,23 @@ public class GeoBrowser {
         String queryId = XMLUtils.getTextValue( queryIdEl );
         String cookie = XMLUtils.getTextValue( cookieEl );
 
-        URL fetchUrl = new URL(
-                GeoBrowser.EFETCH + "&mode=mode.text" + "&query_key=" + urlEncode( queryId ) + "&retmax="
-                        + 10000 + "&WebEnv=" + urlEncode( cookie )
-                        + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + urlEncode( NCBI_API_KEY ) : "" ) );
+        String fetchUrl = GeoBrowser.ESUMMARY
+                + "&mode=mode.text"
+                + "&query_key=" + urlEncode( queryId )
+                + "&retmax=" + 10000
+                + "&WebEnv=" + urlEncode( cookie )
+                + ( StringUtils.isNotBlank( ncbiApiKey ) ? "&api_key=" + urlEncode( ncbiApiKey ) : "" );
 
         StopWatch t = new StopWatch();
         t.start();
 
-        NodeList accNodes, titleNodes, dateNodes, orgnNodes, summaryNodes, techNodes;
-        try {
-            Document summaryDocument = parseMiniMLDocument( fetchUrl );
-            accNodes = ( NodeList ) xPlataccession.evaluate( summaryDocument, XPathConstants.NODESET );
-            titleNodes = ( NodeList ) xtitle.evaluate( summaryDocument, XPathConstants.NODESET );
-            summaryNodes = ( NodeList ) xsummary.evaluate( summaryDocument, XPathConstants.NODESET );
-            techNodes = ( NodeList ) xPlatformTech.evaluate( summaryDocument, XPathConstants.NODESET );
-            orgnNodes = ( NodeList ) xorganisms.evaluate( summaryDocument, XPathConstants.NODESET );
-            dateNodes = ( NodeList ) xreleaseDate.evaluate( summaryDocument, XPathConstants.NODESET );
-        } catch ( EmptyXmlDocumentException e ) {
-            throw new RuntimeException( "Got an empty MINiML document for " + fetchUrl, e );
-        } catch ( XPathExpressionException e ) {
-            throw new RuntimeException( "Could not parse data for " + searchUrl, e );
-        }
+        Document summaryDocument = parseMiniMLDocument( new URL( fetchUrl ) );
+        NodeList accNodes = evaluate( xPlataccession, summaryDocument );
+        NodeList titleNodes = evaluate( xtitle, summaryDocument );
+        NodeList summaryNodes = evaluate( xsummary, summaryDocument );
+        NodeList techNodes = evaluate( xPlatformTech, summaryDocument );
+        NodeList orgnNodes = evaluate( xorganisms, summaryDocument );
+        NodeList dateNodes = evaluate( xreleaseDate, summaryDocument );
 
         // consider n_samples (number of elements) and the number of GSEs, but not every record has them, so it would be trickier.
 
@@ -350,72 +361,74 @@ public class GeoBrowser {
             }
             record.setTitle( titleNodes.item( i ).getTextContent() );
             record.setOrganisms( null );
-            record.setSummary( summaryNodes.item( i ).getTextContent() );
+            record.setSummary( StringUtils.strip( summaryNodes.item( i ).getTextContent() ) );
             record.setSeriesType( techNodes.item( i ).getTextContent() ); // slight abuse
-            Collection<String> taxa = this.getTaxonCollection( orgnNodes.item( i ).getTextContent() );
-            record.setOrganisms( taxa );
+            fillOrganisms( record, orgnNodes.item( i ) );
             records.add( record );
         }
 
         return records;
-
     }
 
     /**
      * Provides more details than getRecentGeoRecords. Performs an E-utilities query of the GEO database with the given
      * searchTerms (search terms can be omitted). Returns at most pageSize records. Does some screening of results for
      * expression studies, and (optionally) taxa. This is used for identifying data sets for loading.
+     * <p>
+     * Note that the search is reversed in time. You get the most recent records first.
      *
-     * @param  start          start an offset to retrieve batches
-     * @param  pageSize       page size how many to retrive
-     * @param  searchTerms    search terms in NCBI Entrez query format
-     * @param  detailed       if true, additional information is fetched (slower)
-     * @param  allowedTaxa    if not null, data sets not containing any of these taxa will be skipped
-     * @param  limitPlatforms not null or empty, platforms to limit the query to (combining with searchTerms not
-     *                        supported yet)
-     * @return list of GeoRecords
-     * @throws IOException    if there is a problem obtaining or manipulating the file (some exceptions are not thrown
-     *                        and
-     *                        just logged)
+     * @param searchTerms    search terms in NCBI Entrez query format, ignored if null or blank
+     * @param field          a field to search in or null to search everywhere
+     * @param allowedTaxa    restrict search to the given taxa if not null
+     * @param limitPlatforms restrict search to the given platforms if not null
+     * @param seriesTypes    restrict search to the given series types (i.e. Expression profiling by array)
+     * @param start          start an offset to retrieve batches
+     * @param pageSize       number of results to retrieve in a batch
+     * @param detailed       if true, additional information is fetched (slower)
+     * @return a list of GeoRecords
+     * @throws IOException if there is a problem obtaining or manipulating the file (some exceptions are not thrown and just logged)
      */
-    public List<GeoRecord> getGeoRecordsBySearchTerm( String searchTerms, int start, int pageSize, boolean detailed, Collection<String> allowedTaxa,
-            Collection<String> limitPlatforms )
-            throws IOException {
+    public Slice<GeoRecord> searchGeoRecords( @Nullable String searchTerms, @Nullable GeoSearchField field, @Nullable Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatforms, @Nullable Collection<String> seriesTypes, int start, int pageSize, boolean detailed ) throws IOException {
+        String term = "gse[ETYP]";
 
-        List<GeoRecord> records = new ArrayList<>();
+        if ( StringUtils.isNotBlank( searchTerms ) ) {
+            term += " AND " + quoteTerm( searchTerms );
+            if ( field != null ) {
+                term += "[" + field + "]";
+            }
+        }
 
-        String platformLimitClause = "";
         if ( limitPlatforms != null && !limitPlatforms.isEmpty() ) {
-            platformLimitClause = " AND (" + limitPlatforms.stream().map( s -> s + "[ACCN]" ).collect( Collectors.joining( " OR " ) );
+            term += " AND (" + limitPlatforms.stream().map( s -> quoteTerm( s ) + "[ACCN]" ).collect( Collectors.joining( " OR " ) ) + ")";
         }
 
-        String searchUrlString;
-        if ( StringUtils.isBlank( searchTerms ) ) {
-            searchUrlString = GeoBrowser.ERETRIEVE + urlEncode( platformLimitClause ) + "&retstart=" + start + "&retmax=" + pageSize + "&usehistory=y";
-        } else {
-            // FIXME: could allow merging in of platformLimitClause. Should really rewrite the way we form these urls to be more modular.
-            searchUrlString = GeoBrowser.ESEARCH + urlEncode( searchTerms ) + "&retstart=" + start + "&retmax=" + pageSize
-                    + "&usehistory=y";
+        if ( allowedTaxa != null && !allowedTaxa.isEmpty() ) {
+            term += " AND (" + allowedTaxa.stream().map( s -> quoteTerm( s ) + "[ORGN]" ).collect( Collectors.joining( " OR " ) ) + ")";
         }
 
-        if ( StringUtils.isNotBlank( NCBI_API_KEY ) ) {
-            searchUrlString = searchUrlString + "&api_key=" + NCBI_API_KEY;
+        if ( seriesTypes != null ) {
+            term += " AND (" + seriesTypes.stream().map( s -> quoteTerm( s ) + "[DataSet Type]" ).collect( Collectors.joining( " OR " ) ) + ")";
         }
 
-        URL searchUrl = new URL( searchUrlString );
-        Document searchDocument;
-        try {
-            searchDocument = parseMiniMLDocument( searchUrl );
-        } catch ( EmptyXmlDocumentException e ) {
-            throw new RuntimeException( "Got an empty MINiML document for " + searchUrl, e );
+        String searchUrl = ESEARCH
+                + "&term=" + urlEncode( term )
+                + "&retstart=" + start
+                + "&retmax=" + pageSize
+                + "&usehistory=y";
+
+        if ( StringUtils.isNotBlank( ncbiApiKey ) ) {
+            searchUrl += "&api_key=" + ncbiApiKey;
         }
 
+        Document searchDocument = parseMiniMLDocument( new URL( searchUrl ) );
         NodeList countNode = searchDocument.getElementsByTagName( "Count" );
         Node countEl = countNode.item( 0 );
 
-        int count = Integer.parseInt( XMLUtils.getTextValue( ( Element ) countEl ) );
-        if ( count == 0 )
-            throw new RuntimeException( "Got no records from: " + searchUrl );
+        long count = Long.parseLong( XMLUtils.getTextValue( ( Element ) countEl ) );
+        if ( count == 0 ) {
+            log.warn( "Got no records from: " + searchUrl );
+            return new Slice<>( Collections.emptyList(), Sort.by( null, "releaseDate", Sort.Direction.DESC, Sort.NullMode.DEFAULT ), 0, pageSize, count );
+        }
 
         NodeList qnode = searchDocument.getElementsByTagName( "QueryKey" );
 
@@ -427,71 +440,44 @@ public class GeoBrowser {
         String queryId = XMLUtils.getTextValue( queryIdEl );
         String cookie = XMLUtils.getTextValue( cookieEl );
 
-        URL fetchUrl = new URL(
-                GeoBrowser.EFETCH + "&mode=mode.text" + "&query_key=" + urlEncode( queryId ) + "&retstart=" + start + "&retmax="
-                        + pageSize + "&WebEnv=" + urlEncode( cookie )
-                        + ( StringUtils.isNotBlank( NCBI_API_KEY ) ? "&api_key=" + urlEncode( NCBI_API_KEY ) : "" ) );
+        String fetchUrl = GeoBrowser.ESUMMARY
+                + "&mode=mode.text"
+                + "&query_key=" + urlEncode( queryId )
+                + "&retstart=" + start
+                + "&retmax=" + pageSize
+                + "&WebEnv=" + urlEncode( cookie )
+                + ( StringUtils.isNotBlank( ncbiApiKey ) ? "&api_key=" + urlEncode( ncbiApiKey ) : "" );
 
         StopWatch t = new StopWatch();
         DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd", Locale.ENGLISH ); // for logging
 
         t.start();
-        int rawRecords = 0;
 
-        NodeList accNodes, titleNodes, sampleNodes, dateNodes, orgnNodes, platformNodes, summaryNodes, typeNodes, pubmedNodes;
-        try {
-            Document summaryDocument = parseMiniMLDocument( fetchUrl );
-            accNodes = ( NodeList ) xaccession.evaluate( summaryDocument, XPathConstants.NODESET );
-            titleNodes = ( NodeList ) xtitle.evaluate( summaryDocument, XPathConstants.NODESET );
-            sampleNodes = ( NodeList ) xnumSamples.evaluate( summaryDocument, XPathConstants.NODESET );
-            dateNodes = ( NodeList ) xreleaseDate.evaluate( summaryDocument, XPathConstants.NODESET );
-            orgnNodes = ( NodeList ) xorganisms.evaluate( summaryDocument, XPathConstants.NODESET );
-            platformNodes = ( NodeList ) xgpl.evaluate( summaryDocument, XPathConstants.NODESET );
-            summaryNodes = ( NodeList ) xsummary.evaluate( summaryDocument, XPathConstants.NODESET );
-            typeNodes = ( NodeList ) xtype.evaluate( summaryDocument, XPathConstants.NODESET );
-            pubmedNodes = ( NodeList ) xpubmed.evaluate( summaryDocument, XPathConstants.NODESET );
-            // NodeList sampleLists = ( NodeList ) xsamples.evaluate( summaryDocument, XPathConstants.NODESET );
-        } catch ( EmptyXmlDocumentException e ) {
-            throw new RuntimeException( "Got an empty MINiML document for " + fetchUrl, e );
-        } catch ( XPathExpressionException e ) {
-            throw new RuntimeException( String.format( "Failed to parse XML for %s", searchUrl ), e );
-        }
+        Document summaryDocument = parseMiniMLDocument( new URL( fetchUrl ) );
+        NodeList accNodes = evaluate( xaccession, summaryDocument );
+        NodeList titleNodes = evaluate( xtitle, summaryDocument );
+        NodeList sampleNodes = evaluate( xnumSamples, summaryDocument );
+        NodeList dateNodes = evaluate( xreleaseDate, summaryDocument );
+        NodeList orgnNodes = evaluate( xorganisms, summaryDocument );
+        NodeList platformNodes = evaluate( xgpl, summaryDocument );
+        NodeList summaryNodes = evaluate( xsummary, summaryDocument );
+        NodeList typeNodes = evaluate( xtype, summaryDocument );
+        NodeList pubmedNodes = evaluate( xpubmed, summaryDocument );
+        // NodeList sampleLists = ( NodeList ) xsamples.evaluate( summaryDocument, XPathConstants.NODESET );
 
         // Create GeoRecords using information parsed from XML file
         log.debug( String.format( "Got %d XML records in %d ms", accNodes.getLength(), t.getTime( TimeUnit.MILLISECONDS ) ) );
 
+        List<GeoRecord> records = new ArrayList<>();
         for ( int i = 0; i < accNodes.getLength(); i++ ) {
             t.reset();
             t.start();
 
             GeoRecord record = new GeoRecord();
-
-            rawRecords++; // prior to any filtering.
-
             record.setGeoAccession( "GSE" + accNodes.item( i ).getTextContent() );
-
             record.setSeriesType( typeNodes.item( i ).getTextContent() );
-            if ( !record.getSeriesType().contains( "Expression profiling" ) ) {
-                continue;
-            }
-
-            Collection<String> taxa = this.getTaxonCollection( orgnNodes.item( i ).getTextContent() );
-            if ( allowedTaxa != null && !allowedTaxa.isEmpty() ) {
-                boolean useableTaxa = false;
-                for ( String ta : taxa ) {
-                    if ( allowedTaxa.contains( ta ) ) {
-                        useableTaxa = true;
-                        break;
-                    }
-                }
-                if ( !useableTaxa ) {
-                    continue;
-                }
-            }
-            record.setOrganisms( taxa );
-
+            fillOrganisms( record, orgnNodes.item( i ) );
             record.setTitle( titleNodes.item( i ).getTextContent() );
-
             record.setNumSamples( Integer.parseInt( sampleNodes.item( i ).getTextContent() ) );
 
             try {
@@ -512,14 +498,14 @@ public class GeoBrowser {
 
             record.setPlatform( platformS );
 
-            record.setSummary( summaryNodes.item( i ).getTextContent() );
-            record.setPubMedIds( StringUtils.strip( pubmedNodes.item( i ).getTextContent() ).replaceAll( "\\n", "," ).replaceAll( "\\s*", "" ) );
+            record.setSummary( StringUtils.strip( summaryNodes.item( i ).getTextContent() ) );
+            fillPubMedIds( record, pubmedNodes.item( i ) );
             record.setSuperSeries( record.getTitle().contains( "SuperSeries" ) || record.getSummary().contains( "SuperSeries" ) );
 
             if ( detailed ) {
                 // without details this goes a lot quicker so feedback isn't very important
                 log.debug( "Obtaining details for " + record.getGeoAccession() + " " + record.getNumSamples() + " samples..." );
-                getDetails( record );
+                fillDetails( record );
             }
 
             records.add( record );
@@ -527,21 +513,14 @@ public class GeoBrowser {
             log.debug( "Processed: " + record.getGeoAccession() + " (" + dateFormat.format( record.getReleaseDate() ) + "), " + record.getNumSamples() + " samples, " + t.getTime() / 1000 + "s " );
         }
 
-
-        if ( records.isEmpty() && rawRecords != 0 ) {
-            /*
-               When there are raw records, all that happened is we filtered them all out.
-             */
-            GeoBrowser.log.warn( "No records retained from query - all filtered out; number of raw records was " + rawRecords );
-        } else if ( rawRecords == 0 ) {
-            log.warn( "No records received at all" ); // could be the very beginning ...
-            log.warn( "Query was " + searchUrl );
-            log.warn( "Fetch was " + fetchUrl );
-        } else {
-            log.debug( "Parsed " + rawRecords + " records, " + records.size() + " retained at this stage" );
+        if ( records.isEmpty() ) {
+            // When there are raw records, all that happened is we filtered them all out.
+            GeoBrowser.log.warn( "No records retained from query - all filtered out; number of raw records was " + accNodes.getLength() );
         }
 
-        return records;
+        GeoBrowser.log.debug( "Parsed " + accNodes.getLength() + " records, " + records.size() + " retained at this stage" );
+
+        return new Slice<>( records, Sort.by( null, "releaseDate", Sort.Direction.DESC, Sort.NullMode.DEFAULT ), start, pageSize, count );
     }
 
     /**
@@ -553,14 +532,16 @@ public class GeoBrowser {
      * @return list of GeoRecords
      * @throws IOException    if there is a problem while manipulating the file
      */
-    public List<GeoRecord> getRecentGeoRecords( int startPage, int pageSize ) throws IOException {
-
+    public Slice<GeoRecord> getRecentGeoRecords( int startPage, int pageSize ) throws IOException {
         if ( startPage < 0 || pageSize < 0 )
             throw new IllegalArgumentException( "Values must be greater than zero " );
 
-        List<GeoRecord> records = new ArrayList<>();
-        URL url = new URL( GEO_BROWSE_URL + startPage + GEO_BROWSE_SUFFIX + pageSize );
+        // mode=tsv : tells GEO to give us tab delimited file -- PP changed to csv
+        // because of garbled tabbed lines returned
+        // from GEO.
+        URL url = new URL( GEO_BROWSE + "?view=series&zsort=date&mode=csv&page=" + startPage + "&display=" + pageSize );
 
+        List<GeoRecord> records = new ArrayList<>();
         try ( BufferedReader br = new BufferedReader( new InputStreamReader( url.openStream() ) ) ) {
 
             // We are getting a tab delimited file.
@@ -600,7 +581,11 @@ public class GeoBrowser {
 
                 String[] taxons = fields[columnNameToIndex.get( "Taxonomy" )]
                         .replaceAll( GeoBrowser.FLANKING_QUOTES_REGEX, "" ).split( ";" );
-                geoRecord.getOrganisms().addAll( Arrays.asList( taxons ) );
+                if ( geoRecord.getOrganisms() == null ) {
+                    geoRecord.setOrganisms( Arrays.asList( taxons ) );
+                } else {
+                    geoRecord.getOrganisms().addAll( Arrays.asList( taxons ) );
+                }
 
                 try {
                     Date date = DateUtils.parseDate( fields[columnNameToIndex.get( "Release Date" )]
@@ -620,52 +605,65 @@ public class GeoBrowser {
         if ( records.isEmpty() ) {
             GeoBrowser.log.warn( "No records obtained" );
         }
-        return records;
 
+        return new Slice<>( records, Sort.by( null, "releaseDate", Sort.Direction.DESC, Sort.NullMode.DEFAULT ), startPage, pageSize, null );
+    }
+
+    /**
+     * Quote a term if needed.
+     * <p>
+     * Refer to <a href="https://www.ncbi.nlm.nih.gov/books/NBK3837/">Entrez Help</a> for more details about the search
+     * query syntax.
+     */
+    private String quoteTerm( String c ) {
+        // strip quotes, I don't think it's possible to escape them
+        c = c.replaceAll( "\"", "" );
+        // : is used for range queries (i.e. 1:10[Sequence Length])
+        // [] are used for fielded search
+        // () are used for grouping boolean expressions
+        // * is used for wildcard
+        // spaces must be quoted, or else they will be treated as separate terms
+        // '/' are used in date formatting
+        if ( c.matches( "[:\\[\\]()*/\\s]" ) ) {
+            return "\"" + c + "\"";
+        }
+        return c;
     }
 
     /**
      * exposed for testing
-     *
      */
-    void parseMINiML( GeoRecord record, Document detailsDocument ) {
+    void fillSubSeriesStatus( GeoRecord record, Document detailsDocument ) {
         // e.g. https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE180363&targ=gse&form=xml&view=full
-        NodeList relTypeNodes;
-        String overallDesign;
+        String result;
         try {
-            relTypeNodes = ( NodeList ) xRelationType.evaluate( detailsDocument, XPathConstants.NODESET );
-            overallDesign = ( String ) xOverallDesign.evaluate( detailsDocument, XPathConstants.STRING );
+            result = ( String ) xOverallDesign.evaluate( detailsDocument, XPathConstants.STRING );
         } catch ( XPathExpressionException e ) {
-            throw new RuntimeException( "Failed to parse MINiML", e );
+            throw new RuntimeException( e );
         }
-
+        record.setOverallDesign( StringUtils.strip( result ) );
+        NodeList relTypeNodes = evaluate( xRelationType, detailsDocument );
         for ( int i = 0; i < relTypeNodes.getLength(); i++ ) {
-
             String relType = relTypeNodes.item( i ).getAttributes().getNamedItem( "type" ).getTextContent();
             String relTo = relTypeNodes.item( i ).getAttributes().getNamedItem( "target" ).getTextContent();
-
             if ( relType.startsWith( "SubSeries" ) ) {
                 record.setSubSeries( true );
                 record.setSubSeriesOf( relTo );
             }
         }
-
-        if ( overallDesign != null )
-            record.setOverallDesign( StringUtils.remove( overallDesign, '\n' ) );
     }
 
     /**
      * exposed for testing
-     *
      */
-    void parseSampleMiNIML( GeoRecord record, Document detailsDocument ) throws XPathExpressionException {
+    void fillSampleDetails( GeoRecord record, Document detailsDocument ) {
         // Source, Characteristics
-        NodeList channelNodes = ( NodeList ) xChannel.evaluate( detailsDocument, XPathConstants.NODESET );
+        NodeList channelNodes = evaluate( xChannel, detailsDocument );
         Set<String> props = new HashSet<>(); // expect duplicate terms
 
         for ( int i = 0; i < channelNodes.getLength(); i++ ) {
             Node item = channelNodes.item( i );
-            NodeList sources = ( NodeList ) source.evaluate( item, XPathConstants.NODESET );
+            NodeList sources = evaluate( source, item );
             for ( int k = 0; k < sources.getLength(); k++ ) {
                 String s = sources.item( k ).getTextContent();
                 String v = StringUtils.strip( s );
@@ -676,7 +674,7 @@ public class GeoBrowser {
                     props.add( v );
                 }
             }
-            NodeList chars = ( NodeList ) characteristics.evaluate( item, XPathConstants.NODESET );
+            NodeList chars = evaluate( characteristics, item );
             for ( int k = 0; k < chars.getLength(); k++ ) {
                 String s = chars.item( k ).getTextContent();
                 String v = StringUtils.strip( s );
@@ -688,7 +686,7 @@ public class GeoBrowser {
             }
         }
 
-        NodeList ls = ( NodeList ) xLibraryStrategy.evaluate( detailsDocument, XPathConstants.NODESET );
+        NodeList ls = evaluate( xLibraryStrategy, detailsDocument );
         Set<String> libraryStrategies = new HashSet<>();
         for ( int i = 0; i < ls.getLength(); i++ ) {
             libraryStrategies.add( ls.item( i ).getTextContent() );
@@ -700,6 +698,14 @@ public class GeoBrowser {
         record.setSampleDetails( StringUtils.join( props, ";" ) );
     }
 
+    private NodeList evaluate( XPathExpression xpath, Node item ) {
+        try {
+            return ( NodeList ) xpath.evaluate( item, XPathConstants.NODESET );
+        } catch ( XPathExpressionException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
     /**
      * Do another query to NCBI to fetch additional information not present in the eutils. Specifically: whether this is
      * a subseries, and MeSH headings associated with any publication.
@@ -707,57 +713,66 @@ public class GeoBrowser {
      * This method is resilient to various errors, ensuring that the GEO record can still be returned even if all the
      * details might not be filled.
      */
-    private void getDetails( GeoRecord record ) {
-        if ( !record.isSuperSeries() ) {
-            URL miniMLURL;
-            try {
-                miniMLURL = new URL( "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gse&form=xml&view=full&acc=" + urlEncode( record.getGeoAccession() ) );
-            } catch ( MalformedURLException e ) {
-                throw new RuntimeException( e );
-            }
+    private void fillDetails( GeoRecord record ) {
+        Document document;
+        try {
+            document = parseMINiMLDocument( record.getGeoAccession() );
+        } catch ( IOException e ) {
+            log.error( "Error while processing MINiML for " + record.getGeoAccession() + ", sample details will not be obtained", e );
+            return;
+        }
 
+        if ( !record.isSuperSeries() ) {
             /*
              * I can't find a better way to get subseries info: the eutils doesn't provide this
              * information other than mentioning (in the summary text) when a series is a superseries. Determining
              * subseries
              * status is impossible without another query. I don't think batch queries for MiniML is possible.
              */
-            try {
-                parseMINiML( record, parseMiniMLDocument( miniMLURL ) );
-            } catch ( EmptyXmlDocumentException | IOException e ) {
-                log.error( e.getMessage() + " while processing MINiML for " + record.getGeoAccession()
-                        + ", subseries status will not be determined." );
-            }
+            fillSubSeriesStatus( record, document );
         }
 
-        try {
-            getSampleDetails( record );
-        } catch ( EmptyXmlDocumentException | IOException e ) {
-            log.error( e.getMessage() + " while processing MINiML for " + record.getGeoAccession()
-                    + ", sample details will not be obtained" );
-        }
+        // Fetch miniML for the samples.
+        // e.g. https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE171682&targ=gsm&form=xml&view=full
+        log.debug( String.format( "Obtaining sample details for %s...", record ) );
+        fillSampleDetails( record, document );
 
         // another query. Note that new Pubmed IDs generally don't have mesh headings yet, so this might not be that useful.
-        if ( StringUtils.isNotBlank( record.getPubMedIds() ) ) {
-            try {
-                getMeshHeadings( record );
-            } catch ( IOException e ) {
-                log.error( "Could not get MeSH headings for " + record.getGeoAccession() + ": " + e.getMessage() );
-            }
+        try {
+            fillMeshHeadings( record );
+        } catch ( IOException e ) {
+            log.error( "Could not get MeSH headings for " + record.getGeoAccession() + ".", e );
         }
 
         // get sample information
         // https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM5230452&targ=self&form=xml&view=full
     }
 
-    /**
-     * @param  record      to process
-     */
-    private void getMeshHeadings( GeoRecord record ) throws IOException {
-        Collection<String> meshheadings = new ArrayList<>();
-        String[] idlist = record.getPubMedIds().split( "[,\\s]+" );
+    private void fillOrganisms( GeoRecord record, Node item ) {
+        String input = item.getTextContent();
+        input = input.replace( "; ", ";" );
+        String[] taxonArray = input.split( ";" );
+        Collection<String> taxa = new ArrayList<>();
+        for ( int i = 0; i < Array.getLength( taxonArray ); i++ ) {
+            taxa.add( taxonArray[i].trim() );
+        }
+        record.setOrganisms( taxa );
+    }
+
+    private void fillPubMedIds( GeoRecord record, Node item ) {
+        List<String> pubmedIds = Arrays.stream( item.getTextContent().split( "\\n" ) )
+                .map( StringUtils::stripToNull )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toList() );
+        record.setPubMedIds( pubmedIds );
+    }
+
+    private void fillMeshHeadings( GeoRecord record ) throws IOException {
+        if ( record.getPubMedIds() == null || record.getPubMedIds().isEmpty() ) {
+            return;
+        }
         List<Integer> idints = new ArrayList<>();
-        for ( String s : idlist ) {
+        for ( String s : record.getPubMedIds() ) {
             try {
                 idints.add( Integer.parseInt( s ) );
             } catch ( NumberFormatException e ) {
@@ -765,48 +780,13 @@ public class GeoBrowser {
             }
         }
         Collection<BibliographicReference> refs = pubmedFetcher.retrieveByHTTP( idints );
+        Collection<String> meshheadings = new ArrayList<>();
         for ( BibliographicReference ref : refs ) {
             for ( MedicalSubjectHeading mesh : ref.getMeshTerms() ) {
                 meshheadings.add( mesh.getTerm() );
             }
         }
-
-        if ( !meshheadings.isEmpty() )
-            record.setMeshHeadings( StringUtils.join( meshheadings, ";" ) );
-    }
-
-    /**
-     * Fetch and parse MINiML for samples.
-     *
-     */
-    private void getSampleDetails( GeoRecord record ) throws EmptyXmlDocumentException, IOException {
-        // Fetch miniML for the samples.
-        // e.g. https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE171682&targ=gsm&form=xml&view=full
-        URL sampleMINIMLURL = new URL( "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?targ=gsm&form=xml&view=full&acc=" + urlEncode( record.getGeoAccession() ) );
-        log.debug( String.format( "Obtaining sample details for %s from %s...", record.getGeoAccession(), sampleMINIMLURL ) );
-        try {
-            parseSampleMiNIML( record, parseMiniMLDocument( sampleMINIMLURL ) );
-        } catch ( XPathExpressionException e ) {
-            throw new RuntimeException( String.format( "Failed to parse MINiML from URL %s", sampleMINIMLURL ), e );
-        }
-    }
-
-    /**
-     * Extracts taxon names from input string; returns a collection of taxon names
-     *
-     * @param  input input
-     * @return taxon names
-     */
-    private Collection<String> getTaxonCollection( String input ) {
-        Collection<String> taxa = new ArrayList<>();
-
-        input = input.replace( "; ", ";" );
-        String[] taxonArray = input.split( ";" );
-
-        for ( int i = 0; i < Array.getLength( taxonArray ); i++ ) {
-            taxa.add( taxonArray[i].trim() );
-        }
-        return taxa;
+        record.setMeshHeadings( meshheadings );
     }
 
     private String urlEncode( String s ) {
@@ -818,42 +798,61 @@ public class GeoBrowser {
     }
 
     /**
+     * Parse a MINiML document for given GEO series accession.
+     */
+    private Document parseMINiMLDocument( String geoAccession ) throws IOException {
+        URL documentUrl = new URL( GEO_FTP + geoAccession.substring( 0, geoAccession.length() - 3 ) + "nnn/" + geoAccession + "/miniml/" + geoAccession + "_family.xml.tgz" );
+        return execute( ( attempt, lastAttempt ) -> {
+            try ( TarInputStream tis = new TarInputStream( new GZIPInputStream( documentUrl.openStream() ) ) ) {
+                TarEntry entry;
+                while ( ( entry = tis.getNextEntry() ) != null ) {
+                    if ( entry.getName().equals( geoAccession + "_family.xml" ) ) {
+                        log.debug( "Parsing MINiML for " + geoAccession + " from " + documentUrl + "!" + entry.getName() + "..." );
+                        return createDocumentBuilder().parse( tis );
+                    }
+                }
+            } catch ( ParserConfigurationException | SAXException e ) {
+                if ( isCausedByAnEmptyXmlDocument( e ) ) {
+                    throw new IOException( e );
+                } else if ( isCausedByAnHtmlDocument( e ) ) {
+                    throw new IOException( "Detected what was likely an HTML document.", e );
+                } else {
+                    throw new RuntimeException( e );
+                }
+            } catch ( FileNotFoundException e ) {
+                throw new NonRetryableIOException( e );
+            }
+            throw new NonRetryableIOException( new FileNotFoundException( String.format( "No entry with name %s_family.xml in %s.", geoAccession, documentUrl ) ) );
+        }, "retrieve " + documentUrl );
+    }
+
+    /**
      *
      * @param url an URL from which the document should be parsed
      * @return a parsed MINiML document
      * @throws IOException if there is a problem while manipulating the file or if the number of records in the document
      * exceeds {@link #MAX_MINIML_RECORD_SIZE}
      */
-    Document parseMiniMLDocument( URL url ) throws EmptyXmlDocumentException, IOException {
-        return parseMiniMLDocument( url, MAX_RETRIES, null );
-    }
-
-    private Document parseMiniMLDocument( URL url, int maxRetries, @Nullable IOExceptionWithRetry errorFromPreviousAttempt ) throws EmptyXmlDocumentException, IOException {
-        try ( InputStream is = openUrlWithMaxSize( url, MAX_MINIML_RECORD_SIZE ) ) {
-            return createDocumentBuilder().parse( is );
-        } catch ( ParserConfigurationException | SAXException e ) {
-            if ( isCausedByAnEmptyXmlDocument( e ) ) {
-                throw new EmptyXmlDocumentException( e );
-            } else {
-                throw new IOException( String.format( "Failed to parse MINiML from URL %s", url ), e );
-            }
-        } catch ( IOException ioe ) {
-            if ( maxRetries > 0 && isEligibleForRetry( ioe ) ) {
-                // exponential backoff?
-                log.warn( String.format( "Failed to retrieve MINiML from URL %s, there are %d attempts left.", url, maxRetries - 1 ), ioe );
-                try {
-                    Thread.sleep( 1000 );
-                } catch ( InterruptedException e ) {
-                    Thread.currentThread().interrupt();
-                    throw ioe; // give up and just raise the exception
+    Document parseMiniMLDocument( URL url ) throws IOException {
+        return execute( ( retries, lastAttempt ) -> {
+            try ( InputStream is = openUrlWithMaxSize( url, MAX_MINIML_RECORD_SIZE ) ) {
+                return createDocumentBuilder().parse( is );
+            } catch ( ParserConfigurationException | SAXException e ) {
+                if ( isCausedByAnEmptyXmlDocument( e ) ) {
+                    throw new IOException( "Got an empty document for " + url + ".", e );
+                } else if ( isCausedByAnHtmlDocument( e ) ) {
+                    throw new IOException( "Detected what was likely an HTML document.", e );
+                } else {
+                    throw new RuntimeException( e );
                 }
-                return parseMiniMLDocument( url, maxRetries - 1, new IOExceptionWithRetry( ioe, errorFromPreviousAttempt ) );
-            } else if ( errorFromPreviousAttempt != null ) {
-                throw new IOExceptionWithRetry( ioe, errorFromPreviousAttempt );
-            } else {
-                throw ioe;
+            } catch ( IOException ioe ) {
+                if ( isEligibleForRetry( ioe ) ) {
+                    throw ioe;
+                } else {
+                    throw new NonRetryableIOException( ioe );
+                }
             }
-        }
+        }, "parse MINiML from URL " + url );
     }
 
     /**
@@ -866,10 +865,17 @@ public class GeoBrowser {
     }
 
     /**
-     * Check if an excpetion is caused by an empty MINiML document.
+     * Check if an exception is caused by an empty MINiML document.
      */
     private boolean isCausedByAnEmptyXmlDocument( Exception e ) {
         return e instanceof SAXParseException && e.getMessage().contains( "Premature end of file." );
+    }
+
+    /**
+     * Check if an exception is caused by an HTML document being served instead of an XML document.
+     */
+    private boolean isCausedByAnHtmlDocument( Exception e ) {
+        return e instanceof SAXParseException && e.getMessage().contains( "White spaces are required between publicId and systemId." );
     }
 
     /**
@@ -894,12 +900,28 @@ public class GeoBrowser {
         }
     }
 
+    private <T> T execute( SimpleRetryCallable<T, IOException> callable, Object what ) throws IOException {
+        try {
+            return retryTemplate.execute( callable, what );
+        } catch ( NonRetryableIOException w ) {
+            throw w.getCause();
+        }
+    }
+
     /**
-     * Exception raised when an empty XML document is encountered.
+     * Allows for raising an {@link IOException} without having it retried.
      */
-    private static class EmptyXmlDocumentException extends Exception {
-        public EmptyXmlDocumentException( Throwable cause ) {
-            super( "The XML document was empty", cause );
+    private static class NonRetryableIOException extends RuntimeException {
+
+        private final IOException cause;
+
+        private NonRetryableIOException( IOException cause ) {
+            this.cause = cause;
+        }
+
+        @Override
+        public IOException getCause() {
+            return cause;
         }
     }
 }

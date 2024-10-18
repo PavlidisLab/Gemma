@@ -130,7 +130,7 @@ public class UserFormMultiActionController extends BaseController {
     /**
      * AJAX entry point. Loads a user.
      */
-    @RequestMapping(value = "/loadUser.html", method = RequestMethod.GET)
+    @RequestMapping(value = "/loadUser.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void loadUser( HttpServletResponse response ) throws IOException {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

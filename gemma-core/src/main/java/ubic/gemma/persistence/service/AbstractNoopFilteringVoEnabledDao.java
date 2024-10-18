@@ -84,7 +84,7 @@ public abstract class AbstractNoopFilteringVoEnabledDao<O extends Identifiable, 
     }
 
     @Override
-    public final Sort getSort( String property, @Nullable Sort.Direction direction ) throws IllegalArgumentException {
+    public final Sort getSort( String property, @Nullable Sort.Direction direction, Sort.NullMode nullMode ) throws IllegalArgumentException {
         throw new UnsupportedOperationException( message );
     }
 

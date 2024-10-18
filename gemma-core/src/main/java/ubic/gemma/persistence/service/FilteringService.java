@@ -91,9 +91,9 @@ public interface FilteringService<O extends Identifiable> extends BaseReadOnlySe
     <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, Collection<T> parsedValues );
 
     /**
-     * @see FilteringDao#getSort(String, Sort.Direction)
+     * @see FilteringDao#getSort(String, Sort.Direction, Sort.NullMode)
      */
-    Sort getSort( String property, @Nullable Sort.Direction direction ) throws IllegalArgumentException;
+    Sort getSort( String property, @Nullable Sort.Direction direction, Sort.NullMode last ) throws IllegalArgumentException;
 
     /**
      * @see FilteringDao#loadIds(Filters, Sort)

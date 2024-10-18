@@ -24,12 +24,13 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.entrez.EutilFetch;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -42,17 +43,20 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.Slice;
 
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.*;
 import java.io.*;
-import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
+import static ubic.gemma.core.util.XMLUtils.createDocumentBuilder;
 
 /**
  * This is marked as {@link Lazy} since we don't use it outside Gemma Web, so it won't be loaded unless it's needed.
@@ -97,12 +101,21 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
 
+    @Value("${entrez.efetch.apikey}")
+    private String ncbiApiKey;
+
+    @Value("${gemma.download.path}")
+    private String downloadPath;
+
+    private GeoBrowser browser;
+
     private final Map<String, GeoRecord> localInfo = new ConcurrentHashMap<>();
 
     private final ExecutorService es = Executors.newSingleThreadExecutor();
 
     @Override
     public void afterPropertiesSet() {
+        browser = new GeoBrowser( ncbiApiKey );
         try {
             es.submit( this::initializeLocalInfo );
         } finally {
@@ -125,7 +138,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
          * The maxrecords is > 1 because it return platforms as well (and there are series with as many as 13 platforms
          * ... leaving some headroom)
          */
-        String details = EutilFetch.fetch( "gds", accession, 25 );
+        String details = new EutilFetch( ncbiApiKey ).fetch( "gds", accession, 25 );
 
         if ( details == null ) {
             throw new IOException( "No results from GEO" );
@@ -143,22 +156,13 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
     }
 
     @Override
-    public List<GeoRecord> getRecentGeoRecords( int start, int count ) throws IOException, ParseException {
-        GeoBrowser browser = new GeoBrowser();
-        List<GeoRecord> records = browser.getRecentGeoRecords( start, count );
-
-        if ( records.isEmpty() )
-            return records;
-
-        return this.filterGeoRecords( records );
+    public List<GeoRecord> getRecentGeoRecords( int start, int count ) throws IOException {
+        return this.filterGeoRecords( browser.getRecentGeoRecords( start, count ) );
     }
 
     @Override
     public List<GeoRecord> searchGeoRecords( String searchString, int start, int count, boolean detailed ) throws IOException {
-        GeoBrowser browser = new GeoBrowser();
-        List<GeoRecord> records = browser.getGeoRecordsBySearchTerm( searchString, start, count, detailed, null, null );
-
-        return this.filterGeoRecords( records );
+        return this.filterGeoRecords( browser.searchGeoRecords( searchString, null, null, null, null, start, count, detailed ) );
     }
 
     @Override
@@ -185,7 +189,8 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
         details = details.replaceAll( "encoding=\"UTF-8\"", "" );
 
         try {
-            Document document = EutilFetch.parseStringInputStream( details );
+            DocumentBuilder builder = createDocumentBuilder();
+            Document document = builder.parse( new InputSource( new StringReader( details ) ) );
 
             String gse = "GSE" + xgse.evaluate( document, XPathConstants.STRING );
             String title = ( String ) xtitle.evaluate( document, XPathConstants.STRING );
@@ -221,57 +226,52 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
         return details;
     }
 
-    private List<GeoRecord> filterGeoRecords( List<GeoRecord> records ) {
+    private List<GeoRecord> filterGeoRecords( Slice<GeoRecord> records ) {
         ExternalDatabase geo = externalDatabaseService.findByName( "GEO" );
-        Collection<GeoRecord> toRemove = new HashSet<>();
-        assert geo != null;
-        rec:
-        for ( GeoRecord record : records ) {
-
-            if ( record.getNumSamples() < GeoBrowserServiceImpl.MIN_SAMPLES ) {
-                toRemove.add( record );
-            }
-
-            Collection<String> organisms = record.getOrganisms();
-            if ( organisms == null || organisms.size() == 0 ) {
-                continue;
-            }
-            int i = 0;
-            for ( String string : organisms ) {
-                Taxon t = taxonService.findByCommonName( string );
-                if ( t == null ) {
-                    t = taxonService.findByScientificName( string );
-                    if ( t == null ) {
-                        toRemove.add( record );
-                        continue rec;
+        return records.stream()
+                .filter( record -> {
+                    if ( record.getNumSamples() < GeoBrowserServiceImpl.MIN_SAMPLES ) {
+                        return false;
                     }
-                }
-                String acc = record.getGeoAccession();
-                if ( organisms.size() > 1 ) {
-                    acc = acc + "." + i;
-                }
-                DatabaseEntry de = DatabaseEntry.Factory.newInstance();
-                de.setExternalDatabase( geo );
-                de.setAccession( acc );
 
-                Collection<ExpressionExperiment> ee = expressionExperimentService.findByAccession( de );
-                if ( !ee.isEmpty() ) {
-                    for ( ExpressionExperiment expressionExperiment : ee ) {
-                        record.getCorrespondingExperiments().add( expressionExperiment.getId() );
+                    Collection<String> organisms = record.getOrganisms();
+                    if ( organisms == null || organisms.isEmpty() ) {
+                        return true;
                     }
-                }
 
-                record.setPreviousClicks( localInfo.containsKey( acc ) ? localInfo.get( acc ).getPreviousClicks() : 0 );
+                    int i = 0;
+                    for ( String string : organisms ) {
+                        Taxon t = taxonService.findByCommonName( string );
+                        if ( t == null ) {
+                            t = taxonService.findByScientificName( string );
+                            if ( t == null ) {
+                                return false;
+                            }
+                        }
+                        String acc = record.getGeoAccession();
+                        if ( organisms.size() > 1 ) {
+                            acc = acc + "." + i;
+                        }
+                        DatabaseEntry de = DatabaseEntry.Factory.newInstance();
+                        de.setExternalDatabase( geo );
+                        de.setAccession( acc );
 
-                record.setUsable( !localInfo.containsKey( acc ) || localInfo.get( acc ).isUsable() );
-                i++;
-            }
-        }
+                        Collection<ExpressionExperiment> ee = expressionExperimentService.findByAccession( de );
+                        if ( !ee.isEmpty() ) {
+                            for ( ExpressionExperiment expressionExperiment : ee ) {
+                                record.getCorrespondingExperiments().add( expressionExperiment.getId() );
+                            }
+                        }
 
-        records.removeAll( toRemove );
+                        record.setPreviousClicks( localInfo.containsKey( acc ) ? localInfo.get( acc ).getPreviousClicks() : 0 );
 
-        return records;
+                        record.setUsable( !localInfo.containsKey( acc ) || localInfo.get( acc ).isUsable() );
+                        i++;
+                    }
 
+                    return true;
+                } )
+                .collect( Collectors.toList() );
     }
 
     private void formatArrayDetails( NodeList gpls, StringBuilder buf, String contextPath ) {
@@ -307,8 +307,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
     }
 
     private File getInfoStoreFile() {
-        String path = Settings.getDownloadPath();
-        return new File( path + File.separatorChar + GeoBrowserServiceImpl.GEO_DATA_STORE_FILE_NAME );
+        return new File( downloadPath + File.separatorChar + GeoBrowserServiceImpl.GEO_DATA_STORE_FILE_NAME );
     }
 
     /**

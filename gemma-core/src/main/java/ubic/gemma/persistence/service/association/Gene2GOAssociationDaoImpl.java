@@ -36,9 +36,9 @@ import ubic.gemma.persistence.util.QueryUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.stream.Collectors;
 
-import static ubic.gemma.persistence.util.QueryUtils.*;
+import static ubic.gemma.persistence.util.QueryUtils.batchIdentifiableParameterList;
+import static ubic.gemma.persistence.util.QueryUtils.listByBatch;
 
 /**
  * @author pavlidis
@@ -63,7 +63,6 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
         return ( Gene2GOAssociation ) queryObject.uniqueResult();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<Gene2GOAssociation> findAssociationByGene( Gene gene ) {
         return this.findByProperty( "gene", gene );
@@ -118,11 +117,9 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
         if ( uris.isEmpty() ) {
             return Collections.emptyList();
         }
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
+        return listByBatch( this.getSessionFactory().getCurrentSession().createQuery(
                         "select distinct geneAss.gene from Gene2GOAssociation as geneAss  "
-                                + "where geneAss.ontologyEntry.valueUri in (:uris)" )
-                .setParameterList( "uris", optimizeParameterList( uris ) ).list();
+                                + "where geneAss.ontologyEntry.valueUri in (:uris)" ), "uris", uris, 2048 );
     }
 
     @Override
@@ -130,12 +127,11 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
         if ( uris.isEmpty() ) {
             return Collections.emptyList();
         }
-        return streamByBatch( this.getSessionFactory().getCurrentSession()
+        return listByBatch( this.getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct gene from Gene2GOAssociation as geneAss "
                         + "join geneAss.gene as gene "
                                 + "where geneAss.ontologyEntry.valueUri in (:uris) and gene.taxon = :tax" )
-                .setParameter( "tax", taxon ), "uris", uris, 2048, Gene.class )
-                .collect( Collectors.toSet() );
+                .setParameter( "tax", taxon ), "uris", uris, 2048 );
     }
 
     @Override
@@ -144,7 +140,7 @@ public class Gene2GOAssociationDaoImpl extends AbstractDao<Gene2GOAssociation> i
         Map<Taxon, Collection<Gene>> results = new HashMap<>();
         for ( Gene g : genes ) {
             if ( !results.containsKey( g.getTaxon() ) ) {
-                results.put( g.getTaxon(), new HashSet<Gene>() );
+                results.put( g.getTaxon(), new HashSet<>() );
             }
             results.get( g.getTaxon() ).add( g );
         }

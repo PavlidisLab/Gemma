@@ -25,8 +25,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
+import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static ubic.gemma.rest.util.JsonAssert.json;
 
 
 public class WebApplicationExceptionMapperTest extends JerseyTest {
@@ -115,6 +117,14 @@ public class WebApplicationExceptionMapperTest extends JerseyTest {
                 .extracting( "response" )
                 .extracting( "entity" )
                 .asInstanceOf( InstanceOfAssertFactories.INPUT_STREAM )
-                .hasContent( "{\"apiVersion\":\"2.8.3\",\"buildInfo\":{\"version\":\"1.0.0\",\"timestamp\":\"2024-05-20T04:41:58.000+00:00\",\"gitHash\":\"1234\"},\"error\":{\"code\":400,\"message\":\"test\"}}" );
+                .asString( StandardCharsets.UTF_8 )
+                .asInstanceOf( json() )
+                .hasPath( "$.apiVersion" )
+                .doesNotHavePath( "$.apiVersion2" )
+                .hasPathWithValue( "$.buildInfo.version", "1.0.0" )
+                .hasPathWithValue( "$.buildInfo.timestamp", "2024-05-20T04:41:58.000+00:00" )
+                .hasPathWithValue( "$.buildInfo.gitHash", "1234" )
+                .hasPathWithValue( "$.error.code", 400 )
+                .hasPathWithValue( "$.error.message", "test" );
     }
 }
