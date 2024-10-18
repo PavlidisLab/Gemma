@@ -21,6 +21,7 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedService;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 
@@ -33,31 +34,14 @@ import java.io.File;
  */
 public class PubMedLoaderCli extends AbstractAuthenticatedCLI {
 
-    private String directory;
+    @Autowired
+    private PubMedService pms;
 
-    @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.MISC;
-    }
+    private String directory;
 
     @Override
     public String getCommandName() {
         return "pubmedLoad";
-    }
-
-    @SuppressWarnings("static-access")
-    @Override
-    protected void buildOptions( Options options ) {
-        Option fileOption = Option.builder( "d" ).required().hasArg().argName( "Directory" )
-                .desc( "Directory of PubMed XML files to load" ).longOpt( "dir" ).build();
-        options.addOption( fileOption );
-
-    }
-
-    @Override
-    protected void doWork() throws Exception {
-        PubMedService pms = this.getBean( PubMedService.class );
-        pms.loadFromDirectory( new File( directory ) );
     }
 
     @Override
@@ -66,10 +50,26 @@ public class PubMedLoaderCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.MISC;
+    }
+
+    @Override
+    protected void buildOptions( Options options ) {
+        Option fileOption = Option.builder( "d" ).required().hasArg().argName( "Directory" )
+                .desc( "Directory of PubMed XML files to load" ).longOpt( "dir" ).build();
+        options.addOption( fileOption );
+    }
+
+    @Override
+    protected void doAuthenticatedWork() {
+        pms.loadFromDirectory( new File( directory ) );
+    }
+
+    @Override
     protected void processOptions( CommandLine commandLine ) {
         if ( commandLine.hasOption( 'd' ) ) {
             this.directory = commandLine.getOptionValue( 'd' );
         }
     }
-
 }

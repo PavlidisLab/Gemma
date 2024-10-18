@@ -230,7 +230,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         switch ( mode ) {
             case GET_PLATFORMS:
                 getPlatforms();

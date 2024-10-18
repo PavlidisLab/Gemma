@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.apps;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.core.analysis.sequence.CompositeSequenceMapSummary;
 import ubic.gemma.core.util.CLI;
@@ -33,6 +34,9 @@ import java.util.Collection;
  */
 public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli {
 
+    @Autowired
+    private ArrayDesignMapResultService arrayDesignMapResultService;
+
     @Override
     public String getCommandName() {
         return "platformMapSummary";
@@ -45,9 +49,12 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
     }
 
     @Override
-    protected void doWork() throws Exception {
-        ArrayDesignMapResultService arrayDesignMapResultService = this.getBean( ArrayDesignMapResultService.class );
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.ANALYSIS;
+    }
 
+    @Override
+    protected void doAuthenticatedWork() throws Exception {
         Collection<ArrayDesign> ads = getArrayDesignService().thaw( getArrayDesignsToProcess() );
         for ( ArrayDesign thawed : ads ) {
             Collection<CompositeSequenceMapSummary> results = arrayDesignMapResultService.summarizeMapResults( thawed );
@@ -57,10 +64,4 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
             }
         }
     }
-
-    @Override
-    public CommandGroup getCommandGroup() {
-        return CLI.CommandGroup.ANALYSIS;
-    }
-
 }

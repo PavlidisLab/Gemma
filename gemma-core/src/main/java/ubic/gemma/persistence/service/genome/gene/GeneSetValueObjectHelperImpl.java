@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.*;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
 
@@ -74,7 +74,7 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
 
         DatabaseBackedGeneSetValueObject dbgsvo = convertToLightValueObject( gs );
 
-        Collection<Long> ids = EntityUtils
+        Collection<Long> ids = IdentifiableUtils
                 .getIds( this.geneSetService.getGenesInGroup( new GeneSetValueObject( gs.getId() ) ) );
         dbgsvo.setGeneIds( ids );
         dbgsvo.setSize( ids.size() );
@@ -103,7 +103,7 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
     private List<DatabaseBackedGeneSetValueObject> convertToLightValueObjects( Collection<GeneSet> geneSets,
             boolean includeOnesWithoutGenes, boolean light ) {
 
-        Collection<Long> genesetIds = EntityUtils.getIds( geneSets );
+        Collection<Long> genesetIds = IdentifiableUtils.getIds( geneSets );
 
         List<DatabaseBackedGeneSetValueObject> results = new ArrayList<>();
 

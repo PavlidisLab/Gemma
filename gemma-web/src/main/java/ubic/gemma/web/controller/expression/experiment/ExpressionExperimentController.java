@@ -43,8 +43,8 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.report.WhatsNew;
 import ubic.gemma.core.analysis.report.WhatsNewService;
-import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.datastructure.matrix.io.TsvUtils;
 import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
@@ -75,7 +75,7 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.*;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.web.controller.ControllerUtils;
@@ -95,6 +95,7 @@ import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectStatistics;
 import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectType;
@@ -495,9 +496,9 @@ public class ExpressionExperimentController {
         long newBioMaterialCount = wn.getNewBioMaterialCount();
 
         Collection<ExpressionExperiment> newExpressionExperiments = wn.getNewExpressionExperiments();
-        Collection<Long> newExpressionExperimentIds = ( newExpressionExperiments != null ) ? EntityUtils.getIds( newExpressionExperiments ) : new ArrayList<>();
+        Collection<Long> newExpressionExperimentIds = ( newExpressionExperiments != null ) ? IdentifiableUtils.getIds( newExpressionExperiments ) : new ArrayList<>();
         Collection<ExpressionExperiment> updatedExpressionExperiments = wn.getUpdatedExpressionExperiments();
-        Collection<Long> updatedExpressionExperimentIds = ( updatedExpressionExperiments != null ) ? EntityUtils.getIds( updatedExpressionExperiments ) : new ArrayList<>();
+        Collection<Long> updatedExpressionExperimentIds = ( updatedExpressionExperiments != null ) ? IdentifiableUtils.getIds( updatedExpressionExperiments ) : new ArrayList<>();
 
         int newExpressionExperimentCount = ( newExpressionExperiments != null ) ? newExpressionExperiments.size() : 0;
         int updatedExpressionExperimentCount = ( updatedExpressionExperiments != null ) ? updatedExpressionExperiments.size() : 0;
@@ -657,13 +658,13 @@ public class ExpressionExperimentController {
         ArrayDesign ad = arrayDesignService.loadOrFail( id, EntityNotFoundException::new, "No platform with ID " + id + "." );
 
         Collection<ExpressionExperimentDetailsValueObject> switchedExperiments = getFilteredExpressionExperimentValueObjects( null,
-                EntityUtils.getIds( arrayDesignService.getSwitchedExperiments( ad ) ), 0, true );
+                IdentifiableUtils.getIds( arrayDesignService.getSwitchedExperiments( ad ) ), 0, true );
         for ( ExpressionExperimentDetailsValueObject evo : switchedExperiments ) {
             evo.setName( "[Switched to another platform] " + evo.getName() );
         }
 
         Collection<ExpressionExperimentDetailsValueObject> experiments = this.getFilteredExpressionExperimentValueObjects( null,
-                EntityUtils.getIds( arrayDesignService.getExpressionExperiments( ad ) ),
+                IdentifiableUtils.getIds( arrayDesignService.getExpressionExperiments( ad ) ),
                 0, true );
 
         // combine original and switched EES
@@ -1283,20 +1284,20 @@ public class ExpressionExperimentController {
 
         switch ( filter ) {
             case 1: // eligible for diff and don't have it.
-                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( IdentifiableUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainLackingEvent( eesToKeep, DifferentialExpressionAnalysisEvent.class );
                 eesToKeep.removeAll( expressionExperimentService.loadLackingFactors() );
                 break;
             case 2: // need coexp
-                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( IdentifiableUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainLackingEvent( eesToKeep, LinkAnalysisEvent.class );
                 break;
             case 3:
-                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( IdentifiableUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainHavingEvent( eesToKeep, DifferentialExpressionAnalysisEvent.class );
                 break;
             case 4:
-                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( IdentifiableUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainHavingEvent( eesToKeep, LinkAnalysisEvent.class );
                 break;
             case 5:
@@ -1310,20 +1311,20 @@ public class ExpressionExperimentController {
                 eesToKeep = expressionExperimentService.loadLackingTags();
                 break;
             case 8: // needs batch info
-                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( IdentifiableUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainLackingEvent( eesToKeep, BatchInformationFetchingEvent.class );
                 auditEventService.retainLackingEvent( eesToKeep, FailedBatchInformationMissingEvent.class );
                 break;
             case 9:
-                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( IdentifiableUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainHavingEvent( eesToKeep, BatchInformationFetchingEvent.class );
                 break;
             case 10:
-                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( IdentifiableUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainLackingEvent( eesToKeep, PCAAnalysisEvent.class );
                 break;
             case 11:
-                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( IdentifiableUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainHavingEvent( eesToKeep, PCAAnalysisEvent.class );
                 break;
             case 12:
@@ -1347,7 +1348,7 @@ public class ExpressionExperimentController {
                 return filtered;
             }
             // Map<Long, ExpressionExperiment> idMap = EntityUtils.getIdMap( eesToKeep );
-            Collection<Long> ids = EntityUtils.getIds( eesToKeep );
+            Collection<Long> ids = IdentifiableUtils.getIds( eesToKeep );
             for ( ExpressionExperimentDetailsValueObject eevo : eeValObjectCol ) {
                 if ( ids.contains( eevo.getId() ) ) {
                     filtered.add( eevo );
@@ -1366,7 +1367,7 @@ public class ExpressionExperimentController {
     private String format4File( Collection<ExpressionExperimentValueObject> ees, @Nullable String eeSetName ) {
         StringBuilder strBuff = new StringBuilder();
         strBuff.append( "# Generated by Gemma\n# " ).append( new Date() ).append( "\n" );
-        strBuff.append( ExpressionDataFileService.DISCLAIMER + "#\n" );
+        strBuff.append( Arrays.stream( TsvUtils.GEMMA_CITATION_NOTICE ).map( line -> "# " + line + "\n" ).collect( Collectors.joining() ) + "#\n" );
 
         if ( eeSetName != null && !eeSetName.isEmpty() )
             strBuff.append( "# Experiment Set: " ).append( eeSetName ).append( "\n" );
@@ -1628,7 +1629,7 @@ public class ExpressionExperimentController {
                 ExpressionExperimentController.log.info( "Searching pubmed on line .." );
 
                 // search for pubmedId
-                PubMedSearch pms = new PubMedSearch( Settings.getString( "entrez.efetch.apikey" ));
+                PubMedSearch pms = new PubMedSearch( Settings.getString( "entrez.efetch.apikey" ) );
                 Collection<String> searchTerms = new ArrayList<>();
                 searchTerms.add( pubmedId );
                 Collection<BibliographicReference> publications;

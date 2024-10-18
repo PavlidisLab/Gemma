@@ -21,7 +21,9 @@ package ubic.gemma.model.common.measurement;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.Objects;
 
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public class Measurement implements Identifiable, Serializable {
@@ -31,92 +33,18 @@ public class Measurement implements Identifiable, Serializable {
      */
     private static final long serialVersionUID = 1833568047451431226L;
     private MeasurementType type;
+    /**
+     * The measurement value.
+     * <p>
+     * Null indicates a missing value.
+     */
+    @Nullable
     private String value;
     private MeasurementKind kindCV;
     private String otherKind;
     private PrimitiveType representation;
     private Long id;
     private Unit unit;
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-
-        Measurement other = ( Measurement ) obj;
-        if ( this.getId() == null ) {
-            if ( other.getId() != null )
-                return false;
-        } else if ( !this.getId().equals( other.getId() ) )
-            return false;
-
-        if ( this.getValue() == null ) {
-            if ( other.getValue() != null )
-                return false;
-        } else if ( !this.getValue().equals( other.getValue() ) )
-            return false;
-
-        if ( this.getUnit() == null ) {
-            if ( other.getUnit() != null )
-                return false;
-        } else if ( !this.getUnit().equals( other.getUnit() ) )
-            return false;
-
-        if ( this.getType() == null ) {
-            if ( other.getType() != null )
-                return false;
-        } else if ( !this.getType().equals( other.getType() ) )
-            return false;
-
-        if ( this.getKindCV() == null ) {
-            if ( other.getKindCV() != null )
-                return false;
-        } else if ( !this.getKindCV().equals( other.getKindCV() ) )
-            return false;
-
-        if ( this.getOtherKind() == null ) {
-            if ( other.getOtherKind() != null )
-                return false;
-        } else if ( !this.getOtherKind().equals( other.getOtherKind() ) )
-            return false;
-        if ( this.getRepresentation() == null ) {
-            return other.getRepresentation() == null;
-        } else
-            return this.getRepresentation().equals( other.getRepresentation() );
-
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( this.getId() == null ) ? 0 : this.getId().hashCode() );
-
-        if ( this.getId() == null ) {
-            result = prime * result + ( ( this.getValue() == null ) ? 0 : this.getValue().hashCode() );
-
-            result =
-                    prime * result + ( ( this.getRepresentation() == null ) ? 0 : this.getRepresentation().hashCode() );
-            result = prime * result + ( ( this.getUnit() == null ) ? 0 : this.getUnit().hashCode() );
-
-            result = prime * result + ( ( this.getType() == null ) ? 0 : this.getType().hashCode() );
-
-            result = prime * result + ( ( this.getKindCV() == null ) ? 0 : this.getKindCV().hashCode() );
-            result = prime * result + ( ( this.getOtherKind() == null ) ? 0 : this.getOtherKind().hashCode() );
-
-        }
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return this.getValue();
-    }
-
 
     @Override
     public Long getId() {
@@ -167,13 +95,42 @@ public class Measurement implements Identifiable, Serializable {
         this.unit = unit;
     }
 
+    @Nullable
     public String getValue() {
         return this.value;
     }
 
-    public void setValue( String value ) {
+    public void setValue( @Nullable String value ) {
         this.value = value;
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash( getValue(), getRepresentation(), getUnit(), getType(), getKindCV(), getOtherKind() );
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( !( obj instanceof Measurement ) )
+            return false;
+        Measurement other = ( Measurement ) obj;
+        if ( getId() != null && other.getId() != null )
+            return getId().equals( other.getId() );
+        return Objects.equals( getValue(), other.getValue() )
+                && Objects.equals( getUnit(), other.getUnit() )
+                && Objects.equals( getType(), other.getType() )
+                && Objects.equals( getRepresentation(), other.getRepresentation() )
+                && Objects.equals( getKindCV(), other.getKindCV() )
+                && Objects.equals( getOtherKind(), other.getOtherKind() );
+    }
+
+    @Override
+    public String toString() {
+        return this.getValue();
+    }
+
 
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static final class Factory {

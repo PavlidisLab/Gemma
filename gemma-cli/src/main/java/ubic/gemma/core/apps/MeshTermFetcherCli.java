@@ -67,7 +67,6 @@ public class MeshTermFetcherCli extends AbstractCLI {
         return CLI.CommandGroup.MISC;
     }
 
-    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions( Options options ) {
         Option fileOption = Option.builder( "f" )
@@ -78,6 +77,16 @@ public class MeshTermFetcherCli extends AbstractCLI {
                 .build();
         options.addOption( fileOption );
         options.addOption( "m", "Use major subjects only" );
+    }
+
+    @Override
+    protected void processOptions( CommandLine commandLine ) {
+        if ( commandLine.hasOption( 'f' ) ) {
+            this.file = commandLine.getOptionValue( 'f' );
+        }
+        if ( commandLine.hasOption( 'm' ) ) {
+            this.majorTopicsOnly = true;
+        }
     }
 
     @Override
@@ -99,16 +108,6 @@ public class MeshTermFetcherCli extends AbstractCLI {
 
         if ( !chunk.isEmpty() ) {
             this.processChunk( fetcher, chunk );
-        }
-    }
-
-    @Override
-    protected void processOptions( CommandLine commandLine ) {
-        if ( commandLine.hasOption( 'f' ) ) {
-            this.file = commandLine.getOptionValue( 'f' );
-        }
-        if ( commandLine.hasOption( 'm' ) ) {
-            this.majorTopicsOnly = true;
         }
     }
 

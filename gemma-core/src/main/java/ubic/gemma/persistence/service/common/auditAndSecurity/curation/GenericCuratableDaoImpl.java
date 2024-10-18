@@ -9,6 +9,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 
+import java.util.List;
+
 @Repository
 public class GenericCuratableDaoImpl implements GenericCuratableDao {
 
@@ -17,6 +19,11 @@ public class GenericCuratableDaoImpl implements GenericCuratableDao {
 
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
+
+    @Override
+    public List<Long> loadTroubledIds() {
+        throw new UnsupportedOperationException( "Cannot load troubled IDs for an unknown entity." );
+    }
 
     @Override
     public void updateCurationDetailsFromAuditEvent( Curatable auditable, AuditEvent auditEvent ) {

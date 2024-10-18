@@ -33,7 +33,6 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatAssociationService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
-import ubic.gemma.persistence.util.EntityUtils;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -221,7 +220,13 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
 
         int hash = Objects.hash( chromId, targetStart, targetEnd, targetStarts, queryId );
 
-        EntityUtils.populateMapSet( blatResultCount, csId, hash );
+        if ( blatResultCount.containsKey( csId ) ) {
+            blatResultCount.get( csId ).add( hash );
+        } else {
+            Set<Integer> set = new HashSet<>();
+            set.add( hash );
+            blatResultCount.put( csId, set );
+        }
 
         if ( vo.getNumBlatHits() == null ) {
             vo.setNumBlatHits( 1 );

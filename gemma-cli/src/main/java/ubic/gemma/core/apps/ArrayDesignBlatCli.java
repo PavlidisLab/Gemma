@@ -22,6 +22,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.sequence.Blat;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.core.loader.genome.BlatResultParser;
@@ -44,18 +45,26 @@ import java.util.Date;
  */
 public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
-    private Taxon taxon;
+    @Autowired
     private ArrayDesignSequenceAlignmentService arrayDesignSequenceAlignmentService;
+    @Autowired
+    private TaxonService taxonService;
+
+    private Taxon taxon;
     private String blatResultFile = null;
     private Double blatScoreThreshold = Blat.DEFAULT_BLAT_SCORE_THRESHOLD;
     private boolean sensitive = false;
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.PLATFORM;
+    public String getCommandName() {
+        return "blatPlatform";
     }
 
-    @SuppressWarnings("static-access")
+    @Override
+    public String getShortDesc() {
+        return "Run BLAT on the sequences for a platform; the results are persisted in the DB.";
+    }
+
     @Override
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
@@ -107,8 +116,6 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             this.blatScoreThreshold = ( ( Number ) commandLine.getParsedOptionValue( 's' ) ).doubleValue();
         }
 
-        TaxonService taxonService = this.getBean( TaxonService.class );
-
         if ( commandLine.hasOption( 't' ) ) {
             String taxonName = commandLine.getOptionValue( 't' );
             this.taxon = taxonService.findByCommonName( taxonName );
@@ -116,18 +123,10 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 throw new IllegalArgumentException( "No taxon named " + taxonName );
             }
         }
-
-        arrayDesignSequenceAlignmentService = this.getBean( ArrayDesignSequenceAlignmentService.class );
-
     }
 
     @Override
-    public String getCommandName() {
-        return "blatPlatform";
-    }
-
-    @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         final Date skipIfLastRunLaterThan = this.getLimitingDate();
 
         if ( !this.getArrayDesignsToProcess().isEmpty() ) {
@@ -150,7 +149,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                     if ( this.blatResultFile != null ) {
                         Collection<BlatResult> blatResults = this.getBlatResultsFromFile( arrayDesign );
 
-                        if ( blatResults == null || blatResults.size() == 0 ) {
+                        if ( blatResults == null || blatResults.isEmpty() ) {
                             throw new IllegalStateException( "No blat results in file!" );
                         }
 
@@ -187,11 +186,6 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         } else {
             throw new RuntimeException();
         }
-    }
-
-    @Override
-    public String getShortDesc() {
-        return "Run BLAT on the sequences for a platform; the results are persisted in the DB.";
     }
 
     private void audit( ArrayDesign arrayDesign, String note ) {

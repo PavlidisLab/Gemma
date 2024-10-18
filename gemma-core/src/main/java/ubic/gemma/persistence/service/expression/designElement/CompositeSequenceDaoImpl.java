@@ -261,7 +261,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
                 .addSynchronizedEntityClass( CompositeSequence.class )
                 .addSynchronizedEntityClass( Gene.class );
 
-        for ( Collection<Long> csIdBatch : batchParameterList( EntityUtils.getIds( compositeSequences ), GENE2CS_BATCH_SIZE ) ) {
+        for ( Collection<Long> csIdBatch : batchParameterList( IdentifiableUtils.getIds( compositeSequences ), GENE2CS_BATCH_SIZE ) ) {
             queryObject.setParameterList( "csids", csIdBatch );
             csGene.addAll( queryObject.list() );
         }

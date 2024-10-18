@@ -22,9 +22,9 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.sequence.RepeatScan;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentServiceImpl;
-import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -40,15 +40,11 @@ import java.util.Date;
  */
 public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli {
 
+    @Autowired
     private BioSequenceService bsService;
+
     private String inputFileName;
 
-    @Override
-    public CommandGroup getCommandGroup() {
-        return CLI.CommandGroup.PLATFORM;
-    }
-
-    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions( Options options ) {
         super.buildOptions( options );
@@ -71,9 +67,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
     }
 
     @Override
-    protected void doWork() throws Exception {
-        bsService = this.getBean( BioSequenceService.class );
-
+    protected void doAuthenticatedWork() throws Exception {
         Date skipIfLastRunLaterThan = this.getLimitingDate();
 
         if ( !this.getArrayDesignsToProcess().isEmpty() ) {

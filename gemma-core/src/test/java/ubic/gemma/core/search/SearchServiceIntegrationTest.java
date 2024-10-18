@@ -150,6 +150,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
      */
     @Test
     @DirtiesContext
+    @Category(SlowTest.class) // because it triggers database re-initialization
     public void testGeneralSearch4Brain() throws SearchException, IOException {
         try ( InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" ) ) {
             assert is != null;
@@ -319,6 +320,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
      */
     @Test
     @DirtiesContext
+    @Category(SlowTest.class) // because it triggers database re-initialization
     public void testURIChildSearch() throws SearchException, IOException {
         try ( InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" ) ) {
             assert is != null;

@@ -24,7 +24,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.OutlierFlaggingService;
@@ -51,11 +50,13 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import java.io.File;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 import static org.junit.Assert.*;
+import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 
 /**
  * @author keshav
@@ -188,8 +189,6 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
      */
     @Test
     public void testConstructExpressionDataDoubleMatrixWithGeoValues() {
-        ByteArrayConverter bac = new ByteArrayConverter();
-
         ee = ExpressionExperiment.Factory.newInstance();
 
         QuantitationType qt = QuantitationType.Factory.newInstance();
@@ -230,14 +229,14 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
         RawExpressionDataVector vector1 = RawExpressionDataVector.Factory.newInstance();
         double[] ddata1 = { 74.9, 101.7 };
-        byte[] bdata1 = bac.doubleArrayToBytes( ddata1 );
+        byte[] bdata1 = doubleArrayToBytes( ddata1 );
         vector1.setData( bdata1 );
         vector1.setQuantitationType( qt );
         vector1.setBioAssayDimension( bioAssayDimension );
 
         RawExpressionDataVector vector2 = RawExpressionDataVector.Factory.newInstance();
         double[] ddata2 = { 404.6, 318.7 };
-        byte[] bdata2 = bac.doubleArrayToBytes( ddata2 );
+        byte[] bdata2 = doubleArrayToBytes( ddata2 );
         vector2.setData( bdata2 );
         vector2.setQuantitationType( qt );
         vector2.setBioAssayDimension( bioAssayDimension );
@@ -311,14 +310,14 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
         processedDataVectorService.computeProcessedExpressionData( newee );
 
-        File f1 = expressionDataFileService
+        Path f1 = expressionDataFileService
                 .writeOrLocateProcessedDataFile( expressionExperimentService.load( newee.getId() ), true, true )
                 .orElse( null );
         assertNotNull( f1 );
-        assertTrue( f1.exists() );
+        assertTrue( Files.exists( f1 ) );
 
         expressionDataFileService.deleteAllFiles( newee );
-        assertFalse( f1.exists() );
+        assertFalse( Files.exists( f1 ) );
 
         /*
          * outlier removal.

@@ -233,16 +233,16 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.SingleCellDataLoaderCli ' ]]; then
-        if ! [[ "$current_option" =~ (--anndata-cell-type-factor-name|--anndata-sample-factor-name|--anndata-unknown-cell-type-indicator|--cell-level-characteristics-file|--cell-type-assignment-file|--cell-type-assignment-name|--cell-type-assignment-protocol|--data-path|--data-type|--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--platform|--quantitation-type-name|--taxon|-a|-annDataCellTypeFactorName|-annDataSampleFactorName|-annDataUnknownCellTypeIndicator|-batchFormat|-batchOutputFile|-clcFile|-ctaFile|-ctaName|-ctaProtocol|-dataType|-e|-eeset|-f|-p|-q|-qtName|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--anndata-cell-type-factor-name --anndata-sample-factor-name --anndata-unknown-cell-type-indicator --cell-level-characteristics-file --cell-type-assignment-file --cell-type-assignment-name --cell-type-assignment-protocol --data-path --data-type --eeListfile --excludeEEFile --experiment --expressionQuery --help --load-cell-level-characteristics --load-cell-type-assignment --platform --preferred-cell-type-assignment --preferred-quantitation-type --quantitation-type-name --replace --taxon -a -all -annDataCellTypeFactorName -annDataSampleFactorName -annDataUnknownCellTypeIndicator -batchFormat -batchOutputFile -clcFile -ctaFile -ctaName -ctaProtocol -dataType -e -eeset -f -h -loadClc -loadCta -p -preferredCta -preferredQt -q -qtName -replace -t -x" -- "$2")
+        if ! [[ "$current_option" =~ (--anndata-cell-type-factor-name|--anndata-sample-factor-name|--anndata-unknown-cell-type-indicator|--cell-level-characteristics-file|--cell-type-assignment-file|--data-path|--data-type|--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--platform|--quantitation-type-name|--taxon|-a|-annDataCellTypeFactorName|-annDataSampleFactorName|-annDataUnknownCellTypeIndicator|-batchFormat|-batchOutputFile|-clcFile|-ctaFile|-dataType|-e|-eeset|-f|-p|-q|-qtName|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--anndata-cell-type-factor-name --anndata-sample-factor-name --anndata-unknown-cell-type-indicator --cell-level-characteristics-file --cell-type-assignment-file --data-path --data-type --eeListfile --excludeEEFile --experiment --expressionQuery --help --load-cell-level-characteristics --load-cell-type-assignment --platform --preferred-cell-type-assignment --preferred-quantitation-type --quantitation-type-name --replace --taxon -a -all -annDataCellTypeFactorName -annDataSampleFactorName -annDataUnknownCellTypeIndicator -batchFormat -batchOutputFile -clcFile -ctaFile -dataType -e -eeset -f -h -loadClc -loadCta -p -preferredCta -preferredQt -q -qtName -replace -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--cell-level-characteristics-file|--cell-type-assignment-file|--data-path|--eeListfile|--excludeEEFile|-batchOutputFile|-clcFile|-ctaFile|-f|-p|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' loadSingleCellData ' ]]; then
-        if ! [[ "$current_option" =~ (--anndata-cell-type-factor-name|--anndata-sample-factor-name|--anndata-unknown-cell-type-indicator|--cell-level-characteristics-file|--cell-type-assignment-file|--cell-type-assignment-name|--cell-type-assignment-protocol|--data-path|--data-type|--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--platform|--quantitation-type-name|--taxon|-a|-annDataCellTypeFactorName|-annDataSampleFactorName|-annDataUnknownCellTypeIndicator|-batchFormat|-batchOutputFile|-clcFile|-ctaFile|-ctaName|-ctaProtocol|-dataType|-e|-eeset|-f|-p|-q|-qtName|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--anndata-cell-type-factor-name --anndata-sample-factor-name --anndata-unknown-cell-type-indicator --cell-level-characteristics-file --cell-type-assignment-file --cell-type-assignment-name --cell-type-assignment-protocol --data-path --data-type --eeListfile --excludeEEFile --experiment --expressionQuery --help --load-cell-level-characteristics --load-cell-type-assignment --platform --preferred-cell-type-assignment --preferred-quantitation-type --quantitation-type-name --replace --taxon -a -all -annDataCellTypeFactorName -annDataSampleFactorName -annDataUnknownCellTypeIndicator -batchFormat -batchOutputFile -clcFile -ctaFile -ctaName -ctaProtocol -dataType -e -eeset -f -h -loadClc -loadCta -p -preferredCta -preferredQt -q -qtName -replace -t -x" -- "$2")
+        if ! [[ "$current_option" =~ (--anndata-cell-type-factor-name|--anndata-sample-factor-name|--anndata-unknown-cell-type-indicator|--cell-level-characteristics-file|--cell-type-assignment-file|--data-path|--data-type|--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--platform|--quantitation-type-name|--taxon|-a|-annDataCellTypeFactorName|-annDataSampleFactorName|-annDataUnknownCellTypeIndicator|-batchFormat|-batchOutputFile|-clcFile|-ctaFile|-dataType|-e|-eeset|-f|-p|-q|-qtName|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--anndata-cell-type-factor-name --anndata-sample-factor-name --anndata-unknown-cell-type-indicator --cell-level-characteristics-file --cell-type-assignment-file --data-path --data-type --eeListfile --excludeEEFile --experiment --expressionQuery --help --load-cell-level-characteristics --load-cell-type-assignment --platform --preferred-cell-type-assignment --preferred-quantitation-type --quantitation-type-name --replace --taxon -a -all -annDataCellTypeFactorName -annDataSampleFactorName -annDataUnknownCellTypeIndicator -batchFormat -batchOutputFile -clcFile -ctaFile -dataType -e -eeset -f -h -loadClc -loadCta -p -preferredCta -preferredQt -q -qtName -replace -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--cell-level-characteristics-file|--cell-type-assignment-file|--data-path|--eeListfile|--excludeEEFile|-batchOutputFile|-clcFile|-ctaFile|-f|-p|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -361,16 +361,16 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.RefreshExperimentCli ' ]]; then
-        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-threads|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --refreshReports --refreshVectors --taxon -all -batchFormat -batchOutputFile -e -eeset -f -h -q -r -t -threads -v -x" -- "$2")
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|--threads|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-threads|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --refreshReports --refreshVectors --taxon --threads -all -batchFormat -batchOutputFile -e -eeset -f -h -q -r -t -threads -v -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' refreshExperiment ' ]]; then
-        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-threads|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --refreshReports --refreshVectors --taxon -all -batchFormat -batchOutputFile -e -eeset -f -h -q -r -t -threads -v -x" -- "$2")
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|--threads|-batchFormat|-batchOutputFile|-e|-eeset|-f|-q|-t|-threads|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --help --refreshReports --refreshVectors --taxon --threads -all -batchFormat -batchOutputFile -e -eeset -f -h -q -r -t -threads -v -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -855,16 +855,16 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.GenerateDatabaseUpdateCli ' ]]; then
-        if ! [[ "$current_option" =~ (--dialect|--output-file|-d|-o) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--dialect --help --output-file -d -h -o" -- "$2")
+        if ! [[ "$current_option" =~ (--output-file|--vendor|-o|-vendor) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--create --help --output-file --vendor -c -h -o -vendor" -- "$2")
         fi
         if [[ "$current_option" =~ (--output-file|-o) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' generateDatabaseUpdate ' ]]; then
-        if ! [[ "$current_option" =~ (--dialect|--output-file|-d|-o) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--dialect --help --output-file -d -h -o" -- "$2")
+        if ! [[ "$current_option" =~ (--output-file|--vendor|-o|-vendor) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--create --help --output-file --vendor -c -h -o -vendor" -- "$2")
         fi
         if [[ "$current_option" =~ (--output-file|-o) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -887,13 +887,13 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.IndexGemmaCLI ' ]]; then
-        if ! [[ "$current_option" =~ (-threads) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -a -b -e -g -h -q -s -threads -x -y" -- "$2")
+        if ! [[ "$current_option" =~ (--threads|-threads) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --threads -a -b -e -g -h -q -s -threads -x -y" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' searchIndex ' ]]; then
-        if ! [[ "$current_option" =~ (-threads) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -a -b -e -g -h -q -s -threads -x -y" -- "$2")
+        if ! [[ "$current_option" =~ (--threads|-threads) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --threads -a -b -e -g -h -q -s -threads -x -y" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ExternalDatabaseUpdaterCli ' ]]; then
@@ -933,16 +933,16 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.SingleCellDataDownloaderCli ' ]]; then
-        if ! [[ "$current_option" =~ (--acc|--data-type|--fetch-threads|--file|--mex-barcodes-file|--mex-features-file|--mex-matrix-file|--retry|--sample-accessions|--summary-output-file|--supplementary-file|-batchFormat|-batchOutputFile|-dataType|-e|-f|-fetchThreads|-mexBarcodesFile|-mexFeaturesFile|-mexMatrixFile|-retry|-s|-sampleAccessions|-supplementaryFile|-threads) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--acc --data-type --fetch-threads --file --help --mex-barcodes-file --mex-features-file --mex-matrix-file --resume --retry --sample-accessions --summary-output-file --supplementary-file -batchFormat -batchOutputFile -dataType -e -f -fetchThreads -h -mexBarcodesFile -mexFeaturesFile -mexMatrixFile -r -retry -s -sampleAccessions -supplementaryFile -threads" -- "$2")
+        if ! [[ "$current_option" =~ (--acc|--data-type|--fetch-threads|--file|--mex-barcodes-file|--mex-features-file|--mex-matrix-file|--retry|--sample-accessions|--summary-output-file|--supplementary-file|--threads|-batchFormat|-batchOutputFile|-dataType|-e|-f|-fetchThreads|-mexBarcodesFile|-mexFeaturesFile|-mexMatrixFile|-retry|-s|-sampleAccessions|-supplementaryFile|-threads) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--acc --data-type --fetch-threads --file --help --mex-barcodes-file --mex-features-file --mex-matrix-file --resume --retry --sample-accessions --summary-output-file --supplementary-file --threads -batchFormat -batchOutputFile -dataType -e -f -fetchThreads -h -mexBarcodesFile -mexFeaturesFile -mexMatrixFile -r -retry -s -sampleAccessions -supplementaryFile -threads" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|--mex-barcodes-file|--mex-features-file|--mex-matrix-file|--summary-output-file|--supplementary-file|-batchOutputFile|-f|-mexBarcodesFile|-mexFeaturesFile|-mexMatrixFile|-s|-supplementaryFile) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' downloadSingleCellData ' ]]; then
-        if ! [[ "$current_option" =~ (--acc|--data-type|--fetch-threads|--file|--mex-barcodes-file|--mex-features-file|--mex-matrix-file|--retry|--sample-accessions|--summary-output-file|--supplementary-file|-batchFormat|-batchOutputFile|-dataType|-e|-f|-fetchThreads|-mexBarcodesFile|-mexFeaturesFile|-mexMatrixFile|-retry|-s|-sampleAccessions|-supplementaryFile|-threads) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--acc --data-type --fetch-threads --file --help --mex-barcodes-file --mex-features-file --mex-matrix-file --resume --retry --sample-accessions --summary-output-file --supplementary-file -batchFormat -batchOutputFile -dataType -e -f -fetchThreads -h -mexBarcodesFile -mexFeaturesFile -mexMatrixFile -r -retry -s -sampleAccessions -supplementaryFile -threads" -- "$2")
+        if ! [[ "$current_option" =~ (--acc|--data-type|--fetch-threads|--file|--mex-barcodes-file|--mex-features-file|--mex-matrix-file|--retry|--sample-accessions|--summary-output-file|--supplementary-file|--threads|-batchFormat|-batchOutputFile|-dataType|-e|-f|-fetchThreads|-mexBarcodesFile|-mexFeaturesFile|-mexMatrixFile|-retry|-s|-sampleAccessions|-supplementaryFile|-threads) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--acc --data-type --fetch-threads --file --help --mex-barcodes-file --mex-features-file --mex-matrix-file --resume --retry --sample-accessions --summary-output-file --supplementary-file --threads -batchFormat -batchOutputFile -dataType -e -f -fetchThreads -h -mexBarcodesFile -mexFeaturesFile -mexMatrixFile -r -retry -s -sampleAccessions -supplementaryFile -threads" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|--mex-barcodes-file|--mex-features-file|--mex-matrix-file|--summary-output-file|--supplementary-file|-batchOutputFile|-f|-mexBarcodesFile|-mexFeaturesFile|-mexMatrixFile|-s|-supplementaryFile) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")

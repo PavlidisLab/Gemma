@@ -48,11 +48,14 @@ import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * For the download of data files from the browser. We can send the 'raw' data for any one quantitation type, with gene
@@ -87,7 +90,7 @@ public class ExpressionExperimentDataFetchController {
         }
         // exclude any paths leading to the filename
         filename = FilenameUtils.getName( filename );
-        this.download( dataDir.resolve( filename ).toFile(), null, MediaType.APPLICATION_OCTET_STREAM_VALUE, response );
+        this.download( dataDir.resolve( filename ), null, MediaType.APPLICATION_OCTET_STREAM_VALUE, response );
     }
 
     @RequestMapping(value = "/getMetaData.html", method = { RequestMethod.GET, RequestMethod.HEAD })
@@ -97,7 +100,8 @@ public class ExpressionExperimentDataFetchController {
         if ( type == null ) {
             throw new IllegalArgumentException( "The experiment ID and file type ID parameters must be valid identifiers." );
         }
-        File file = expressionDataFileService.getMetadataFile( ee, type );
+        Path file = expressionDataFileService.getMetadataFile( ee, type )
+                .orElseThrow( () -> new EntityNotFoundException( ee.getShortName() + " does not have metadata of type " + type + "." ) );
         this.download( file, type.getDownloadName( ee ), type.getContentType(), response );
     }
 
@@ -107,27 +111,18 @@ public class ExpressionExperimentDataFetchController {
      * @param eeId the id of the experiment to scan for the metadata for.
      * @return an array of files available in the metadata directory for the given experiment.
      */
-    public MetaFile[] getMetadataFiles( Long eeId ) {
+    public MetaFile[] getMetadataFiles( Long eeId ) throws IOException {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId,
                 EntityNotFoundException::new, "Experiment with given ID does not exist." );
-
-        MetaFile[] metaFiles = new MetaFile[ExpressionExperimentMetaFileType.values().length];
-
-        int i = 0;
+        List<MetaFile> metaFiles = new ArrayList<>( ExpressionExperimentMetaFileType.values().length );
         for ( ExpressionExperimentMetaFileType type : ExpressionExperimentMetaFileType.values() ) {
-
             // Some files are prefixed with the experiments accession
-            File file = expressionDataFileService.getMetadataFile( ee, type );
-
-            // Check if we can read the file
-            if ( !file.canRead() ) {
-                continue;
-            }
-
-            metaFiles[i++] = new MetaFile( type.getId(), type.getDisplayName() );
+            expressionDataFileService.getMetadataFile( ee, type )
+                    .filter( Files::isReadable )
+                    .map( f -> new MetaFile( type.getId(), type.getDisplayName() ) )
+                    .ifPresent( metaFiles::add );
         }
-
-        return metaFiles;
+        return metaFiles.toArray( new MetaFile[0] );
     }
 
     /**
@@ -184,21 +179,16 @@ public class ExpressionExperimentDataFetchController {
      * @param response     the http response to download to.
      * @throws IOException if the file in the given path can not be read.
      */
-    private void download( File f, String downloadName, String contentType, HttpServletResponse response ) throws IOException {
-        if ( !f.canRead() ) {
-            throw new IOException( "Cannot read from " + f.getPath() );
-        }
+    private void download( Path f, String downloadName, String contentType, HttpServletResponse response ) throws IOException {
         if ( StringUtils.isBlank( downloadName ) ) {
-            downloadName = f.getName();
+            downloadName = f.getFileName().toString();
         }
         response.setContentType( contentType );
-        response.setContentLength( ( int ) f.length() );
+        response.setContentLength( ( int ) Files.size( f ) );
         response.addHeader( "Content-disposition", "attachment; filename=\"" + downloadName + "\"" );
-        try ( FileInputStream in = new FileInputStream( f ) ) {
+        try ( InputStream in = Files.newInputStream( f ) ) {
             FileCopyUtils.copy( in, response.getOutputStream() );
             response.flushBuffer();
-        } catch ( IOException ignored ) {
-
         }
     }
 
@@ -232,13 +222,17 @@ public class ExpressionExperimentDataFetchController {
                         "No data available (either due to lack of authorization, or use of an invalid entity identifier)" );
             }
 
-            File f = expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, false )
-                    .orElseThrow( () -> new IllegalStateException( "There is no coexpression data for " + ee ) );
+            Path f;
+            try {
+                f = expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, false );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
 
             watch.stop();
             log.debug( "Finished getting co-expression file; done in " + watch.getTime() + " milliseconds" );
 
-            ModelAndView mav = new ModelAndView( new RedirectView( "/getData.html?file=" + f.getName(), true ) );
+            ModelAndView mav = new ModelAndView( new RedirectView( "/getData.html?file=" + f.getFileName(), true ) );
 
             return new TaskResult( taskCommand, mav );
         }
@@ -317,26 +311,40 @@ public class ExpressionExperimentDataFetchController {
 
             ee = expressionExperimentService.thawLite( ee );
 
-            File f = null;
+            Path f;
 
             /* write out the file using text format */
             if ( usedFormat.equals( "text" ) ) {
 
                 /* the design file */
                 if ( eedId != null ) {
-                    f = expressionDataFileService.writeOrLocateDesignFile( ee, false );
+                    try {
+                        ExpressionExperiment finalEe = ee;
+                        f = expressionDataFileService.writeOrLocateDesignFile( ee, false )
+                                .orElseThrow( () -> new IllegalStateException( finalEe + " does not have an experimental design" ) );
+                    } catch ( IOException e ) {
+                        throw new RuntimeException( e );
+                    }
                 }
                 /* the data file */
                 else {
                     if ( qType != null ) {
                         log.debug( "Using quantitation type to create matrix." );
-                        f = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qType, false );
+                        try {
+                            f = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qType, false );
+                        } catch ( IOException e ) {
+                            throw new RuntimeException( e );
+                        }
                     } else {
 
                         try {
-                            f = expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, filtered ).orElse( null );
+                            ExpressionExperiment finalEe1 = ee;
+                            f = expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, filtered )
+                                    .orElseThrow( () -> new IllegalStateException( finalEe1 + " does not have an experimental design" ) );
                         } catch ( FilteringException e ) {
                             throw new IllegalStateException( "The expression experiment data matrix could not be filtered for " + ee + ".", e );
+                        } catch ( IOException e ) {
+                            throw new RuntimeException( e );
                         }
 
                     }
@@ -344,15 +352,22 @@ public class ExpressionExperimentDataFetchController {
 
             }
             /* json format */
-            else if ( usedFormat.equals( "json" ) ) {
-
+            else {
                 if ( qType != null ) {
-                    f = expressionDataFileService.writeOrLocateJSONRawExpressionDataFile( ee, qType, false );
+                    try {
+                        f = expressionDataFileService.writeOrLocateJSONRawExpressionDataFile( ee, qType, false );
+                    } catch ( IOException e ) {
+                        throw new RuntimeException( e );
+                    }
                 } else {
                     try {
-                        f = expressionDataFileService.writeOrLocateJSONProcessedExpressionDataFile( ee, false, filtered ).orElse( null );
+                        ExpressionExperiment finalEe2 = ee;
+                        f = expressionDataFileService.writeOrLocateJSONProcessedExpressionDataFile( ee, false, filtered )
+                                .orElseThrow( () -> new IllegalStateException( finalEe2 + " does not have processed vectors." ) );
                     } catch ( FilteringException e ) {
                         throw new IllegalStateException( "The expression experiment data matrix could not be filtered for " + ee + ".", e );
+                    } catch ( IOException e ) {
+                        throw new RuntimeException( e );
                     }
                 }
             }
@@ -363,7 +378,7 @@ public class ExpressionExperimentDataFetchController {
             watch.stop();
             log.debug( "Finished writing and downloading a file; done in " + watch.getTime() + " milliseconds" );
 
-            ModelAndView mav = new ModelAndView( new RedirectView( "/getData.html?file=" + f.getName(), true ) );
+            ModelAndView mav = new ModelAndView( new RedirectView( "/getData.html?file=" + f.getFileName(), true ) );
 
             return new TaskResult( taskCommand, mav );
 
@@ -384,14 +399,19 @@ public class ExpressionExperimentDataFetchController {
 
             StopWatch watch = new StopWatch();
             watch.start();
-            Collection<File> files = new HashSet<>();
+            Collection<Path> files = new HashSet<>();
 
             assert this.taskCommand != null;
 
             if ( this.taskCommand.getAnalysisId() != null ) {
 
-                File f = expressionDataFileService.getDiffExpressionAnalysisArchiveFile( taskCommand.getAnalysisId(),
-                        taskCommand.isForceRewrite() );
+                Path f;
+                try {
+                    f = expressionDataFileService.getDiffExpressionAnalysisArchiveFile( taskCommand.getAnalysisId(),
+                            taskCommand.isForceRewrite() );
+                } catch ( IOException e ) {
+                    throw new RuntimeException( e );
+                }
 
                 files.add( f );
 
@@ -425,12 +445,11 @@ public class ExpressionExperimentDataFetchController {
             }
 
             ModelAndView mav = new ModelAndView(
-                    new RedirectView( "/getData.html?file=" + files.iterator().next().getName(), true ) );
+                    new RedirectView( "/getData.html?file=" + files.iterator().next().getFileName(), true ) );
             return new TaskResult( taskCommand, mav );
 
         }
 
     }
-
 }
 

@@ -31,14 +31,14 @@ import java.util.HashSet;
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Possible external use
 public class GeoChannel {
 
-    String sourceName = "";
-    Collection<String> characteristics = new HashSet<>();
-    String bioMaterialProvider = "";
-    String growthProtocol = "";
-    String treatmentProtocol = "";
-    String extractProtocol = "";
-    String label = "";
-    String labelProtocol = "";
+    private String sourceName = "";
+    private final Collection<String> characteristics = new HashSet<>();
+    private String bioMaterialProvider = "";
+    private String growthProtocol = "";
+    private String treatmentProtocol = "";
+    private String extractProtocol = "";
+    private String label = "";
+    private String labelProtocol = "";
     private int channelNumber = -1;
     private String organism = null;
     private ChannelMolecule molecule;
@@ -99,13 +99,6 @@ public class GeoChannel {
      */
     public Collection<String> getCharacteristic() {
         return this.characteristics;
-    }
-
-    /**
-     * @param characteristics The characteristics to set.
-     */
-    public void setCharacteristic( Collection<String> characteristics ) {
-        this.characteristics = characteristics;
     }
 
     /**
@@ -273,13 +266,6 @@ public class GeoChannel {
      */
     public Collection<String> getCharacteristics() {
         return this.characteristics;
-    }
-
-    /**
-     * @param characteristics The characteristics to set.
-     */
-    public void setCharacteristics( Collection<String> characteristics ) {
-        this.characteristics = characteristics;
     }
 
     public String getGrowthProtocol() {

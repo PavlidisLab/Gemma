@@ -23,6 +23,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Stores the order of BioAssays referred to in DataVectors.
@@ -40,6 +41,20 @@ public class BioAssayDimension extends AbstractDescribable implements Serializab
 
     public void setBioAssays( List<BioAssay> bioAssays ) {
         this.bioAssays = bioAssays;
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof BioAssayDimension ) )
+            return false;
+        BioAssayDimension that = ( BioAssayDimension ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        }
+        return Objects.equals( getName(), that.getName() )
+                && Objects.equals( getBioAssays(), that.getBioAssays() );
     }
 
     public static final class Factory {

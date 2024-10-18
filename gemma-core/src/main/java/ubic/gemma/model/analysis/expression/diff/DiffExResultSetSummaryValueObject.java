@@ -25,7 +25,7 @@ import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -103,7 +103,7 @@ public class DiffExResultSetSummaryValueObject implements Serializable {
 
     public DiffExResultSetSummaryValueObject( ExpressionAnalysisResultSet resultSet ) {
         this.setId( resultSet.getId() );
-        this.setFactorIds( EntityUtils.getIds( resultSet.getExperimentalFactors() ) );
+        this.setFactorIds( IdentifiableUtils.getIds( resultSet.getExperimentalFactors() ) );
         this.setNumberOfGenesAnalyzed( resultSet.getNumberOfGenesTested() );
         this.setNumberOfProbesAnalyzed( resultSet.getNumberOfProbesTested() );
 

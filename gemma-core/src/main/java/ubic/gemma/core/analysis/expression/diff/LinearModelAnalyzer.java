@@ -36,11 +36,10 @@ import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.MathUtil;
 import ubic.basecode.math.linearmodels.*;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
-import ubic.gemma.core.datastructure.matrix.MatrixWriter;
+import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -97,7 +96,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             Collection<FactorValue> fvs ) {
         for ( BioAssay ba : ee.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
-            for ( FactorValue fv : bm.getFactorValues() ) {
+            for ( FactorValue fv : bm.getAllFactorValues() ) {
                 if ( fv.getExperimentalFactor().equals( f ) ) {
                     fvs.add( fv );
                 }
@@ -345,7 +344,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         FactorValue subsetFactorValue = null;
         for ( BioMaterial bm : samplesInSubset ) {
-            Collection<FactorValue> fvs = bm.getFactorValues();
+            Collection<FactorValue> fvs = bm.getAllFactorValues();
             for ( FactorValue fv : fvs ) {
                 if ( fv.getExperimentalFactor().equals( ef ) ) {
                     if ( subsetFactorValue == null ) {
@@ -598,7 +597,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         try ( FileWriter writer = new FileWriter( File.createTempFile( "data.", ".txt" ) );
                 FileWriter out = new FileWriter( File.createTempFile( "design.", ".txt" ) ) ) {
 
-            mw.write( writer, dmatrix, null, true, false );
+            mw.write( dmatrix, writer );
 
             ubic.basecode.io.writer.MatrixWriter<String, String> dem = new ubic.basecode.io.writer.MatrixWriter<>(
                     out );
@@ -1339,7 +1338,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         for ( BioMaterial sample : samplesUsed ) {
             boolean ok = false;
-            for ( FactorValue fv : sample.getFactorValues() ) {
+            for ( FactorValue fv : sample.getAllFactorValues() ) {
                 if ( fv.getExperimentalFactor().equals( subsetFactor ) ) {
                     subSetSamples.get( fv ).add( sample );
                     ok = true;

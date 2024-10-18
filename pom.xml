@@ -140,7 +140,7 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.1.23</version>
+			<version>1.1.24-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
@@ -336,6 +336,16 @@
 			<artifactId>commons-fileupload</artifactId>
 			<version>1.5</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-pool2</artifactId>
+			<version>2.12.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-compress</artifactId>
+			<version>1.26.2</version>
+		</dependency>
 
 		<!-- Jackson, for JSON serialization -->
 		<dependency>
@@ -502,7 +512,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.5.1</version>
 				<configuration>
-					<argLine>${jvmOptions}</argLine>
+					<argLine>${testJvmOptions}</argLine>
 					<redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
 					<includes>
 						<include>**/*Test.java</include>
@@ -517,7 +527,7 @@
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>3.5.1</version>
 				<configuration>
-					<argLine>${jvmOptions}</argLine>
+					<argLine>${testJvmOptions}</argLine>
 					<redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
 					<includes>
 						<include>**/*Test.java</include>
@@ -749,6 +759,13 @@
 		<slack.version>1.40.3</slack.version>
 		<micrometer.version>1.13.3</micrometer.version>
 		<dom4j.version>2.1.4</dom4j.version>
+		<!-- HDF5 -->
+		<!-- You may override this in ~/.m2/settings.xml -->
+		<hdf5.version>1.12.1</hdf5.version>
+		<!-- directory containing the HDF5 JNI shared library -->
+		<hdf5.libDir>/usr/lib64/hdf5</hdf5.libDir>
+		<!-- full path to the HDF5 JAR -->
+		<hdf5.jarPath>/usr/lib/java/hdf5.jar</hdf5.jarPath>
 		<mysql.version>8.4.0</mysql.version>
 		<tomcat.version>9.0.93</tomcat.version>
 		<mockito.version>5.12.0</mockito.version>
@@ -772,5 +789,11 @@
 			<!-- this flag is ignored starting Java 17 -->
 			--add-opens=java.base/java.lang=ALL-UNNAMED
 		</jvmOptions>
+		<!-- JVM options used in tests -->
+		<testJvmOptions>
+			${jvmOptions}
+			<!-- the location of libhdf5 is system-dependent, so we do not want to add it to the default ${jvmOptions} -->
+			-Djava.library.path=${hdf5.libDir}
+		</testJvmOptions>
 	</properties>
 </project>

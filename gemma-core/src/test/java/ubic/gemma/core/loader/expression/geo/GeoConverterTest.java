@@ -23,7 +23,6 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
@@ -46,6 +45,8 @@ import java.util.*;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.*;
+import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToDoubles;
+import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToInts;
 
 /**
  * Unit test for GeoConversion Added extension BaseSpringContextTest as want Taxon Service to be called
@@ -55,7 +56,6 @@ import static org.junit.Assert.*;
 @Category(SlowTest.class)
 public class GeoConverterTest extends BaseSpringContextTest {
 
-    private final ByteArrayConverter bac = new ByteArrayConverter();
     @Autowired
     private GeoConverter gc;
     @Value("${entrez.efetch.apikey}")
@@ -85,7 +85,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setRepresentation( PrimitiveType.DOUBLE );
         byte[] actualResult = gc.convertData( testList, qt );
-        double[] revertedResult = bac.byteArrayToDoubles( actualResult );
+        double[] revertedResult = byteArrayToDoubles( actualResult );
         assertEquals( revertedResult[0], 1.1, 0.00001 );
         assertEquals( revertedResult[1], 2929202e-4, 0.00001 );
         assertEquals( revertedResult[2], -394949.44422, 0.00001 );
@@ -100,7 +100,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setRepresentation( PrimitiveType.INT );
         byte[] actualResult = gc.convertData( testList, qt );
-        int[] revertedResult = bac.byteArrayToInts( actualResult );
+        int[] revertedResult = byteArrayToInts( actualResult );
         assertEquals( revertedResult[0], 1 );
         assertEquals( revertedResult[1], 2929202 );
         assertEquals( revertedResult[2], -394949 );

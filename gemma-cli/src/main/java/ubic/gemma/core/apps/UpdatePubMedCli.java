@@ -71,7 +71,7 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         Map<String, ExpressionExperiment> toFetch = new HashMap<>();
         Collection<ExpressionExperiment> ees = eeserv.getExperimentsLackingPublications();
         for ( ExpressionExperiment ee : ees ) {

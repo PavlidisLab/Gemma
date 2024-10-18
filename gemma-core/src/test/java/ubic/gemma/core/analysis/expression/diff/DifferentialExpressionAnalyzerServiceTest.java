@@ -47,16 +47,15 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisServiceImpl;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import java.io.File;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 import static org.junit.Assert.*;
@@ -201,18 +200,18 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         for ( ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
             this.arrayDesignAnnotationService.deleteExistingFiles( ad );
         }
-        Collection<File> outputLocations = expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, true );
+        Collection<Path> outputLocations = expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, true );
 
         assertEquals( 1, outputLocations.size() );
 
-        File outputLocation = outputLocations.iterator().next();
+        Path outputLocation = outputLocations.iterator().next();
 
         // NOte that this reader generally won't work for experiment files because of the gene annotations.
         DoubleMatrixReader r = new DoubleMatrixReader();
 
-        assertTrue( outputLocation.canRead() );
+        assertTrue( Files.exists( outputLocation ) );
 
-        DoubleMatrix<String, String> readIn = r.read( outputLocation.getAbsolutePath() );
+        DoubleMatrix<String, String> readIn = r.read( outputLocation.toAbsolutePath().toString() );
 
         assertTrue( readIn.rows() > 0 );
         assertEquals( 9, readIn.columns() );

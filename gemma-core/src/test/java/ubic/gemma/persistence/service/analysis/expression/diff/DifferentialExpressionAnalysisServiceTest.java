@@ -30,7 +30,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -155,7 +155,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
         // also by ID
         Map<Long, Collection<DifferentialExpressionAnalysis>> ees = analysisService
-                .findByExperimentIds( EntityUtils.getIds( investigations ) );
+                .findByExperimentIds( IdentifiableUtils.getIds( investigations ) );
         assertEquals( 2, ees.size() );
 
         assertEquals( 1, ees.get( e1.getId() ).size() );

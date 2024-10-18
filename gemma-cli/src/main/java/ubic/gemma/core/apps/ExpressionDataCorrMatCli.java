@@ -52,13 +52,13 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
-        if ( !force && this.noNeedToRun( ee, null ) ) {
+        if ( this.noNeedToRun( ee, null ) ) {
             return;
         }
 
         ee = eeService.thawLiter( ee );
         try {
-            if ( force ) {
+            if ( isForce() ) {
                 sampleCoexpressionAnalysisService.compute( ee, sampleCoexpressionAnalysisService.prepare( ee ) );
             } else {
                 if ( sampleCoexpressionAnalysisService.retrieveExisting( ee ) == null ) {

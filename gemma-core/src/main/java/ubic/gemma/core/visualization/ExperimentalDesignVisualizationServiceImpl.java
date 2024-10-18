@@ -31,8 +31,8 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
 import ubic.basecode.graphics.ColorMap;
 import ubic.basecode.graphics.ColorMatrix;
 import ubic.basecode.graphics.MatrixDisplay;
+import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.EmptyExpressionMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
@@ -43,7 +43,7 @@ import ubic.gemma.model.expression.bioAssayData.SlicedDoubleVectorValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import javax.annotation.Nullable;
 import java.awt.*;
@@ -418,7 +418,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
         LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> result = new LinkedHashMap<>();
 
-        ExpressionDataMatrix<Object> mat = new EmptyExpressionMatrix( bds );
+        BulkExpressionDataMatrix<Object> mat = new EmptyExpressionMatrix( bds );
 
         ExpressionExperiment sourceExperiment = null;
         if ( experiment instanceof ExpressionExperimentSubSet ) {
@@ -478,7 +478,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
             BioAssay ba = bas.iterator().next();
 
-            Collection<FactorValue> fvs = bm.getFactorValues();
+            Collection<FactorValue> fvs = bm.getAllFactorValues();
 
 
             BioAssayValueObject baVo = new BioAssayValueObject( ba, false );
@@ -595,7 +595,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
             if ( isSubset ) {
                 BioAssayDimensionValueObject badvo = vec.getBioAssayDimension();
-                Collection<Long> badids = EntityUtils.getIds( badvo.getBioAssays() );
+                Collection<Long> badids = IdentifiableUtils.getIds( badvo.getBioAssays() );
                 for ( BioAssayDimension bad : bioAssayDimensions ) {
                     // trim the bads for relevant samples. This is unpleasant - it would be better to work with VOs
                     // but it's easier said than done

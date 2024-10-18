@@ -20,7 +20,7 @@ package ubic.gemma.core.datastructure.matrix;
 
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.util.Collection;
@@ -84,7 +84,7 @@ public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
     }
 
     @Override
-    public Object[] getColumn( Integer column ) {
+    public Object[] getColumn( int column ) {
         throw new UnsupportedOperationException();
     }
 
@@ -104,12 +104,7 @@ public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
     }
 
     @Override
-    public Object[] getRow( Integer index ) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Object[][] getRows( List<CompositeSequence> designElements ) {
+    public Object[] getRow( int index ) {
         throw new UnsupportedOperationException();
     }
 
@@ -130,7 +125,7 @@ public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
     }
 
     @Override
-    protected void vectorsToMatrix( Collection<? extends DesignElementDataVector> vectors ) {
+    protected void vectorsToMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
         throw new UnsupportedOperationException();
     }
 

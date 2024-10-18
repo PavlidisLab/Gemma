@@ -16,25 +16,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.core.datastructure.matrix.io.TsvUtils.*;
+
 @Service
-public class DifferentialExpressionAnalysisResultListFileServiceImpl extends AbstractFileService<List<DifferentialExpressionAnalysisResult>> implements DifferentialExpressionAnalysisResultListFileService {
+public class DifferentialExpressionAnalysisResultListFileServiceImpl implements DifferentialExpressionAnalysisResultListFileService {
 
     @Override
-    public void writeTsv( List<DifferentialExpressionAnalysisResult> entity, Writer writer ) throws IOException {
-        writeTsvInternal( entity, null, null, null, null, writer );
-    }
-
-    @Override
-    public void writeTsv( List<DifferentialExpressionAnalysisResult> entity, Gene gene, Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap, Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap, Writer writer ) throws IOException {
-        writeTsvInternal( entity, gene, sourceExperimentIdMap, experimentAnalyzedIdMap, baselineMap, writer );
-    }
-
-    private void writeTsvInternal( List<DifferentialExpressionAnalysisResult> payload, @Nullable Gene gene, @Nullable Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, @Nullable Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap, @Nullable Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap, Writer writer ) throws IOException {
+    public void writeTsv( List<DifferentialExpressionAnalysisResult> entity, @Nullable Gene gene, @Nullable Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, @Nullable Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap, @Nullable Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap, Writer writer ) throws IOException {
         List<String> extraHeaderComments = new ArrayList<>();
         if ( gene != null ) {
             extraHeaderComments.add( "Results for " + gene );
         }
-        extraHeaderComments.add( String.format( "The 'contrasts' column contains contrasts delimited by '%s'. Each contrast is structured as space-delimited key=value pairs. Factors are encoded by their factor value ID for the 'factor' key. Interaction of factors are encoded as 'id1:id2'. Continuous contrasts will use the '[continuous]' indicator.", getSubDelimiter() ) );
+        extraHeaderComments.add( String.format( "The 'contrasts' column contains contrasts delimited by '%s'. Each contrast is structured as space-delimited key=value pairs. Factors are encoded by their factor value ID for the 'factor' key. Interaction of factors are encoded as 'id1:id2'. Continuous contrasts will use the '[continuous]' indicator.", SUB_DELIMITER ) );
         extraHeaderComments.add( "Baselines are encoded as a factor value ID. Baselines for interactions are encoded as 'id1:id2'." );
         List<String> header = new ArrayList<>();
         header.add( "id" );
@@ -56,18 +49,18 @@ public class DifferentialExpressionAnalysisResultListFileServiceImpl extends Abs
         }
         try ( CSVPrinter printer = getTsvFormatBuilder( extraHeaderComments.toArray( new String[0] ) )
                 .setHeader( header.toArray( new String[0] ) ).build().print( writer ) ) {
-            for ( DifferentialExpressionAnalysisResult result : payload ) {
+            for ( DifferentialExpressionAnalysisResult result : entity ) {
                 List<Object> record = new ArrayList<>( header.size() );
                 record.add( result.getId() );
                 if ( sourceExperimentIdMap != null ) {
-                    record.add( sourceExperimentIdMap.get( result ) );
+                    record.add( format( sourceExperimentIdMap.get( result ) ) );
                 }
                 if ( experimentAnalyzedIdMap != null ) {
-                    record.add( experimentAnalyzedIdMap.get( result ) );
+                    record.add( format( experimentAnalyzedIdMap.get( result ) ) );
                 }
-                record.add( result.getResultSet().getId() );
-                record.add( result.getProbe().getId() );
-                record.add( result.getProbe().getName() );
+                record.add( format( result.getResultSet().getId() ) );
+                record.add( format( result.getProbe().getId() ) );
+                record.add( format( result.getProbe().getName() ) );
                 record.add( format( result.getPvalue() ) );
                 record.add( format( result.getCorrectedPvalue() ) );
                 record.add( format( result.getRank() ) );
@@ -81,21 +74,21 @@ public class DifferentialExpressionAnalysisResultListFileServiceImpl extends Abs
     }
 
     private String formatContrasts( Set<ContrastResult> contrasts ) {
-        return contrasts.stream().map( this::formatContrast ).collect( Collectors.joining( getSubDelimiter() ) );
+        return contrasts.stream().map( this::formatContrast ).collect( Collectors.joining( String.valueOf( SUB_DELIMITER ) ) );
     }
 
     private String formatContrast( ContrastResult contrast ) {
-        String d;
+        String factor;
         if ( contrast.getFactorValue() != null ) {
-            d = String.valueOf( contrast.getFactorValue().getId() );
+            factor = String.valueOf( contrast.getFactorValue().getId() );
             if ( contrast.getSecondFactorValue() != null ) {
-                d += ":" + contrast.getSecondFactorValue().getId();
+                factor += ":" + contrast.getSecondFactorValue().getId();
             }
         } else {
-            d = "[continuous]";
+            factor = "[continuous]";
         }
         return String.format( "factor=%s coefficient=%s log2fc=%s tstat=%s pvalue=%s",
-                d,
+                format( factor ),
                 format( contrast.getCoefficient() ),
                 format( contrast.getLogFoldChange() ),
                 format( contrast.getTstat() ),
@@ -106,6 +99,6 @@ public class DifferentialExpressionAnalysisResultListFileServiceImpl extends Abs
         if ( baseline == null ) {
             return null;
         }
-        return baseline.getFactorValue().getId() + ( baseline.getSecondFactorValue() != null ? ":" + baseline.getSecondFactorValue().getId() : "" );
+        return format( baseline.getFactorValue().getId() + ( baseline.getSecondFactorValue() != null ? ":" + baseline.getSecondFactorValue().getId() : "" ) );
     }
 }
