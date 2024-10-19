@@ -22,6 +22,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.springframework.beans.factory.annotation.Value;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -35,6 +36,9 @@ import java.io.PrintWriter;
  * @author keshav
  */
 public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatingCLI {
+
+    @Value("${gemma.hosturl}")
+    private String gemmaHostUrl;
 
     private String outFileName;
 
@@ -65,7 +69,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
-        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( gemmaHostUrl );
         try ( PrintWriter writer = new PrintWriter( outFileName + "_" + FileTools.cleanForFileName( ee.getShortName() ) + ".txt" ) ) {
             edWriter.write( writer, ee, true );
             writer.flush();

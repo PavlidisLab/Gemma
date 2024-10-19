@@ -4,7 +4,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.csv.CSVPrinter;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
-import ubic.gemma.core.datastructure.matrix.io.TsvUtils;
+import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
@@ -21,7 +21,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static java.util.function.Function.identity;
-import static ubic.gemma.core.datastructure.matrix.io.TsvUtils.*;
+import static ubic.gemma.core.util.TsvUtils.*;
 
 @Service
 @CommonsLog

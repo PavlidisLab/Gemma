@@ -16,13 +16,14 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.datastructure.matrix;
+package ubic.gemma.core.datastructure.matrix.io;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -80,7 +81,7 @@ public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
             return;
         }
 
-        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( "https://gemma.msl.ubc.ca" );
 
         File f = File.createTempFile( "test_writer_" + shortName + ".", ".txt" );
         try ( PrintWriter writer = new PrintWriter( f ) ) {

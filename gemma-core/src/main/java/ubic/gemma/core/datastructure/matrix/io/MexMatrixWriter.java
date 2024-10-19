@@ -12,6 +12,7 @@ import org.springframework.util.Assert;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.datastructure.matrix.DoubleSingleCellExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
+import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -33,8 +34,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
-import static ubic.gemma.core.datastructure.matrix.io.TsvUtils.SUB_DELIMITER;
-import static ubic.gemma.core.datastructure.matrix.io.TsvUtils.format;
+import static ubic.gemma.core.util.TsvUtils.SUB_DELIMITER;
+import static ubic.gemma.core.util.TsvUtils.format;
 import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToDoubles;
 
 /**
@@ -328,7 +329,8 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
             int numberOfCells = vector.getSingleCellDimension().getNumberOfCellsBySample( sampleIndex );
             int nextSampleOffset = sampleOffset + numberOfCells;
 
-            int end = Arrays.binarySearch( colind, nextSampleOffset );
+            // check where the next sample begins, only search past this sample starting point
+            int end = Arrays.binarySearch( colind, start, colind.length, nextSampleOffset );
             if ( end < 0 ) {
                 end = -end - 1;
             }

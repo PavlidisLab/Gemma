@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.core.datastructure.matrix.io.TsvUtils.*;
+import static ubic.gemma.core.util.TsvUtils.*;
 
 @Service
 public class DifferentialExpressionAnalysisResultListFileServiceImpl implements DifferentialExpressionAnalysisResultListFileService {

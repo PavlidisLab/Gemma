@@ -25,7 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataWriterUtils;
+import ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
@@ -549,7 +549,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
              * useful for tests.
              */
             biomaterialsInExpressionExperiment
-                    .put( ExpressionDataWriterUtils.constructBioAssayName( bm, bm.getBioAssaysUsedIn() ), bm );
+                    .put( ExpressionDataWriterUtils.constructSampleName( bm, bm.getBioAssaysUsedIn() ), bm );
 
         }
         return biomaterialsInExpressionExperiment;

@@ -1,10 +1,9 @@
-package ubic.gemma.core.datastructure.matrix;
+package ubic.gemma.core.util;
 
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static ubic.gemma.core.datastructure.matrix.io.TsvUtils.format;
-import static ubic.gemma.core.datastructure.matrix.io.TsvUtils.formatComment;
+import static ubic.gemma.core.util.TsvUtils.*;
 
 public class TsvUtilsTest {
 

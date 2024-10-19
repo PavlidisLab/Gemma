@@ -72,7 +72,7 @@ import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataWriterUtils;
+import ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -146,6 +146,9 @@ public class ExpressionExperimentQCController extends BaseController {
     @Value("${gemma.analysis.dir}")
     private Path analysisStoragePath;
 
+    @Value("${gemma.hosturl}")
+    private String gemmaHostUrl;
+
     @RequestMapping(value = "/expressionExperiment/detailedFactorAnalysis.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void detailedFactorAnalysis( @RequestParam("id") Long id, HttpServletResponse response ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
@@ -168,9 +171,9 @@ public class ExpressionExperimentQCController extends BaseController {
         StringWriter writer = new StringWriter();
         StringBuffer buf = writer.getBuffer();
 
-        ExpressionDataWriterUtils.appendBaseHeader( ee, "Outliers removed", buf );
+        ExpressionDataWriterUtils.appendBaseHeader( ee, "Outliers removed", gemmaHostUrl, buf );
 
-        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( gemmaHostUrl );
         ee = expressionExperimentService.thawLiter( ee );
         edWriter.write( writer, ee, bioAssays, false, true );
 
@@ -214,9 +217,9 @@ public class ExpressionExperimentQCController extends BaseController {
         StringWriter writer = new StringWriter();
         StringBuffer buf = writer.getBuffer();
 
-        ExpressionDataWriterUtils.appendBaseHeader( ee, "Sample outlier", buf );
+        ExpressionDataWriterUtils.appendBaseHeader( ee, "Sample outlier", gemmaHostUrl, buf );
 
-        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( gemmaHostUrl );
         ee = expressionExperimentService.thawLiter( ee );
         edWriter.write( writer, ee, bioAssays, false, true );
 

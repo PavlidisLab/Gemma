@@ -28,6 +28,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
@@ -144,6 +145,9 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         return reorderedDim;
     }
+
+    @Value("${gemma.hosturl}")
+    private String gemmaHostUrl;
 
     /**
      * Executor used for performing analyses in the background while the current thread is reporting progress.
@@ -593,7 +597,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      */
     private void outputForDebugging( ExpressionDataDoubleMatrix dmatrix,
             ObjectMatrix<String, String, Object> designMatrix ) {
-        MatrixWriter mw = new MatrixWriter();
+        MatrixWriter mw = new MatrixWriter( gemmaHostUrl );
         try ( FileWriter writer = new FileWriter( File.createTempFile( "data.", ".txt" ) );
                 FileWriter out = new FileWriter( File.createTempFile( "design.", ".txt" ) ) ) {
 

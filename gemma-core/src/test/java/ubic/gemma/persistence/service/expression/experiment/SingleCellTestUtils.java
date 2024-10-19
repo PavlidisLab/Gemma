@@ -1,7 +1,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import cern.jet.random.NegativeBinomial;
-import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -9,13 +8,12 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.bioAssayData.NegativeBinomialDistribution;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -25,6 +23,7 @@ public class SingleCellTestUtils {
 
     private static final NegativeBinomialDistribution countDistribution = new NegativeBinomialDistribution( 6, 0.5 );
     private static final UniformRealDistribution uniform100Distribution = new UniformRealDistribution( 0, 100 );
+    private static final Random random = new Random();
 
     /**
      * Set the seed used to generate random single-cell vectors.
@@ -32,6 +31,7 @@ public class SingleCellTestUtils {
     public static void setSeed( int seed ) {
         countDistribution.reseedRandomGenerator( seed );
         uniform100Distribution.reseedRandomGenerator( seed );
+        random.setSeed( seed );
     }
 
     public static Collection<SingleCellExpressionDataVector> randomSingleCellVectors() {
@@ -45,7 +45,10 @@ public class SingleCellTestUtils {
         }
         ExpressionExperiment ee = new ExpressionExperiment();
         for ( int i = 0; i < numSamples; i++ ) {
-            ee.getBioAssays().add( BioAssay.Factory.newInstance( "ba" + i ) );
+            BioMaterial bm = BioMaterial.Factory.newInstance( "bm" + i );
+            BioAssay ba = BioAssay.Factory.newInstance( "ba" + i, arrayDesign, bm );
+            bm.getBioAssaysUsedIn().add( ba );
+            ee.getBioAssays().add( ba );
         }
         QuantitationType qt = new QuantitationType();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
@@ -79,7 +82,10 @@ public class SingleCellTestUtils {
         Assert.isTrue( qt.getRepresentation() == PrimitiveType.DOUBLE,
                 "Can only generate double vectors." );
         Assert.isTrue( sparsity >= 0.0 && sparsity <= 1.0, "Sparsity must be between 0 and 1." );
-        List<BioAssay> samples = new ArrayList<>( ee.getBioAssays() );
+        List<BioAssay> samples = ee.getBioAssays().stream()
+                // for reproducibility
+                .sorted( Comparator.comparing( BioAssay::getName ) )
+                .collect( Collectors.toList() );
         int numCells = numCellsPerBioAssay * ee.getBioAssays().size();
         SingleCellDimension dimension = new SingleCellDimension();
         dimension.setName( "Bunch of test cells" );
@@ -91,11 +97,14 @@ public class SingleCellTestUtils {
             offsets[i] = i * numCellsPerBioAssay;
         }
         dimension.setBioAssaysOffset( offsets );
-        Collection<SingleCellExpressionDataVector> results = new ArrayList<>();
-        for ( CompositeSequence cs : ad.getCompositeSequences() ) {
+        // necessary for reproducible results
+        List<CompositeSequence> sortedCs = new ArrayList<>( ad.getCompositeSequences() );
+        sortedCs.sort( Comparator.comparing( CompositeSequence::getName ) );
+        List<SingleCellExpressionDataVector> results = new ArrayList<>();
+        for ( CompositeSequence compositeSequence : sortedCs ) {
             SingleCellExpressionDataVector vector = new SingleCellExpressionDataVector();
             vector.setExpressionExperiment( ee );
-            vector.setDesignElement( cs );
+            vector.setDesignElement( compositeSequence );
             vector.setQuantitationType( qt );
             vector.setSingleCellDimension( dimension );
             double density = 1.0 - sparsity;
@@ -109,7 +118,7 @@ public class SingleCellTestUtils {
                 } else {
                     X[i] = transform( countDistribution.sample(), qt.getScale() );
                 }
-                IX[i] = ( i * step ) + RandomUtils.nextInt( step );
+                IX[i] = ( i * step ) + random.nextInt( step );
             }
             vector.setData( doubleArrayToBytes( X ) );
             vector.setDataIndices( IX );

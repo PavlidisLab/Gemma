@@ -63,6 +63,11 @@ public class MexSingleCellDataLoaderPersistenceTest extends BaseDatabaseTest {
         public QuantitationTypeService quantitationTypeService() {
             return mock();
         }
+
+        @Bean
+        public ExperimentalDesignService experimentalDesignService() {
+            return mock();
+        }
     }
 
     @Autowired

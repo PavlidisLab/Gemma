@@ -40,7 +40,9 @@ public class ExpressionDataFileServiceTest extends AbstractJUnit4SpringContextTe
 
         @Bean
         public static TestPropertyPlaceholderConfigurer propertyPlaceholderConfigurer() throws IOException {
-            return new TestPropertyPlaceholderConfigurer( "gemma.appdata.home=" + Files.createTempDirectory( "gemmaData" ) );
+            return new TestPropertyPlaceholderConfigurer(
+                    "gemma.appdata.home=" + Files.createTempDirectory( "gemmaData" ),
+                    "gemma.hosturl=https://gemma.msl.ubc.ca" );
         }
 
         @Bean

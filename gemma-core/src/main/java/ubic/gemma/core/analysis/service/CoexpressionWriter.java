@@ -1,6 +1,6 @@
 package ubic.gemma.core.analysis.service;
 
-import ubic.gemma.core.datastructure.matrix.io.TsvUtils;
+import ubic.gemma.core.util.Constants;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
 
@@ -9,14 +9,14 @@ import java.io.Writer;
 import java.util.Collection;
 import java.util.Date;
 
-import static ubic.gemma.core.datastructure.matrix.io.TsvUtils.format;
+import static ubic.gemma.core.util.TsvUtils.format;
 
 public class CoexpressionWriter {
 
     public void write( ExpressionExperiment ee, Collection<CoexpressionValueObject> geneLinks, Writer writer ) throws IOException {
         Date timestamp = new Date( System.currentTimeMillis() );
         // Write header information
-        for ( String line : TsvUtils.GEMMA_CITATION_NOTICE ) {
+        for ( String line : Constants.GEMMA_CITATION_NOTICE ) {
             writer.append( "# " ).append( line ).append( "\n" );
         }
         writer.append( "# Coexpression data for:  " ).append( ee.getShortName() ).append( " : " ).append( ee.getName() ).append( " \n" );

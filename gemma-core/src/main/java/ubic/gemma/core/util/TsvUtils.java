@@ -1,4 +1,4 @@
-package ubic.gemma.core.datastructure.matrix.io;
+package ubic.gemma.core.util;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.lang3.ArrayUtils;
@@ -10,15 +10,13 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
+import static ubic.gemma.core.util.Constants.GEMMA_CITATION_NOTICE;
+
 /**
- * Bunch of utilities for writing matrices to TSV.
+ * Bunch of utilities for writing data to TSV.
+ * @author poirigui
  */
 public class TsvUtils {
-
-    public static final String[] GEMMA_CITATION_NOTICE = new String[] {
-            "If you use this file for your research, please cite:",
-            "Lim et al. (2021) Curation of over 10 000 transcriptomic studies to enable data reuse.",
-            "Database, baab006 (doi:10.1093/database/baab006)." };
 
     public static final char COMMENT = '#';
 
@@ -53,7 +51,7 @@ public class TsvUtils {
     /**
      * Preconfigure a {@link CSVFormat.Builder} with desirable defaults.
      * @param extraHeaderComments additional header comments that will be included at the top of the TSV file, right
-     *                            after the {@link #GEMMA_CITATION_NOTICE}
+     *                            after the {@link Constants#GEMMA_CITATION_NOTICE}
      */
     public static CSVFormat.Builder getTsvFormatBuilder( String... extraHeaderComments ) {
         return CSVFormat.Builder.create( CSVFormat.TDF ).setCommentMarker( COMMENT )

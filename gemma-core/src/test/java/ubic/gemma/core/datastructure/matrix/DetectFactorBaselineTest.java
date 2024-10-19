@@ -24,7 +24,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author paul
  */
-public class DetectFactorBaselineTest {
+public class DetectFactorBaselineTest {;
 
     @Test
     public void testIsBaselineA() {

@@ -22,7 +22,6 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataWriterUtils;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -38,8 +37,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import static ubic.gemma.core.datastructure.matrix.io.TsvUtils.SUB_DELIMITER;
-import static ubic.gemma.core.datastructure.matrix.io.TsvUtils.format;
+import static ubic.gemma.core.util.TsvUtils.SUB_DELIMITER;
+import static ubic.gemma.core.util.TsvUtils.format;
 
 /**
  * Writes {@link BulkExpressionDataMatrix} to various tabular formats.
@@ -48,6 +47,12 @@ import static ubic.gemma.core.datastructure.matrix.io.TsvUtils.format;
 @CommonsLog
 @ParametersAreNonnullByDefault
 public class MatrixWriter implements BulkExpressionDataMatrixWriter {
+
+    private final String gemmaHostUrl;
+
+    public MatrixWriter( String gemmaHostUrl ) {
+        this.gemmaHostUrl = gemmaHostUrl;
+    }
 
     @Override
     public int write( BulkExpressionDataMatrix<?> matrix, Writer writer ) throws IOException {
@@ -187,7 +192,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
             @Nullable Map<CompositeSequence, ?> geneAnnotations, Writer writer ) throws IOException {
 
         StringBuffer buf = new StringBuffer();
-        ExpressionDataWriterUtils.appendBaseHeader( matrix.getExpressionExperiment(), false, buf );
+        ExpressionDataWriterUtils.appendBaseHeader( matrix.getExpressionExperiment(), false, gemmaHostUrl, buf );
         writer.append( buf );
 
         writer.append( "Probe\tSequence" );
@@ -198,7 +203,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
 
         for ( BioMaterial bioMaterial : orderedBioMaterials ) {
             int i = matrix.getColumnIndex( bioMaterial );
-            String colName = ExpressionDataWriterUtils.constructBioAssayName( matrix, i );
+            String colName = ExpressionDataWriterUtils.constructSampleName( matrix, i );
             writer.append( "\t" ).append( format( colName ) );
         }
         writer.append( "\n" );

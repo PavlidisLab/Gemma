@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
 import ubic.basecode.util.StringUtil;
+import ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporterImpl;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -42,6 +43,12 @@ public class ExperimentalDesignWriter {
     private final Log log = LogFactory.getLog( this.getClass() );
 
     private static final String EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR = "#$";
+
+    private final String gemmaHostUrl;
+
+    public ExperimentalDesignWriter( String gemmaHostUrl ) {
+        this.gemmaHostUrl = gemmaHostUrl;
+    }
 
     /**
      * @param writer      writer
@@ -97,13 +104,13 @@ public class ExperimentalDesignWriter {
 
             /* column 0 of the design matrix */
             String rowName = ExpressionDataWriterUtils
-                    .constructBioAssayName( bioMaterial, bioMaterials.get( bioMaterial ) );
+                    .constructSampleName( bioMaterial, bioMaterials.get( bioMaterial ) );
             buf.append( rowName );
 
             buf.append( "\t" );
 
             /* column 1 */
-            String externalId = ExpressionDataWriterUtils.getExternalId( bioMaterial, bioMaterials.get( bioMaterial ) );
+            String externalId = ExpressionDataWriterUtils.constructSampleExternalId( bioMaterial, bioMaterials.get( bioMaterial ) );
 
             buf.append( externalId );
 
@@ -141,7 +148,7 @@ public class ExperimentalDesignWriter {
             boolean writeBaseHeader, StringBuffer buf ) {
 
         if ( writeBaseHeader ) {
-            ExpressionDataWriterUtils.appendBaseHeader( expressionExperiment, true, buf );
+            ExpressionDataWriterUtils.appendBaseHeader( expressionExperiment, true, gemmaHostUrl, buf );
         }
 
         for ( ExperimentalFactor ef : factors ) {
