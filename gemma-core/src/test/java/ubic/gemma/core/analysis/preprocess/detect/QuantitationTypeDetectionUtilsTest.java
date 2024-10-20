@@ -1,22 +1,19 @@
-package ubic.gemma.core.datastructure.matrix;
+package ubic.gemma.core.analysis.preprocess.detect;
 
 import org.apache.commons.math3.distribution.NormalDistribution;
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.expression.bioAssayData.RandomExpressionDataMatrixUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,85 +23,17 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
-import static org.assertj.core.api.Assertions.*;
-import static ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionUtils.detectSuspiciousValues;
+import static ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionUtils.inferQuantitationType;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomExpressionDataMatrixUtils.*;
-import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 
-public class ExpressionDataDoubleMatrixUtilTest {
+public class QuantitationTypeDetectionUtilsTest {
 
     /* fixtures */
     private QuantitationType qt;
     private ExpressionDataDoubleMatrix matrix;
-
-    @Before
-    public void setUp() {
-        RawExpressionDataVector ev = new RawExpressionDataVector();
-        ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setTechnologyType( TechnologyType.ONECOLOR );
-        CompositeSequence cs = CompositeSequence.Factory.newInstance( "test", ad );
-        ev.setDesignElement( cs );
-        ev.setData( doubleArrayToBytes( new Double[] { 4.0 } ) );
-        qt = new QuantitationType();
-        qt.setGeneralType( GeneralType.QUANTITATIVE );
-        qt.setType( StandardQuantitationType.AMOUNT );
-        qt.setRepresentation( PrimitiveType.DOUBLE );
-        ev.setQuantitationType( qt );
-        BioAssayDimension bad = new BioAssayDimension();
-        BioAssay ba = new BioAssay();
-        BioMaterial bm = new BioMaterial();
-        ba.setSampleUsed( bm );
-        bad.setBioAssays( Collections.singletonList( ba ) );
-        ev.setBioAssayDimension( bad );
-        matrix = new ExpressionDataDoubleMatrix( Collections.singleton( ev ), Collections.singleton( qt ) );
-        matrix.set( 0, 0, 4.0 );
-        RandomExpressionDataMatrixUtils.setSeed( 123L );
-    }
-
-    @Test
-    public void testLog2ShouldDoNothing() {
-        qt.setScale( ScaleType.LOG2 );
-        assertThat( ExpressionDataDoubleMatrixUtil.ensureLog2Scale( matrix ) )
-                .isSameAs( matrix );
-    }
-
-    @Test
-    public void testLinearConversion() {
-        qt.setScale( ScaleType.LINEAR );
-        assertThat( ExpressionDataDoubleMatrixUtil.ensureLog2Scale( matrix ) )
-                .satisfies( this::basicBasicLog2MatrixChecks )
-                .satisfies( m -> {
-                    assertThat( m.getMatrix().get( 0, 0 ) ).isEqualTo( Math.log( 4.0 ) / Math.log( 2 ) );
-                } );
-    }
-
-    @Test
-    public void testLog10Conversion() {
-        qt.setScale( ScaleType.LOG10 );
-        assertThat( ExpressionDataDoubleMatrixUtil.ensureLog2Scale( matrix ) )
-                .satisfies( this::basicBasicLog2MatrixChecks )
-                .satisfies( m -> {
-                    assertThat( m.getMatrix().get( 0, 0 ) ).isEqualTo( 4.0 * Math.log( 10 ) / Math.log( 2 ), within( 1e-10 ) );
-                } );
-    }
-
-    @Test
-    public void testCountConversion() {
-        qt.setType( StandardQuantitationType.COUNT );
-        qt.setScale( ScaleType.COUNT );
-        assertThat( ExpressionDataDoubleMatrixUtil.ensureLog2Scale( matrix ) )
-                .satisfies( this::basicBasicLog2MatrixChecks )
-                .satisfies( m -> {
-                    assertThat( m.getMatrix().get( 0, 0 ) )
-                            .isEqualTo( Math.log( 1e6 * ( 4 + 0.5 ) / ( 4 + 1 ) ) / Math.log( 2 ), within( 1e-10 ) );
-                } );
-    }
-
-    @Test
-    public void testInferredLogbaseDifferFromQuantitations() {
-        assertThatThrownBy( () -> ExpressionDataDoubleMatrixUtil.ensureLog2Scale( matrix, false ) )
-                .isInstanceOf( InferredQuantitationMismatchException.class );
-    }
 
     @Test
     public void testCounts() {
@@ -342,16 +271,5 @@ public class ExpressionDataDoubleMatrixUtilTest {
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
-    }
-
-    private void basicBasicLog2MatrixChecks( ExpressionDataDoubleMatrix m ) {
-        assertThat( m.getQuantitationTypes() )
-                .hasSize( 1 )
-                .allSatisfy( qt -> {
-                    assertThat( qt.getGeneralType() ).isEqualTo( GeneralType.QUANTITATIVE );
-                    assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.AMOUNT );
-                    assertThat( qt.getRepresentation() ).isEqualTo( PrimitiveType.DOUBLE );
-                    assertThat( qt.getScale() ).isEqualTo( ScaleType.LOG2 );
-                } );
     }
 }

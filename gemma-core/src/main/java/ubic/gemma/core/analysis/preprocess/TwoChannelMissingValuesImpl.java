@@ -27,6 +27,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.*;

@@ -30,6 +30,7 @@ import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServi
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixBuilder;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;

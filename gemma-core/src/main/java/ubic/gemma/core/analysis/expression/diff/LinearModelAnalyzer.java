@@ -38,7 +38,6 @@ import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.MathUtil;
 import ubic.basecode.math.linearmodels.*;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
 import ubic.gemma.model.analysis.expression.diff.*;
@@ -57,6 +56,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
+
+import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.filterAndLog2Transform;
 
 /**
  * Handles fitting linear models with continuous or fixed-level covariates. Data are always log-transformed.
@@ -723,7 +724,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         /*
          * FIXME: remove columns that are marked as outliers, this will make some steps cleaner
          */
-        expressionData = ExpressionDataDoubleMatrixUtil.filterAndLog2Transform( expressionData );
+        expressionData = filterAndLog2Transform( expressionData );
         DoubleMatrix<CompositeSequence, BioMaterial> bareFilteredDataMatrix = expressionData.getMatrix();
 
         DoubleMatrix1D librarySizes = getLibrarySizes( config, expressionData );

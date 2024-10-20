@@ -71,7 +71,7 @@ import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
-import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
+import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
 import ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;

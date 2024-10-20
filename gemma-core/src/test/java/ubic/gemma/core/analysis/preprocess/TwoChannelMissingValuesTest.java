@@ -23,6 +23,7 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataBooleanMatrix;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.loader.expression.geo.*;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.util.test.BaseSpringContextTest;

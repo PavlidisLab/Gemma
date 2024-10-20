@@ -24,7 +24,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.OutlierFlaggingService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;

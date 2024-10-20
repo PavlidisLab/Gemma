@@ -22,15 +22,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.math.linearmodels.MeanVarianceEstimator;
+import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationScaleConversionException;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MeanVarianceUpdateEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.filterAndLog2Transform;
 
 /**
  * Manage the mean-variance relationship.
@@ -75,7 +77,7 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
             throw new IllegalStateException( "Did not find any preferred quantitation type. Mean-variance relation was not computed." );
         }
         try {
-            intensities = ExpressionDataDoubleMatrixUtil.filterAndLog2Transform( intensities );
+            intensities = filterAndLog2Transform( intensities );
         } catch ( UnsupportedQuantitationScaleConversionException e ) {
             log.warn( "Problem log transforming data. Check that the appropriate log scale is used. Mean-variance will be computed as is." );
         }

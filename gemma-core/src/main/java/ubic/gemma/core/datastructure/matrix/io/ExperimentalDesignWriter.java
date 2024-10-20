@@ -16,13 +16,12 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.datastructure.matrix;
+package ubic.gemma.core.datastructure.matrix.io;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
 import ubic.basecode.util.StringUtil;
-import ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporterImpl;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;

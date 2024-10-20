@@ -30,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
-import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.datastructure.matrix.*;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -331,6 +330,38 @@ class ProcessedExpressionDataVectorHelperServiceImpl
      * @param inMatrix The matrix to be masked
      */
     private void maskMissingValues( ExpressionDataDoubleMatrix inMatrix, ExpressionDataBooleanMatrix missingValues ) {
-        ExpressionDataDoubleMatrixUtil.maskMatrix( inMatrix, missingValues );
+        maskMatrix( inMatrix, missingValues );
+    }
+
+    /**
+     * Use the mask matrix to turn some values in a matrix to NaN. Ideally, they matrices are conformant, but if they
+     * are not (as some rows are sometimes missing for some quantitation types), this method attempts to handle it
+     * anyway (see below). The rows and columns do not have to be in the same order, but they do have to have the same
+     * column keys and row keys (with the exception of missing rows). The result is stored in matrix.
+     *
+     * @param matrix matrix
+     * @param mask if null, masking is not attempted.
+     */
+    private void maskMatrix( ExpressionDataDoubleMatrix matrix, ExpressionDataBooleanMatrix mask ) {
+        if ( mask == null ) return;
+        // checkConformant( a, b );
+        if ( matrix.columns() != mask.columns() )
+            throw new IllegalArgumentException( "Unequal column counts: " + matrix.columns() + " != " + mask.columns() );
+        int columns = matrix.columns();
+        for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
+            CompositeSequence del = el.getDesignElement();
+            if ( mask.getRow( del ) == null ) {
+                log.warn( "Mask Matrix is missing a row for " + del );
+                continue;
+            }
+            for ( int i = 0; i < columns; i++ ) {
+                BioAssay bm = matrix.getBioAssaysForColumn( i ).iterator().next();
+                boolean present = mask.get( del, bm );
+                if ( !present ) {
+                    matrix.set( del, bm, Double.NaN );
+                }
+
+            }
+        }
     }
 }

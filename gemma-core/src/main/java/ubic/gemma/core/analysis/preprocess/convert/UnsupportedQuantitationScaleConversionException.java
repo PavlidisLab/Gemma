@@ -17,9 +17,8 @@
  *
  */
 
-package ubic.gemma.core.analysis.preprocess;
+package ubic.gemma.core.analysis.preprocess.convert;
 
-import ubic.gemma.core.datastructure.matrix.QuantitationTypeConversionException;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 
 /**

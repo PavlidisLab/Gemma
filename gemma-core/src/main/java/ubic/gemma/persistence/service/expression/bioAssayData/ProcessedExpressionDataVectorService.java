@@ -19,7 +19,7 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.springframework.security.access.annotation.Secured;
-import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
+import ubic.gemma.core.analysis.preprocess.detect.QuantitationMismatchException;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;

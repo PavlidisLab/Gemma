@@ -12,10 +12,9 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package ubic.gemma.core.datastructure.matrix;
+package ubic.gemma.core.analysis.expression.diff;
 
 import org.junit.Test;
-import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
 
@@ -24,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author paul
  */
-public class DetectFactorBaselineTest {;
+public class DetectFactorBaselineTest {
 
     @Test
     public void testIsBaselineA() {

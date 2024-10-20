@@ -24,7 +24,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Value;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
+import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.io.IOException;

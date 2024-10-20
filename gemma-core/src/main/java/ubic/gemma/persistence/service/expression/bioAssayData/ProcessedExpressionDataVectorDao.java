@@ -19,7 +19,7 @@
 
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
+import ubic.gemma.core.analysis.preprocess.detect.QuantitationMismatchException;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;

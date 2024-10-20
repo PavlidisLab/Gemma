@@ -1,5 +1,6 @@
-package ubic.gemma.core.datastructure.matrix;
+package ubic.gemma.core.analysis.preprocess.detect;
 
+import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 
 /**

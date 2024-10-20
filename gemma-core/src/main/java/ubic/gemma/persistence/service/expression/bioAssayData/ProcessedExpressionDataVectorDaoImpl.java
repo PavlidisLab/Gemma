@@ -24,10 +24,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.analysis.preprocess.detect.QuantitationMismatchException;
 import ubic.gemma.core.analysis.preprocess.normalize.QuantileNormalizer;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
-import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -43,6 +42,7 @@ import ubic.gemma.persistence.util.CommonQueries;
 
 import java.util.*;
 
+import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.ensureLog2Scale;
 import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 import static ubic.gemma.persistence.util.QueryUtils.batchIdentifiableParameterList;
 import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
@@ -298,8 +298,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             Collection<RawExpressionDataVector> rawPreferredDataVectors,
             QuantitationType preferredMaskedDataQuantitationType,
             boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
-        ExpressionDataDoubleMatrix matrix = ExpressionDataDoubleMatrixUtil
-                .ensureLog2Scale( new ExpressionDataDoubleMatrix( rawPreferredDataVectors ), ignoreQuantitationMismatch );
+        ExpressionDataDoubleMatrix matrix = ensureLog2Scale( new ExpressionDataDoubleMatrix( rawPreferredDataVectors ), ignoreQuantitationMismatch );
         preferredMaskedDataQuantitationType.setScale( ScaleType.LOG2 );
         this.getSessionFactory().getCurrentSession().update( preferredMaskedDataQuantitationType );
         return new HashSet<>( matrix.toRawDataVectors() );

@@ -16,24 +16,25 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.analysis.preprocess;
+package ubic.gemma.core.datastructure.matrix;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import ubic.gemma.core.datastructure.matrix.*;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.util.ChannelUtils;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToDoubles;
@@ -50,9 +51,10 @@ import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToDoubles;
 public class ExpressionDataMatrixBuilder {
 
     private static final Log log = LogFactory.getLog( ExpressionDataMatrixBuilder.class.getName() );
+    private static final double LOGARITHM_BASE = 2.0;
     private final Map<ArrayDesign, BioAssayDimension> dimMap = new HashMap<>();
     private final Map<QuantitationType, Integer> numMissingValues = new HashMap<>();
-    private Collection<BulkExpressionDataVector> vectors;
+    private final Collection<BulkExpressionDataVector> vectors;
     private ExpressionExperiment expressionExperiment;
     private Collection<ProcessedExpressionDataVector> processedDataVectors = new HashSet<>();
     private QuantitationTypeData dat = null;
@@ -62,7 +64,7 @@ public class ExpressionDataMatrixBuilder {
      * @param vectors collection of vectors. They should be thawed first.
      */
     public ExpressionDataMatrixBuilder( Collection<? extends BulkExpressionDataVector> vectors ) {
-        if ( vectors == null || vectors.size() == 0 )
+        if ( vectors.isEmpty() )
             throw new IllegalArgumentException( "No vectors" );
         this.vectors = new HashSet<>();
         this.vectors.addAll( vectors );
@@ -90,7 +92,7 @@ public class ExpressionDataMatrixBuilder {
      * @return matrix of appropriate type.
      */
     public static BulkExpressionDataMatrix<?> getMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
-        if ( vectors == null || vectors.isEmpty() )
+        if ( vectors.isEmpty() )
             throw new IllegalArgumentException( "No vectors" );
         PrimitiveType representation = vectors.iterator().next().getQuantitationType().getRepresentation();
         return getMatrix( representation, vectors );
@@ -128,7 +130,7 @@ public class ExpressionDataMatrixBuilder {
 
         Collection<QuantitationType> eeQtTypes = expressionExperiment.getQuantitationTypes();
 
-        if ( eeQtTypes.size() == 0 )
+        if ( eeQtTypes.isEmpty() )
             throw new IllegalArgumentException( "No quantitation types for " + expressionExperiment );
 
         ExpressionDataMatrixBuilder.log.debug( "Experiment has " + eeQtTypes.size() + " quantitation types" );
@@ -157,7 +159,7 @@ public class ExpressionDataMatrixBuilder {
 
         Collection<QuantitationType> eeQtTypes = expressionExperiment.getQuantitationTypes();
 
-        if ( eeQtTypes.size() == 0 )
+        if ( eeQtTypes.isEmpty() )
             throw new IllegalArgumentException( "No quantitation types for " + expressionExperiment );
 
         ExpressionDataMatrixBuilder.log.debug( "Experiment has " + eeQtTypes.size() + " quantitation types" );
@@ -226,7 +228,7 @@ public class ExpressionDataMatrixBuilder {
 
         Collection<QuantitationType> eeQtTypes = expressionExperiment.getQuantitationTypes();
 
-        if ( eeQtTypes.size() == 0 ) {
+        if ( eeQtTypes.isEmpty() ) {
             throw new IllegalArgumentException( "No quantitation types for " + expressionExperiment );
         }
 
@@ -249,7 +251,7 @@ public class ExpressionDataMatrixBuilder {
                 qTypes.add( qType );
         }
 
-        if ( qTypes.size() != 0 ) {
+        if ( !qTypes.isEmpty() ) {
             return this.makeMatrix( qTypes );
         }
         return null;
@@ -269,7 +271,7 @@ public class ExpressionDataMatrixBuilder {
                 qTypes.add( qType );
         }
 
-        if ( qTypes.size() != 0 ) {
+        if ( !qTypes.isEmpty() ) {
             return this.makeMatrix( qTypes );
         }
         return null;
@@ -282,7 +284,7 @@ public class ExpressionDataMatrixBuilder {
 
         List<BioAssayDimension> result = new ArrayList<>();
 
-        if ( dimMap.keySet().size() > 0 ) {
+        if ( !dimMap.keySet().isEmpty() ) {
             result.addAll( dimMap.values() );
             return result;
         }
@@ -318,7 +320,7 @@ public class ExpressionDataMatrixBuilder {
                 qTypes.add( qType );
         }
 
-        if ( qTypes.size() != 0 ) {
+        if ( !qTypes.isEmpty() ) {
             return this.makeMatrix( qTypes );
         }
         return null;
@@ -350,24 +352,24 @@ public class ExpressionDataMatrixBuilder {
             }
 
             if ( backgroundA != null && signalA != null ) {
-                ExpressionDataDoubleMatrixUtil.subtractMatrices( signalA, backgroundA );
+                subtractMatrices( signalA, backgroundA );
             }
 
             if ( backgroundB != null && signalB != null ) {
-                ExpressionDataDoubleMatrixUtil.subtractMatrices( signalB, backgroundB );
+                subtractMatrices( signalB, backgroundB );
             }
 
             if ( signalA != null ) {
-                ExpressionDataDoubleMatrixUtil.logTransformMatrix( signalA );
+                logTransformMatrix( signalA );
             }
 
             if ( signalB != null ) {
-                ExpressionDataDoubleMatrixUtil.logTransformMatrix( signalB );
+                logTransformMatrix( signalB );
             }
 
             if ( signalA != null && signalB != null ) {
-                ExpressionDataDoubleMatrixUtil.addMatrices( signalA, signalB );
-                ExpressionDataDoubleMatrixUtil.scalarDivideMatrix( signalA, 2.0 );
+                addMatrices( signalA, signalB );
+                scalarDivideMatrix( signalA, 2.0 );
             }
 
             if ( signalA == null ) {
@@ -385,9 +387,10 @@ public class ExpressionDataMatrixBuilder {
      * computed by our system) is not found. This will return the values whether the array design is two-color
      * or not.
      */
+    @Nullable
     public ExpressionDataBooleanMatrix getMissingValueData() {
         List<QuantitationType> qtypes = this.getMissingValueQTypes();
-        if ( qtypes == null || qtypes.size() == 0 )
+        if ( qtypes.isEmpty() )
             return null;
         return new ExpressionDataBooleanMatrix( vectors, qtypes );
     }
@@ -405,7 +408,7 @@ public class ExpressionDataMatrixBuilder {
 
         List<QuantitationType> qtypes = this.getPreferredQTypes();
 
-        if ( qtypes.size() == 0 ) {
+        if ( qtypes.isEmpty() ) {
             ExpressionDataMatrixBuilder.log.warn( "Could not find a 'preferred' quantitation type" );
             return null;
         }
@@ -418,7 +421,7 @@ public class ExpressionDataMatrixBuilder {
 
         List<BioAssayDimension> dimensions = this.getBioAssayDimensions();
 
-        if ( dimensions.size() == 0 ) {
+        if ( dimensions.isEmpty() ) {
             throw new IllegalArgumentException( "No bioAssayDimensions!" );
         }
 
@@ -443,7 +446,7 @@ public class ExpressionDataMatrixBuilder {
 
         List<QuantitationType> qtypes = this.getPreferredQTypes();
 
-        if ( qtypes.size() == 0 ) {
+        if ( qtypes.isEmpty() ) {
             ExpressionDataMatrixBuilder.log.warn( "Could not find a 'preferred' quantitation type" );
             return null;
         }
@@ -487,7 +490,7 @@ public class ExpressionDataMatrixBuilder {
                 qTypes.add( signalChannelA );
         }
 
-        if ( qTypes.size() != 0 ) {
+        if ( !qTypes.isEmpty() ) {
             return this.makeMatrix( qTypes );
         }
         return null;
@@ -505,7 +508,7 @@ public class ExpressionDataMatrixBuilder {
                 qTypes.add( qType );
         }
 
-        if ( qTypes.size() != 0 ) {
+        if ( !qTypes.isEmpty() ) {
             return this.makeMatrix( qTypes );
         }
         return null;
@@ -539,8 +542,8 @@ public class ExpressionDataMatrixBuilder {
     /**
      * @return true if channelA needs reconstruction
      */
-    private boolean checkChannelA( QuantitationType signalChannelA, QuantitationType signalChannelB,
-            QuantitationType backgroundChannelA, QuantitationType bkgSubChannelA ) {
+    private boolean checkChannelA( @Nullable QuantitationType signalChannelA, @Nullable QuantitationType signalChannelB,
+            @Nullable QuantitationType backgroundChannelA, @Nullable QuantitationType bkgSubChannelA ) {
         if ( signalChannelA == null || signalChannelB == null ) {
 
             /*
@@ -785,8 +788,9 @@ public class ExpressionDataMatrixBuilder {
         return false;
     }
 
+    @Nullable
     private ExpressionDataDoubleMatrix makeMatrix( List<QuantitationType> qTypes ) {
-        if ( qTypes.size() > 0 ) {
+        if ( !qTypes.isEmpty() ) {
             return new ExpressionDataDoubleMatrix( vectors, qTypes );
         }
         return null;
@@ -808,66 +812,179 @@ public class ExpressionDataMatrixBuilder {
         }
     }
 
+    /**
+     * Log-transform the values in the matrix (base 2). Non-positive values (which have no logarithm defined) are
+     * entered as NaN.
+     *
+     * @param matrix matrix
+     */
+    public static void logTransformMatrix( ExpressionDataDoubleMatrix matrix ) {
+        int columns = matrix.columns();
+        double log2 = Math.log( LOGARITHM_BASE );
+        for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
+            CompositeSequence del = el.getDesignElement();
+            for ( int i = 0; i < columns; i++ ) {
+                BioAssay bm = matrix.getBioAssaysForColumn( i ).iterator().next();
+                double valA = matrix.get( del, bm );
+                if ( valA <= 0 ) {
+                    matrix.set( del, bm, Double.NaN );
+                } else {
+                    matrix.set( del, bm, Math.log( valA ) / log2 );
+                }
+            }
+        }
+    }
+
+    /**
+     * Subtract two matrices. Ideally, they matrices are conformant, but if they are not (as some rows are sometimes
+     * missing for some quantitation types), this method attempts to handle it anyway (see below). The rows and columns
+     * do not have to be in the same order, but they do have to have the same column keys and row keys (with the
+     * exception of missing rows). The result is stored in a. (a - b).
+     * If the number of rows are not the same, and/or the rows have different keys in the two matrices, some rows will
+     * simply not get subtracted and a warning will be issued.
+     *
+     * @param a matrix a
+     * @param b matrix b
+     * @throws IllegalArgumentException if the matrices are not column-conformant.
+     */
+    private void subtractMatrices( ExpressionDataDoubleMatrix a, ExpressionDataDoubleMatrix b ) {
+        // checkConformant( a, b );
+        if ( a.columns() != b.columns() )
+            throw new IllegalArgumentException( "Unequal column counts: " + a.columns() + " != " + b.columns() );
+
+        int columns = a.columns();
+        for ( ExpressionDataMatrixRowElement el : a.getRowElements() ) {
+            int rowNum = el.getIndex();
+            CompositeSequence del = el.getDesignElement();
+
+            if ( b.getRow( del ) == null ) {
+                log.warn( "Matrix 'b' is missing a row for " + del + ", it will not be subtracted" );
+                continue;
+            }
+
+            for ( int i = 0; i < columns; i++ ) {
+                BioAssay assay = a.getBioAssaysForColumn( i ).iterator().next();
+                double valA = a.get( del, assay );
+                double valB = b.get( del, assay );
+                a.set( rowNum, i, valA - valB );
+            }
+        }
+    }
+
+
+    /**
+     * Add two matrices. Ideally, they matrices are conformant, but if they are not (as some rows are sometimes missing
+     * for some quantitation types), this method attempts to handle it anyway (see below). The rows and columns do not
+     * have to be in the same order, but they do have to have the same column keys and row keys (with the exception of
+     * missing rows). The result is stored in a.
+     * If the number of rows are not the same, and/or the rows have different keys in the two matrices, some rows will
+     * simply not get added and a warning will be issued.
+     *
+     * @param a matrix a
+     * @param b matrix b
+     * @throws IllegalArgumentException if the matrices are not column-conformant.
+     */
+    public void addMatrices( ExpressionDataDoubleMatrix a, ExpressionDataDoubleMatrix b ) {
+        // checkConformant( a, b );
+        if ( a.columns() != b.columns() )
+            throw new IllegalArgumentException( "Unequal column counts: " + a.columns() + " != " + b.columns() );
+        int columns = a.columns();
+        for ( ExpressionDataMatrixRowElement el : a.getRowElements() ) {
+            CompositeSequence del = el.getDesignElement();
+
+            if ( b.getRow( del ) == null ) {
+                log.warn( "Matrix 'b' is missing a row for " + del + ", this row will not be added" );
+                continue;
+            }
+            for ( int i = 0; i < columns; i++ ) {
+                BioAssay bm = a.getBioAssaysForColumn( i ).iterator().next();
+                double valA = a.get( del, bm );
+                double valB = b.get( del, bm );
+                a.set( del, bm, valA + valB );
+            }
+        }
+    }
+
+    /**
+     * Divide all values by the dividend
+     *
+     * @param matrix matrix
+     * @param dividend dividend
+     * @throws IllegalArgumentException if dividend == 0.
+     */
+    public void scalarDivideMatrix( ExpressionDataDoubleMatrix matrix, double dividend ) {
+        if ( dividend == 0 ) throw new IllegalArgumentException( "Can't divide by zero" );
+        int columns = matrix.columns();
+        for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
+            CompositeSequence del = el.getDesignElement();
+            for ( int i = 0; i < columns; i++ ) {
+                BioAssay bm = matrix.getBioAssaysForColumn( i ).iterator().next();
+                double valA = matrix.get( del, bm );
+                matrix.set( del, bm, valA / dividend );
+
+            }
+        }
+    }
+
+    /**
+     * Helper class that keeps track of which QTs are background, signal and preferred.
+     */
+    private static class QuantitationTypeData {
+
+        private final Map<BioAssayDimension, QuantitationType> backgroundChannelA = new HashMap<>();
+        private final Map<BioAssayDimension, QuantitationType> backgroundChannelB = new HashMap<>();
+        private final Map<BioAssayDimension, QuantitationType> bkgSubChannelA = new HashMap<>();
+        private final Map<BioAssayDimension, QuantitationType> preferred = new HashMap<>();
+        private final Map<BioAssayDimension, QuantitationType> signalChannelA = new HashMap<>();
+        private final Map<BioAssayDimension, QuantitationType> signalChannelB = new HashMap<>();
+
+        void addBackgroundChannelA( BioAssayDimension dim, QuantitationType qt ) {
+            this.backgroundChannelA.put( dim, qt );
+        }
+
+        void addBackgroundChannelB( BioAssayDimension dim, QuantitationType qt ) {
+            this.backgroundChannelB.put( dim, qt );
+        }
+
+        void addBkgSubChannelA( BioAssayDimension dim, QuantitationType qt ) {
+            this.bkgSubChannelA.put( dim, qt );
+        }
+
+        void addPreferred( BioAssayDimension dim, QuantitationType qt ) {
+            this.preferred.put( dim, qt );
+        }
+
+        void addSignalChannelA( BioAssayDimension dim, QuantitationType qt ) {
+            this.signalChannelA.put( dim, qt );
+        }
+
+        void addSignalChannelB( BioAssayDimension dim, QuantitationType qt ) {
+            this.signalChannelB.put( dim, qt );
+        }
+
+        QuantitationType getBackgroundChannelA( BioAssayDimension dim ) {
+            return backgroundChannelA.get( dim );
+        }
+
+        QuantitationType getBackgroundChannelB( BioAssayDimension dim ) {
+            return backgroundChannelB.get( dim );
+        }
+
+        QuantitationType getBkgSubChannelA( BioAssayDimension dim ) {
+            return bkgSubChannelA.get( dim );
+        }
+
+        QuantitationType getPreferred( BioAssayDimension dim ) {
+            return preferred.get( dim );
+        }
+
+        QuantitationType getSignalChannelA( BioAssayDimension dim ) {
+            return signalChannelA.get( dim );
+        }
+
+        QuantitationType getSignalChannelB( BioAssayDimension dim ) {
+            return signalChannelB.get( dim );
+        }
+    }
 }
 
-/**
- * Helper class that keeps track of which QTs are background, signal and preferred.
- */
-class QuantitationTypeData {
-
-    private final Map<BioAssayDimension, QuantitationType> backgroundChannelA = new HashMap<>();
-    private final Map<BioAssayDimension, QuantitationType> backgroundChannelB = new HashMap<>();
-    private final Map<BioAssayDimension, QuantitationType> bkgSubChannelA = new HashMap<>();
-    private final Map<BioAssayDimension, QuantitationType> preferred = new HashMap<>();
-    private final Map<BioAssayDimension, QuantitationType> signalChannelA = new HashMap<>();
-    private final Map<BioAssayDimension, QuantitationType> signalChannelB = new HashMap<>();
-
-    void addBackgroundChannelA( BioAssayDimension dim, QuantitationType qt ) {
-        this.backgroundChannelA.put( dim, qt );
-    }
-
-    void addBackgroundChannelB( BioAssayDimension dim, QuantitationType qt ) {
-        this.backgroundChannelB.put( dim, qt );
-    }
-
-    void addBkgSubChannelA( BioAssayDimension dim, QuantitationType qt ) {
-        this.bkgSubChannelA.put( dim, qt );
-    }
-
-    void addPreferred( BioAssayDimension dim, QuantitationType qt ) {
-        this.preferred.put( dim, qt );
-    }
-
-    void addSignalChannelA( BioAssayDimension dim, QuantitationType qt ) {
-        this.signalChannelA.put( dim, qt );
-    }
-
-    void addSignalChannelB( BioAssayDimension dim, QuantitationType qt ) {
-        this.signalChannelB.put( dim, qt );
-    }
-
-    QuantitationType getBackgroundChannelA( BioAssayDimension dim ) {
-        return backgroundChannelA.get( dim );
-    }
-
-    QuantitationType getBackgroundChannelB( BioAssayDimension dim ) {
-        return backgroundChannelB.get( dim );
-    }
-
-    QuantitationType getBkgSubChannelA( BioAssayDimension dim ) {
-        return bkgSubChannelA.get( dim );
-    }
-
-    QuantitationType getPreferred( BioAssayDimension dim ) {
-        return preferred.get( dim );
-    }
-
-    QuantitationType getSignalChannelA( BioAssayDimension dim ) {
-        return signalChannelA.get( dim );
-    }
-
-    QuantitationType getSignalChannelB( BioAssayDimension dim ) {
-        return signalChannelB.get( dim );
-    }
-
-}
