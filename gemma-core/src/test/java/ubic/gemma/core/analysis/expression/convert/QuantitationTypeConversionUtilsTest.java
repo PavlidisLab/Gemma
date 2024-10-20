@@ -2,7 +2,7 @@ package ubic.gemma.core.analysis.expression.convert;
 
 import org.junit.Before;
 import org.junit.Test;
-import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.detect.InferredQuantitationMismatchException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -18,6 +18,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.RandomExpressionDa
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.*;
+import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.ensureLog2Scale;
 import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 
 public class QuantitationTypeConversionUtilsTest {
@@ -51,16 +52,16 @@ public class QuantitationTypeConversionUtilsTest {
     }
 
     @Test
-    public void testLog2ShouldDoNothing() {
+    public void testLog2ShouldDoNothing() throws QuantitationTypeConversionException {
         qt.setScale( ScaleType.LOG2 );
-        assertThat( QuantitationTypeConversionUtils.ensureLog2Scale( matrix ) )
+        assertThat( ensureLog2Scale( matrix ) )
                 .isSameAs( matrix );
     }
 
     @Test
-    public void testLinearConversion() {
+    public void testLinearConversion() throws QuantitationTypeConversionException {
         qt.setScale( ScaleType.LINEAR );
-        assertThat( QuantitationTypeConversionUtils.ensureLog2Scale( matrix ) )
+        assertThat( ensureLog2Scale( matrix ) )
                 .satisfies( this::basicBasicLog2MatrixChecks )
                 .satisfies( m -> {
                     assertThat( m.getMatrix().get( 0, 0 ) ).isEqualTo( Math.log( 4.0 ) / Math.log( 2 ) );
@@ -68,9 +69,9 @@ public class QuantitationTypeConversionUtilsTest {
     }
 
     @Test
-    public void testLog10Conversion() {
+    public void testLog10Conversion() throws QuantitationTypeConversionException {
         qt.setScale( ScaleType.LOG10 );
-        assertThat( QuantitationTypeConversionUtils.ensureLog2Scale( matrix ) )
+        assertThat( ensureLog2Scale( matrix ) )
                 .satisfies( this::basicBasicLog2MatrixChecks )
                 .satisfies( m -> {
                     assertThat( m.getMatrix().get( 0, 0 ) ).isEqualTo( 4.0 * Math.log( 10 ) / Math.log( 2 ), within( 1e-10 ) );
@@ -78,10 +79,10 @@ public class QuantitationTypeConversionUtilsTest {
     }
 
     @Test
-    public void testCountConversion() {
+    public void testCountConversion() throws QuantitationTypeConversionException {
         qt.setType( StandardQuantitationType.COUNT );
         qt.setScale( ScaleType.COUNT );
-        assertThat( QuantitationTypeConversionUtils.ensureLog2Scale( matrix ) )
+        assertThat( ensureLog2Scale( matrix ) )
                 .satisfies( this::basicBasicLog2MatrixChecks )
                 .satisfies( m -> {
                     assertThat( m.getMatrix().get( 0, 0 ) )
@@ -91,7 +92,7 @@ public class QuantitationTypeConversionUtilsTest {
 
     @Test
     public void testInferredLogbaseDifferFromQuantitations() {
-        assertThatThrownBy( () -> QuantitationTypeConversionUtils.ensureLog2Scale( matrix, false ) )
+        assertThatThrownBy( () -> ensureLog2Scale( matrix, false ) )
                 .isInstanceOf( InferredQuantitationMismatchException.class );
     }
 

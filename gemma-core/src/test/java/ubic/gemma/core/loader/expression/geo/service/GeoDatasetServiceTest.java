@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.TwoChannelMissingValues;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
@@ -235,7 +236,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         qts = eeService.getQuantitationTypes( ee );
         assertEquals( 17, qts.size() ); // 16 that were imported plus the detection call we added.
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
 
         ee = eeService.thaw( ee );
         Collection<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();
@@ -261,7 +262,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
      * For bug 2312 - qts getting dropped.
      */
     @Test
-    public void testFetchAndLoadGSE18707() {
+    public void testFetchAndLoadGSE18707() throws QuantitationTypeConversionException {
         setUpDatasetFromGeo( "GSE18707" );
 
         // Mouse430A_2.
@@ -273,7 +274,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         QuantitationType qt = qts.iterator().next();
         assertEquals( "Processed Affymetrix Rosetta intensity values", qt.getDescription() );
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
         ee = eeService.thaw( ee );
         Set<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();
         assertEquals( 100, ee.getNumberOfDataVectors().intValue() );
@@ -361,7 +362,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
          * Should load okay, but should not load the data.
          */
         try {
-            processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+            processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
             fail( "Should not have any data vectors for exon arrays on first loading" );
         } catch ( Exception e ) {
             // OK
@@ -401,7 +402,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
          * Should load okay, even though it has no data. See bug 3981.
          */
         try {
-            processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+            processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
             fail( "Should not have any data vectors for exon arrays on first loading" );
         } catch ( Exception e ) {
             // OK

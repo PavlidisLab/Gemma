@@ -540,7 +540,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public Optional<Path> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException, IOException {
+    public Optional<Path> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws IOException, FilteringException {
         // randomize file name if temporary in case of access by more than one user at once
         String result;
         if ( filtered ) {
@@ -559,7 +559,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public Optional<Path> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered, int timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException {
+    public Optional<Path> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered, int timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException, FilteringException {
         // randomize file name if temporary in case of access by more than one user at once
         String result;
         if ( filtered ) {

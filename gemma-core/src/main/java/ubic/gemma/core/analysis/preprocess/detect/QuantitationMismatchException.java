@@ -14,7 +14,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
  * </ul>
  * @author poirigui
  */
-public abstract class QuantitationMismatchException extends Exception {
+public abstract class QuantitationMismatchException extends QuantitationTypeDetectionException {
 
     private final QuantitationType quantitationType;
 

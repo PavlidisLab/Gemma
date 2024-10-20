@@ -19,7 +19,9 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.springframework.security.access.annotation.Secured;
-import ubic.gemma.core.analysis.preprocess.detect.QuantitationMismatchException;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
+import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -40,45 +42,40 @@ public interface ProcessedExpressionDataVectorService
         extends DesignElementDataVectorService<ProcessedExpressionDataVector> {
 
     /**
-     * @see ProcessedExpressionDataVectorDao#createProcessedDataVectors(ExpressionExperiment, boolean)
-     */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    int createProcessedDataVectors( ExpressionExperiment expressionExperiment );
-
-    /**
-     * @see ProcessedExpressionDataVectorDao#createProcessedDataVectors(ExpressionExperiment, boolean)
-     */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException;
-
-    /**
-     * Create processed vectors and update ranks.
+     * Create processed vectors and optionally update ranks.
      * <p>
      * Mismatch between quantitation type and data is ignored.
-     * @see #createProcessedDataVectors(ExpressionExperiment)
+     * @param updateRanks whether to update the rnaks of the vectors or not
      * @see #updateRanks(ExpressionExperiment)
+     * @see ProcessedExpressionDataVectorDao#createProcessedDataVectors(ExpressionExperiment, boolean)
+     * @throws QuantitationTypeConversionException if the data cannot be converted, generally to log2 scale
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    int computeProcessedExpressionData( ExpressionExperiment ee );
+    int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks ) throws QuantitationTypeConversionException;
 
     /**
-     * Create processed vectors and update ranks.
+     * Create processed vectors and optionally update ranks.
      * @see #createProcessedDataVectors(ExpressionExperiment, boolean)
      * @see #updateRanks(ExpressionExperiment)
+     * @throws QuantitationTypeDetectionException if the QT caanot be detected from data, never raised if
+     * ignoreQuantitationMismatch is set to true
+     * @throws QuantitationTypeConversionException if the data cannot be converted, generally to log2 scale
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    int computeProcessedExpressionData( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException;
+    int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException;
 
     /**
      * Replace the processed vectors of a EE with the given vectors.
      * <p>
-     * Ranks are recomputed.
+     * Ranks are recomputed, no conversion of QT is done.
      *
      * @param ee      ee
-     * @param vectors non-persistent, all of the same quantitationtype
+     * @param vectors non-persistent, all of the same {@link QuantitationType}
+     * @param updateRanks whether to update ranks or not
+     * @see ProcessedExpressionDataVectorDao#createProcessedDataVectors(ExpressionExperiment, boolean)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors );
+    int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors, boolean updateRanks );
 
     /**
      * Creates new bioAssayDimensions to match the experimental design, reorders the data to match, updates.

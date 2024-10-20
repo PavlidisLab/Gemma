@@ -137,7 +137,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         expressionExperimentPlatformSwitchService.switchExperimentToMergedPlatform( ee );
         ee = this.eeService.thawLite( ee ); // essential.
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
         Collection<ProcessedExpressionDataVector> preferredVectors = this.processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
         ee = eeService.loadOrFail( ee.getId() );
@@ -158,7 +158,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         assertNotNull( s );
         assertEquals( ee.getNumberOfDataVectors(), s.getProcessedExpressionVectorCount() );
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
         // repeat, make sure deleted old QTs.
         ee = eeService.load( ee.getId() );
         assertNotNull( ee );
@@ -186,7 +186,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
         ee = this.eeService.thawLite( ee );
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
         Collection<ProcessedExpressionDataVector> preferredVectors = this.processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
         ee = eeService.load( ee.getId() );
@@ -292,7 +292,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         }
 
         ee = this.eeService.thawLite( ee );
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
 
         ExperimentalFactor factor = ExperimentalFactor.Factory.newInstance();
         factor.setType( FactorType.CATEGORICAL );

@@ -218,7 +218,7 @@ public interface ExpressionDataFileService {
      */
     Optional<Path> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException, IOException;
 
-    Optional<Path> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean b, boolean filtered, int i, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException;
+    Optional<Path> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean b, boolean filtered, int i, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException, FilteringException;
 
     /**
      * Locate or create a new data file for the given quantitation type. The output will include gene information if it

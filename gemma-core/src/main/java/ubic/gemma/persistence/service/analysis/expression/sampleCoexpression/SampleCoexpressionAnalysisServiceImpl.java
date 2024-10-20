@@ -31,6 +31,7 @@ import ubic.basecode.math.linearmodels.LeastSquaresFit;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -134,7 +135,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
     @Override
     @Transactional(readOnly = true)
-    public PreparedCoexMatrices prepare( ExpressionExperiment ee ) {
+    public PreparedCoexMatrices prepare( ExpressionExperiment ee ) throws FilteringException {
         // Create new analysis
         Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
@@ -248,7 +249,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     private SampleCoexpressionMatrix getMatrix( ExpressionExperiment ee, boolean regress,
-            Collection<ProcessedExpressionDataVector> vectors ) {
+            Collection<ProcessedExpressionDataVector> vectors ) throws FilteringException {
         SampleCoexpressionAnalysisServiceImpl.log.info( String
                 .format( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_COMPUTING_SCM, ee.getId(), regress ) );
 
@@ -284,7 +285,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     private ExpressionDataDoubleMatrix loadDataMatrix( ExpressionExperiment ee, boolean useRegression,
-            Collection<ProcessedExpressionDataVector> vectors ) {
+            Collection<ProcessedExpressionDataVector> vectors ) throws FilteringException {
         if ( vectors.isEmpty() ) {
             SampleCoexpressionAnalysisServiceImpl.log.warn( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_VECTORS );
             return null;
@@ -307,7 +308,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     private ExpressionDataDoubleMatrix loadFilteredDataMatrix( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> vectors, boolean requireSequences ) {
+            Collection<ProcessedExpressionDataVector> vectors, boolean requireSequences ) throws FilteringException {
         FilterConfig fConfig = new FilterConfig();
         fConfig.setIgnoreMinimumRowsThreshold( true );
         fConfig.setIgnoreMinimumSampleThreshold( true );

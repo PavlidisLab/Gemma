@@ -37,6 +37,7 @@ import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.MathUtil;
 import ubic.basecode.math.linearmodels.*;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
@@ -724,7 +725,11 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         /*
          * FIXME: remove columns that are marked as outliers, this will make some steps cleaner
          */
-        expressionData = filterAndLog2Transform( expressionData );
+        try {
+            expressionData = filterAndLog2Transform( expressionData );
+        } catch ( QuantitationTypeConversionException e ) {
+            throw new RuntimeException( e );
+        }
         DoubleMatrix<CompositeSequence, BioMaterial> bareFilteredDataMatrix = expressionData.getMatrix();
 
         DoubleMatrix1D librarySizes = getLibrarySizes( config, expressionData );
@@ -745,7 +750,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         final Map<String, LinearModelSummary> rawResults = this
                 .runAnalysis( bareFilteredDataMatrix, finalDataMatrix, properDesignMatrix, librarySizes, config );
 
-        if ( rawResults.size() == 0 ) {
+        if ( rawResults.isEmpty() ) {
             LinearModelAnalyzer.log.error( "Got no results from the analysis" );
             return null;
         }

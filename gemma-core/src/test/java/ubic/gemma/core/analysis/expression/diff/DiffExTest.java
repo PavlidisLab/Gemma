@@ -241,7 +241,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
 
         ee = this.eeService.thawLite( ee );
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
 
         if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             ee = eeService.load( ee.getId() );

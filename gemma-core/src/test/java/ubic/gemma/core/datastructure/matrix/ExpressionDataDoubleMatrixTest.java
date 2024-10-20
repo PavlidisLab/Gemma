@@ -307,7 +307,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
          * Additional tests for files and outlier marking.
          */
 
-        processedDataVectorService.computeProcessedExpressionData( newee );
+        processedDataVectorService.createProcessedDataVectors( newee, true );
 
         Path f1 = expressionDataFileService
                 .writeOrLocateProcessedDataFile( expressionExperimentService.load( newee.getId() ), true, true )

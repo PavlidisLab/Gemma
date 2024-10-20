@@ -167,9 +167,9 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         ds2 = experimentService.thawLite( ds2 );
         ds3 = experimentService.thawLite( ds3 );
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( ds1 );
-        processedExpressionDataVectorService.computeProcessedExpressionData( ds2 );
-        processedExpressionDataVectorService.computeProcessedExpressionData( ds3 );
+        processedExpressionDataVectorService.createProcessedDataVectors( ds1, true );
+        processedExpressionDataVectorService.createProcessedDataVectors( ds2, true );
+        processedExpressionDataVectorService.createProcessedDataVectors( ds3, true );
 
         /*
          * Delete the experimental design (which came with the GEO import) and reload. the new designs have been

@@ -93,7 +93,7 @@ class ExpressionDataFileHelperService {
         return Optional.ofNullable( matrix );
     }
 
-    public Optional<ExpressionDataDoubleMatrix> getDataMatrix( ExpressionExperiment ee, boolean filtered, Map<CompositeSequence, String[]> geneAnnotations ) {
+    public Optional<ExpressionDataDoubleMatrix> getDataMatrix( ExpressionExperiment ee, boolean filtered, Map<CompositeSequence, String[]> geneAnnotations ) throws FilteringException {
         Optional<ExpressionDataDoubleMatrix> matrix = getDataMatrix( ee, filtered );
         if ( matrix.isPresent() ) {
             Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );

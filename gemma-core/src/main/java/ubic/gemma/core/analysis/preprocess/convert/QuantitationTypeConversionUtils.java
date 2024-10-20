@@ -24,7 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.MatrixStats;
 import ubic.gemma.core.analysis.preprocess.detect.InferredQuantitationMismatchException;
-import ubic.gemma.core.analysis.preprocess.detect.QuantitationMismatchException;
+import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionUtils;
 import ubic.gemma.core.analysis.preprocess.detect.SuspiciousValuesForQuantitationException;
 import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilter;
@@ -68,8 +68,9 @@ public class QuantitationTypeConversionUtils {
      *
      * @param dmatrix matrix
      * @return ee data double matrix
+     * @throws QuantitationTypeDetectionException if data cannot be converted to log2 scale
      */
-    public static ExpressionDataDoubleMatrix filterAndLog2Transform( ExpressionDataDoubleMatrix dmatrix ) {
+    public static ExpressionDataDoubleMatrix filterAndLog2Transform( ExpressionDataDoubleMatrix dmatrix ) throws QuantitationTypeConversionException {
         dmatrix = QuantitationTypeConversionUtils.ensureLog2Scale( dmatrix );
 
         /*
@@ -116,7 +117,7 @@ public class QuantitationTypeConversionUtils {
      * case
      */
     @CheckReturnValue
-    public static ExpressionDataDoubleMatrix ensureLog2Scale( ExpressionDataDoubleMatrix dmatrix, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
+    public static ExpressionDataDoubleMatrix ensureLog2Scale( ExpressionDataDoubleMatrix dmatrix, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
         QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
         if ( quantitationType == null ) {
             throw new IllegalArgumentException( "Expression data matrix lacks a quantitation type." );
@@ -242,10 +243,10 @@ public class QuantitationTypeConversionUtils {
         return log2Matrix;
     }
 
-    public static ExpressionDataDoubleMatrix ensureLog2Scale( ExpressionDataDoubleMatrix expressionData ) {
+    public static ExpressionDataDoubleMatrix ensureLog2Scale( ExpressionDataDoubleMatrix expressionData ) throws QuantitationTypeConversionException {
         try {
             return ensureLog2Scale( expressionData, true );
-        } catch ( QuantitationMismatchException e ) {
+        } catch ( QuantitationTypeDetectionException e ) {
             // never happening
             throw new RuntimeException( e );
         }

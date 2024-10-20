@@ -19,7 +19,8 @@
 
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import ubic.gemma.core.analysis.preprocess.detect.QuantitationMismatchException;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
+import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -42,7 +43,7 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
      *                                   processed EVs instead of relying on the QT
      * @return the number of created vectors
      */
-    int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException;
+    int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException;
 
     /**
      * @param expressionExperiment ee

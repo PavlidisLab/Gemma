@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCallbackHandler;
 import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisConfig.SingularThreshold;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
@@ -99,9 +100,9 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
     @Test
     @Category(SlowTest.class)
-    public void testLoadAnalyzeSaveAndCoexpSearch() {
+    public void testLoadAnalyzeSaveAndCoexpSearch() throws QuantitationTypeConversionException {
         ee = this.getTestPersistentCompleteExpressionExperimentWithSequences();
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
 
         tableMaintenanceUtil.disableEmail();
         tableMaintenanceUtil.updateGene2CsEntries();
@@ -162,7 +163,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
         eeService.update( ee2 );
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee2 );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee2, true );
         linkAnalysisService.process( ee2, filterConfig, linkAnalysisConfig );
 
         this.updateNodeDegree();

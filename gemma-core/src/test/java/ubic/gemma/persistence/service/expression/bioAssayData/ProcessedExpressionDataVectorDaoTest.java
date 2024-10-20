@@ -14,7 +14,9 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationMismatchException;
+import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -75,7 +77,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
 
     @Test
     @WithMockUser
-    public void testCreateProcessedDataVectors() throws QuantitationMismatchException {
+    public void testCreateProcessedDataVectors() throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
         double[][] matrix = randomExpressionMatrix( NUM_PROBES, 4, new LogNormalDistribution( 9, 1 ) );
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LINEAR, false );
         assertThat( ee.getProcessedExpressionDataVectors() ).isEmpty();
@@ -90,7 +92,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
 
     @Test
     @WithMockUser
-    public void testCreateProcessedDataVectorsFromLog2Data() throws QuantitationMismatchException {
+    public void testCreateProcessedDataVectorsFromLog2Data() throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
         double[][] matrix = randomExpressionMatrix( NUM_PROBES, 4, new NormalDistribution( 15, 1 ) );
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, false );
         assertThat( ee.getProcessedExpressionDataVectors() ).isEmpty();
@@ -100,7 +102,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
 
     @Test
     @WithMockUser
-    public void testCreateProcessedDataVectorsFromLog2RatiometricData() throws QuantitationMismatchException {
+    public void testCreateProcessedDataVectorsFromLog2RatiometricData() throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
         double[][] matrix = randomExpressionMatrix( NUM_PROBES, 4, new NormalDistribution( 0, 1 ) );
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, true );
         assertThat( ee.getProcessedExpressionDataVectors() ).isEmpty();
@@ -110,7 +112,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
 
     @Test
     @WithMockUser
-    public void testThaw() throws QuantitationMismatchException {
+    public void testThaw() throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
         double[][] matrix = randomExpressionMatrix( NUM_PROBES, 8, new NormalDistribution( 0, 1 ) );
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, true );
         assertThat( ee.getRawExpressionDataVectors() ).hasSize( NUM_PROBES );

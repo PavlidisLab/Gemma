@@ -20,15 +20,15 @@ package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Propagation;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.service.BaseImmutableService;
 
 import javax.annotation.Nullable;
 import java.util.Date;
-import java.util.List;
 
 /**
  * Create and manipulate audit trails.
@@ -72,6 +72,7 @@ public interface AuditTrailService extends BaseImmutableService<AuditTrail> {
      * @see #addUpdateEvent(Auditable, Class, String, String, Date)
      */
     @Secured({ "GROUP_AGENT" })
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, Throwable throwable );
 
     /**

@@ -43,6 +43,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToDoubles;
@@ -75,7 +76,7 @@ class ProcessedExpressionDataVectorHelperServiceImpl
     @Override
     @Transactional
     public void reorderByDesign( ExpressionExperiment ee ) {
-        if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+        if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             log.info( ee + " does not have a populated experimental design, skipping" );
             return;
         }
@@ -342,7 +343,7 @@ class ProcessedExpressionDataVectorHelperServiceImpl
      * @param matrix matrix
      * @param mask if null, masking is not attempted.
      */
-    private void maskMatrix( ExpressionDataDoubleMatrix matrix, ExpressionDataBooleanMatrix mask ) {
+    private void maskMatrix( ExpressionDataDoubleMatrix matrix, @Nullable ExpressionDataBooleanMatrix mask ) {
         if ( mask == null ) return;
         // checkConformant( a, b );
         if ( matrix.columns() != mask.columns() )

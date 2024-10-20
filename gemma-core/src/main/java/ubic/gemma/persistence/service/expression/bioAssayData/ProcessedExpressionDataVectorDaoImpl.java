@@ -24,7 +24,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.gemma.core.analysis.preprocess.detect.QuantitationMismatchException;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
+import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
 import ubic.gemma.core.analysis.preprocess.normalize.QuantileNormalizer;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -72,7 +73,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
     }
 
     @Override
-    public int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
+    public int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
         log.info( "Removing processed expression vectors for " + expressionExperiment + "..." );
         expressionExperimentDao.removeProcessedDataVectors( expressionExperiment );
 
@@ -297,7 +298,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
     private Collection<RawExpressionDataVector> consolidateRawVectors(
             Collection<RawExpressionDataVector> rawPreferredDataVectors,
             QuantitationType preferredMaskedDataQuantitationType,
-            boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
+            boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
         ExpressionDataDoubleMatrix matrix = ensureLog2Scale( new ExpressionDataDoubleMatrix( rawPreferredDataVectors ), ignoreQuantitationMismatch );
         preferredMaskedDataQuantitationType.setScale( ScaleType.LOG2 );
         this.getSessionFactory().getCurrentSession().update( preferredMaskedDataQuantitationType );

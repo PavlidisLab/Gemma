@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.service.ExpressionExperimentVectorManipulatingService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -215,7 +216,11 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
         if ( hasData && targetBioAssayDimension != null /* case 2 */ ) {
             log.info( ee + " has data, regenerating processed data vectors..." );
-            processedExpressionDataVectorService.createProcessedDataVectors( ee ); // this still fails sometimes? works fine if run later by cli
+            try {
+                processedExpressionDataVectorService.createProcessedDataVectors( ee, false ); // this still fails sometimes? works fine if run later by cli
+            } catch ( QuantitationTypeConversionException e ) {
+                throw new RuntimeException( e );
+            }
         }
     }
 

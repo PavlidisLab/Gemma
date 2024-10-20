@@ -20,6 +20,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
@@ -51,7 +52,7 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
     }
 
     @Override
-    public Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee ) {
+    public Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee ) throws FilteringException {
         DoubleMatrix<BioAssay, BioAssay> cormat = sampleCoexpressionAnalysisService.loadBestMatrix( ee );
         if ( cormat == null ) {
             cormat = sampleCoexpressionAnalysisService.compute( ee, sampleCoexpressionAnalysisService.prepare( ee ) );

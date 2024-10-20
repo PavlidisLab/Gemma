@@ -4,7 +4,8 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.analysis.preprocess.detect.QuantitationMismatchException;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
+import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -66,50 +67,38 @@ public class ProcessedExpressionDataVectorServiceImpl
     }
 
     @Override
-    @Transactional
-    public int createProcessedDataVectors( ExpressionExperiment expressionExperiment ) {
+    @Transactional(rollbackFor = { QuantitationTypeConversionException.class })
+    public int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks ) throws QuantitationTypeConversionException {
         try {
-            return createProcessedDataVectors( expressionExperiment, true );
-        } catch ( QuantitationMismatchException e ) {
+            return createProcessedDataVectors( expressionExperiment, true, true );
+        } catch ( QuantitationTypeDetectionException e ) {
+            // never happening
             throw new RuntimeException( e );
         }
     }
 
     @Override
-    @Transactional
-    public int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
+    @Transactional(rollbackFor = { QuantitationTypeDetectionException.class, QuantitationTypeConversionException.class })
+    public int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
+        int created;
         try {
-            int created = this.processedExpressionDataVectorDao.createProcessedDataVectors( expressionExperiment, ignoreQuantitationMismatch );
+            created = this.processedExpressionDataVectorDao.createProcessedDataVectors( expressionExperiment, ignoreQuantitationMismatch );
             auditTrailService.addUpdateEvent( expressionExperiment, ProcessedVectorComputationEvent.class, String.format( "Created processed expression data for %s.", expressionExperiment ) );
-            return created;
         } catch ( Exception e ) {
+            // Note: addUpdateEvent with an exception uses REQUIRES_NEW, which will create an audit event that cannot be
+            //       rolled back
             auditTrailService.addUpdateEvent( expressionExperiment, FailedProcessedVectorComputationEvent.class, "Failed to create processed expression data vectors.", e );
             throw e;
         }
-    }
-
-    @Override
-    @Transactional
-    public int computeProcessedExpressionData( ExpressionExperiment ee ) {
-        try {
-            return computeProcessedExpressionData( ee, true );
-        } catch ( QuantitationMismatchException e ) {
-            throw new RuntimeException( e );
+        if ( updateRanks ) {
+            updateRanks( expressionExperiment );
         }
-    }
-
-    @Override
-    @Transactional
-    public int computeProcessedExpressionData( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
-        int created = createProcessedDataVectors( ee, ignoreQuantitationMismatch );
-        updateRanks( ee );
         return created;
     }
 
     @Override
     @Transactional
-    public int replaceProcessedDataVectors( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> vectors ) {
+    public int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors, boolean updateRanks ) {
         int replaced;
         try {
             replaced = expressionExperimentService.replaceProcessedDataVectors( ee, vectors );
@@ -118,7 +107,9 @@ public class ProcessedExpressionDataVectorServiceImpl
             auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.class, "Failed to replace processed expression data vectors.", e );
             throw e;
         }
-        updateRanks( ee );
+        if ( updateRanks ) {
+            updateRanks( ee );
+        }
         return replaced;
     }
 
