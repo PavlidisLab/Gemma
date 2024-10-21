@@ -61,6 +61,7 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Class<? extends DataVector> getDataVectorType( QuantitationType qt ) {
         return quantitationTypeDao.getVectorType( qt );
     }

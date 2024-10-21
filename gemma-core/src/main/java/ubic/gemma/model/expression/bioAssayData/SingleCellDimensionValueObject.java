@@ -1,17 +1,22 @@
 package ubic.gemma.model.expression.bioAssayData;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.apachecommons.CommonsLog;
+import org.hibernate.Hibernate;
 import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Value object for a single-cell dimension.
@@ -37,27 +42,37 @@ public class SingleCellDimensionValueObject extends IdentifiableValueObject<Sing
     private List<Long> bioAssayIds;
 
     /**
-     * The preferred cell type assignment.
+     * All the cell type assignments.
      */
-    @Nullable
-    private CellTypeAssignmentValueObject cellTypeAssignment;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Set<CellTypeAssignmentValueObject> cellTypeAssignments;
 
     /**
-     * @param cellTypeAssignment a featured cell type assignment from {@link SingleCellDimension#getCellTypeAssignments()}
+     * All the other cell-level characteristics.
      */
-    public SingleCellDimensionValueObject( SingleCellDimension singleCellDimension, @Nullable CellTypeAssignment cellTypeAssignment ) {
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Set<CellLevelCharacteristicsValueObject> cellLevelCharacteristics;
+
+    public SingleCellDimensionValueObject( SingleCellDimension singleCellDimension ) {
         super( singleCellDimension );
         this.cellIds = singleCellDimension.getCellIds();
         this.bioAssayIds = new ArrayList<>( singleCellDimension.getCellIds().size() );
         try {
             for ( int i = 0; i < singleCellDimension.getCellIds().size(); i++ ) {
-                this.bioAssayIds.add( singleCellDimension.getBioAssay( i ).getId() );
+                this.bioAssayIds.add( requireNonNull( singleCellDimension.getBioAssay( i ).getId() ) );
             }
         } catch ( IllegalArgumentException | IndexOutOfBoundsException e ) {
             log.warn( "The bioassays sparse range array is invalid for " + singleCellDimension, e );
         }
-        if ( cellTypeAssignment != null ) {
-            this.cellTypeAssignment = new CellTypeAssignmentValueObject( cellTypeAssignment );
+        if ( Hibernate.isInitialized( singleCellDimension.getCellTypeAssignments() ) ) {
+            this.cellTypeAssignments = singleCellDimension.getCellTypeAssignments().stream()
+                    .map( CellTypeAssignmentValueObject::new )
+                    .collect( Collectors.toSet() );
+        }
+        if ( Hibernate.isInitialized( singleCellDimension.getCellLevelCharacteristics() ) ) {
+            this.cellLevelCharacteristics = singleCellDimension.getCellLevelCharacteristics().stream()
+                    .map( CellLevelCharacteristicsValueObject::new )
+                    .collect( Collectors.toSet() );
         }
     }
 }

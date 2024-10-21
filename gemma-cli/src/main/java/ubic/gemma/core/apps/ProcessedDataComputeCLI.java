@@ -23,7 +23,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
-import ubic.gemma.core.analysis.preprocess.detect.QuantitationMismatchPreprocessingException;
+import ubic.gemma.core.analysis.preprocess.QuantitationTypeDetectionRelatedPreprocessingException;
 import ubic.gemma.core.analysis.preprocess.detect.SuspiciousValuesForQuantitationException;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -122,17 +122,17 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
 
             // Note the auditing is done by the service.
             addSuccessObject( ee );
-        } catch ( QuantitationMismatchPreprocessingException e ) {
-            // TODO: e.getCause().getQuantitationType();
-            QuantitationType qt = e.getCause().getQuantitationType();
+        } catch ( QuantitationTypeDetectionRelatedPreprocessingException e ) {
             if ( e.getCause() instanceof SuspiciousValuesForQuantitationException ) {
+                SuspiciousValuesForQuantitationException actual = ( SuspiciousValuesForQuantitationException ) e.getCause();
+                QuantitationType qt = actual.getQuantitationType();
                 addErrorObject( String.format( "%s:\n%s", ee, qt ), String.format( "The following issues were found in expression data:\n\n - %s\n\nYou may ignore this by setting the -%s option.",
-                        ( ( SuspiciousValuesForQuantitationException ) e.getCause() )
+                        actual
                                 .getSuspiciousValues().stream()
                                 .map( SuspiciousValuesForQuantitationException.SuspiciousValueResult::toString )
                                 .collect( Collectors.joining( "\n - " ) ), IGNORE_QUANTITATION_MISMATCH_OPTION ) );
             } else {
-                addErrorObject( String.format( "%s:\n%s", ee, qt ), e.getCause().getMessage() );
+                addErrorObject( ee, e );
             }
         } catch ( Exception e ) {
             addErrorObject( ee, e );

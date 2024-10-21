@@ -39,9 +39,32 @@ import java.util.concurrent.TimeoutException;
 public interface ExpressionDataFileService {
 
     /**
+     * A locked path.
+     */
+    interface LockedPath extends AutoCloseable {
+
+        /**
+         * Retrieve the path being locked.
+         */
+        Path getPath();
+
+        /**
+         * Indicate if the lock is shared.
+         */
+        boolean isShared();
+
+        /**
+         * Release the lock.
+         */
+        @Override
+        void close();
+    }
+
+    /**
      * Delete any existing coexpression, data, or differential expression data files.
      * <p>
-     * Experiment metadata are not deleted.
+     * Experiment metadata are not deleted, use {@link #deleteMetadataFile(ExpressionExperiment, ExpressionExperimentMetaFileType)}
+     * for that purpose.
      */
     void deleteAllFiles( ExpressionExperiment ee );
 
@@ -68,10 +91,14 @@ public interface ExpressionDataFileService {
      */
     Optional<Path> getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type ) throws IOException;
 
+    Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type, boolean shared ) throws IOException;
+
     /**
      * Copy a metadata file to the location of a given metadata type.
      * <p>
      * Writing to a directory (i.e. {@link ExpressionExperimentMetaFileType#isDirectory()} is true) is not supported.
+     * <p>
+     * If the metadata file is in use, this method will block until it is released.
      * @param existingFile file to copy, must exist
      * @param forceWrite   override any existing metadata file
      * @return the resulting metadata file, which can also be retrieved with {@link #getMetadataFile(ExpressionExperiment, ExpressionExperimentMetaFileType)}
@@ -82,6 +109,8 @@ public interface ExpressionDataFileService {
      * Delete a metadata file.
      * <p>
      * If the metadata file is organized as a directory, it is deleted recursively.
+     * <p>
+     * If the metadata file is in use, this method will block until it is released.
      * @param type the type of metadata file to delete
      * @return true if a metadata file was deleted
      *
@@ -89,7 +118,24 @@ public interface ExpressionDataFileService {
     boolean deleteMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type ) throws IOException;
 
     /**
-     * Locate a data file.
+     * Locate any data file in the data directory.
+     * <p>
+     * A shared lock is acquired on the path and must be released when reading is done.
+     */
+    LockedPath getDataFile( String filename );
+
+    /**
+     * Locate a raw data file.
+     * <p>
+     * If the data file is being written, this method will block until it is completed.
+     * @see #writeOrLocateRawExpressionDataFile(ExpressionExperiment, QuantitationType, boolean)
+     */
+    Path getDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type );
+
+    Path getDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException;
+
+    /**
+     * Locate a processed data file.
      * <p>
      * If the data file is being written, this method will block until it is completed.
      * @see #writeOrLocateRawExpressionDataFile(ExpressionExperiment, QuantitationType, boolean)
@@ -97,38 +143,28 @@ public interface ExpressionDataFileService {
     Optional<Path> getDataFile( ExpressionExperiment ee, boolean filtered, ExpressionExperimentDataFileType type );
 
     /**
-     * Locate an data file.
+     * Delete a raw data file if it exists.
      * <p>
-     * If the data file is being written, this method will block until it is completed.
-     * @see #writeOrLocateRawExpressionDataFile(ExpressionExperiment, QuantitationType, boolean)
-     */
-    Path getDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type );
-
-    /**
-     * Delete a data file if it exists.
+     * If the data file is in use, this method will block until it is released.
      * @return true if the file was deleted, false if it did not exist
      */
     boolean deleteDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type ) throws IOException;
 
     /**
+     * Delete a processed data file if it exists.
+     * <p>
+     * If the data file is in use, this method will block until it is released.
+     * @return true if the file was deleted, false if it did not exist
+     */
+    boolean deleteDataFile( ExpressionExperiment ee, boolean filtered, ExpressionExperimentDataFileType type ) throws IOException;
+
+    /**
      * Locate an experimental design file.
+     * <p>
+     * If the data file is being written, this method will block until it is completed.
      * @see #writeOrLocateDesignFile(ExpressionExperiment, boolean)
      */
     Optional<Path> getExperimentalDesignFile( ExpressionExperiment ee );
-
-    /**
-     * Create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
-     * expression applied (currently supports default settings only).
-     *
-     * @param ee       the experiment
-     * @param compress compress?
-     * @param fileName file name
-     * @param filtered fitlered?
-     * @return file, or empty if the experiment has no processed expression data
-     * @throws IOException when there are IO problems
-     */
-    Optional<Path> writeProcessedExpressionDataFile( ExpressionExperiment ee, boolean filtered, String fileName, boolean compress )
-            throws IOException, FilteringException;
 
     /**
      * Write single-cell expression data to a given writer for a given quantitation type in tabular format.
@@ -147,8 +183,6 @@ public interface ExpressionDataFileService {
      * @see ubic.gemma.core.datastructure.matrix.io.TabularMatrixWriter
      */
     Path writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) throws IOException;
-
-    Path writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException, IOException;
 
     /**
      * Write single-cell expression data to a given output stream for a given quantitation type.
@@ -232,14 +266,14 @@ public interface ExpressionDataFileService {
      * The file will be regenerated even if one already exists if the forceWrite parameter is true, or if there was
      * a recent change (more recent than the last modified date of the existing file) to any of the experiments platforms.
      *
+     * @param ee         the experiment
      * @param filtered   filtered
      * @param forceWrite force re-write even if file already exists and is up to date.
-     * @param ee         the experiment
      * @return file, or empty if the experiment has no processed vectors
      */
-    Optional<Path> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException, IOException;
+    Optional<Path> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean filtered, boolean forceWrite ) throws FilteringException, IOException;
 
-    Optional<Path> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered, int timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException, FilteringException;
+    Optional<Path> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean filtered, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException, FilteringException;
 
     /**
      * Locate or create a new data file for the given quantitation type. The output will include gene information if it

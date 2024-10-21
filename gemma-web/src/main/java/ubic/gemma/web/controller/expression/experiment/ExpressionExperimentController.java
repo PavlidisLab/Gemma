@@ -39,6 +39,7 @@ import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.report.WhatsNew;
@@ -1534,7 +1535,7 @@ public class ExpressionExperimentController {
      *
      * @param id id
      */
-    private void updateCorrelationMatrixFile( Long id ) {
+    private void updateCorrelationMatrixFile( Long id ) throws FilteringException {
         ExpressionExperiment ee = getExperimentById( id, true );
         try {
             sampleCoexpressionAnalysisService.compute( ee, sampleCoexpressionAnalysisService.prepare( ee ) );

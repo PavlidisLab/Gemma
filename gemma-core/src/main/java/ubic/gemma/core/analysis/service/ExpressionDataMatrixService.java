@@ -68,6 +68,7 @@ public interface ExpressionDataMatrixService {
     /**
      * Obtain a raw expression data matrix for a given quantitation type
      */
+    @Nullable
     ExpressionDataDoubleMatrix getRawExpressionDataMatrix( ExpressionExperiment ee, QuantitationType quantitationType );
 
     DoubleMatrix<Gene, ExpressionExperiment> getRankMatrix( Collection<Gene> genes,

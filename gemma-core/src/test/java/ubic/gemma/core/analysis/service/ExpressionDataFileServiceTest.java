@@ -120,6 +120,21 @@ public class ExpressionDataFileServiceTest extends AbstractJUnit4SpringContextTe
     private Path appdataHome;
 
     @Test
+    public void testDeleteAll() throws IOException {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setShortName( "test" );
+        Path reportFile = appdataHome.resolve( "metadata/test/MultiQCReports/multiqc_report.html" );
+        PathUtils.createParentDirectories( reportFile );
+        PathUtils.touch( reportFile );
+        assertThat( reportFile ).exists();
+
+        expressionDataFileService.deleteAllFiles( ee );
+
+        // make sure that metadata is not touched
+        assertThat( reportFile ).exists();
+    }
+
+    @Test
     public void testGetMetadata() throws IOException {
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setShortName( "test" );
@@ -163,7 +178,10 @@ public class ExpressionDataFileServiceTest extends AbstractJUnit4SpringContextTe
         Path reportFile = appdataHome.resolve( "metadata/test/MultiQCReports/multiqc_report.html" );
         PathUtils.createParentDirectories( reportFile );
         PathUtils.touch( reportFile );
-        expressionDataFileService.deleteMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT );
+        assertThat( expressionDataFileService.deleteMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT ) )
+                .isTrue();
+        assertThat( expressionDataFileService.deleteMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT ) )
+                .isFalse();
         assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT ) )
                 .hasValue( reportFile );
     }

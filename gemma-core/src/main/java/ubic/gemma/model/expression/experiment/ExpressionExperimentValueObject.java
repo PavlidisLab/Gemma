@@ -15,9 +15,6 @@ import org.hibernate.Hibernate;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
-import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
-import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
-import ubic.gemma.model.expression.bioAssayData.SingleCellDimensionValueObject;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.genome.TaxonValueObject;
@@ -89,13 +86,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<CharacteristicValueObject> characteristics;
-
-    /**
-     * The single-cell dimension of the preferred single-cell vectors.
-     */
-    @Nullable
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private SingleCellDimensionValueObject singleCellDimension;
 
     /**
      * Required when using the class as a spring bean.
@@ -176,11 +166,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         }
     }
 
-    public ExpressionExperimentValueObject( ExpressionExperiment ee, SingleCellDimension singleCellDimension, CellTypeAssignment cellTypeAssignment ) {
-        this( ee );
-        this.singleCellDimension = new SingleCellDimensionValueObject( singleCellDimension, cellTypeAssignment );
-    }
-
     public ExpressionExperimentValueObject( ExpressionExperiment ee ) {
         this( ee, false, false );
     }
@@ -235,7 +220,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.isShared = vo.getIsShared();
         this.geeq = vo.getGeeq();
         this.suitableForDEA = vo.getSuitableForDEA();
-        this.singleCellDimension = vo.getSingleCellDimension();
         this.characteristics = vo.getCharacteristics();
     }
 

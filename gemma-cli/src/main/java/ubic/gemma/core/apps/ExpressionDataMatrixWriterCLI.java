@@ -25,11 +25,15 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.io.IOException;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collection;
 
 /**
@@ -87,10 +91,10 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
         } else {
             fileName = FileTools.cleanForFileName( ee.getShortName() ) + ".txt";
         }
-        try {
-            fs.writeProcessedExpressionDataFile( ee, filter, fileName, false )
-                    .orElseThrow( () -> new RuntimeException( "No processed expression data vectors to write." ) );
-        } catch ( IOException e ) {
+        try ( Writer writer = Files.newBufferedWriter( Paths.get( fileName ) ) ) {
+            int written = fs.writeProcessedExpressionData( ee, filter, writer );
+            addSuccessObject( ee, "Wrote " + written + " vectors to " + fileName );
+        } catch ( IOException | FilteringException e ) {
             throw new RuntimeException( e );
         }
     }

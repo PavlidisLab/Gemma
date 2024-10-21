@@ -20,6 +20,7 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedSampleCorrelationAnalysisEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
@@ -55,7 +56,6 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
         if ( this.noNeedToRun( ee, null ) ) {
             return;
         }
-
         ee = eeService.thawLiter( ee );
         try {
             if ( isForce() ) {
@@ -65,6 +65,9 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
                     sampleCoexpressionAnalysisService.compute( ee, sampleCoexpressionAnalysisService.prepare( ee ) );
                 }
             }
+        } catch ( FilteringException e ) {
+            auditTrailService.addUpdateEvent( ee, FailedSampleCorrelationAnalysisEvent.class, null, e );
+            throw new RuntimeException( e );
         } catch ( Exception e ) {
             auditTrailService.addUpdateEvent( ee, FailedSampleCorrelationAnalysisEvent.class, null, e );
             throw e;

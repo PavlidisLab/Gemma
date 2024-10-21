@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * @author poirigui
  */
@@ -20,6 +22,11 @@ import java.util.stream.Collectors;
 public class CellTypeAssignmentValueObject extends AnalysisValueObject<CellTypeAssignment> {
 
     /**
+     * A set of cell types that are assigned to individual cells.
+     */
+    private Set<CharacteristicValueObject> cellTypes;
+
+    /**
      * A list of IDs, one-per-cell, that refers to one of the cell type labels in {@link #cellTypes}.
      * <p>
      * {@code null} is used to indicate an unknown cell type.
@@ -27,24 +34,24 @@ public class CellTypeAssignmentValueObject extends AnalysisValueObject<CellTypeA
     private List<Long> cellTypeIds;
 
     /**
-     * A set of cell types that are assigned to individual cells.
+     * Indicate if this assignment is the preferred one.
      */
-    private Set<CharacteristicValueObject> cellTypes;
+    private boolean isPreferred;
 
     public CellTypeAssignmentValueObject( CellTypeAssignment cellTypeAssignment ) {
         super( cellTypeAssignment );
+        cellTypes = cellTypeAssignment.getCellTypes().stream()
+                .map( CharacteristicValueObject::new )
+                .collect( Collectors.toSet() );
         try {
             cellTypeIds = Arrays.stream( cellTypeAssignment.getCellTypeIndices() )
-                    .mapToObj( cellTypeAssignment::getCellType )
-                    .map( characteristic -> characteristic != null ? characteristic.getId() : null )
+                    .mapToObj( i -> i != -1 ? requireNonNull( cellTypeAssignment.getCellTypes().get( i ).getId() ) : null )
                     .collect( Collectors.toList() );
         } catch ( IndexOutOfBoundsException e ) {
             // this may happen because getCellType() can fail if the data we have is incorrect, but we don't want to
             // break the VO serialization which would break the REST API.
-            log.warn( "Cell type IDs is invalid for " + cellTypeAssignment + "." );
+            log.warn( "Cell type indices are invalid for " + cellTypeAssignment + "." );
         }
-        cellTypes = cellTypeAssignment.getCellTypes().stream()
-                .map( CharacteristicValueObject::new )
-                .collect( Collectors.toSet() );
+        isPreferred = cellTypeAssignment.isPreferred();
     }
 }

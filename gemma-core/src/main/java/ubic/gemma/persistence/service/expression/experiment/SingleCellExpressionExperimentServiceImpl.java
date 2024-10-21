@@ -89,7 +89,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional(readOnly = true)
     public Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt, int fetchSize ) {
-        return expressionExperimentDao.getNumberOfNonZeroesBySample(ee, qt, fetchSize );
+        return expressionExperimentDao.getNumberOfNonZeroesBySample( ee, qt, fetchSize );
     }
 
     @Override
@@ -340,11 +340,11 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SingleCellDimension getSingleCellDimensionWithCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt ) {
         SingleCellDimension scd = expressionExperimentDao.getSingleCellDimension( ee, qt );
         if ( scd == null ) {
-            // FIXME: it's possible to create a QT for an empty set of vectors, which would result in no SCD
-            throw new IllegalStateException( "Vectors for " + qt + " do not have a single-cell dimension." );
+            throw new IllegalStateException( qt + " does not have an associated single-cell dimension." );
         }
         Hibernate.initialize( scd.getCellTypeAssignments() );
         Hibernate.initialize( scd.getCellLevelCharacteristics() );

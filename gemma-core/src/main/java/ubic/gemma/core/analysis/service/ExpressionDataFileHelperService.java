@@ -14,7 +14,6 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -31,7 +30,10 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -73,13 +75,7 @@ class ExpressionDataFileHelperService {
         return vectors;
     }
 
-    public Collection<BulkExpressionDataVector> getVectors( ExpressionExperiment ee, QuantitationType type, Map<CompositeSequence, String[]> geneAnnotations ) {
-        Collection<BulkExpressionDataVector> vectors = getVectors( ee, type );
-        geneAnnotations.putAll( getGeneAnnotationsAsStringsByProbe( this.getArrayDesigns( vectors ) ) );
-        return vectors;
-    }
-
-    public Optional<ExpressionDataDoubleMatrix> getDataMatrix( ExpressionExperiment ee, boolean filtered ) throws FilteringException {
+    public ExpressionDataDoubleMatrix getDataMatrix( ExpressionExperiment ee, boolean filtered ) throws FilteringException {
         ee = expressionExperimentService.thawLite( ee );
         ExpressionDataDoubleMatrix matrix;
         if ( filtered ) {
@@ -90,20 +86,27 @@ class ExpressionDataFileHelperService {
         } else {
             matrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
         }
-        return Optional.ofNullable( matrix );
-    }
-
-    public Optional<ExpressionDataDoubleMatrix> getDataMatrix( ExpressionExperiment ee, boolean filtered, Map<CompositeSequence, String[]> geneAnnotations ) throws FilteringException {
-        Optional<ExpressionDataDoubleMatrix> matrix = getDataMatrix( ee, filtered );
-        if ( matrix.isPresent() ) {
-            Collection<ArrayDesign> arrayDesigns = expressionExperimentService.getArrayDesignsUsed( ee );
-            geneAnnotations.putAll( getGeneAnnotationsAsStringsByProbe( arrayDesigns ) );
+        if ( matrix == null ) {
+            throw new IllegalStateException( ee + " does not have processed data vectors." );
         }
         return matrix;
     }
 
+    public ExpressionDataDoubleMatrix getDataMatrix( ExpressionExperiment ee, boolean filtered, Map<CompositeSequence, String[]> geneAnnotations ) throws FilteringException {
+        ExpressionDataDoubleMatrix matrix = getDataMatrix( ee, filtered );
+        Set<ArrayDesign> ads = matrix.getDesignElements().stream()
+                .map( CompositeSequence::getArrayDesign )
+                .collect( Collectors.toSet() );
+        geneAnnotations.putAll( getGeneAnnotationsAsStringsByProbe( ads ) );
+        return matrix;
+    }
+
     public ExpressionDataDoubleMatrix getDataMatrix( ExpressionExperiment ee, QuantitationType qt, Map<CompositeSequence, String[]> geneAnnotations ) {
+        ee = expressionExperimentService.thawLite( ee );
         ExpressionDataDoubleMatrix matrix = expressionDataMatrixService.getRawExpressionDataMatrix( ee, qt );
+        if ( matrix == null ) {
+            throw new IllegalStateException( ee + " does not have raw data vectors for " + qt + "." );
+        }
         Set<ArrayDesign> ads = matrix.getDesignElements().stream()
                 .map( CompositeSequence::getArrayDesign )
                 .collect( Collectors.toSet() );
@@ -176,14 +179,6 @@ class ExpressionDataFileHelperService {
             }
         }
         return annotations;
-    }
-
-    private Collection<ArrayDesign> getArrayDesigns( Collection<? extends DesignElementDataVector> vectors ) {
-        Collection<ArrayDesign> ads = new HashSet<>();
-        for ( DesignElementDataVector v : vectors ) {
-            ads.add( v.getDesignElement().getArrayDesign() );
-        }
-        return ads;
     }
 
     public Collection<CoexpressionValueObject> getGeneLinks( ExpressionExperiment ee ) {

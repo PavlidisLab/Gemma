@@ -1831,7 +1831,6 @@ public class ExpressionExperimentDaoImpl
     @Override
     protected void postProcessValueObjects( List<ExpressionExperimentValueObject> results ) {
         populateArrayDesignCount( results );
-        populateSingleCellMetadata( results );
     }
 
     @Override
@@ -2957,19 +2956,6 @@ public class ExpressionExperimentDaoImpl
             Assert.isTrue( vectors.stream().map( DesignElementDataVector::getData ).allMatch( b -> b.length == expectedVectorSizeInBytes ),
                     "All vectors must contain " + bad.getBioAssays().size() + " values, expected size is " + expectedVectorSizeInBytes + " B." );
         }
-    }
-
-
-    private void populateSingleCellMetadata( Collection<ExpressionExperimentValueObject> eevos ) {
-        if ( eevos.isEmpty() ) {
-            return;
-        }
-        Map<Long, SingleCellDimension> dims = getPreferredSingleCellDimensions( IdentifiableUtils.getIds( eevos ) );
-        Map<SingleCellDimension, CellTypeAssignment> ctas = getPreferredCellTypeAssignments( dims.values() );
-        Map<Long, ExpressionExperimentValueObject> voById = IdentifiableUtils.getIdMap( eevos );
-        dims.forEach( ( eeId, dim ) -> {
-            voById.get( eeId ).setSingleCellDimension( new SingleCellDimensionValueObject( dim, ctas.get( dim ) ) );
-        } );
     }
 
     private Map<Long, SingleCellDimension> getPreferredSingleCellDimensions( Collection<Long> eeIds ) {

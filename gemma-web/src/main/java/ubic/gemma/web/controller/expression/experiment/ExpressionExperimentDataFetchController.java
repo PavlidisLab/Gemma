@@ -46,6 +46,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.util.EntityNotFoundException;
 
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
@@ -90,7 +91,12 @@ public class ExpressionExperimentDataFetchController {
         }
         // exclude any paths leading to the filename
         filename = FilenameUtils.getName( filename );
-        this.download( dataDir.resolve( filename ), null, MediaType.APPLICATION_OCTET_STREAM_VALUE, response );
+        try ( ExpressionDataFileService.LockedPath file = expressionDataFileService.getDataFile( filename ) ) {
+            if ( !Files.exists( file.getPath() ) ) {
+                throw new EntityNotFoundException( "There is not data file named " + filename + " available for download." );
+            }
+            this.download( file.getPath(), null, MediaType.APPLICATION_OCTET_STREAM_VALUE, response );
+        }
     }
 
     @RequestMapping(value = "/getMetaData.html", method = { RequestMethod.GET, RequestMethod.HEAD })
@@ -100,9 +106,15 @@ public class ExpressionExperimentDataFetchController {
         if ( type == null ) {
             throw new IllegalArgumentException( "The experiment ID and file type ID parameters must be valid identifiers." );
         }
-        Path file = expressionDataFileService.getMetadataFile( ee, type )
-                .orElseThrow( () -> new EntityNotFoundException( ee.getShortName() + " does not have metadata of type " + type + "." ) );
-        this.download( file, type.getDownloadName( ee ), type.getContentType(), response );
+        String missingMessage = ee.getShortName() + " does not have metadata of type " + type + ".";
+        try ( ExpressionDataFileService.LockedPath file = expressionDataFileService.getMetadataFile( ee, type, true )
+                // only happens for metadata files organized as directories
+                .orElseThrow( () -> new EntityNotFoundException( missingMessage ) ) ) {
+            if ( !Files.exists( file.getPath() ) ) {
+                throw new EntityNotFoundException( missingMessage );
+            }
+            this.download( file.getPath(), type.getDownloadName( ee ), type.getContentType(), response );
+        }
     }
 
     /**
@@ -179,7 +191,7 @@ public class ExpressionExperimentDataFetchController {
      * @param response     the http response to download to.
      * @throws IOException if the file in the given path can not be read.
      */
-    private void download( Path f, String downloadName, String contentType, HttpServletResponse response ) throws IOException {
+    private void download( Path f, @Nullable String downloadName, String contentType, HttpServletResponse response ) throws IOException {
         if ( StringUtils.isBlank( downloadName ) ) {
             downloadName = f.getFileName().toString();
         }
@@ -339,7 +351,7 @@ public class ExpressionExperimentDataFetchController {
 
                         try {
                             ExpressionExperiment finalEe1 = ee;
-                            f = expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, filtered )
+                            f = expressionDataFileService.writeOrLocateProcessedDataFile( ee, filtered, false )
                                     .orElseThrow( () -> new IllegalStateException( finalEe1 + " does not have an experimental design" ) );
                         } catch ( FilteringException e ) {
                             throw new IllegalStateException( "The expression experiment data matrix could not be filtered for " + ee + ".", e );
@@ -437,12 +449,11 @@ public class ExpressionExperimentDataFetchController {
             log.debug( "Finished writing and downloading differential expression file(s); done in " + watch.getTime()
                     + " milliseconds" );
 
-            if ( files.isEmpty() ) {
-                throw new EntityNotFoundException( "No data available (either due to no analyses being present, lack of authorization, or use of an invalid entity identifier)" );
-                // } else if ( files.size() > 1 ) {
-                // throw new UnsupportedOperationException(
-                // "Sorry, you can't get multiple analyses at once using this method." );
-            }
+            // if ( files.isEmpty() ) {
+            //    throw new EntityNotFoundException( "No data available (either due to no analyses being present, lack of authorization, or use of an invalid entity identifier)" );
+            // } else if ( files.size() > 1 ) {
+            //     throw new UnsupportedOperationException( "Sorry, you can't get multiple analyses at once using this method." );
+            // }
 
             ModelAndView mav = new ModelAndView(
                     new RedirectView( "/getData.html?file=" + files.iterator().next().getFileName(), true ) );

@@ -68,7 +68,6 @@ import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
-import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
@@ -192,13 +191,8 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
-        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = null;
-        try {
-            sampleCorrelationMatrix = sampleCoexpressionAnalysisService
-                    .loadRegressedMatrix( ee );
-        } catch ( FilteringException e ) {
-            log.warn( "Error when filtering the expression data matrix for " + ee + ", nothing will be displayed.", e );
-        }
+        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionAnalysisService
+                .loadRegressedMatrix( ee );
         if ( sampleCorrelationMatrix == null || sampleCorrelationMatrix.rows() < 3 ) {
             return null;
         }
