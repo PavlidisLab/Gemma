@@ -22,7 +22,6 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.loader.expression.DataUpdater;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
@@ -56,7 +55,6 @@ import static org.junit.Assert.*;
 @Category(GeoTest.class)
 public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
-    private static final ByteArrayConverter bac = new ByteArrayConverter();
     @Autowired
     private MeanVarianceService meanVarianceService;
     @Autowired
@@ -115,8 +113,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         // convert byte[] to array[]
         // warning: order may have changed
-        double[] means = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getMeans() );
-        double[] variances = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getVariances() );
+        double[] means = mvr.getMeans();
+        double[] variances = mvr.getVariances();
         Arrays.sort( means );
         Arrays.sort( variances );
 
@@ -158,10 +156,9 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         MeanVarianceRelation mvr = meanVarianceService.create( ee, true );
 
-        // convert byte[] to array[]
         // warning: order may have changed
-        double[] means = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getMeans() );
-        double[] variances = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getVariances() );
+        double[] means = mvr.getMeans();
+        double[] variances = mvr.getVariances();
         Arrays.sort( means );
         Arrays.sort( variances );
 
@@ -244,10 +241,9 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         MeanVarianceRelation mvr = meanVarianceService.create( ee, true );
 
-        // convert byte[] to array[]
         // warning: order may have changed
-        double[] means = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getMeans() );
-        double[] variances = MeanVarianceServiceTest.bac.byteArrayToDoubles( mvr.getVariances() );
+        double[] means = mvr.getMeans();
+        double[] variances = mvr.getVariances();
         if ( means != null ) {
             Arrays.sort( means );
         }
@@ -353,6 +349,6 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         quantitationTypeService.update( qt );
 
         // important bit, need to createProcessedVectors manually before using it
-        processedExpressionDataVectorService.createProcessedDataVectors( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, false );
     }
 }

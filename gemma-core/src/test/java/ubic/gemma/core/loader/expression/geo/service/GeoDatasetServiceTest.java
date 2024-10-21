@@ -24,11 +24,13 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.TwoChannelMissingValues;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
@@ -43,7 +45,6 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -56,8 +57,9 @@ import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataV
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 
-import java.io.File;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
 
@@ -234,7 +236,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         qts = eeService.getQuantitationTypes( ee );
         assertEquals( 17, qts.size() ); // 16 that were imported plus the detection call we added.
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
 
         ee = eeService.thaw( ee );
         Collection<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();
@@ -250,17 +252,17 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         ee = this.eeService.thawLite( ee );
         qts = eeService.getQuantitationTypes( ee );
         assertEquals( 18, qts.size() );
-        File f = dataFileService.writeOrLocateProcessedDataFile( ee, true, true ).orElse( null );
+        Path f = dataFileService.writeOrLocateProcessedDataFile( ee, true, true ).orElse( null );
         assertNotNull( f );
-        assertTrue( f.canRead() );
-        assertTrue( f.length() > 0 );
+        assertTrue( Files.exists( f ) );
+        assertTrue( Files.size( f ) > 0 );
     }
 
     /*
      * For bug 2312 - qts getting dropped.
      */
     @Test
-    public void testFetchAndLoadGSE18707() {
+    public void testFetchAndLoadGSE18707() throws QuantitationTypeConversionException {
         setUpDatasetFromGeo( "GSE18707" );
 
         // Mouse430A_2.
@@ -272,7 +274,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         QuantitationType qt = qts.iterator().next();
         assertEquals( "Processed Affymetrix Rosetta intensity values", qt.getDescription() );
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
         ee = eeService.thaw( ee );
         Set<ProcessedExpressionDataVector> dataVectors = ee.getProcessedExpressionDataVectors();
         assertEquals( 100, ee.getNumberOfDataVectors().intValue() );
@@ -334,7 +336,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
 
-        ExpressionDataMatrix<Double> matrix = builder.getPreferredData();
+        BulkExpressionDataMatrix<Double> matrix = builder.getPreferredData();
 
         assertNotNull( matrix );
 
@@ -360,7 +362,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
          * Should load okay, but should not load the data.
          */
         try {
-            processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+            processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
             fail( "Should not have any data vectors for exon arrays on first loading" );
         } catch ( Exception e ) {
             // OK
@@ -400,7 +402,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
          * Should load okay, even though it has no data. See bug 3981.
          */
         try {
-            processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+            processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
             fail( "Should not have any data vectors for exon arrays on first loading" );
         } catch ( Exception e ) {
             // OK
@@ -427,14 +429,14 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         log.debug( buf.toString() );
     }
 
-    private void testMatrixValue( ExpressionExperiment exp, ExpressionDataMatrix<Double> matrix, String probeToTest,
+    private void testMatrixValue( ExpressionExperiment exp, BulkExpressionDataMatrix<Double> matrix, String probeToTest,
             String sampleToTest, double expectedValue ) {
 
         CompositeSequence soughtDesignElement = null;
         BioAssay soughtBioAssay = null;
         Collection<RawExpressionDataVector> vectors = exp.getRawExpressionDataVectors();
         vectors = rawExpressionDataVectorService.thaw( vectors );
-        for ( DesignElementDataVector vector : vectors ) {
+        for ( RawExpressionDataVector vector : vectors ) {
             CompositeSequence de = vector.getDesignElement();
             if ( de.getName().equals( probeToTest ) ) {
                 soughtDesignElement = de;

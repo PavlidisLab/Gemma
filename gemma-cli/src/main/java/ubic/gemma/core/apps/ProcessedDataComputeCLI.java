@@ -23,8 +23,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
-import ubic.gemma.core.analysis.preprocess.QuantitationMismatchPreprocessingException;
-import ubic.gemma.core.datastructure.matrix.SuspiciousValuesForQuantitationException;
+import ubic.gemma.core.analysis.preprocess.detect.QuantitationMismatchPreprocessingException;
+import ubic.gemma.core.analysis.preprocess.detect.SuspiciousValuesForQuantitationException;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -90,8 +90,8 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
-        if ( expressionExperimentService.isTroubled( ee ) && !force ) {
-            log.info( "Skipping troubled experiment " + ee.getShortName() );
+        if ( expressionExperimentService.isTroubled( ee ) && !isForce() ) {
+            addErrorObject( ee, "Skipping troubled experiment " + ee.getShortName() + ", use -" + FORCE_OPTION + " to process." );
             return;
         }
         try {

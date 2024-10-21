@@ -2,6 +2,8 @@ package ubic.gemma.core.util;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import ubic.gemma.core.util.test.category.IntegrationTest;
 
 import java.io.IOException;
 
@@ -10,6 +12,7 @@ import static org.assertj.core.api.InstanceOfAssertFactories.list;
 import static org.assertj.core.api.InstanceOfAssertFactories.type;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
+@Category(IntegrationTest.class)
 public class GemmaRestApiClientTest {
 
     private static final String GEMMA_HOST_URL = "https://gemma.msl.ubc.ca";

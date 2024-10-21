@@ -79,4 +79,18 @@ public class SampleCoexpressionAnalysis extends SingleExperimentAnalysis {
     public SampleCoexpressionMatrix getBestCoexpressionMatrix() {
         return regressedCoexpressionMatrix != null ? regressedCoexpressionMatrix : fullCoexpressionMatrix;
     }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof SampleCoexpressionAnalysis ) )
+            return false;
+        SampleCoexpressionAnalysis that = ( SampleCoexpressionAnalysis ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return this.getId().equals( that.getId() );
+        } else {
+            return false;
+        }
+    }
 }

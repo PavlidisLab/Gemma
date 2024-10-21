@@ -15,6 +15,10 @@
       <property name="description" type="org.hibernate.type.MaterializedClobType">
          <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text"/>
       </property>
+      <many-to-one name="sourceBioMaterial" class="ubic.gemma.model.expression.biomaterial.BioMaterial"
+                   lazy="proxy" foreign-key="BIO_MATERIAL_SOURCE_BIO_MATERIAL_FKC">
+         <column name="SOURCE_BIO_MATERIAL_FK" not-null="false" sql-type="BIGINT"/>
+      </many-to-one>
       <many-to-one name="sourceTaxon" class="ubic.gemma.model.genome.Taxon" lazy="proxy" fetch="select">
          <column name="SOURCE_TAXON_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>

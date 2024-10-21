@@ -26,6 +26,7 @@ import ubic.gemma.model.common.Identifiable;
 
 import java.io.Serializable;
 import java.util.Comparator;
+import java.util.Objects;
 
 /**
  * <p>
@@ -70,20 +71,7 @@ public class DatabaseEntry implements Identifiable, Serializable {
 
     @Override
     public int hashCode() {
-        if ( this.getId() != null )
-            return super.hashCode();
-
-        int hashCode = 0;
-        if ( this.getAccession() != null )
-            hashCode = 29 * this.getAccession().hashCode();
-
-        if ( this.getAccessionVersion() != null )
-            hashCode += this.getAccessionVersion().hashCode();
-
-        if ( this.getExternalDatabase() != null )
-            hashCode += this.getExternalDatabase().hashCode();
-
-        return hashCode;
+        return Objects.hash( getAccession(), getAccessionVersion(), getExternalDatabase() );
     }
 
     @Override

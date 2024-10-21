@@ -25,10 +25,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixBuilder;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -183,6 +185,8 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 BioMaterial bm = ba.getSampleUsed();
 
                 // identify samples we want to include
+                // TODO: support sub-biomaterials and use getAllFactorValues() instead, we also need to implement
+                //       cloneBioMaterial() accordingly
                 for ( FactorValue fv : bm.getFactorValues() ) {
                     if ( fv.equals( splitValue ) ) {
                         assert !bms.contains( bm );
@@ -535,7 +539,9 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         clone.setSequenceReadCount( ba.getSequenceReadCount() );
         clone.setSequenceReadLength( ba.getSequenceReadLength() );
 
-        clone.setSampleUsed( this.cloneBioMaterial( ba.getSampleUsed(), clone ) );
+        BioMaterial sampleClone = this.cloneBioMaterial( ba.getSampleUsed() );
+        clone.setSampleUsed( sampleClone );
+        sampleClone.getBioAssaysUsedIn().add( clone );
         clone.setAccession( this.cloneAccession( ba.getAccession() ) );
 
         return clone;
@@ -553,8 +559,8 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         return clone;
     }
 
-    private BioMaterial cloneBioMaterial( BioMaterial bm, BioAssay ba ) {
-        assert ba.getId() == null; // should be a clone
+    private BioMaterial cloneBioMaterial( BioMaterial bm ) {
+        Assert.isNull( bm.getSourceBioMaterial(), "Cannot split an experiment with biomaterials that have a source biomaterial." );
         BioMaterial clone = BioMaterial.Factory.newInstance();
         clone.setName( bm.getName() + " (Split)" ); // it is important we make a new name, so we don't confuse this with the previous one in findOrCreate();
         clone.setDescription( bm.getDescription() );
@@ -562,7 +568,6 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         clone.setExternalAccession( this.cloneAccession( bm.getExternalAccession() ) );
         clone.setSourceTaxon( bm.getSourceTaxon() );
         clone.setTreatments( this.cloneTreatments( bm.getTreatments() ) );
-        clone.getBioAssaysUsedIn().add( ba );
         // Factor values are done separately
         return clone;
     }

@@ -152,9 +152,6 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
 
     @Override
     public int hashCode() {
-        if ( this.getId() != null ) {
-            return super.hashCode();
-        }
         return Objects.hash( StringUtils.lowerCase( categoryUri != null ? categoryUri : category ),
                 StringUtils.lowerCase( valueUri != null ? valueUri : value ) );
     }

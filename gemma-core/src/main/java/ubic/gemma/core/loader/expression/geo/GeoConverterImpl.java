@@ -22,12 +22,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceProcessingServiceImpl;
 import ubic.gemma.core.loader.expression.geo.model.*;
 import ubic.gemma.core.loader.expression.geo.model.GeoDataset.ExperimentType;
@@ -35,6 +35,7 @@ import ubic.gemma.core.loader.expression.geo.model.GeoDataset.PlatformType;
 import ubic.gemma.core.loader.expression.geo.model.GeoReplication.ReplicationType;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries.SeriesType;
 import ubic.gemma.core.loader.expression.geo.model.GeoVariable.VariableType;
+import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
 import ubic.gemma.core.loader.expression.geo.util.GeoConstants;
 import ubic.gemma.core.loader.util.parser.ExternalDatabaseUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -66,26 +67,30 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static ubic.gemma.persistence.util.ByteArrayUtils.*;
+
 /**
- * Convert GEO domain objects into Gemma objects. Usually we trigger this by passing in GeoSeries objects.
- * GEO has four basic kinds of objects: Platforms (ArrayDesigns), Samples (BioAssays), Series (Experiments) and DataSets
- * (which are curated Experiments). Note that a sample can belong to more than one series. A series can include more
- * than one dataset. GEO also supports the concept of a superseries. See
- * http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html.
+ * Convert GEO domain objects into Gemma objects.
+ * <p>
+ * Usually we trigger this by passing in {@link GeoSeries} objects.
+ * <p>
+ * GEO has four basic kinds of objects: Platforms ({@link ArrayDesign}), Samples ({@link BioMaterial}), Series ({@link ExpressionExperiment})
+ * and DataSets (which are curated {@link ExpressionExperiment}). Note that a sample can belong to more than one series.
+ * A series can include more than one dataset. GEO also supports the concept of a super-series. See <a href="https://www.ncbi.nlm.nih.gov/geo/info/soft.html">SOFT submission instructions</a>.
+ * <p>
  * A curated expression data set is at first represented by a GEO "GDS" number (a curated dataset), which maps to a
  * series (GSE). HOWEVER, multiple datasets may go together to form a series (GSE). This can happen when the "A" and "B"
- * arrays were both run on the same samples. Thus we actually normally go by GSE.
+ * arrays were both run on the same samples. Thus, we actually normally go by GSE.
+ * <p>
  * This service can be used in database-aware or unaware states. However, it has prototype scope as it has some 'global'
  * data structures used during processing.
  *
- * @author keshav
+ * @author kesv
  * @author pavlidis
  */
 @Component
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 public class GeoConverterImpl implements GeoConverter {
-
-    private static final int DEFAULT_DEFINITION_OF_TOO_MANY_ELEMENTS = 100000;
 
     /**
      * This string is inserted into the descriptions of constructed biomaterials.
@@ -111,41 +116,49 @@ public class GeoConverterImpl implements GeoConverter {
     private static final String RAT = "Rattus norvegicus";
     private static final Log log = LogFactory.getLog( ArrayDesignSequenceProcessingServiceImpl.class.getName() );
     private static final Map<String, String> organismDatabases = new HashMap<>();
+    private static final ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
 
     static {
         GeoConverterImpl.organismDatabases.put( "Saccharomyces cerevisiae", "SGD" );
         GeoConverterImpl.organismDatabases.put( "Schizosaccharomyces pombe", "GeneDB" );
     }
 
-    private final ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
-    private final Map<String, Taxon> taxonScientificNameMap = new HashMap<>();
-    private final Map<String, Taxon> taxonCommonNameMap = new HashMap<>();
-    /**
-     * More than this and we apply stricter selection criteria for choosing elements to keep on a platform.
-     */
-    private int tooManyElements = Settings.getInt( "geo.platform.import.maxelements", GeoConverterImpl.DEFAULT_DEFINITION_OF_TOO_MANY_ELEMENTS );
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
     @Autowired
     private TaxonService taxonService;
-    private ExternalDatabase geoDatabase;
-    private Map<String, Map<String, CompositeSequence>> platformDesignElementMap = new HashMap<>();
-    private Collection<Object> results = new HashSet<>();
-    private Map<String, ArrayDesign> seenPlatforms = new HashMap<>();
-    private ExternalDatabase genbank;
+    private final GeoSingleCellDetector singleCellDetector = new GeoSingleCellDetector();
+
+    /**
+     * More than this and we apply stricter selection criteria for choosing elements to keep on a platform.
+     */
+    @Value("${geo.platform.import.maxelements}")
+    private int tooManyElements;
+
+    // configuration
     private boolean splitByPlatform = false;
     private boolean forceConvertElements = false;
     private boolean skipDataVectors = false;
 
+    // commonly used external databases
+    private ExternalDatabase geoDatabase;
+    private ExternalDatabase genbank;
+
+    // internal state of the converter, can be cleared with clear()
+    private final Map<String, Taxon> taxonScientificNameMap = new HashMap<>();
+    private final Map<String, Taxon> taxonCommonNameMap = new HashMap<>();
+    private final Map<String, Map<String, CompositeSequence>> platformDesignElementMap = new HashMap<>();
+    private final Collection<Object> results = new HashSet<>();
+    private final Map<String, ArrayDesign> seenPlatforms = new HashMap<>();
+
     @Override
     public void clear() {
-        results = new HashSet<>();
-        seenPlatforms = new HashMap<>();
-        platformDesignElementMap = new HashMap<>();
+        results.clear();
+        seenPlatforms.clear();
+        platformDesignElementMap.clear();
         taxonCommonNameMap.clear();
         taxonScientificNameMap.clear();
     }
-
 
     @Override
     public Collection<Object> convert( Collection<? extends GeoData> geoObjects ) {
@@ -391,25 +404,25 @@ public class GeoConverterImpl implements GeoConverter {
             return null;
         }
 
-        byte[] bytes = byteArrayConverter.toBytes( toConvert.toArray() );
+        byte[] bytes = toBytes( toConvert.toArray() );
 
         /*
          * Debugging - absolutely make sure we can convert the data back.
          */
         if ( pt.equals( PrimitiveType.DOUBLE ) ) {
-            double[] byteArrayToDoubles = byteArrayConverter.byteArrayToDoubles( bytes );
-            if ( byteArrayToDoubles.length != vector.size() ) {
-                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToDoubles.length + " doubles" );
+            double[] doubles = byteArrayToDoubles( bytes );
+            if ( doubles.length != vector.size() ) {
+                throw new IllegalStateException( "Expected " + vector.size() + " got " + doubles.length + " doubles" );
             }
         } else if ( pt.equals( PrimitiveType.INT ) ) {
-            int[] byteArrayToInts = byteArrayConverter.byteArrayToInts( bytes );
-            if ( byteArrayToInts.length != vector.size() ) {
-                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToInts.length + " ints" );
+            int[] ints = byteArrayToInts( bytes );
+            if ( ints.length != vector.size() ) {
+                throw new IllegalStateException( "Expected " + vector.size() + " got " + ints.length + " ints" );
             }
         } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
-            boolean[] byteArrayToBooleans = byteArrayConverter.byteArrayToBooleans( bytes );
-            if ( byteArrayToBooleans.length != vector.size() ) {
-                throw new IllegalStateException( "Expected " + vector.size() + " got " + byteArrayToBooleans.length + " booleans" );
+            boolean[] booleans = byteArrayToBooleans( bytes );
+            if ( booleans.length != vector.size() ) {
+                throw new IllegalStateException( "Expected " + vector.size() + " got " + booleans.length + " booleans" );
             }
         }
 
@@ -530,31 +543,40 @@ public class GeoConverterImpl implements GeoConverter {
             }
         }
 
+        // compute it once to save time
+        boolean hasSingleCellDataInSeries = singleCellDetector.hasSingleCellData( series );
+
         for ( GeoSample sample : series.getSamples() ) {
             String reason;
-            if ( sample.getType().equals( "RNA" ) ) {
-                // this is apparently what we get for microarrays
+            // this is apparently what we get for microarrays
+            if ( sample.getType().equals( GeoSampleType.RNA ) ) {
                 continue;
             }
 
+            // RNA-Seq
+            // FIXME: are we really seeing MPSS out there?
             // some MPSS might not have libSource filled in. Other possibilities we know about for type are 'other', 'SAGE' and 'mixed';
-            if ( sample.getType().equals( "SRA" ) || sample.getType().equals( "MPSS" ) ) {
-                if ( sample.getLibSource() != null && sample.getLibSource().equals( "transcriptomic" ) ) {
+            else if ( sample.getType().equals( GeoSampleType.MPSS ) || sample.getType().equals( GeoSampleType.SRA ) ) {
+                // bulk RNA-Seq
+                if ( sample.getLibSource() != null && sample.getLibSource().equals( GeoLibrarySource.TRANSCRIPTOMIC ) ) {
                     // have to drill down.
-                    if ( sample.getLibStrategy() != null && ( sample.getLibStrategy().equals( "RNA-Seq" )
-                            || sample.getLibStrategy().equals( "ssRNA-seq" )
-                            || sample.getLibStrategy().equalsIgnoreCase( "OTHER" ) ) ) {
+                    if ( sample.getLibStrategy() != null && ( sample.getLibStrategy().equals( GeoLibraryStrategy.RNA_SEQ )
+                            || sample.getLibStrategy().equals( GeoLibraryStrategy.SSRNA_SEQ )
+                            || sample.getLibStrategy().equals( GeoLibraryStrategy.OTHER ) ) ) {
                         // I've added "other" to be allowed just to avoid being too strict, but removed miRNA and ncRNA.
                         continue;
+                    } else {
+                        reason = "Unsupported transcriptomic library strategy.";
                     }
-                    reason = "Unsupported library strategy for transcriptomic data.";
-                } else if ( sample.getLibSource() != null && sample.getLibSource().equals( "transcriptomic single cell" ) ) {
-                    // FIXME   e.g GSE213756 sample GSM6593523. Currently, we will reject these but will add support
-                    // no-op, just making explicit.
-                    reason = "Single-cell library source is not supported yet.";
                 } else {
                     reason = "Unsupported library source.";
                 }
+            }
+
+            // single-cell RNA-Seq
+            // cannot be grouped with RNA-Seq because we retrieve data from supplementary files, not SRA/MPSS
+            else if ( singleCellDetector.isSingleCell( sample, hasSingleCellDataInSeries ) ) {
+                continue;
             } else {
                 reason = "Unsupported sample type.";
             }

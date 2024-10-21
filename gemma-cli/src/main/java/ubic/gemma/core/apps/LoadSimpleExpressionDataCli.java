@@ -116,7 +116,7 @@ public class LoadSimpleExpressionDataCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         if ( this.fileName != null ) {
             log.info( "Loading experiments from " + this.fileName );
             InputStream is = new FileInputStream( new File( this.dirName, this.fileName ) );

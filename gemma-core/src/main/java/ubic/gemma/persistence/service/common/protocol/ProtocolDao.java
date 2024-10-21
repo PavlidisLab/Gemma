@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.common.protocol;
 
+import io.micrometer.common.lang.Nullable;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.persistence.service.BaseDao;
@@ -28,10 +29,6 @@ import ubic.gemma.persistence.service.BaseDao;
 @Repository
 public interface ProtocolDao extends BaseDao<Protocol> {
 
-    @Override
-    Protocol find( Protocol protocol );
-
-    @Override
-    Protocol findOrCreate( Protocol protocol );
-
+    @Nullable
+    Protocol findByName( String protocolName );
 }

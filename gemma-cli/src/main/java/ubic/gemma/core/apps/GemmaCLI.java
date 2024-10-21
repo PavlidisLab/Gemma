@@ -350,7 +350,7 @@ public class GemmaCLI {
 
         footer.append( "To get help for a specific tool, use: 'gemma-cli <commandName> --help'." );
 
-        HelpUtils.printHelp( writer, "<commandName>", options, false, null, footer.toString() );
+        HelpUtils.printHelp( writer, "gemma-cli [options] [commandName] [commandOptions]", options, null, footer.toString() );
     }
 
     @Value

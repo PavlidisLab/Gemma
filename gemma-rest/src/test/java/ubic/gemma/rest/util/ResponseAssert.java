@@ -71,7 +71,7 @@ public class ResponseAssert extends AbstractAssert<ResponseAssert, Response> {
      * Asserts that the response has a media type compatible with the given media type.
      */
     public ResponseAssert hasMediaTypeCompatibleWith( MediaType mediaType ) {
-        objects.assertEqual( info, mediaType.isCompatible( mediaType ), true );
+        objects.assertEqual( info, actual.getMediaType().isCompatible( mediaType ), true );
         return myself;
     }
 

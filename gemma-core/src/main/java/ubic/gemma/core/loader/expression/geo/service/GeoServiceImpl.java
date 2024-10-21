@@ -193,7 +193,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
             geoConverter.setForceConvertElements( true );
 
             for ( GeoData d : platforms ) {
-                if ( expressionExperimentService.isBlackListed( d.getGeoAccession() ) ) {
+                if ( d.getGeoAccession() != null && expressionExperimentService.isBlackListed( d.getGeoAccession() ) ) {
                     throw new IllegalArgumentException(
                             "Entity with accession " + d.getGeoAccession() + " is blacklisted" );
                 }
@@ -299,6 +299,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         Collection<? extends GeoData> parseResult = geoDomainObjectGenerator.generate( geoAccession );
         Object obj = parseResult.iterator().next();
         GeoSeries series = ( GeoSeries ) obj;
+        //noinspection unchecked
         Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoConverter.convert( series, true );
 
         /*
@@ -388,13 +389,14 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
                 }
 
 
-                if (numNewCharacteristics == 0 ) {
-                    // that's okay but probably shouldn't do anything
-                } else {
+                if ( numNewCharacteristics > 0 ) {
                     expressionExperimentService.update( ee );
                     String message = " Updated from GEO; " + numNewCharacteristics + " characteristics added/replaced" + ( pubUpdate ? "; Publication added" : "" );
                     log.info( ee.getShortName() + message );
                     auditTrailService.addUpdateEvent( ee, ExpressionExperimentUpdateFromGEOEvent.class, message );
+                } else {
+                    // that's okay but probably shouldn't do anything
+                    log.debug( "No new characteristics for " + ee );
                 }
 
             }
@@ -505,6 +507,10 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         Collection<GeoSample> toSkip = new HashSet<>();
 
         for ( GeoSample sample : series.getSamples() ) {
+            if ( sample.getGeoAccession() == null ) {
+                log.warn( "Ignoring sample without GEO accession in " + series );
+                continue;
+            }
             if ( !sample.appearsInMultipleSeries() ) {
                 // nothing to worry about: if this series is not loaded, then we're guaranteed to be new.
                 continue;
@@ -904,7 +910,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
             throw new IllegalStateException( "Series " + series.getGeoAccession() + " has no platform." );
         for ( GeoPlatform pl : platforms ) {
 
-            if ( expressionExperimentService.isBlackListed( pl.getGeoAccession() ) ) {
+            if ( pl.getGeoAccession() != null && expressionExperimentService.isBlackListed( pl.getGeoAccession() ) ) {
                 throw new IllegalArgumentException(
                         "A platform used by " + series.getGeoAccession() + " is blacklisted: " + pl.getGeoAccession() );
             }

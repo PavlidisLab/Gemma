@@ -14,14 +14,16 @@
  */
 package ubic.gemma.core.analysis.service;
 
+import ubic.gemma.core.config.Settings;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.genome.Gene;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Collection;
-
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.core.config.Settings;
+import java.util.Map;
 
 /**
  * Methods to generate annotations for array designs, based on information already in the database. This can be used to
@@ -59,6 +61,19 @@ public interface ArrayDesignAnnotationService {
     String ANNOT_DATA_DIR = Settings.getString( "gemma.appdata.home" ) + File.separatorChar + ANNOTATION_FILE_DIRECTORY_NAME + File.separatorChar;
 
     void deleteExistingFiles( ArrayDesign arrayDesign );
+
+    /**
+     * This tries to read one of the annotation files (noparents, bioprocess or regular) to get the gene information -
+     * GO annotations are not part of the result.
+     *
+     * @param  arrayDesign array design
+     * @return Map of composite sequence ids to an array of delimited strings: [probe name,genes symbol,
+     *                     gene Name,
+     *                     gemma gene id, ncbi id] for a given probe id. format of string is geneSymbol then geneNames
+     *                     same as found
+     *                     in annotation file.
+     */
+    Map<CompositeSequence, String[]> readAnnotationFile( ArrayDesign arrayDesign ) throws IOException;
 
     /**
      * Create (or update) all the annotation files for the given platform. Side effect: any expression experiment data

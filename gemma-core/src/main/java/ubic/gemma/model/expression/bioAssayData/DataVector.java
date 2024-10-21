@@ -18,60 +18,33 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
-import ubic.gemma.model.common.Identifiable;
+import lombok.Getter;
+import lombok.Setter;
+import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import java.io.Serializable;
+import java.util.Objects;
 
 /**
- * An abstract class representing a one-dimensional vector of data about some aspect of an experiment.
+ * An abstract class representing a one-dimensional vector of data about some aspect of an {@link ExpressionExperiment}.
+ * @see DesignElementDataVector
  */
-public abstract class DataVector implements Identifiable, Serializable {
+@Getter
+@Setter
+public abstract class DataVector extends AbstractIdentifiable {
 
-    private static final long serialVersionUID = -5823802521832643417L;
-
-    private Long id;
     private ExpressionExperiment expressionExperiment;
     private QuantitationType quantitationType;
     private byte[] data;
 
-    public ExpressionExperiment getExpressionExperiment() {
-        return expressionExperiment;
-    }
-
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
-    }
-
-    public byte[] getData() {
-        return this.data;
-    }
-
-    public void setData( byte[] data ) {
-        this.data = data;
-    }
-
+    /**
+     * Returns a hash code based on this entity's identifiers.
+     */
     @Override
-    public Long getId() {
-        return this.id;
+    public int hashCode() {
+        // also, we cannot hash the ID because it is assigned on creation
+        // hashing the data is wasteful because subclasses will have a design element to distinguish distinct vectors
+        return Objects.hash( expressionExperiment, quantitationType );
     }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public QuantitationType getQuantitationType() {
-        return this.quantitationType;
-    }
-
-    public void setQuantitationType( QuantitationType quantitationType ) {
-        this.quantitationType = quantitationType;
-    }
-
-    @Override
-    public abstract boolean equals( Object obj );
-
-    @Override
-    public abstract int hashCode();
 }

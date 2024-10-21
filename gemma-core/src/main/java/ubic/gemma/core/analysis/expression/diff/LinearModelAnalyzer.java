@@ -28,6 +28,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
@@ -36,11 +37,10 @@ import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.MathUtil;
 import ubic.basecode.math.linearmodels.*;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
-import ubic.gemma.core.datastructure.matrix.MatrixWriter;
+import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -57,6 +57,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
+
+import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.filterAndLog2Transform;
 
 /**
  * Handles fitting linear models with continuous or fixed-level covariates. Data are always log-transformed.
@@ -97,7 +99,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             Collection<FactorValue> fvs ) {
         for ( BioAssay ba : ee.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
-            for ( FactorValue fv : bm.getFactorValues() ) {
+            for ( FactorValue fv : bm.getAllFactorValues() ) {
                 if ( fv.getExperimentalFactor().equals( f ) ) {
                     fvs.add( fv );
                 }
@@ -145,6 +147,9 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         return reorderedDim;
     }
+
+    @Value("${gemma.hosturl}")
+    private String gemmaHostUrl;
 
     /**
      * Executor used for performing analyses in the background while the current thread is reporting progress.
@@ -345,7 +350,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         FactorValue subsetFactorValue = null;
         for ( BioMaterial bm : samplesInSubset ) {
-            Collection<FactorValue> fvs = bm.getFactorValues();
+            Collection<FactorValue> fvs = bm.getAllFactorValues();
             for ( FactorValue fv : fvs ) {
                 if ( fv.getExperimentalFactor().equals( ef ) ) {
                     if ( subsetFactorValue == null ) {
@@ -594,11 +599,11 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      */
     private void outputForDebugging( ExpressionDataDoubleMatrix dmatrix,
             ObjectMatrix<String, String, Object> designMatrix ) {
-        MatrixWriter mw = new MatrixWriter();
+        MatrixWriter mw = new MatrixWriter( gemmaHostUrl );
         try ( FileWriter writer = new FileWriter( File.createTempFile( "data.", ".txt" ) );
                 FileWriter out = new FileWriter( File.createTempFile( "design.", ".txt" ) ) ) {
 
-            mw.write( writer, dmatrix, null, true, false );
+            mw.write( dmatrix, writer );
 
             ubic.basecode.io.writer.MatrixWriter<String, String> dem = new ubic.basecode.io.writer.MatrixWriter<>(
                     out );
@@ -720,7 +725,11 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         /*
          * FIXME: remove columns that are marked as outliers, this will make some steps cleaner
          */
-        expressionData = ExpressionDataDoubleMatrixUtil.filterAndLog2Transform( expressionData );
+        try {
+            expressionData = filterAndLog2Transform( expressionData );
+        } catch ( QuantitationTypeConversionException e ) {
+            throw new RuntimeException( e );
+        }
         DoubleMatrix<CompositeSequence, BioMaterial> bareFilteredDataMatrix = expressionData.getMatrix();
 
         DoubleMatrix1D librarySizes = getLibrarySizes( config, expressionData );
@@ -741,7 +750,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         final Map<String, LinearModelSummary> rawResults = this
                 .runAnalysis( bareFilteredDataMatrix, finalDataMatrix, properDesignMatrix, librarySizes, config );
 
-        if ( rawResults.size() == 0 ) {
+        if ( rawResults.isEmpty() ) {
             LinearModelAnalyzer.log.error( "Got no results from the analysis" );
             return null;
         }
@@ -1339,7 +1348,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         for ( BioMaterial sample : samplesUsed ) {
             boolean ok = false;
-            for ( FactorValue fv : sample.getFactorValues() ) {
+            for ( FactorValue fv : sample.getAllFactorValues() ) {
                 if ( fv.getExperimentalFactor().equals( subsetFactor ) ) {
                     subSetSamples.get( fv ).add( sample );
                     ok = true;

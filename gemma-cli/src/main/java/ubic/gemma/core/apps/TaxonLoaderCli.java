@@ -20,6 +20,7 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.genome.taxon.TaxonFetcher;
 import ubic.gemma.core.loader.genome.taxon.TaxonLoader;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
@@ -32,6 +33,9 @@ import java.util.Collection;
  * @author pavlidis
  */
 public class TaxonLoaderCli extends AbstractAuthenticatedCLI {
+
+    @Autowired
+    private PersisterHelper persisterHelper;
 
     @Override
     public String getCommandName() {
@@ -59,7 +63,7 @@ public class TaxonLoaderCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         TaxonFetcher tf = new TaxonFetcher();
         Collection<LocalFile> files = tf.fetch();
         LocalFile names = null;
@@ -74,7 +78,7 @@ public class TaxonLoaderCli extends AbstractAuthenticatedCLI {
         }
 
         TaxonLoader tl = new TaxonLoader();
-        tl.setPersisterHelper( this.getBean( PersisterHelper.class ) );
+        tl.setPersisterHelper( persisterHelper );
         int numLoaded = tl.load( names.asFile() );
         log.info( "Loaded " + numLoaded + " taxa" );
     }

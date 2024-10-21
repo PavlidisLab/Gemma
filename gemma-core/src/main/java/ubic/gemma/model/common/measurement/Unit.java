@@ -21,6 +21,7 @@ package ubic.gemma.model.common.measurement;
 import ubic.gemma.model.common.Identifiable;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 @SuppressWarnings("WeakerAccess") // Possible frontend use
 public class Unit implements Identifiable, Serializable {
@@ -28,41 +29,6 @@ public class Unit implements Identifiable, Serializable {
     private static final long serialVersionUID = 6348133346610787608L;
     private String unitNameCV;
     private Long id;
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( this.getId() == null ) ? 0 : this.getId().hashCode() );
-        result = prime * result + ( ( this.getUnitNameCV() == null ) ? 0 : this.getUnitNameCV().hashCode() );
-        return result;
-    }
-
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-        Unit other = ( Unit ) obj;
-        if ( this.getId() == null ) {
-            if ( other.getId() != null )
-                return false;
-        } else if ( !this.getId().equals( other.getId() ) )
-            return false;
-        if ( this.getUnitNameCV() == null ) {
-            return other.getUnitNameCV() == null;
-        } else
-            return this.getUnitNameCV().equals( other.getUnitNameCV() );
-    }
-
-    @Override
-    public String toString() {
-        return this.getUnitNameCV();
-    }
-
     @Override
     public Long getId() {
         return this.id;
@@ -79,6 +45,30 @@ public class Unit implements Identifiable, Serializable {
 
     public void setUnitNameCV( String unitNameCV ) {
         this.unitNameCV = unitNameCV;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash( unitNameCV );
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( !( obj instanceof Unit ) )
+            return false;
+        Unit other = ( Unit ) obj;
+        if ( getId() != null && other.getId() != null )
+            return getId().equals( other.getId() );
+        return Objects.equals( getUnitNameCV(), other.getUnitNameCV() );
+    }
+
+    @Override
+    public String toString() {
+        return this.getUnitNameCV();
     }
 
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use

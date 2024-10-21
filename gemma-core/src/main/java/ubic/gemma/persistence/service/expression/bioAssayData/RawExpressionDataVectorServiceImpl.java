@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.Collection;
 
@@ -37,12 +36,6 @@ public class RawExpressionDataVectorServiceImpl extends AbstractDesignElementDat
     protected RawExpressionDataVectorServiceImpl( RawExpressionDataVectorDao mainDao ) {
         super( mainDao );
         this.mainDao = mainDao;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<RawExpressionDataVector> findByExpressionExperiment( ExpressionExperiment ee, QuantitationType quantitationType ) {
-        return mainDao.findByExpressionExperiment( ee, quantitationType );
     }
 
     @Override

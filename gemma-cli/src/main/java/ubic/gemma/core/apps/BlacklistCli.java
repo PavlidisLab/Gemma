@@ -23,6 +23,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
@@ -54,6 +55,12 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
 
     private static final int MAX_RETRIES = 3;
 
+    @Autowired
+    private BlacklistedEntityService blacklistedEntityService;
+    @Autowired
+    private ExternalDatabaseService externalDatabaseService;
+    @Autowired
+    ExpressionExperimentService expressionExperimentService;
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
 
@@ -72,7 +79,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
     private Collection<String> platformsToScreen;
 
     public BlacklistCli() {
-        setRequireLogin( true );
+        setRequireLogin();
     }
 
     @Override
@@ -112,10 +119,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
-        BlacklistedEntityService blacklistedEntityService = this.getBean( BlacklistedEntityService.class );
-        ExternalDatabaseService externalDatabaseService = this.getBean( ExternalDatabaseService.class );
-
+    protected void doAuthenticatedWork() throws Exception {
         ExternalDatabase geo = externalDatabaseService.findByName( "GEO" );
 
         if ( geo == null )
@@ -137,7 +141,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
                 throw new IllegalArgumentException( "A reason for blacklisting must be provided for " + accession );
             }
 
-            BlacklistedEntity b = null;
+            BlacklistedEntity b;
             if ( accession.startsWith( "GPL" ) ) {
                 b = new BlacklistedPlatform();
             } else if ( accession.startsWith( "GSE" ) ) {
@@ -239,8 +243,6 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
                 log.info( "Blacklisted " + accession );
             }
 
-        } catch ( Exception e ) {
-            throw e;
         }
     }
 
@@ -249,12 +251,11 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
      */
     private void proactivelyBlacklistExperiments( ExternalDatabase geo ) throws Exception {
         GeoBrowser gbs = new GeoBrowser( ncbiApiKey );
-        BlacklistedEntityService blacklistedEntityDao = this.getBean( BlacklistedEntityService.class );
 
         Collection<String> candidates = new ArrayList<>();
         int numChecked = 0;
         int numBlacklisted = 0;
-        for ( BlacklistedEntity be : blacklistedEntityDao.loadAll() ) {
+        for ( BlacklistedEntity be : blacklistedEntityService.loadAll() ) {
             if ( be instanceof BlacklistedPlatform ) {
 
                 if ( platformsToScreen == null || !platformsToScreen.isEmpty()
@@ -266,13 +267,13 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
 
             if ( candidates.size() == 5 ) { // too many will break eutils query
                 log.info( "Looking for batch of candidates using: " + StringUtils.join( candidates, "," ) );
-                numBlacklisted += fetchAndBlacklist( geo, gbs, blacklistedEntityDao, candidates );
+                numBlacklisted += fetchAndBlacklist( geo, gbs, candidates );
                 candidates.clear();
             }
         }
 
         // finish the last batch
-        fetchAndBlacklist( geo, gbs, blacklistedEntityDao, candidates );
+        fetchAndBlacklist( geo, gbs, candidates );
 
         log.info( "Checked " + numChecked + " blacklisted platforms for experiment in GEO, blacklisted " + numBlacklisted + " GSEs" );
 
@@ -281,19 +282,16 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
     /**
      * @return number of actually blacklisted experiments in this batch.
      */
-    private int fetchAndBlacklist( ExternalDatabase geo, GeoBrowser gbs, BlacklistedEntityService blacklistedEntityDao, Collection<String> candidates )
+    private int fetchAndBlacklist( ExternalDatabase geo, GeoBrowser gbs, Collection<String> candidates )
             throws InterruptedException {
         int start = 0;
 
-        ExpressionExperimentService expressionExperimentService = this.getBean( ExpressionExperimentService.class );
-
-        boolean keepGoing = true;
         int numBlacklisted = 0;
         int retries = 0;
-        while ( keepGoing ) {
+        while ( true ) {
 
             // code copied from GeoGrabberCli
-            List<GeoRecord> recs = null;
+            List<GeoRecord> recs;
 
             try {
                 recs = gbs.searchGeoRecords( null, null, null, candidates, null, start, 100, false /* details */ );
@@ -307,18 +305,22 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
                     continue; // try again
                 }
                 log.info( "Too many failures, giving up" );
-                keepGoing = false;
+                break;
             }
 
             if ( recs == null || recs.isEmpty() ) {
-                keepGoing = false;
                 break;
             }
 
             for ( GeoRecord geoRecord : recs ) {
                 boolean skip = false;
                 String eeAcc = geoRecord.getGeoAccession();
-                if ( null != blacklistedEntityDao.findByAccession( eeAcc ) ) {
+                if ( eeAcc == null ) {
+                    log.warn( "Found GEO record with null accession, skipping." );
+                    continue;
+                }
+
+                if ( blacklistedEntityService.findByAccession( eeAcc ) != null ) {
                     log.debug( "Already blacklisted: " + eeAcc );
                     continue;
                 }
@@ -326,7 +328,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
                 String[] platforms = geoRecord.getPlatform().split( ";" );
                 for ( String p : platforms ) {
 
-                    BlacklistedEntity bli = blacklistedEntityDao.findByAccession( p );
+                    BlacklistedEntity bli = blacklistedEntityService.findByAccession( p );
 
                     if ( bli == null ) {
                         // then at least one platform it uses isn't blacklisted, we won't blacklist the experiment
@@ -352,7 +354,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
                 b.setDescription( geoRecord.getTitle() );
                 b.setReason( "Unsupported platform" );
 
-                blacklistedEntityDao.create( b );
+                blacklistedEntityService.create( b );
                 numBlacklisted++;
 
             }

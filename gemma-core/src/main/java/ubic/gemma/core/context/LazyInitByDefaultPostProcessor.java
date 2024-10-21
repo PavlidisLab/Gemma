@@ -35,44 +35,68 @@ public class LazyInitByDefaultPostProcessor implements BeanFactoryPostProcessor,
 
     @Override
     public void postProcessBeanFactory( ConfigurableListableBeanFactory beanFactory ) throws BeansException {
+        boolean isTraceEnabled = log.isTraceEnabled();
         log.debug( "Marking beans as lazy-init by default..." );
-        Set<String> markedAsLazyInitBeans = new TreeSet<>();
+        Set<String> markedAsLazyInitBeans;
+        int markedAsLazyInitBeansSize = 0;
+        if ( isTraceEnabled ) {
+            markedAsLazyInitBeans = new TreeSet<>();
+        } else {
+            markedAsLazyInitBeans = null;
+        }
         for ( String beanName : beanFactory.getBeanDefinitionNames() ) {
             BeanDefinition def = beanFactory.getBeanDefinition( beanName );
             if ( def.hasAttribute( IGNORE_ATTRIBUTE ) && Boolean.parseBoolean( ( String ) def.getAttribute( IGNORE_ATTRIBUTE ) ) ) {
-                log.debug( "Ignoring " + formatBeanDefinition( beanName, def ) + " marked as ignored with " + IGNORE_ATTRIBUTE + "." );
+                if ( isTraceEnabled ) {
+                    log.trace( "Ignoring " + formatBeanDefinition( beanName, def ) + " marked as ignored with " + IGNORE_ATTRIBUTE + "." );
+                }
                 continue;
             }
             if ( def.getRole() == BeanDefinition.ROLE_INFRASTRUCTURE ) {
-                log.debug( "Ignoring infrastructure bean " + formatBeanDefinition( beanName, def ) );
+                if ( isTraceEnabled ) {
+                    log.trace( "Ignoring infrastructure bean " + formatBeanDefinition( beanName, def ) );
+                }
                 continue;
             }
             if ( def.isLazyInit() ) {
-                log.debug( "Ignoring " + formatBeanDefinition( beanName, def ) + " already lazy-init." );
+                if ( isTraceEnabled ) {
+                    log.trace( "Ignoring " + formatBeanDefinition( beanName, def ) + " already lazy-init." );
+                }
                 continue;
             }
             if ( def instanceof AnnotatedBeanDefinition ) {
                 AnnotatedBeanDefinition abd = ( AnnotatedBeanDefinition ) def;
                 if ( abd.getMetadata().isAnnotated( LAZY_ANNOTATION_CLASS ) ) {
-                    log.debug( "Ignoring " + formatBeanDefinition( beanName, def ) + " with explicit @Lazy annotation." );
+                    if ( isTraceEnabled ) {
+                        log.trace( "Ignoring " + formatBeanDefinition( beanName, def ) + " with explicit @Lazy annotation." );
+                    }
                     continue;
                 }
                 if ( def.getFactoryMethodName() != null ) {
                     // FIXME: is this really the best way?
                     if ( abd.getMetadata().getAnnotatedMethods( LAZY_ANNOTATION_CLASS ).stream()
                             .map( MethodMetadata::getMethodName ).anyMatch( def.getFactoryMethodName()::equals ) ) {
-                        log.debug( "Ignoring " + formatBeanDefinition( beanName, def ) + " with explicit @Lazy annotation." );
+                        if ( isTraceEnabled ) {
+                            log.trace( "Ignoring " + formatBeanDefinition( beanName, def ) + " with explicit @Lazy annotation." );
+                        }
                         continue;
                     }
                 }
             }
-            if ( log.isTraceEnabled() ) {
+            if ( isTraceEnabled ) {
                 log.trace( "Marking " + formatBeanDefinition( beanName, def ) + " as lazy-init." );
             }
             def.setLazyInit( true );
-            markedAsLazyInitBeans.add( beanName );
+            if ( isTraceEnabled ) {
+                markedAsLazyInitBeans.add( beanName );
+            }
+            markedAsLazyInitBeansSize++;
         }
-        log.debug( "Marked the following beans as lazy-init: " + String.join( ", ", markedAsLazyInitBeans ) );
+        if ( isTraceEnabled ) {
+            log.trace( "Marked the following beans as lazy-init: " + String.join( ", ", markedAsLazyInitBeans ) );
+        } else {
+            log.debug( "Marked " + markedAsLazyInitBeansSize + " beans as lazy-init." );
+        }
     }
 
     @Override

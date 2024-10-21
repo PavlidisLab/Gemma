@@ -43,7 +43,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.hibernate.HibernateUtils;
 import ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDaoBase;
 import ubic.gemma.persistence.util.CommonQueries;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -359,7 +359,7 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
         Taxon taxon = gene.getTaxon();
 
         Set<Long> ids = new HashSet<>();
-        for ( Collection<Long> batch : batchParameterList( EntityUtils.getIds( probes ), 1024 ) ) {
+        for ( Collection<Long> batch : batchParameterList( IdentifiableUtils.getIds( probes ), 1024 ) ) {
             //noinspection unchecked
             ids.addAll( this.getSessionFactory().getCurrentSession()
                     .createSQLQuery( "select a.EXPERIMENT_ANALYZED_FK from ANALYSIS a "
@@ -615,7 +615,7 @@ class DifferentialExpressionAnalysisDaoImpl extends SingleExperimentAnalysisDaoB
     @Override
     public void remove( DifferentialExpressionAnalysis analysis ) {
         log.info( "Removing " + analysis + "..." );
-        List<Long> resultSetIds = EntityUtils.getIds( analysis.getResultSets() );
+        List<Long> resultSetIds = IdentifiableUtils.getIds( analysis.getResultSets() );
         if ( !resultSetIds.isEmpty() ) {
             int removedContrasts = getSessionFactory().getCurrentSession()
                     .createSQLQuery( "delete cr from CONTRAST_RESULT cr where cr.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK in (select dear.ID from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear where dear.RESULT_SET_FK in (:resultSetIds))" )

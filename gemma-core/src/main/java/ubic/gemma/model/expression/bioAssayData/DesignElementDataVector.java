@@ -18,28 +18,33 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
+import javax.annotation.Nullable;
+import java.util.Objects;
+
+/**
+ * Data vector associated to a {@link CompositeSequence}.
+ */
+@Getter
+@Setter
 public abstract class DesignElementDataVector extends DataVector {
 
-    private static final long serialVersionUID = -4185333066166517308L;
-
-    private BioAssayDimension bioAssayDimension;
     private CompositeSequence designElement;
 
-    public BioAssayDimension getBioAssayDimension() {
-        return this.bioAssayDimension;
-    }
+    /**
+     * The original design element that was used to create this vector.
+     * <p>
+     * This is generally null, but if the data was imported and a mapping was done between some external data source and
+     * one of Gemma's platform, this will contain the original ID.
+     */
+    @Nullable
+    public abstract String getOriginalDesignElement();
 
-    public void setBioAssayDimension( BioAssayDimension bioAssayDimension ) {
-        this.bioAssayDimension = bioAssayDimension;
-    }
-
-    public CompositeSequence getDesignElement() {
-        return this.designElement;
-    }
-
-    public void setDesignElement( CompositeSequence designElement ) {
-        this.designElement = designElement;
+    @Override
+    public int hashCode() {
+        return Objects.hash( super.hashCode(), designElement );
     }
 }

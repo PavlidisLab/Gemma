@@ -30,6 +30,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -78,18 +79,6 @@ public class ArrayDesign extends AbstractAuditable implements Curatable, Secured
      * No-arg constructor added to satisfy javabean contract
      */
     public ArrayDesign() {
-    }
-
-    @Override
-    public boolean equals( Object object ) {
-        if ( !( object instanceof ArrayDesign ) )
-            return false;
-        ArrayDesign that = ( ArrayDesign ) object;
-        if ( this.getId() != null && that.getId() != null )
-            return this.getId().equals( that.getId() );
-
-        return this.getName() != null && that.getName() != null && this.getName().equals( that.getName() );
-
     }
 
     @Override
@@ -204,15 +193,6 @@ public class ArrayDesign extends AbstractAuditable implements Curatable, Secured
         return this.technologyType;
     }
 
-    @Override
-    public int hashCode() {
-        if ( this.getId() != null )
-            return 29 * getId().hashCode();
-        if ( this.getName() != null )
-            return 29 * getName().hashCode();
-        return super.hashCode();
-    }
-
     public void setAdvertisedNumberOfDesignElements( Integer advertisedNumberOfDesignElements ) {
         this.advertisedNumberOfDesignElements = advertisedNumberOfDesignElements;
     }
@@ -271,6 +251,27 @@ public class ArrayDesign extends AbstractAuditable implements Curatable, Secured
 
     public void setTechnologyType( TechnologyType technologyType ) {
         this.technologyType = technologyType;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash( getShortName() );
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof ArrayDesign ) )
+            return false;
+        ArrayDesign that = ( ArrayDesign ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return this.getId().equals( that.getId() );
+        } else if ( getShortName() != null && that.getShortName() != null ) {
+            return getShortName().equals( that.getShortName() );
+        } else {
+            return false;
+        }
     }
 
     @Override

@@ -166,7 +166,7 @@ public class DesignMatrixRowValueObject implements Serializable {
             CountingMap<FactorValueVector> assayCount = new CountingMap<>();
             for ( BioAssay assay : expressionExperiment.getBioAssays() ) {
                 BioMaterial sample = assay.getSampleUsed();
-                assayCount.increment( new FactorValueVector( factors, sample.getFactorValues() ) );
+                assayCount.increment( new FactorValueVector( factors, sample.getAllFactorValues() ) );
             }
 
             Collection<DesignMatrixRowValueObject> matrix = new ArrayList<>();

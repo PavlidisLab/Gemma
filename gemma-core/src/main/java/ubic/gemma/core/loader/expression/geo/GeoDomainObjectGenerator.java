@@ -266,7 +266,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         parser.parse( dataSetPath );
 
         // first result is where we start.
-        GeoParseResult results = ( GeoParseResult ) parser.getResults().iterator().next();
+        GeoParseResult results = parser.getResults().iterator().next();
 
         Map<String, GeoDataset> datasetMap = results.getDatasets();
         if ( !datasetMap.containsKey( geoDataSetAccession ) ) {
@@ -294,7 +294,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
             throw new RuntimeException( e1 );
         }
 
-        return ( ( GeoParseResult ) parser.getResults().iterator().next() ).getPlatformMap().get( geoAccession );
+        return parser.getResults().iterator().next().getPlatformMap().get( geoAccession );
     }
 
     /**
@@ -319,7 +319,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         }
 
         // Only allow one series...
-        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap()
+        GeoSeries series = parser.getResults().iterator().next().getSeriesMap()
                 .get( seriesAccession );
 
         if ( series == null ) {
@@ -349,7 +349,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         for ( String seriesAccession : seriesAccessions ) {
             this.processSeriesPlatforms( seriesAccession, parser );
         }
-        return ( ( GeoParseResult ) parser.getResults().iterator().next() ).getPlatformMap().values();
+        return parser.getResults().iterator().next().getPlatformMap().values();
 
     }
 
@@ -369,6 +369,6 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         } catch ( IOException e1 ) {
             throw new RuntimeException( e1 );
         }
-        return ( ( GeoParseResult ) parser.getResults().iterator().next() ).getPlatformMap().values();
+        return parser.getResults().iterator().next().getPlatformMap().values();
     }
 }

@@ -40,11 +40,16 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 @SuppressWarnings("unused") // Possible external use
 public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
         SecurableFilteringVoEnabledService<ArrayDesign, ArrayDesignValueObject> {
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    ArrayDesign loadAndThaw( Long id );
 
     /**
      * Load a platform by ID and thaw it with {@link #thawLite(ArrayDesign)}
@@ -126,6 +131,21 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign );
 
+    /**
+     * @see ArrayDesignDao#getGenes(ArrayDesign)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<Gene> getGenes( ArrayDesign arrayDesign );
+
+    /**
+     * @see ArrayDesignDao#getGenesByCompositeSequence(ArrayDesign)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( Collection<ArrayDesign> arrayDesign );
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Long getCompositeSequenceCount( ArrayDesign arrayDesign );
 
@@ -134,12 +154,6 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<CompositeSequence> getCompositeSequences( ArrayDesign arrayDesign, int limit, int offset );
-
-    /**
-     * Obtain all the genes associated to the platform.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Collection<Gene> getGenes( ArrayDesign arrayDesign );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
@@ -202,6 +216,7 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
      * @param arrayDesign The id of the array design
      * @return The Set of Taxons for array design.
      */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<Taxon> getTaxa( ArrayDesign arrayDesign );
 
     Taxon getTaxon( Long id );
@@ -352,6 +367,18 @@ public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
     @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ArrayDesign> thaw( Collection<ArrayDesign> aas );
+
+    /**
+     * Thaw the composite sequences of a given platform
+     * @see ArrayDesignDao#thawCompositeSequences(ArrayDesign)
+     */
+    @CheckReturnValue
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    ArrayDesign thawCompositeSequences( ArrayDesign arrayDesign );
+
+    @CheckReturnValue
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ArrayDesign> thawCompositeSequences( Collection<ArrayDesign> ads );
 
     /**
      * Perform a less intensive thaw of an array design: not the composite sequences.

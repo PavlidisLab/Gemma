@@ -77,7 +77,7 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         File f = new File( file );
         if ( !f.canRead() ) {
             throw new RuntimeException( "Cannot read from " + file );

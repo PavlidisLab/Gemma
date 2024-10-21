@@ -51,6 +51,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.EE2AD_QUERY_SPACE;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
 import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
@@ -379,6 +380,37 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
+    public Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign ) {
+        Map<Long, CompositeSequence> idMap = IdentifiableUtils.getIdMap( arrayDesign.getCompositeSequences() );
+        //noinspection unchecked
+        List<Object[]> results = getSessionFactory().getCurrentSession()
+                .createSQLQuery( "select gene2cs.CS, {G.*} from GENE2CS gene2cs join CHROMOSOME_FEATURE G on gene2cs.GENE = G.ID where gene2cs.AD = :arrayDesignId" )
+                .addScalar( "CS", StandardBasicTypes.LONG )
+                .addEntity( "G", Gene.class )
+                .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
+                .addSynchronizedEntityClass( ArrayDesign.class )
+                .addSynchronizedEntityClass( CompositeSequence.class )
+                .addSynchronizedEntityClass( Gene.class )
+                .setParameter( "arrayDesignId", arrayDesign.getId() )
+                .setCacheable( true )
+                .list();
+        return results.stream()
+                .collect( Collectors.groupingBy(
+                        row -> requireNonNull( idMap.get( ( Long ) row[0] ) ),
+                        Collectors.mapping( row -> ( Gene ) row[1], Collectors.toSet() ) ) );
+    }
+
+    @Override
+    public Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( Collection<ArrayDesign> arrayDesign ) {
+        return arrayDesign.stream()
+                .map( this::getGenesByCompositeSequence )
+                .reduce( new HashMap<>(), ( m1, m2 ) -> {
+                    m1.putAll( m2 );
+                    return m1;
+                } );
+    }
+
+    @Override
     public Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign ) {
         //language=HQL
         final String queryString = "select ee from "
@@ -573,10 +605,16 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     public List<ArrayDesignValueObject> loadValueObjectsForEE( @Nullable Long eeId ) {
         if ( eeId == null ) {
-            return new ArrayList<>();
+            return Collections.emptyList();
         }
-        Collection<Long> ids = CommonQueries.getArrayDesignIdsUsed( eeId,
-                this.getSessionFactory().getCurrentSession() );
+        //noinspection unchecked
+        List<Long> ids = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct ad.id from ExpressionExperiment as ee "
+                        + "join ee.bioAssays b join b.arrayDesignUsed ad "
+                        + "where ee.id = :eeId" )
+                .setParameter( "eeId", eeId )
+                .setCacheable( true )
+                .list();
         return this.loadValueObjectsByIds( ids );
     }
 
@@ -814,23 +852,36 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public void thaw( final ArrayDesign arrayDesign ) {
-        if ( arrayDesign.getId() == null ) {
-            throw new IllegalArgumentException( "Cannot thaw a non-persistent array design" );
-        }
-
-        /*
-         * Thaw basic stuff
-         */
         StopWatch timer = StopWatch.createStarted();
-        this.thawLite( arrayDesign );
 
-        // Thaw the composite sequences
-        StopWatch probeTimer = StopWatch.createStarted();
+        // Thaw basic stuff
+        long metadataTime = timer.getTime();
+        thawLite( arrayDesign );
+        metadataTime = timer.getTime() - metadataTime;
+
+        // Thaw the composite sequences & biological characteristics
+        long probeTime = timer.getTime();
         Hibernate.initialize( arrayDesign.getCompositeSequences() );
-        probeTimer.stop();
+        for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
+            Hibernate.initialize( compositeSequence.getBiologicalCharacteristic() );
+        }
+        probeTime = timer.getTime() - probeTime;
 
-        String message = String.format( "Thaw array design took %d ms (metadata: %d ms, probes: %d ms)",
-                timer.getTime(), timer.getTime() - probeTimer.getTime(), probeTimer.getTime() );
+        String message = String.format( "Thaw array design with %d elements took %d ms (metadata: %d ms, probes: %d ms)",
+                arrayDesign.getCompositeSequences().size(), timer.getTime(), metadataTime, probeTime );
+        if ( timer.getTime() > 1000 ) {
+            log.warn( message );
+        } else {
+            log.debug( message );
+        }
+    }
+
+    @Override
+    public void thawCompositeSequences( ArrayDesign arrayDesign ) {
+        StopWatch timer = StopWatch.createStarted();
+        Hibernate.initialize( arrayDesign.getCompositeSequences() );
+        String message = String.format( "Thaw array design with %d elements took %d ms",
+                arrayDesign.getCompositeSequences().size(), timer.getTime() );
         if ( timer.getTime() > 1000 ) {
             log.warn( message );
         } else {
@@ -1031,7 +1082,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         //noinspection unchecked
         List<Object[]> r = getSessionFactory().getCurrentSession()
                 .createQuery( "select ad.id, e from ArrayDesign ad join ad.externalReferences e where ad.id in :ids" )
-                .setParameterList( "ids", optimizeParameterList( EntityUtils.getIds( results ) ) )
+                .setParameterList( "ids", optimizeParameterList( IdentifiableUtils.getIds( results ) ) )
                 .setCacheable( true )
                 .list();
         Map<Long, Set<DatabaseEntry>> dbi = r.stream()
@@ -1044,7 +1095,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     private void populateIsMerged( Collection<ArrayDesignValueObject> results ) {
-        Map<Long, Boolean> isMergedByArrayDesignId = isMerged( EntityUtils.getIds( results ) );
+        Map<Long, Boolean> isMergedByArrayDesignId = isMerged( IdentifiableUtils.getIds( results ) );
         for ( ArrayDesignValueObject advo : results ) {
             advo.setIsMerged( isMergedByArrayDesignId.get( advo.getId() ) );
         }
@@ -1080,7 +1131,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 .addSynchronizedEntityClass( ArrayDesign.class )
                 .setCacheable( true );
         EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
-        Map<Long, Long> countById = QueryUtils.streamByBatch( query, "ids", EntityUtils.getIds( entities ), 2048, Object[].class )
+        Map<Long, Long> countById = QueryUtils.streamByBatch( query, "ids", IdentifiableUtils.getIds( entities ), 2048, Object[].class )
                 .collect( Collectors.toMap( o -> ( Long ) o[0], o -> ( Long ) o[1] ) );
         for ( ArrayDesignValueObject vo : entities ) {
             // missing implies no EEs, so zero is a valid default
@@ -1108,7 +1159,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                 .addSynchronizedEntityClass( ArrayDesign.class )
                 .setCacheable( true );
         EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
-        Map<Long, Long> switchedCountById = QueryUtils.streamByBatch( query, "ids", EntityUtils.getIds( entities ), 2048, Object[].class )
+        Map<Long, Long> switchedCountById = QueryUtils.streamByBatch( query, "ids", IdentifiableUtils.getIds( entities ), 2048, Object[].class )
                 .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
         for ( ArrayDesignValueObject vo : entities ) {
             // missing implies no switched EEs, so zero is a valid default

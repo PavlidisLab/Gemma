@@ -25,7 +25,8 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
-import ubic.gemma.core.util.AbstractAuthenticatedCLI;
+import ubic.gemma.core.util.AbstractAutoSeekingCLI;
+import ubic.gemma.core.util.EntityLocator;
 import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
@@ -36,6 +37,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
+import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.io.IOException;
 import java.util.*;
 
@@ -45,7 +47,7 @@ import java.util.*;
  *
  * @author pavlidis
  */
-public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthenticatedCLI {
+public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSeekingCLI<ArrayDesign> {
 
     @Autowired
     private ArrayDesignReportService arrayDesignReportService;
@@ -55,11 +57,14 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
     protected AuditTrailService auditTrailService;
     @Autowired
     protected AuditEventService auditEventService;
+    @Autowired
+    protected EntityLocator entityLocator;
 
     private Collection<ArrayDesign> arrayDesignsToProcess = new HashSet<>();
 
     protected ArrayDesignSequenceManipulatingCli() {
-        setRequireLogin( true );
+        super( ArrayDesign.class );
+        setRequireLogin();
     }
 
     @Override
@@ -89,7 +94,9 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
     }
 
     @Override
+    @OverridingMethodsMustInvokeSuper
     protected void processOptions( CommandLine commandLine ) throws ParseException {
+        super.processOptions( commandLine );
         if ( commandLine.hasOption( 'a' ) ) {
             this.arraysFromCliList( commandLine );
         } else if ( commandLine.hasOption( 'f' ) ) {
@@ -210,11 +217,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
         for ( String shortName : shortNames ) {
             if ( StringUtils.isBlank( shortName ) )
                 continue;
-            ArrayDesign ad = this.locateArrayDesign( shortName );
-            if ( ad == null ) {
-                log.warn( shortName + " not found" );
-                continue;
-            }
+            ArrayDesign ad = entityLocator.locateArrayDesign( shortName );
             arrayDesignsToProcess.add( ad );
         }
         if ( arrayDesignsToProcess.isEmpty() ) {
@@ -330,30 +333,5 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAuthent
             ees.add( ee );
         }
         return ees;
-    }
-
-    /**
-     * @param name of the array design to find.
-     * @return an array design, if found. Bails otherwise with an error exit code
-     */
-    protected ArrayDesign locateArrayDesign( String name ) {
-
-        ArrayDesign arrayDesign = null;
-
-        Collection<ArrayDesign> byname = arrayDesignService.findByName( name.trim().toUpperCase() );
-        if ( byname.size() > 1 ) {
-            throw new IllegalArgumentException( "Ambiguous name: " + name );
-        } else if ( byname.size() == 1 ) {
-            arrayDesign = byname.iterator().next();
-        }
-
-        if ( arrayDesign == null ) {
-            arrayDesign = arrayDesignService.findByShortName( name );
-        }
-
-        if ( arrayDesign == null ) {
-            log.error( "No arrayDesign " + name + " found" );
-        }
-        return arrayDesign;
     }
 }
