@@ -58,6 +58,13 @@ public interface ExpressionDataFileService {
 
     /**
      * Locate a metadata file.
+     * If the metadata file is represented by a directory (i.e. {@link ExpressionExperimentMetaFileType#isDirectory()}
+     * is true), then the latest file in the directory is returned. If no such file exists. {@link Optional#empty()} is
+     * returned.
+     * <p>
+     * If the data file is being written (i.e. with {@link #copyMetadataFile(ExpressionExperiment, Path, ExpressionExperimentMetaFileType, boolean)},
+     * this method will block until it is completed.
+     * @return the metadata file or empty if none is present in the case of a directory-structured metadata
      */
     Optional<Path> getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type ) throws IOException;
 
@@ -72,13 +79,27 @@ public interface ExpressionDataFileService {
     Path copyMetadataFile( ExpressionExperiment ee, Path existingFile, ExpressionExperimentMetaFileType type, boolean forceWrite ) throws IOException;
 
     /**
-     * Locate an data file.
+     * Delete a metadata file.
+     * <p>
+     * If the metadata file is organized as a directory, it is deleted recursively.
+     * @param type the type of metadata file to delete
+     * @return true if a metadata file was deleted
+     *
+     */
+    boolean deleteMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type ) throws IOException;
+
+    /**
+     * Locate a data file.
+     * <p>
+     * If the data file is being written, this method will block until it is completed.
      * @see #writeOrLocateRawExpressionDataFile(ExpressionExperiment, QuantitationType, boolean)
      */
     Optional<Path> getDataFile( ExpressionExperiment ee, boolean filtered, ExpressionExperimentDataFileType type );
 
     /**
      * Locate an data file.
+     * <p>
+     * If the data file is being written, this method will block until it is completed.
      * @see #writeOrLocateRawExpressionDataFile(ExpressionExperiment, QuantitationType, boolean)
      */
     Path getDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type );
@@ -192,7 +213,7 @@ public interface ExpressionDataFileService {
      * Writes out the experimental design for the given experiment.
      * <p>
      * The bioassays (col 0) matches the header row of the data matrix printed out by the {@link MatrixWriter}.
-     * @see ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter
+     * @see ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter
      */
     void writeDesignMatrix( ExpressionExperiment ee, Writer writer ) throws IOException;
 
@@ -218,7 +239,7 @@ public interface ExpressionDataFileService {
      */
     Optional<Path> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException, IOException;
 
-    Optional<Path> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean b, boolean filtered, int i, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException, FilteringException;
+    Optional<Path> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered, int timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException, FilteringException;
 
     /**
      * Locate or create a new data file for the given quantitation type. The output will include gene information if it
@@ -230,7 +251,7 @@ public interface ExpressionDataFileService {
      */
     Path writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException;
 
-    Path writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType qt, boolean b, long i, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException;
+    Path writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType qt, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException;
 
     /**
      * Locate or create an experimental design file for a given experiment.

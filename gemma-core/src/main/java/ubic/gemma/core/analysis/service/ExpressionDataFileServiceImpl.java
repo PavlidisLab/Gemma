@@ -183,14 +183,9 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public Optional<Path> getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type ) throws IOException {
-        // TODO: add support for locking, in this case it will be via FileChannel/FileLock because those files are
-        //       generated externally
         Path file = metadataDir.resolve( this.getEEFolderName( ee ) ).resolve( type.getFileName( ee ) );
         Lock lock = acquirePathLock( file, false );
         try {
-            if ( !Files.exists( file ) ) {
-                return Optional.empty();
-            }
             if ( type.isDirectory() ) {
                 // If this is a directory, check if we can read the most recent file.
                 try ( Stream<Path> files = Files.list( file ) ) {
@@ -209,6 +204,42 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             } else {
                 return Optional.of( file );
             }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public Path copyMetadataFile( ExpressionExperiment ee, Path existingFile, ExpressionExperimentMetaFileType type, boolean forceWrite ) throws IOException {
+        Assert.isTrue( !type.isDirectory(), "Copy metadata file to a directory is not supported." );
+        Assert.isTrue( Files.isReadable( existingFile ), existingFile + " must be readable." );
+        Path destinationFile = metadataDir.resolve( getEEFolderName( ee ) ).resolve( type.getFileName( ee ) );
+        if ( !forceWrite && Files.exists( destinationFile ) ) {
+            throw new RuntimeException( "Metadata file already exists, use forceWrite is not override." );
+        }
+        Lock lock = acquirePathLock( destinationFile, true );
+        try {
+            PathUtils.createParentDirectories( destinationFile );
+            Files.copy( existingFile, destinationFile, StandardCopyOption.REPLACE_EXISTING );
+            return destinationFile;
+        } catch ( Exception e ) {
+            Files.deleteIfExists( destinationFile );
+            throw e;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public boolean deleteMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type ) throws IOException {
+        Path destinationFile = metadataDir.resolve( getEEFolderName( ee ) ).resolve( type.getFileName( ee ) );
+        Lock lock = acquirePathLock( destinationFile, true );
+        try {
+            if ( Files.exists( destinationFile ) ) {
+                PathUtils.delete( destinationFile );
+                return true;
+            }
+            return false;
         } finally {
             lock.unlock();
         }
@@ -462,27 +493,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             new DiffExAnalysisResultSetWriter().write( analysis, geneAnnotations, config, hasSignificantBatchConfound.get(), stream );
         } catch ( Exception e ) {
             Files.deleteIfExists( f );
-            throw e;
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    @Override
-    public Path copyMetadataFile( ExpressionExperiment ee, Path existingFile, ExpressionExperimentMetaFileType type, boolean forceWrite ) throws IOException {
-        Assert.isTrue( !type.isDirectory(), "Copy metadata file to a directory is not supported." );
-        Assert.isTrue( Files.isReadable( existingFile ), existingFile + " must be readable." );
-        Path destinationFile = metadataDir.resolve( getEEFolderName( ee ) ).resolve( type.getFileName( ee ) );
-        if ( !forceWrite && Files.exists( destinationFile ) ) {
-            throw new RuntimeException( "Metadata file already exists, use forceWrite is not override." );
-        }
-        Lock lock = acquirePathLock( destinationFile, true );
-        try {
-            PathUtils.createParentDirectories( destinationFile );
-            Files.copy( existingFile, destinationFile, StandardCopyOption.REPLACE_EXISTING );
-            return destinationFile;
-        } catch ( Exception e ) {
-            Files.deleteIfExists( destinationFile );
             throw e;
         } finally {
             lock.unlock();

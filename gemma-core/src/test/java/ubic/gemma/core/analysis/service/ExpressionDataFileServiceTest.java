@@ -135,12 +135,36 @@ public class ExpressionDataFileServiceTest extends AbstractJUnit4SpringContextTe
                             .isEqualTo( reportFile );
                 } );
 
+        // ensure that metadata of a split is stored in its original directory
         ee.setShortName( "test.1" );
         assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT ) )
                 .hasValue( reportFile );
 
         ee.setShortName( "test.1.2" );
         assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT ) )
-                .isEmpty();
+                .hasValue( appdataHome.resolve( "metadata/test.1/MultiQCReports/multiqc_report.html" ) );
+    }
+
+    @Test
+    public void testCopyMetadata() throws IOException {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setShortName( "test" );
+        Path tmpReportFile = Files.createTempFile( null, "multiqc_report.html" );
+        expressionDataFileService.copyMetadataFile( ee, tmpReportFile, ExpressionExperimentMetaFileType.MUTLQC_REPORT, false );
+        Path reportFile = appdataHome.resolve( "metadata/test/MultiQCReports/multiqc_report.html" );
+        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT ) )
+                .hasValue( reportFile );
+    }
+
+    @Test
+    public void testDeleteMetadata() throws IOException {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setShortName( "test" );
+        Path reportFile = appdataHome.resolve( "metadata/test/MultiQCReports/multiqc_report.html" );
+        PathUtils.createParentDirectories( reportFile );
+        PathUtils.touch( reportFile );
+        expressionDataFileService.deleteMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT );
+        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT ) )
+                .hasValue( reportFile );
     }
 }
