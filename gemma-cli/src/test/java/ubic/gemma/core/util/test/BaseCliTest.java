@@ -5,8 +5,9 @@ import org.springframework.test.context.ActiveProfiles;
 /**
  * Base class for CLI tests.
  * <p>
- * Use {@link BaseCLIIntegrationTest} for integration tests.
+ * Use {@link BaseCliIntegrationTest} for integration tests.
  */
 @ActiveProfiles("cli")
-public class BaseCLITest extends BaseTest {
+public abstract class BaseCliTest extends BaseTest {
+
 }

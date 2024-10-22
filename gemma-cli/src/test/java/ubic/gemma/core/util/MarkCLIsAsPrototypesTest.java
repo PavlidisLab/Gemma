@@ -8,7 +8,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.apps.TestCli;
-import ubic.gemma.core.util.test.BaseCLIIntegrationTest;
+import ubic.gemma.core.util.test.BaseCliIntegrationTest;
 
 import javax.annotation.Nullable;
 
@@ -19,7 +19,7 @@ import static org.junit.Assert.*;
  * Test various behaviours of CLIs when injected as bean.
  * @author poirigui
  */
-public class MarkCLIsAsPrototypesTest extends BaseCLIIntegrationTest {
+public class MarkCLIsAsPrototypesTest extends BaseCliIntegrationTest {
 
     @Autowired
     private BeanFactory beanFactory;

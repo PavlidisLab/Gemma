@@ -7,5 +7,6 @@ import org.springframework.test.context.ActiveProfiles;
  * @author poirigui
  */
 @ActiveProfiles("cli")
-public abstract class BaseCLIIntegrationTest extends BaseIntegrationTest {
+public abstract class BaseCliIntegrationTest extends BaseIntegrationTest {
+
 }

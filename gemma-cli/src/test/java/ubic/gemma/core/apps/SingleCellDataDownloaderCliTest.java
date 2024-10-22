@@ -8,12 +8,12 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.util.ftp.FTPConfig;
-import ubic.gemma.core.util.test.BaseCLITest;
+import ubic.gemma.core.util.test.BaseCliTest;
 
 import static ubic.gemma.core.util.test.Assertions.assertThat;
 
 @ContextConfiguration
-public class SingleCellDataDownloaderCliTest extends BaseCLITest {
+public class SingleCellDataDownloaderCliTest extends BaseCliTest {
 
     @Configuration
     @TestComponent
@@ -31,7 +31,7 @@ public class SingleCellDataDownloaderCliTest extends BaseCLITest {
     @Test
     public void test() {
         assertThat( singleCellDataDownloaderCli )
-                .withCommand( "" )
+                .withCommand( "-e", "GSE1234" )
                 .succeeds();
     }
 }

@@ -19,6 +19,7 @@ import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.common.protocol.ProtocolService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -88,6 +89,11 @@ public class ArrayDesignMergeCliTest extends AbstractJUnit4SpringContextTests {
             return mock();
         }
 
+        @Bean
+        public ProtocolService protocolService() {
+            return mock();
+        }
+       
         @Bean
         public EntityLocator entityLocator() {
             return new EntityLocator();
