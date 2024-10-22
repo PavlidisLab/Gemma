@@ -283,7 +283,7 @@ public class OpenApiTest extends AbstractJUnit4SpringContextTests {
         assertThat( spec.getPaths().get( "/resultSets/{resultSet}" ).getGet().getResponses()
                 .get( "default" )
                 .getContent()
-                .get( "text/tab-separated-values; charset=UTF-8" )
+                .get( "text/tab-separated-values; charset=UTF-8; q=0.9" )
                 .getExample() )
                 .isEqualTo( IOUtils.resourceToString(  "/restapidocs/examples/result-set.tsv" , StandardCharsets.UTF_8 ) );
     }

@@ -1,7 +1,6 @@
 package ubic.gemma.rest.annotations;
 
-import ubic.gemma.rest.providers.GzipHeaderDecorator;
-
+import javax.ws.rs.core.MediaType;
 import java.lang.annotation.*;
 
 /**
@@ -10,7 +9,8 @@ import java.lang.annotation.*;
  * Note that using this annotation will disregard any form of content encoding negotiation for the endpoint. This should
  * only be used on endpoints that produce significant payloads.
  *
- * @see GzipHeaderDecorator
+ * @see ubic.gemma.rest.providers.GzipHeaderDecorator
+ * @see ubic.gemma.rest.providers.GzipHeaderDecoratorAfterGZipEncoder
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
@@ -18,7 +18,16 @@ import java.lang.annotation.*;
 public @interface GZIP {
 
     /**
+     * If non-empty, only contents compatible with any of the specified media type will be compressed.
+     * @see javax.ws.rs.core.MediaType#isCompatible(MediaType)
+     */
+    String[] mediaTypes() default {};
+
+    /**
      * Indicate that the payload is already compressed.
+     * <p>
+     * When that is the case, the decorator should only append a {@code Content-Encoding: gzip} header, but not alter
+     * the entity.
      */
     boolean alreadyCompressed() default false;
 }

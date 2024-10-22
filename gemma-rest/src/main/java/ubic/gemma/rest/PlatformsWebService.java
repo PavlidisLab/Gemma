@@ -37,7 +37,6 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
-import ubic.gemma.rest.util.MediaTypeUtils;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
@@ -274,7 +273,7 @@ public class PlatformsWebService {
     @GZIP(alreadyCompressed = true)
     @GET
     @Path("/{platform}/annotations")
-    @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
+    @Produces("text/tab-separated-values; charset=UTF-8")
     @Operation(summary = "Retrieve the annotations of a given platform",
             description = "The following columns are available: ElementName, GeneSymbols, GOTerms, GemmaIDs, NCBIids. Older files might still use ProbeName instead of ElementName.",
             responses = {

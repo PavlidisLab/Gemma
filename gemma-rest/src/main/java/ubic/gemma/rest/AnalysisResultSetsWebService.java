@@ -58,8 +58,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import static ubic.gemma.rest.util.MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8;
 import static ubic.gemma.rest.util.MediaTypeUtils.negotiate;
+import static ubic.gemma.rest.util.MediaTypeUtils.withQuality;
 import static ubic.gemma.rest.util.Responders.paginate;
 import static ubic.gemma.rest.util.Responders.respond;
 
@@ -70,9 +70,8 @@ import static ubic.gemma.rest.util.Responders.respond;
 @Path("/resultSets")
 public class AnalysisResultSetsWebService {
 
-    private static final String TEXT_TAB_SEPARATED_VALUES_Q9 = TEXT_TAB_SEPARATED_VALUES_UTF8 + "; q=0.9";
-
-    private static final MediaType TEXT_TAB_SEPARATED_VALUES_Q9_TYPE = MediaTypeUtils.withQuality( MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE, 0.9 );
+    public static final String TEXT_TAB_SEPARATED_VALUES_UTF8_Q9 = "text/tab-separated-values; charset=UTF-8; q=0.9";
+    private static final MediaType TEXT_TAB_SEPARATED_VALUES_Q9_TYPE = withQuality( new MediaType( "text", "tab-separated-values", "UTF-8" ), 0.9 );
 
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
@@ -141,7 +140,7 @@ public class AnalysisResultSetsWebService {
     @GZIP
     @GET
     @Path("/{resultSet}")
-    @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_Q9 })
+    @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8_Q9 })
     @Operation(summary = "Retrieve a single analysis result set by its identifier",
             description = "A slice or results can be retrieved by specifying the `offset` and `limit` parameters. "
                     + "This is only applicable to the JSON representation. "
@@ -152,7 +151,7 @@ public class AnalysisResultSetsWebService {
                     @ApiResponse(content = {
                             @Content(mediaType = MediaType.APPLICATION_JSON,
                                     schema = @Schema(implementation = PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject.class)),
-                            @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, /* no need to expose the q-value */
+                            @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8_Q9,
                                     schema = @Schema(type = "string", format = "binary"),
                                     examples = { @ExampleObject("classpath:/restapidocs/examples/result-set.tsv") })
                     }),
