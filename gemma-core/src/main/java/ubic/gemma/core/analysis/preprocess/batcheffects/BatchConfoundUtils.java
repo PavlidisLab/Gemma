@@ -160,10 +160,10 @@ public class BatchConfoundUtils {
                 batches.setSize( numBioMaterials );
 
                 int j = 0;
-                for ( BioMaterial bmId : bmToFv.keySet() ) {
+                for ( BioMaterial bm : bmToFv.keySet() ) {
                     assert !factorValues.isEmpty() : "Biomaterial to factorValue is empty for " + ef;
-                    factorValues.set( j, bmToFv.get( bmId ).doubleValue() ); // ensures we only look at actually used factorvalues.
-                    batches.set( j, batchIndexes.get( batchMembership.get( bmId ) ) );
+                    factorValues.set( j, bmToFv.get( bm ).doubleValue() ); // ensures we only look at actually used factorvalues.
+                    batches.set( j, batchIndexes.get( batchMembership.get( bm ) ) );
                     j++;
                 }
 
@@ -199,8 +199,8 @@ public class BatchConfoundUtils {
 
                 Map<BioMaterial, FactorValue> factorValueMembership = new HashMap<>();
 
-                for ( BioMaterial bmId : bmToFv.keySet() ) {
-                    factorValueMembership.put( bmId, factorValueById.get( ( Long ) bmToFv.get( bmId ) ) );
+                for ( BioMaterial bm : bmToFv.keySet() ) {
+                    factorValueMembership.put( bm, factorValueById.get( ( Long ) bmToFv.get( bm ) ) );
                 }
 
                 // numbatches could still be incorrect, so we have to clean this up later.

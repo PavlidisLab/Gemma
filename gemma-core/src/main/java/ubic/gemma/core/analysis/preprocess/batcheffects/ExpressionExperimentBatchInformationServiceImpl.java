@@ -250,8 +250,8 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
 
         // we can override the date-based p-value with the factor-based p-value if it is lower.
         // The reason to do this is it can be underpowered. The date-based one is more sensitive.
-        for ( Integer component : svd.getFactorPvals().keySet() ) {
-            Map<ExperimentalFactor, Double> cmpEffects = svd.getFactorPvals().get( component );
+        for ( Integer component : svd.getFactorPVals().keySet() ) {
+            Map<ExperimentalFactor, Double> cmpEffects = svd.getFactorPVals().get( component );
 
             // could use the effect size instead of the p-values (or in addition)
             //Map<Long, Double> cmpEffectSizes = svd.getFactorCorrelations().get( component );

@@ -277,7 +277,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
         if ( svdFactorAnalysis == null ) {
             return importantFactors;
         }
-        Map<Integer, Map<ExperimentalFactor, Double>> factorPVals = svdFactorAnalysis.getFactorPvals();
+        Map<Integer, Map<ExperimentalFactor, Double>> factorPVals = svdFactorAnalysis.getFactorPVals();
         for ( Integer cmp : factorPVals.keySet() ) {
             Map<ExperimentalFactor, Double> factorPv = factorPVals.get( cmp );
             for ( ExperimentalFactor ef : factorPv.keySet() ) {

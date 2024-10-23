@@ -20,8 +20,6 @@
 package ubic.gemma.core.analysis.preprocess.svd;
 
 import lombok.Value;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
@@ -42,10 +40,8 @@ import java.util.stream.Collectors;
 @Value
 public class SVDResult implements Serializable {
 
-    private static final Log log = LogFactory.getLog( SVDResult.class.getName() );
-
     /**
-     * Experiment this is for
+     * Experiment or subset this is for.
      */
     BioAssaySet experimentAnalyzed;
 
@@ -65,13 +61,28 @@ public class SVDResult implements Serializable {
     DoubleMatrix<BioMaterial, Integer> vMatrix;
 
     /**
-     * Map of component to correlation that component with "batch/scan date" (the dates associated with BioAssays)
+     * Date associated to the {@link #bioMaterials}.
+     * <p>
+     * Missing values are encoded as {@code null}.
+     */
+    List<Date> dates = new ArrayList<>();
+
+    /**
+     * Map of component to correlation that component with "batch/scan date"
+     * @see #dates
      */
     Map<Integer, Double> dateCorrelations = new HashMap<>();
 
+    /**
+     * P-values associated to the "batch/scan date" component.
+     * @see #dates
+     */
     Map<Integer, Double> datePVals = new HashMap<>();
 
-    List<Date> dates = new ArrayList<>();
+    /**
+     * Map of factors to the double-ized representations of them.
+     */
+    Map<ExperimentalFactor, List<Double>> factors = new HashMap<>();
 
     /**
      * Map of component to a map of ExperimentalFactor IDs to correlations of that factor with the component.
@@ -79,18 +90,13 @@ public class SVDResult implements Serializable {
     Map<Integer, Map<ExperimentalFactor, Double>> factorCorrelations = new HashMap<>();
 
     /**
-     * Map of component to map of ExperimentalFactor IDs to pvalues for the association of that factor with the
+     * Map of component to map of ExperimentalFactor IDs to P-values for the association of that factor with the
      * component.
      * <p>
      * Need to store the correlations of eigengenes with dates of assays, and also with factors. Statistics are
      * rank-based correlations
      */
-    Map<Integer, Map<ExperimentalFactor, Double>> factorPvals = new HashMap<>();
-
-    /**
-     * Map of factors to the double-ized representations of them.
-     */
-    Map<ExperimentalFactor, List<Double>> factors = new HashMap<>();
+    Map<Integer, Map<ExperimentalFactor, Double>> factorPVals = new HashMap<>();
 
     public SVDResult( PrincipalComponentAnalysis pca ) {
         this.experimentAnalyzed = pca.getExperimentAnalyzed();
@@ -160,9 +166,9 @@ public class SVDResult implements Serializable {
     }
 
     void setPCFactorCorrelationPval( int componentNumber, ExperimentalFactor ef, double pvalue ) {
-        if ( !this.factorPvals.containsKey( componentNumber ) ) {
-            this.factorPvals.put( componentNumber, new HashMap<>() );
+        if ( !this.factorPVals.containsKey( componentNumber ) ) {
+            this.factorPVals.put( componentNumber, new HashMap<>() );
         }
-        this.factorPvals.get( componentNumber ).put( ef, pvalue );
+        this.factorPVals.get( componentNumber ).put( ef, pvalue );
     }
 }
