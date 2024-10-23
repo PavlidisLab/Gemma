@@ -1,11 +1,13 @@
 package ubic.gemma.core.util;
 
+import com.fasterxml.jackson.databind.util.StdDateFormat;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 import java.math.RoundingMode;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
@@ -26,6 +28,11 @@ public class TsvUtils {
     public static final char SUB_DELIMITER = '|';
 
     private static final DecimalFormat smallNumberFormat, midNumberFormat, largeNumberFormat;
+
+    /**
+     * <a href="https://en.wikipedia.org/wiki/ISO_8601>ISO 8601</a> date format.
+     */
+    private static final DateFormat dateFormat = new StdDateFormat();
 
     static {
         DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance( Locale.ENGLISH );
@@ -104,6 +111,13 @@ public class TsvUtils {
                 .replace( "\n", "\\n" )
                 .replace( "\t", "\\t" )
                 .replace( "\r", "\\r" );
+    }
+
+    public static String format( @Nullable Date d ) {
+        if ( d == null ) {
+            return "";
+        }
+        return dateFormat.format( d );
     }
 
     public static String format( @Nullable Object object ) {
