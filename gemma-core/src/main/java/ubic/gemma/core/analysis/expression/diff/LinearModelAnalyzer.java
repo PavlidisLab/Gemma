@@ -28,7 +28,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
@@ -41,6 +41,7 @@ import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionExc
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -51,6 +52,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -148,8 +150,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         return reorderedDim;
     }
 
-    @Value("${gemma.hosturl}")
-    private String gemmaHostUrl;
+    @Autowired
+    private EntityUrlBuilder entityUrlBuilder;
+    @Autowired
+    private BuildInfo buildInfo;
 
     /**
      * Executor used for performing analyses in the background while the current thread is reporting progress.
@@ -599,7 +603,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      */
     private void outputForDebugging( ExpressionDataDoubleMatrix dmatrix,
             ObjectMatrix<String, String, Object> designMatrix ) {
-        MatrixWriter mw = new MatrixWriter( gemmaHostUrl );
+        MatrixWriter mw = new MatrixWriter( entityUrlBuilder, buildInfo );
         try ( FileWriter writer = new FileWriter( File.createTempFile( "data.", ".txt" ) );
                 FileWriter out = new FileWriter( File.createTempFile( "design.", ".txt" ) ) ) {
 

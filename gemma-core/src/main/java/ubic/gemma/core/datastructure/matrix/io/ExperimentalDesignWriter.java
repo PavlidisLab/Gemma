@@ -23,9 +23,11 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporterImpl;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -43,10 +45,12 @@ public class ExperimentalDesignWriter {
 
     private static final String EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR = "#$";
 
-    private final String gemmaHostUrl;
+    private final EntityUrlBuilder entityUrlBuilder;
+    private final BuildInfo buildInfo;
 
-    public ExperimentalDesignWriter( String gemmaHostUrl ) {
-        this.gemmaHostUrl = gemmaHostUrl;
+    public ExperimentalDesignWriter( EntityUrlBuilder entityUrlBuilder, BuildInfo buildInfo ) {
+        this.entityUrlBuilder = entityUrlBuilder;
+        this.buildInfo = buildInfo;
     }
 
     /**
@@ -147,7 +151,7 @@ public class ExperimentalDesignWriter {
             boolean writeBaseHeader, StringBuffer buf ) {
 
         if ( writeBaseHeader ) {
-            ExpressionDataWriterUtils.appendBaseHeader( expressionExperiment, true, gemmaHostUrl, buf );
+            ExpressionDataWriterUtils.appendBaseHeader( expressionExperiment, true, entityUrlBuilder.fromHostUrl( expressionExperiment ).web().toUriString(), buildInfo, buf );
         }
 
         for ( ExperimentalFactor ef : factors ) {

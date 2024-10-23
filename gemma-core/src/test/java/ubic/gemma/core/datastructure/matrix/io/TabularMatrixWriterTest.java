@@ -1,8 +1,11 @@
 package ubic.gemma.core.datastructure.matrix.io;
 
+import org.junit.Before;
 import org.junit.Test;
 import ubic.gemma.core.datastructure.matrix.DoubleSingleCellExpressionDataMatrix;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -16,7 +19,13 @@ import static ubic.gemma.persistence.service.expression.experiment.SingleCellTes
 
 public class TabularMatrixWriterTest {
 
-    private final TabularMatrixWriter writer = new TabularMatrixWriter( "https://gemma.msl.ubc.ca" );
+    private TabularMatrixWriter writer;
+
+    @Before
+    public void setUp() {
+        EntityUrlBuilder entityUrlBuilder = new EntityUrlBuilder( "https://gemma.msl.ubc.ca" );
+        writer = new TabularMatrixWriter( entityUrlBuilder, BuildInfo.fromClasspath() );
+    }
 
     @Test
     public void testWriteMatrix() throws IOException {

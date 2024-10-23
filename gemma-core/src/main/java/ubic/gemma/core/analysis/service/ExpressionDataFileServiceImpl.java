@@ -36,6 +36,7 @@ import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
 import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
 import ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter;
 import ubic.gemma.core.datastructure.matrix.io.TabularMatrixWriter;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -50,6 +51,7 @@ import ubic.gemma.persistence.service.association.coexpression.CoexpressionValue
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -100,18 +102,18 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private QuantitationTypeService quantitationTypeService;
-
     @Autowired
     private ExpressionDataFileHelperService helperService;
+    @Autowired
+    private EntityUrlBuilder entityUrlBuilder;
+    @Autowired
+    private BuildInfo buildInfo;
 
     @Value("${gemma.appdata.home}/metadata")
     private Path metadataDir;
 
     @Value("${gemma.appdata.home}/dataFiles")
     private Path dataDir;
-
-    @Value("${gemma.hosturl}")
-    private String gemmaHostUrl;
 
     @Override
     public void deleteAllFiles( ExpressionExperiment ee ) {
@@ -383,7 +385,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             numVecs.set( col.size() );
             vectors = col.stream();
         }
-        return new TabularMatrixWriter( gemmaHostUrl ).write( vectors.peek( createStreamMonitor( numVecs.get() ) ), cs2gene, writer );
+        return new TabularMatrixWriter( entityUrlBuilder, buildInfo ).write( vectors.peek( createStreamMonitor( numVecs.get() ) ), cs2gene, writer );
     }
 
     @Override
@@ -464,7 +466,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             AtomicBoolean hasSignificantBatchConfound = new AtomicBoolean();
             analysis = helperService.getAnalysis( experimentAnalyzed, analysis, geneAnnotations, hasSignificantBatchConfound );
             log.info( "Creating differential expression analysis archive file: " + f );
-            new DiffExAnalysisResultSetWriter().write( analysis, geneAnnotations, config, hasSignificantBatchConfound.get(), stream );
+            new DiffExAnalysisResultSetWriter( buildInfo ).write( analysis, geneAnnotations, config, hasSignificantBatchConfound.get(), stream );
         } catch ( Exception e ) {
             Files.deleteIfExists( f );
             throw e;
@@ -475,7 +477,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     public int writeRawExpressionData( ExpressionExperiment ee, QuantitationType qt, Writer writer ) throws IOException {
         Map<CompositeSequence, String[]> geneAnnotations = new HashMap<>();
         ExpressionDataDoubleMatrix matrix = helperService.getDataMatrix( ee, qt, geneAnnotations );
-        return new MatrixWriter( gemmaHostUrl ).writeWithStringifiedGeneAnnotations( writer, matrix, geneAnnotations );
+        return new MatrixWriter( entityUrlBuilder, buildInfo ).writeWithStringifiedGeneAnnotations( writer, matrix, geneAnnotations );
     }
 
     @Override
@@ -484,14 +486,14 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             throw new IllegalStateException( "No experimental design for " + ee );
         }
-        new ExperimentalDesignWriter( gemmaHostUrl ).write( writer, ee, true );
+        new ExperimentalDesignWriter( entityUrlBuilder, buildInfo ).write( writer, ee, true );
     }
 
     @Override
     public int writeProcessedExpressionData( ExpressionExperiment ee, boolean filtered, Writer writer ) throws FilteringException, IOException {
         Map<CompositeSequence, String[]> geneAnnotations = new HashMap<>();
         ExpressionDataDoubleMatrix matrix = helperService.getDataMatrix( ee, filtered, geneAnnotations );
-        return new MatrixWriter( gemmaHostUrl ).writeWithStringifiedGeneAnnotations( writer, matrix, geneAnnotations );
+        return new MatrixWriter( entityUrlBuilder, buildInfo ).writeWithStringifiedGeneAnnotations( writer, matrix, geneAnnotations );
     }
 
     @Override
@@ -506,7 +508,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         try ( LockedPath ignored = acquirePathLock( f, true ); Writer writer = openCompressedFile( f ) ) {
             Collection<CoexpressionValueObject> geneLinks = helperService.getGeneLinks( ee );
             ExpressionDataFileServiceImpl.log.info( "Creating new coexpression data file: " + f );
-            new CoexpressionWriter().write( ee, geneLinks, writer );
+            new CoexpressionWriter( buildInfo ).write( ee, geneLinks, writer );
             return f;
         } catch ( Exception e ) {
             Files.deleteIfExists( f );
@@ -679,7 +681,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         try ( LockedPath ignored = acquirePathLock( f, true ); Writer writer = openCompressedFile( f ) ) {
             ExpressionDataDoubleMatrix matrix = helperService.getDataMatrix( ee, filtered );
             ExpressionDataFileServiceImpl.log.info( "Creating new JSON expression data file: " + f );
-            int written = new MatrixWriter( gemmaHostUrl ).writeJSON( writer, matrix );
+            int written = new MatrixWriter( entityUrlBuilder, buildInfo ).writeJSON( writer, matrix );
             log.info( "Wrote " + written + " vectors to " + f + "." );
             return Optional.of( f );
         } catch ( Exception e ) {
@@ -700,7 +702,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             Collection<BulkExpressionDataVector> vectors = helperService.getVectors( ee, type );
             BulkExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
             ExpressionDataFileServiceImpl.log.info( "Creating new JSON expression data file: " + f );
-            int written = new MatrixWriter( gemmaHostUrl ).writeJSON( writer, expressionDataMatrix );
+            int written = new MatrixWriter( entityUrlBuilder, buildInfo ).writeJSON( writer, expressionDataMatrix );
             log.info( "Wrote " + written + " vectors for " + type + " to " + f );
             return f;
         } catch ( Exception e ) {

@@ -3,7 +3,8 @@ package ubic.gemma.core.util;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static ubic.gemma.core.util.TsvUtils.*;
+import static ubic.gemma.core.util.TsvUtils.format;
+import static ubic.gemma.core.util.TsvUtils.formatComment;
 
 public class TsvUtilsTest {
 
@@ -29,6 +30,7 @@ public class TsvUtilsTest {
         assertEquals( "", format( Double.NaN ) );
         assertEquals( "inf", format( Double.POSITIVE_INFINITY ) );
         assertEquals( "-inf", format( Double.NEGATIVE_INFINITY ) );
+        assertEquals( "", format( ( Object ) Double.NaN ) );
     }
 
     @Test

@@ -27,9 +27,11 @@ import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import java.io.File;
 import java.io.FileReader;
@@ -38,25 +40,30 @@ import java.util.Collection;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeNoException;
+import static org.junit.Assume.assumeNotNull;
 
 /**
  * @author keshav
  */
 public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
 
-    private final String shortName = "GSE1611";
-    private ExpressionExperiment ee = null;
     @Autowired
     private ExpressionExperimentService eeService = null;
     @Autowired
     private GeoService geoService;
+    @Autowired
+    private EntityUrlBuilder entityUrlBuilder;
+    @Autowired
+    private BuildInfo buildInfo;
+
+    private ExpressionExperiment ee = null;
 
     @Before
     public void setUp() throws Exception {
         try {
             geoService.setGeoDomainObjectGenerator(
                     new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "gds994Medium" ) ) );
-            Collection<?> results = geoService.fetchAndLoad( shortName, false, true, false );
+            Collection<?> results = geoService.fetchAndLoad( "GSE1611", false, true, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
@@ -74,15 +81,12 @@ public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
 
     @Test
     @Category(SlowTest.class)
-    public void testWrite() throws Exception {
-        if ( ee == null ) {
-            log.error( "Could not find experiment " + shortName + ".  Skipping test ..." );
-            return;
-        }
+    public void testGSE1611() throws Exception {
+        assumeNotNull( ee, "Could not find experiment GSE1611." );
 
-        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( "https://gemma.msl.ubc.ca" );
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo );
 
-        File f = File.createTempFile( "test_writer_" + shortName + ".", ".txt" );
+        File f = File.createTempFile( "test_writer_" + "GSE1611" + ".", ".txt" );
         try ( PrintWriter writer = new PrintWriter( f ) ) {
 
             edWriter.write( writer, ee, true );

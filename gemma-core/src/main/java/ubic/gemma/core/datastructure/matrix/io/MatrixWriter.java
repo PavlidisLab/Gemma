@@ -22,11 +22,13 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -48,10 +50,12 @@ import static ubic.gemma.core.util.TsvUtils.format;
 @ParametersAreNonnullByDefault
 public class MatrixWriter implements BulkExpressionDataMatrixWriter {
 
-    private final String gemmaHostUrl;
+    private final EntityUrlBuilder entityUrlBuilder;
+    private final BuildInfo buildInfo;
 
-    public MatrixWriter( String gemmaHostUrl ) {
-        this.gemmaHostUrl = gemmaHostUrl;
+    public MatrixWriter( EntityUrlBuilder entityUrlBuilder, BuildInfo buildInfo ) {
+        this.entityUrlBuilder = entityUrlBuilder;
+        this.buildInfo = buildInfo;
     }
 
     @Override
@@ -75,7 +79,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
 
         for ( int j = 0; j < rows; j++ ) {
             CompositeSequence probeForRow = matrix.getDesignElementForRow( j );
-            writer.append( format( probeForRow.getName() ) ).append( "\t" );
+            writer.append( format( probeForRow.getName() ) );
             this.writeSequence( probeForRow, writer );
             if ( geneAnnotations != null ) {
                 this.writeGeneInfo( probeForRow, geneAnnotations, writer );
@@ -111,22 +115,16 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
 
         for ( int j = 0; j < rows; j++ ) {
             CompositeSequence probeForRow = matrix.getDesignElementForRow( j );
-            writer.append( format( probeForRow.getName() ) ).append( "\t" );
+            writer.append( format( probeForRow.getName() ) );
             this.writeSequence( probeForRow, writer );
             if ( geneAnnotations != null ) {
                 this.writeStringifiedGeneInfo( probeForRow, geneAnnotations, writer );
             }
 
-            int orderedBioMLastIndex = orderedBioMaterials.size() - 1;
-
             for ( BioMaterial bioMaterial : orderedBioMaterials ) {
                 int i = matrix.getColumnIndex( bioMaterial );
                 Object val = matrix.get( j, i );
-                writer.append( format( val ) );
-                // Don't want line to contain a trailing unnecessary tab
-                if ( orderedBioMaterials.indexOf( bioMaterial ) != orderedBioMLastIndex ) {
-                    writer.append( "\t" );
-                }
+                writer.append( "\t" ).append( format( val ) );
             }
 
             writer.append( "\n" );
@@ -192,7 +190,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
             @Nullable Map<CompositeSequence, ?> geneAnnotations, Writer writer ) throws IOException {
 
         StringBuffer buf = new StringBuffer();
-        ExpressionDataWriterUtils.appendBaseHeader( matrix.getExpressionExperiment(), false, gemmaHostUrl, buf );
+        ExpressionDataWriterUtils.appendBaseHeader( matrix.getExpressionExperiment(), false, entityUrlBuilder.fromHostUrl( matrix.getExpressionExperiment() ).web().toUriString(), buildInfo, buf );
         writer.append( buf );
 
         writer.append( "Probe\tSequence" );
@@ -218,48 +216,47 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
      * @see ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl#readAnnotationFile(ArrayDesign)
      */
     private void writeStringifiedGeneInfo( CompositeSequence probe, Map<CompositeSequence, String[]> geneAnnotations, Writer buf ) throws IOException {
-        if ( geneAnnotations.containsKey( probe ) ) {
-
-            String[] geneStrings = geneAnnotations.get( probe );
-
-            if ( geneStrings.length == 0 ) {
-                buf.append( "\t\t\t\t" );
-                return;
-            }
-
-            String symbols = "";
-
-            if ( geneStrings.length > 1 && geneStrings[1] != null ) {
-                symbols = geneStrings[1];
-            }
-
-            String names = "";
-            if ( geneStrings.length > 2 && geneStrings[2] != null ) {
-                names = geneStrings[2];
-            }
-
-            String gemmaID = "";
-            if ( geneStrings.length > 3 && geneStrings[3] != null ) {
-                gemmaID = geneStrings[3];
-            }
-
-            String ncbiID = "";
-            if ( geneStrings.length > 4 && geneStrings[4] != null ) {
-                ncbiID = geneStrings[4];
-            }
-
-            // Improve compatibility with third-party programs like R. See bug 1851. Annotation file should already be
-            // cleaned, this is just to make sure.
-            names = names.replaceAll( "#", "_" );
-
-            // initial tab has already been added before
-            buf.append( format( symbols ) ).append( "\t" )
-                    .append( format( names ) ).append( "\t" )
-                    .append( format( gemmaID ) ).append( "\t" )
-                    .append( format( ncbiID ) ).append( "\t" );
-        } else {
+        if ( !geneAnnotations.containsKey( probe ) ) {
             buf.append( "\t\t\t\t" );
+            return;
         }
+
+        String[] geneStrings = geneAnnotations.get( probe );
+
+        if ( geneStrings.length == 0 ) {
+            buf.append( "\t\t\t\t" );
+            return;
+        }
+
+        String symbols = "";
+
+        if ( geneStrings.length > 1 && geneStrings[1] != null ) {
+            symbols = geneStrings[1];
+        }
+
+        String names = "";
+        if ( geneStrings.length > 2 && geneStrings[2] != null ) {
+            names = geneStrings[2];
+        }
+
+        String gemmaID = "";
+        if ( geneStrings.length > 3 && geneStrings[3] != null ) {
+            gemmaID = geneStrings[3];
+        }
+
+        String ncbiID = "";
+        if ( geneStrings.length > 4 && geneStrings[4] != null ) {
+            ncbiID = geneStrings[4];
+        }
+
+        // Improve compatibility with third-party programs like R. See bug 1851. Annotation file should already be
+        // cleaned, this is just to make sure.
+        names = names.replaceAll( "#", "_" );
+
+        buf.append( "\t" ).append( format( symbols ) )
+                .append( "\t" ).append( format( names ) )
+                .append( "\t" ).append( format( gemmaID ) )
+                .append( "\t" ).append( format( ncbiID ) );
     }
 
     /**
@@ -274,10 +271,10 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
         } else if ( genes.size() == 1 ) {
             // simple case, avoid some overhead.
             Gene g = genes.iterator().next();
-            writer.append( format( g.getOfficialSymbol() ) ).append( "\t" )
-                    .append( format( g.getOfficialName() ) ).append( "\t" )
-                    .append( format( g.getId() ) ).append( "\t" )
-                    .append( format( g.getNcbiGeneId() ) );
+            writer.append( "\t" ).append( format( g.getOfficialSymbol() ) )
+                    .append( "\t" ).append( format( g.getOfficialName() ) )
+                    .append( "\t" ).append( format( g.getId() ) )
+                    .append( "\t" ).append( format( g.getNcbiGeneId() ) );
         } else {
             List<String> gs = new ArrayList<>();
             List<String> gn = new ArrayList<>();
@@ -290,21 +287,18 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
                 ncbiIds.add( format( gene.getNcbiGeneId() ) );
             }
             writer
-                    .append( StringUtils.join( gs, SUB_DELIMITER ) )
-                    .append( "\t" )
-                    .append( StringUtils.join( gn, SUB_DELIMITER ) )
-                    .append( "\t" )
-                    .append( StringUtils.join( ids, SUB_DELIMITER ) )
-                    .append( "\t" )
-                    .append( StringUtils.join( ncbiIds, SUB_DELIMITER ) );
+                    .append( "\t" ).append( StringUtils.join( gs, SUB_DELIMITER ) )
+                    .append( "\t" ).append( StringUtils.join( gn, SUB_DELIMITER ) )
+                    .append( "\t" ).append( StringUtils.join( ids, SUB_DELIMITER ) )
+                    .append( "\t" ).append( StringUtils.join( ncbiIds, SUB_DELIMITER ) );
         }
     }
 
     private void writeSequence( CompositeSequence probeForRow, Writer buf ) throws IOException {
         BioSequence biologicalCharacteristic = probeForRow.getBiologicalCharacteristic();
-        if ( biologicalCharacteristic != null )
-            buf.append( format( biologicalCharacteristic.getName() ) );
-
         buf.append( "\t" );
+        if ( biologicalCharacteristic != null ) {
+            buf.append( format( biologicalCharacteristic.getName() ) );
+        }
     }
 }

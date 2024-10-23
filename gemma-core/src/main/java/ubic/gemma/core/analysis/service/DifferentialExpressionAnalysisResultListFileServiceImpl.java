@@ -1,7 +1,9 @@
 package ubic.gemma.core.analysis.service;
 
 import org.apache.commons.csv.CSVPrinter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.analysis.expression.diff.Baseline;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -21,12 +23,16 @@ import static ubic.gemma.core.util.TsvUtils.*;
 @Service
 public class DifferentialExpressionAnalysisResultListFileServiceImpl implements DifferentialExpressionAnalysisResultListFileService {
 
+    @Autowired
+    private BuildInfo buildInfo;
+
     @Override
     public void writeTsv( List<DifferentialExpressionAnalysisResult> entity, @Nullable Gene gene, @Nullable Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, @Nullable Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap, @Nullable Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap, Writer writer ) throws IOException {
-        List<String> extraHeaderComments = new ArrayList<>();
+        String what = "Differential expression analysis results";
         if ( gene != null ) {
-            extraHeaderComments.add( "Results for " + gene );
+            what += " for " + gene;
         }
+        List<String> extraHeaderComments = new ArrayList<>();
         extraHeaderComments.add( String.format( "The 'contrasts' column contains contrasts delimited by '%s'. Each contrast is structured as space-delimited key=value pairs. Factors are encoded by their factor value ID for the 'factor' key. Interaction of factors are encoded as 'id1:id2'. Continuous contrasts will use the '[continuous]' indicator.", SUB_DELIMITER ) );
         extraHeaderComments.add( "Baselines are encoded as a factor value ID. Baselines for interactions are encoded as 'id1:id2'." );
         List<String> header = new ArrayList<>();
@@ -47,7 +53,7 @@ public class DifferentialExpressionAnalysisResultListFileServiceImpl implements 
         if ( baselineMap != null ) {
             header.add( "baseline" );
         }
-        try ( CSVPrinter printer = getTsvFormatBuilder( extraHeaderComments.toArray( new String[0] ) )
+        try ( CSVPrinter printer = getTsvFormatBuilder( what, buildInfo, extraHeaderComments.toArray( new String[0] ) )
                 .setHeader( header.toArray( new String[0] ) ).build().print( writer ) ) {
             for ( DifferentialExpressionAnalysisResult result : entity ) {
                 List<Object> record = new ArrayList<>( header.size() );

@@ -2,8 +2,10 @@ package ubic.gemma.core.analysis.service;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.csv.CSVPrinter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.Characteristic;
@@ -27,8 +29,12 @@ import static ubic.gemma.core.util.TsvUtils.*;
 @CommonsLog
 public class ExpressionAnalysisResultSetFileServiceImpl implements ExpressionAnalysisResultSetFileService {
 
+    @Autowired
+    private BuildInfo buildInfo;
+
     @Override
     public void writeTsv( ExpressionAnalysisResultSet analysisResultSet, @Nullable Baseline baseline, @Nullable Map<Long, Set<Gene>> resultId2Genes, Writer writer ) throws IOException {
+        String what = "Differential expression analysis result set with ID " + analysisResultSet.getId();
         List<String> extraHeaderComments = new ArrayList<>();
 
         String experimentalFactorsMetadata = "[" + analysisResultSet.getExperimentalFactors().stream()
@@ -94,7 +100,7 @@ public class ExpressionAnalysisResultSetFileServiceImpl implements ExpressionAna
                     contrastResultPrefix + "pvalue" ) );
         }
 
-        try ( CSVPrinter printer = getTsvFormatBuilder( extraHeaderComments.toArray( new String[0] ) )
+        try ( CSVPrinter printer = getTsvFormatBuilder( what, buildInfo, extraHeaderComments.toArray( new String[1] ) )
                 .setHeader( header.toArray( new String[0] ) )
                 .build()
                 .print( writer ) ) {

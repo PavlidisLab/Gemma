@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.core.datastructure.matrix.DoubleSingleCellExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -15,6 +16,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.util.ByteArrayUtils;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -46,10 +48,12 @@ import static ubic.gemma.core.util.TsvUtils.format;
  */
 public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter {
 
-    private final String gemmaHostUrl;
+    private final EntityUrlBuilder entityUrlBuilder;
+    private final BuildInfo buildInfo;
 
-    public TabularMatrixWriter( String gemmaHostUrl ) {
-        this.gemmaHostUrl = gemmaHostUrl;
+    public TabularMatrixWriter( EntityUrlBuilder entityUrlBuilder, BuildInfo buildInfo ) {
+        this.entityUrlBuilder = entityUrlBuilder;
+        this.buildInfo = buildInfo;
     }
 
     @Override
@@ -110,8 +114,9 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
 
     private void writeHeader( ExpressionExperiment ee, QuantitationType qt, SingleCellDimension scd, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer pwriter ) throws IOException {
         StringBuffer buf = new StringBuffer();
-        appendBaseHeader( ee, "Single-cell expression data", gemmaHostUrl, buf );
+        appendBaseHeader( ee, "Single-cell expression data", entityUrlBuilder.fromHostUrl( ee ).web().toUriString(), buildInfo, buf );
         pwriter.write( buf.toString() );
+        pwriter.append( "# Dataset: " ).append( format( ee ) ).append( "\n" );
         pwriter.append( "# Single-cell dimension: " ).append( format( scd ) ).append( "\n" );
         pwriter.append( "# Quantitation type: " ).append( format( qt ) ).append( "\n" );
         pwriter.append( "# Samples: " ).append( scd.getBioAssays().stream().map( TsvUtils::format ).collect( Collectors.joining( ", " ) ) ).append( "\n" );

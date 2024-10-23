@@ -72,6 +72,7 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
 import ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -83,6 +84,7 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.util.EntityNotFoundException;
@@ -141,12 +143,13 @@ public class ExpressionExperimentQCController extends BaseController {
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
     @Autowired
     private CoexpressionAnalysisService coexpressionAnalysisService;
+    @Autowired
+    private EntityUrlBuilder entityUrlBuilder;
+    @Autowired
+    private BuildInfo buildInfo;
 
     @Value("${gemma.analysis.dir}")
     private Path analysisStoragePath;
-
-    @Value("${gemma.hosturl}")
-    private String gemmaHostUrl;
 
     @RequestMapping(value = "/expressionExperiment/detailedFactorAnalysis.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void detailedFactorAnalysis( @RequestParam("id") Long id, HttpServletResponse response ) throws Exception {
@@ -170,9 +173,9 @@ public class ExpressionExperimentQCController extends BaseController {
         StringWriter writer = new StringWriter();
         StringBuffer buf = writer.getBuffer();
 
-        ExpressionDataWriterUtils.appendBaseHeader( ee, "Outliers removed", gemmaHostUrl, buf );
+        ExpressionDataWriterUtils.appendBaseHeader( ee, "Outliers removed", entityUrlBuilder.fromHostUrl( ee ).web().toUriString(), buildInfo, buf );
 
-        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( gemmaHostUrl );
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo );
         ee = expressionExperimentService.thawLiter( ee );
         edWriter.write( writer, ee, bioAssays, false, true );
 
@@ -211,9 +214,9 @@ public class ExpressionExperimentQCController extends BaseController {
         StringWriter writer = new StringWriter();
         StringBuffer buf = writer.getBuffer();
 
-        ExpressionDataWriterUtils.appendBaseHeader( ee, "Sample outlier", gemmaHostUrl, buf );
+        ExpressionDataWriterUtils.appendBaseHeader( ee, "Sample outlier", entityUrlBuilder.fromHostUrl( ee ).web().toUriString(), buildInfo, buf );
 
-        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( gemmaHostUrl );
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo );
         ee = expressionExperimentService.thawLiter( ee );
         edWriter.write( writer, ee, bioAssays, false, true );
 
