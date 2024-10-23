@@ -42,13 +42,13 @@ public class SVDServiceImpl implements SVDService {
      */
     @Override
     @Transactional(readOnly = true)
-    public SVDValueObject getSvd( Long eeId ) {
+    public SVDResult getSvd( Long eeId ) {
         return svdServiceHelper.retrieveSvd( expressionExperimentService.loadOrFail( eeId ) );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public SVDValueObject getSvdFactorAnalysis( Long eeId ) {
+    public SVDResult getSvdFactorAnalysis( Long eeId ) {
         return svdServiceHelper.svdFactorAnalysis( expressionExperimentService.loadOrFail( eeId ) );
     }
 
@@ -67,7 +67,7 @@ public class SVDServiceImpl implements SVDService {
 
     @Override
     @Transactional
-    public SVDValueObject svd( Long eeId ) throws SVDException {
+    public SVDResult svd( Long eeId ) throws SVDException {
         return svdServiceHelper.svd( expressionExperimentService.loadOrFail( eeId ) );
     }
 }

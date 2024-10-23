@@ -26,7 +26,6 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Distance;
 import ubic.basecode.math.KruskalWallis;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
@@ -42,7 +41,6 @@ import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponent
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
 
@@ -88,15 +86,16 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
      * <p>
      * Continuous factor values are converted to a {@link Double} if possible, otherwise the {@link FactorValue#getId()}
      * is used. This is the case for categorical measurement.
-     * @param bioMaterialFactorMap to be populated, of experimental factor -&gt; biomaterial ID -&gt; factor value
-     *                             (double value if possible otherwise ID)
+     * @param bioMaterialFactorMap to be populated, of experimental factor -&gt; biomaterial ID -&gt; factor value, the
+     *                             value is that of the parsed measurement if numerical, otherwise the ID of the factor
+     *                             value
      * @param bm                   to populate for
      */
-    public static void populateBMFMap( Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap,
+    public static void populateBMFMap( Map<ExperimentalFactor, Map<BioMaterial, Number>> bioMaterialFactorMap,
             BioMaterial bm ) {
         for ( FactorValue fv : bm.getFactorValues() ) {
             ExperimentalFactor experimentalFactor = fv.getExperimentalFactor();
-            double valueToStore;
+            Number valueToStore;
             if ( experimentalFactor.getType().equals( FactorType.CONTINUOUS ) ) {
                 if ( fv.getMeasurement() != null && fv.getMeasurement().getValue() != null ) { // continuous
                     try {
@@ -112,22 +111,22 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
                                 break;
                             default:
                                 // non-numerical measurement can be treated as categorical
-                                valueToStore = fv.getId().doubleValue();
+                                valueToStore = fv.getId();
                         }
                     } catch ( NumberFormatException e ) {
                         valueToStore = Double.NaN; // due to a missing value
                     }
                 } else {
-                    valueToStore =Double.NaN;
+                    valueToStore = Double.NaN;
                 }
             } else {
                 // for categorical factors, we use the ids as dummy values.
-                valueToStore = fv.getId().doubleValue();
+                valueToStore = fv.getId();
             }
 
             bioMaterialFactorMap
                     .computeIfAbsent( experimentalFactor, k -> new HashMap<>() )
-                    .put( bm.getId(), valueToStore );
+                    .put( bm, valueToStore );
         }
     }
 
@@ -138,13 +137,13 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
      */
     @Override
     @Transactional(readOnly = true)
-    public SVDValueObject retrieveSvd( ExpressionExperiment ee ) {
+    public SVDResult retrieveSvd( ExpressionExperiment ee ) {
         PrincipalComponentAnalysis pca = this.principalComponentAnalysisService.loadForExperiment( ee );
         if ( pca == null )
             return null;
         // pca.setBioAssayDimension( bioAssayDimensionService.thawRawAndProcessed( pca.getBioAssayDimension() ) );
         try {
-            return new SVDValueObject( pca );
+            return new SVDResult( pca );
         } catch ( Exception e ) {
             SVDServiceHelperImpl.log.error( e.getLocalizedMessage() );
             return null;
@@ -153,7 +152,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
 
     @Override
     @Transactional
-    public SVDValueObject svd( ExpressionExperiment ee ) throws SVDException {
+    public SVDResult svd( ExpressionExperiment ee ) throws SVDException {
         assert ee != null;
 
         Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
@@ -274,20 +273,17 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
         if ( experimentalFactors.isEmpty() ) {
             return importantFactors;
         }
-        Map<Long, ExperimentalFactor> factors = EntityUtils.getIdMap( experimentalFactors );
-        SVDValueObject svdFactorAnalysis = this.svdFactorAnalysis( ee );
+        SVDResult svdFactorAnalysis = this.svdFactorAnalysis( ee );
         if ( svdFactorAnalysis == null ) {
             return importantFactors;
         }
-        Map<Integer, Map<Long, Double>> factorPVals = svdFactorAnalysis.getFactorPvals();
+        Map<Integer, Map<ExperimentalFactor, Double>> factorPVals = svdFactorAnalysis.getFactorPvals();
         for ( Integer cmp : factorPVals.keySet() ) {
-            Map<Long, Double> factorPv = factorPVals.get( cmp );
-            for ( Long efId : factorPv.keySet() ) {
-                Double pvalue = factorPv.get( efId );
-                ExperimentalFactor ef = factors.get( efId );
+            Map<ExperimentalFactor, Double> factorPv = factorPVals.get( cmp );
+            for ( ExperimentalFactor ef : factorPv.keySet() ) {
+                Double pvalue = factorPv.get( ef );
 
                 if ( pvalue < importanceThreshold ) {
-                    assert factors.containsKey( efId );
                     SVDServiceHelperImpl.log
                             .info( ef + " retained at p=" + String.format( "%.2g", pvalue ) + " for PC" + cmp );
                     importantFactors.add( ef );
@@ -305,21 +301,21 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
 
     @Override
     @Transactional(readOnly = true)
-    public SVDValueObject svdFactorAnalysis( PrincipalComponentAnalysis pca ) {
+    public SVDResult svdFactorAnalysis( PrincipalComponentAnalysis pca ) {
 
         BioAssayDimension bad = pca.getBioAssayDimension();
         List<BioAssay> bioAssays = bad.getBioAssays();
 
-        SVDValueObject svo;
+        SVDResult svo;
         try {
-            svo = new SVDValueObject( pca );
+            svo = new SVDResult( pca );
         } catch ( Exception e ) {
             SVDServiceHelperImpl.log.error( e.getLocalizedMessage() );
             return null;
         }
 
-        Map<Long, Date> bioMaterialDates = new HashMap<>();
-        Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap = new HashMap<>();
+        Map<BioMaterial, Date> bioMaterialDates = new HashMap<>();
+        Map<ExperimentalFactor, Map<BioMaterial, Number>> bioMaterialFactorMap = new HashMap<>();
 
         this.prepareForFactorComparisons( svo, bioAssays, bioMaterialDates, bioMaterialFactorMap );
 
@@ -328,7 +324,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
             return svo;
         }
 
-        Long[] svdBioMaterials = svo.getBioMaterialIds();
+        List<BioMaterial> svdBioMaterials = svo.getBioMaterials();
 
         svo.getDateCorrelations().clear();
         svo.getFactorCorrelations().clear();
@@ -336,8 +332,8 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
         svo.getFactors().clear();
 
         for ( int componentNumber = 0; componentNumber < Math
-                .min( svo.getvMatrix().columns(), SVDServiceHelperImpl.MAX_EIGEN_GENES_TO_TEST ); componentNumber++ ) {
-            this.analyzeComponent( svo, componentNumber, svo.getvMatrix(), bioMaterialDates, bioMaterialFactorMap,
+                .min( svo.getVMatrix().columns(), SVDServiceHelperImpl.MAX_EIGEN_GENES_TO_TEST ); componentNumber++ ) {
+            this.analyzeComponent( svo, componentNumber, svo.getVMatrix(), bioMaterialDates, bioMaterialFactorMap,
                     svdBioMaterials );
         }
 
@@ -346,7 +342,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
 
     @Override
     @Transactional(readOnly = true)
-    public SVDValueObject svdFactorAnalysis( ExpressionExperiment ee ) {
+    public SVDResult svdFactorAnalysis( ExpressionExperiment ee ) {
         PrincipalComponentAnalysis pca = principalComponentAnalysisService.loadForExperiment( ee );
         if ( pca == null ) {
             SVDServiceHelperImpl.log.warn( "PCA not available for this experiment" );
@@ -358,17 +354,17 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
     /**
      * Do the factor comparisons for one component.
      *
-     * @param bioMaterialFactorMap Map of factors to biomaterials to the value we're going to use. Even for
-     *                             non-continuous factors the value is a double.
+     * @param bioMaterialFactorMap Map of factors to biomaterials to the value we're going to use. For non-continuous
+     *                             factor, the value is the ID of the factor value
      */
-    private void analyzeComponent( SVDValueObject svo, int componentNumber, DoubleMatrix<Long, Integer> vMatrix,
-            Map<Long, Date> bioMaterialDates, Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap,
-            Long[] svdBioMaterials ) {
+    private void analyzeComponent( SVDResult svo, int componentNumber, DoubleMatrix<BioMaterial, Integer> vMatrix,
+            Map<BioMaterial, Date> bioMaterialDates, Map<ExperimentalFactor, Map<BioMaterial, Number>> bioMaterialFactorMap,
+            List<BioMaterial> svdBioMaterials ) {
         DoubleArrayList eigenGene = new DoubleArrayList( vMatrix.getColumn( componentNumber ) );
         // since we use rank correlation/anova, we just use the casted ids (two-groups) or dates as the covariate
 
         int numWithDates = 0;
-        for ( Long id : bioMaterialDates.keySet() ) {
+        for ( BioMaterial id : bioMaterialDates.keySet() ) {
             if ( bioMaterialDates.get( id ) != null ) {
                 numWithDates++;
             }
@@ -379,19 +375,19 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
              * Get the dates in order, - no rounding.
              */
             boolean initializingDates = svo.getDates().isEmpty();
-            double[] dates = new double[svdBioMaterials.length];
+            double[] dates = new double[svdBioMaterials.size()];
 
             /*
              * If dates are all the same, skip.
              */
             Set<Date> uniqueDate = new HashSet<>();
 
-            for ( int j = 0; j < svdBioMaterials.length; j++ ) {
+            for ( int j = 0; j < svdBioMaterials.size(); j++ ) {
 
-                Date date = bioMaterialDates.get( svdBioMaterials[j] );
+                Date date = bioMaterialDates.get( svdBioMaterials.get( j ) );
                 if ( date == null ) {
                     SVDServiceHelperImpl.log
-                            .warn( "Incomplete date information, missing for biomaterial " + svdBioMaterials[j] );
+                            .warn( "Incomplete date information, missing for biomaterial " + svdBioMaterials.get( j ) );
                     dates[j] = Double.NaN;
                 } else {
                     Date roundDate = DateUtils.round( date, Calendar.MINUTE );
@@ -428,21 +424,21 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
          * eigen-genes. Using rank statistics.
          */
         for ( ExperimentalFactor ef : bioMaterialFactorMap.keySet() ) {
-            Map<Long, Double> bmToFv = bioMaterialFactorMap.get( ef );
+            Map<BioMaterial, Number> bmToFv = bioMaterialFactorMap.get( ef );
 
-            double[] fvs = new double[svdBioMaterials.length];
+            double[] fvs = new double[svdBioMaterials.size()];
             assert fvs.length > 0;
 
             int numNotMissing = 0;
 
             boolean initializing = false;
-            if ( !svo.getFactors().containsKey( ef.getId() ) ) {
-                svo.getFactors().put( ef.getId(), new ArrayList<>() );
+            if ( !svo.getFactors().containsKey( ef ) ) {
+                svo.getFactors().put( ef, new ArrayList<>() );
                 initializing = true;
             }
 
-            for ( int j = 0; j < svdBioMaterials.length; j++ ) {
-                fvs[j] = bmToFv.get( svdBioMaterials[j] );
+            for ( int j = 0; j < svdBioMaterials.size(); j++ ) {
+                fvs[j] = bmToFv.get( svdBioMaterials.get( j ) ).doubleValue();
                 if ( !Double.isNaN( fvs[j] ) ) {
                     numNotMissing++;
                 }
@@ -451,8 +447,8 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
                 if ( initializing ) {
                     if ( SVDServiceHelperImpl.log.isDebugEnabled() )
                         SVDServiceHelperImpl.log
-                                .debug( "EF:" + ef.getId() + " fv=" + bmToFv.get( svdBioMaterials[j] ) );
-                    svo.getFactors().get( ef.getId() ).add( bmToFv.get( svdBioMaterials[j] ) );
+                                .debug( "EF:" + ef.getId() + " fv=" + bmToFv.get( svdBioMaterials.get( j ) ) );
+                    svo.getFactors().get( ef ).add( bmToFv.get( svdBioMaterials.get( j ) ).doubleValue() );
                 }
             }
 
@@ -527,7 +523,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
                      */
                     if ( corrPvalue <= kwPVal ) {
                         svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
-                        svo.setPCFactorCorrelationPval( componentNumber, ef, corrPvalue);
+                        svo.setPCFactorCorrelationPval( componentNumber, ef, corrPvalue );
                     } else {
                         // hack. A bit like turning pvalues into prob it
                         double approxCorr = CorrelationStats
@@ -543,31 +539,29 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
     /**
      * Fill in NaN for any missing biomaterial factorValues (dates were already done)
      */
-    private void fillInMissingValues( Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap,
-            Long[] svdBioMaterials ) {
+    private void fillInMissingValues( Map<ExperimentalFactor, Map<BioMaterial, Number>> bioMaterialFactorMap,
+            List<BioMaterial> svdBioMaterials ) {
 
-        for ( Long id : svdBioMaterials ) {
+        for ( BioMaterial bm : svdBioMaterials ) {
             for ( ExperimentalFactor ef : bioMaterialFactorMap.keySet() ) {
-                if ( !bioMaterialFactorMap.get( ef ).containsKey( id ) ) {
+                if ( !bioMaterialFactorMap.get( ef ).containsKey( bm ) ) {
                     /*
                      * Missing values in factors, not fatal but not great either.
                      */
                     if ( SVDServiceHelperImpl.log.isDebugEnabled() )
-                        SVDServiceHelperImpl.log
-                                .debug( "Incomplete factorvalue information for " + ef + " (biomaterial id=" + id
-                                        + " missing a value)" );
-                    bioMaterialFactorMap.get( ef ).put( id, Double.NaN );
+                        SVDServiceHelperImpl.log.debug( "Incomplete factorvalue information for " + ef + ": " + bm + " missing a value" );
+                    bioMaterialFactorMap.get( ef ).put( bm, Double.NaN );
                 }
             }
         }
     }
 
-    private void getFactorsForAnalysis( Collection<BioAssay> bioAssays, Map<Long, Date> bioMaterialDates,
-            Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap ) {
+    private void getFactorsForAnalysis( Collection<BioAssay> bioAssays, Map<BioMaterial, Date> bioMaterialDates,
+            Map<ExperimentalFactor, Map<BioMaterial, Number>> bioMaterialFactorMap ) {
         for ( BioAssay bioAssay : bioAssays ) {
             Date processingDate = bioAssay.getProcessingDate();
             BioMaterial bm = bioAssay.getSampleUsed();
-            bioMaterialDates.put( bm.getId(), processingDate ); // can be null
+            bioMaterialDates.put( bm, processingDate ); // can be null
 
             SVDServiceHelperImpl.populateBMFMap( bioMaterialFactorMap, bm );
         }
@@ -576,21 +570,20 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
     /**
      * Gather the information we need for comparing PCs to factors.
      */
-    private void prepareForFactorComparisons( SVDValueObject svo, Collection<BioAssay> bioAssays,
-            Map<Long, Date> bioMaterialDates, Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap ) {
+    private void prepareForFactorComparisons( SVDResult svo, Collection<BioAssay> bioAssays,
+            Map<BioMaterial, Date> bioMaterialDates, Map<ExperimentalFactor, Map<BioMaterial, Number>> bioMaterialFactorMap ) {
         /*
          * Note that dates or batch information can be missing for some bioassays.
          */
 
         this.getFactorsForAnalysis( bioAssays, bioMaterialDates, bioMaterialFactorMap );
-        Long[] svdBioMaterials = svo.getBioMaterialIds();
+        List<BioMaterial> svdBioMaterials = svo.getBioMaterials();
 
-        if ( svdBioMaterials == null || svdBioMaterials.length == 0 ) {
+        if ( svdBioMaterials == null || svdBioMaterials.isEmpty() ) {
             throw new IllegalStateException( "SVD did not have biomaterial information" );
         }
 
         this.fillInMissingValues( bioMaterialFactorMap, svdBioMaterials );
-
     }
 
     private PrincipalComponentAnalysis updatePca( ExpressionExperiment ee, ExpressionDataSVD svd,
