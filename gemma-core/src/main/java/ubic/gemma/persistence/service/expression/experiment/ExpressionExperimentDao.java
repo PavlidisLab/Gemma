@@ -453,6 +453,18 @@ public interface ExpressionExperimentDao
     CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee );
 
     /**
+     * Obtain a cell type assignment by ID.
+     */
+    @Nullable
+    CellTypeAssignment getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, Long ctaId );
+
+    /**
+     * Obtain a cell type assignment by name.
+     */
+    @Nullable
+    CellTypeAssignment getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, String ctaName );
+
+    /**
      * Obtain all cell-level characteristics from all single cell dimensions.
      */
     List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee );

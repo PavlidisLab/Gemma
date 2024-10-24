@@ -43,15 +43,19 @@ public class SingleCellExpressionExperimentSplitServiceImpl implements SingleCel
     public List<ExpressionExperimentSubSet> splitByCellType( ExpressionExperiment ee ) {
         CellTypeAssignment cta = singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee )
                 .orElseThrow( () -> new IllegalStateException( ee + " does not have a preferred cell type assignment." ) );
+        return splitByCellType( ee, cta );
+    }
+
+    @Override
+    @Transactional
+    public List<ExpressionExperimentSubSet> splitByCellType( ExpressionExperiment ee, CellTypeAssignment cta ) {
         // the characteristics from the CTA have to be mapped with the statements from the factor values
         ExperimentalFactor cellTypeFactor = singleCellExpressionExperimentService.getCellTypeFactor( ee )
                 .orElseThrow( () -> new IllegalStateException( ee + " does not have a cell type factor." ) );
         return splitByCellType( ee, cta, cellTypeFactor );
     }
 
-    @Override
-    @Transactional
-    public List<ExpressionExperimentSubSet> splitByCellType( ExpressionExperiment ee, CellTypeAssignment cta, ExperimentalFactor cellTypeFactor ) {
+    private List<ExpressionExperimentSubSet> splitByCellType( ExpressionExperiment ee, CellTypeAssignment cta, ExperimentalFactor cellTypeFactor ) {
         Map<Characteristic, FactorValue> mappedCellTypeFactors = mapCellTypeAssignmentToCellTypeFactor( cta, cellTypeFactor );
         List<ExpressionExperimentSubSet> results = new ArrayList<>( cta.getCellTypes().size() );
         // create sample by cell type populations

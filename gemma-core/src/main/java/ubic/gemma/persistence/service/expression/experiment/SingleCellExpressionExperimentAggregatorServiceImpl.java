@@ -45,13 +45,15 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
      */
     @Override
     @Transactional
-    public QuantitationType aggregateVectors( ExpressionExperiment ee, List<BioAssay> cellBAs, boolean makePreferred ) {
+    public QuantitationType aggregateVectors( ExpressionExperiment ee, QuantitationType quantitationType, List<BioAssay> cellBAs, boolean makePreferred ) {
         // FIXME: this is needed because if EE is not in the session, getPreferredSingleCellDataVectors() will retrieve
         //        a distinct QT than that of ee.getQuantitationTypes()
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         ExpressionExperiment finalEe = ee;
-        Collection<SingleCellExpressionDataVector> vectors = singleCellExpressionExperimentService.getPreferredSingleCellDataVectors( ee )
-                .orElseThrow( () -> new IllegalStateException( finalEe + " does not have a set of preferred single-cell vectors." ) );
+        Collection<SingleCellExpressionDataVector> vectors = singleCellExpressionExperimentService.getSingleCellDataVectors( ee, quantitationType );
+        if ( vectors.isEmpty() ) {
+            throw new IllegalStateException( finalEe + " does not have single-cell vectors for " + quantitationType + "." );
+        }
         CellTypeAssignment cta = singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee )
                 .orElseThrow( () -> new IllegalStateException( finalEe + " does not have a preferred cell type assignment." ) );
         ExperimentalFactor cellTypeFactor = singleCellExpressionExperimentService.getCellTypeFactor( ee )

@@ -14,10 +14,11 @@ public interface SingleCellExpressionExperimentAggregatorService {
 
     /**
      * Aggregate preferred single-cell data vectors by the preferred cell type assignment.
+     * @param qt            single-cell quantitation type to aggregate
      * @param cellBAs       samples to aggregate vectors for
      * @param makePreferred make the resulting QT preferred
      * @return the quantitation type of the newly created vectors
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    QuantitationType aggregateVectors( ExpressionExperiment ee, List<BioAssay> cellBAs, boolean makePreferred );
+    QuantitationType aggregateVectors( ExpressionExperiment ee, QuantitationType qt, List<BioAssay> cellBAs, boolean makePreferred );
 }

@@ -157,10 +157,27 @@ public interface SingleCellExpressionExperimentService {
     List<CellTypeAssignment> getCellTypeAssignments( ExpressionExperiment ee );
 
     /**
+     * Obtain a cell type assignment by ID.
+     * @return that cell type assignmente, or null if none is found
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Optional<CellTypeAssignment> getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, Long ctaId );
+
+    /**
+     * Obtain a cell type assignment by name.
+     * @return that cell type assignmente, or null if none is found
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Optional<CellTypeAssignment> getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, String ctaName );
+
+    /**
      * Obtain the preferred cell type labelling from the preferred single-cell vectors.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Optional<CellTypeAssignment> getPreferredCellTypeAssignment( ExpressionExperiment ee );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Optional<CellTypeAssignment> getPreferredCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt );
 
     /**
      * Add new cell-level characteristics.

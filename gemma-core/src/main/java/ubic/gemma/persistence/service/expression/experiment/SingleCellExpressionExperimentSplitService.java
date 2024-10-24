@@ -1,8 +1,9 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
@@ -16,23 +17,22 @@ public interface SingleCellExpressionExperimentSplitService {
 
     /**
      * Split single-cell vectors by the preferred cell type assignment.
-     * @see #splitByCellType(ExpressionExperiment, CellTypeAssignment, ExperimentalFactor)
+     * @see #splitByCellType(ExpressionExperiment, CellTypeAssignment)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     List<ExpressionExperimentSubSet> splitByCellType( ExpressionExperiment ee );
 
     /**
-     * Split biomaterials and bioassays by the given cell type assignment and factor.
+     * Split biomaterials and bioassays by the given cell type assignment.
      * <p>
      * This method will:
      * <ul>
-     * <li>create sub-biomaterial for each subject and cell type</li>
-     * <li>create bioassays for the sub-biomaterials</li>
-     * <li>attach the bioassay to the experiment</li>
+     * <li>create sub-{@link BioMaterial}s for each subject and cell type</li>
+     * <li>create corresponding {@link BioAssay}s for the sub-{@link BioMaterial}s</li>
+     * <li>attach the {@link BioAssay}s to {@link ExpressionExperimentSubSet}</li>
      * </ul>
-     *
-     * @return a list of samples representing subpopulations of cells
+     * @return a list of subsets representing subpopulations of cells
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    List<ExpressionExperimentSubSet> splitByCellType( ExpressionExperiment ee, CellTypeAssignment cta, ExperimentalFactor cellTypeFactor );
+    List<ExpressionExperimentSubSet> splitByCellType( ExpressionExperiment ee, CellTypeAssignment cta );
 }

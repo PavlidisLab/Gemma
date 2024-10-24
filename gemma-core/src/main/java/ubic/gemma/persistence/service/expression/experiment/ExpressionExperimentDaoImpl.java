@@ -2261,6 +2261,34 @@ public class ExpressionExperimentDaoImpl
                 .uniqueResult();
     }
 
+    @Nullable
+    @Override
+    public CellTypeAssignment getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, Long ctaId ) {
+        return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct cta from SingleCellExpressionDataVector scedv "
+                        + "join scedv.singleCellDimension scd "
+                        + "join scd.cellTypeAssignments cta "
+                        + "where scedv.quantitationType = :qt and cta.id = :ctaId and scedv.expressionExperiment = :ee" )
+                .setParameter( "ee", expressionExperiment )
+                .setParameter( "qt", qt )
+                .setParameter( "ctaId", ctaId )
+                .uniqueResult();
+    }
+
+    @Nullable
+    @Override
+    public CellTypeAssignment getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, String ctaName ) {
+        return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct cta from SingleCellExpressionDataVector scedv "
+                        + "join scedv.singleCellDimension scd "
+                        + "join scd.cellTypeAssignments cta "
+                        + "where scedv.quantitationType = :qt and cta.name = :ctaName and scedv.expressionExperiment = :ee" )
+                .setParameter( "ee", expressionExperiment )
+                .setParameter( "qt", qt )
+                .setParameter( "ctaName", ctaName )
+                .uniqueResult();
+    }
+
     @Override
     public List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee ) {
         List<CellLevelCharacteristics> results = new ArrayList<>( getCellTypeAssignments( ee ) );

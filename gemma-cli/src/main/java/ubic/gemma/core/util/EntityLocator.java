@@ -6,13 +6,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.protocol.Protocol;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
+import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.protocol.ProtocolService;
+import ubic.gemma.persistence.service.common.quantitationtype.NonUniqueQuantitationTypeByNameException;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+
+import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
 
@@ -32,6 +40,8 @@ public class EntityLocator {
     private ArrayDesignService arrayDesignService;
     @Autowired
     private ProtocolService protocolService;
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
 
     public Taxon locateTaxon( String identifier ) {
         Assert.isTrue( StringUtils.isNotBlank( identifier ), "Taxon name must be be blank." );
@@ -137,5 +147,34 @@ public class EntityLocator {
         }
         return requireNonNull( protocolService.findByName( protocolName ),
                 "Could not locate any protocol with identifier or name matching " + protocolName );
+    }
+
+    public QuantitationType locateQuantitationType( ExpressionExperiment ee, String qt, Class<? extends DataVector> vectorType ) {
+        try {
+            quantitationTypeService.loadByIdAndVectorType( Long.parseLong( qt ), ee, vectorType );
+        } catch ( NumberFormatException e ) {
+            // ignore
+        }
+        try {
+            return requireNonNull( quantitationTypeService.findByNameAndVectorType( ee, qt, vectorType ) );
+        } catch ( NonUniqueQuantitationTypeByNameException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    @Autowired
+    private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
+
+    public CellTypeAssignment locateCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, String cta ) {
+        try {
+            Optional<CellTypeAssignment> c = singleCellExpressionExperimentService.getCellTypeAssignment( expressionExperiment, qt, Long.parseLong( cta ) );
+            if ( c.isPresent() ) {
+                return c.get();
+            }
+        } catch ( NumberFormatException e ) {
+            // ignore
+        }
+        return singleCellExpressionExperimentService.getCellTypeAssignment( expressionExperiment, qt, cta )
+                .orElseThrow( () -> new NullPointerException( "Could not locate any cell type assignment with identifier or name matching " + cta ) );
     }
 }

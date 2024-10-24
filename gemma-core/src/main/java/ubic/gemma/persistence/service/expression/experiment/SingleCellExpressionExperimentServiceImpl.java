@@ -464,11 +464,30 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<CellTypeAssignment> getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, Long ctaId ) {
+        return Optional.ofNullable( expressionExperimentDao.getCellTypeAssignment( expressionExperiment, qt, ctaId ) );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<CellTypeAssignment> getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, String ctaName ) {
+        return Optional.ofNullable( expressionExperimentDao.getCellTypeAssignment( expressionExperiment, qt, ctaName ) );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<CellTypeAssignment> getPreferredCellTypeAssignment( ExpressionExperiment ee ) {
         return Optional.ofNullable( expressionExperimentDao.getPreferredCellTypeAssignment( ee ) );
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Optional<CellTypeAssignment> getPreferredCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt ) {
+        return Optional.ofNullable( expressionExperimentDao.getPreferredCellTypeAssignment( ee ) );
+    }
+
+    @Override
+    @Transactional
     public CellLevelCharacteristics addCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDimension scd, CellLevelCharacteristics clc ) {
         Assert.notNull( ee.getId(), "Dataset must be persistent." );
         Assert.notNull( scd.getId(), "Dimension must be persistent." );
@@ -481,6 +500,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     }
 
     @Override
+    @Transactional
     public void removeCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDimension scd, CellLevelCharacteristics clc ) {
         Assert.notNull( ee.getId(), "Dataset must be persistent." );
         Assert.notNull( scd.getId(), "Dimension must be persistent." );
@@ -498,6 +518,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         return expressionExperimentDao.getCellLevelCharacteristics( ee );
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee, Category category ) {
         return expressionExperimentDao.getCellLevelCharacteristics( ee, category );
     }
@@ -509,6 +531,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<ExperimentalFactor> getCellTypeFactor( ExpressionExperiment ee ) {
         if ( ee.getExperimentalDesign() == null ) {
             log.warn( ee + " does not have an experimental design, returning null for the cell type factor." );
