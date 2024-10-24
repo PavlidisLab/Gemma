@@ -23,11 +23,11 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -40,10 +40,10 @@ import java.io.PrintWriter;
 public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatingCLI {
 
     @Autowired
-    private BuildInfo buildInfo;
+    private EntityUrlBuilder entityUrlBuilder;
 
-    @Value("${gemma.hosturl}")
-    private String gemmaHostUrl;
+    @Autowired
+    private BuildInfo buildInfo;
 
     private String outFileName;
 
@@ -74,7 +74,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
-        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( gemmaHostUrl, buildInfo );
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo );
         try ( PrintWriter writer = new PrintWriter( outFileName + "_" + FileTools.cleanForFileName( ee.getShortName() ) + ".txt" ) ) {
             edWriter.write( writer, ee, true );
             writer.flush();
