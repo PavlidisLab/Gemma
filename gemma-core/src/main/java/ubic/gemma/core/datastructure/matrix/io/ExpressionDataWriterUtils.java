@@ -29,6 +29,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -60,15 +61,18 @@ public class ExpressionDataWriterUtils {
      * Appends base header information (about the experiment) to a file.
      *
      * @param buf         buffer
-     * @param experiment  ee
      * @param fileTypeStr file type str
+     * @param experiment  ee
+     * @param experimentUrl an URL for the expriment, or null to ommit
      */
-    public static void appendBaseHeader( ExpressionExperiment experiment, String fileTypeStr, String experimentUrl, BuildInfo buildInfo, StringBuffer buf ) {
+    public static void appendBaseHeader( ExpressionExperiment experiment, String fileTypeStr, @Nullable String experimentUrl, BuildInfo buildInfo, StringBuffer buf ) {
         appendBaseHeader( fileTypeStr, buildInfo, buf );
         buf.append( "#\n" );
         buf.append( "# shortName=" ).append( experiment.getShortName() ).append( "\n" );
         buf.append( "# name=" ).append( experiment.getName() ).append( "\n" );
-        buf.append( "# Experiment details: " ).append( experimentUrl ).append( "\n" );
+        if ( experimentUrl != null ) {
+            buf.append( "# Experiment details: " ).append( experimentUrl ).append( "\n" );
+        }
     }
 
     public static void appendBaseHeader( String fileTypeStr, BuildInfo buildInfo, StringBuffer buf ) {

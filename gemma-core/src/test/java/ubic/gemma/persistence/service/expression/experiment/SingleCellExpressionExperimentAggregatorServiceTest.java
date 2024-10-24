@@ -146,10 +146,10 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         cta.setCellTypeIndices( indices );
         cta.setPreferred( true );
         dimension.getCellTypeAssignments().add( cta );
-        when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee ) )
+        when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, qt ) )
                 .thenReturn( Optional.of( cta ) );
-        when( singleCellExpressionExperimentService.getPreferredSingleCellDataVectors( ee ) )
-                .thenReturn( Optional.of( vectors ) );
+        when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
+                .thenReturn( vectors );
 
         QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true );
         assertThat( newQt.getName() ).isEqualTo( "Counts aggregated by cell type" );
@@ -196,8 +196,8 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         dimension.getCellTypeAssignments().add( cta );
         when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee ) )
                 .thenReturn( Optional.of( cta ) );
-        when( singleCellExpressionExperimentService.getPreferredSingleCellDataVectors( ee ) )
-                .thenReturn( Optional.of( vectors ) );
+        when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
+                .thenReturn( vectors );
 
         QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true );
         assertThat( newQt.getName() ).isEqualTo( "log2cpm aggregated by cell type" );
@@ -244,8 +244,8 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         dimension.getCellTypeAssignments().add( cta );
         when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee ) )
                 .thenReturn( Optional.of( cta ) );
-        when( singleCellExpressionExperimentService.getPreferredSingleCellDataVectors( ee ) )
-                .thenReturn( Optional.of( vectors ) );
+        when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
+                .thenReturn( vectors );
 
         QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true );
         assertThat( newQt.getName() ).isEqualTo( "log1p aggregated by cell type" );
@@ -293,8 +293,8 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         dimension.getCellTypeAssignments().add( cta );
         when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee ) )
                 .thenReturn( Optional.of( cta ) );
-        when( singleCellExpressionExperimentService.getPreferredSingleCellDataVectors( ee ) )
-                .thenReturn( Optional.of( vectors ) );
+        when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
+                .thenReturn( vectors );
 
         assertThatThrownBy( () -> singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true ) )
                 .isInstanceOf( UnsupportedOperationException.class )
