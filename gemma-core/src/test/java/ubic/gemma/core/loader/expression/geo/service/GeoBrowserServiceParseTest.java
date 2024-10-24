@@ -21,6 +21,7 @@ import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
@@ -32,6 +33,7 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,6 +53,7 @@ public class GeoBrowserServiceParseTest extends AbstractJUnit4SpringContextTests
 
     @Configuration
     @TestComponent
+    @Import(EntityUrlBuilder.class)
     static class GeoBrowserServiceParseTestContextConfiguration {
 
         @Bean

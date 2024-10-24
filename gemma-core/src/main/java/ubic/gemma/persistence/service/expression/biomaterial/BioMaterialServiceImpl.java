@@ -42,7 +42,7 @@ import java.util.*;
 /**
  * @author pavlidis
  * @author keshav
- * @see    BioMaterialService
+ * @see BioMaterialService
  */
 @Service
 public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial, BioMaterialValueObject>
@@ -52,17 +52,17 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     private final FactorValueDao factorValueDao;
     private final BioAssayDao bioAssayDao;
     private final ExperimentalFactorDao experimentalFactorDao;
-    @Autowired
-    private CharacteristicService characteristicService;
+    private final CharacteristicService characteristicService;
 
     @Autowired
     public BioMaterialServiceImpl( BioMaterialDao bioMaterialDao, FactorValueDao factorValueDao,
-            BioAssayDao bioAssayDao, ExperimentalFactorDao experimentalFactorDao ) {
+            BioAssayDao bioAssayDao, ExperimentalFactorDao experimentalFactorDao, CharacteristicService characteristicService ) {
         super( bioMaterialDao );
         this.bioMaterialDao = bioMaterialDao;
         this.factorValueDao = factorValueDao;
         this.bioAssayDao = bioAssayDao;
         this.experimentalFactorDao = experimentalFactorDao;
+        this.characteristicService = characteristicService;
     }
 
     @Override
@@ -75,6 +75,12 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     @Transactional(readOnly = true)
     public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment ) {
         return this.bioMaterialDao.findByExperiment( experiment );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<BioMaterial> findByFactor( ExperimentalFactor experimentalFactor ) {
+        return this.bioMaterialDao.findByFactor( experimentalFactor );
     }
 
     @Override
@@ -196,6 +202,7 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     }
 
     @Override
+    @Transactional
     public void removeCharacteristic( BioMaterial bm, Characteristic characterId ) {
         Assert.notNull( characterId.getId(), "The characteristic must be persistent." );
         if ( !bm.getCharacteristics().remove( characterId ) ) {

@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
@@ -37,8 +36,6 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
 
     private static final long serialVersionUID = 4291090102921066018L;
 
-    protected static final ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
-
     private ExpressionExperimentValueObject expressionExperiment;
     private CompositeSequenceValueObject designElement;
     private QuantitationTypeValueObject quantitationType;
@@ -49,7 +46,7 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
         super( id );
     }
 
-    protected DataVectorValueObject( DesignElementDataVector dedv, BioAssayDimensionValueObject badvo ) {
+    protected DataVectorValueObject( BulkExpressionDataVector dedv, BioAssayDimensionValueObject badvo ) {
         super( dedv );
         if ( badvo == null ) {
             BioAssayDimension badim = dedv.getBioAssayDimension();
@@ -63,7 +60,7 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
         this.expressionExperiment = new ExpressionExperimentValueObject( dedv.getExpressionExperiment() );
     }
 
-    protected DataVectorValueObject( DesignElementDataVector dedv, Collection<Long> genes,
+    protected DataVectorValueObject( BulkExpressionDataVector dedv, Collection<Long> genes,
             BioAssayDimensionValueObject badvo ) {
         this( dedv, badvo );
         this.genes = genes;

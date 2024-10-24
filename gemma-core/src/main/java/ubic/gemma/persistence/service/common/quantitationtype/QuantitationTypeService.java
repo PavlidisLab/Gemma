@@ -50,23 +50,44 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
      *
      * @return found QT
      */
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType );
+    QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType, Class<? extends DataVector> dataVectorTypes );
 
     /**
      * @see QuantitationTypeDao#findByNameAndVectorType(ExpressionExperiment, String, Class)
      * @throws NonUniqueQuantitationTypeByNameException if more than one QT matches the given name and vector type
      */
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     QuantitationType findByNameAndVectorType( ExpressionExperiment ee, String name, Class<? extends DataVector> dataVectorType ) throws NonUniqueQuantitationTypeByNameException;
+
+    /**
+     * Find all the QT associated to the given experiment.
+     */
+    Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee );
 
     @Override
     @Secured({ "GROUP_USER" })
     QuantitationType findOrCreate( QuantitationType quantitationType );
 
+    /**
+     * @see QuantitationTypeDao#findOrCreate(QuantitationType, Class)
+     */
+    @Secured("GROUP_USER")
+    QuantitationType findOrCreate( QuantitationType quantitationType, Class<? extends DataVector> dataVectorType );
+
     @Override
     @Secured({ "GROUP_USER" })
     QuantitationType create( QuantitationType quantitationType );
+
+    /**
+     * Create a new QuantitationType for the given vector type.
+     * <p>
+     * For now, this is just doing the same thing as {@link #create(QuantitationType)}, but with extra validations.
+     */
+    @Secured({ "GROUP_USER" })
+    QuantitationType create( QuantitationType quantitationType, Class<? extends DataVector> dataVectorType );
 
     @Override
     @Secured({ "GROUP_USER" })
@@ -88,8 +109,7 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
     @Secured({ "GROUP_USER" })
     void update( QuantitationType quantitationType );
 
-    @Secured({ "GROUP_USER" })
-    List<QuantitationType> loadByDescription( String description );
-
     List<QuantitationTypeValueObject> loadValueObjectsWithExpressionExperiment( Collection<QuantitationType> qts, ExpressionExperiment expressionExperiment );
+
+    Class<? extends DataVector> getDataVectorType( QuantitationType qt );
 }

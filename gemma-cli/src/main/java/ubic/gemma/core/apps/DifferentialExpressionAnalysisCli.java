@@ -92,14 +92,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-
-        /*
-         * These options from the super class support: running on one or more data sets from the command line, running
-         * on list of data sets from a file, running on all data sets.
-         */
-        super.buildOptions( options );
-
+    protected void buildExperimentOptions( Options options ) {
         /* Supports: running on all data sets that have not been run since a given date. */
         addLimitingDateOption( options );
 
@@ -146,8 +139,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( "type" ) ) {
             if ( !commandLine.hasOption( "factors" ) ) {
                 throw new IllegalArgumentException( "Please specify the factor(s) when specifying the analysis type." );
@@ -216,14 +208,13 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     @Override
     protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
-        if ( type != null && expressionExperiments.size() > 1 ) {
+        if ( type != null ) {
             throw new IllegalArgumentException( "You can only specify the analysis type when analyzing a single experiment" );
         }
-        if ( subsetFactorId != null && expressionExperiments.size() > 1 ) {
+        if ( subsetFactorId != null ) {
             throw new IllegalArgumentException( "You can only specify the subset factor when analyzing a single experiment" );
         }
-
-        if ( !factorIds.isEmpty() && expressionExperiments.size() > 1 ) {
+        if ( !factorIds.isEmpty() ) {
             throw new IllegalArgumentException( "You can only specify the factors when analyzing a single experiment" );
         }
         super.processBioAssaySets( expressionExperiments );

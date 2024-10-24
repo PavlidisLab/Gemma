@@ -17,13 +17,14 @@ import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
-import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -255,16 +256,15 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
     public void testGetDatasetRawExpression() throws IOException {
         ExpressionExperiment ee = ees.get( 0 );
         Response response = datasetsWebService.getDatasetRawExpression( DatasetArg.valueOf( String.valueOf( ee.getId() ) ), null );
-        byte[] payload;
-        try ( ByteArrayOutputStream os = new ByteArrayOutputStream() ) {
-            ( ( StreamingOutput ) response.getEntity() ).write( os );
-            payload = os.toByteArray();
-        }
-        String decodedPayload = new String( payload, StandardCharsets.UTF_8 );
         // there's 7 comment lines, 1 header and then one line per raw EV (there are two platforms the default collection size in the fixture)
-        assertThat( decodedPayload )
-                .isNotEmpty()
-                .contains( ee.getShortName() )
-                .hasLineCount( 8 + 2 * testHelper.getTestElementCollectionSize() );
+        assertThat( ( File ) response.getEntity() )
+                .exists()
+                .content()
+                .satisfies( f -> {
+                    assertThat( new GZIPInputStream( new FileInputStream( f ) ) )
+                            .asString( StandardCharsets.UTF_8 )
+                            .contains( ee.getShortName() )
+                            .hasLineCount( 8 + 2 * testHelper.getTestElementCollectionSize() );
+                } );
     }
 }

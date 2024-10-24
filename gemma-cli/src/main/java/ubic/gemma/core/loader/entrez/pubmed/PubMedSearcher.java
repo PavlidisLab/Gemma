@@ -45,7 +45,7 @@ public class PubMedSearcher extends AbstractAuthenticatedCLI {
     private boolean persist = false;
 
     public PubMedSearcher() {
-        setAllowPositionalArguments( true );
+        setAllowPositionalArguments();
     }
 
     @Override
@@ -70,7 +70,7 @@ public class PubMedSearcher extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         PubMedSearch pubMedSearcher = new PubMedSearch( ncbiApiKey );
         Collection<BibliographicReference> refs = pubMedSearcher
                 .searchAndRetrieveByHTTP( this.args );

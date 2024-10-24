@@ -132,7 +132,7 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
 
         expressionExperimentService.update( ee );
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
 
         ee = expressionExperimentService.thaw( ee );
 

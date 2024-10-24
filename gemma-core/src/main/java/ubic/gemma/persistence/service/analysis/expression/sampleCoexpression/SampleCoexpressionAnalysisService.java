@@ -17,8 +17,8 @@ package ubic.gemma.persistence.service.analysis.expression.sampleCoexpression;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis;
-import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -63,10 +63,10 @@ public interface SampleCoexpressionAnalysisService {
 
     @Transactional(readOnly = true)
     @Nullable
-    public DoubleMatrix<BioAssay, BioAssay> retrieveExisting( ExpressionExperiment ee );
+    DoubleMatrix<BioAssay, BioAssay> retrieveExisting( ExpressionExperiment ee );
 
     @Transactional(readOnly = true)
-    PreparedCoexMatrices prepare( ExpressionExperiment ee );
+    PreparedCoexMatrices prepare( ExpressionExperiment ee ) throws FilteringException;
 
     /**
      * Computes sample correlation matrices for the given experiment. If the experiment already has any, they are

@@ -63,7 +63,7 @@ public class ResponseAssert extends AbstractAssert<ResponseAssert, Response> {
      * Asserts that the response has the given media type.
      */
     public ResponseAssert hasMediaType( MediaType mediaType ) {
-        objects.assertEqual( info, mediaType, mediaType );
+        objects.assertEqual( info, actual.getMediaType(), mediaType );
         return myself;
     }
 
@@ -71,7 +71,7 @@ public class ResponseAssert extends AbstractAssert<ResponseAssert, Response> {
      * Asserts that the response has a media type compatible with the given media type.
      */
     public ResponseAssert hasMediaTypeCompatibleWith( MediaType mediaType ) {
-        objects.assertEqual( info, mediaType.isCompatible( mediaType ), true );
+        objects.assertEqual( info, actual.getMediaType().isCompatible( mediaType ), true );
         return myself;
     }
 
@@ -96,11 +96,22 @@ public class ResponseAssert extends AbstractAssert<ResponseAssert, Response> {
         return myself;
     }
 
+    public ResponseAssert doesNotHaveHeader( String name, String value ) {
+        Map.Entry<String, String> entry = org.assertj.core.util.Maps.newHashMap( name, value ).entrySet().iterator().next();
+        //noinspection unchecked
+        maps.assertDoesNotContain( info, actual.getStringHeaders(), new Map.Entry[] { entry } );
+        return myself;
+    }
+
     /**
      * Asserts that the response has the given 'Content-Encoding' header.
      */
     public ResponseAssert hasEncoding( String encoding ) {
         return hasHeader( "Content-Encoding", encoding );
+    }
+
+    public ResponseAssert doesNotHaveEncoding( String encoding ) {
+        return doesNotHaveHeader( "Content-Encoding", encoding );
     }
 
     public ResponseAssert hasLanguage( Locale locale ) {

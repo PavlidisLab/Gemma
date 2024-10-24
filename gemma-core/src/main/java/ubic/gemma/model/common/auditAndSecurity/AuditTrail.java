@@ -38,11 +38,6 @@ public class AuditTrail implements Identifiable, Serializable {
     private List<AuditEvent> events = new ArrayList<>();
 
     @Override
-    public int hashCode() {
-        return Objects.hash( id );
-    }
-
-    @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
             return true;

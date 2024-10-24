@@ -34,12 +34,12 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
-import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.ArrayList;
@@ -61,9 +61,6 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-
-    @Autowired
-    private RawExpressionDataVectorService rawExpressionDataVectorService;
 
     @Autowired
     private ArrayDesignService arrayDesignService;
@@ -115,7 +112,11 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     @Override
     @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix getRawExpressionDataMatrix( ExpressionExperiment ee, QuantitationType quantitationType ) {
-        return new ExpressionDataDoubleMatrix( rawExpressionDataVectorService.findByExpressionExperiment( ee, quantitationType ) );
+        Collection<RawExpressionDataVector> vectors = expressionExperimentService.getRawDataVectors( ee, quantitationType );
+        if ( vectors.isEmpty() ) {
+            return null;
+        }
+        return new ExpressionDataDoubleMatrix( vectors );
     }
 
     @Override

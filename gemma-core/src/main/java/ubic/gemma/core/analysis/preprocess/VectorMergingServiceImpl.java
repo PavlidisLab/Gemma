@@ -24,7 +24,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentVectorManipulatingService;
 import ubic.gemma.model.common.AbstractDescribable;
@@ -44,6 +43,8 @@ import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionS
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.*;
+
+import static ubic.gemma.persistence.util.ByteArrayUtils.*;
 
 /**
  * Tackles the problem of concatenating DesignElementDataVectors for a single experiment. This is necessary When a study
@@ -118,7 +119,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
             }
         }
 
-        if ( allOldBioAssayDims.size() == 0 ) {
+        if ( allOldBioAssayDims.isEmpty() ) {
             throw new IllegalStateException(
                     "No bioAssayDimensions found to merge (previously merged ones are filtered, data may be corrupt?" );
         }
@@ -193,9 +194,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
                                     + ", got " + data.size() );
                 }
 
-                byte[] newDataAr = converter.toBytes( data.toArray() );
-
-                vector.setData( newDataAr );
+                vector.setData( toBytes( data.toArray() ) );
 
                 newVectors.add( vector );
 
@@ -511,27 +510,26 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
     @SuppressWarnings("unused")
     private void print( Collection<DesignElementDataVector> newVectors ) {
         StringBuilder buf = new StringBuilder();
-        ByteArrayConverter conv = new ByteArrayConverter();
         for ( DesignElementDataVector vector : newVectors ) {
             buf.append( vector.getDesignElement() );
             QuantitationType qtype = vector.getQuantitationType();
             if ( qtype.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
-                double[] vals = conv.byteArrayToDoubles( vector.getData() );
+                double[] vals = byteArrayToDoubles( vector.getData() );
                 for ( double d : vals ) {
                     buf.append( "\t" ).append( d );
                 }
             } else if ( qtype.getRepresentation().equals( PrimitiveType.INT ) ) {
-                int[] vals = conv.byteArrayToInts( vector.getData() );
+                int[] vals = byteArrayToInts( vector.getData() );
                 for ( int i : vals ) {
                     buf.append( "\t" ).append( i );
                 }
             } else if ( qtype.getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
-                boolean[] vals = conv.byteArrayToBooleans( vector.getData() );
+                boolean[] vals = byteArrayToBooleans( vector.getData() );
                 for ( boolean d : vals ) {
                     buf.append( "\t" ).append( d );
                 }
             } else if ( qtype.getRepresentation().equals( PrimitiveType.STRING ) ) {
-                String[] vals = conv.byteArrayToStrings( vector.getData() );
+                String[] vals = byteArrayToStrings( vector.getData() );
                 for ( String d : vals ) {
                     buf.append( "\t" ).append( d );
                 }

@@ -20,8 +20,6 @@ package ubic.gemma.model.common.quantitationtype;
 
 /**
  * Primitive storage types for data vectors.
- * @see ubic.basecode.io.ByteArrayConverter
- * @see java.io.DataOutputStream
  */
 public enum PrimitiveType {
     DOUBLE( 8 ),

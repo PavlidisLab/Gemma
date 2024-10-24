@@ -53,9 +53,18 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     private ExpressionExperimentService ees;
     @Autowired
     private PersisterHelper persisterHelper;
+    private PubMedXMLFetcher fetcher;
+    private ExpressionExperimentBibRefFinder finder;
 
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        super.afterPropertiesSet();
+        this.fetcher = new PubMedXMLFetcher( ncbiApiKey );
+        this.finder = new ExpressionExperimentBibRefFinder( ncbiApiKey );
+    }
 
     private String pubmedIdFilename;
     private Map<String, Integer> pubmedIds = new HashMap<>();
@@ -71,8 +80,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         Option pubmedOption = Option.builder( "pubmedIDFile" ).hasArg().argName( "pubmedIDFile" ).desc(
                         "A text file which contains the list of pubmed IDs associated with each experiment ID. "
                                 + "If the pubmed ID is not found, it will try to use the existing pubmed ID associated "
@@ -85,8 +93,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( "pmidFile" ) ) {
             this.pubmedIdFilename = commandLine.getOptionValue( "pmidFile" );
             try {
@@ -97,72 +104,21 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
         }
     }
 
+    // collect some statistics
+    Collection<String> nullPubCount;
+    Collection<String> samePubCount;
+    Collection<String> diffPubCount;
+    Collection<String> failedEe;
+
     @Override
     protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
-        PubMedXMLFetcher fetcher = new PubMedXMLFetcher( ncbiApiKey );
-
         // collect some statistics
-        Collection<String> nullPubCount = new ArrayList<>();
-        Collection<String> samePubCount = new ArrayList<>();
-        Collection<String> diffPubCount = new ArrayList<>();
-        Collection<String> failedEe = new ArrayList<>();
+        nullPubCount = new ArrayList<>();
+        samePubCount = new ArrayList<>();
+        diffPubCount = new ArrayList<>();
+        failedEe = new ArrayList<>();
 
-        ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder( ncbiApiKey );
-        for ( BioAssaySet bioassay : expressionExperiments ) {
-            if ( !( bioassay instanceof ExpressionExperiment ) ) {
-                log.info( bioassay.getName() + " is not an ExpressionExperiment" );
-                continue;
-            }
-            ExpressionExperiment experiment = ( ExpressionExperiment ) bioassay;
-            try {
-                // if ( experiment.getPrimaryPublication() != null ) continue;
-                if ( experiment.getPrimaryPublication() == null ) {
-                    log.warn( experiment + " has no existing primary publication, will attempt to find" );
-                } else {
-                    log.info( experiment.getPrimaryPublication() + " has a primary publication, updating" );
-                }
-                experiment = ees.thawLite( experiment );
-
-                // get from GEO or get from a file
-                BibliographicReference ref = fetcher.retrieveByHTTP( pubmedIds.get( experiment.getShortName() ) );
-
-                if ( ref == null ) {
-                    if ( this.pubmedIdFilename != null ) {
-                        log.warn( "Pubmed ID for " + experiment.getShortName() + " was not found in "
-                                + this.pubmedIdFilename );
-                    }
-                    try {
-                        ref = finder.locatePrimaryReference( experiment );
-                    } catch ( IOException e ) {
-                        log.error( e );
-                        continue;
-                    }
-
-                    if ( ref == null ) {
-                        log.error( "No ref for " + experiment );
-                        failedEe.add( experiment.getShortName() );
-                        continue;
-                    }
-                }
-
-                // collect some statistics
-                if ( experiment.getPrimaryPublication() == null ) {
-                    nullPubCount.add( experiment.getShortName() );
-                } else if ( experiment.getPrimaryPublication().getPubAccession().getAccession()
-                        .equals( pubmedIds.get( experiment.getShortName() ).toString() ) ) {
-                    samePubCount.add( experiment.getShortName() );
-                } else {
-                    diffPubCount.add( experiment.getShortName() );
-                }
-
-                log.info( "Found pubAccession " + ref.getPubAccession().getAccession() + " for " + experiment );
-                ref = ( BibliographicReference ) persisterHelper.persist( ref );
-                experiment.setPrimaryPublication( ref );
-                ees.update( experiment );
-            } catch ( Exception e ) {
-                log.error( experiment.getShortName() + " (id=" + experiment.getId() + ") update failed.", e );
-            }
-        }
+        super.processBioAssaySets( expressionExperiments );
 
         // print statistics
         log.info( "\n\n========== Summary ==========" );
@@ -176,6 +132,60 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
         log.info( "Diff publication: " + Arrays.toString( diffPubCount.toArray() ) );
         log.info( "No initial publication: " + Arrays.toString( nullPubCount.toArray() ) );
         log.info( "No publications found: " + Arrays.toString( failedEe.toArray() ) );
+    }
+
+    @Override
+    protected void processExpressionExperiment( ExpressionExperiment experiment ) {
+        try {
+            // if ( experiment.getPrimaryPublication() != null ) continue;
+            if ( experiment.getPrimaryPublication() == null ) {
+                log.warn( experiment + " has no existing primary publication, will attempt to find" );
+            } else {
+                log.info( experiment.getPrimaryPublication() + " has a primary publication, updating" );
+            }
+            experiment = ees.thawLite( experiment );
+
+            // get from GEO or get from a file
+            BibliographicReference ref = fetcher.retrieveByHTTP( pubmedIds.get( experiment.getShortName() ) );
+
+            if ( ref == null ) {
+                if ( this.pubmedIdFilename != null ) {
+                    log.warn( "Pubmed ID for " + experiment.getShortName() + " was not found in "
+                            + this.pubmedIdFilename );
+                }
+                try {
+                    ref = finder.locatePrimaryReference( experiment );
+                } catch ( IOException e ) {
+                    addErrorObject( experiment, e );
+                    log.error( e );
+                    return;
+                }
+
+                if ( ref == null ) {
+                    addErrorObject( experiment, "No ref for " + experiment );
+                    failedEe.add( experiment.getShortName() );
+                    return;
+                }
+            }
+
+            // collect some statistics
+            if ( experiment.getPrimaryPublication() == null ) {
+                nullPubCount.add( experiment.getShortName() );
+            } else if ( experiment.getPrimaryPublication().getPubAccession().getAccession()
+                    .equals( pubmedIds.get( experiment.getShortName() ).toString() ) ) {
+                samePubCount.add( experiment.getShortName() );
+            } else {
+                diffPubCount.add( experiment.getShortName() );
+            }
+
+            log.info( "Found pubAccession " + ref.getPubAccession().getAccession() + " for " + experiment );
+            ref = ( BibliographicReference ) persisterHelper.persist( ref );
+            experiment.setPrimaryPublication( ref );
+            ees.update( experiment );
+            addSuccessObject( experiment );
+        } catch ( Exception e ) {
+            addErrorObject( experiment, experiment.getShortName() + " (id=" + experiment.getId() + ") update failed.", e );
+        }
     }
 
     /**

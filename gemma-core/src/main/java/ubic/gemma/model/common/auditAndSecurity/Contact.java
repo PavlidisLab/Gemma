@@ -22,6 +22,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 import ubic.gemma.model.common.AbstractDescribable;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Representing a person or organization that can be contacted about, or is the source of, data in the system. A contact
@@ -46,6 +47,20 @@ public class Contact extends AbstractDescribable implements Serializable {
     @Override
     public Long getId() {
         return super.getId();
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof Contact ) )
+            return false;
+        Contact that = ( Contact ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        }
+        return Objects.equals( getName(), that.getName() )
+                && Objects.equals( getEmail(), that.getEmail() );
     }
 
     @Override

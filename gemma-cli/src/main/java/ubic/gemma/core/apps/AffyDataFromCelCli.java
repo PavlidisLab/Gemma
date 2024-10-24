@@ -68,16 +68,14 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         options.addOption( Option.builder( AffyDataFromCelCli.APT_FILE_OPT ).longOpt( null ).desc( "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour; "
                 + "ensure you used the right official CDF/MPS configuration" ).argName( "path" ).hasArg().build() );
         addForceOption( options );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( AffyDataFromCelCli.APT_FILE_OPT ) ) {
             this.aptFile = commandLine.getOptionValue( AffyDataFromCelCli.APT_FILE_OPT );
         }
@@ -88,23 +86,26 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
     protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
-        // This can be done for multiple experiments under some conditions; we get this one just  to test for some multi-platform situations
-        Collection<ArrayDesign> arrayDesignsUsed = this.eeService
-                .getArrayDesignsUsed( expressionExperiments.iterator().next() );
-
         if ( StringUtils.isNotBlank( aptFile ) ) {
-            if ( expressionExperiments.size() > 1 ) {
-                throw new IllegalArgumentException(
-                        "Can't use " + AffyDataFromCelCli.APT_FILE_OPT + " unless you are doing just one experiment" );
-            }
+            throw new IllegalArgumentException(
+                    "Can't use " + AffyDataFromCelCli.APT_FILE_OPT + " unless you are doing just one experiment" );
+        }
+        super.processBioAssaySets( expressionExperiments );
+    }
 
+    @Override
+    protected void processExpressionExperiment( ExpressionExperiment ee ) {
+
+        // This can be done for multiple experiments under some conditions; we get this one just  to test for some multi-platform situations
+        if ( StringUtils.isNotBlank( aptFile ) ) {
             if ( this.celchip != null ) {
                 throw new UnsupportedOperationException( "celchip not supported with aptFile yet" );
             }
 
-            ExpressionExperiment thawedEe = ( ExpressionExperiment ) expressionExperiments.iterator().next();
-            thawedEe = this.eeService.thawLite( thawedEe );
+            ee = this.eeService.thawLite( ee );
 
+            Collection<ArrayDesign> arrayDesignsUsed = this.eeService
+                    .getArrayDesignsUsed( ee );
             if ( arrayDesignsUsed.size() > 1 ) {
                 throw new IllegalArgumentException( "Cannot use " + AffyDataFromCelCli.APT_FILE_OPT
                         + " for experiment that uses multiple platforms" );
@@ -118,31 +119,27 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
 
             log.info( "Loading data from " + aptFile );
             try {
-                serv.addAffyDataFromAPTOutput( thawedEe, aptFile );
+                serv.addAffyDataFromAPTOutput( ee, aptFile );
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
             }
-        } else {
-            super.processBioAssaySets( expressionExperiments );
+            return;
         }
-    }
 
-    @Override
-    protected void processExpressionExperiment( ExpressionExperiment ee ) {
         ee = this.eeService.thawLite( ee );
         Collection<ArrayDesign> adsUsed = this.eeService.getArrayDesignsUsed( ee );
 
         /*
          * if the audit trail already has a DataReplacedEvent, skip it, unless --force.
          */
-        if ( this.checkForAlreadyDone( ee ) && !this.force ) {
+        if ( this.checkForAlreadyDone( ee ) && !isForce() ) {
             throw new RuntimeException( "Was already run before, use -force" );
         }
 
         /*
          * Avoid repeated attempts that won't work e.g. no data available.
          */
-        if ( super.auditEventService.hasEvent( ee, FailedDataReplacedEvent.class ) && !this.force ) {
+        if ( super.auditEventService.hasEvent( ee, FailedDataReplacedEvent.class ) && !isForce() ) {
             throw new RuntimeException( "Failed before, use -force to re-attempt" );
         }
 

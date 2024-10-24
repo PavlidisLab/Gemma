@@ -6,11 +6,18 @@ import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CurationDetailsEvent;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
+import java.util.List;
+
 /**
  * Created by tesarst on 13/03/17.
  * DAO wrapper for all curatable DAOs.
  */
 public interface CuratableDao<C extends Curatable> {
+
+    /**
+     * Load IDs of troubled entities.
+     */
+    List<Long> loadTroubledIds();
 
     /**
      * Update the curation details of a given curatable entity.

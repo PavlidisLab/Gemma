@@ -34,10 +34,11 @@ import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialUtils.visitBioMaterials;
+import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
 
 /**
  * @author pavlidis
@@ -94,6 +95,37 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
     }
 
     @Override
+    public List<BioMaterial> findSubBioMaterials( BioMaterial bioMaterial ) {
+        return findSubBioMaterials( Collections.singleton( bioMaterial ) );
+    }
+
+    @Override
+    public List<BioMaterial> findSubBioMaterials( Collection<BioMaterial> bioMaterials ) {
+        if ( bioMaterials.isEmpty() ) {
+            return Collections.emptyList();
+        }
+        // using a treeset to avoid initializing proxies
+        Set<BioMaterial> fringe = new TreeSet<>( Comparator.comparing( BioMaterial::getId ) );
+        fringe.addAll( bioMaterials );
+        Set<BioMaterial> visited = new HashSet<>();
+        List<BioMaterial> results = new ArrayList<>();
+        while ( !fringe.isEmpty() ) {
+            //noinspection unchecked
+            List<BioMaterial> r = getSessionFactory().getCurrentSession()
+                    .createQuery( "select bm from BioMaterial bm where bm.sourceBioMaterial in :source" )
+                    .setParameterList( "source", optimizeIdentifiableParameterList( fringe ) )
+                    .list();
+            visited.addAll( fringe );
+            fringe.clear();
+            fringe.addAll( r );
+            // drop already visited bioassays
+            Assert.state( !fringe.removeAll( visited ), "Circular biomaterial detected!" );
+            results.addAll( fringe );
+        }
+        return results;
+    }
+
+    @Override
     public BioMaterial copy( final BioMaterial bioMaterial ) {
 
         BioMaterial newMaterial = BioMaterial.Factory.newInstance();
@@ -119,6 +151,15 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
     }
 
     @Override
+    public Collection<BioMaterial> findByFactor( ExperimentalFactor experimentalFactor ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct bm from BioMaterial bm join bm.factorValues fv where fv.experimentalFactor = :ef" )
+                .setParameter( "ef", experimentalFactor )
+                .list();
+    }
+
+    @Override
     public ExpressionExperiment getExpressionExperiment( Long bioMaterialId ) {
         return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession().createQuery(
                         "select distinct e from ExpressionExperiment e inner join e.bioAssays ba inner join ba.sampleUsed bm where bm.id =:bmid " )
@@ -127,16 +168,33 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
 
     @Override
     public void thaw( final BioMaterial bioMaterial ) {
-        Hibernate.initialize( bioMaterial.getSourceTaxon() );
-        Hibernate.initialize( bioMaterial.getTreatments() );
-        for ( FactorValue fv : bioMaterial.getFactorValues() ) {
-            Hibernate.initialize( fv.getExperimentalFactor() );
-        }
+        visitBioMaterials( bioMaterial, bm -> {
+            Hibernate.initialize( bioMaterial.getSourceTaxon() );
+            Hibernate.initialize( bioMaterial.getTreatments() );
+            for ( FactorValue fv : bioMaterial.getFactorValues() ) {
+                Hibernate.initialize( fv.getExperimentalFactor() );
+            }
+        } );
     }
 
     @Override
     protected BioMaterialValueObject doLoadValueObject( BioMaterial entity ) {
         return new BioMaterialValueObject( entity );
+    }
+
+    @Override
+    public void remove( BioMaterial entity ) {
+        log.info( "Removing " + entity + "..." );
+        //noinspection unchecked
+        List<BioMaterial> subBioMaterials = getSessionFactory().getCurrentSession()
+                .createQuery( "select bm from BioMaterial bm where bm.sourceBioMaterial = :bm" )
+                .setParameter( "bm", entity )
+                .list();
+        for ( BioMaterial bm : subBioMaterials ) {
+            log.info( "Setting source biomaterial for " + bm + " to " + entity.getSourceBioMaterial() + "." );
+            bm.setSourceBioMaterial( entity.getSourceBioMaterial() );
+        }
+        super.remove( entity );
     }
 
     private void validate( BioMaterial bm ) {
@@ -156,5 +214,13 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
                         affectedFvs ) );
             }
         }
+        // make sure that the BM is not circular
+        BioMaterial parent = bm;
+        while ( ( parent = parent.getSourceBioMaterial() ) != null ) {
+            // need to use identity here because of how Hibernate works
+            Assert.isTrue( bm != parent, "A sub-biomaterial cannot be its own source." );
+        }
+        Assert.isTrue( bm.getSourceBioMaterial() == null || bm.getSourceTaxon().equals( bm.getSourceBioMaterial().getSourceTaxon() ),
+                "A sub-biomaterial must use the same source taxon as its parent." );
     }
 }

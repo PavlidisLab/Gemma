@@ -22,6 +22,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -43,11 +44,20 @@ import java.util.Map;
  */
 public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipulatingCli {
 
+    @Autowired
+    private BioSequenceService bioSequenceService;
+
     private boolean delete;
 
     @Override
     public String getCommandName() {
         return "detachSequences";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Remove all associations that a platform has with sequences, for cases where imported data had wrong associations. "
+                + "Also can be used to delete sequences associated with a platform (use very carefully as sequences can be shared by platforms)";
     }
 
     @Override
@@ -67,9 +77,7 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
     }
 
     @Override
-    protected void doWork() throws Exception {
-        BioSequenceService bioSequenceService = this.getBean( BioSequenceService.class );
-
+    protected void doAuthenticatedWork() throws Exception {
         if ( this.getArrayDesignsToProcess().isEmpty() ) {
             throw new IllegalArgumentException( "You must provide at least one platform to process" );
         }
@@ -103,12 +111,6 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
         }
 
 
-    }
-
-    @Override
-    public String getShortDesc() {
-        return "Remove all associations that a platform has with sequences, for cases where imported data had wrong associations. "
-                + "Also can be used to delete sequences associated with a platform (use very carefully as sequences can be shared by platforms)";
     }
 
     private void audit( ArrayDesign arrayDesign, String message ) {

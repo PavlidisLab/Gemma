@@ -32,16 +32,14 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableFilteringVoEnabledService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -83,6 +81,12 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment loadWithAuditTrail( Long id );
 
+    /**
+     * Load troubled experiment IDs.
+     * @see CuratableDao#loadTroubledIds()
+     */
+    List<Long> loadTroubledIds();
+
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor );
 
@@ -98,6 +102,15 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void addFactorValues( ExpressionExperiment ee, Map<BioMaterial, FactorValue> fvs );
+
+    /**
+     * Obtain raw vectors for a given QT.
+     * <p>
+     * This is preferable to using {@link ExpressionExperiment#getRawExpressionDataVectors()} as it only loads vectors
+     * relevant to the given QT.
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, QuantitationType qt );
 
     /**
      * Used when we want to add data for a quantitation type. Does not remove any existing vectors.
@@ -436,6 +449,21 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet expressionExperiment );
 
     /**
+     * Obtain a collection of {@link ArrayDesign} used by a specific set of vectors.
+     * <p>
+     * The type of vectors is inferred.
+     * @see #getArrayDesignsUsed(ExpressionExperiment, QuantitationType, Class)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, QuantitationType qt );
+
+    /**
+     * Obtain a collection of {@link ArrayDesign} used by a specific set of vectors.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, QuantitationType qt, Class<? extends DataVector> vectorType );
+
+    /**
      * Retrieve the genes used by the preferred vectors of this experiment.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
@@ -559,8 +587,8 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Map<QuantitationType, Long> getQuantitationTypeCount( ExpressionExperiment ee );
 
     /**
-     * @param expressionExperiment experiment
-     * @return all the quantitation types used by the given expression experiment
+     * Retrieve all the quantitation types used by the given expression experiment.
+     * @see ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDao#findByExpressionExperiment(ExpressionExperiment)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment );
@@ -627,10 +655,10 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "GROUP_ADMIN", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Slice<ExpressionExperimentValueObject> loadBlacklistedValueObjects( @Nullable Filters filters, @Nullable Sort sort, int offset, int limit );
 
-    @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> loadLackingFactors();
 
-    @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> loadLackingTags();
 
     /**
@@ -695,7 +723,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<ExpressionExperiment> getExperimentsLackingPublications();
 
-    @Secured({ "GROUP_USER" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr );
 
     /**

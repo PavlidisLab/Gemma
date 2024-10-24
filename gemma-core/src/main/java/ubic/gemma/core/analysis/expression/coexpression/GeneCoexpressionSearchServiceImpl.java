@@ -33,7 +33,7 @@ import ubic.gemma.persistence.service.analysis.expression.coexpression.Coexpress
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
 
@@ -95,7 +95,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         }
 
         // database hit. loadValueObjects is too slow.
-        Map<Long, GeneValueObject> coexpedGenes = EntityUtils
+        Map<Long, GeneValueObject> coexpedGenes = IdentifiableUtils
                 .getIdMap( geneService.loadValueObjectsByIds( coexpGenes ) );
 
         for ( CoexpressionValueObject cvo : coexp ) {
@@ -188,7 +188,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
             return result;
         }
 
-        Collection<Long> eeIds = EntityUtils.getIds( eevos );
+        Collection<Long> eeIds = IdentifiableUtils.getIds( eevos );
 
         Map<Long, List<CoexpressionValueObject>> allCoexpressions;
 
@@ -252,7 +252,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
 
         Set<Long> queryGeneIds = allCoexpressions.keySet();
         assert genes.containsAll( queryGeneIds );
-        Map<Long, GeneValueObject> idMap = EntityUtils.getIdMap( geneService.loadValueObjectsByIds( queryGeneIds ) );
+        Map<Long, GeneValueObject> idMap = IdentifiableUtils.getIdMap( geneService.loadValueObjectsByIds( queryGeneIds ) );
 
         int k = 0;
         for ( Long queryGene : queryGeneIds ) {

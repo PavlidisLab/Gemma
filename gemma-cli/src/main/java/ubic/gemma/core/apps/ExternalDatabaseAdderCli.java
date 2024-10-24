@@ -70,7 +70,7 @@ public class ExternalDatabaseAdderCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         ExternalDatabase created = externalDatabaseService.create( ExternalDatabase.Factory.newInstance( name, type ) );
         log.info( "Created " + created );
     }

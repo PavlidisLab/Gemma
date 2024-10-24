@@ -38,8 +38,7 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
     private PreprocessorService preprocessorService;
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         super.addForceOption( options );
     }
 

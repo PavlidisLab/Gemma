@@ -55,19 +55,15 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
-
+    protected void buildExperimentOptions( Options options ) {
         Option forceWriteOption = Option.builder( "w" )
                 .desc( "Overwrites existing files if this option is set" ).longOpt( "forceWrite" )
                 .build();
-
         options.addOption( forceWriteOption );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( 'w' ) ) {
             this.forceWrite = true;
         }
@@ -78,9 +74,10 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
         getBatchTaskExecutor().submit( () -> {
             log.info( "Processing Experiment: " + ee1.getName() );
             ExpressionExperiment ee = this.eeService.thawLite( ee1 );
-            expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, forceWrite );
+                expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, forceWrite );
             ats.addUpdateEvent( ee, CommentedEvent.class, "Generated Flat data files for downloading" );
             addSuccessObject( ee, "Success:  generated data file for " + ee.getShortName() + " ID=" + ee.getId() );
+            return null;
         } );
     }
 }

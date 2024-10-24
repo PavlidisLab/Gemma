@@ -1,17 +1,16 @@
 package ubic.gemma.core.util;
 
 import lombok.Value;
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
-import java.io.File;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,8 +22,17 @@ import java.util.stream.Collectors;
 /**
  * A task executor that automatically reports errors in batch tasks.
  */
-@ParametersAreNonnullByDefault
+@CommonsLog
 class BatchTaskExecutorService extends AbstractDelegatingExecutorService {
+
+    enum BatchFormat {
+        TEXT,
+        TSV,
+        SUPPRESS
+    }
+
+    private final BatchFormat batchFormat;
+    private final Path batchOutputFile;
 
     private final AtomicInteger batchTaskCounter = new AtomicInteger( 0 );
     private final AtomicInteger completedBatchTasks = new AtomicInteger( 0 );
@@ -36,8 +44,10 @@ class BatchTaskExecutorService extends AbstractDelegatingExecutorService {
     private final List<BatchProcessingResult> batchProcessingResults = Collections.synchronizedList( new ArrayList<>() );
     private boolean hasErrorObjects = false;
 
-    public BatchTaskExecutorService( ExecutorService delegate ) {
+    public BatchTaskExecutorService( ExecutorService delegate, BatchFormat batchFormat, @Nullable Path batchOutputFile ) {
         super( delegate );
+        this.batchFormat = batchFormat;
+        this.batchOutputFile = batchOutputFile;
     }
 
     private final ThreadLocal<Boolean> wasSuccessObjectAdded = ThreadLocal.withInitial( () -> false );
@@ -103,6 +113,13 @@ class BatchTaskExecutorService extends AbstractDelegatingExecutorService {
     }
 
     /**
+     * Indicate if error objects have been reported.
+     */
+    boolean hasErrorObjects() {
+        return hasErrorObjects;
+    }
+
+    /**
      * Add a success object to indicate success in a batch processing.
      *
      * @param successObject object that was processed
@@ -150,18 +167,8 @@ class BatchTaskExecutorService extends AbstractDelegatingExecutorService {
         addBatchProcessingResult( new BatchProcessingResult( true, errorObject, exception.getMessage(), exception ) );
     }
 
-    /**
-     * Indicate if error objects have been reported.
-     */
-    boolean hasErrorObjects() {
-        return hasErrorObjects;
-    }
-
-    List<BatchProcessingResult> getBatchProcessingResults() {
-        return batchProcessingResults;
-    }
-
     private void addBatchProcessingResult( BatchProcessingResult result ) {
+        batchProcessingResults.add( result );
         if ( result.isError() ) {
             wasErrorObjectAdded.set( true );
             hasErrorObjects = true;
@@ -174,7 +181,7 @@ class BatchTaskExecutorService extends AbstractDelegatingExecutorService {
      * Represents an individual result in a batch processing.
      */
     @Value
-    static class BatchProcessingResult {
+    private static class BatchProcessingResult {
         boolean isError;
         @Nullable
         Object source;
@@ -204,6 +211,74 @@ class BatchTaskExecutorService extends AbstractDelegatingExecutorService {
                         .append( ExceptionUtils.getRootCauseMessage( throwable ) );
             }
             return buf.toString();
+        }
+    }
+
+    /**
+     * Print out a summary of what the program did. Useful when analyzing lists of experiments etc. Use the
+     * 'successObjects' and 'errorObjects'
+     */
+    void summarizeBatchProcessing() {
+        if ( batchProcessingResults.isEmpty() ) {
+            return;
+        }
+        if ( batchFormat != BatchFormat.SUPPRESS && batchOutputFile != null ) {
+            log.info( String.format( "Batch processing summary will be written to %s", batchOutputFile ) );
+        }
+        try ( Writer dest = batchOutputFile != null ? Files.newBufferedWriter( batchOutputFile ) : null ) {
+            switch ( batchFormat ) {
+                case TEXT:
+                    summarizeBatchProcessingToText( dest != null ? dest : System.out );
+                    break;
+                case TSV:
+                    summarizeBatchProcessingToTsv( dest != null ? dest : System.out );
+                    break;
+                case SUPPRESS:
+                    break;
+                default:
+                    throw new IllegalStateException( "Unsupported batch format " + batchFormat );
+            }
+        } catch ( IOException e ) {
+            log.error( "Failed to summarize batch processing.", e );
+        }
+    }
+
+    private void summarizeBatchProcessingToText( Appendable dest ) throws IOException {
+        List<BatchTaskExecutorService.BatchProcessingResult> successObjects = batchProcessingResults.stream().filter( bp -> !bp.isError() ).collect( Collectors.toList() );
+        if ( !successObjects.isEmpty() ) {
+            dest.append( "---------------------\nSuccessfully processed " )
+                    .append( String.valueOf( successObjects.size() ) )
+                    .append( " objects:\n" );
+            for ( BatchTaskExecutorService.BatchProcessingResult result : successObjects ) {
+                dest.append( String.valueOf( result ) ).append( "\n" );
+            }
+            dest.append( "---------------------\n" );
+        }
+
+        List<BatchTaskExecutorService.BatchProcessingResult> errorObjects = batchProcessingResults.stream().filter( BatchTaskExecutorService.BatchProcessingResult::isError ).collect( Collectors.toList() );
+        if ( !errorObjects.isEmpty() ) {
+            if ( !successObjects.isEmpty() ) {
+                dest.append( "\n" );
+            }
+            dest.append( "---------------------\nErrors occurred during the processing of " )
+                    .append( String.valueOf( errorObjects.size() ) )
+                    .append( " objects:\n" );
+            for ( BatchTaskExecutorService.BatchProcessingResult result : errorObjects ) {
+                dest.append( String.valueOf( result ) ).append( "\n" );
+            }
+            dest.append( "---------------------\n" );
+        }
+    }
+
+    private void summarizeBatchProcessingToTsv( Appendable dest ) throws IOException {
+        try ( CSVPrinter printer = new CSVPrinter( dest, CSVFormat.TDF ) ) {
+            for ( BatchTaskExecutorService.BatchProcessingResult result : batchProcessingResults ) {
+                printer.printRecord(
+                        result.getSource(),
+                        result.isError() ? "ERROR" : "SUCCESS",
+                        result.getMessage(),
+                        result.getThrowable() != null ? ExceptionUtils.getRootCauseMessage( result.getThrowable() ) : null );
+            }
         }
     }
 }

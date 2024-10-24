@@ -59,7 +59,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -336,7 +336,7 @@ public class SearchServiceImpl implements SearchService, InitializingBean {
                             TypeDescriptor.collection( List.class, TypeDescriptor.valueOf( supportedResultTypes.get( resultType ) ) ) ) );
         }
 
-        Map<Long, IdentifiableValueObject<?>> entityVosById = EntityUtils.getIdMap( entitiesVos );
+        Map<Long, IdentifiableValueObject<?>> entityVosById = IdentifiableUtils.getIdMap( entitiesVos );
 
         Set<SearchResult<?>> excludedResults = new HashSet<>();
 

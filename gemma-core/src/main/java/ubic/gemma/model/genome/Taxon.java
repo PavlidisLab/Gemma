@@ -45,10 +45,13 @@ public class Taxon implements Identifiable, java.io.Serializable {
 
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * ( hashCode + ( this.getId() == null ? this.computeHashCode() : this.getId().hashCode() ) );
-
-        return hashCode;
+        if ( this.getNcbiId() != null ) {
+            return this.getNcbiId().hashCode();
+        } else if ( this.getScientificName() != null ) {
+            return this.getScientificName().hashCode();
+        } else {
+            return super.hashCode();
+        }
     }
 
     /**
@@ -166,19 +169,6 @@ public class Taxon implements Identifiable, java.io.Serializable {
 
     public void setSecondaryNcbiId( Integer secondaryNcbiId ) {
         this.secondaryNcbiId = secondaryNcbiId;
-    }
-
-    private int computeHashCode() {
-        int hashCode = 0;
-        if ( this.getNcbiId() != null ) {
-            hashCode += this.getNcbiId().hashCode();
-        } else if ( this.getScientificName() != null ) {
-            hashCode += this.getScientificName().hashCode();
-        } else {
-            hashCode += super.hashCode();
-        }
-
-        return hashCode;
     }
 
     public static final class Factory {

@@ -29,6 +29,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Taxon;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -56,6 +57,22 @@ public class ExpressionExperimentSet extends AbstractAuditable implements Secura
     @DocumentId
     public Long getId() {
         return super.getId();
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof ExpressionExperimentSet ) )
+            return false;
+        ExpressionExperimentSet that = ( ExpressionExperimentSet ) object;
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        } else if ( getName() != null && that.getName() != null ) {
+            return getName().equals( that.getName() );
+        } else {
+            return false;
+        }
     }
 
     @Override

@@ -29,6 +29,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -49,8 +50,8 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
 
     @Override
     @Transactional(readOnly = true)
-    public List<QuantitationType> loadByDescription( String description ) {
-        return this.quantitationTypeDao.loadByDescription( description );
+    public Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee ) {
+        return quantitationTypeDao.findByExpressionExperiment( ee );
     }
 
     @Override
@@ -61,14 +62,20 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
 
     @Override
     @Transactional(readOnly = true)
+    public Class<? extends DataVector> getDataVectorType( QuantitationType qt ) {
+        return quantitationTypeDao.getVectorType( qt );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public QuantitationType loadByIdAndVectorType( Long id, ExpressionExperiment ee, Class<? extends DataVector> dataVectorType ) {
         return quantitationTypeDao.loadByIdAndVectorType( id, ee, dataVectorType );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType ) {
-        return this.quantitationTypeDao.find( ee, quantitationType );
+    public QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType, Class<? extends DataVector> dataVectorTypes ) {
+        return this.quantitationTypeDao.find( ee, quantitationType, Collections.singleton( dataVectorTypes ) );
     }
 
     @Override
@@ -79,5 +86,17 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
         } catch ( NonUniqueResultException e ) {
             throw new NonUniqueQuantitationTypeByNameException( String.format( "More than one QuantitationType uses %s as name in %s for vectors of type %s.", name, ee, dataVectorType ), e );
         }
+    }
+
+    @Override
+    @Transactional
+    public QuantitationType findOrCreate( QuantitationType quantitationType, Class<? extends DataVector> dataVectorType ) {
+        return quantitationTypeDao.findOrCreate( quantitationType, dataVectorType );
+    }
+
+    @Override
+    @Transactional
+    public QuantitationType create( QuantitationType quantitationType, Class<? extends DataVector> dataVectorType ) {
+        return this.quantitationTypeDao.create( quantitationType, dataVectorType );
     }
 }

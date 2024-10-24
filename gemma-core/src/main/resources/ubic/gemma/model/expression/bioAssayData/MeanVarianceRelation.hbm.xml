@@ -11,11 +11,17 @@
          <generator class="native">
          </generator>
       </id>
-      <property name="means" type="org.hibernate.type.MaterializedBlobType">
+      <property name="means">
          <column name="MEANS" not-null="false" unique="false" sql-type="MEDIUMBLOB"/>
+         <type name="ubic.gemma.persistence.hibernate.ByteArrayType">
+            <param name="arrayType">double</param>
+         </type>
       </property>
-      <property name="variances" type="org.hibernate.type.MaterializedBlobType">
+      <property name="variances">
          <column name="VARIANCES" not-null="false" unique="false" sql-type="MEDIUMBLOB"/>
+         <type name="ubic.gemma.persistence.hibernate.ByteArrayType">
+            <param name="arrayType">double</param>
+         </type>
       </property>
    </class>
 </hibernate-mapping>

@@ -71,16 +71,14 @@ public class ExperimentalDesignImportCli extends ExpressionExperimentManipulatin
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         Option designFileOption = Option.builder( "f" ).required().hasArg().type( Path.class ).argName( "Design file" )
                 .desc( "Experimental design description file" ).longOpt( "designFile" ).build();
         options.addOption( designFileOption );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         experimentalDesignFile = commandLine.getParsedOptionValue( 'f' );
     }
 

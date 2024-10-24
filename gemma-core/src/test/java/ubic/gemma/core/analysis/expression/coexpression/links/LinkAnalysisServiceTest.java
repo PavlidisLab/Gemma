@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCallbackHandler;
 import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisConfig.SingularThreshold;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
@@ -44,7 +45,7 @@ import ubic.gemma.persistence.service.association.coexpression.CoexpressionServi
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -99,9 +100,9 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
     @Test
     @Category(SlowTest.class)
-    public void testLoadAnalyzeSaveAndCoexpSearch() {
+    public void testLoadAnalyzeSaveAndCoexpSearch() throws QuantitationTypeConversionException {
         ee = this.getTestPersistentCompleteExpressionExperimentWithSequences();
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
 
         tableMaintenanceUtil.disableEmail();
         tableMaintenanceUtil.updateGene2CsEntries();
@@ -162,7 +163,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
         eeService.update( ee2 );
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee2 );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee2, true );
         linkAnalysisService.process( ee2, filterConfig, linkAnalysisConfig );
 
         this.updateNodeDegree();
@@ -251,12 +252,12 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         }
 
         Map<Long, GeneCoexpressionNodeDegreeValueObject> nodeDegrees = geneCoexpressionService
-                .getNodeDegrees( EntityUtils.getIds( geneService.loadAll() ) );
+                .getNodeDegrees( IdentifiableUtils.getIds( geneService.loadAll() ) );
         assertTrue( !nodeDegrees.isEmpty() );
 
         // experiment-major query
         Map<Long, List<CoexpressionValueObject>> allLinks = geneCoexpressionService
-                .findCoexpressionRelationships( mouse, new HashSet<Long>(), EntityUtils.getIds( ees ), ees.size(), 10,
+                .findCoexpressionRelationships( mouse, new HashSet<Long>(), IdentifiableUtils.getIds( ees ), ees.size(), 10,
                         false );
         assertTrue( !allLinks.isEmpty() );
 
@@ -269,7 +270,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         for ( Gene gene : geneService.loadAll( mouse ) ) {
 
             Collection<CoexpressionValueObject> links = geneCoexpressionService
-                    .findCoexpressionRelationships( gene, EntityUtils.getIds( ees ), 1, 0, false );
+                    .findCoexpressionRelationships( gene, IdentifiableUtils.getIds( ees ), 1, 0, false );
 
             if ( links == null || links.isEmpty() ) {
                 continue;
@@ -303,8 +304,8 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
                 // without specifying stringency
                 Map<Long, List<CoexpressionValueObject>> multiGeneResults = geneCoexpressionService
-                        .findCoexpressionRelationships( mouse, EntityUtils.getIds( genesWithLinks ),
-                                EntityUtils.getIds( ees ), 100, false );
+                        .findCoexpressionRelationships( mouse, IdentifiableUtils.getIds( genesWithLinks ),
+                                IdentifiableUtils.getIds( ees ), 100, false );
 
                 if ( !multiGeneResults.isEmpty() ) {
 
@@ -316,7 +317,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
                     // with stringency specified, quick.
                     Map<Long, List<CoexpressionValueObject>> multiGeneResults2 = geneCoexpressionService
-                            .findCoexpressionRelationships( mouse, EntityUtils.getIds( genesWithLinks ), EntityUtils.getIds( ees ), ees.size(), 100, true );
+                            .findCoexpressionRelationships( mouse, IdentifiableUtils.getIds( genesWithLinks ), IdentifiableUtils.getIds( ees ), ees.size(), 100, true );
                     if ( multiGeneResults.size() != multiGeneResults2.size() ) {
                         assertEquals( multiGeneResults.size(), multiGeneResults2.size() );
                     }
@@ -334,8 +335,8 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         assertTrue( foundOne );
 
         Map<Long, List<CoexpressionValueObject>> mygeneresults = geneCoexpressionService
-                .findInterCoexpressionRelationships( mouse, EntityUtils.getIds( genesWithLinks ),
-                        EntityUtils.getIds( ees ), 1, false );
+                .findInterCoexpressionRelationships( mouse, IdentifiableUtils.getIds( genesWithLinks ),
+                        IdentifiableUtils.getIds( ees ), 1, false );
         if ( mygeneresults.isEmpty() ) {
             //noinspection ConstantConditions // these strange structures are to help with debugger.
             assertTrue( !mygeneresults.isEmpty() );

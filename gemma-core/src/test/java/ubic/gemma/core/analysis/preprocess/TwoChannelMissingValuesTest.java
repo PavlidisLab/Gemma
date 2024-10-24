@@ -22,8 +22,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataBooleanMatrix;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.loader.expression.geo.*;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
@@ -43,6 +43,7 @@ import java.util.Collection;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.*;
+import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToBooleans;
 
 /**
  * @author pavlidis
@@ -81,14 +82,13 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         BioAssayDimension dim = calls.iterator().next().getBioAssayDimension();
 
         // Spot check the results. For sample ME-TMZ, ID #27 should be 'true' and 26 should be false.
-        ByteArrayConverter bac = new ByteArrayConverter();
 
         boolean foundA = false;
         boolean foundB = false;
         for ( DesignElementDataVector vector : calls ) {
             if ( vector.getDesignElement().getName().equals( "26" ) ) {
                 byte[] dat = vector.getData();
-                boolean[] row = bac.byteArrayToBooleans( dat );
+                boolean[] row = byteArrayToBooleans( dat );
                 int i = 0;
                 for ( BioAssay bas : dim.getBioAssays() ) {
                     if ( bas.getName().equals( "expression array ME-TMZ" ) ) {
@@ -100,7 +100,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
             }
             if ( vector.getDesignElement().getName().equals( "27" ) ) {
                 byte[] dat = vector.getData();
-                boolean[] row = bac.byteArrayToBooleans( dat );
+                boolean[] row = byteArrayToBooleans( dat );
                 int i = 0;
                 for ( BioAssay bas : dim.getBioAssays() ) {
                     if ( bas.getName().equals( "expression array ME-TMZ" ) ) {
@@ -237,7 +237,6 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
      */
     @SuppressWarnings("unused")
     private void print( Collection<RawExpressionDataVector> calls ) {
-        ByteArrayConverter bac = new ByteArrayConverter();
         BioAssayDimension dim = calls.iterator().next().getBioAssayDimension();
 
         System.err.print( "\n" );
@@ -248,7 +247,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         for ( DesignElementDataVector vector : calls ) {
             System.err.print( vector.getDesignElement() );
             byte[] dat = vector.getData();
-            boolean[] row = bac.byteArrayToBooleans( dat );
+            boolean[] row = byteArrayToBooleans( dat );
             for ( boolean b : row ) {
                 System.err.print( "\t" + b );
             }

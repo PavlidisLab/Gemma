@@ -23,8 +23,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
-import ubic.gemma.core.analysis.preprocess.QuantitationMismatchPreprocessingException;
-import ubic.gemma.core.datastructure.matrix.SuspiciousValuesForQuantitationException;
+import ubic.gemma.core.analysis.preprocess.QuantitationTypeDetectionRelatedPreprocessingException;
+import ubic.gemma.core.analysis.preprocess.detect.SuspiciousValuesForQuantitationException;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -59,8 +59,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     private boolean ignoreQuantitationMismatch = false;
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         addForceOption( options );
         addLimitingDateOption( options );
         options.addOption( UPDATE_DIAGNOSTICS_OPTION, false,
@@ -71,8 +70,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         this.updateDiagnostics = commandLine.hasOption( UPDATE_DIAGNOSTICS_OPTION );
         this.updateRanks = commandLine.hasOption( UPDATE_RANKS_OPTION );
         this.ignoreQuantitationMismatch = commandLine.hasOption( IGNORE_QUANTITATION_MISMATCH_OPTION );
@@ -90,8 +88,8 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
-        if ( expressionExperimentService.isTroubled( ee ) && !force ) {
-            log.info( "Skipping troubled experiment " + ee.getShortName() );
+        if ( expressionExperimentService.isTroubled( ee ) && !isForce() ) {
+            addErrorObject( ee, "Skipping troubled experiment " + ee.getShortName() + ", use -" + FORCE_OPTION + " to process." );
             return;
         }
         try {
@@ -122,17 +120,17 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
 
             // Note the auditing is done by the service.
             addSuccessObject( ee );
-        } catch ( QuantitationMismatchPreprocessingException e ) {
-            // TODO: e.getCause().getQuantitationType();
-            QuantitationType qt = e.getCause().getQuantitationType();
+        } catch ( QuantitationTypeDetectionRelatedPreprocessingException e ) {
             if ( e.getCause() instanceof SuspiciousValuesForQuantitationException ) {
+                SuspiciousValuesForQuantitationException actual = ( SuspiciousValuesForQuantitationException ) e.getCause();
+                QuantitationType qt = actual.getQuantitationType();
                 addErrorObject( String.format( "%s:\n%s", ee, qt ), String.format( "The following issues were found in expression data:\n\n - %s\n\nYou may ignore this by setting the -%s option.",
-                        ( ( SuspiciousValuesForQuantitationException ) e.getCause() )
+                        actual
                                 .getSuspiciousValues().stream()
                                 .map( SuspiciousValuesForQuantitationException.SuspiciousValueResult::toString )
                                 .collect( Collectors.joining( "\n - " ) ), IGNORE_QUANTITATION_MISMATCH_OPTION ) );
             } else {
-                addErrorObject( String.format( "%s:\n%s", ee, qt ), e.getCause().getMessage() );
+                addErrorObject( ee, e );
             }
         } catch ( Exception e ) {
             addErrorObject( ee, e );

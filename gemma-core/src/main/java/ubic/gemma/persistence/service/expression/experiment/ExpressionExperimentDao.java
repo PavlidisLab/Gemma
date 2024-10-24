@@ -5,16 +5,14 @@ import org.hibernate.CacheMode;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
@@ -31,6 +29,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * Created by tesarst on 13/03/17.
@@ -109,7 +108,9 @@ public interface ExpressionExperimentDao
 
     Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet bas );
 
-    Map<ArrayDesign, Collection<Long>> getArrayDesignsUsed( Collection<Long> eeids );
+    Collection<ArrayDesign> getArrayDesignsUsed( Collection<? extends BioAssaySet> ees );
+
+    Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, QuantitationType qt, Class<? extends DataVector> dataVectorType );
 
     /**
      * Obtain genes used by the processed vectors of this dataset.
@@ -127,6 +128,7 @@ public interface ExpressionExperimentDao
      * Obtain the dataset usage frequency by technology type for the given dataset IDs.
      * <p>
      * Note: No ACL filtering is performed.
+     *
      * @see #getTechnologyTypeUsageFrequency()
      */
     Map<TechnologyType, Long> getTechnologyTypeUsageFrequency( Collection<Long> eeIds );
@@ -145,6 +147,7 @@ public interface ExpressionExperimentDao
      * Obtain dataset usage frequency by platform currently for the given dataset IDs.
      * <p>
      * Note: no ACL filtering is performed. Only administrator can see troubled platforms.
+     *
      * @see #getArrayDesignsUsageFrequency(int)
      */
     Map<ArrayDesign, Long> getArrayDesignsUsageFrequency( Collection<Long> eeIds, int maxResults );
@@ -164,6 +167,7 @@ public interface ExpressionExperimentDao
      * Obtain dataset usage frequency by platform currently for the given dataset IDs.
      * <p>
      * Note: no ACL filtering is performed. Only administrators can see troubled platforms.
+     *
      * @see #getOriginalPlatformsUsageFrequency(int)
      */
     Map<ArrayDesign, Long> getOriginalPlatformsUsageFrequency( Collection<Long> eeIds, int maxResults );
@@ -202,7 +206,11 @@ public interface ExpressionExperimentDao
 
     Map<QuantitationType, Long> getQuantitationTypeCount( ExpressionExperiment ee );
 
-    Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment );
+    /**
+     * Obtain the preferred quantitation type for single cell data, if available.
+     */
+    @Nullable
+    QuantitationType getPreferredSingleCellQuantitationType( ExpressionExperiment ee );
 
     /**
      * Obtain the preferred quantitation type, if available.
@@ -238,11 +246,11 @@ public interface ExpressionExperimentDao
      * Special method for front-end access. This is partly redundant with {@link #loadValueObjects(Filters, Sort, int, int)};
      * however, it fills in more information, returns ExpressionExperimentDetailsValueObject
      *
-     * @param ids        only list specific ids, or null to ignore
-     * @param taxon      only list EEs in the specified taxon, or null to ignore
-     * @param sort       the field to order the results by.
-     * @param offset     offset
-     * @param limit      maximum number of results to return
+     * @param ids    only list specific ids, or null to ignore
+     * @param taxon  only list EEs in the specified taxon, or null to ignore
+     * @param sort   the field to order the results by.
+     * @param offset offset
+     * @param limit  maximum number of results to return
      * @return a list of EE details VOs representing experiments matching the given arguments.
      */
     Slice<ExpressionExperimentDetailsValueObject> loadDetailsValueObjects( @Nullable Collection<Long> ids, @Nullable Taxon taxon, @Nullable Sort sort, int offset, int limit );
@@ -270,7 +278,7 @@ public interface ExpressionExperimentDao
 
     void thaw( ExpressionExperiment expressionExperiment );
 
-    void thawWithoutVectors( ExpressionExperiment expressionExperiment );
+    void thawLite( ExpressionExperiment expressionExperiment );
 
     void thawBioAssays( ExpressionExperiment expressionExperiment );
 
@@ -345,6 +353,8 @@ public interface ExpressionExperimentDao
      */
     long countBioMaterials( @Nullable Filters filters );
 
+    Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, QuantitationType qt );
+
     /**
      * Add raw data vectors with the given quantitation type.
      * @return the number of raw data vectors created
@@ -372,6 +382,10 @@ public interface ExpressionExperimentDao
 
     /**
      * Create processed data vectors
+     * <p>
+     * The QT is created if it doesn't exist and is attached to the experiment.
+     * <p>
+     * The number of vectors {@link ExpressionExperiment#getNumberOfDataVectors()} is updated.
      * @return the number of created processed vectors
      */
     int createProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors );
@@ -379,7 +393,7 @@ public interface ExpressionExperimentDao
     /**
      * Remove processed data vectors.
      * <p>
-     * Their corresponding QT is removed and the number of vectors (i.e. {@link ExpressionExperiment#getNumberOfDataVectors()}
+     * Their corresponding QT is detached from the experiment and removed. The number of vectors (i.e. {@link ExpressionExperiment#getNumberOfDataVectors()}
      * is set to zero.
      * @return the number of removed processed vectors
      */
@@ -387,7 +401,126 @@ public interface ExpressionExperimentDao
 
     /**
      * Replace processed data vectors.
+     * <p>
+     * The QT is reused and the number of vectors {@link ExpressionExperiment#getNumberOfDataVectors()} is updated.
      * @return the number of vectors replaced
      */
     int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors );
+
+    /**
+     * Obtain all the single cell dimensions used by the single-cell vectors of a given experiment.
+     */
+    List<SingleCellDimension> getSingleCellDimensions( ExpressionExperiment ee );
+
+    /**
+     * Obtain the single-cell dimension used by a specific QT.
+     */
+    @Nullable
+    SingleCellDimension getSingleCellDimension( ExpressionExperiment ee, QuantitationType quantitationType );
+
+    /**
+     * Obtain the preferred single cell dimension, that is the dimension associated to the preferred set of single-cell vectors.
+     */
+    @Nullable
+    SingleCellDimension getPreferredSingleCellDimension( ExpressionExperiment ee );
+
+    /**
+     * Create a single-cell dimension for a given experiment.
+     * @throws IllegalArgumentException if the single-cell dimension is invalid
+     */
+    void createSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
+
+    /**
+     * Update a single-cell dimensino for a given experiment.
+     * @throws IllegalArgumentException if the single-cell dimension is invalid
+     */
+    void updateSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
+
+    /**
+     * Delete the given single cell dimension.
+     */
+    void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
+
+    List<CellTypeAssignment> getCellTypeAssignments( ExpressionExperiment ee );
+
+    /**
+     * Obtain the preferred assignment of the preferred single-cell vectors.
+     *
+     * @throws org.springframework.dao.IncorrectResultSizeDataAccessException if there are multiple preferred cell-type
+     *                                                                        labellings
+     */
+    @Nullable
+    CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee );
+
+    /**
+     * Obtain a cell type assignment by ID.
+     */
+    @Nullable
+    CellTypeAssignment getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, Long ctaId );
+
+    /**
+     * Obtain a cell type assignment by name.
+     */
+    @Nullable
+    CellTypeAssignment getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, String ctaName );
+
+    /**
+     * Obtain all cell-level characteristics from all single cell dimensions.
+     */
+    List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee );
+
+    /**
+     * Obtain all cell-level characteristics from all single cell dimensions matching the given category.
+     */
+    List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee, Category category );
+
+    List<Characteristic> getCellTypes( ExpressionExperiment ee );
+
+    /**
+     * Obtain a list of single-cell QTs.
+     */
+    List<QuantitationType> getSingleCellQuantitationTypes( ExpressionExperiment ee );
+
+    /**
+     * Obtain a set of single-cell data vectors for the given quantitation type.
+     */
+    List<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment expressionExperiment, QuantitationType quantitationType );
+
+    /**
+     * Obtain a stream over the vectors for a given QT.
+     * <p>
+     * Make absolutely sure that the resulting stream is closed because it is attached to a {@link org.hibernate.Session}
+     * object.
+     */
+    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize );
+
+    /**
+     * Obtain the number of single-cell vectors for a given QT.
+     */
+    long getNumberOfSingleCellDataVectors( ExpressionExperiment ee, QuantitationType qt );
+
+    /**
+     * Obtain the number of non-zeroes.
+     */
+    long getNumberOfNonZeroes( ExpressionExperiment ee, QuantitationType qt );
+
+    /**
+     * Obtain the number of non-zeroes by sample.
+     * <p>
+     * This is quite costly because the indices of each vector has to be examined.
+     */
+    Map<BioAssay, Long> getNumberOfNonZeroesBySample( ExpressionExperiment ee, QuantitationType qt, int fetchSize );
+
+    /**
+     * Remove the given single-cell data vectors.
+     * @param quantitationType quantitation to remove
+     * @param deleteQt         if true, detach the QT from the experiment and delete it
+     *                         TODO: add a replaceSingleCellDataVectors to avoid needing this
+     */
+    int removeSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, boolean deleteQt );
+
+    /**
+     * Remove all single-cell data vectors and their quantitation types.
+     */
+    int removeAllSingleCellDataVectors( ExpressionExperiment ee );
 }

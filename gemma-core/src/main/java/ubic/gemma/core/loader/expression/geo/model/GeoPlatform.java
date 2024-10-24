@@ -97,7 +97,7 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
-     * 
+     *
      * @param geoPlatformId (GPL)
      * @return true if we recognize it as an Affymetrix platform. Depends on our mappings, if an error is spotted let us
      *         know.
@@ -109,11 +109,11 @@ public class GeoPlatform extends GeoData {
     /**
      * Refers to a list of platforms for which the data from GEO is usually not usable and/or which we always reanalyze
      * from CEL files - exon arrays.
-     * 
+     * <p>
      * Logic: if this was run on an Affymetrix exon array we won't use the data from GEO, even if it was already using
      * the gene-level version of the platform, because there are several variant versions that just muck up the system
      * with useless probes (we have gone back and forth on this a bit...)
-     * 
+     * <p>
      * Note that we endeavour to reanalyze all Affy data sets at the CEL file level.
      *
      * @param geoPlatformId (GPL)
@@ -227,7 +227,7 @@ public class GeoPlatform extends GeoData {
         if ( !platformInformation.containsKey( columnName ) ) {
             if ( GeoPlatform.log.isDebugEnabled() )
                 GeoPlatform.log.debug( "Adding " + columnName + " to " + this.getGeoAccession() );
-            platformInformation.put( columnName, new ArrayList<String>() );
+            platformInformation.put( columnName, new ArrayList<>() );
         }
 
         // don't add design elements twice. Occurs in corrupt files, but see bug 2054
@@ -241,7 +241,7 @@ public class GeoPlatform extends GeoData {
                 // log.warn( "Column " + columnName + " contains the value " + value
                 // + " twice; check the GEO file for validity!" );
                 throw new IllegalStateException(
-                        "In platform " + geoAccession + ": Column " + columnName + " contains the value " + value
+                        "In platform " + getGeoAccession() + ": Column " + columnName + " contains the value " + value
                                 + " twice; check the GEO file for validity!" );
                 // return;
             }
@@ -569,9 +569,9 @@ public class GeoPlatform extends GeoData {
 
         if ( GeoPlatform.DISTRIBUTION_VIRTUAL.equals( this.distribution ) || technology.equals( PlatformType.MPSS )
                 || technology.equals( PlatformType.SAGE ) || technology.equals( PlatformType.SAGENlaIII ) || technology
-                        .equals( PlatformType.SAGERsaI )
+                .equals( PlatformType.SAGERsaI )
                 || technology.equals( PlatformType.SAGESau3A ) || technology
-                        .equals( PlatformType.other ) ) {
+                .equals( PlatformType.other ) ) {
             return false;
         }
 

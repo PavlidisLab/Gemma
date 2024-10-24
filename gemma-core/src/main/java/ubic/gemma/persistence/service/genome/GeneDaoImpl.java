@@ -391,7 +391,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         if ( genes.isEmpty() )
             return new HashSet<>();
         Collection<Gene> result = new HashSet<>();
-        for ( Collection<Long> batch : batchParameterList( EntityUtils.getIds( genes ), getBatchSize() ) ) {
+        for ( Collection<Long> batch : batchParameterList( IdentifiableUtils.getIds( genes ), getBatchSize() ) ) {
             result.addAll( this.loadThawed( batch ) );
         }
         return result;
@@ -694,7 +694,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         }
         List<Object[]> results = listByBatch( getSessionFactory().getCurrentSession()
                         .createQuery( "select g.id, a.alias from Gene g join g.aliases a where g.id in :ids" ),
-                "ids", EntityUtils.getIds( geneValueObjects ), 2048 );
+                "ids", IdentifiableUtils.getIds( geneValueObjects ), 2048 );
         Map<Long, List<String>> aliasByGeneId = results.stream()
                 .collect( Collectors.groupingBy(
                         row -> ( Long ) row[0],
@@ -715,7 +715,7 @@ public class GeneDaoImpl extends AbstractQueryFilteringVoEnabledDao<Gene, GeneVa
         }
         List<Object[]> results = listByBatch( getSessionFactory().getCurrentSession()
                         .createQuery( "select g.id, a from Gene g join g.accessions a where g.id in :ids" ),
-                "ids", EntityUtils.getIds( geneValueObjects ), 2048 );
+                "ids", IdentifiableUtils.getIds( geneValueObjects ), 2048 );
         Map<Long, List<DatabaseEntry>> accessionsByGeneId = results.stream()
                 .collect( Collectors.groupingBy(
                         row -> ( Long ) row[0],

@@ -20,7 +20,6 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
-import ubic.gemma.rest.util.MediaTypeUtils;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
 
@@ -81,7 +80,7 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest 
         dears = new ExpressionAnalysisResultSet();
         dears.setAnalysis( dea );
         PvalueDistribution pvalueDist = new PvalueDistribution();
-        pvalueDist.setBinCounts( new byte[0] );
+        pvalueDist.setBinCounts( new double[0] );
         pvalueDist.setNumBins( 0 );
         dears.setPvalueDistribution( pvalueDist );
         dea.getResultSets().add( dears );
@@ -271,7 +270,8 @@ public class AnalysisResultSetsWebServiceTest extends BaseJerseyIntegrationTest 
 
     @Test
     public void testFindByIdToTsv() {
-        assertThat( target( "/resultSets/" + dears.getId() ).request( MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8 ).get() )
+        assertThat( target( "/resultSets/" + dears.getId() ).request( "text/tab-separated-values" ).get() )
+                .hasMediaType( new MediaType( "text", "tab-separated-values", "UTF-8" ) )
                 .entityAsStream()
                 .satisfies( is -> {
                     // FIXME: I could not find the equivalent of withFirstRecordAsHeader() in the builder API

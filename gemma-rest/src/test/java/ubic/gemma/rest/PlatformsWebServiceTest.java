@@ -1,6 +1,5 @@
 package ubic.gemma.rest;
 
-import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -8,14 +7,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.core.util.test.TestAuthenticationUtils;
+import ubic.gemma.model.blacklist.BlacklistedPlatform;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.model.blacklist.BlacklistedPlatform;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
@@ -84,9 +83,8 @@ public class PlatformsWebServiceTest extends BaseJerseyIntegrationTest {
                 .hasFieldOrPropertyWithValue( "offset", 0 )
                 .hasFieldOrPropertyWithValue( "limit", 20 );
         assertThat( response.getData() )
-                .asInstanceOf( InstanceOfAssertFactories.LIST )
-                .hasSize( 1 )
-                .first().hasFieldOrPropertyWithValue( "id", expressionExperiment.getId() );
+                .singleElement()
+                .hasFieldOrPropertyWithValue( "id", expressionExperiment.getId() );
     }
 
     @Test

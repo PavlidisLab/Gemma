@@ -43,6 +43,7 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 import ubic.gemma.persistence.util.Slice;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -100,6 +101,9 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
+
+    @Autowired
+    private EntityUrlBuilder entityUrlBuilder;
 
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
@@ -203,9 +207,9 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
             ExpressionExperiment ee = this.expressionExperimentService.findByShortName( gse );
 
             if ( ee != null ) {
-                buf.append( "\n<p><strong><a target=\"_blank\" href=\"" ).append( contextPath )
-                        .append( "/expressionExperiment/showExpressionExperiment.html?id=" ).append( ee.getId() )
-                        .append( "\">" ).append( gse ).append( "</a></strong>" );
+                buf.append( "\n<p><strong><a target=\"_blank\" href=\"" )
+                        .append( entityUrlBuilder.fromContextPath( ee, contextPath ).web().toUriString() )
+                        .append( "\">" ).append( escapeHtml4( gse ) ).append( "</a></strong>" );
             } else {
                 buf.append( "\n<p><strong>" ).append( gse ).append( " [new to Gemma]</strong>" );
             }
@@ -297,8 +301,8 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
                     }
                 }
                 buf.append( "<p><strong>Platform in Gemma:&nbsp;<a target=\"_blank\" href=\"" )
-                        .append( contextPath ).append( "/arrays/showArrayDesign.html?id=" )
-                        .append( arrayDesign.getId() ).append( "\">" ).append( escapeHtml4( gpl ) ).append( "</a></strong>" )
+                        .append( entityUrlBuilder.fromContextPath( arrayDesign, contextPath ).web().toUriString() )
+                        .append( "\">" ).append( escapeHtml4( gpl ) ).append( "</a></strong>" )
                         .append( trouble );
             } else {
                 buf.append( "<p><strong>" ).append( escapeHtml4( gpl ) ).append( " [New to Gemma]</strong>" );

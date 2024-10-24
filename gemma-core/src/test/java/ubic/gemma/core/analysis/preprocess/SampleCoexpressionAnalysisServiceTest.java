@@ -18,6 +18,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -39,14 +41,14 @@ public class SampleCoexpressionAnalysisServiceTest extends BaseSpringContextTest
 
     @Test
     @Category(SlowTest.class)
-    public void test() {
+    public void test() throws QuantitationTypeConversionException, FilteringException {
         ExpressionExperiment ee = super.getTestPersistentCompleteExpressionExperiment( false );
         assertFalse( sampleCoexpressionAnalysisService.hasAnalysis( ee ) );
         assertNull( sampleCoexpressionAnalysisService.loadFullMatrix( ee ) );
         assertNull( sampleCoexpressionAnalysisService.loadRegressedMatrix( ee ) );
         assertNull( sampleCoexpressionAnalysisService.loadBestMatrix( ee ) );
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
         sampleCoexpressionAnalysisService.compute( ee, sampleCoexpressionAnalysisService.prepare( ee ) );
         DoubleMatrix<BioAssay, BioAssay> matrix = sampleCoexpressionAnalysisService.loadFullMatrix( ee );
         assertNotNull( matrix );

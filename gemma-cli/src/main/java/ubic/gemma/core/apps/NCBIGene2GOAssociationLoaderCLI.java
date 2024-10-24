@@ -75,7 +75,7 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         NCBIGene2GOAssociationLoader gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
         gene2GOAssLoader.setPersisterHelper( persisterHelper );
 
