@@ -46,8 +46,8 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     @Autowired
     private ExpressionDataFileService fs;
 
-    private boolean filter = false;
-    private String outFileName = null;
+    private boolean filter;
+    private String outFileName;
 
     @Override
     public String getCommandName() {
@@ -60,19 +60,15 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         options.addOption( Option.builder( "o" ).longOpt( "outputFileName" ).desc( "File name. If omitted, the file name will be based on the short name of the experiment." ).argName( "filename" ).hasArg().build() );
         options.addOption( "filter", "Filter expression matrix under default parameters" );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         outFileName = commandLine.getOptionValue( 'o' );
-        if ( commandLine.hasOption( "filter" ) ) {
-            filter = true;
-        }
+        filter = commandLine.hasOption( "filter" );
     }
 
     @Override

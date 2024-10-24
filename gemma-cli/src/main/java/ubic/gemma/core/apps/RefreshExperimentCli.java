@@ -27,16 +27,14 @@ public class RefreshExperimentCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         options.addOption( "v", "refreshVectors", false, "Refresh cache of raw and processed data vectors" );
         options.addOption( "r", "refreshReports", false, "Refresh cache of experiment reports (i.e. batch information, diff ex. analyses, etc.)" );
         addThreadsOption( options );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         refreshVectors = commandLine.hasOption( 'v' );
         refreshReports = commandLine.hasOption( 'r' );
     }

@@ -148,7 +148,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     }
 
     @Override
-    protected void buildOptions( Options options ) {
+    protected final void buildOptions( Options options ) {
         Option expOption = Option.builder( "e" ).hasArg().argName( "shortname" ).desc(
                         "Expression experiment short name. Most tools recognize comma-delimited values given on the command line, "
                                 + "and if this option is omitted (and none other provided), the tool will be applied to all expression experiments." )
@@ -156,8 +156,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
 
         options.addOption( expOption );
 
-        if ( singleExperimentMode )
+        if ( singleExperimentMode ) {
+            buildExperimentOptions( options );
             return;
+        }
 
         options.addOption( "all", false, "Process all expression experiments" );
 
@@ -186,10 +188,16 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         options.addOption( excludeEeOption );
 
         addBatchOption( options );
+
+        buildExperimentOptions( options );
+    }
+
+    protected void buildExperimentOptions( Options options ) {
+
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
+    protected final void processOptions( CommandLine commandLine ) throws ParseException {
         Assert.isTrue( commandLine.hasOption( "all" ) || commandLine.hasOption( "eeset" )
                         || commandLine.hasOption( "e" ) || commandLine.hasOption( 'f' ) || commandLine.hasOption( 'q' ),
                 "At least one of -all, -e, -eeset, -f, or -q must be provided." );
@@ -205,6 +213,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         this.query = commandLine.getOptionValue( 'q' );
         this.taxonName = commandLine.getOptionValue( 't' );
         this.excludeFile = commandLine.getParsedOptionValue( 'x' );
+        processExperimentOptions( commandLine );
+    }
+
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
+
     }
 
     @Override

@@ -41,8 +41,7 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         this.addForceOption( options );
     }
 

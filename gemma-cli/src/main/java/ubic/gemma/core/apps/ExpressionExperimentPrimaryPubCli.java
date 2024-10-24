@@ -80,8 +80,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         Option pubmedOption = Option.builder( "pubmedIDFile" ).hasArg().argName( "pubmedIDFile" ).desc(
                         "A text file which contains the list of pubmed IDs associated with each experiment ID. "
                                 + "If the pubmed ID is not found, it will try to use the existing pubmed ID associated "
@@ -94,8 +93,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( "pmidFile" ) ) {
             this.pubmedIdFilename = commandLine.getOptionValue( "pmidFile" );
             try {

@@ -50,21 +50,17 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( 'm' ) ) {
             this.mode = GeeqService.ScoreMode.valueOf( commandLine.getOptionValue( 'm' ) );
         }
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         super.addAutoOption( options, GeeqEvent.class );
         super.addLimitingDateOption( options );
         super.addForceOption( options );
-
         Option modeOption = Option.builder( "m" ).longOpt( "mode" )
                 .desc( "If specified, switches the scoring mode. By default the mode is set to 'all'" //
                         + "\n Possible values are:" //

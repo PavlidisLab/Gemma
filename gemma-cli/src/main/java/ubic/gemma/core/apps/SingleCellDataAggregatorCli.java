@@ -55,15 +55,14 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentManipulatin
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         options.addOption( "qt", "quantitation-type", true, "Identifier of the single-cell quantitation type to use (defaults to the preferred one)" );
         options.addOption( "cta", "cell-type-assignment", true, "Name of the cell type assignment to use (defaults to the preferred one)" );
         options.addOption( "p", "make-preferred", false, "Make the resulting aggregated data the preferred raw data for the experiment" );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         qtName = commandLine.getOptionValue( "qt" );
         ctaName = commandLine.getOptionValue( "cta" );
         makePreferred = commandLine.hasOption( "p" );

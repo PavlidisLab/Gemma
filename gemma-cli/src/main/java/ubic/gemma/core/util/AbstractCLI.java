@@ -205,11 +205,12 @@ public abstract class AbstractCLI implements CLI {
      * You may also use {@link #getNumThreads()} to retrieve the number of threads to use.
      */
     protected void addThreadsOption( Options options ) {
+        Assert.state( !options.hasOption( THREADS_OPTION ), "The -" + THREADS_OPTION + " option was already added." );
         options.addOption( Option.builder( THREADS_OPTION )
                 .longOpt( "threads" )
                 .argName( "numThreads" ).hasArg()
                 .desc( "Number of threads to use for batch processing." )
-                .type( Number.class )
+                .type( Number.class ) // FIXME: this should be an Integer.class
                 .build() );
     }
 
@@ -219,6 +220,7 @@ public abstract class AbstractCLI implements CLI {
      * These options allow the user to control how and where batch processing results are summarized.
      */
     protected void addBatchOption( Options options ) {
+        Assert.state( !options.hasOption( BATCH_FORMAT_OPTION ), "The -" + BATCH_FORMAT_OPTION + " option was already added." );
         options.addOption( BATCH_FORMAT_OPTION, true, "Format to use to the batch summary" );
         options.addOption( Option.builder( BATCH_OUTPUT_FILE_OPTION ).hasArg().type( Path.class ).desc( "Output file to use for the batch summary (default is standard output)" ).build() );
     }
@@ -229,8 +231,8 @@ public abstract class AbstractCLI implements CLI {
      * <p>
      * Those arguments can be retrieved in {@link #processOptions(CommandLine)} by using {@link CommandLine#getArgList()}.
      */
-    protected void setAllowPositionalArguments( @SuppressWarnings("SameParameterValue") boolean allowPositionalArguments ) {
-        this.allowPositionalArguments = allowPositionalArguments;
+    protected void setAllowPositionalArguments() {
+        this.allowPositionalArguments = true;
     }
 
     protected int getNumThreads() {

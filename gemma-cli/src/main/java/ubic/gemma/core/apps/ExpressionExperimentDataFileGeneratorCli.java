@@ -55,19 +55,15 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
-
+    protected void buildExperimentOptions( Options options ) {
         Option forceWriteOption = Option.builder( "w" )
                 .desc( "Overwrites existing files if this option is set" ).longOpt( "forceWrite" )
                 .build();
-
         options.addOption( forceWriteOption );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( 'w' ) ) {
             this.forceWrite = true;
         }

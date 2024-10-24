@@ -31,7 +31,7 @@ public class SingleCellDataTransformCli extends AbstractCLI {
     private SingleCellInputOutputFileTransformation transformation;
 
     public SingleCellDataTransformCli() {
-        setAllowPositionalArguments( true );
+        setAllowPositionalArguments();
     }
 
     @Override

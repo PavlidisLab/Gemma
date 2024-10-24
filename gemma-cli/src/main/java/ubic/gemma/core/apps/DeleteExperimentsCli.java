@@ -55,8 +55,7 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         options.addOption(
                 Option.builder( "a" ).longOpt( "array" )
                         .desc( "Delete platform(s) instead; you must delete associated experiments first; other options are ignored" )
@@ -64,8 +63,7 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( 'a' ) ) {
             this.platformAccs = Arrays.asList( StringUtils.split( commandLine.getOptionValue( 'a' ), "," ) );
 

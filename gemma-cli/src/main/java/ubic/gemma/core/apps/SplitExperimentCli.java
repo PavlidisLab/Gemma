@@ -69,16 +69,14 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         options.addOption( Option.builder( FACTOR_OPTION ).hasArg()
                 .desc( "ID numbers, categories or names of the factor to use, with spaces replaced by underscores (must not be 'batch')" )
                 .build() );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         if ( !commandLine.hasOption( FACTOR_OPTION ) ) {
             throw new IllegalArgumentException( "Please specify the factor" );
         }

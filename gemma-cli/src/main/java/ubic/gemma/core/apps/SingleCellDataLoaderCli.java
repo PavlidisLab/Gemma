@@ -102,8 +102,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         options.addOption( LOAD_CELL_TYPE_ASSIGNMENT_OPTION, "load-cell-type-assignment", false, "Only load cell type assignment. Use -" + QT_NAME_OPTION + " to specify which set of vectors this is applicable to." );
         options.addOption( LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION, "load-cell-level-characteristics", false, "Only load cell-level characteristics. Use -" + QT_NAME_OPTION + " to specify which set of vectors this is applicable to." );
         options.addOption( DATA_TYPE_OPTION, "data-type", true, "Data type to import. Must be one of " + Arrays.stream( SingleCellDataType.values() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) + "." );
@@ -137,8 +136,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( LOAD_CELL_TYPE_ASSIGNMENT_OPTION ) && commandLine.hasOption( LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION ) ) {
             throw new IllegalArgumentException( "Can only choose one of -" + LOAD_CELL_TYPE_ASSIGNMENT_OPTION + " and -" + LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION + " at a time." );
         }

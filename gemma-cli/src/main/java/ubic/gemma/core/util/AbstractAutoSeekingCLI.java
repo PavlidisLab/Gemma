@@ -5,6 +5,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.Assert;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
@@ -70,6 +71,7 @@ public abstract class AbstractAutoSeekingCLI<T extends Auditable> extends Abstra
      * The auto option value can be retrieved with {@link #isAutoSeek()}.
      */
     protected void addAutoOption( Options options ) {
+        Assert.state( !options.hasOption( AUTO_OPTION_NAME ), "The -" + AUTO_OPTION_NAME + " option was already added." );
         options.addOption( Option.builder( AUTO_OPTION_NAME )
                 .desc( "Attempt to process entities that need processing based on workflow criteria." )
                 .build() );
@@ -91,12 +93,15 @@ public abstract class AbstractAutoSeekingCLI<T extends Auditable> extends Abstra
      * The limiting date can be retrieved with {@link #getLimitingDate()}.
      */
     protected void addLimitingDateOption( Options options ) {
+        Assert.state( !options.hasOption( LIMITING_DATE_OPTION ), "The -" + LIMITING_DATE_OPTION + " option was already added." );
         addDateOption( LIMITING_DATE_OPTION, null, "Constrain to run only on entities with analyses older than the given date. "
                 + "For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. "
                 + "If there is no record of when the analysis was last run, it will be run.", options );
     }
 
     protected void addForceOption( Options options ) {
+        Assert.state( !force, "Force mode is enabled for this CLI, you cannot add the -force/--force option." );
+        Assert.state( !options.hasOption( FORCE_OPTION ), "The -" + FORCE_OPTION + " option was already added." );
         String desc = "Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)";
         options.addOption( FORCE_OPTION, "force", false, desc );
     }

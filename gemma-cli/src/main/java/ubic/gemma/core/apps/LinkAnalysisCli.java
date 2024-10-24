@@ -101,9 +101,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
-
+    protected void buildExperimentOptions( Options options ) {
         super.addLimitingDateOption( options );
 
         Option nodeDegreeUpdate = Option.builder( "n" ).desc( "Update the node degree for taxon given by -t option. All other options ignored." )
@@ -211,9 +209,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
-
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( "delete" ) ) {
             this.deleteAnalyses = true;
             setForce();

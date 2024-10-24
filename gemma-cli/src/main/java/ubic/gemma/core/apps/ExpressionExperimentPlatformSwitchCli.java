@@ -21,14 +21,12 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 /**
  * Switch the array design used to the merged one.
@@ -37,16 +35,13 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
  */
 public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentManipulatingCLI {
 
-    private String arrayDesignName = null;
-
     @Autowired
     private ExpressionExperimentPlatformSwitchService serv;
 
     @Autowired
-    private ArrayDesignService arrayDesignService;
-
-    @Autowired
     private AuditTrailService ats;
+
+    private String arrayDesignName = null;
 
     @Override
     public String getCommandName() {
@@ -59,8 +54,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         Option arrayDesignOption = Option.builder( "a" ).hasArg().argName( "Array design" ).desc(
                         "Array design short name to be switched to - no need to specify if the platforms used by the EE are merged" )
                 .longOpt( "array" ).build();
@@ -69,8 +63,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processExperimentOptions( CommandLine commandLine ) {
         if ( commandLine.hasOption( 'a' ) ) {
             this.arrayDesignName = commandLine.getOptionValue( 'a' );
         }

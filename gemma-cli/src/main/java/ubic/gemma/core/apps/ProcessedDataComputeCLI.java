@@ -59,8 +59,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     private boolean ignoreQuantitationMismatch = false;
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         addForceOption( options );
         addLimitingDateOption( options );
         options.addOption( UPDATE_DIAGNOSTICS_OPTION, false,
@@ -71,8 +70,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         this.updateDiagnostics = commandLine.hasOption( UPDATE_DIAGNOSTICS_OPTION );
         this.updateRanks = commandLine.hasOption( UPDATE_RANKS_OPTION );
         this.ignoreQuantitationMismatch = commandLine.hasOption( IGNORE_QUANTITATION_MISMATCH_OPTION );

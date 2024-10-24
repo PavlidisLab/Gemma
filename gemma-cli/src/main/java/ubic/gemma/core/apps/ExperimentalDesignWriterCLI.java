@@ -58,8 +58,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         Option outputFileOption = Option.builder( "o" ).hasArg().required().argName( "outFilePrefix" )
                 .desc( "File prefix for saving the output (short name will be appended)" )
                 .longOpt( "outFilePrefix" ).build();
@@ -67,8 +66,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         outFileName = commandLine.getOptionValue( 'o' );
     }
 

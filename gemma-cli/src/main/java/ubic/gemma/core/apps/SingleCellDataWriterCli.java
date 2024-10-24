@@ -66,8 +66,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentManipulatingCLI
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         options.addOption( "qtName", "quantitation-type-name", true, "Name of the quantitation type to obtain (defaults to the preferred one)" );
         options.addOption( "format", "format", true, "Format to write the matrix for (possible values: tabular, MEX, defaults to tabular)" );
         options.addOption( "useEnsemblIds", "use-ensembl-ids", false, "Use Ensembl IDs instead of official gene symbols (only for MEX output)" );
@@ -79,8 +78,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentManipulatingCLI
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         this.quantitationTypeName = commandLine.getOptionValue( "qtName" );
         this.useEnsemblIds = commandLine.hasOption( "useEnsemblIds" );
         if ( commandLine.hasOption( "noStreaming" ) && commandLine.hasOption( "fetchSize" ) ) {

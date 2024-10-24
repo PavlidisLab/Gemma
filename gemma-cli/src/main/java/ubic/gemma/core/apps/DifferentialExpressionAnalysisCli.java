@@ -92,14 +92,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-
-        /*
-         * These options from the super class support: running on one or more data sets from the command line, running
-         * on list of data sets from a file, running on all data sets.
-         */
-        super.buildOptions( options );
-
+    protected void buildExperimentOptions( Options options ) {
         /* Supports: running on all data sets that have not been run since a given date. */
         addLimitingDateOption( options );
 
@@ -146,8 +139,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( "type" ) ) {
             if ( !commandLine.hasOption( "factors" ) ) {
                 throw new IllegalArgumentException( "Please specify the factor(s) when specifying the analysis type." );

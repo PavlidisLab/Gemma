@@ -48,6 +48,12 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     private static final String METADATAOPT = "rlen";
     private static final String RPKM_FILE_OPT = "rpkm";
     private static final String MULTIQC_METADATA_FILE_OPT = "multiqc";
+
+    @Autowired
+    private DataUpdater serv;
+    @Autowired
+    private ExpressionDataFileService expressionDataFileService;
+
     private boolean allowMissingSamples = false;
     private String countFile = null;
     private Boolean isPairedReads = null;
@@ -56,11 +62,6 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     private String rpkmFile = null;
     private boolean justbackfillLog2cpm = false;
     private Path qualityControlReportFile = null;
-
-    @Autowired
-    private DataUpdater serv;
-    @Autowired
-    private ExpressionDataFileService expressionDataFileService;
 
     @Override
     public String getCommandName() {
@@ -73,8 +74,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         options.addOption( Option.builder( RNASeqDataAddCli.RPKM_FILE_OPT ).longOpt( null ).desc( "File with RPKM data" ).argName( "file path" ).hasArg().build() );
         options.addOption( Option.builder( RNASeqDataAddCli.COUNT_FILE_OPT ).longOpt( null ).desc( "File with count data" ).argName( "file path" ).hasArg().build() );
 
@@ -91,9 +91,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
-
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( "log2cpm" ) ) {
             this.justbackfillLog2cpm = true;
 
