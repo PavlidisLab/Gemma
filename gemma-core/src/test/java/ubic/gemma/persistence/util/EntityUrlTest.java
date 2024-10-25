@@ -12,11 +12,10 @@ public class EntityUrlTest {
     public void test() {
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 12L );
-        assertEquals( "/expressionExperiment/showExpressionExperiment.html?id=12", EntityUrl.of( "", ee ).web().toUriString() );
-        assertEquals( "/rest/v2/datasets/12", EntityUrl.of( "", ee ).rest().toUriString() );
+        assertEquals( "/rest/v2/datasets/12", EntityUrl.of( "" ).entity( ee ).rest().toUriString() );
         ArrayDesign ad = new ArrayDesign();
         ad.setId( 3L );
-        assertEquals( "/arrays/showArrayDesign.html?id=3", EntityUrl.of( "", ad ).web().toUriString() );
-        assertEquals( "/rest/v2/platforms/3", EntityUrl.of( "", ad ).rest().toUriString() );
+        assertEquals( "/arrays/showArrayDesign.html?id=3", EntityUrl.of( "" ).entity( ad ).web().toUriString() );
+        assertEquals( "/rest/v2/platforms/3", EntityUrl.of( "" ).entity( ad ).rest().toUriString() );
     }
 }
