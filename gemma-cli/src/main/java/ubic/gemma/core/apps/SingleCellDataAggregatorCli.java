@@ -96,7 +96,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentManipulatin
             newQt = helperService.splitAndAggregate( expressionExperiment, qt, cta, makePreferred );
         } catch ( UnsupportedScaleTypeForAggregationException e ) {
             addErrorObject( expressionExperiment, String.format( "Aggregation is not support for data of scale type %s, change it first in the GUI %s.",
-                    qt.getScale(), entityUrlBuilder.fromHostUrl( expressionExperiment ).web().edit().toUriString() ), e );
+                    qt.getScale(), entityUrlBuilder.fromHostUrl().entity( expressionExperiment ).web().edit().toUriString() ), e );
             return;
         }
 
@@ -128,7 +128,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentManipulatin
         public QuantitationType splitAndAggregate( ExpressionExperiment expressionExperiment, QuantitationType qt, CellTypeAssignment cta, boolean makePreferred ) {
             List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSplitService.splitByCellType( expressionExperiment, cta );
             log.info( String.format( "Created %d subsets of %s for each cell type:\n%s", subsets.size(), expressionExperiment,
-                    subsets.stream().map( subset -> subset.getName() + "\t" + entityUrlBuilder.fromHostUrl( subset ).web().toUri() ).collect( Collectors.joining( "\n\t" ) ) ) );
+                    subsets.stream().map( subset -> subset.getName() + "\t" + entityUrlBuilder.fromHostUrl().entity( subset ).web().toUri() ).collect( Collectors.joining( "\n\t" ) ) ) );
 
             List<BioAssay> cellBAs = new ArrayList<>();
             for ( ExpressionExperimentSubSet subset : subsets ) {

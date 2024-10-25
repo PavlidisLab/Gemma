@@ -4,8 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.util.EntityUrl.EntityUrlChooser;
 
 /**
  * @author poirigui
@@ -22,25 +21,19 @@ public class EntityUrlBuilder {
     }
 
     /**
-     * Obtain an {@link EntityUrl} for generating an URL relative to the host URL.
-     * <p>
-     * Use this for external URLs.
+     * Obtain an {@link EntityUrlChooser} for generating a URL relative to the host URL.
      */
-    public <T extends Identifiable> EntityUrl<T> fromHostUrl( T entity ) {
-        return EntityUrl.of( hostUrl, entity );
-    }
-
-    public EntityUrl.ExpressionExperimentUrl fromHostUrl( ExpressionExperiment entity ) {
-        return EntityUrl.of( hostUrl, entity );
+    public EntityUrlChooser fromHostUrl() {
+        return EntityUrl.of( hostUrl );
     }
 
     /**
-     * Obtain an {@link EntityUrl} for generating an URL relative to the context path.
+     * Obtain an {@link EntityUrlChooser} for generating a URL relative to the context path.
      * <p>
      * Use this for relative URLs.
      */
-    public <T extends Identifiable> EntityUrl<T> fromContextPath( T entity, String contextPath ) {
+    public EntityUrlChooser fromContextPath( String contextPath ) {
         Assert.isTrue( !contextPath.endsWith( "/" ), "The context path must not end with '/'." );
-        return EntityUrl.of( contextPath, entity );
+        return EntityUrl.of( contextPath );
     }
 }

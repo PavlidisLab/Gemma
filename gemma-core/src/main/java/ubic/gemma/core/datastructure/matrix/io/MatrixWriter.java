@@ -190,7 +190,7 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
             @Nullable Map<CompositeSequence, ?> geneAnnotations, Writer writer ) throws IOException {
 
         StringBuffer buf = new StringBuffer();
-        ExpressionDataWriterUtils.appendBaseHeader( matrix.getExpressionExperiment(), false, entityUrlBuilder.fromHostUrl( matrix.getExpressionExperiment() ).web().toUriString(), buildInfo, buf );
+        ExpressionDataWriterUtils.appendBaseHeader( matrix.getExpressionExperiment(), false, entityUrlBuilder.fromHostUrl().entity( matrix.getExpressionExperiment() ).web().toUriString(), buildInfo, buf );
         writer.append( buf );
 
         writer.append( "Probe\tSequence" );

@@ -151,7 +151,7 @@ public class ExperimentalDesignWriter {
             boolean writeBaseHeader, StringBuffer buf ) {
 
         if ( writeBaseHeader ) {
-            ExpressionDataWriterUtils.appendBaseHeader( expressionExperiment, true, entityUrlBuilder.fromHostUrl( expressionExperiment ).web().toUriString(), buildInfo, buf );
+            ExpressionDataWriterUtils.appendBaseHeader( expressionExperiment, true, entityUrlBuilder.fromHostUrl().entity( expressionExperiment ).web().toUriString(), buildInfo, buf );
         }
 
         for ( ExperimentalFactor ef : factors ) {

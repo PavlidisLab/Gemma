@@ -114,7 +114,7 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
 
     private void writeHeader( ExpressionExperiment ee, QuantitationType qt, SingleCellDimension scd, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer pwriter ) throws IOException {
         StringBuffer buf = new StringBuffer();
-        String experimentUrl = ee.getId() != null ? entityUrlBuilder.fromHostUrl( ee ).web().toUriString() : null;
+        String experimentUrl = ee.getId() != null ? entityUrlBuilder.fromHostUrl().entity( ee ).web().toUriString() : null;
         appendBaseHeader( ee, "Single-cell expression data", experimentUrl, buildInfo, buf );
         pwriter.write( buf.toString() );
         pwriter.append( "# Dataset: " ).append( format( ee ) ).append( "\n" );

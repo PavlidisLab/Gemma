@@ -173,7 +173,7 @@ public class ExpressionExperimentQCController extends BaseController {
         StringWriter writer = new StringWriter();
         StringBuffer buf = writer.getBuffer();
 
-        ExpressionDataWriterUtils.appendBaseHeader( ee, "Outliers removed", entityUrlBuilder.fromHostUrl( ee ).web().toUriString(), buildInfo, buf );
+        ExpressionDataWriterUtils.appendBaseHeader( ee, "Outliers removed", entityUrlBuilder.fromHostUrl().entity( ee ).web().toUriString(), buildInfo, buf );
 
         ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo );
         ee = expressionExperimentService.thawLiter( ee );
@@ -214,7 +214,7 @@ public class ExpressionExperimentQCController extends BaseController {
         StringWriter writer = new StringWriter();
         StringBuffer buf = writer.getBuffer();
 
-        ExpressionDataWriterUtils.appendBaseHeader( ee, "Sample outlier", entityUrlBuilder.fromHostUrl( ee ).web().toUriString(), buildInfo, buf );
+        ExpressionDataWriterUtils.appendBaseHeader( ee, "Sample outlier", entityUrlBuilder.fromHostUrl().entity( ee ).web().toUriString(), buildInfo, buf );
 
         ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo );
         ee = expressionExperimentService.thawLiter( ee );

@@ -537,7 +537,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             buf.append( "# " ).append( "GO terms not included in this file as per settings.\n" );
         }
         // FIXME: add the contextPath
-        buf.append( "# Gemma link for this platform: " ).append( entityUrlBuilder.fromHostUrl( arrayDesign ).web().toUriString() ).append( "\n" );
+        buf.append( "# Gemma link for this platform: " ).append( entityUrlBuilder.fromHostUrl().entity( arrayDesign ).web().toUriString() ).append( "\n" );
         buf.append( "# " ).append( arrayDesign.getShortName() ).append( "  " ).append( arrayDesign.getName() )
                 .append( "\n" );
         buf.append( "# " ).append( arrayDesign.getPrimaryTaxon().getScientificName() ).append( "\n" );

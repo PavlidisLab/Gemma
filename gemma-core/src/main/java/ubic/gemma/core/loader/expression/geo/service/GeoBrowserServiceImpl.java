@@ -208,7 +208,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
 
             if ( ee != null ) {
                 buf.append( "\n<p><strong><a target=\"_blank\" href=\"" )
-                        .append( entityUrlBuilder.fromContextPath( ee, contextPath ).web().toUriString() )
+                        .append( entityUrlBuilder.fromContextPath( contextPath ).entity( ee ).web().toUriString() )
                         .append( "\">" ).append( escapeHtml4( gse ) ).append( "</a></strong>" );
             } else {
                 buf.append( "\n<p><strong>" ).append( gse ).append( " [new to Gemma]</strong>" );
@@ -301,7 +301,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
                     }
                 }
                 buf.append( "<p><strong>Platform in Gemma:&nbsp;<a target=\"_blank\" href=\"" )
-                        .append( entityUrlBuilder.fromContextPath( arrayDesign, contextPath ).web().toUriString() )
+                        .append( entityUrlBuilder.fromContextPath( contextPath ).entity( arrayDesign ).web().toUriString() )
                         .append( "\">" ).append( escapeHtml4( gpl ) ).append( "</a></strong>" )
                         .append( trouble );
             } else {

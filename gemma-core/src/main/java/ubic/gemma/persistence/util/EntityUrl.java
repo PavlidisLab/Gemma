@@ -18,13 +18,8 @@ import java.net.URI;
  */
 public class EntityUrl<T extends Identifiable> {
 
-
-    public static <T extends Identifiable> EntityUrl<T> of( String baseUrl, T entity ) {
-        return new EntityUrl<>( baseUrl, entity );
-    }
-
-    public static ExpressionExperimentUrl of( String baseUrl, ExpressionExperiment entity ) {
-        return new ExpressionExperimentUrl( baseUrl, entity );
+    public static EntityUrlChooser of( String baseUrl ) {
+        return new EntityUrlChooser( baseUrl );
     }
 
     protected final String baseUrl;
@@ -46,6 +41,23 @@ public class EntityUrl<T extends Identifiable> {
      */
     public RestEntityUrl rest() {
         return new RestEntityUrl();
+    }
+
+    public static class EntityUrlChooser {
+
+        private final String baseUrl;
+
+        public EntityUrlChooser( String baseUrl ) {
+            this.baseUrl = baseUrl;
+        }
+
+        public ExpressionExperimentUrl entity( ExpressionExperiment entity ) {
+            return new ExpressionExperimentUrl( baseUrl, entity );
+        }
+
+        public <T extends Identifiable> EntityUrl<T> entity( T entity ) {
+            return new EntityUrl<>( baseUrl, entity );
+        }
     }
 
     public static class ExpressionExperimentUrl extends EntityUrl<ExpressionExperiment> {
