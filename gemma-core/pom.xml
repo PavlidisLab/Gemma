@@ -166,6 +166,13 @@
             <version>3.11.1</version>
         </dependency>
 
+        <!-- Swagger (only annotations, implementation is reserved to Gemma REST) -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>${swagger.version}</version>
+        </dependency>
+
         <!-- Utilities -->
         <dependency>
             <groupId>javax.xml.bind</groupId>
