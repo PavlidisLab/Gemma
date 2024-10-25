@@ -131,7 +131,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         qt.setType( StandardQuantitationType.COUNT );
         qt.setScale( ScaleType.COUNT );
         qt.setRepresentation( PrimitiveType.DOUBLE );
-        Collection<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( ee, ad, qt );
+        List<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( ee, ad, qt );
         SingleCellDimension dimension = vectors.iterator().next().getSingleCellDimension();
         // randomly assign cell types
         CellTypeAssignment cta = new CellTypeAssignment();
@@ -179,7 +179,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         qt.setType( StandardQuantitationType.COUNT );
         qt.setScale( ScaleType.LOG2 );
         qt.setRepresentation( PrimitiveType.DOUBLE );
-        Collection<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( ee, ad, qt );
+        List<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( ee, ad, qt );
         SingleCellDimension dimension = vectors.iterator().next().getSingleCellDimension();
         // randomly assign cell types
         CellTypeAssignment cta = new CellTypeAssignment();
@@ -227,7 +227,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         qt.setType( StandardQuantitationType.COUNT );
         qt.setScale( ScaleType.LOG1P );
         qt.setRepresentation( PrimitiveType.DOUBLE );
-        Collection<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( ee, ad, qt );
+        List<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( ee, ad, qt );
         SingleCellDimension dimension = vectors.iterator().next().getSingleCellDimension();
         // randomly assign cell types
         CellTypeAssignment cta = new CellTypeAssignment();
@@ -276,7 +276,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         qt.setType( StandardQuantitationType.COUNT );
         qt.setScale( ScaleType.PERCENT );
         qt.setRepresentation( PrimitiveType.DOUBLE );
-        Collection<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( ee, ad, qt );
+        List<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( ee, ad, qt );
         SingleCellDimension dimension = vectors.iterator().next().getSingleCellDimension();
         // randomly assign cell types
         CellTypeAssignment cta = new CellTypeAssignment();

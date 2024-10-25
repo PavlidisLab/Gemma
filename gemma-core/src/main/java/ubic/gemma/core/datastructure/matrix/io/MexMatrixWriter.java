@@ -232,30 +232,25 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
     }
 
     private void writeFeature( CompositeSequence de, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, boolean first, OutputStream out ) throws IOException {
-        String f;
-        if ( cs2gene != null ) {
-            f = ( first ? "" : "\n" ) + format( de.getName() ) + "\t" + formatGenes( cs2gene.get( de ) );
-        } else {
-            f = ( first ? "" : "\n" ) + format( de.getName() );
-        }
+        String f = ( first ? "" : "\n" ) + format( de.getName() ) + "\t" + ( cs2gene != null ? formatGenes( cs2gene.get( de ) ) : "" ) + "\t" + "Gene Expression";
         out.write( f.getBytes( StandardCharsets.UTF_8 ) );
     }
 
     private String formatGenes( @Nullable Collection<Gene> genes ) {
         if ( genes == null || genes.isEmpty() ) {
-            return "\t";
+            return "";
         }
         if ( useEnsemblIds ) {
             List<Gene> sortedGenes = genes.stream()
                     .filter( gene -> gene.getEnsemblId() != null )
                     .sorted( Comparator.comparing( Gene::getEnsemblId ) )
                     .collect( Collectors.toList() );
-            return formatGenesAttribute( sortedGenes, Gene::getEnsemblId ) + "\t" + formatGenesAttribute( sortedGenes, Gene::getOfficialName );
+            return formatGenesAttribute( sortedGenes, Gene::getEnsemblId );
         } else {
             List<Gene> sortedGenes = genes.stream()
                     .sorted( Comparator.comparing( Gene::getOfficialSymbol ) )
                     .collect( Collectors.toList() );
-            return formatGenesAttribute( sortedGenes, Gene::getOfficialSymbol ) + "\t" + formatGenesAttribute( sortedGenes, Gene::getOfficialName );
+            return formatGenesAttribute( sortedGenes, Gene::getOfficialSymbol );
         }
     }
 

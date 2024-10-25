@@ -18,7 +18,8 @@ public interface SingleCellExpressionExperimentAggregatorService {
      * @param cellBAs       samples to aggregate vectors for
      * @param makePreferred make the resulting QT preferred
      * @return the quantitation type of the newly created vectors
+     * @throws UnsupportedScaleTypeForAggregationException if data of the given scale type cannot be aggregated
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    QuantitationType aggregateVectors( ExpressionExperiment ee, QuantitationType qt, List<BioAssay> cellBAs, boolean makePreferred );
+    QuantitationType aggregateVectors( ExpressionExperiment ee, QuantitationType qt, List<BioAssay> cellBAs, boolean makePreferred ) throws UnsupportedScaleTypeForAggregationException;
 }

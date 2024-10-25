@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author poirigui
@@ -26,6 +27,10 @@ public class EntityUrlBuilder {
      * Use this for external URLs.
      */
     public <T extends Identifiable> EntityUrl<T> fromHostUrl( T entity ) {
+        return EntityUrl.of( hostUrl, entity );
+    }
+
+    public EntityUrl.ExpressionExperimentUrl fromHostUrl( ExpressionExperiment entity ) {
         return EntityUrl.of( hostUrl, entity );
     }
 

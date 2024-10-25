@@ -202,9 +202,12 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         Path file = metadataDir.resolve( this.getEEFolderName( ee ) ).resolve( type.getFileName( ee ) );
         try ( LockedPathImpl lock = acquirePathLock( file, false ) ) {
             if ( type.isDirectory() ) {
+                if ( !Files.exists( file ) ) {
+                    return Optional.empty();
+                }
                 // If this is a directory, check if we can read the most recent file.
                 try ( Stream<Path> files = Files.list( file ) ) {
-                    file = files
+                    return files
                             // ignore sub-directories
                             .filter( f -> !Files.isDirectory( f ) )
                             // Sort by last modified, we only want the newest file
@@ -215,14 +218,11 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                                     return FileTime.fromMillis( 0 );
                                 }
                             } ) )
-                            .orElse( null );
+                            .map( lock::stealWithPath );
                 }
-            }
-            if ( file != null ) {
+            } else {
                 // lock will be managed by the LockedFile
                 return Optional.of( lock.steal() );
-            } else {
-                return Optional.empty();
             }
         }
     }
@@ -902,6 +902,18 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             Assert.state( !stolen, "This lock was already stolen." );
             try {
                 return new LockedPathImpl( path, lock, shared );
+            } finally {
+                stolen = true;
+            }
+        }
+
+        /**
+         * Steal this lock with a different path.
+         */
+        public LockedPath stealWithPath( Path file ) {
+            Assert.state( !stolen, "This lock was already stolen." );
+            try {
+                return new LockedPathImpl( file, lock, shared );
             } finally {
                 stolen = true;
             }

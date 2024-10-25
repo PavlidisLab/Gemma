@@ -255,7 +255,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
     @Test
     public void testGetDatasetRawExpression() throws IOException {
         ExpressionExperiment ee = ees.get( 0 );
-        Response response = datasetsWebService.getDatasetRawExpression( DatasetArg.valueOf( String.valueOf( ee.getId() ) ), null );
+        Response response = datasetsWebService.getDatasetRawExpression( DatasetArg.valueOf( String.valueOf( ee.getId() ) ), null, false );
         // there's 7 comment lines, 1 header and then one line per raw EV (there are two platforms the default collection size in the fixture)
         assertThat( ( File ) response.getEntity() )
                 .exists()

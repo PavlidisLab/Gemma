@@ -17,6 +17,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentAggregatorService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentSplitService;
+import ubic.gemma.persistence.service.expression.experiment.UnsupportedScaleTypeForAggregationException;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -35,6 +37,9 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentManipulatin
 
     @Autowired
     private PreprocessorService preprocessorService;
+
+    @Autowired
+    private EntityUrlBuilder entityUrlBuilder;
 
     @Nullable
     private String qtName;
@@ -86,7 +91,14 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentManipulatin
                     .orElseThrow( () -> new IllegalStateException( expressionExperiment + " does not have a preferred cell-type assignment for " + qt + "." ) );
         }
 
-        QuantitationType newQt = helperService.splitAndAggregate( expressionExperiment, qt, cta, makePreferred );
+        QuantitationType newQt;
+        try {
+            newQt = helperService.splitAndAggregate( expressionExperiment, qt, cta, makePreferred );
+        } catch ( UnsupportedScaleTypeForAggregationException e ) {
+            addErrorObject( expressionExperiment, String.format( "Aggregation is not support for data of scale type %s, change it first in the GUI %s.",
+                    qt.getScale(), entityUrlBuilder.fromHostUrl( expressionExperiment ).web().edit().toUriString() ), e );
+            return;
+        }
 
         // create/recreate processed vectors
         if ( newQt.getIsPreferred() ) {
@@ -109,11 +121,14 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentManipulatin
         @Autowired
         private SingleCellExpressionExperimentAggregatorService singleCellExpressionExperimentAggregatorService;
 
+        @Autowired
+        private EntityUrlBuilder entityUrlBuilder;
+
         @Transactional
         public QuantitationType splitAndAggregate( ExpressionExperiment expressionExperiment, QuantitationType qt, CellTypeAssignment cta, boolean makePreferred ) {
             List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSplitService.splitByCellType( expressionExperiment, cta );
             log.info( String.format( "Created %d subsets of %s for each cell type:\n%s", subsets.size(), expressionExperiment,
-                    subsets.stream().map( ExpressionExperimentSubSet::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
+                    subsets.stream().map( subset -> subset.getName() + "\t" + entityUrlBuilder.fromHostUrl( subset ).web().toUri() ).collect( Collectors.joining( "\n\t" ) ) ) );
 
             List<BioAssay> cellBAs = new ArrayList<>();
             for ( ExpressionExperimentSubSet subset : subsets ) {

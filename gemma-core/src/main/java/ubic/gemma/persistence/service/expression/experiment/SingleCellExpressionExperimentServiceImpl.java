@@ -64,7 +64,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType ) {
+    public List<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType ) {
         return expressionExperimentDao.getSingleCellDataVectors( ee, quantitationType );
     }
 
@@ -104,7 +104,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
-    public List<QuantitationType> getSingleCellQuantitationTypes( ExpressionExperiment ee ) {
+    public Collection<QuantitationType> getSingleCellQuantitationTypes( ExpressionExperiment ee ) {
         return expressionExperimentDao.getSingleCellQuantitationTypes( ee );
     }
 

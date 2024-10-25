@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -16,6 +17,7 @@ import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 
 import java.util.*;
@@ -40,6 +42,9 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
 
     @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
+
+    @Autowired
+    private AuditTrailService auditTrailService;
 
     /**
      */
@@ -85,7 +90,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
                 method = SingleCellExpressionAggregationMethod.LOG_SUM;
                 break;
             default:
-                throw new UnsupportedOperationException( "Unsupported scale type for aggregation: " + qt.getScale() );
+                throw new UnsupportedScaleTypeForAggregationException( qt.getScale() );
         }
 
         log.info( "Aggregating single-cell data with scale " + qt.getScale() + " using " + method + "." );
@@ -161,7 +166,9 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
         }
 
         int newVecs = expressionExperimentService.addRawDataVectors( ee, newQt, rawVectors );
-        log.info( String.format( "Created %d aggregated raw vectors for %s.", newVecs, newQt ) );
+        String note = String.format( "Created %d aggregated raw vectors for %s.", newVecs, newQt );
+        log.info( note );
+        auditTrailService.addUpdateEvent( ee, DataAddedEvent.class, note );
 
         return newQt;
     }

@@ -4,7 +4,10 @@ import org.springframework.util.Assert;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Taxon;
 
 import java.net.URI;
@@ -15,22 +18,27 @@ import java.net.URI;
  */
 public class EntityUrl<T extends Identifiable> {
 
+
     public static <T extends Identifiable> EntityUrl<T> of( String baseUrl, T entity ) {
-        Assert.notNull( entity.getId(), "Entity must have an ID." );
         return new EntityUrl<>( baseUrl, entity );
     }
 
-    private final String baseUrl;
+    public static ExpressionExperimentUrl of( String baseUrl, ExpressionExperiment entity ) {
+        return new ExpressionExperimentUrl( baseUrl, entity );
+    }
 
-    private final T entity;
+    protected final String baseUrl;
+
+    protected final T entity;
 
     private EntityUrl( String baseUrl, T entity ) {
+        Assert.notNull( entity.getId(), "Entity must have an ID." );
         this.baseUrl = baseUrl;
         this.entity = entity;
     }
 
-    public WebEntityUrl web() {
-        return new WebEntityUrl();
+    public WebEntityUrl<T> web() {
+        return new WebEntityUrl<T>( entity );
     }
 
     /**
@@ -40,18 +48,38 @@ public class EntityUrl<T extends Identifiable> {
         return new RestEntityUrl();
     }
 
+    public static class ExpressionExperimentUrl extends EntityUrl<ExpressionExperiment> {
+
+        private ExpressionExperimentUrl( String baseUrl, ExpressionExperiment entity ) {
+            super( baseUrl, entity );
+        }
+
+        @Override
+        public ExpressionExperimentWebUrl web() {
+            return new ExpressionExperimentWebUrl( entity );
+        }
+    }
+
     /**
      * Generate a URL for Gemma Web.
      */
-    public class WebEntityUrl {
+    public class WebEntityUrl<U extends Identifiable> {
 
+        protected final U entity;
         private final String entityPath;
 
-        private WebEntityUrl() {
+        private WebEntityUrl( U entity ) {
+            this.entity = entity;
             if ( entity instanceof ExpressionExperiment ) {
                 this.entityPath = "/expressionExperiment/showExpressionExperiment.html?id=";
             } else if ( entity instanceof ArrayDesign ) {
                 this.entityPath = "/arrays/showArrayDesign.html?id=";
+            } else if ( entity instanceof ExperimentalDesign ) {
+                this.entityPath = "/experimentalDesign/showExperimentalDesign.html?id=";
+            } else if ( entity instanceof ExpressionExperimentSubSet ) {
+                this.entityPath = "/expressionExperiment/showExpressionExperimentSubSet.html?id=";
+            } else if ( entity instanceof BioAssay ) {
+                this.entityPath = "/bioAssay/showBioAssay.html?id=";
             } else {
                 throw new UnsupportedOperationException( "Cannot generate Web URL for entities of type " + entity.getClass() + "." );
             }
@@ -68,6 +96,49 @@ public class EntityUrl<T extends Identifiable> {
         @Override
         public String toString() {
             return toUriString();
+        }
+    }
+
+    public class ExpressionExperimentWebUrl extends WebEntityUrl<ExpressionExperiment> {
+
+        private boolean edit = false;
+
+        private ExpressionExperimentWebUrl( ExpressionExperiment entity ) {
+            super( entity );
+        }
+
+        public ExperimentalDesignWebUrl design() {
+            Assert.notNull( entity.getExperimentalDesign(), entity + " does not have an experimental design." );
+            return new ExperimentalDesignWebUrl( entity, entity.getExperimentalDesign() );
+        }
+
+        public ExpressionExperimentWebUrl edit() {
+            edit = true;
+            return this;
+        }
+
+        @Override
+        public URI toUri() {
+            if ( edit ) {
+                return URI.create( baseUrl + "/expressionExperiment/editExpressionExperiment.html?id=" + entity.getId() );
+            } else {
+                return super.toUri();
+            }
+        }
+    }
+
+    public class ExperimentalDesignWebUrl extends WebEntityUrl<ExperimentalDesign> {
+
+        private final ExpressionExperiment experiment;
+
+        private ExperimentalDesignWebUrl( ExpressionExperiment ee, ExperimentalDesign entity ) {
+            super( entity );
+            this.experiment = ee;
+        }
+
+        @Override
+        public URI toUri() {
+            return URI.create( baseUrl + "/experimentalDesign/showExperimentalDesign.html?eeid=" + experiment.getId() );
         }
     }
 

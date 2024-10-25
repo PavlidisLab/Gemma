@@ -13,7 +13,10 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.bioAssayData.NegativeBinomialDistribution;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -34,11 +37,11 @@ public class SingleCellTestUtils {
         random.setSeed( seed );
     }
 
-    public static Collection<SingleCellExpressionDataVector> randomSingleCellVectors() {
+    public static List<SingleCellExpressionDataVector> randomSingleCellVectors() {
         return randomSingleCellVectors( 100, 4, 1000, 0.9 );
     }
 
-    public static Collection<SingleCellExpressionDataVector> randomSingleCellVectors( int numDesignElements, int numSamples, int numCellsPerBioAssay, double sparsity ) {
+    public static List<SingleCellExpressionDataVector> randomSingleCellVectors( int numDesignElements, int numSamples, int numCellsPerBioAssay, double sparsity ) {
         ArrayDesign arrayDesign = new ArrayDesign();
         for ( int i = 0; i < numDesignElements; i++ ) {
             arrayDesign.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "cs" + i ) );
@@ -62,7 +65,7 @@ public class SingleCellTestUtils {
      * Generate random single-cell vectors with 1000 cells/sample and 10% sparsity.
      * @see #randomSingleCellVectors(ExpressionExperiment, ArrayDesign, QuantitationType, int, double)
      */
-    public static Collection<SingleCellExpressionDataVector> randomSingleCellVectors( ExpressionExperiment ee, ArrayDesign ad, QuantitationType qt ) {
+    public static List<SingleCellExpressionDataVector> randomSingleCellVectors( ExpressionExperiment ee, ArrayDesign ad, QuantitationType qt ) {
         return randomSingleCellVectors( ee, ad, qt, 1000, 0.9 );
     }
 
@@ -75,7 +78,7 @@ public class SingleCellTestUtils {
      * @param numCellsPerBioAssay how many cells to generate per {@link BioAssay}
      * @param sparsity            sparsity of the vectors
      */
-    public static Collection<SingleCellExpressionDataVector> randomSingleCellVectors( ExpressionExperiment ee, ArrayDesign ad, QuantitationType qt, int numCellsPerBioAssay, double sparsity ) {
+    public static List<SingleCellExpressionDataVector> randomSingleCellVectors( ExpressionExperiment ee, ArrayDesign ad, QuantitationType qt, int numCellsPerBioAssay, double sparsity ) {
         Assert.isTrue( qt.getGeneralType() == GeneralType.QUANTITATIVE );
         Assert.isTrue( qt.getType() == StandardQuantitationType.COUNT );
         Assert.isTrue( qt.getScale() == ScaleType.COUNT || qt.getScale() == ScaleType.LOG2 || qt.getScale() == ScaleType.LOG1P || qt.getScale() == ScaleType.PERCENT );

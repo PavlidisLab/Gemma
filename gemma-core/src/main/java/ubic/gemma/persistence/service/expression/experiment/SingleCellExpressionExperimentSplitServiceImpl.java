@@ -4,6 +4,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SingleCellSubSetsCreatedEvent;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
@@ -12,6 +13,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 
@@ -37,6 +39,9 @@ public class SingleCellExpressionExperimentSplitServiceImpl implements SingleCel
 
     @Autowired
     private BioMaterialService bioMaterialService;
+
+    @Autowired
+    private AuditTrailService auditTrailService;
 
     @Override
     @Transactional
@@ -70,6 +75,18 @@ public class SingleCellExpressionExperimentSplitServiceImpl implements SingleCel
             }
             results.add( expressionExperimentSubSetService.create( subset ) );
         }
+        StringBuilder details = new StringBuilder();
+        details.append( "Cell-type assignment: " ).append( cta ).append( "\n" );
+        details.append( "Factor: " ).append( cellTypeFactor ).append( "\n" );
+        details.append( "Mapping:\n" );
+        mappedCellTypeFactors.forEach( ( k, v ) -> {
+            details.append( "\t" ).append( k ).append( " -> " ).append( v ).append( "\n" );
+        } );
+        details.append( "Subsets:\n" );
+        for ( ExpressionExperimentSubSet subset : results ) {
+            details.append( "\t" ).append( subset ).append( "\n" );
+        }
+        auditTrailService.addUpdateEvent( ee, SingleCellSubSetsCreatedEvent.class, "Created " + results.size() + " aggregated single-cell subsets for " + cellTypeFactor, details.toString() );
         return results;
     }
 
@@ -91,7 +108,7 @@ public class SingleCellExpressionExperimentSplitServiceImpl implements SingleCel
         bm.setName( sourceBioMaterial.getName() + " - " + cellTypeName );
         bm.setSourceTaxon( sourceBioMaterial.getSourceTaxon() );
         bm.setSourceBioMaterial( sourceBioMaterial );
-        bm.getCharacteristics().add( cellType );
+        bm.getCharacteristics().add( Characteristic.Factory.newInstance( cellType ) );
         bm.getFactorValues().add( cellTypeFactor );
         return bioMaterialService.create( bm );
     }

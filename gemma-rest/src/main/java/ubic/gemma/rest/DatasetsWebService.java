@@ -29,10 +29,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.lucene.analysis.Analyzer;
@@ -52,8 +49,8 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.DifferentialExpressionAnalysisResultListFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
 import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
+import ubic.gemma.core.datastructure.matrix.io.MexMatrixBundler;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchResult;
@@ -97,14 +94,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
 import java.nio.file.Files;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -1149,9 +1142,10 @@ public class DatasetsWebService {
             deprecated = true)
     public Response getDatasetExpression( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg, // Required
-            @QueryParam("filter") @DefaultValue("false") Boolean filterData // Optional, default false
+            @QueryParam("filter") @DefaultValue("false") Boolean filterData, // Optional, default false
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download
     ) {
-        return getDatasetProcessedExpression( datasetArg, filterData );
+        return getDatasetProcessedExpression( datasetArg, filterData, download );
     }
 
     /**
@@ -1160,7 +1154,7 @@ public class DatasetsWebService {
      * The payload is transparently compressed via a <code>Content-Encoding</code> header and streamed to avoid dumping
      * the whole payload in memory.
      */
-    @GZIP(alreadyCompressed = true)
+    @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
     @GET
     @Path("/{dataset}/data/processed")
     @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8)
@@ -1173,7 +1167,11 @@ public class DatasetsWebService {
                     @ApiResponse(responseCode = "204", description = "The dataset expression matrix is empty. Only applicable if filter is set to true."),
                     @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public Response getDatasetProcessedExpression( @PathParam("dataset") DatasetArg<?> datasetArg, @QueryParam("filter") @DefaultValue("false") Boolean filtered ) {
+    public Response getDatasetProcessedExpression(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("filter") @DefaultValue("false") Boolean filtered,
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download
+    ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         if ( !expressionExperimentService.hasProcessedExpressionData( ee ) ) {
             throw new NotFoundException( ee.getShortName() + " does not have any processed vectors." );
@@ -1191,14 +1189,14 @@ public class DatasetsWebService {
                 log.error( "Failed to create processed expression data for " + ee + ", will have to stream it as a fallback.", e );
                 return Response.ok( ( StreamingOutput ) output -> {
                             try {
-                                expressionDataFileService.writeProcessedExpressionData( ee, filtered, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
+                                expressionDataFileService.writeProcessedExpressionData( ee, filtered, new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ) );
                             } catch ( FilteringException ex ) {
                                 // this is a bit unfortunate, because it's too late for producing a 204 error
                                 throw new RuntimeException( ex );
-
                             }
                         } )
-                        .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ) ) + "\"" )
+                        .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                        .header( "Content-Disposition", "attachment; filename=\"" + ( download ? getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ) : FilenameUtils.removeExtension( getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ) ) ) + "\"" )
                         .build();
             } catch ( InterruptedException e ) {
                 throw new InternalServerErrorException( e );
@@ -1216,7 +1214,7 @@ public class DatasetsWebService {
      * The payload is transparently compressed via a <code>Content-Encoding</code> header and streamed to avoid dumping
      * the whole payload in memory.
      */
-    @GZIP(alreadyCompressed = true)
+    @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
     @GET
     @Path("/{dataset}/data/raw")
     @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8)
@@ -1228,8 +1226,11 @@ public class DatasetsWebService {
                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-raw-data.tsv") })),
                     @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public Response getDatasetRawExpression( @PathParam("dataset") DatasetArg<?> datasetArg,
-            @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg ) {
+    public Response getDatasetRawExpression(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download
+    ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         QuantitationType qt;
         if ( quantitationTypeArg != null ) {
@@ -1243,15 +1244,18 @@ public class DatasetsWebService {
         try {
             java.nio.file.Path p = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, false, 5, TimeUnit.SECONDS );
             return Response.ok( p.toFile() )
-                    .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( p.getFileName().toString() ) + "\"" )
+                    .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                    .header( "Content-Disposition", "attachment; filename=\"" + ( download ? p.getFileName().toString() : FilenameUtils.removeExtension( p.getFileName().toString() ) ) + "\"" )
                     .build();
         } catch ( TimeoutException e ) {
             // file is being written, recommend to the user to wait a little bit
             throw new ServiceUnavailableException( "Raw data for " + qt + " is still being generated.", 30L, e );
         } catch ( IOException e ) {
             log.error( "Failed to write raw expression data for " + qt + " to disk, will resort to stream it.", e );
-            return Response.ok( ( StreamingOutput ) output -> expressionDataFileService.writeRawExpressionData( ee, qt, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) ) )
-                    .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( getDataOutputFilename( ee, qt, ExpressionDataFileUtils.TABULAR_BULK_DATA_FILE_SUFFIX ) ) + "\"" )
+            String filename = getDataOutputFilename( ee, qt, TABULAR_BULK_DATA_FILE_SUFFIX );
+            return Response.ok( ( StreamingOutput ) output -> expressionDataFileService.writeRawExpressionData( ee, qt, new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ) ) )
+                    .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                    .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
                     .build();
         } catch ( InterruptedException e ) {
             throw new InternalServerErrorException( e );
@@ -1261,23 +1265,24 @@ public class DatasetsWebService {
     @GZIP(mediaTypes = { TEXT_TAB_SEPARATED_VALUES_UTF8 }, alreadyCompressed = true)
     @GET
     @Path("/{dataset}/data/singleCell")
-    @Produces({ TEXT_TAB_SEPARATED_VALUES_UTF8, APPLICATION_10X_MEX + "; q=0.9" })
+    @Produces({ APPLICATION_10X_MEX, TEXT_TAB_SEPARATED_VALUES_UTF8 + ";q=0.9" })
     @Operation(summary = "Retrieve single-cell expression data of a dataset",
             responses = {
                     @ApiResponse(
                             content = {
-                                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string", format = "binary"),
+                                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8 + "; q=0.9", schema = @Schema(type = "string", format = "binary"),
                                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-single-cell-data.tsv") }),
-                                    @Content(mediaType = APPLICATION_10X_MEX + "; q=0.9", schema = @Schema(description = "Sample files are bundled in a TAR archive according to the 10x MEX format.", type = "string", format = "binary", externalDocs = @ExternalDocumentation(url = "https://www.10xgenomics.com/support/software/cell-ranger/latest/analysis/outputs/cr-outputs-mex-matrices")))
+                                    @Content(mediaType = APPLICATION_10X_MEX, schema = @Schema(description = "Sample files are bundled in a TAR archive according to the 10x MEX format.", type = "string", format = "binary", externalDocs = @ExternalDocumentation(url = "https://www.10xgenomics.com/support/software/cell-ranger/latest/analysis/outputs/cr-outputs-mex-matrices")))
                             }),
                     @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetSingleCellExpression(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
+            @QueryParam("download") @DefaultValue("false") Boolean download,
             @Context HttpHeaders headers
     ) {
-        MediaType mediaType = negotiate( headers, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE, withQuality( APPLICATION_10X_MEX_TYPE, 0.9 ) );
+        MediaType mediaType = negotiate( headers, APPLICATION_10X_MEX_TYPE, withQuality( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE, 0.9 ) );
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         QuantitationType qt;
         if ( quantitationTypeArg != null ) {
@@ -1286,32 +1291,14 @@ public class DatasetsWebService {
             qt = singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee )
                     .orElseThrow( () -> new NotFoundException( "No preferred single-cell quantitation type could be found for " + ee + "." ) );
         }
-        if ( mediaType.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
-            try {
-                java.nio.file.Path p = expressionDataFileService.getDataFile( ee, qt, ExpressionExperimentDataFileType.TABULAR, 5, TimeUnit.SECONDS );
-                if ( Files.exists( p ) ) {
-                    return Response.ok( p.toFile() )
-                            .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( p.getFileName().toString() ) + "\"" )
-                            .build();
-                } else {
-                    // generate the file in the background and stream it
-                    // TODO: limit the number of threads writing SC data to disk to not overwhelm the short-lived task pool
-                    log.info( "Single-cell data for " + qt + " is not available, will generate it in the background and stream it in the meantime." );
-                    taskExecutor.submit( () -> expressionDataFileService.writeOrLocateTabularSingleCellExpressionData( ee, qt, true, 30, false ) );
-                    return streamTabularDatasetSingleCellExpression( ee, qt );
-                }
-            } catch ( TimeoutException e ) {
-                // file is being written, recommend to the user to wait a little bit, stacktrace is superfluous
-                log.warn( "Single-cell data for " + qt + " is still being generated, it will be streamed in the meantime." );
-                return streamTabularDatasetSingleCellExpression( ee, qt );
-            } catch ( InterruptedException e ) {
-                throw new InternalServerErrorException( e );
-            }
-        } else {
+        if ( mediaType.equals( APPLICATION_10X_MEX_TYPE ) ) {
             try {
                 java.nio.file.Path p = expressionDataFileService.getDataFile( ee, qt, ExpressionExperimentDataFileType.MEX, 5, TimeUnit.SECONDS );
                 if ( Files.exists( p ) ) {
-                    return bundleMexFile( ee, qt, p );
+                    return Response.ok( ( StreamingOutput ) stream -> new MexMatrixBundler().bundle( p, stream ) )
+                            .type( APPLICATION_10X_MEX_TYPE )
+                            .header( "Content-Disposition", "attachment; filename=\"" + p.getFileName() + ".tar\"" )
+                            .build();
                 } else {
                     taskExecutor.submit( () -> expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, true, 30, false ) );
                     throw new ServiceUnavailableException( "MEX single-cell data for " + qt + " is still being generated.", 30L );
@@ -1321,59 +1308,36 @@ public class DatasetsWebService {
             } catch ( InterruptedException e ) {
                 throw new InternalServerErrorException( e );
             }
+        } else {
+            try {
+                java.nio.file.Path p = expressionDataFileService.getDataFile( ee, qt, ExpressionExperimentDataFileType.TABULAR, 5, TimeUnit.SECONDS );
+                if ( Files.exists( p ) ) {
+                    return Response.ok( p.toFile() )
+                            .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                            .header( "Content-Disposition", "attachment; filename=\"" + ( download ? p.getFileName().toString() : FilenameUtils.removeExtension( p.getFileName().toString() ) ) + "\"" )
+                            .build();
+                } else {
+                    // generate the file in the background and stream it
+                    // TODO: limit the number of threads writing SC data to disk to not overwhelm the short-lived task pool
+                    log.info( "Single-cell data for " + qt + " is not available, will generate it in the background and stream it in the meantime." );
+                    taskExecutor.submit( () -> expressionDataFileService.writeOrLocateTabularSingleCellExpressionData( ee, qt, true, 30, false ) );
+                    return streamTabularDatasetSingleCellExpression( ee, qt, download );
+                }
+            } catch ( TimeoutException e ) {
+                // file is being written, recommend to the user to wait a little bit, stacktrace is superfluous
+                log.warn( "Single-cell data for " + qt + " is still being generated, it will be streamed in the meantime." );
+                return streamTabularDatasetSingleCellExpression( ee, qt, download );
+            } catch ( InterruptedException e ) {
+                throw new InternalServerErrorException( e );
+            }
         }
     }
 
-    private Response streamTabularDatasetSingleCellExpression( ExpressionExperiment ee, QuantitationType qt ) {
+    private Response streamTabularDatasetSingleCellExpression( ExpressionExperiment ee, QuantitationType qt, Boolean download ) {
+        String filename = getDataOutputFilename( ee, qt, TABULAR_SC_DATA_SUFFIX );
         return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, true, 30, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ) ) )
-                .type( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
-                .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( getDataOutputFilename( ee, qt, TABULAR_SC_DATA_SUFFIX ) ) + "\"" )
-                .build();
-    }
-
-    private Response bundleMexFile( ExpressionExperiment ee, QuantitationType qt, java.nio.file.Path p ) {
-        return Response.ok( ( StreamingOutput ) stream -> {
-                    // FIXME: compressing with GZIP is redundant
-                    try ( TarArchiveOutputStream out = new TarArchiveOutputStream( stream ) ) {
-                        Files.walkFileTree( p, new FileVisitor<java.nio.file.Path>() {
-
-                            @Nullable
-                            private java.nio.file.Path sampleDir;
-
-                            @Override
-                            public FileVisitResult preVisitDirectory( java.nio.file.Path path, BasicFileAttributes basicFileAttributes ) {
-                                sampleDir = path;
-                                return FileVisitResult.CONTINUE;
-                            }
-
-                            @Override
-                            public FileVisitResult visitFile( java.nio.file.Path path, BasicFileAttributes basicFileAttributes ) throws IOException {
-                                if ( sampleDir != null ) {
-                                    TarArchiveEntry entry = out.createArchiveEntry( path, sampleDir.getFileName() + "/" + path.getFileName() );
-                                    out.putArchiveEntry( entry );
-                                    try ( InputStream in = Files.newInputStream( path ) ) {
-                                        IOUtils.copy( in, out );
-                                    }
-                                    out.closeArchiveEntry();
-                                }
-                                return FileVisitResult.CONTINUE;
-                            }
-
-                            @Override
-                            public FileVisitResult visitFileFailed( java.nio.file.Path path, IOException e ) {
-                                return FileVisitResult.TERMINATE;
-                            }
-
-                            @Override
-                            public FileVisitResult postVisitDirectory( java.nio.file.Path path, IOException e ) {
-                                sampleDir = null;
-                                return FileVisitResult.CONTINUE;
-                            }
-                        } );
-                    }
-                } )
-                .type( APPLICATION_10X_MEX_TYPE )
-                .header( "Content-Disposition", "attachment; filename=\"" + p.getFileName() + ".tar\"" )
+                .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
                 .build();
     }
 

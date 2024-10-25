@@ -81,9 +81,11 @@ Gemma.ExpressionExperimentQuantitationTypeGrid = Ext.extend( Ext.grid.GridPanel,
          renderer : function( value, metadata, record, rowIndex, colIndex, store ) {
             var downloadQuantitationUrl;
             if ( record.data.vectorType === 'ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector' ) {
-               downloadQuantitationUrl = ctxBasePath + '/rest/v2/datasets/' + record.data.expressionExperimentId + '/data/processed';
+               downloadQuantitationUrl = ctxBasePath + '/rest/v2/datasets/' + record.data.expressionExperimentId + '/data/processed?download=true';
             } else if ( record.data.vectorType === 'ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector' ) {
-               downloadQuantitationUrl = ctxBasePath + '/rest/v2/datasets/' + record.data.expressionExperimentId + '/data/raw?quantitationType=' + record.data.id;
+               downloadQuantitationUrl = ctxBasePath + '/rest/v2/datasets/' + record.data.expressionExperimentId + '/data/raw?quantitationType=' + record.data.id + '&download=true';
+            } else if ( record.data.vectorType === 'ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector' ) {
+               downloadQuantitationUrl = ctxBasePath + '/rest/v2/datasets/' + record.data.expressionExperimentId + '/data/singleCell?quantitationType=' + record.data.id + '&download=true';
             }
             if ( downloadQuantitationUrl ) {
                return '<a href="' + downloadQuantitationUrl + '">' + value + "</a>";

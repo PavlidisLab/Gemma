@@ -2343,7 +2343,7 @@ public class ExpressionExperimentDaoImpl
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
                 .createQuery( "select scedv from SingleCellExpressionDataVector scedv "
-                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
+                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt")
                 .setParameter( "ee", expressionExperiment )
                 .setParameter( "qt", quantitationType )
                 .list();
@@ -2353,7 +2353,7 @@ public class ExpressionExperimentDaoImpl
     public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize ) {
         Session session = getSessionFactory().openSession();
         Query query = session.createQuery( "select scedv from SingleCellExpressionDataVector scedv "
-                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
+                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt")
                 .setParameter( "ee", ee )
                 .setParameter( "qt", quantitationType );
         return QueryUtils.<SingleCellExpressionDataVector>stream( query, fetchSize ).onClose( session::close );
@@ -2409,7 +2409,7 @@ public class ExpressionExperimentDaoImpl
                     start = end;
                 }
                 if ( ++done % 1000 == 0 ) {
-                    log.debug( String.format( "Processed %d/%d vectors at %.2f vectors/sec", done, numVecs, 1000.0 * done / timer.getTime() ) );
+                    log.info( String.format( "Processed %d/%d vectors at %.2f vectors/sec", done, numVecs, 1000.0 * done / timer.getTime() ) );
                 }
             }
             Map<BioAssay, Long> result = new HashMap<>();
