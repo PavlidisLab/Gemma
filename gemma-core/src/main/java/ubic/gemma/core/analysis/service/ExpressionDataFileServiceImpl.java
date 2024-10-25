@@ -376,16 +376,15 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Override
     public int writeTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, Writer writer ) throws IOException {
         Map<CompositeSequence, Set<Gene>> cs2gene = new HashMap<>();
-        Stream<SingleCellExpressionDataVector> vectors;
-        AtomicLong numVecs = new AtomicLong();
         if ( useStreaming ) {
-            vectors = helperService.getSingleCellVectors( ee, qt, cs2gene, numVecs, fetchSize );
+            AtomicLong numVecs = new AtomicLong();
+            try ( Stream<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, qt, cs2gene, numVecs, fetchSize ) ) {
+                return new TabularMatrixWriter( entityUrlBuilder, buildInfo ).write( vectors.peek( createStreamMonitor( numVecs.get() ) ), cs2gene, writer );
+            }
         } else {
-            Collection<SingleCellExpressionDataVector> col = helperService.getSingleCellVectors( ee, qt, cs2gene );
-            numVecs.set( col.size() );
-            vectors = col.stream();
+            Collection<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, qt, cs2gene );
+            return new TabularMatrixWriter( entityUrlBuilder, buildInfo ).write( vectors.stream().peek( createStreamMonitor( vectors.size() ) ), cs2gene, writer );
         }
-        return new TabularMatrixWriter( entityUrlBuilder, buildInfo ).write( vectors.peek( createStreamMonitor( numVecs.get() ) ), cs2gene, writer );
     }
 
     @Override
@@ -428,13 +427,14 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             if ( useStreaming ) {
                 Map<BioAssay, Long> nnzBySample = new HashMap<>();
                 AtomicLong numVecs = new AtomicLong();
-                Stream<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, qt, cs2gene, numVecs, nnzBySample, fetchSize );
-                if ( Files.exists( destDir ) ) {
-                    log.info( destDir + " already exists, removing..." );
-                    PathUtils.deleteDirectory( destDir );
+                try ( Stream<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, qt, cs2gene, numVecs, nnzBySample, fetchSize ) ) {
+                    if ( Files.exists( destDir ) ) {
+                        log.info( destDir + " already exists, removing..." );
+                        PathUtils.deleteDirectory( destDir );
+                    }
+                    log.info( "Will write MEX data for " + qt + " to " + destDir + ( useEnsemblIds ? " using Ensembl IDs" : "" ) + "." );
+                    return writer.write( vectors.peek( createStreamMonitor( numVecs.get() ) ), ( int ) numVecs.get(), nnzBySample, cs2gene, destDir );
                 }
-                log.info( "Will write MEX data for " + qt + " to " + destDir + ( useEnsemblIds ? " using Ensembl IDs" : "" ) + "." );
-                return writer.write( vectors.peek( createStreamMonitor( numVecs.get() ) ), ( int ) numVecs.get(), nnzBySample, cs2gene, destDir );
             } else {
                 SingleCellExpressionDataMatrix<Double> matrix = helperService.getSingleCellMatrix( ee, qt, cs2gene );
                 log.info( "Will write MEX data for " + qt + " to " + destDir + ( useEnsemblIds ? " using Ensembl IDs" : "" ) + "." );
