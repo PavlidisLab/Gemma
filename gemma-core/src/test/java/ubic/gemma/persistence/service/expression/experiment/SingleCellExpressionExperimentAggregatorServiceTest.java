@@ -22,6 +22,7 @@ import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 
 import java.util.*;
@@ -59,6 +60,11 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
 
         @Bean
         public BioAssayDimensionService bioAssayDimensionService() {
+            return mock();
+        }
+
+        @Bean
+        public AuditTrailService auditTrailService() {
             return mock();
         }
     }

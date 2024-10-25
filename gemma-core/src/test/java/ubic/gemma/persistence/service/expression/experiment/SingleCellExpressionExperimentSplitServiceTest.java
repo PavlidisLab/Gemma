@@ -14,6 +14,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 
@@ -54,6 +55,11 @@ public class SingleCellExpressionExperimentSplitServiceTest extends AbstractJUni
 
         @Bean
         public BioMaterialService bioMaterialService() {
+            return mock();
+        }
+
+        @Bean
+        public AuditTrailService auditTrailService() {
             return mock();
         }
     }
