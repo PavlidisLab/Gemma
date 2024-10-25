@@ -36,7 +36,10 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.security.access.AccessDecisionManager;
+import org.springframework.security.access.SecurityConfig;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfound;
@@ -173,6 +176,8 @@ public class DatasetsWebService {
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
     @Autowired
     private AsyncTaskExecutor taskExecutor;
+    @Autowired
+    private AccessDecisionManager accessDecisionManager;
 
     @Context
     private UriInfo uriInfo;
@@ -1126,7 +1131,7 @@ public class DatasetsWebService {
      *                   is more efficient. Only datasets that user has access to will be available.
      * @param filterData return filtered the expression data.
      */
-    @GZIP(alreadyCompressed = true)
+    @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
     @GET
     @Path("/{dataset}/data")
     @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8)
@@ -1143,9 +1148,10 @@ public class DatasetsWebService {
     public Response getDatasetExpression( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg, // Required
             @QueryParam("filter") @DefaultValue("false") Boolean filterData, // Optional, default false
-            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
     ) {
-        return getDatasetProcessedExpression( datasetArg, filterData, download );
+        return getDatasetProcessedExpression( datasetArg, filterData, download, force );
     }
 
     /**
@@ -1170,15 +1176,19 @@ public class DatasetsWebService {
     public Response getDatasetProcessedExpression(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("filter") @DefaultValue("false") Boolean filtered,
-            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
     ) {
+        if ( force ) {
+            checkIsAdmin();
+        }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         if ( !expressionExperimentService.hasProcessedExpressionData( ee ) ) {
             throw new NotFoundException( ee.getShortName() + " does not have any processed vectors." );
         }
         try {
             try {
-                java.nio.file.Path p = expressionDataFileService.writeOrLocateProcessedDataFile( ee, filtered, false, 5, TimeUnit.SECONDS )
+                java.nio.file.Path p = expressionDataFileService.writeOrLocateProcessedDataFile( ee, filtered, force, 5, TimeUnit.SECONDS )
                         .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have any processed vectors." ) );
                 return Response.ok( p.toFile() )
                         .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( p.getFileName().toString() ) + "\"" )
@@ -1229,8 +1239,12 @@ public class DatasetsWebService {
     public Response getDatasetRawExpression(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
-            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
     ) {
+        if ( force ) {
+            checkIsAdmin();
+        }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         QuantitationType qt;
         if ( quantitationTypeArg != null ) {
@@ -1242,7 +1256,7 @@ public class DatasetsWebService {
             }
         }
         try {
-            java.nio.file.Path p = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, false, 5, TimeUnit.SECONDS );
+            java.nio.file.Path p = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, force, 5, TimeUnit.SECONDS );
             return Response.ok( p.toFile() )
                     .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                     .header( "Content-Disposition", "attachment; filename=\"" + ( download ? p.getFileName().toString() : FilenameUtils.removeExtension( p.getFileName().toString() ) ) + "\"" )
@@ -1262,7 +1276,7 @@ public class DatasetsWebService {
         }
     }
 
-    @GZIP(mediaTypes = { TEXT_TAB_SEPARATED_VALUES_UTF8 }, alreadyCompressed = true)
+    @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
     @GET
     @Path("/{dataset}/data/singleCell")
     @Produces({ APPLICATION_10X_MEX, TEXT_TAB_SEPARATED_VALUES_UTF8 + ";q=0.9" })
@@ -1279,9 +1293,13 @@ public class DatasetsWebService {
     public Response getDatasetSingleCellExpression(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
-            @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force,
             @Context HttpHeaders headers
     ) {
+        if ( force ) {
+            checkIsAdmin();
+        }
         MediaType mediaType = negotiate( headers, APPLICATION_10X_MEX_TYPE, withQuality( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE, 0.9 ) );
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         QuantitationType qt;
@@ -1311,7 +1329,7 @@ public class DatasetsWebService {
         } else {
             try {
                 java.nio.file.Path p = expressionDataFileService.getDataFile( ee, qt, ExpressionExperimentDataFileType.TABULAR, 5, TimeUnit.SECONDS );
-                if ( Files.exists( p ) ) {
+                if ( !force && Files.exists( p ) ) {
                     return Response.ok( p.toFile() )
                             .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                             .header( "Content-Disposition", "attachment; filename=\"" + ( download ? p.getFileName().toString() : FilenameUtils.removeExtension( p.getFileName().toString() ) ) + "\"" )
@@ -1320,7 +1338,7 @@ public class DatasetsWebService {
                     // generate the file in the background and stream it
                     // TODO: limit the number of threads writing SC data to disk to not overwhelm the short-lived task pool
                     log.info( "Single-cell data for " + qt + " is not available, will generate it in the background and stream it in the meantime." );
-                    taskExecutor.submit( () -> expressionDataFileService.writeOrLocateTabularSingleCellExpressionData( ee, qt, true, 30, false ) );
+                    taskExecutor.submit( () -> expressionDataFileService.writeOrLocateTabularSingleCellExpressionData( ee, qt, true, 30, force ) );
                     return streamTabularDatasetSingleCellExpression( ee, qt, download );
                 }
             } catch ( TimeoutException e ) {
@@ -1347,7 +1365,7 @@ public class DatasetsWebService {
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.
      */
-    @GZIP(alreadyCompressed = true)
+    @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
     @GET
     @Path("/{dataset}/design")
     @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8)
@@ -1357,22 +1375,30 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetDesign( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg // Required
+            @PathParam("dataset") DatasetArg<?> datasetArg, // Required
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
     ) {
+        if ( force ) {
+            checkIsAdmin();
+        }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         try {
-            java.nio.file.Path file = expressionDataFileService.writeOrLocateDesignFile( ee, false, 5, TimeUnit.SECONDS )
+            java.nio.file.Path file = expressionDataFileService.writeOrLocateDesignFile( ee, force, 5, TimeUnit.SECONDS )
                     .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have an experimental design." ) );
+            String filename = file.getFileName().toString();
             return Response.ok( file.toFile() )
-                    // we remove the .gz extension because we use HTTP Content-Encoding
-                    .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( file.getFileName().toString() ) + "\"" )
+                    .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                    .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
                     .build();
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( "Experimental design for " + ee.getShortName() + " is still being generated.", 30L, e );
         } catch ( IOException e ) {
             log.error( "Failed to write design for " + ee + " to disk, will resort to stream it.", e );
-            return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeDesignMatrix( ee, new OutputStreamWriter( stream, StandardCharsets.UTF_8 ) ) )
-                    .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( getDesignFileName( ee ) ) + "\"" )
+            String filename = getDesignFileName( ee );
+            return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeDesignMatrix( ee, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ) ) )
+                    .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                    .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
                     .build();
         } catch ( InterruptedException e ) {
             throw new InternalServerErrorException( e );
@@ -1871,6 +1897,10 @@ public class DatasetsWebService {
                     .map( t -> new CharacteristicValueObject( t.getLabel(), t.getUri() ) )
                     .collect( Collectors.toList() );
         }
+    }
+
+    private void checkIsAdmin() {
+        accessDecisionManager.decide( SecurityContextHolder.getContext().getAuthentication(), null, Collections.singletonList( new SecurityConfig( "GROUP_ADMIN" ) ) );
     }
 
     private List<Long> sliceIds( List<Long> ids, int offset, int limit ) {

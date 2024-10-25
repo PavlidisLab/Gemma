@@ -15,6 +15,7 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -22,7 +23,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDecisionManager;
+import org.springframework.security.access.SecurityConfig;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -47,6 +51,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.regex.Pattern;
 
 import static ubic.gemma.rest.util.Responders.paginate;
@@ -64,33 +69,23 @@ public class PlatformsWebService {
 
     private static final String ERROR_ANNOTATION_FILE_NOT_AVAILABLE = "Annotation file for platform %s does not exist or can not be accessed.";
 
-    private GeneService geneService;
-    private ArrayDesignService arrayDesignService;
-    private CompositeSequenceService compositeSequenceService;
-    private ArrayDesignAnnotationService annotationFileService;
-    private PlatformArgService arrayDesignArgService;
-    private CompositeSequenceArgService probeArgService;
+    public static final String TEXT_TAB_SEPARATED_VALUES_UTF8 = "text/tab-separated-values; charset=UTF-8";
+    public static final MediaType TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE = new MediaType( "text", "tab-separated-values", "UTF-8" );
 
-    /**
-     * Required by spring
-     */
-    public PlatformsWebService() {
-    }
-
-    /**
-     * Constructor for service autowiring
-     */
     @Autowired
-    public PlatformsWebService( GeneService geneService, ArrayDesignService arrayDesignService,
-            CompositeSequenceService compositeSequenceService, ArrayDesignAnnotationService annotationFileService,
-            PlatformArgService arrayDesignArgService, CompositeSequenceArgService probeArgService ) {
-        this.geneService = geneService;
-        this.arrayDesignService = arrayDesignService;
-        this.compositeSequenceService = compositeSequenceService;
-        this.annotationFileService = annotationFileService;
-        this.arrayDesignArgService = arrayDesignArgService;
-        this.probeArgService = probeArgService;
-    }
+    private GeneService geneService;
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+    @Autowired
+    private CompositeSequenceService compositeSequenceService;
+    @Autowired
+    private ArrayDesignAnnotationService annotationFileService;
+    @Autowired
+    private PlatformArgService arrayDesignArgService;
+    @Autowired
+    private CompositeSequenceArgService probeArgService;
+    @Autowired
+    private AccessDecisionManager accessDecisionManager;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -270,7 +265,7 @@ public class PlatformsWebService {
      *                    is more efficient. Only platforms that user has access to will be available.
      * @return the content of the annotation file of the given platform.
      */
-    @GZIP(alreadyCompressed = true)
+    @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
     @GET
     @Path("/{platform}/annotations")
     @Produces("text/tab-separated-values; charset=UTF-8")
@@ -281,14 +276,19 @@ public class PlatformsWebService {
                             examples = { @ExampleObject("classpath:/restapidocs/examples/platform-annotations.tsv") }))
             })
     public Response getPlatformAnnotations( // Params:
-            @PathParam("platform") PlatformArg<?> platformArg // Optional, default null
+            @PathParam("platform") PlatformArg<?> platformArg,// Optional, default null
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
     ) {
+        if ( force ) {
+            checkIsAdmin();
+        }
         ArrayDesign arrayDesign = arrayDesignArgService.getEntity( platformArg );
         String fileName = arrayDesign.getShortName().replaceAll( Pattern.quote( "/" ), "_" )
                 + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
         java.nio.file.Path file = Paths.get( ArrayDesignAnnotationService.ANNOT_DATA_DIR ).resolve( fileName );
-        if ( !Files.exists( file ) ) {
+        if ( !force || !Files.exists( file ) ) {
             try {
                 // generate it. This will cause a delay, and potentially a time-out, but better than a 404
                 // To speed things up, we don't delete other files
@@ -299,7 +299,12 @@ public class PlatformsWebService {
             }
         }
         return Response.ok( file.toFile() )
-                .header( "Content-Disposition", "attachment; filename=\"" + FilenameUtils.removeExtension( file.getFileName().toString() ) + "\"" )
+                .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                .header( "Content-Disposition", "attachment; filename=\"" + ( download ? file.getFileName().toString() : FilenameUtils.removeExtension( file.getFileName().toString() ) ) + "\"" )
                 .build();
+    }
+
+    private void checkIsAdmin() {
+        accessDecisionManager.decide( SecurityContextHolder.getContext().getAuthentication(), null, Collections.singletonList( new SecurityConfig( "GROUP_ADMIN" ) ) );
     }
 }
