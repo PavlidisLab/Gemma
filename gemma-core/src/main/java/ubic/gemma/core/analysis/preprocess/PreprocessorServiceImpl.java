@@ -27,7 +27,7 @@ import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionExc
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDException;
-import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
+import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -75,7 +75,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     @Autowired
     private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
     @Autowired
-    private SVDServiceHelper svdService;
+    private SVDService svdService;
     @Autowired
     private TwoChannelMissingValues twoChannelMissingValueService;
     @Autowired

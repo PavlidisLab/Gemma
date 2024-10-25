@@ -53,6 +53,7 @@ import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.web.controller.ControllerUtils;
 import ubic.gemma.web.controller.visualization.VisualizationValueObject;
+import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.view.TextView;
 
 import javax.annotation.Nullable;
@@ -453,8 +454,9 @@ public class DEDVController {
         StopWatch watch = new StopWatch();
         watch.start();
 
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId, EntityNotFoundException::new );
         Map<ProbeLoading, DoubleVectorValueObject> topLoadedVectors = this.svdService
-                .getTopLoadedVectors( eeId, component, count );
+                .getTopLoadedVectors( ee, component, count );
 
         if ( topLoadedVectors == null )
             return null;
@@ -607,8 +609,9 @@ public class DEDVController {
             int component = Integer.parseInt( request.getParameter( "component" ) );
             Long eeId = eeIds.iterator().next();
 
+            ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId, EntityNotFoundException::new );
             Map<ProbeLoading, DoubleVectorValueObject> topLoadedVectors = this.svdService
-                    .getTopLoadedVectors( eeId, component, ( int ) thresh );
+                    .getTopLoadedVectors( ee, component, ( int ) thresh );
 
             if ( topLoadedVectors == null )
                 return null;

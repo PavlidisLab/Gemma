@@ -22,7 +22,7 @@ import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.stat.inference.ChiSquareTest;
 import org.springframework.stereotype.Service;
 import ubic.basecode.math.KruskalWallis;
-import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelperImpl;
+import ubic.gemma.core.analysis.preprocess.svd.SVDServiceImpl;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -63,7 +63,7 @@ public class BatchConfoundUtils {
 
         for ( BioAssay bioAssay : ee.getBioAssays() ) {
             BioMaterial bm = bioAssay.getSampleUsed();
-            SVDServiceHelperImpl.populateBMFMap( bioMaterialFactorMap, bm );
+            SVDServiceImpl.populateBMFMap( bioMaterialFactorMap, bm );
         }
         return bioMaterialFactorMap;
     }

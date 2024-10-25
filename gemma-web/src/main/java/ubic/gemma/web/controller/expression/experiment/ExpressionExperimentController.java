@@ -454,7 +454,7 @@ public class ExpressionExperimentController {
         qc.setEeManagerId( ee.getId() + "-eemanager" );
         qc.setHasCorrMat( sampleCoexpressionAnalysisService.hasAnalysis( ee ) );
         qc.setHasNodeDegreeDist( ExpressionExperimentQCUtils.hasNodeDegreeDistFile( ee ) );
-        qc.setHasPCA( svdService.hasPca( ee.getId() ) );
+        qc.setHasPCA( svdService.hasPca( ee ) );
         qc.setNumFactors( ExpressionExperimentQCUtils.numFactors( ee ) );
         qc.setHasMeanVariance( ee.getMeanVarianceRelation() != null );
         qc.setHasCorrDist( this.coexpressionAnalysisService.hasCoexpCorrelationDistribution( ee ) );
@@ -1262,7 +1262,7 @@ public class ExpressionExperimentController {
     private void addQCInfo( ExpressionExperiment expressionExperiment, ModelAndView mav ) {
         mav.addObject( "hasCorrMat", sampleCoexpressionAnalysisService.hasAnalysis( expressionExperiment ) );
         mav.addObject( "hasPvalueDist", ExpressionExperimentQCUtils.hasPvalueDistFiles( expressionExperiment ) );
-        mav.addObject( "hasPCA", svdService.hasPca( expressionExperiment.getId() ) );
+        mav.addObject( "hasPCA", svdService.hasPca( expressionExperiment ) );
         mav.addObject( "hasMeanVariance", expressionExperiment.getMeanVarianceRelation() != null );
 
         // FIXME don't store in a file.

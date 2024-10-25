@@ -1503,14 +1503,17 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the singular value decomposition (SVD) of a dataset expression data", responses = {
             @ApiResponse(useReturnTypeSchema = true, content = @Content()),
-            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist or does not have an SVD.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<SimpleSVDValueObject> getDatasetSvd( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
-        SVDValueObject svd = svdService.getSvd( datasetArgService.getEntity( datasetArg ).getId() );
-        return respond( svd == null ? null : new SimpleSVDValueObject( Arrays.asList( svd.getBioMaterialIds() ), svd.getVariances(), svd.getvMatrix().getRawMatrix() )
-        );
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        SVDValueObject svd = svdService.retrieveSvd( ee );
+        if ( svd == null ) {
+            throw new NotFoundException( ee.getShortName() + " does not have an SVD." );
+        }
+        return respond( new SimpleSVDValueObject( Arrays.asList( svd.getBioMaterialIds() ), svd.getVariances(), svd.getvMatrix().getRawMatrix() ) );
     }
 
     /**

@@ -181,7 +181,7 @@ public class ProcessedExpressionDataVectorServiceImpl
 
         // Adapted from DEDV controller
         for ( ExpressionExperiment ee : ees ) {
-            Collection<DoubleVectorValueObject> vectors = svdService.getTopLoadedVectors( ee.getId(), component, limit )
+            Collection<DoubleVectorValueObject> vectors = svdService.getTopLoadedVectors( ee, component, limit )
                     .values();
             this.addExperimentGeneVectors( vos, ee, vectors, keepGeneNonSpecific, consolidateMode );
         }

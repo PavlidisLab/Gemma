@@ -226,7 +226,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
             return details;
         }
 
-        SVDValueObject svd = svdService.getSvdFactorAnalysis( ee.getId() );
+        SVDValueObject svd = svdService.svdFactorAnalysis( ee );
         if ( svd == null ) {
             log.warn( "SVD was null for " + ef + ", can't compute batch effect statistics." );
             return details;

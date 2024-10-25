@@ -230,7 +230,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
         SVDValueObject svdo = null;
         try {
-            svdo = svdService.getSvdFactorAnalysis( ee.getId() );
+            svdo = svdService.svdFactorAnalysis( ee );
         } catch ( Exception e ) {
             // if there is no pca
             // log.error( e, e );
@@ -246,7 +246,7 @@ public class ExpressionExperimentQCController extends BaseController {
     @RequestMapping(value = "/expressionExperiment/pcaScree.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void pcaScree( @RequestParam("id") Long id, HttpServletResponse response ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
-        SVDValueObject svdo = svdService.getSvd( ee.getId() );
+        SVDValueObject svdo = svdService.retrieveSvd( ee );
         if ( svdo != null ) {
             this.writePCAScree( svdo, response );
         } else {
@@ -435,7 +435,7 @@ public class ExpressionExperimentQCController extends BaseController {
     public ModelAndView writeEigenGenes( @RequestParam("eeid") Long eeid ) throws IOException {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeid,
                 EntityNotFoundException::new, "Could not load experiment with id " + eeid );// or access deined.
-        SVDValueObject svdo = svdService.getSvd( ee.getId() );
+        SVDValueObject svdo = svdService.retrieveSvd( ee );
 
         DoubleMatrix<Long, Integer> vMatrix = svdo.getvMatrix();
 
@@ -683,7 +683,7 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     private void writeDetailedFactorAnalysis( ExpressionExperiment ee, HttpServletResponse os ) throws Exception {
-        SVDValueObject svdo = svdService.getSvdFactorAnalysis( ee.getId() );
+        SVDValueObject svdo = svdService.svdFactorAnalysis( ee );
         if ( svdo == null ) {
             writePlaceholderImage( os, DEFAULT_QC_IMAGE_SIZE_PX );
             return;

@@ -32,7 +32,7 @@ import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisCo
 import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
+import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
@@ -90,7 +90,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     @Autowired
     private SampleCoexpressionAnalysisDao sampleCoexpressionAnalysisDao;
     @Autowired
-    private SVDServiceHelper svdService;
+    private SVDService svdService;
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
     @Autowired

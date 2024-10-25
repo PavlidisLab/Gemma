@@ -85,7 +85,6 @@ public class ExpressionExperimentBatchInformationServiceTest extends AbstractJUn
         SVDValueObject svdResult = mock();
         when( svdResult.getDatePvals() ).thenReturn( Collections.singletonMap( 0, 0.0000001 ) );
         when( svdResult.getVariances() ).thenReturn( new double[] { 0.99 } );
-        when( svdService.getSvdFactorAnalysis( 1L ) ).thenReturn( svdResult );
         ExperimentalFactor batchFactor = new ExperimentalFactor();
         batchFactor.setName( ExperimentalDesignUtils.BATCH_FACTOR_NAME );
         Characteristic c = Characteristic.Factory.newInstance();
@@ -93,6 +92,7 @@ public class ExpressionExperimentBatchInformationServiceTest extends AbstractJUn
         batchFactor.setCategory( c );
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );
+        when( svdService.svdFactorAnalysis( ee ) ).thenReturn( svdResult );
         ee.setExperimentalDesign( new ExperimentalDesign() );
         ee.getExperimentalDesign().getExperimentalFactors().add( batchFactor );
         assertTrue( eeBatchService.checkHasBatchInfo( ee ) );
