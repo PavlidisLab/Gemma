@@ -200,12 +200,15 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     public Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee ) {
         //noinspection unchecked
         Set<Long> qtIds = new HashSet<>( ( List<Long> ) getSessionFactory().getCurrentSession()
-                .createQuery( "select qt.id from ExpressionExperiment ee join ee.quantitationTypes qt" )
+                .createQuery( "select qt.id from ExpressionExperiment ee join ee.quantitationTypes qt where ee = :ee" )
+                .setParameter( "ee", ee )
                 .list() );
         for ( Class<? extends DataVector> vectorType : dataVectorTypes ) {
             //noinspection unchecked
-            qtIds.addAll( getSessionFactory().getCurrentSession().createCriteria( vectorType )
+            qtIds.addAll( getSessionFactory().getCurrentSession()
+                    .createCriteria( vectorType )
                     .add( Restrictions.eq( "expressionExperiment", ee ) )
+                    .createCriteria( "quantitationType" )
                     .setProjection( Projections.distinct( Projections.property( "id" ) ) )
                     .list() );
         }
