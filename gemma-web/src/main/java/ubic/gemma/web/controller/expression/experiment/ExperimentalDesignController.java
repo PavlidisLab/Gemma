@@ -32,7 +32,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.persistence.service.expression.experiment.FactorValueDeletion;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignUpdatedEvent;
@@ -47,14 +46,11 @@ import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
+import ubic.gemma.persistence.service.expression.experiment.*;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.EntityDelegator;
-import ubic.gemma.web.util.AnchorTagUtil;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.servlet.ServletContext;
@@ -96,6 +92,8 @@ public class ExperimentalDesignController extends BaseController {
     private SecurityService securityService;
     @Autowired
     private AuditTrailService auditTrailService;
+    @Autowired
+    private EntityUrlBuilder entityUrlBuilder;
     @Autowired
     private ServletContext servletContext;
 
@@ -644,7 +642,14 @@ public class ExperimentalDesignController extends BaseController {
         String desc = ee.getDescription();
         ee.setDescription( StringUtils.strip( desc ) );
         RequestContextHolder.getRequestAttributes().setAttribute( "id", ee.getExperimentalDesign().getId(), RequestAttributes.SCOPE_REQUEST );
-        return new ModelAndView( "experimentalDesign.detail" ).addObject( "taxonId", expressionExperimentService.getTaxon( ee ).getId() ).addObject( "hasPopulatedDesign", !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ).addObject( "experimentalDesign", ee.getExperimentalDesign() ).addObject( "expressionExperiment", ee ).addObject( "currentUserCanEdit", securityService.isEditable( ee ) ? "true" : "" ).addAllObjects( getNeedsAttentionDetails( ee ) ).addObject( "expressionExperimentUrl", AnchorTagUtil.getExpressionExperimentUrl( ee, servletContext ) );
+        return new ModelAndView( "experimentalDesign.detail" )
+                .addObject( "taxonId", expressionExperimentService.getTaxon( ee ).getId() )
+                .addObject( "hasPopulatedDesign", !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() )
+                .addObject( "experimentalDesign", ee.getExperimentalDesign() )
+                .addObject( "expressionExperiment", ee )
+                .addObject( "currentUserCanEdit", securityService.isEditable( ee ) ? "true" : "" )
+                .addAllObjects( getNeedsAttentionDetails( ee ) )
+                .addObject( "expressionExperimentUrl", entityUrlBuilder.fromContextPath( servletContext.getContextPath() ).entity( ee ).toUriString() );
     }
 
     private Map<String, ?> getNeedsAttentionDetails( ExpressionExperiment ee ) {
