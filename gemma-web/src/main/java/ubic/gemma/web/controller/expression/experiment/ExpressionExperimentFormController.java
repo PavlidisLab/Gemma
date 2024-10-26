@@ -21,6 +21,7 @@ package ubic.gemma.web.controller.expression.experiment;
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.text.StringEscapeUtils;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
@@ -44,6 +45,7 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.util.EntityNotFoundException;
 
@@ -89,15 +91,13 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
         if ( request.getParameter( "cancel" ) != null ) {
             if ( id != null ) {
-                return new ModelAndView( new RedirectView(
-                        "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
-                                + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
+                String url = entityUrlBuilder.fromRoot().entity( ExpressionExperiment.class, id ).web().toUriString();
+                return new ModelAndView( new RedirectView( url, true ) );
             }
 
             ExpressionExperimentFormController.log.warn( "Cannot find details view due to null id.  Redirecting to overview" );
-            return new ModelAndView( new RedirectView(
-                    "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
-                            + "/expressionExperiment/showAllExpressionExperiments.html" ) );
+            String url = entityUrlBuilder.fromRoot().all( ExpressionExperiment.class ).web().toUriString();
+            return new ModelAndView( new RedirectView( url, true ) );
         }
 
         ModelAndView mav = super.processFormSubmission( request, response, command, errors );
@@ -249,10 +249,12 @@ public class ExpressionExperimentFormController extends BaseFormController {
             }
         }
 
-        return new ModelAndView( new RedirectView(
-                "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
-                        + "/expressionExperiment/showExpressionExperiment.html?id=" + eeCommand.getId() ) );
+        String url = entityUrlBuilder.fromContextPath( "" ).entity( ExpressionExperiment.class, eeCommand.getId() ).web().toUriString();
+        return new ModelAndView( new RedirectView( url, true ) );
     }
+
+    @Autowired
+    private EntityUrlBuilder entityUrlBuilder;
 
     private void audit( ExpressionExperiment ee, Class<? extends AuditEventType> eventType, String note ) {
         auditTrailService.addUpdateEvent( ee, eventType, note );

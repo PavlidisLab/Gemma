@@ -76,6 +76,7 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.*;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -267,11 +268,16 @@ public class ExpressionExperimentController {
         return userOwnsGroup;
     }
 
+    @Autowired
+    private EntityUrlBuilder entityUrlBuilder;
+
     @RequestMapping(value = "/filterExpressionExperiments.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView filter( @RequestParam("filter") String searchString ) {
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( searchString ) ) {
-            return new ModelAndView( new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) ).addObject( "message", "No search criteria provided" );
+            String url = entityUrlBuilder.fromContextPath( "" ).all( ExpressionExperiment.class ).toUriString();
+            return new ModelAndView( new RedirectView( url, true ) )
+                    .addObject( "message", "No search criteria provided" );
         }
 
         Collection<Long> ids;
@@ -282,21 +288,20 @@ public class ExpressionExperimentController {
         }
 
         if ( ids.isEmpty() ) {
-
-            return new ModelAndView( new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) ).addObject( "message", "Your search yielded no results." );
-
+            String url = entityUrlBuilder.fromContextPath( "" ).all( ExpressionExperiment.class ).toUriString();
+            return new ModelAndView( new RedirectView( url, true ) )
+                    .addObject( "message", "Your search yielded no results." );
         }
 
         if ( ids.size() == 1 ) {
-            return new ModelAndView( new RedirectView( "/expressionExperiment/showExpressionExperiment.html?id=" + ids.iterator().next(), true ) ).addObject( "message", "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
+            String url = entityUrlBuilder.fromContextPath( "" ).entity( ExpressionExperiment.class, ids.iterator().next() ).toUriString();
+            return new ModelAndView( new RedirectView( url, true ) )
+                    .addObject( "message", "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
         }
 
-        StringBuilder list = new StringBuilder();
-        for ( Long id : ids ) {
-            list.append( id ).append( "," );
-        }
-
-        return new ModelAndView( new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html?id=" + list, true ) ).addObject( "message", "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
+        String url = entityUrlBuilder.fromRoot().some( ExpressionExperiment.class, ids ).web().toUriString();
+        return new ModelAndView( new RedirectView( url, true ) )
+                .addObject( "message", "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
     }
 
     /**
@@ -1578,9 +1583,9 @@ public class ExpressionExperimentController {
         @Override
         public TaskResult call() {
             expressionExperimentService.remove( taskCommand.getEntityId() );
-
-            return new TaskResult( taskCommand, new ModelAndView( new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html", true ) ).addObject( "message", "Dataset id: " + taskCommand.getEntityId() + " removed from Database" ) );
-
+            String url = entityUrlBuilder.fromRoot().all( ExpressionExperiment.class ).web().toUriString();
+            return new TaskResult( taskCommand, new ModelAndView( new RedirectView( url, true ) )
+                    .addObject( "message", "Dataset id: " + taskCommand.getEntityId() + " removed from Database" ) );
         }
     }
 

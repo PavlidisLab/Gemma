@@ -23,11 +23,12 @@ import com.sun.syndication.feed.rss.Content;
 import com.sun.syndication.feed.rss.Item;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.view.feed.AbstractRssFeedView;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.core.config.Settings;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
+import ubic.gemma.web.controller.WebConstants;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -40,7 +41,10 @@ import java.util.*;
 public class CustomRssViewer extends AbstractRssFeedView {
 
     @Autowired
-    ExpressionExperimentService expressionExperimentService;
+    private EntityUrlBuilder entityUrlBuilder;
+
+    @Value("${gemma.hosturl}")
+    private String gemmaHostUrl;
 
     @Override
     protected List<Item> buildFeedItems( Map<String, Object> model, HttpServletRequest request,
@@ -55,13 +59,9 @@ public class CustomRssViewer extends AbstractRssFeedView {
             ExpressionExperiment e = entry.getKey();
 
             String title = e.getShortName() + " (" + entry.getValue() + "): " + e.getName();
-            String link = Settings.getHostUrl() + getServletContext().getContextPath() + "/expressionExperiment/showExpressionExperiment.html?id=" + e.getId()
-                    .toString();
+            String link = entityUrlBuilder.fromHostUrl().entity( e ).web().toUriString();
 
-            int maxLength = 500;
-            if ( e.getDescription().length() < 500 ) {
-                maxLength = e.getDescription().length();
-            }
+            int maxLength = Math.min( e.getDescription().length(), 500 );
 
             Item item = new Item();
             Content content = new Content();
@@ -86,7 +86,7 @@ public class CustomRssViewer extends AbstractRssFeedView {
         int newCount = ( Integer ) model.get( "newCount" );
         feed.setTitle( "RSS | Gemma" );
         feed.setDescription( updateCount + " updated experiments and " + newCount + " new experiments since " + date );
-        feed.setLink( Settings.getHostUrl() + getServletContext().getContextPath() + "/" );
+        feed.setLink( gemmaHostUrl + WebConstants.HOME_PAGE );
 
         super.buildFeedMetadata( model, feed, request );
     }

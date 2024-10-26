@@ -1,11 +1,13 @@
 package ubic.gemma.persistence.util;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -19,6 +21,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 /**
  * This builder allows for generating URLs for entities in Gemma Web and REST.
@@ -55,6 +59,15 @@ public class EntityUrlBuilder {
     }
 
     /**
+     * Obtain an {@link EntityUrlChooser} relative to a root URL (i.e. '/').
+     * <p>
+     * Use this if the context path will be prefixed by a separate mechanism.
+     */
+    public EntityUrlChooser fromRoot() {
+        return new EntityUrlChooser( "" );
+    }
+
+    /**
      * Allows for choosing a specific entity.
      */
     public static class EntityUrlChooser {
@@ -63,10 +76,6 @@ public class EntityUrlBuilder {
 
         public EntityUrlChooser( String baseUrl ) {
             this.baseUrl = baseUrl;
-        }
-
-        public <T extends Identifiable> AllEntitiesUrl<T> all( Class<T> entityType ) {
-            return new AllEntitiesUrl<>( baseUrl, entityType );
         }
 
         public ExpressionExperimentUrl entity( ExpressionExperiment entity ) {
@@ -79,6 +88,28 @@ public class EntityUrlBuilder {
 
         public <T extends Identifiable> EntityUrl<T> entity( T entity ) {
             return new EntityUrl<>( baseUrl, entity );
+        }
+
+        public <T extends Identifiable> EntityUrl<T> entity( Class<T> entityType, Long id ) {
+            T entity = BeanUtils.instantiate( entityType );
+            if ( entity instanceof AbstractIdentifiable ) {
+                ( ( AbstractIdentifiable ) entity ).setId( id );
+            } else {
+                throw new UnsupportedOperationException();
+            }
+            return new EntityUrl<>( baseUrl, entity );
+        }
+
+        public <T extends Identifiable> AllEntitiesUrl<T> all( Class<T> entityType ) {
+            return new AllEntitiesUrl<>( baseUrl, entityType );
+        }
+
+        public <T extends Identifiable> SomeEntitiesUrl<T> some( Collection<T> entities ) {
+            return new SomeEntitiesUrl<>( baseUrl, entities );
+        }
+
+        public <T extends Identifiable> SomeEntitiesUrl<T> some( Class<T> entityType, Collection<Long> ids ) {
+            return new SomeEntitiesUrl<>( baseUrl, entityType, ids );
         }
     }
 
@@ -322,6 +353,66 @@ public class EntityUrlBuilder {
         @Override
         public URI toUri() {
             return URI.create( baseUrl + "/rest/v2" + entityPath );
+        }
+    }
+
+    public static class SomeEntitiesUrl<T extends Identifiable> {
+
+        protected final String baseUrl;
+        protected final Class<T> entityType;
+        protected final Collection<Long> ids;
+
+        private SomeEntitiesUrl( String baseUrl, Class<T> entityType, Collection<Long> ids ) {
+            this.baseUrl = baseUrl;
+            this.entityType = entityType;
+            this.ids = ids;
+        }
+
+        private SomeEntitiesUrl( String baseUrl, Collection<T> entities ) {
+            this( baseUrl, selectCommonType( entities ), entities.stream().map( Identifiable::getId ).collect( Collectors.toSet() ) );
+        }
+
+        public SomeWebEntitiesUrl<T> web() {
+            return new SomeWebEntitiesUrl<>( baseUrl, entityType, ids );
+        }
+
+        public URI toUri() {
+            return web().toUri();
+        }
+
+        public String toUriString() {
+            return toUri().toString();
+        }
+
+        @Override
+        public String toString() {
+            return toUriString();
+        }
+
+        private static <T> Class<T> selectCommonType( Collection<?> elements ) {
+            // FIXME: do better...
+            //noinspection unchecked
+            return ( Class<T> ) elements.iterator().next().getClass();
+        }
+    }
+
+    public static class SomeWebEntitiesUrl<T extends Identifiable> extends SomeEntitiesUrl<T> {
+
+        private final String entityPath;
+
+        private SomeWebEntitiesUrl( String baseUrl, Class<T> entityType, Collection<Long> ids ) {
+            super( baseUrl, entityType, ids );
+            if ( ExpressionExperiment.class.isAssignableFrom( entityType ) ) {
+                this.entityPath = "/expressionExperiment/showAllExpressionExperiments.html?id=";
+            } else if ( ArrayDesign.class.isAssignableFrom( entityType ) ) {
+                this.entityPath = "/arrays/showAllArrayDesigns.html?id=";
+            } else {
+                throw new UnsupportedOperationException( "Cannot generate a Web URL for entities of type " + entityType + "." );
+            }
+        }
+
+        public URI toUri() {
+            return URI.create( baseUrl + entityPath + StringUtils.join( ids, "," ) );
         }
     }
 

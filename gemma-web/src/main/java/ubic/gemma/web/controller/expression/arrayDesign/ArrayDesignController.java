@@ -56,9 +56,9 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
@@ -68,6 +68,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Note: do not use parametrized collections as parameters for ajax methods in this class! Type information is lost
@@ -148,7 +149,8 @@ public class ArrayDesignController {
         // Do this by checking if there are any bioassays that depend this AD
         Collection<BioAssay> assays = arrayDesignService.getAllAssociatedBioAssays( arrayDesign );
         if ( !assays.isEmpty() ) {
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
+            String url = entityUrlBuilder.fromRoot().all( ArrayDesign.class ).web().toUriString();
+            return new ModelAndView( new RedirectView( url, true ) )
                     .addObject( "message", "Array  " + arrayDesign.getName()
                             + " can't be deleted. Dataset has a dependency on this Array." );
         }
@@ -203,14 +205,19 @@ public class ArrayDesignController {
         }
     }
 
+    @Autowired
+    private EntityUrlBuilder entityUrlBuilder;
+
     @RequestMapping(value = "/filterArrayDesigns.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView filter( @RequestParam("filter") String filter ) {
         StopWatch overallWatch = new StopWatch();
         overallWatch.start();
 
+        String allArrayDesignUrl = entityUrlBuilder.fromRoot().all( ArrayDesign.class ).web().toUriString();
+
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( filter ) ) {
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
+            return new ModelAndView( new RedirectView( allArrayDesignUrl, true ) )
                     .addObject( "message", "No search criteria provided" );
         }
 
@@ -219,37 +226,34 @@ public class ArrayDesignController {
             searchResults = searchService.search( SearchSettings.arrayDesignSearch( filter ) )
                     .getByResultObjectType( ArrayDesign.class );
         } catch ( SearchException e ) {
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
+            return new ModelAndView( new RedirectView( allArrayDesignUrl, true ) )
                     .addObject( "message", "Invalid search settings: " + e.getMessage() );
         }
 
         if ( ( searchResults == null ) || ( searchResults.isEmpty() ) ) {
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
+            return new ModelAndView( new RedirectView( allArrayDesignUrl, true ) )
                     .addObject( "message", "No search criteria provided" );
 
         }
 
-        StringBuilder list = new StringBuilder();
-
-        if ( searchResults.size() == 1 ) {
-            ArrayDesign arrayDesign = arrayDesignService.loadOrFail( searchResults.iterator().next().getResultId() );
-            return new ModelAndView(
-                    new RedirectView( "/arrays/showArrayDesign.html?id=" + arrayDesign.getId(), true ) )
-                    .addObject( "message",
-                            "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName() + ")" );
-        }
-
-        for ( SearchResult<ArrayDesign> ad : searchResults ) {
-            list.append( ad.getResultId() ).append( "," );
-        }
+        Collection<Long> ids = searchResults.stream()
+                .map( SearchResult::getResultId )
+                .collect( Collectors.toSet() );
 
         overallWatch.stop();
         long overallElapsed = overallWatch.getTime();
-        log.info( "Generating the AD list:  (" + list + ") took: " + overallElapsed / 1000 + "s " );
+        log.info( "Generating the AD list:  (" + ids + ") took: " + overallElapsed / 1000 + "s " );
 
-        return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html?id=" + list, true ) )
-                .addObject( "message", searchResults.size() + " Platforms matched your search." );
-
+        if ( ids.size() == 1 ) {
+            ArrayDesign arrayDesign = arrayDesignService.loadOrFail( ids.iterator().next(), EntityNotFoundException::new );
+            String url = entityUrlBuilder.fromRoot().entity( arrayDesign ).web().toUriString();
+            return new ModelAndView( new RedirectView( url, true ) )
+                    .addObject( "message", "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName() + ")" );
+        } else {
+            String url = entityUrlBuilder.fromRoot().some( ArrayDesign.class, ids ).toUriString();
+            return new ModelAndView( new RedirectView( url, true ) )
+                    .addObject( "message", searchResults.size() + " Platforms matched your search." );
+        }
     }
 
     @RequestMapping(value = "/generateArrayDesignSummary.html", method = { RequestMethod.GET, RequestMethod.HEAD })
@@ -259,13 +263,15 @@ public class ArrayDesignController {
         if ( id == null ) {
             job = new GenerateArraySummaryLocalTask( new TaskCommand() );
             String taskId = taskRunningService.submitTask( job );
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
+            String url = entityUrlBuilder.fromRoot().all( ArrayDesign.class ).web().toUriString();
+            return new ModelAndView( new RedirectView( url, true ) )
                     .addObject( "taskId", taskId );
         }
 
         job = new GenerateArraySummaryLocalTask( new TaskCommand( id ) );
         String taskId = taskRunningService.submitTask( job );
-        return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html?id=" + id, true ) )
+        String url = entityUrlBuilder.fromRoot().some( ArrayDesign.class, Collections.singleton( id ) ).web().toUriString();
+        return new ModelAndView( new RedirectView( url, true ) )
                 .addObject( "taskId", taskId );
     }
 
@@ -517,18 +523,11 @@ public class ArrayDesignController {
 
     @RequestMapping(value = "/showExpressionExperiments.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showExpressionExperiments( @RequestParam("id") Long id ) {
-        ArrayDesign arrayDesign = arrayDesignService.load( id );
-        if ( arrayDesign == null ) {
-            // FIXME: treat this as a 404 instead
-            return new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
-                    .addObject( "message", "Platform with id=" + id + " not found" );
-        }
+        ArrayDesign arrayDesign = arrayDesignService.loadOrFail( id, EntityNotFoundException::new );
         // seems inefficient? but need security filtering.
         Collection<ExpressionExperiment> ees = arrayDesignService.getExpressionExperiments( arrayDesign );
-
-        String ids = StringUtils.join( IdentifiableUtils.getIds( ees ).toArray(), "," );
-        return new ModelAndView(
-                new RedirectView( "/expressionExperiment/showAllExpressionExperiments.html?id=" + ids, true ) );
+        String url = entityUrlBuilder.fromRoot().some( ees ).web().toUriString();
+        return new ModelAndView( new RedirectView( url, true ) );
     }
 
     @SuppressWarnings("unused")
@@ -629,8 +628,9 @@ public class ArrayDesignController {
             ArrayDesign ad = arrayDesignService.loadOrFail( taskCommand.getEntityId(),
                     EntityNotFoundException::new, "Could not load platform with id=" + taskCommand.getEntityId() );
             arrayDesignService.remove( ad );
+            String url = entityUrlBuilder.fromRoot().all( ArrayDesign.class ).web().toUriString();
             return new TaskResult( taskCommand,
-                    new ModelAndView( new RedirectView( "/arrays/showAllArrayDesigns.html", true ) )
+                    new ModelAndView( new RedirectView( url, true ) )
                             .addObject( "message", "Array " + ad.getShortName() + " removed from Database." ) );
 
         }
