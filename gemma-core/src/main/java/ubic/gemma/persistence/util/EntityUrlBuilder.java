@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -28,15 +29,29 @@ import java.util.stream.Collectors;
  * This builder allows for generating URLs for entities in Gemma Web and REST.
  * @author poirigui
  */
+@Primary
 @Component
 public class EntityUrlBuilder {
 
     private final String hostUrl;
 
+    private boolean webByDefault = false;
+    private boolean restByDefault = false;
+
     @Autowired
     public EntityUrlBuilder( @Value("${gemma.hosturl}") String hostUrl ) {
         Assert.isTrue( !hostUrl.endsWith( "/" ), "The context path must not end with '/'." );
         this.hostUrl = hostUrl;
+    }
+
+    public void setWebByDefault() {
+        Assert.state( !restByDefault, "Cannot set both Web and REST by default." );
+        this.webByDefault = true;
+    }
+
+    public void setRestByDefault() {
+        Assert.state( !webByDefault, "Cannot set both Web and REST by default." );
+        this.restByDefault = true;
     }
 
     /**
@@ -45,36 +60,27 @@ public class EntityUrlBuilder {
      * Use this for absolute URLs.
      */
     public EntityUrlChooser fromHostUrl() {
-        return new EntityUrlChooser( hostUrl );
+        return fromBaseUrl( hostUrl );
     }
 
     /**
-     * Obtain an {@link EntityUrlChooser} for generating a URL relative to the context path.
+     * Obtain an {@link EntityUrlChooser} for generating a URL relative to a base URL.
      * <p>
      * Use this for relative URLs.
      */
-    public EntityUrlChooser fromContextPath( String contextPath ) {
-        Assert.isTrue( !contextPath.endsWith( "/" ), "The context path must not end with '/'." );
-        return new EntityUrlChooser( contextPath );
-    }
-
-    /**
-     * Obtain an {@link EntityUrlChooser} relative to a root URL (i.e. '/').
-     * <p>
-     * Use this if the context path will be prefixed by a separate mechanism.
-     */
-    public EntityUrlChooser fromRoot() {
-        return new EntityUrlChooser( "" );
+    public EntityUrlChooser fromBaseUrl( String baseUrl ) {
+        return new EntityUrlChooser( baseUrl );
     }
 
     /**
      * Allows for choosing a specific entity.
      */
-    public static class EntityUrlChooser {
+    public class EntityUrlChooser {
 
         private final String baseUrl;
 
         public EntityUrlChooser( String baseUrl ) {
+            Assert.isTrue( !baseUrl.endsWith( "/" ), "The base URL must not end with '/'." );
             this.baseUrl = baseUrl;
         }
 
@@ -116,7 +122,7 @@ public class EntityUrlBuilder {
     /**
      * Represents a URL for an {@link Identifiable} entity.
      */
-    public static class EntityUrl<T extends Identifiable> {
+    public class EntityUrl<T extends Identifiable> {
 
         protected final String baseUrl;
         protected final T entity;
@@ -143,7 +149,7 @@ public class EntityUrlBuilder {
 
 
         public URI toUri() {
-            return web().toUri();
+            return webByDefault ? web().toUri() : restByDefault ? rest().toUri() : raiseNoDefault();
         }
 
         public String toUriString() {
@@ -156,7 +162,7 @@ public class EntityUrlBuilder {
         }
     }
 
-    public static class ExpressionExperimentUrl extends EntityUrl<ExpressionExperiment> {
+    public class ExpressionExperimentUrl extends EntityUrl<ExpressionExperiment> {
 
         private ExpressionExperimentUrl( String baseUrl, ExpressionExperiment entity ) {
             super( baseUrl, entity );
@@ -171,7 +177,7 @@ public class EntityUrlBuilder {
     /**
      * Generate a URL for Gemma Web.
      */
-    public static class WebEntityUrl<U extends Identifiable> extends EntityUrl<U> {
+    public class WebEntityUrl<U extends Identifiable> extends EntityUrl<U> {
 
         protected final String entityPath;
 
@@ -199,7 +205,7 @@ public class EntityUrlBuilder {
         }
     }
 
-    public static class ExpressionExperimentWebUrl extends WebEntityUrl<ExpressionExperiment> {
+    public class ExpressionExperimentWebUrl extends WebEntityUrl<ExpressionExperiment> {
 
         private boolean byShortName = false;
         private boolean edit = false;
@@ -236,7 +242,7 @@ public class EntityUrlBuilder {
         }
     }
 
-    public static class ExperimentalDesignWebUrl extends WebEntityUrl<ExperimentalDesign> {
+    public class ExperimentalDesignWebUrl extends WebEntityUrl<ExperimentalDesign> {
 
         private final ExpressionExperiment experiment;
 
@@ -254,7 +260,7 @@ public class EntityUrlBuilder {
     /**
      * Generate a URL for Gemma REST.
      */
-    public static class RestEntityUrl<T extends Identifiable> extends EntityUrl<T> {
+    public class RestEntityUrl<T extends Identifiable> extends EntityUrl<T> {
 
         private final String entityPath;
 
@@ -278,7 +284,7 @@ public class EntityUrlBuilder {
         }
     }
 
-    public static class AllEntitiesUrl<T extends Identifiable> {
+    public class AllEntitiesUrl<T extends Identifiable> {
 
         protected final String baseUrl;
         private final Class<T> entityType;
@@ -297,7 +303,7 @@ public class EntityUrlBuilder {
         }
 
         public URI toUri() {
-            return web().toUri();
+            return webByDefault ? web().toUri() : restByDefault ? rest().toUri() : raiseNoDefault();
         }
 
         public String toUriString() {
@@ -310,7 +316,7 @@ public class EntityUrlBuilder {
         }
     }
 
-    public static class AllWebEntitiesUrl<T extends Identifiable> extends AllEntitiesUrl<T> {
+    public class AllWebEntitiesUrl<T extends Identifiable> extends AllEntitiesUrl<T> {
 
         private final String entityPath;
 
@@ -331,7 +337,7 @@ public class EntityUrlBuilder {
         }
     }
 
-    public static class AllRestEntitiesUrl<T extends Identifiable> extends AllEntitiesUrl<T> {
+    public class AllRestEntitiesUrl<T extends Identifiable> extends AllEntitiesUrl<T> {
 
         private final String entityPath;
 
@@ -356,7 +362,7 @@ public class EntityUrlBuilder {
         }
     }
 
-    public static class SomeEntitiesUrl<T extends Identifiable> {
+    public class SomeEntitiesUrl<T extends Identifiable> {
 
         protected final String baseUrl;
         protected final Class<T> entityType;
@@ -376,8 +382,12 @@ public class EntityUrlBuilder {
             return new SomeWebEntitiesUrl<>( baseUrl, entityType, ids );
         }
 
+        public SomeRestEntitiesUrl<T> rest() {
+            return new SomeRestEntitiesUrl<>( baseUrl, entityType, ids );
+        }
+
         public URI toUri() {
-            return web().toUri();
+            return webByDefault ? web().toUri() : restByDefault ? rest().toUri() : raiseNoDefault();
         }
 
         public String toUriString() {
@@ -388,15 +398,9 @@ public class EntityUrlBuilder {
         public String toString() {
             return toUriString();
         }
-
-        private static <T> Class<T> selectCommonType( Collection<?> elements ) {
-            // FIXME: do better...
-            //noinspection unchecked
-            return ( Class<T> ) elements.iterator().next().getClass();
-        }
     }
 
-    public static class SomeWebEntitiesUrl<T extends Identifiable> extends SomeEntitiesUrl<T> {
+    public class SomeWebEntitiesUrl<T extends Identifiable> extends SomeEntitiesUrl<T> {
 
         private final String entityPath;
 
@@ -416,15 +420,15 @@ public class EntityUrlBuilder {
         }
     }
 
-    private static String urlEncode( String s ) {
-        try {
-            return URLEncoder.encode( s, StandardCharsets.UTF_8.name() );
-        } catch ( UnsupportedEncodingException e ) {
-            throw new RuntimeException( e );
+    public class SomeRestEntitiesUrl<T extends Identifiable> extends SomeEntitiesUrl<T> {
+
+        public SomeRestEntitiesUrl( String baseUrl, Class<T> entityType, Collection<Long> ids ) {
+            super( baseUrl, entityType, ids );
+            throw new UnsupportedOperationException( "Cannot generate a REST URL for entities of type " + entityType + "." );
         }
     }
 
-    public static class ArrayDesignUrl extends WebEntityUrl<ArrayDesign> {
+    public class ArrayDesignUrl extends WebEntityUrl<ArrayDesign> {
 
         public ArrayDesignUrl( String baseUrl, ArrayDesign entity ) {
             super( baseUrl, entity );
@@ -436,7 +440,7 @@ public class EntityUrlBuilder {
         }
     }
 
-    public static class ArrayDesignWebUrl extends WebEntityUrl<ArrayDesign> {
+    public class ArrayDesignWebUrl extends WebEntityUrl<ArrayDesign> {
 
         private boolean byShortName = false;
 
@@ -457,6 +461,24 @@ public class EntityUrlBuilder {
             } else {
                 return super.toUri();
             }
+        }
+    }
+
+    private URI raiseNoDefault() {
+        throw new IllegalStateException( "There is no default way to generate an URL." );
+    }
+
+    private <T> Class<T> selectCommonType( Collection<?> elements ) {
+        // FIXME: do better...
+        //noinspection unchecked
+        return ( Class<T> ) elements.iterator().next().getClass();
+    }
+
+    private String urlEncode( String s ) {
+        try {
+            return URLEncoder.encode( s, StandardCharsets.UTF_8.name() );
+        } catch ( UnsupportedEncodingException e ) {
+            throw new RuntimeException( e );
         }
     }
 }

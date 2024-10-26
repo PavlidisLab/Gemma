@@ -56,7 +56,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
-import ubic.gemma.persistence.util.EntityUrlBuilder;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.web.remote.EntityDelegator;
@@ -64,6 +63,7 @@ import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
 import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
 import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.util.WebEntityUrlBuilder;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
@@ -103,6 +103,8 @@ public class ArrayDesignController {
     private TaskRunningService taskRunningService;
     @Autowired
     private ArrayDesignAnnotationService annotationFileService;
+    @Autowired
+    private WebEntityUrlBuilder entityUrlBuilder;
 
     @Value("${gemma.support.email}")
     private String supportEmail;
@@ -149,7 +151,7 @@ public class ArrayDesignController {
         // Do this by checking if there are any bioassays that depend this AD
         Collection<BioAssay> assays = arrayDesignService.getAllAssociatedBioAssays( arrayDesign );
         if ( !assays.isEmpty() ) {
-            String url = entityUrlBuilder.fromRoot().all( ArrayDesign.class ).web().toUriString();
+            String url = entityUrlBuilder.fromRoot().all( ArrayDesign.class ).toUriString();
             return new ModelAndView( new RedirectView( url, true ) )
                     .addObject( "message", "Array  " + arrayDesign.getName()
                             + " can't be deleted. Dataset has a dependency on this Array." );
@@ -205,15 +207,12 @@ public class ArrayDesignController {
         }
     }
 
-    @Autowired
-    private EntityUrlBuilder entityUrlBuilder;
-
     @RequestMapping(value = "/filterArrayDesigns.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView filter( @RequestParam("filter") String filter ) {
         StopWatch overallWatch = new StopWatch();
         overallWatch.start();
 
-        String allArrayDesignUrl = entityUrlBuilder.fromRoot().all( ArrayDesign.class ).web().toUriString();
+        String allArrayDesignUrl = entityUrlBuilder.fromRoot().all( ArrayDesign.class ).toUriString();
 
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( filter ) ) {
@@ -246,7 +245,7 @@ public class ArrayDesignController {
 
         if ( ids.size() == 1 ) {
             ArrayDesign arrayDesign = arrayDesignService.loadOrFail( ids.iterator().next(), EntityNotFoundException::new );
-            String url = entityUrlBuilder.fromRoot().entity( arrayDesign ).web().toUriString();
+            String url = entityUrlBuilder.fromRoot().entity( arrayDesign ).toUriString();
             return new ModelAndView( new RedirectView( url, true ) )
                     .addObject( "message", "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName() + ")" );
         } else {
@@ -263,14 +262,14 @@ public class ArrayDesignController {
         if ( id == null ) {
             job = new GenerateArraySummaryLocalTask( new TaskCommand() );
             String taskId = taskRunningService.submitTask( job );
-            String url = entityUrlBuilder.fromRoot().all( ArrayDesign.class ).web().toUriString();
+            String url = entityUrlBuilder.fromRoot().all( ArrayDesign.class ).toUriString();
             return new ModelAndView( new RedirectView( url, true ) )
                     .addObject( "taskId", taskId );
         }
 
         job = new GenerateArraySummaryLocalTask( new TaskCommand( id ) );
         String taskId = taskRunningService.submitTask( job );
-        String url = entityUrlBuilder.fromRoot().some( ArrayDesign.class, Collections.singleton( id ) ).web().toUriString();
+        String url = entityUrlBuilder.fromRoot().some( ArrayDesign.class, Collections.singleton( id ) ).toUriString();
         return new ModelAndView( new RedirectView( url, true ) )
                 .addObject( "taskId", taskId );
     }
@@ -526,7 +525,7 @@ public class ArrayDesignController {
         ArrayDesign arrayDesign = arrayDesignService.loadOrFail( id, EntityNotFoundException::new );
         // seems inefficient? but need security filtering.
         Collection<ExpressionExperiment> ees = arrayDesignService.getExpressionExperiments( arrayDesign );
-        String url = entityUrlBuilder.fromRoot().some( ees ).web().toUriString();
+        String url = entityUrlBuilder.fromRoot().some( ees ).toUriString();
         return new ModelAndView( new RedirectView( url, true ) );
     }
 
@@ -628,7 +627,7 @@ public class ArrayDesignController {
             ArrayDesign ad = arrayDesignService.loadOrFail( taskCommand.getEntityId(),
                     EntityNotFoundException::new, "Could not load platform with id=" + taskCommand.getEntityId() );
             arrayDesignService.remove( ad );
-            String url = entityUrlBuilder.fromRoot().all( ArrayDesign.class ).web().toUriString();
+            String url = entityUrlBuilder.fromRoot().all( ArrayDesign.class ).toUriString();
             return new TaskResult( taskCommand,
                     new ModelAndView( new RedirectView( url, true ) )
                             .addObject( "message", "Array " + ad.getShortName() + " removed from Database." ) );

@@ -84,10 +84,10 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUrlBuilder;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.util.WebEntityUrlBuilder;
 import ubic.gemma.web.view.TextView;
 
 import javax.servlet.http.HttpServletResponse;
@@ -144,7 +144,7 @@ public class ExpressionExperimentQCController extends BaseController {
     @Autowired
     private CoexpressionAnalysisService coexpressionAnalysisService;
     @Autowired
-    private EntityUrlBuilder entityUrlBuilder;
+    private WebEntityUrlBuilder entityUrlBuilder;
     @Autowired
     private BuildInfo buildInfo;
 
@@ -173,7 +173,7 @@ public class ExpressionExperimentQCController extends BaseController {
         StringWriter writer = new StringWriter();
         StringBuffer buf = writer.getBuffer();
 
-        ExpressionDataWriterUtils.appendBaseHeader( ee, "Outliers removed", entityUrlBuilder.fromHostUrl().entity( ee ).web().toUriString(), buildInfo, buf );
+        ExpressionDataWriterUtils.appendBaseHeader( ee, "Outliers removed", entityUrlBuilder.fromHostUrl().entity( ee ).toUriString(), buildInfo, buf );
 
         ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo );
         ee = expressionExperimentService.thawLiter( ee );
@@ -214,7 +214,7 @@ public class ExpressionExperimentQCController extends BaseController {
         StringWriter writer = new StringWriter();
         StringBuffer buf = writer.getBuffer();
 
-        ExpressionDataWriterUtils.appendBaseHeader( ee, "Sample outlier", entityUrlBuilder.fromHostUrl().entity( ee ).web().toUriString(), buildInfo, buf );
+        ExpressionDataWriterUtils.appendBaseHeader( ee, "Sample outlier", entityUrlBuilder.fromHostUrl().entity( ee ).toUriString(), buildInfo, buf );
 
         ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo );
         ee = expressionExperimentService.thawLiter( ee );

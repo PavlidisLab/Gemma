@@ -45,9 +45,9 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUrlBuilder;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.util.WebEntityUrlBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -72,7 +72,9 @@ public class ExpressionExperimentFormController extends BaseFormController {
     private PreprocessorService preprocessorService;
     private QuantitationTypeService quantitationTypeService;
 
-    @SuppressWarnings("deprecation")
+    @Autowired
+    private WebEntityUrlBuilder entityUrlBuilder;
+
     public ExpressionExperimentFormController() {
         /*
          * if true, reuses the same command object across the edit-submit-process (get-post-process).
@@ -249,12 +251,9 @@ public class ExpressionExperimentFormController extends BaseFormController {
             }
         }
 
-        String url = entityUrlBuilder.fromContextPath( "" ).entity( ExpressionExperiment.class, eeCommand.getId() ).web().toUriString();
+        String url = entityUrlBuilder.fromRoot().entity( ExpressionExperiment.class, eeCommand.getId() ).toUriString();
         return new ModelAndView( new RedirectView( url, true ) );
     }
-
-    @Autowired
-    private EntityUrlBuilder entityUrlBuilder;
 
     private void audit( ExpressionExperiment ee, Class<? extends AuditEventType> eventType, String note ) {
         auditTrailService.addUpdateEvent( ee, eventType, note );

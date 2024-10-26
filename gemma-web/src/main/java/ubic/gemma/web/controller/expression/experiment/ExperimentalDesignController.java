@@ -47,11 +47,11 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.*;
-import ubic.gemma.persistence.util.EntityUrlBuilder;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.util.WebEntityUrlBuilder;
 
 import javax.servlet.ServletContext;
 import java.io.File;
@@ -93,9 +93,7 @@ public class ExperimentalDesignController extends BaseController {
     @Autowired
     private AuditTrailService auditTrailService;
     @Autowired
-    private EntityUrlBuilder entityUrlBuilder;
-    @Autowired
-    private ServletContext servletContext;
+    private WebEntityUrlBuilder entityUrlBuilder;
 
     public void createDesignFromFile( Long eeid, String filePath ) {
         ExpressionExperiment ee = expressionExperimentService.loadAndThawOrFail( eeid, EntityNotFoundException::new, "Could not access experiment with id=" + eeid );
@@ -649,7 +647,7 @@ public class ExperimentalDesignController extends BaseController {
                 .addObject( "expressionExperiment", ee )
                 .addObject( "currentUserCanEdit", securityService.isEditable( ee ) ? "true" : "" )
                 .addAllObjects( getNeedsAttentionDetails( ee ) )
-                .addObject( "expressionExperimentUrl", entityUrlBuilder.fromContextPath( servletContext.getContextPath() ).entity( ee ).toUriString() );
+                .addObject( "expressionExperimentUrl", entityUrlBuilder.fromContextPath().entity( ee ).toUriString() );
     }
 
     private Map<String, ?> getNeedsAttentionDetails( ExpressionExperiment ee ) {

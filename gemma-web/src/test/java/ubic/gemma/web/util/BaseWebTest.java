@@ -13,7 +13,6 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import ubic.gemma.core.util.MailEngine;
 import ubic.gemma.core.util.test.BaseTest;
-import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import static org.mockito.Mockito.mock;
 
@@ -27,7 +26,7 @@ import static org.mockito.Mockito.mock;
 @WebAppConfiguration
 public abstract class BaseWebTest extends BaseTest {
 
-    @Import(EntityUrlBuilder.class)
+    @Import(WebEntityUrlBuilder.class)
     public abstract static class BaseWebTestContextConfiguration {
 
         @Bean

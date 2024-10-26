@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 public class EntityUrlBuilderTest {
 
@@ -32,5 +33,30 @@ public class EntityUrlBuilderTest {
         assertEquals( "/arrays/showAllArrayDesigns.html?id=1,2,3", entityUrlBuilder.fromHostUrl().some( ArrayDesign.class, Arrays.asList( 1L, 2L, 3L ) ).web().toUriString() );
         assertEquals( "/rest/v2/platforms/3", entityUrlBuilder.fromHostUrl().entity( ad ).rest().toUriString() );
         assertEquals( "/rest/v2/platforms", entityUrlBuilder.fromHostUrl().all( ArrayDesign.class ).rest().toUriString() );
+
+        // no web/rest is set by default
+        assertThrows( IllegalStateException.class, () -> entityUrlBuilder.fromHostUrl().entity( ee ).toUriString() );
+    }
+
+    @Test
+    public void testWebByDefault() {
+        EntityUrlBuilder eub = new EntityUrlBuilder( "" );
+        eub.setWebByDefault();
+        assertThrows( IllegalStateException.class, eub::setRestByDefault );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 12L );
+        ee.setShortName( "GSE001292" );
+        assertEquals( "/expressionExperiment/showExpressionExperiment.html?id=12", eub.fromHostUrl().entity( ee ).toUriString() );
+    }
+
+    @Test
+    public void testRestByDefault() {
+        EntityUrlBuilder eub = new EntityUrlBuilder( "" );
+        eub.setRestByDefault();
+        assertThrows( IllegalStateException.class, eub::setWebByDefault );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 12L );
+        ee.setShortName( "GSE001292" );
+        assertEquals( "/rest/v2/datasets/12", eub.fromHostUrl().entity( ee ).toUriString() );
     }
 }

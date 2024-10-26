@@ -76,7 +76,6 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.*;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.EntityUrlBuilder;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -88,6 +87,7 @@ import ubic.gemma.web.remote.ListBatchCommand;
 import ubic.gemma.web.taglib.SimplePageContext;
 import ubic.gemma.web.taglib.expression.experiment.ExperimentQCTag;
 import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.util.WebEntityUrlBuilder;
 import ubic.gemma.web.view.TextView;
 
 import javax.annotation.Nullable;
@@ -116,6 +116,7 @@ public class ExpressionExperimentController {
     private static final Boolean AJAX = true;
     private static final int TRIM_SIZE = 800;
     private final String identifierNotFound = "Must provide a valid ExpressionExperiment identifier";
+
     @Autowired
     private TaskRunningService taskRunningService;
     @Autowired
@@ -170,6 +171,8 @@ public class ExpressionExperimentController {
     private ServletContext servletContext;
     @Autowired
     private BuildInfo buildInfo;
+    @Autowired
+    private WebEntityUrlBuilder entityUrlBuilder;
 
     /**
      * AJAX call for remote paging store security isn't incorporated in db query, so paging needs to occur at higher
@@ -268,14 +271,11 @@ public class ExpressionExperimentController {
         return userOwnsGroup;
     }
 
-    @Autowired
-    private EntityUrlBuilder entityUrlBuilder;
-
     @RequestMapping(value = "/filterExpressionExperiments.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView filter( @RequestParam("filter") String searchString ) {
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( searchString ) ) {
-            String url = entityUrlBuilder.fromContextPath( "" ).all( ExpressionExperiment.class ).toUriString();
+            String url = entityUrlBuilder.fromRoot().all( ExpressionExperiment.class ).toUriString();
             return new ModelAndView( new RedirectView( url, true ) )
                     .addObject( "message", "No search criteria provided" );
         }
@@ -288,18 +288,18 @@ public class ExpressionExperimentController {
         }
 
         if ( ids.isEmpty() ) {
-            String url = entityUrlBuilder.fromContextPath( "" ).all( ExpressionExperiment.class ).toUriString();
+            String url = entityUrlBuilder.fromRoot().all( ExpressionExperiment.class ).toUriString();
             return new ModelAndView( new RedirectView( url, true ) )
                     .addObject( "message", "Your search yielded no results." );
         }
 
         if ( ids.size() == 1 ) {
-            String url = entityUrlBuilder.fromContextPath( "" ).entity( ExpressionExperiment.class, ids.iterator().next() ).toUriString();
+            String url = entityUrlBuilder.fromRoot().entity( ExpressionExperiment.class, ids.iterator().next() ).toUriString();
             return new ModelAndView( new RedirectView( url, true ) )
                     .addObject( "message", "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
         }
 
-        String url = entityUrlBuilder.fromRoot().some( ExpressionExperiment.class, ids ).web().toUriString();
+        String url = entityUrlBuilder.fromRoot().some( ExpressionExperiment.class, ids ).toUriString();
         return new ModelAndView( new RedirectView( url, true ) )
                 .addObject( "message", "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
     }
@@ -1583,7 +1583,7 @@ public class ExpressionExperimentController {
         @Override
         public TaskResult call() {
             expressionExperimentService.remove( taskCommand.getEntityId() );
-            String url = entityUrlBuilder.fromRoot().all( ExpressionExperiment.class ).web().toUriString();
+            String url = entityUrlBuilder.fromRoot().all( ExpressionExperiment.class ).toUriString();
             return new TaskResult( taskCommand, new ModelAndView( new RedirectView( url, true ) )
                     .addObject( "message", "Dataset id: " + taskCommand.getEntityId() + " removed from Database" ) );
         }

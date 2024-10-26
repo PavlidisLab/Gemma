@@ -27,8 +27,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.view.feed.AbstractRssFeedView;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.util.EntityUrlBuilder;
 import ubic.gemma.web.controller.WebConstants;
+import ubic.gemma.web.util.WebEntityUrlBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -41,7 +41,7 @@ import java.util.*;
 public class CustomRssViewer extends AbstractRssFeedView {
 
     @Autowired
-    private EntityUrlBuilder entityUrlBuilder;
+    private WebEntityUrlBuilder entityUrlBuilder;
 
     @Value("${gemma.hosturl}")
     private String gemmaHostUrl;
@@ -59,7 +59,7 @@ public class CustomRssViewer extends AbstractRssFeedView {
             ExpressionExperiment e = entry.getKey();
 
             String title = e.getShortName() + " (" + entry.getValue() + "): " + e.getName();
-            String link = entityUrlBuilder.fromHostUrl().entity( e ).web().toUriString();
+            String link = entityUrlBuilder.fromHostUrl().entity( e ).toUriString();
 
             int maxLength = Math.min( e.getDescription().length(), 500 );
 

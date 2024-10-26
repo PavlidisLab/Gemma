@@ -37,12 +37,11 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
-import ubic.gemma.persistence.util.EntityUrlBuilder;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
+import ubic.gemma.web.util.WebEntityUrlBuilder;
 
 import javax.annotation.Nullable;
-import javax.servlet.ServletContext;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
@@ -72,10 +71,7 @@ public class CharacteristicBrowserController {
     private CharacteristicService characteristicService;
 
     @Autowired
-    private EntityUrlBuilder entityUrlBuilder;
-
-    @Autowired
-    private ServletContext servletContext;
+    private WebEntityUrlBuilder entityUrlBuilder;
 
     public JsonReaderResponse<AnnotationValueObject> browse( ListBatchCommand batch ) {
         long count = characteristicService.countAll();
@@ -282,19 +278,19 @@ public class CharacteristicBrowserController {
 
     private String getBioMaterialLink( BioMaterial bm, String text ) {
         Assert.notNull( bm.getId() );
-        String link = entityUrlBuilder.fromContextPath( servletContext.getContextPath() ).entity( bm ).toUriString();
+        String link = entityUrlBuilder.fromContextPath().entity( bm ).toUriString();
         return getLink( link, linkForDescribable( bm, text, "Sample" ) );
     }
 
     private String getExperimentalDesignLink( ExperimentalDesign ed, String text ) {
         Assert.notNull( ed.getId() );
-        String link = entityUrlBuilder.fromContextPath( servletContext.getContextPath() ).entity( ed ).toUriString();
+        String link = entityUrlBuilder.fromContextPath().entity( ed ).toUriString();
         return getLink( link, linkForDescribable( ed, text, "Experimental Design" ) );
     }
 
     private String getExpressionExperimentLink( ExpressionExperiment ee, String text ) {
         Assert.notNull( ee.getId() );
-        String link = entityUrlBuilder.fromContextPath( servletContext.getContextPath() ).entity( ee ).toUriString();
+        String link = entityUrlBuilder.fromContextPath().entity( ee ).toUriString();
         return getLink( link, linkForDescribable( ee, defaultIfBlank( text, Hibernate.isInitialized( ee ) ? ee.getShortName() : null ), "Dataset" ) );
     }
 
