@@ -11,15 +11,15 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.GemmaRestApiClient;
+import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
-import ubic.gemma.core.context.TestComponent;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -29,7 +29,7 @@ import static org.mockito.Mockito.*;
 
 @ContextConfiguration
 @TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class ExternalDatabaseUpdaterCliTest extends AbstractJUnit4SpringContextTests {
+public class ExternalDatabaseUpdaterCliTest extends BaseCliTest {
 
     @Configuration
     @TestComponent

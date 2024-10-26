@@ -12,6 +12,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -27,7 +28,7 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailabl
 
 @ContextConfiguration
 @TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class NCBIGene2GOAssociationLoaderCLITest extends AbstractJUnit4SpringContextTests {
+public class NCBIGene2GOAssociationLoaderCLITest extends BaseCliTest {
 
     @Configuration
     @TestComponent

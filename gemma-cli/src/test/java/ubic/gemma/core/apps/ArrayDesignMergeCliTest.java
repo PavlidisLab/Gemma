@@ -10,19 +10,16 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.core.util.EntityLocator;
 import ubic.gemma.core.util.GemmaRestApiClient;
+import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.persistence.service.common.protocol.ProtocolService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,7 +30,7 @@ import static org.mockito.Mockito.*;
 
 @ContextConfiguration
 @TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class ArrayDesignMergeCliTest extends AbstractJUnit4SpringContextTests {
+public class ArrayDesignMergeCliTest extends BaseCliTest {
 
     @Configuration
     @TestComponent
@@ -80,23 +77,8 @@ public class ArrayDesignMergeCliTest extends AbstractJUnit4SpringContextTests {
         }
 
         @Bean
-        public TaxonService taxonService() {
-            return mock();
-        }
-
-        @Bean
-        public ExpressionExperimentService expressionExperimentService() {
-            return mock();
-        }
-
-        @Bean
-        public ProtocolService protocolService() {
-            return mock();
-        }
-       
-        @Bean
         public EntityLocator entityLocator() {
-            return new EntityLocator();
+            return mock();
         }
     }
 
@@ -109,9 +91,12 @@ public class ArrayDesignMergeCliTest extends AbstractJUnit4SpringContextTests {
     @Autowired
     private ArrayDesignService arrayDesignService;
 
+    @Autowired
+    private EntityLocator entityLocator;
+
     @After
     public void tearDown() {
-        reset( arrayDesignService );
+        reset( entityLocator, arrayDesignService );
     }
 
     @Test
@@ -120,9 +105,9 @@ public class ArrayDesignMergeCliTest extends AbstractJUnit4SpringContextTests {
         ArrayDesign a = ArrayDesign.Factory.newInstance();
         ArrayDesign b = ArrayDesign.Factory.newInstance();
         ArrayDesign c = ArrayDesign.Factory.newInstance();
-        when( arrayDesignService.load( 1L ) ).thenReturn( a );
-        when( arrayDesignService.load( 2L ) ).thenReturn( b );
-        when( arrayDesignService.load( 3L ) ).thenReturn( c );
+        when( entityLocator.locateArrayDesign( "1" ) ).thenReturn( a );
+        when( entityLocator.locateArrayDesign( "2" ) ).thenReturn( b );
+        when( entityLocator.locateArrayDesign( "3" ) ).thenReturn( c );
         when( arrayDesignService.thaw( any( ArrayDesign.class ) ) ).thenAnswer( args -> args.getArgument( 0 ) );
         when( arrayDesignService.thaw( anyCollection() ) ).thenAnswer( args -> args.getArgument( 0 ) );
         Collection<ArrayDesign> otherPlatforms = new HashSet<>( Arrays.asList( b, c ) );
