@@ -724,11 +724,27 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .thenReturn( Optional.of( qt ) );
         when( expressionDataFileService.getDataFile( eq( ee ), eq( qt ), eq( ExpressionExperimentDataFileType.TABULAR ), anyLong(), any() ) )
                 .thenReturn( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ) );
-        assertThat( target( "/datasets/1/data/singleCell" ).request().get() )
+        assertThat( target( "/datasets/1/data/singleCell" ).request()
+                .accept( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ).get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaType( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                 .hasEncoding( "gzip" )
                 .hasHeader( "Content-Disposition", "attachment; filename=\"data.txt\"" );
+    }
+
+    @Test
+    public void testGetDatasetSingleCellDataAsDownload() throws InterruptedException, TimeoutException, URISyntaxException {
+        QuantitationType qt = new QuantitationType();
+        when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
+                .thenReturn( Optional.of( qt ) );
+        when( expressionDataFileService.getDataFile( eq( ee ), eq( qt ), eq( ExpressionExperimentDataFileType.TABULAR ), anyLong(), any() ) )
+                .thenReturn( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ) );
+        assertThat( target( "/datasets/1/data/singleCell" ).queryParam( "download", "true" ).request()
+                .accept( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ).get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaType( MediaType.APPLICATION_OCTET_STREAM_TYPE )
+                .doesNotHaveEncoding( "gzip" )
+                .hasHeader( "Content-Disposition", "attachment; filename=\"data.txt.gz\"" );
     }
 
     @Test

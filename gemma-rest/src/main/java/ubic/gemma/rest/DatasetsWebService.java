@@ -1284,9 +1284,9 @@ public class DatasetsWebService {
             responses = {
                     @ApiResponse(
                             content = {
+                                    @Content(mediaType = APPLICATION_10X_MEX, schema = @Schema(description = "Sample files are bundled in a TAR archive according to the 10x MEX format.", type = "string", format = "binary", externalDocs = @ExternalDocumentation(url = "https://www.10xgenomics.com/support/software/cell-ranger/latest/analysis/outputs/cr-outputs-mex-matrices"))),
                                     @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8 + "; q=0.9", schema = @Schema(type = "string", format = "binary"),
-                                            examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-single-cell-data.tsv") }),
-                                    @Content(mediaType = APPLICATION_10X_MEX, schema = @Schema(description = "Sample files are bundled in a TAR archive according to the 10x MEX format.", type = "string", format = "binary", externalDocs = @ExternalDocumentation(url = "https://www.10xgenomics.com/support/software/cell-ranger/latest/analysis/outputs/cr-outputs-mex-matrices")))
+                                            examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-single-cell-data.tsv") })
                             }),
                     @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
