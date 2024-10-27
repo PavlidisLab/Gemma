@@ -2,20 +2,24 @@ package ubic.gemma.web.util;
 
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
+import javax.servlet.ServletContext;
+
+/**
+ * This builder has extras URL-generating capabilities for Web applications.
+ * @author poirigui
+ */
 public class WebEntityUrlBuilder extends EntityUrlBuilder {
 
     private final String contextPath;
 
-    public WebEntityUrlBuilder( String hostUrl, String contextPath ) {
+    public WebEntityUrlBuilder( String hostUrl, ServletContext servletContext ) {
         super( hostUrl );
-        this.contextPath = contextPath;
+        this.contextPath = servletContext.getContextPath();
         setWebByDefault();
     }
 
     /**
-     * Obtain an {@link EntityUrlChooser} relative to the current context path.
-     * @throws IllegalStateException if there is no current request, use {@link #fromBaseUrl(String)} in that case
-     * instead
+     * Obtain an {@link EntityUrlChooser} relative to the servlet context path.
      */
     public EntityUrlChooser fromContextPath() {
         return fromBaseUrl( contextPath );

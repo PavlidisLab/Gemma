@@ -2,7 +2,6 @@ package ubic.gemma.persistence.util;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.AbstractIdentifiable;
@@ -35,7 +34,7 @@ public class EntityUrlBuilder {
     private boolean webByDefault = false;
     private boolean restByDefault = false;
 
-    public EntityUrlBuilder( @Value("${gemma.hosturl}") String hostUrl ) {
+    public EntityUrlBuilder( String hostUrl ) {
         Assert.isTrue( !hostUrl.endsWith( "/" ), "The context path must not end with '/'." );
         this.hostUrl = hostUrl;
     }

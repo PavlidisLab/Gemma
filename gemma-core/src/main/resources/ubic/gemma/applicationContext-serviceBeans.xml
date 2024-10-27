@@ -7,6 +7,10 @@
             http://www.springframework.org/schema/beans/spring-beans.xsd
        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
 
+    <bean id="entityUrlBuilder" class="ubic.gemma.persistence.util.EntityUrlBuilder" primary="true">
+        <constructor-arg name="hostUrl" value="${gemma.hosturl}"/>
+    </bean>
+
     <!-- Local tasks executor -->
     <bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
         <property name="threadNamePrefix" value="gemma-local-tasks-thread-"/>

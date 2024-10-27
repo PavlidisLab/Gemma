@@ -18,6 +18,12 @@
         <context:exclude-filter type="annotation" expression="ubic.gemma.core.context.TestComponent"/>
     </context:component-scan>
 
+    <!-- This bean allow for generating URLs relative to the context path or the host URL -->
+    <bean id="webEntityUrlBuilder" class="ubic.gemma.web.util.WebEntityUrlBuilder">
+        <constructor-arg value="${gemma.hosturl}"/>
+        <constructor-arg ref="servletContext"/>
+    </bean>
+
     <!-- The servlet uses a different Spring context with gemma-core's context as parent -->
     <!-- Unfortunately, bean post-processor do not get applied, so they must be redeclared here if we want them to apply
     to controllers -->
