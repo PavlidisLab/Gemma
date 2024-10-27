@@ -2,20 +2,19 @@ package ubic.gemma.persistence.util;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
 
 import java.io.UnsupportedEncodingException;
@@ -29,8 +28,6 @@ import java.util.stream.Collectors;
  * This builder allows for generating URLs for entities in Gemma Web and REST.
  * @author poirigui
  */
-@Primary
-@Component
 public class EntityUrlBuilder {
 
     private final String hostUrl;
@@ -38,7 +35,6 @@ public class EntityUrlBuilder {
     private boolean webByDefault = false;
     private boolean restByDefault = false;
 
-    @Autowired
     public EntityUrlBuilder( @Value("${gemma.hosturl}") String hostUrl ) {
         Assert.isTrue( !hostUrl.endsWith( "/" ), "The context path must not end with '/'." );
         this.hostUrl = hostUrl;
@@ -147,6 +143,12 @@ public class EntityUrlBuilder {
             return new RestEntityUrl<>( baseUrl, entity );
         }
 
+        /**
+         * Generate a URL for ontologies served by Gemma.
+         */
+        public OntologyEntityUrl<T> ont() {
+            return new OntologyEntityUrl<>( baseUrl, entity );
+        }
 
         public URI toUri() {
             return webByDefault ? web().toUri() : restByDefault ? rest().toUri() : raiseNoDefault();
@@ -461,6 +463,38 @@ public class EntityUrlBuilder {
             } else {
                 return super.toUri();
             }
+        }
+    }
+
+    public class OntologyEntityUrl<T extends Identifiable> extends EntityUrl<T> {
+
+        /**
+         * Applies to any ontologies served by Gemma, including TGEMO and TGFVO.
+         */
+        private static final String GEMMA_ONTOLOGY_PREFIX = "http://gemma.msl.ubc.ca/ont";
+
+        private final String entityPath;
+
+        private OntologyEntityUrl( String baseUrl, T entity ) {
+            super( baseUrl, entity );
+            if ( entity instanceof FactorValue ) {
+                entityPath = "/ont/TGFVO/" + entity.getId();
+            } else if ( entity instanceof Characteristic ) {
+                Characteristic c = ( Characteristic ) entity;
+                if ( c.getValueUri() != null && c.getValueUri().startsWith( GEMMA_ONTOLOGY_PREFIX ) ) {
+                    entityPath = "/ont" + c.getValueUri().substring( GEMMA_ONTOLOGY_PREFIX.length() );
+                } else if ( c.getCategoryUri() != null && c.getCategoryUri().startsWith( GEMMA_ONTOLOGY_PREFIX ) ) {
+                    entityPath = "/ont" + c.getCategoryUri().substring( GEMMA_ONTOLOGY_PREFIX.length() );
+                } else {
+                    throw new UnsupportedOperationException( "Cannot generate an ontology URL for entities of type " + entity.getClass() + "." );
+                }
+            } else {
+                throw new UnsupportedOperationException( "Cannot generate an ontology URL for entities of type " + entity.getClass() + "." );
+            }
+        }
+
+        public URI toUri() {
+            return URI.create( baseUrl + entityPath );
         }
     }
 

@@ -33,7 +33,7 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.EntityUrlBuilder;
+import ubic.gemma.persistence.util.EntityUrlBuilderConfig;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,7 +53,7 @@ public class GeoBrowserServiceParseTest extends AbstractJUnit4SpringContextTests
 
     @Configuration
     @TestComponent
-    @Import(EntityUrlBuilder.class)
+    @Import(EntityUrlBuilderConfig.class)
     static class GeoBrowserServiceParseTestContextConfiguration {
 
         @Bean

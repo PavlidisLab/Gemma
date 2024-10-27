@@ -24,7 +24,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExp
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUrlBuilder;
+import ubic.gemma.persistence.util.EntityUrlBuilderConfig;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -39,7 +39,7 @@ public class ExpressionDataFileServiceTest extends AbstractJUnit4SpringContextTe
 
     @Configuration
     @TestComponent
-    @Import({ EntityUrlBuilder.class, BuildInfo.class })
+    @Import({ EntityUrlBuilderConfig.class, BuildInfo.class })
     static class ExpressionDataFileServiceTestContextConfiguration {
 
         @Bean

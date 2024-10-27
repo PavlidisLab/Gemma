@@ -1,8 +1,10 @@
 package ubic.gemma.persistence.util;
 
 import org.junit.Test;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -58,5 +60,20 @@ public class EntityUrlBuilderTest {
         ee.setId( 12L );
         ee.setShortName( "GSE001292" );
         assertEquals( "/rest/v2/datasets/12", eub.fromHostUrl().entity( ee ).toUriString() );
+    }
+
+    @Test
+    public void testFactorValueOntologyUrl() {
+        FactorValue fv = new FactorValue();
+        fv.setId( 2L );
+        assertEquals( "/ont/TGFVO/2", entityUrlBuilder.fromHostUrl().entity( fv ).ont().toUriString() );
+        Characteristic c = new Characteristic();
+        c.setId( 3L );
+        c.setValueUri( "http://gemma.msl.ubc.ca/ont/TGEMO_00166" );
+        assertEquals( "/ont/TGEMO_00166", entityUrlBuilder.fromHostUrl().entity( c ).ont().toUriString() );
+        Characteristic c2 = new Characteristic();
+        c.setId( 4L );
+        c.setValueUri( "http://purl.obolibrary.org/ont/NCBITaxon_9606" );
+        assertThrows( UnsupportedOperationException.class, () -> entityUrlBuilder.fromHostUrl().entity( c ).ont().toUriString() );
     }
 }

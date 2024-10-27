@@ -26,14 +26,13 @@ import static org.mockito.Mockito.mock;
 @WebAppConfiguration
 public abstract class BaseWebTest extends BaseTest {
 
-    @Import(WebEntityUrlBuilder.class)
+    @Import(WebEntityUrlBuilderConfig.class)
     public abstract static class BaseWebTestContextConfiguration {
 
         @Bean
         public HandlerExceptionResolver exceptionResolver() {
             return new DefaultHandlerExceptionResolver();
         }
-
 
         @Bean
         public MessageUtil messageUtil() {
