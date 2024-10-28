@@ -200,11 +200,12 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         for ( ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
             this.arrayDesignAnnotationService.deleteExistingFiles( ad );
         }
-        Collection<Path> outputLocations = expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, true );
+        Collection<ExpressionDataFileService.LockedPath> outputLocations = expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, true );
 
         assertEquals( 1, outputLocations.size() );
 
-        Path outputLocation = outputLocations.iterator().next();
+        Path outputLocation = outputLocations.iterator().next()
+                .closeAndGetPath();
 
         // NOte that this reader generally won't work for experiment files because of the gene annotations.
         DoubleMatrixReader r = new DoubleMatrixReader();
@@ -387,8 +388,9 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assertFalse( analyses.isEmpty() );
 
         // this triggers an error?
-        expressionDataFileService.writeDiffExArchiveFile( ee, analyses.iterator().next(), config );
-
+        try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeDiffExAnalysisArchiveFile( analyses.iterator().next(), config ) ) {
+            assertNotNull( lockedPath.getPath() );
+        }
     }
 
     private void prepareGSE1611() throws Exception {

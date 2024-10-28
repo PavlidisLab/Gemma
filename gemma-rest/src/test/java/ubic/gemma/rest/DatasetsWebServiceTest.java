@@ -65,6 +65,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -552,7 +553,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     public void testGetDatasetProcessedExpression() throws IOException, URISyntaxException, InterruptedException, TimeoutException, FilteringException {
         when( expressionExperimentService.hasProcessedExpressionData( eq( ee ) ) ).thenReturn( true );
         when( expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, false, 5, TimeUnit.SECONDS ) )
-                .thenReturn( Optional.of( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ) ) );
+                .thenReturn( Optional.of( new DummyLockedPath( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ) ) ) );
         assertThat( target( "/datasets/1/data/processed" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
@@ -580,7 +581,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         when( expressionExperimentService.getPreferredQuantitationType( ee ) )
                 .thenReturn( qt );
         when( expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, false, 5, TimeUnit.SECONDS ) )
-                .thenReturn( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ) );
+                .thenReturn( new DummyLockedPath( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ) ) );
         assertThat( target( "/datasets/1/data/raw" ).request().get() )
                 .hasStatus( Response.Status.OK )
                 .hasMediaTypeCompatibleWith( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
@@ -614,7 +615,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         when( quantitationTypeService.loadByIdAndVectorType( 12L, ee, RawExpressionDataVector.class ) ).thenReturn( qt );
 
         when( expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, false, 5, TimeUnit.SECONDS ) )
-                .thenReturn( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ) );
+                .thenReturn( new DummyLockedPath( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ) ) );
         Response res = target( "/datasets/1/data/raw" )
                 .queryParam( "quantitationType", "12" ).request().get();
         verify( quantitationTypeService ).loadByIdAndVectorType( 12L, ee, RawExpressionDataVector.class );
@@ -723,7 +724,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
                 .thenReturn( Optional.of( qt ) );
         when( expressionDataFileService.getDataFile( eq( ee ), eq( qt ), eq( ExpressionExperimentDataFileType.TABULAR ), anyLong(), any() ) )
-                .thenReturn( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ) );
+                .thenReturn( new DummyLockedPath( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ) ) );
         assertThat( target( "/datasets/1/data/singleCell" ).request()
                 .accept( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ).get() )
                 .hasStatus( Response.Status.OK )
@@ -738,7 +739,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
                 .thenReturn( Optional.of( qt ) );
         when( expressionDataFileService.getDataFile( eq( ee ), eq( qt ), eq( ExpressionExperimentDataFileType.TABULAR ), anyLong(), any() ) )
-                .thenReturn( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ) );
+                .thenReturn( new DummyLockedPath( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ) ) );
         assertThat( target( "/datasets/1/data/singleCell" ).queryParam( "download", "true" ).request()
                 .accept( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ).get() )
                 .hasStatus( Response.Status.OK )
@@ -753,7 +754,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
                 .thenReturn( Optional.of( qt ) );
         when( expressionDataFileService.getDataFile( eq( ee ), eq( qt ), eq( ExpressionExperimentDataFileType.MEX ), anyLong(), any() ) )
-                .thenReturn( Paths.get( requireNonNull( getClass().getResource( "/data.mex" ) ).toURI() ) );
+                .thenReturn( new DummyLockedPath( Paths.get( requireNonNull( getClass().getResource( "/data.mex" ) ).toURI() ) ) );
         assertThat( target( "/datasets/1/data/singleCell" ).request()
                 .accept( DatasetsWebService.APPLICATION_10X_MEX_TYPE ).get() )
                 .hasStatus( Response.Status.OK )
@@ -785,5 +786,54 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                                     "D/matrix.mtx.gz"
                             );
                 } );
+    }
+
+    private static class DummyLockedPath implements ExpressionDataFileService.LockedPath {
+
+        private final Path path;
+
+        private DummyLockedPath( Path path ) {
+            this.path = path;
+        }
+
+        @Override
+        public Path getPath() {
+            return path;
+        }
+
+        @Override
+        public boolean isShared() {
+            return false;
+        }
+
+        @Override
+        public void close() {
+
+        }
+
+        @Override
+        public Path closeAndGetPath() {
+            return path;
+        }
+
+        @Override
+        public ExpressionDataFileService.LockedPath toExclusive() {
+            return this;
+        }
+
+        @Override
+        public ExpressionDataFileService.LockedPath toExclusive( long timeout, TimeUnit timeUnit ) {
+            return this;
+        }
+
+        @Override
+        public ExpressionDataFileService.LockedPath toShared() {
+            return this;
+        }
+
+        @Override
+        public ExpressionDataFileService.LockedPath steal() {
+            return this;
+        }
     }
 }

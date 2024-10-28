@@ -132,8 +132,9 @@ public class SingleCellDataWriterCli extends ExpressionExperimentManipulatingCLI
             switch ( format ) {
                 case TABULAR:
                     if ( standardLocation ) {
-                        Path path = expressionDataFileService.writeOrLocateTabularSingleCellExpressionData( ee, qt, useStreaming, fetchSize, isForce() );
-                        addSuccessObject( ee, "Written vectors for " + qt + " to " + path + "." );
+                        try ( ExpressionDataFileService.LockedPath path = expressionDataFileService.writeOrLocateTabularSingleCellExpressionData( ee, qt, useStreaming, fetchSize, isForce() ) ) {
+                            addSuccessObject( ee, "Written vectors for " + qt + " to " + path.getPath() + "." );
+                        }
                     } else {
                         try ( Writer writer = new OutputStreamWriter( openOutputFile( isForce() ), StandardCharsets.UTF_8 ) ) {
                             int written = expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, useStreaming, fetchSize, writer );
@@ -143,8 +144,9 @@ public class SingleCellDataWriterCli extends ExpressionExperimentManipulatingCLI
                     break;
                 case MEX:
                     if ( standardLocation ) {
-                        Path path = expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, useStreaming, fetchSize, isForce() );
-                        addSuccessObject( ee, "Successfully written vectors for " + qt + " to " + path + "." );
+                        try ( ExpressionDataFileService.LockedPath path = expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, useStreaming, fetchSize, isForce() ) ) {
+                            addSuccessObject( ee, "Successfully written vectors for " + qt + " to " + path.getPath() + "." );
+                        }
                     } else if ( outputFile == null || outputFile.toString().endsWith( ".tar" ) || outputFile.toString().endsWith( ".tar.gz" ) ) {
                         log.warn( "Writing MEX to a stream requires a lot of memory and cannot be streamed, you can cancel this any anytime with Ctrl-C." );
                         try ( OutputStream stream = openOutputFile( isForce() ) ) {

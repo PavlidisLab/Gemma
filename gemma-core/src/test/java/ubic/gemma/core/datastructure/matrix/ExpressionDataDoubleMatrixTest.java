@@ -311,6 +311,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
         Path f1 = expressionDataFileService
                 .writeOrLocateProcessedDataFile( expressionExperimentService.load( newee.getId() ), true, true )
+                .map( ExpressionDataFileService.LockedPath::closeAndGetPath )
                 .orElse( null );
         assertNotNull( f1 );
         assertTrue( Files.exists( f1 ) );

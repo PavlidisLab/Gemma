@@ -152,7 +152,8 @@ public class ExpressionDataFileServiceTest extends AbstractJUnit4SpringContextTe
         PathUtils.touch( reportFile );
         assertThat( reportFile ).exists();
 
-        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT ) )
+        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT, false )
+                .map( ExpressionDataFileService.LockedPath::closeAndGetPath ) )
                 .hasValueSatisfying( p -> {
                     assertThat( p )
                             .exists()
@@ -161,11 +162,13 @@ public class ExpressionDataFileServiceTest extends AbstractJUnit4SpringContextTe
 
         // ensure that metadata of a split is stored in its original directory
         ee.setShortName( "test.1" );
-        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT ) )
+        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT, false )
+                .map( ExpressionDataFileService.LockedPath::closeAndGetPath ) )
                 .hasValue( reportFile );
 
         ee.setShortName( "test.1.2" );
-        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT ) )
+        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT, false )
+                .map( ExpressionDataFileService.LockedPath::closeAndGetPath ) )
                 .hasValue( appdataHome.resolve( "metadata/test.1/MultiQCReports/multiqc_report.html" ) );
     }
 
@@ -176,7 +179,8 @@ public class ExpressionDataFileServiceTest extends AbstractJUnit4SpringContextTe
         Path tmpReportFile = Files.createTempFile( null, "multiqc_report.html" );
         expressionDataFileService.copyMetadataFile( ee, tmpReportFile, ExpressionExperimentMetaFileType.MUTLQC_REPORT, false );
         Path reportFile = appdataHome.resolve( "metadata/test/MultiQCReports/multiqc_report.html" );
-        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT ) )
+        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT, false )
+                .map( ExpressionDataFileService.LockedPath::closeAndGetPath ) )
                 .hasValue( reportFile );
     }
 
@@ -191,7 +195,8 @@ public class ExpressionDataFileServiceTest extends AbstractJUnit4SpringContextTe
                 .isTrue();
         assertThat( expressionDataFileService.deleteMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT ) )
                 .isFalse();
-        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT ) )
+        assertThat( expressionDataFileService.getMetadataFile( ee, ExpressionExperimentMetaFileType.MUTLQC_REPORT, false )
+                .map( ExpressionDataFileService.LockedPath::closeAndGetPath ) )
                 .hasValue( reportFile );
     }
 }

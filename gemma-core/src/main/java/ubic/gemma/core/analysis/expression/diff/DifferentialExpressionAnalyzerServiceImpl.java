@@ -228,8 +228,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         // we do this here because now we have IDs for everything.
         if ( config.getMakeArchiveFile() ) {
-            try {
-                expressionDataFileService.writeDiffExArchiveFile( expressionExperiment, analysis, config );
+            try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeDiffExAnalysisArchiveFile( analysis, config ) ) {
+                log.info( "Create archive file at " + lockedPath.getPath() );
             } catch ( IOException e ) {
                 DifferentialExpressionAnalyzerServiceImpl.log
                         .error( "Unable to save the data to a file: " + e.getMessage() );

@@ -351,8 +351,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         } else {
             log.info( "Writing results to disk" );
             for ( DifferentialExpressionAnalysis r : results ) {
-                try {
-                    expressionDataFileService.writeDiffExArchiveFile( ee, r, config );
+                try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeDiffExAnalysisArchiveFile( r, config ) ) {
+                    log.info( "Wrote to " + lockedPath.getPath() );
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );
                 }

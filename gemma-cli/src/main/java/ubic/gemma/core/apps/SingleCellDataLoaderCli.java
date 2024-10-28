@@ -235,9 +235,9 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                     qt = singleCellDataLoaderService.load( ee, getPlatform(), config );
                 }
                 if ( qt.getIsSingleCellPreferred() ) {
-                    try {
-                        log.info( "Generating MEX data files for preferred QT: " + qt + "..." );
-                        expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, true, 500, true );
+                    log.info( "Generating MEX data files for preferred QT: " + qt + "..." );
+                    try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, true, 500, true ) ) {
+                        log.info( "Generated MEX data file for " + qt + " at " + lockedPath.getPath() + "." );
                     } catch ( IOException e ) {
                         throw new RuntimeException( "Failed to generate MEX data files for " + qt + ".", e );
                     }

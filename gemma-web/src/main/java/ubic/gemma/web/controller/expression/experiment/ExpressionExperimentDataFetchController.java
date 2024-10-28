@@ -129,7 +129,8 @@ public class ExpressionExperimentDataFetchController {
         List<MetaFile> metaFiles = new ArrayList<>( ExpressionExperimentMetaFileType.values().length );
         for ( ExpressionExperimentMetaFileType type : ExpressionExperimentMetaFileType.values() ) {
             // Some files are prefixed with the experiments accession
-            expressionDataFileService.getMetadataFile( ee, type )
+            expressionDataFileService.getMetadataFile( ee, type, false )
+                    .map( ExpressionDataFileService.LockedPath::closeAndGetPath )
                     .filter( Files::isReadable )
                     .map( f -> new MetaFile( type.getId(), type.getDisplayName() ) )
                     .ifPresent( metaFiles::add );
@@ -235,8 +236,8 @@ public class ExpressionExperimentDataFetchController {
             }
 
             Path f;
-            try {
-                f = expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, false );
+            try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, false ) ) {
+                f = lockedPath.getPath();
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
             }
@@ -330,10 +331,10 @@ public class ExpressionExperimentDataFetchController {
 
                 /* the design file */
                 if ( eedId != null ) {
-                    try {
-                        ExpressionExperiment finalEe = ee;
-                        f = expressionDataFileService.writeOrLocateDesignFile( ee, false )
-                                .orElseThrow( () -> new IllegalStateException( finalEe + " does not have an experimental design" ) );
+                    ExpressionExperiment finalEe = ee;
+                    try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeOrLocateDesignFile( ee, false )
+                            .orElseThrow( () -> new IllegalStateException( finalEe + " does not have an experimental design" ) ) ) {
+                        f = lockedPath.getPath();
                     } catch ( IOException e ) {
                         throw new RuntimeException( e );
                     }
@@ -342,17 +343,16 @@ public class ExpressionExperimentDataFetchController {
                 else {
                     if ( qType != null ) {
                         log.debug( "Using quantitation type to create matrix." );
-                        try {
-                            f = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qType, false );
+                        try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qType, false ) ) {
+                            f = lockedPath.getPath();
                         } catch ( IOException e ) {
                             throw new RuntimeException( e );
                         }
                     } else {
-
-                        try {
-                            ExpressionExperiment finalEe1 = ee;
-                            f = expressionDataFileService.writeOrLocateProcessedDataFile( ee, filtered, false )
-                                    .orElseThrow( () -> new IllegalStateException( finalEe1 + " does not have an experimental design" ) );
+                        ExpressionExperiment finalEe1 = ee;
+                        try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeOrLocateProcessedDataFile( ee, filtered, false )
+                                .orElseThrow( () -> new IllegalStateException( finalEe1 + " does not have an experimental design" ) ) ) {
+                            f = lockedPath.getPath();
                         } catch ( FilteringException e ) {
                             throw new IllegalStateException( "The expression experiment data matrix could not be filtered for " + ee + ".", e );
                         } catch ( IOException e ) {
@@ -366,16 +366,16 @@ public class ExpressionExperimentDataFetchController {
             /* json format */
             else {
                 if ( qType != null ) {
-                    try {
-                        f = expressionDataFileService.writeOrLocateJSONRawExpressionDataFile( ee, qType, false );
+                    try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeOrLocateJSONRawExpressionDataFile( ee, qType, false ) ) {
+                        f = lockedPath.getPath();
                     } catch ( IOException e ) {
                         throw new RuntimeException( e );
                     }
                 } else {
-                    try {
-                        ExpressionExperiment finalEe2 = ee;
-                        f = expressionDataFileService.writeOrLocateJSONProcessedExpressionDataFile( ee, false, filtered )
-                                .orElseThrow( () -> new IllegalStateException( finalEe2 + " does not have processed vectors." ) );
+                    ExpressionExperiment finalEe2 = ee;
+                    try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeOrLocateJSONProcessedExpressionDataFile( ee, false, filtered )
+                            .orElseThrow( () -> new IllegalStateException( finalEe2 + " does not have processed vectors." ) ) ) {
+                        f = lockedPath.getPath();
                     } catch ( FilteringException e ) {
                         throw new IllegalStateException( "The expression experiment data matrix could not be filtered for " + ee + ".", e );
                     } catch ( IOException e ) {
@@ -418,9 +418,8 @@ public class ExpressionExperimentDataFetchController {
             if ( this.taskCommand.getAnalysisId() != null ) {
 
                 Path f;
-                try {
-                    f = expressionDataFileService.getDiffExpressionAnalysisArchiveFile( taskCommand.getAnalysisId(),
-                            taskCommand.isForceRewrite() );
+                try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeOrLocateDiffExArchiveFile( taskCommand.getAnalysisId(), taskCommand.isForceRewrite() ) ) {
+                    f = lockedPath.getPath();
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );
                 }

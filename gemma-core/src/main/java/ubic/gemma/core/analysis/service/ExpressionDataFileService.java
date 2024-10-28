@@ -19,11 +19,11 @@ import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 
 import javax.annotation.Nullable;
+import javax.annotation.WillClose;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
@@ -58,6 +58,48 @@ public interface ExpressionDataFileService {
          */
         @Override
         void close();
+
+        /**
+         * Release the lock and obtain the underlying {@link Path} object.
+         */
+        @WillClose
+        Path closeAndGetPath();
+
+        /**
+         * Convert this lock to an exclusive lock.
+         * <p>
+         * This lock will be closed as a result.
+         * @throws IllegalStateException if this lock is already exclusive
+         */
+        @WillClose
+        LockedPath toExclusive();
+
+        /**
+         * Try to convert this lock to an exclusive lock.
+         * <p>
+         * This lock will be closed as a result.
+         * @throws IllegalStateException if this lock is already exclusive
+         */
+        @WillClose
+        LockedPath toExclusive( long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException;
+
+        /**
+         * Convert this lock to a shared lock.
+         * <p>
+         * This lock will be closed as a result.
+         * @throws IllegalStateException if this lock is already shared
+         */
+        @WillClose
+        LockedPath toShared();
+
+        /**
+         * Steal this lock.
+         * <p>
+         * Once stolen, this lock will no-longer be released when closed.
+         * @throws IllegalStateException if this lock is already stolen
+         */
+        @WillClose
+        LockedPath steal();
     }
 
     /**
@@ -69,17 +111,6 @@ public interface ExpressionDataFileService {
     void deleteAllFiles( ExpressionExperiment ee );
 
     /**
-     * Locate or create the differential expression data file(s) for a given experiment. We generate an archive that
-     * contains following files: - differential expression analysis file (q-values per factor) - file for each result
-     * set with contrasts info (such as fold change for each factor value)
-     *
-     * @param analysisId  analysis ID
-     * @param forceCreate whether to force creation
-     * @return file
-     */
-    Path getDiffExpressionAnalysisArchiveFile( Long analysisId, boolean forceCreate ) throws IOException;
-
-    /**
      * Locate a metadata file.
      * If the metadata file is represented by a directory (i.e. {@link ExpressionExperimentMetaFileType#isDirectory()}
      * is true), then the latest file in the directory is returned. If no such file exists. {@link Optional#empty()} is
@@ -89,9 +120,7 @@ public interface ExpressionDataFileService {
      * this method will block until it is completed.
      * @return the metadata file or empty if none is present in the case of a directory-structured metadata
      */
-    Optional<Path> getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type ) throws IOException;
-
-    Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type, boolean shared ) throws IOException;
+    Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type, boolean exclusive ) throws IOException;
 
     /**
      * Copy a metadata file to the location of a given metadata type.
@@ -101,7 +130,7 @@ public interface ExpressionDataFileService {
      * If the metadata file is in use, this method will block until it is released.
      * @param existingFile file to copy, must exist
      * @param forceWrite   override any existing metadata file
-     * @return the resulting metadata file, which can also be retrieved with {@link #getMetadataFile(ExpressionExperiment, ExpressionExperimentMetaFileType)}
+     * @return the resulting metadata file, which can also be retrieved with {@link #getMetadataFile(ExpressionExperiment, ExpressionExperimentMetaFileType, boolean)}
      */
     Path copyMetadataFile( ExpressionExperiment ee, Path existingFile, ExpressionExperimentMetaFileType type, boolean forceWrite ) throws IOException;
 
@@ -124,23 +153,7 @@ public interface ExpressionDataFileService {
      */
     LockedPath getDataFile( String filename );
 
-    /**
-     * Locate a raw data file.
-     * <p>
-     * If the data file is being written, this method will block until it is completed.
-     * @see #writeOrLocateRawExpressionDataFile(ExpressionExperiment, QuantitationType, boolean)
-     */
-    Path getDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type );
-
-    Path getDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException;
-
-    /**
-     * Locate a processed data file.
-     * <p>
-     * If the data file is being written, this method will block until it is completed.
-     * @see #writeOrLocateRawExpressionDataFile(ExpressionExperiment, QuantitationType, boolean)
-     */
-    Optional<Path> getDataFile( ExpressionExperiment ee, boolean filtered, ExpressionExperimentDataFileType type );
+    LockedPath getDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException;
 
     /**
      * Delete a raw data file if it exists.
@@ -159,14 +172,6 @@ public interface ExpressionDataFileService {
     boolean deleteDataFile( ExpressionExperiment ee, boolean filtered, ExpressionExperimentDataFileType type ) throws IOException;
 
     /**
-     * Locate an experimental design file.
-     * <p>
-     * If the data file is being written, this method will block until it is completed.
-     * @see #writeOrLocateDesignFile(ExpressionExperiment, boolean)
-     */
-    Optional<Path> getExperimentalDesignFile( ExpressionExperiment ee );
-
-    /**
      * Write single-cell expression data to a given writer for a given quantitation type in tabular format.
      *
      * @param ee           the experiment to use
@@ -182,7 +187,7 @@ public interface ExpressionDataFileService {
      * @see #writeTabularSingleCellExpressionData(ExpressionExperiment, QuantitationType, boolean, int, Writer)
      * @see ubic.gemma.core.datastructure.matrix.io.TabularMatrixWriter
      */
-    Path writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) throws IOException;
+    LockedPath writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) throws IOException;
 
     /**
      * Write single-cell expression data to a given output stream for a given quantitation type.
@@ -216,7 +221,7 @@ public interface ExpressionDataFileService {
      * @see #writeMexSingleCellExpressionData(ExpressionExperiment, QuantitationType, boolean, boolean, int, boolean, Path)
      * @see ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter
      */
-    Path writeOrLocateMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) throws IOException;
+    LockedPath writeOrLocateMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) throws IOException;
 
     /**
      * Write raw expression data to a given writer for a given quantitation type.
@@ -258,7 +263,7 @@ public interface ExpressionDataFileService {
      * @param forceWrite whether to force write
      * @return file
      */
-    Path writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException;
+    LockedPath writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException;
 
     /**
      * Locate or create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
@@ -271,9 +276,9 @@ public interface ExpressionDataFileService {
      * @param forceWrite force re-write even if file already exists and is up to date.
      * @return file, or empty if the experiment has no processed vectors
      */
-    Optional<Path> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean filtered, boolean forceWrite ) throws FilteringException, IOException;
+    Optional<LockedPath> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean filtered, boolean forceWrite ) throws FilteringException, IOException;
 
-    Optional<Path> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean filtered, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException, FilteringException;
+    Optional<LockedPath> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean filtered, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException, FilteringException;
 
     /**
      * Locate or create a new data file for the given quantitation type. The output will include gene information if it
@@ -283,9 +288,9 @@ public interface ExpressionDataFileService {
      * @param type       the quantitation type
      * @return file
      */
-    Path writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException;
+    LockedPath writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException;
 
-    Path writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType qt, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException;
+    LockedPath writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType qt, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException;
 
     /**
      * Locate or create an experimental design file for a given experiment.
@@ -297,9 +302,19 @@ public interface ExpressionDataFileService {
      * @return a file or empty if the experiment does not have a design
      * @see #writeDesignMatrix(ExpressionExperiment, Writer)
      */
-    Optional<Path> writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException;
+    Optional<LockedPath> writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException;
 
-    Optional<Path> writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException;
+    Optional<LockedPath> writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException;
+
+    /**
+     * @see #writeOrLocateProcessedDataFile(ExpressionExperiment, boolean, boolean)
+     */
+    Optional<LockedPath> writeOrLocateJSONProcessedExpressionDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException, IOException;
+
+    /**
+     * @see #writeOrLocateRawExpressionDataFile(ExpressionExperiment, QuantitationType, boolean)
+     */
+    LockedPath writeOrLocateJSONRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException;
 
     /**
      * Locate or create the differential expression data file(s) for a given experiment.
@@ -308,32 +323,24 @@ public interface ExpressionDataFileService {
      * @param forceWrite whether to force write
      * @return collection of files, one per analysis.
      */
-    Collection<Path> writeOrLocateDiffExpressionDataFiles( ExpressionExperiment ee, boolean forceWrite ) throws IOException;
+    Collection<LockedPath> writeOrLocateDiffExpressionDataFiles( ExpressionExperiment ee, boolean forceWrite ) throws IOException;
 
     /**
-     * @see #writeOrLocateProcessedDataFile(ExpressionExperiment, boolean, boolean)
-     */
-    Optional<Path> writeOrLocateJSONProcessedExpressionDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException, IOException;
-
-    /**
-     * @see #writeOrLocateRawExpressionDataFile(ExpressionExperiment, QuantitationType, boolean)
-     */
-    Path writeOrLocateJSONRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException;
-
-    void deleteDiffExArchiveFile( DifferentialExpressionAnalysis analysis );
-
-    /**
-     * Writes to the configured gemma.appdata.home
-     * The file created is a zip archive containing at least two files. The first is the summary model fit statistics,
-     * ANOVA-style. The others are the contrast details for each factor.
-     * They should be R-friendly (e.g., readable with
-     * <code>read.delim("analysis.results.txt", header=T, comment.char="#", row.names=1)</code>
+     * Locate or create the differential expression data file(s) for a given experiment. We generate an archive that
+     * contains following files: - differential expression analysis file (q-values per factor) - file for each result
+     * set with contrasts info (such as fold change for each factor value)
      *
-     * @param ee       the experiment
-     * @param analysis analysis
-     * @param config   config
-     * @throws IOException when there was a problem during write
+     * @param analysisId  analysis ID
+     * @param forceCreate whether to force creation
+     * @return file
      */
-    void writeDiffExArchiveFile( BioAssaySet ee, DifferentialExpressionAnalysis analysis,
-            @Nullable DifferentialExpressionAnalysisConfig config ) throws IOException;
+    LockedPath writeOrLocateDiffExArchiveFile( Long analysisId, boolean forceCreate ) throws IOException;
+
+    LockedPath writeDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, @Nullable DifferentialExpressionAnalysisConfig config ) throws IOException;
+
+    /**
+     * Delete a diff. ex. analysis archive file for a given analysis.
+     * @return true if any file was deleted
+     */
+    boolean deleteDiffExArchiveFile( DifferentialExpressionAnalysis analysis );
 }

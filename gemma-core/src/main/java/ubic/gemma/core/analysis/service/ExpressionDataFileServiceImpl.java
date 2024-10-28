@@ -146,7 +146,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 } catch ( IllegalArgumentException e ) {
                     // ignore, this is just an illegal combination of QT and file type
                 } catch ( IOException e ) {
-                    log.error( "Failed to delete: " + getDataFile( ee, qt, type ), e );
+                    log.error( "Failed to delete data file for " + qt + ".", e );
                 }
             }
         }
@@ -164,49 +164,32 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         this.deleteAndLog( dataDir.resolve( getDesignFileName( ee ) ) );
     }
 
-    private void deleteAndLog( Path f1 ) {
-        try ( LockedPath ignored = acquirePathLock( f1, true ) ) {
-            if ( Files.deleteIfExists( f1 ) ) {
-                ExpressionDataFileServiceImpl.log.info( "Deleted: " + f1 );
+    private boolean deleteAndLog( Path path ) {
+        try ( LockedPath lockedPath = acquirePathLock( path, true ) ) {
+            if ( Files.deleteIfExists( lockedPath.getPath() ) ) {
+                ExpressionDataFileServiceImpl.log.info( "Deleted: " + lockedPath.getPath() );
+                return true;
             }
         } catch ( IOException e ) {
-            ExpressionDataFileServiceImpl.log.error( "Failed to delete: " + f1, e );
+            ExpressionDataFileServiceImpl.log.error( "Failed to delete: " + path, e );
         }
+        return false;
     }
 
     @Override
-    public void deleteDiffExArchiveFile( DifferentialExpressionAnalysis analysis ) {
-        this.deleteAndLog( dataDir.resolve( getDiffExArchiveFileName( analysis ) ) );
-    }
-
-    @Override
-    public Path getDiffExpressionAnalysisArchiveFile( Long analysisId, boolean forceCreate ) throws IOException {
-        DifferentialExpressionAnalysis analysis = helperService.getAnalysisById( analysisId );
-        return getDiffExpressionAnalysisArchiveFile( analysis, forceCreate );
-    }
-
-    @Override
-    public Optional<Path> getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type ) throws IOException {
-        return getMetadataFile( ee, type, false )
-                .map( lp -> {
-                    try {
-                        return lp.getPath();
-                    } finally {
-                        lp.close();
-                    }
-                } );
+    public boolean deleteDiffExArchiveFile( DifferentialExpressionAnalysis analysis ) {
+        return this.deleteAndLog( dataDir.resolve( getDiffExArchiveFileName( analysis ) ) );
     }
 
     @Override
     public Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type, boolean exclusive ) throws IOException {
-        Path file = metadataDir.resolve( this.getEEFolderName( ee ) ).resolve( type.getFileName( ee ) );
-        try ( LockedPathImpl lock = acquirePathLock( file, false ) ) {
+        try ( LockedPathImpl lock = acquirePathLock( metadataDir.resolve( this.getEEFolderName( ee ) ).resolve( type.getFileName( ee ) ), exclusive ) ) {
             if ( type.isDirectory() ) {
-                if ( !Files.exists( file ) ) {
+                if ( !Files.exists( lock.getPath() ) ) {
                     return Optional.empty();
                 }
                 // If this is a directory, check if we can read the most recent file.
-                try ( Stream<Path> files = Files.list( file ) ) {
+                try ( Stream<Path> files = Files.list( lock.getPath() ) ) {
                     return files
                             // ignore sub-directories
                             .filter( f -> !Files.isDirectory( f ) )
@@ -281,12 +264,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public Path getDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type ) {
-        return getOutputFile( getDataOutputFilename( ee, qt, getDataSuffix( qt, type ) ) );
-    }
-
-    @Override
-    public Path getDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException {
+    public LockedPath getDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException {
         return getOutputFile( getDataOutputFilename( ee, qt, getDataSuffix( qt, type ) ), timeout, timeUnit );
     }
 
@@ -312,15 +290,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         }
     }
 
-    @Override
-    public Optional<Path> getDataFile( ExpressionExperiment ee, boolean filtered, ExpressionExperimentDataFileType type ) {
-        if ( expressionExperimentService.hasProcessedExpressionData( ee ) ) {
-            return Optional.of( getDataFileInternal( ee, filtered, type ) );
-        } else {
-            return Optional.empty();
-        }
-    }
-
     private Path getDataFileInternal( ExpressionExperiment ee, boolean filtered, ExpressionExperimentDataFileType type ) {
         String suffix;
         switch ( type ) {
@@ -333,16 +302,15 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             default:
                 throw new IllegalArgumentException( "Unsupported data file type: " + type );
         }
-        return getOutputFile( getDataOutputFilename( ee, filtered, suffix ) );
+        return dataDir.resolve( getDataOutputFilename( ee, filtered, suffix ) );
     }
 
     @Override
     public boolean deleteDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type ) throws IOException {
-        Path file = getDataFile( ee, qt, type );
-        try ( LockedPath ignored = acquirePathLock( file, true ) ) {
-            if ( Files.exists( file ) ) {
-                PathUtils.delete( file );
-                log.info( "Deleted raw data file: " + file );
+        try ( LockedPath ignored = acquirePathLock( dataDir.resolve( getDataOutputFilename( ee, qt, getDataSuffix( qt, type ) ) ), true ) ) {
+            if ( Files.exists( ignored.getPath() ) ) {
+                PathUtils.delete( ignored.getPath() );
+                log.info( "Deleted raw data file: " + ignored.getPath() );
                 return true;
             } else {
                 return false;
@@ -353,24 +321,15 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Override
     public boolean deleteDataFile( ExpressionExperiment ee, boolean filtered, ExpressionExperimentDataFileType type ) throws IOException {
         // we still want to delete the file even if there are no processed vectors
-        Path file = getDataFileInternal( ee, filtered, type );
-        try ( LockedPath ignored = acquirePathLock( file, true ) ) {
-            if ( Files.exists( file ) ) {
-                PathUtils.delete( file );
-                log.info( "Deleted processed data file: " + file + "." );
+        try ( LockedPath ignored = acquirePathLock( getDataFileInternal( ee, filtered, type ), true ) ) {
+            if ( Files.exists( ignored.getPath() ) ) {
+                PathUtils.delete( ignored.getPath() );
+                log.info( "Deleted processed data file: " + ignored.getPath() + "." );
                 return true;
             } else {
                 return false;
             }
         }
-    }
-
-    @Override
-    public Optional<Path> getExperimentalDesignFile( ExpressionExperiment ee ) {
-        if ( ee.getExperimentalDesign() == null ) {
-            return Optional.empty();
-        }
-        return Optional.of( getOutputFile( getDesignFileName( ee ) ) );
     }
 
     @Override
@@ -388,19 +347,20 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public Path writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) throws IOException {
-        Path dest = getOutputFile( getDataOutputFilename( ee, qt, TABULAR_SC_DATA_SUFFIX ) );
-        if ( !forceWrite && Files.exists( dest ) ) {
-            return dest;
-        }
-        try ( LockedPath ignored = acquirePathLock( dest, true ); Writer writer = openCompressedFile( dest ) ) {
-            log.info( "Will write tabular data for " + qt + " to " + dest + "." );
+    public LockedPath writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) throws IOException {
+        try ( LockedPath dest = getOutputFile( getDataOutputFilename( ee, qt, TABULAR_SC_DATA_SUFFIX ) ) ) {
+            if ( !forceWrite && Files.exists( dest.getPath() ) ) {
+                return dest.steal();
+            }
+            try ( LockedPath lockedPath = dest.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
+                log.info( "Will write tabular data for " + qt + " to " + lockedPath.getPath() + "." );
             int written = writeTabularSingleCellExpressionData( ee, qt, useStreaming, fetchSize, writer );
-            log.info( "Wrote " + written + " vectors to " + dest + "." );
-            return dest;
+                log.info( "Wrote " + written + " vectors to " + lockedPath.getPath() + "." );
+                return lockedPath.toShared();
         } catch ( Exception e ) {
-            Files.deleteIfExists( dest );
+                Files.deleteIfExists( dest.getPath() );
             throw e;
+        }
         }
     }
 
@@ -447,29 +407,16 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public Path writeOrLocateMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) throws IOException {
-        Path dest = getOutputFile( getDataOutputFilename( ee, qt, MEX_SC_DATA_SUFFIX ) );
-        if ( !forceWrite && Files.exists( dest ) ) {
-            return dest;
-        }
-        int written = writeMexSingleCellExpressionData( ee, qt, false, useStreaming, fetchSize, forceWrite, dest );
-        log.info( "Wrote " + written + " vectors for " + qt + " to " + dest + "." );
-        return dest;
-    }
-
-    @Override
-    public void writeDiffExArchiveFile( BioAssaySet experimentAnalyzed, DifferentialExpressionAnalysis analysis,
-            @Nullable DifferentialExpressionAnalysisConfig config ) throws IOException {
-        Path f = this.getOutputFile( getDiffExArchiveFileName( analysis ) );
-        try ( LockedPath ignored = acquirePathLock( f, true ); OutputStream stream = openFile( f ) ) {
-            Map<CompositeSequence, String[]> geneAnnotations = new HashMap<>();
-            AtomicBoolean hasSignificantBatchConfound = new AtomicBoolean();
-            analysis = helperService.getAnalysis( experimentAnalyzed, analysis, geneAnnotations, hasSignificantBatchConfound );
-            log.info( "Creating differential expression analysis archive file: " + f );
-            new DiffExAnalysisResultSetWriter( buildInfo ).write( analysis, geneAnnotations, config, hasSignificantBatchConfound.get(), stream );
-        } catch ( Exception e ) {
-            Files.deleteIfExists( f );
-            throw e;
+    public LockedPath writeOrLocateMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) throws IOException {
+        try ( LockedPath dest = getOutputFile( getDataOutputFilename( ee, qt, MEX_SC_DATA_SUFFIX ) ) ) {
+            if ( !forceWrite && Files.exists( dest.getPath() ) ) {
+                return dest.steal();
+            }
+            try ( LockedPath lockedPath = dest.toExclusive() ) {
+                int written = writeMexSingleCellExpressionData( ee, qt, false, useStreaming, fetchSize, forceWrite, lockedPath.getPath() );
+                log.info( "Wrote " + written + " vectors for " + qt + " to " + lockedPath.getPath() + "." );
+                return lockedPath.toShared();
+            }
         }
     }
 
@@ -497,27 +444,28 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public Path writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException {
-        Path f = this.getOutputFile( getCoexpressionDataFilename( ee ) );
-        if ( !forceWrite && Files.exists( f ) ) {
-            ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
-            return f;
-        }
+    public LockedPath writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException {
+        try ( LockedPath f = this.getOutputFile( getCoexpressionDataFilename( ee ) ) ) {
+            if ( !forceWrite && Files.exists( f.getPath() ) ) {
+                ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
+                return f.steal();
+            }
 
-        // Write coexpression data to file (zipped of course)
-        try ( LockedPath ignored = acquirePathLock( f, true ); Writer writer = openCompressedFile( f ) ) {
-            Collection<CoexpressionValueObject> geneLinks = helperService.getGeneLinks( ee );
-            ExpressionDataFileServiceImpl.log.info( "Creating new coexpression data file: " + f );
-            new CoexpressionWriter( buildInfo ).write( ee, geneLinks, writer );
-            return f;
-        } catch ( Exception e ) {
-            Files.deleteIfExists( f );
-            throw e;
+            // Write coexpression data to file (zipped of course)
+            try ( LockedPath lockedPath = f.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
+                Collection<CoexpressionValueObject> geneLinks = helperService.getGeneLinks( ee );
+                ExpressionDataFileServiceImpl.log.info( "Creating new coexpression data file: " + lockedPath.getPath() );
+                new CoexpressionWriter( buildInfo ).write( ee, geneLinks, writer );
+                return lockedPath.toShared();
+            } catch ( Exception e ) {
+                Files.deleteIfExists( f.getPath() );
+                throw e;
+            }
         }
     }
 
     @Override
-    public Optional<Path> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean filtered, boolean forceWrite ) throws IOException, FilteringException {
+    public Optional<LockedPath> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean filtered, boolean forceWrite ) throws IOException, FilteringException {
         // randomize file name if temporary in case of access by more than one user at once
         String result;
         if ( filtered ) {
@@ -525,30 +473,31 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         } else {
             result = getDataOutputFilename( ee, false, TABULAR_BULK_DATA_FILE_SUFFIX );
         }
-        Path f = this.getOutputFile( result );
-        Date check = expressionExperimentService.getLastArrayDesignUpdate( ee );
+        try ( LockedPath f = this.getOutputFile( result ) ) {
+            Date check = expressionExperimentService.getLastArrayDesignUpdate( ee );
 
-        if ( this.checkFileOkToReturn( forceWrite, f, check ) ) {
-            return Optional.of( f );
-        }
+            if ( this.checkFileOkToReturn( forceWrite, f.getPath(), check ) ) {
+                return Optional.of( f.steal() );
+            }
 
-        if ( !expressionExperimentService.hasProcessedExpressionData( ee ) ) {
-            return Optional.empty();
-        }
+            if ( !expressionExperimentService.hasProcessedExpressionData( ee ) ) {
+                return Optional.empty();
+            }
 
-        try ( LockedPath ignored = acquirePathLock( f, true ); Writer writer = openCompressedFile( f ) ) {
-            ExpressionDataFileServiceImpl.log.info( "Creating new expression data file: " + f );
-            int written = writeProcessedExpressionData( ee, filtered, writer );
-            log.info( "Wrote " + written + " vectors to " + f + "." );
-            return Optional.of( f );
-        } catch ( Exception e ) {
-            Files.deleteIfExists( f );
-            throw e;
+            try ( LockedPath lockedPath = f.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
+                ExpressionDataFileServiceImpl.log.info( "Creating new expression data file: " + f );
+                int written = writeProcessedExpressionData( ee, filtered, writer );
+                log.info( "Wrote " + written + " vectors to " + lockedPath.getPath() + "." );
+                return Optional.of( lockedPath.toShared() );
+            } catch ( Exception e ) {
+                Files.deleteIfExists( f.getPath() );
+                throw e;
+            }
         }
     }
 
     @Override
-    public Optional<Path> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean filtered, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException, FilteringException {
+    public Optional<LockedPath> writeOrLocateProcessedDataFile( ExpressionExperiment ee, boolean filtered, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException, FilteringException {
         // randomize file name if temporary in case of access by more than one user at once
         String result;
         if ( filtered ) {
@@ -556,158 +505,217 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         } else {
             result = getDataOutputFilename( ee, false, TABULAR_BULK_DATA_FILE_SUFFIX );
         }
-        Path f = this.getOutputFile( result, timeout, timeUnit );
-        Date check = expressionExperimentService.getLastArrayDesignUpdate( ee );
+        try ( LockedPath f = this.getOutputFile( result, timeout, timeUnit ) ) {
+            Date check = expressionExperimentService.getLastArrayDesignUpdate( ee );
 
-        if ( this.checkFileOkToReturn( forceWrite, f, check ) ) {
-            return Optional.of( f );
-        }
+            if ( this.checkFileOkToReturn( forceWrite, f.getPath(), check ) ) {
+                return Optional.of( f.steal() );
+            }
 
-        if ( !expressionExperimentService.hasProcessedExpressionData( ee ) ) {
-            return Optional.empty();
-        }
+            if ( !expressionExperimentService.hasProcessedExpressionData( ee ) ) {
+                return Optional.empty();
+            }
 
-        try ( LockedPath ignored = acquirePathLock( f, true ); Writer writer = openCompressedFile( f ) ) {
-            ExpressionDataFileServiceImpl.log.info( "Creating new tabular expression data file: " + f );
-            int written = writeProcessedExpressionData( ee, filtered, writer );
-            log.info( "Wrote " + written + " vectors to " + f + "." );
-            return Optional.of( f );
-        } catch ( Exception e ) {
-            Files.deleteIfExists( f );
-            throw e;
+            try ( LockedPath ignored = f.toExclusive(); Writer writer = openCompressedFile( ignored.getPath() ) ) {
+                ExpressionDataFileServiceImpl.log.info( "Creating new tabular expression data file: " + f );
+                int written = writeProcessedExpressionData( ee, filtered, writer );
+                log.info( "Wrote " + written + " vectors to " + f + "." );
+                return Optional.of( ignored.toShared() );
+            } catch ( Exception e ) {
+                Files.deleteIfExists( f.getPath() );
+                throw e;
+            }
         }
     }
 
     @Override
-    public Path writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException {
-        Path f = this.getOutputFile( getDataOutputFilename( ee, type, TABULAR_BULK_DATA_FILE_SUFFIX ) );
-        if ( !forceWrite && Files.exists( f ) ) {
-            ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
-            return f;
-        }
-        try ( LockedPath ignored = acquirePathLock( f, true ); Writer writer = openCompressedFile( f ) ) {
-            ExpressionDataFileServiceImpl.log.info( "Creating new expression data file: " + f );
-            int written = writeRawExpressionData( ee, type, writer );
-            log.info( "Wrote " + written + " vectors for " + type + "." );
-        } catch ( Exception e ) {
-            Files.deleteIfExists( f );
-            throw e;
-        }
-        return f;
-    }
-
-    @Override
-    public Path writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException {
-        Path f = this.getOutputFile( getDataOutputFilename( ee, type, TABULAR_BULK_DATA_FILE_SUFFIX ), timeout, timeUnit );
-        if ( !forceWrite && Files.exists( f ) ) {
-            ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
-            return f;
-        }
-        try ( LockedPath ignored = tryAcquirePathLock( f, true, timeout, timeUnit ); Writer writer = openCompressedFile( f ) ) {
-            ExpressionDataFileServiceImpl.log.info( "Creating new expression data file: " + f );
-            int written = writeRawExpressionData( ee, type, writer );
-            log.info( "Wrote " + written + " vectors for " + type + "." );
-            return f;
-        } catch ( Exception e ) {
-            Files.deleteIfExists( f );
-            throw e;
+    public LockedPath writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException {
+        try ( LockedPath f = this.getOutputFile( getDataOutputFilename( ee, type, TABULAR_BULK_DATA_FILE_SUFFIX ) ) ) {
+            if ( !forceWrite && Files.exists( f.getPath() ) ) {
+                ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
+                return f.steal();
+            }
+            try ( LockedPath lockedPath = f.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
+                ExpressionDataFileServiceImpl.log.info( "Creating new expression data file: " + lockedPath.getPath() );
+                int written = writeRawExpressionData( ee, type, writer );
+                log.info( "Wrote " + written + " vectors for " + type + "." );
+                return lockedPath.toShared();
+            } catch ( Exception e ) {
+                Files.deleteIfExists( f.getPath() );
+                throw e;
+            }
         }
     }
 
     @Override
-    public Optional<Path> writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException {
+    public LockedPath writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException {
+        try ( LockedPath f = this.getOutputFile( getDataOutputFilename( ee, type, TABULAR_BULK_DATA_FILE_SUFFIX ), timeout, timeUnit ) ) {
+            if ( !forceWrite && Files.exists( f.getPath() ) ) {
+                ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
+                return f.steal();
+            }
+            // FIXME: subtract elapsed time
+            try ( LockedPath lockedPath = f.toExclusive( timeout, timeUnit );
+                    Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
+                ExpressionDataFileServiceImpl.log.info( "Creating new expression data file: " + lockedPath.getPath() );
+                int written = writeRawExpressionData( ee, type, writer );
+                log.info( "Wrote " + written + " vectors for " + type + "." );
+                return lockedPath.toShared();
+            } catch ( Exception e ) {
+                Files.deleteIfExists( f.getPath() );
+                throw e;
+            }
+        }
+    }
+
+    @Override
+    public Optional<LockedPath> writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException {
         ee = expressionExperimentService.thawLite( ee );
         if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             return Optional.empty();
         }
-        Path f = this.getOutputFile( getDesignFileName( ee ) );
-        Date check = ee.getCurationDetails().getLastUpdated();
-        if ( check != null && this.checkFileOkToReturn( forceWrite, f, check ) ) {
-            return Optional.of( f );
-        }
-        try ( LockedPath ignored = acquirePathLock( f, true ); Writer writer = openCompressedFile( f ) ) {
-            writeDesignMatrix( ee, writer );
-            return Optional.of( f );
-        } catch ( Exception e ) {
-            Files.deleteIfExists( f );
-            throw e;
+        try ( LockedPath f = this.getOutputFile( getDesignFileName( ee ) ) ) {
+            Date check = ee.getCurationDetails().getLastUpdated();
+            if ( check != null && this.checkFileOkToReturn( forceWrite, f.getPath(), check ) ) {
+                return Optional.of( f.steal() );
+            }
+            try ( LockedPath lockedPath = f.toExclusive();
+                    Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
+                writeDesignMatrix( ee, writer );
+                return Optional.of( lockedPath.toShared() );
+            } catch ( Exception e ) {
+                Files.deleteIfExists( f.getPath() );
+                throw e;
+            }
         }
     }
 
     @Override
-    public Optional<Path> writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException {
+    public Optional<LockedPath> writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException {
         ee = expressionExperimentService.thawLite( ee );
         if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             return Optional.empty();
         }
-        Path f = this.getOutputFile( getDesignFileName( ee ), timeout, timeUnit );
-        Date check = ee.getCurationDetails().getLastUpdated();
-        if ( check != null && this.checkFileOkToReturn( forceWrite, f, check ) ) {
-            return Optional.of( f );
-        }
-
-        try ( LockedPath ignored = tryAcquirePathLock( f, true, timeout, timeUnit ); Writer writer = openCompressedFile( f ) ) {
-            writeDesignMatrix( ee, writer );
-            return Optional.of( f );
-        } catch ( Exception e ) {
-            Files.deleteIfExists( f );
-            throw e;
+        try ( LockedPath f = this.getOutputFile( getDesignFileName( ee ), timeout, timeUnit ) ) {
+            Date check = ee.getCurationDetails().getLastUpdated();
+            if ( check != null && this.checkFileOkToReturn( forceWrite, f.getPath(), check ) ) {
+                return Optional.of( f.steal() );
+            }
+            try ( LockedPath lockedPath = f.toExclusive( timeout, timeUnit );
+                    Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
+                writeDesignMatrix( ee, writer );
+                return Optional.of( lockedPath.toShared() );
+            } catch ( Exception e ) {
+                Files.deleteIfExists( f.getPath() );
+                throw e;
+            }
         }
     }
 
     @Override
-    public Collection<Path> writeOrLocateDiffExpressionDataFiles( ExpressionExperiment ee, boolean forceWrite ) throws IOException {
+    public Collection<LockedPath> writeOrLocateDiffExpressionDataFiles( ExpressionExperiment ee, boolean forceWrite ) throws IOException {
         Collection<DifferentialExpressionAnalysis> analyses = helperService.getAnalyses( ee );
-        Collection<Path> result = new HashSet<>();
+        Collection<LockedPath> result = new HashSet<>();
         for ( DifferentialExpressionAnalysis analysis : analyses ) {
-            result.add( this.getDiffExpressionAnalysisArchiveFile( analysis, forceWrite ) );
+            result.add( this.writeOrLocateDiffExAnalysisArchiveFile( analysis, forceWrite ) );
         }
         return result;
     }
 
     @Override
-    public Optional<Path> writeOrLocateJSONProcessedExpressionDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException, IOException {
-        // randomize file name if temporary in case of access by more than one user at once
-        Path f = this.getOutputFile( getDataOutputFilename( ee, filtered, JSON_BULK_DATA_FILE_SUFFIX ) );
-        if ( !forceWrite && Files.exists( f ) ) {
-            ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
-            return Optional.of( f );
-        }
+    public LockedPath writeOrLocateDiffExArchiveFile( Long analysisId, boolean forceCreate ) throws IOException {
+        DifferentialExpressionAnalysis analysis = helperService.getAnalysisById( analysisId );
+        return writeOrLocateDiffExAnalysisArchiveFile( analysis, forceCreate );
+    }
 
-        if ( !expressionExperimentService.hasProcessedExpressionData( ee ) ) {
-            return Optional.empty();
-        }
+    private LockedPath writeOrLocateDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, boolean forceCreate ) throws IOException {
+        String filename = getDiffExArchiveFileName( analysis );
+        try ( LockedPath f = this.getOutputFile( filename ) ) {
+            // Force create if file is older than one year
+            if ( !forceCreate && Files.exists( f.getPath() ) ) {
+                Date d = new Date( f.getPath().toFile().lastModified() );
+                Calendar calendar = Calendar.getInstance();
+                calendar.add( Calendar.YEAR, -1 );
+                forceCreate = d.before( new Date( calendar.getTimeInMillis() ) );
+            }
 
-        try ( LockedPath ignored = acquirePathLock( f, true ); Writer writer = openCompressedFile( f ) ) {
-            ExpressionDataDoubleMatrix matrix = helperService.getDataMatrix( ee, filtered );
-            ExpressionDataFileServiceImpl.log.info( "Creating new JSON expression data file: " + f );
-            int written = new MatrixWriter( entityUrlBuilder, buildInfo ).writeJSON( writer, matrix );
-            log.info( "Wrote " + written + " vectors to " + f + "." );
-            return Optional.of( f );
-        } catch ( Exception e ) {
-            Files.deleteIfExists( f );
-            throw e;
+            // If not force create and the file exists (can be read from), return the existing file.
+            if ( !forceCreate && Files.exists( f.getPath() ) ) {
+                ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
+                return f.steal();
+            }
+
+            // (Re-)create the file
+            try ( LockedPath lockedPath = f.toExclusive();
+                    OutputStream stream = Files.newOutputStream( lockedPath.getPath() ) ) {
+                log.info( "Creating differential expression analysis archive file: " + lockedPath.getPath() );
+                writeDiffExArchive( analysis, stream );
+                return lockedPath.toShared();
+            }
         }
     }
 
     @Override
-    public Path writeOrLocateJSONRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException {
-        Path f = getOutputFile( getDataOutputFilename( ee, type, JSON_BULK_DATA_FILE_SUFFIX ) );
-        if ( !forceWrite && Files.exists( f ) ) {
-            ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
-            return f;
+    public LockedPath writeDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, @Nullable DifferentialExpressionAnalysisConfig config ) throws IOException {
+        try ( LockedPath lockedPath = acquirePathLock( dataDir.resolve( getDiffExArchiveFileName( analysis ) ), true );
+                OutputStream stream = Files.newOutputStream( lockedPath.getPath() ) ) {
+            log.info( "Creating differential expression analysis archive file: " + lockedPath.getPath() );
+            writeDiffExArchive( analysis, stream );
+            return lockedPath.toShared();
         }
+    }
 
-        try ( LockedPath ignored = acquirePathLock( f, true ); Writer writer = openCompressedFile( f ) ) {
+    private void writeDiffExArchive( DifferentialExpressionAnalysis analysis, OutputStream stream ) throws IOException {
+        BioAssaySet experimentAnalyzed = analysis.getExperimentAnalyzed();
+        Map<CompositeSequence, String[]> geneAnnotations = new HashMap<>();
+        AtomicBoolean hasSignificantBatchConfound = new AtomicBoolean();
+        analysis = helperService.getAnalysis( experimentAnalyzed, analysis, geneAnnotations, hasSignificantBatchConfound );
+        new DiffExAnalysisResultSetWriter( buildInfo ).write( analysis, geneAnnotations, null, hasSignificantBatchConfound.get(), stream );
+    }
+
+    @Override
+    public Optional<LockedPath> writeOrLocateJSONProcessedExpressionDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException, IOException {
+        // randomize file name if temporary in case of access by more than one user at once
+        try ( LockedPath f = this.getOutputFile( getDataOutputFilename( ee, filtered, JSON_BULK_DATA_FILE_SUFFIX ) ) ) {
+            if ( !forceWrite && Files.exists( f.getPath() ) ) {
+                ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
+                return Optional.of( f.steal() );
+            }
+            if ( !expressionExperimentService.hasProcessedExpressionData( ee ) ) {
+                return Optional.empty();
+            }
+            try ( LockedPath ignored = f.toExclusive();
+                    Writer writer = openCompressedFile( ignored.getPath() ) ) {
+                ExpressionDataDoubleMatrix matrix = helperService.getDataMatrix( ee, filtered );
+                ExpressionDataFileServiceImpl.log.info( "Creating new JSON expression data file: " + ignored.getPath() );
+                int written = new MatrixWriter( entityUrlBuilder, buildInfo ).writeJSON( writer, matrix );
+                log.info( "Wrote " + written + " vectors to " + ignored.getPath() + "." );
+                return Optional.of( f.toShared() );
+            } catch ( Exception e ) {
+                Files.deleteIfExists( f.getPath() );
+                throw e;
+            }
+        }
+    }
+
+    @Override
+    public LockedPath writeOrLocateJSONRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException {
+        try ( LockedPath f = getOutputFile( getDataOutputFilename( ee, type, JSON_BULK_DATA_FILE_SUFFIX ) ) ) {
+            if ( !forceWrite && Files.exists( f.getPath() ) ) {
+                ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
+                return f.steal();
+            }
+            try ( LockedPath lockedPath = f.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
             Collection<BulkExpressionDataVector> vectors = helperService.getVectors( ee, type );
             BulkExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
-            ExpressionDataFileServiceImpl.log.info( "Creating new JSON expression data file: " + f );
-            int written = new MatrixWriter( entityUrlBuilder, buildInfo ).writeJSON( writer, expressionDataMatrix );
-            log.info( "Wrote " + written + " vectors for " + type + " to " + f );
-            return f;
-        } catch ( Exception e ) {
-            Files.deleteIfExists( f );
-            throw e;
+                ExpressionDataFileServiceImpl.log.info( "Creating new JSON expression data file: " + lockedPath.getPath() );
+                int written = new MatrixWriter( entityUrlBuilder, buildInfo ).writeJSON( writer, expressionDataMatrix );
+                log.info( "Wrote " + written + " vectors for " + type + " to " + lockedPath.getPath() );
+                return lockedPath.toShared();
+            } catch ( Exception e ) {
+                Files.deleteIfExists( f.getPath() );
+                throw e;
+            }
         }
     }
 
@@ -741,31 +749,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         return false;
     }
 
-
-    private Path getDiffExpressionAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, boolean forceCreate ) throws IOException {
-        String filename = getDiffExArchiveFileName( analysis );
-        Path f = this.getOutputFile( filename );
-
-        // Force create if file is older than one year
-        if ( !forceCreate && Files.exists( f ) ) {
-            Date d = new Date( f.toFile().lastModified() );
-            Calendar calendar = Calendar.getInstance();
-            calendar.add( Calendar.YEAR, -1 );
-            forceCreate = d.before( new Date( calendar.getTimeInMillis() ) );
-        }
-
-        // If not force create and the file exists (can be read from), return the existing file.
-        if ( !forceCreate && Files.exists( f ) ) {
-            ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
-            return f;
-        }
-
-        // (Re-)create the file
-        this.writeDiffExArchiveFile( analysis.getExperimentAnalyzed(), analysis, null );
-
-        return f;
-    }
-
     /**
      * Resolve a filename in the {@link #dataDir} directory.
      * <p>
@@ -773,24 +756,12 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * @param filename without the path - that is, just the name of the file
      * @return File, with location in the appropriate target directory.
      */
-    private Path getOutputFile( String filename ) {
-        Path fullFilePath = dataDir.resolve( filename );
-        try ( LockedPath ignored = acquirePathLock( fullFilePath, false ) ) {
-            if ( Files.exists( fullFilePath ) ) {
-                return fullFilePath;
-            }
-            return fullFilePath;
-        }
+    private LockedPath getOutputFile( String filename ) {
+        return acquirePathLock( dataDir.resolve( filename ), false );
     }
 
-    private Path getOutputFile( String filename, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException {
-        Path fullFilePath = dataDir.resolve( filename );
-        try ( LockedPath ignored = tryAcquirePathLock( fullFilePath, false, timeout, timeUnit ) ) {
-            if ( Files.exists( fullFilePath ) ) {
-                return fullFilePath;
-            }
-            return fullFilePath;
-        }
+    private LockedPath getOutputFile( String filename, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException {
+        return tryAcquirePathLock( dataDir.resolve( filename ), false, timeout, timeUnit );
     }
 
     /**
@@ -862,7 +833,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         }
     }
 
-    private static class LockedPathImpl implements LockedPath {
+    private class LockedPathImpl implements LockedPath {
 
         private final Path path;
         private final Lock lock;
@@ -893,12 +864,32 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             }
         }
 
-        /**
-         * Steal this lock.
-         * <p>
-         * Once stolen, this lock will no-longer be released when closed.
-         */
-        private LockedPath steal() {
+        @Override
+        public Path closeAndGetPath() {
+            close();
+            return path;
+        }
+
+        @Override
+        public LockedPath toExclusive() {
+            Assert.state( shared, "This lock is already exclusive." );
+            return acquirePathLock( closeAndGetPath(), true );
+        }
+
+        @Override
+        public LockedPath toExclusive( long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException {
+            Assert.state( shared, "This lock is already exclusive." );
+            return tryAcquirePathLock( closeAndGetPath(), true, timeout, timeUnit );
+        }
+
+        @Override
+        public LockedPath toShared() {
+            Assert.state( !shared, "This lock is already shared." );
+            return acquirePathLock( closeAndGetPath(), false );
+        }
+
+        @Override
+        public LockedPath steal() {
             Assert.state( !stolen, "This lock was already stolen." );
             try {
                 return new LockedPathImpl( path, lock, shared );
@@ -910,13 +901,18 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         /**
          * Steal this lock with a different path.
          */
-        public LockedPath stealWithPath( Path file ) {
+        public LockedPathImpl stealWithPath( Path file ) {
             Assert.state( !stolen, "This lock was already stolen." );
             try {
                 return new LockedPathImpl( file, lock, shared );
             } finally {
                 stolen = true;
             }
+        }
+
+        @Override
+        public String toString() {
+            return path + " " + ( shared ? "[shared]" : "[exclusive]" );
         }
     }
 }
