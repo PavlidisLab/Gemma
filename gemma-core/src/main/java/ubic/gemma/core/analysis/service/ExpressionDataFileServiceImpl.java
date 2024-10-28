@@ -354,13 +354,13 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             }
             try ( LockedPath lockedPath = dest.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
                 log.info( "Will write tabular data for " + qt + " to " + lockedPath.getPath() + "." );
-            int written = writeTabularSingleCellExpressionData( ee, qt, useStreaming, fetchSize, writer );
+                int written = writeTabularSingleCellExpressionData( ee, qt, useStreaming, fetchSize, writer );
                 log.info( "Wrote " + written + " vectors to " + lockedPath.getPath() + "." );
                 return lockedPath.toShared();
-        } catch ( Exception e ) {
+            } catch ( Exception e ) {
                 Files.deleteIfExists( dest.getPath() );
-            throw e;
-        }
+                throw e;
+            }
         }
     }
 
@@ -706,8 +706,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 return f.steal();
             }
             try ( LockedPath lockedPath = f.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
-            Collection<BulkExpressionDataVector> vectors = helperService.getVectors( ee, type );
-            BulkExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
+                Collection<BulkExpressionDataVector> vectors = helperService.getVectors( ee, type );
+                BulkExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
                 ExpressionDataFileServiceImpl.log.info( "Creating new JSON expression data file: " + lockedPath.getPath() );
                 int written = new MatrixWriter( entityUrlBuilder, buildInfo ).writeJSON( writer, expressionDataMatrix );
                 log.info( "Wrote " + written + " vectors for " + type + " to " + lockedPath.getPath() );
@@ -839,7 +839,16 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         private final Lock lock;
         private final boolean shared;
 
+        /**
+         * Indicate if this lock was stolen and thus not to be closed.
+         */
         private boolean stolen = false;
+
+        /**
+         * Indicate if this lock was converted (ether shared -> exclusive or exclusive -> shared) and thus already
+         * closed.
+         */
+        private boolean converted = false;
 
         public LockedPathImpl( Path path, Lock lock, boolean shared ) {
             this.path = path;
@@ -859,7 +868,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
         @Override
         public void close() {
-            if ( !stolen ) {
+            if ( !stolen && !converted ) {
                 lock.unlock();
             }
         }
@@ -873,19 +882,37 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         @Override
         public LockedPath toExclusive() {
             Assert.state( shared, "This lock is already exclusive." );
-            return acquirePathLock( closeAndGetPath(), true );
+            Assert.state( !converted, "This lock was already converted to an exclusive lock." );
+            Assert.state( !stolen, "This lock was stolen." );
+            try {
+                return acquirePathLock( closeAndGetPath(), true );
+            } finally {
+                converted = true;
+            }
         }
 
         @Override
         public LockedPath toExclusive( long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException {
             Assert.state( shared, "This lock is already exclusive." );
-            return tryAcquirePathLock( closeAndGetPath(), true, timeout, timeUnit );
+            Assert.state( !converted, "This lock was already converted to an exclusive lock." );
+            Assert.state( !stolen, "This lock was stolen." );
+            try {
+                return tryAcquirePathLock( closeAndGetPath(), true, timeout, timeUnit );
+            } finally {
+                converted = true;
+            }
         }
 
         @Override
         public LockedPath toShared() {
             Assert.state( !shared, "This lock is already shared." );
-            return acquirePathLock( closeAndGetPath(), false );
+            Assert.state( !converted, "This lock was already converted to a shared lock." );
+            Assert.state( !stolen, "This lock was stolen." );
+            try {
+                return acquirePathLock( closeAndGetPath(), false );
+            } finally {
+                converted = true;
+            }
         }
 
         @Override
