@@ -11,7 +11,7 @@ public class ExpressionDataFileUtils {
 
     // for single-cell vectors
     private static final String SC_DATA_SUFFIX = ".scdata";
-    public static final String MEX_SC_DATA_SUFFIX = SC_DATA_SUFFIX;
+    public static final String MEX_SC_DATA_SUFFIX = SC_DATA_SUFFIX + ".mex";
     public static final String TABULAR_SC_DATA_SUFFIX = SC_DATA_SUFFIX + ".tsv.gz";
 
     // for bulk (raw or processed vectors)
