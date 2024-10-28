@@ -3,13 +3,17 @@ package ubic.gemma.core.analysis.preprocess.detect;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
+import cern.colt.matrix.impl.DenseDoubleMatrix1D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.jet.math.Functions;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
+import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.hibernate.LazyInitializationException;
 import ubic.basecode.math.DescriptiveWithMissing;
+import ubic.gemma.core.datastructure.matrix.DoubleSingleCellExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -42,7 +46,7 @@ public class QuantitationTypeDetectionUtils {
     /**
      * Infer a {@link QuantitationType} from expression data.
      */
-    public static QuantitationType inferQuantitationType( ExpressionDataDoubleMatrix expressionDataDoubleMatrix ) {
+    public static QuantitationType inferQuantitationType( ExpressionDataMatrix<?> expressionDataDoubleMatrix ) {
         QuantitationType qt = new QuantitationType();
         InferredQuantitationType iqt = infer( expressionDataDoubleMatrix, null );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
@@ -53,12 +57,19 @@ public class QuantitationTypeDetectionUtils {
         return qt;
     }
 
-    public static InferredQuantitationType infer( ExpressionDataDoubleMatrix expressionData, @Nullable QuantitationType qt ) {
-        DoubleMatrix2D matrix = new DenseDoubleMatrix2D( expressionData.getMatrix().asArray() );
+    public static InferredQuantitationType infer( ExpressionDataMatrix<?> expressionData, @Nullable QuantitationType qt ) {
+        Object matrix;
+        if ( expressionData instanceof ExpressionDataDoubleMatrix ) {
+            matrix = new DenseDoubleMatrix2D( ( ( ExpressionDataDoubleMatrix ) expressionData ).getMatrix().asArray() );
+        } else if ( expressionData instanceof DoubleSingleCellExpressionDataMatrix ) {
+            matrix = ( ( DoubleSingleCellExpressionDataMatrix ) expressionData ).getMatrix();
+        } else {
+            throw new UnsupportedOperationException( "Unsupported expression data matrix type " + expressionData.getClass().getName() + "." );
+        }
 
         boolean isMicroarray;
         try {
-            isMicroarray = expressionData.getRowNames().stream()
+            isMicroarray = expressionData.getDesignElements().stream()
                     .map( CompositeSequence::getArrayDesign )
                     .distinct()
                     .map( ArrayDesign::getTechnologyType )
@@ -69,7 +80,7 @@ public class QuantitationTypeDetectionUtils {
         }
 
         // no data, there's nothing we can do
-        if ( matrix.rows() == 0 || matrix.columns() == 0 ) {
+        if ( isEmpty( matrix ) ) {
             if ( qt == null ) {
                 throw new IllegalArgumentException( "Cannot infer quantitation type without data." );
             } else {
@@ -103,11 +114,7 @@ public class QuantitationTypeDetectionUtils {
         }
 
         // obtain min/max right now, they are used in tests below
-        double maximum = Arrays.stream( matrix.toArray() )
-                .flatMapToDouble( Arrays::stream )
-                .filter( Double::isFinite )
-                .max()
-                .orElseThrow( RuntimeException::new );
+        double maximum = getMaximum( matrix );
 
         if ( isPercent100( matrix, maximum ) ) {
             log.info( String.format( "Data contains values between 0 and 100 close enough to the boundaries, will report at %s.", ScaleType.PERCENT ) );
@@ -135,11 +142,7 @@ public class QuantitationTypeDetectionUtils {
             }
         }
 
-        double minimum = Arrays.stream( matrix.toArray() )
-                .flatMapToDouble( Arrays::stream )
-                .filter( Double::isFinite )
-                .min()
-                .orElseThrow( RuntimeException::new );
+        double minimum = getMinimum( matrix );
 
         // negative values indicate log-transformation
         if ( minimum < 0 ) {
@@ -152,9 +155,7 @@ public class QuantitationTypeDetectionUtils {
 
         // check if the data is log-normalized before reporting it as linear
         // because we're testing for zero (log-reported as 1 in linear scale)
-        DoubleMatrix2D logMatrix = matrix
-                .copy()
-                .assign( Functions.log );
+        Object logMatrix = logTransform( matrix );
         if ( isZScore( logMatrix ) ) {
             log.info( "Data appears to be normalized sample-wise in the log-space." );
             return new InferredQuantitationType( StandardQuantitationType.ZSCORE, scaleType, false );
@@ -163,12 +164,112 @@ public class QuantitationTypeDetectionUtils {
         return new InferredQuantitationType( StandardQuantitationType.AMOUNT, scaleType, false );
     }
 
+    private static double getMaximum( Object matrix ) {
+        if ( matrix instanceof DoubleMatrix2D ) {
+            return getMaximum( ( DoubleMatrix2D ) matrix );
+        } else if ( matrix instanceof CompRowMatrix ) {
+            return getMaximum( ( CompRowMatrix ) matrix );
+        } else {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    private static double getMaximum( DoubleMatrix2D matrix ) {
+        return Arrays.stream( matrix.toArray() )
+                .flatMapToDouble( Arrays::stream )
+                .filter( Double::isFinite )
+                .max()
+                .orElseThrow( RuntimeException::new );
+    }
+
+    private static double getMaximum( CompRowMatrix matrix ) {
+        return Arrays.stream( matrix.getData() )
+                .filter( Double::isFinite )
+                .max()
+                .orElseThrow( RuntimeException::new );
+    }
+
+    private static double getMinimum( Object matrix ) {
+        if ( matrix instanceof DoubleMatrix2D ) {
+            return getMinimum( ( DoubleMatrix2D ) matrix );
+        } else if ( matrix instanceof CompRowMatrix ) {
+            return getMinimum( ( CompRowMatrix ) matrix );
+        } else {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    private static double getMinimum( DoubleMatrix2D matrix ) {
+        return Arrays.stream( matrix.toArray() )
+                .flatMapToDouble( Arrays::stream )
+                .filter( Double::isFinite )
+                .min()
+                .orElseThrow( RuntimeException::new );
+    }
+
+    private static double getMinimum( CompRowMatrix matrix ) {
+        return Arrays.stream( matrix.getData() )
+                .filter( Double::isFinite )
+                .min()
+                .orElseThrow( RuntimeException::new );
+    }
+
+    private static Object logTransform( Object matrix ) {
+        if ( matrix instanceof DoubleMatrix2D ) {
+            return ( ( DoubleMatrix2D ) matrix )
+                    .copy()
+                    .assign( Functions.log );
+        } else if ( matrix instanceof CompRowMatrix ) {
+            // zero is -inf in the log-space
+            CompRowMatrix copy = ( ( CompRowMatrix ) matrix ).copy();
+            for ( int i = 0; i < copy.getRowPointers().length - 1; i++ ) {
+                for ( int j = copy.getRowPointers()[i]; j < copy.getRowPointers()[i + 1]; j++ ) {
+                    copy.set( i, copy.getColumnIndices()[j], Math.log( copy.getData()[j] ) );
+                }
+            }
+            return copy;
+        } else {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    /**
+     * Check if the given matrix is empty.
+     */
+    private static boolean isEmpty( Object matrix ) {
+        if ( matrix instanceof DoubleMatrix2D ) {
+            return isEmpty( ( DoubleMatrix2D ) matrix );
+        } else if ( matrix instanceof CompRowMatrix ) {
+            return isEmpty( ( CompRowMatrix ) matrix );
+        } else {
+            throw new UnsupportedOperationException( "Cannot check if matrix of type " + matrix.getClass().getName() + " is empty." );
+        }
+    }
+
+    private static boolean isEmpty( DoubleMatrix2D matrix ) {
+        return matrix.rows() == 0 || matrix.columns() == 0;
+    }
+
+    private static boolean isEmpty( CompRowMatrix matrix ) {
+        return matrix.numRows() == 0 || matrix.numColumns() == 0;
+    }
+
     /**
      * Check if data in the given matrix are counts.
      * <p>
      * At this stage, the data has already been transformed to double, so we only check if all the values are positive
      * and  equal to their closest integer using {@link Math#rint(double)}.
      */
+    private static boolean isCount( Object matrix ) {
+        if ( matrix instanceof DoubleMatrix2D ) {
+            return isCount( ( DoubleMatrix2D ) matrix );
+        } else if ( matrix instanceof CompRowMatrix ) {
+            return isCount( new DenseDoubleMatrix1D( ( ( CompRowMatrix ) matrix ).getData() ) );
+        } else {
+            throw new UnsupportedOperationException();
+        }
+    }
+
     private static boolean isCount( DoubleMatrix2D matrix ) {
         if ( matrix.size() < 10 ) {
             log.warn( "Matrix is too small to detect counts, will likely be reported as LINEAR." );
@@ -176,12 +277,27 @@ public class QuantitationTypeDetectionUtils {
         }
         boolean isCount = true;
         for ( int i = 0; i < matrix.rows(); i++ ) {
-            for ( int j = 0; j < matrix.columns(); j++ ) {
-                double x = matrix.get( i, j );
-                isCount &= x >= 0 && Math.rint( x ) == x;
-            }
+            isCount &= isCount( matrix.viewRow( i ) );
         }
         return isCount;
+    }
+
+    private static boolean isCount( DoubleMatrix1D vector ) {
+        boolean isCount = true;
+        for ( int j = 0; j < vector.size(); j++ ) {
+            double x = vector.get( j );
+            isCount &= x >= 0 && Math.rint( x ) == x;
+        }
+        return isCount;
+    }
+
+    private static boolean isPercent( Object matrix ) {
+        if ( matrix instanceof DoubleMatrix2D ) {
+            return isPercent( ( DoubleMatrix2D ) matrix );
+        } else {
+            // TODO
+            return false;
+        }
     }
 
     private static boolean isPercent( DoubleMatrix2D matrix ) {
@@ -194,6 +310,15 @@ public class QuantitationTypeDetectionUtils {
             }
         }
         return isWithinZeroAndOne;
+    }
+
+    private static boolean isPercent100( Object matrix, double maximum ) {
+        if ( matrix instanceof DoubleMatrix2D ) {
+            return isPercent100( ( DoubleMatrix2D ) matrix, maximum );
+        } else {
+            // TODO
+            return false;
+        }
     }
 
     /**
@@ -221,6 +346,17 @@ public class QuantitationTypeDetectionUtils {
      * Check if any of the rows of a given matrix are normalized.
      * @see #isZScore(DoubleMatrix1D)
      */
+    private static boolean isZScore( Object matrix ) {
+        if ( matrix instanceof DoubleMatrix2D ) {
+            return isZScore( ( DoubleMatrix2D ) matrix );
+        } else if ( matrix instanceof CompRowMatrix ) {
+            // TODO: but slicing column is inefficient :(
+            return false;
+        } else {
+            throw new UnsupportedOperationException();
+        }
+    }
+
     private static boolean isZScore( DoubleMatrix2D matrix ) {
         // check if the data is Z-transformed sample-wise
         for ( int j = 0; j < matrix.columns(); j++ ) {
@@ -253,6 +389,15 @@ public class QuantitationTypeDetectionUtils {
      * ratiometric as it the log ratio (generally 2) of two raw signals. When that occurs, the max has to be interpreted
      * differently.
      */
+    private static boolean isRatiometric( Object matrix ) {
+        if ( matrix instanceof DoubleMatrix2D ) {
+            return isRatiometric( ( DoubleMatrix2D ) matrix );
+        } else {
+            // TODO
+            return false;
+        }
+    }
+
     private static boolean isRatiometric( DoubleMatrix2D matrix ) {
         boolean ratiometric = true;
         for ( int j = 0; j < matrix.columns(); j++ ) {

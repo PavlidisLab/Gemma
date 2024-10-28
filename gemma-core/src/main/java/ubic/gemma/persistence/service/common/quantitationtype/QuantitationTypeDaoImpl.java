@@ -199,20 +199,25 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     @Override
     public Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee ) {
         //noinspection unchecked
-        Set<Long> qtIds = new HashSet<>( ( List<Long> ) getSessionFactory().getCurrentSession()
-                .createQuery( "select qt.id from ExpressionExperiment ee join ee.quantitationTypes qt where ee = :ee" )
+        Set<QuantitationType> qts = new HashSet<>( ( List<QuantitationType> ) getSessionFactory().getCurrentSession()
+                .createQuery( "select qt from ExpressionExperiment ee join ee.quantitationTypes qt where ee = :ee" )
                 .setParameter( "ee", ee )
                 .list() );
         for ( Class<? extends DataVector> vectorType : dataVectorTypes ) {
-            //noinspection unchecked
-            qtIds.addAll( getSessionFactory().getCurrentSession()
-                    .createCriteria( vectorType )
-                    .add( Restrictions.eq( "expressionExperiment", ee ) )
-                    .createCriteria( "quantitationType" )
-                    .setProjection( Projections.distinct( Projections.property( "id" ) ) )
-                    .list() );
+            qts.addAll( findByExpressionExperiment( ee, vectorType ) );
         }
-        return load( qtIds );
+        return qts;
+    }
+
+    @Override
+    public Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee, Class<? extends DataVector> vectorType ) {
+        //noinspection unchecked
+        return load( ( List<Long> ) getSessionFactory().getCurrentSession()
+                .createCriteria( vectorType )
+                .add( Restrictions.eq( "expressionExperiment", ee ) )
+                .createCriteria( "quantitationType" )
+                .setProjection( Projections.distinct( Projections.property( "id" ) ) )
+                .list() );
     }
 
     @Override

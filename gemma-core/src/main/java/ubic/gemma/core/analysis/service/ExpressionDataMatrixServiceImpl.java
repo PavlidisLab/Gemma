@@ -71,7 +71,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
         Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
         if ( dataVectors.isEmpty() ) {
-            return null;
+            throw new IllegalStateException( "There are no processed vectors for " + ee + ", they must be created first." );
         }
         return this.getFilteredMatrix( ee, filterConfig, dataVectors );
     }
@@ -103,8 +103,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
         Collection<ProcessedExpressionDataVector> dataVectors = this.processedExpressionDataVectorService
                 .getProcessedDataVectorsAndThaw( ee );
         if ( dataVectors.isEmpty() ) {
-            log.warn( "There are no ProcessedExpressionDataVectors for " + ee + ", they must be created first" );
-            return null;
+            throw new IllegalStateException( "There are no processed vectors for " + ee + ", they must be created first." );
         }
         return new ExpressionDataDoubleMatrix( dataVectors );
     }
@@ -114,7 +113,7 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     public ExpressionDataDoubleMatrix getRawExpressionDataMatrix( ExpressionExperiment ee, QuantitationType quantitationType ) {
         Collection<RawExpressionDataVector> vectors = expressionExperimentService.getRawDataVectors( ee, quantitationType );
         if ( vectors.isEmpty() ) {
-            return null;
+            throw new IllegalStateException( ee + " does not have any raw data vectors for " + quantitationType + "." );
         }
         return new ExpressionDataDoubleMatrix( vectors );
     }
@@ -162,11 +161,10 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
 
     private ExpressionDataDoubleMatrix getFilteredMatrix( FilterConfig filterConfig,
             Collection<ProcessedExpressionDataVector> dataVectors, Collection<ArrayDesign> arrayDesignsUsed ) throws FilteringException {
-        if ( dataVectors == null || dataVectors.isEmpty() )
+        if ( dataVectors.isEmpty() )
             throw new IllegalArgumentException( "Vectors must be provided" );
         ExpressionExperimentFilter filter = new ExpressionExperimentFilter( arrayDesignsUsed, filterConfig );
         dataVectors = this.processedExpressionDataVectorService.thaw( dataVectors );
         return filter.getFilteredMatrix( dataVectors );
     }
-
 }

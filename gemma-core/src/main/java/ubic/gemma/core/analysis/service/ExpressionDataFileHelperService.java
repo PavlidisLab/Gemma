@@ -30,7 +30,10 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -74,19 +77,14 @@ class ExpressionDataFileHelperService {
 
     public ExpressionDataDoubleMatrix getDataMatrix( ExpressionExperiment ee, boolean filtered ) throws FilteringException {
         ee = expressionExperimentService.thawLite( ee );
-        ExpressionDataDoubleMatrix matrix;
         if ( filtered ) {
             FilterConfig filterConfig = new FilterConfig();
             filterConfig.setIgnoreMinimumSampleThreshold( true );
             filterConfig.setIgnoreMinimumRowsThreshold( true );
-            matrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig );
+            return expressionDataMatrixService.getFilteredMatrix( ee, filterConfig );
         } else {
-            matrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
+            return expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
         }
-        if ( matrix == null ) {
-            throw new IllegalStateException( ee + " does not have processed data vectors." );
-        }
-        return matrix;
     }
 
     public ExpressionDataDoubleMatrix getDataMatrix( ExpressionExperiment ee, boolean filtered, Map<CompositeSequence, String[]> geneAnnotations ) throws FilteringException {
@@ -101,9 +99,6 @@ class ExpressionDataFileHelperService {
     public ExpressionDataDoubleMatrix getDataMatrix( ExpressionExperiment ee, QuantitationType qt, Map<CompositeSequence, String[]> geneAnnotations ) {
         ee = expressionExperimentService.thawLite( ee );
         ExpressionDataDoubleMatrix matrix = expressionDataMatrixService.getRawExpressionDataMatrix( ee, qt );
-        if ( matrix == null ) {
-            throw new IllegalStateException( ee + " does not have raw data vectors for " + qt + "." );
-        }
         Set<ArrayDesign> ads = matrix.getDesignElements().stream()
                 .map( CompositeSequence::getArrayDesign )
                 .collect( Collectors.toSet() );

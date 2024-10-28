@@ -67,6 +67,11 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
      */
     Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee );
 
+    /**
+     * Find all the QT associated to the given experiment and data vector type.
+     */
+    Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee, Class<? extends DataVector> dataVectorType );
+
     @Override
     @Secured({ "GROUP_USER" })
     QuantitationType findOrCreate( QuantitationType quantitationType );

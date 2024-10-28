@@ -56,6 +56,12 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee, Class<? extends DataVector> dataVectorType ) {
+        return quantitationTypeDao.findByExpressionExperiment( ee, dataVectorType );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<QuantitationTypeValueObject> loadValueObjectsWithExpressionExperiment( Collection<QuantitationType> qts, ExpressionExperiment expressionExperiment ) {
         return this.quantitationTypeDao.loadValueObjectsWithExpressionExperiment( qts, expressionExperiment );
     }

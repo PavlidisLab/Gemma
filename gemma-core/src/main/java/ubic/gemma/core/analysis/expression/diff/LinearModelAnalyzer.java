@@ -340,9 +340,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
          */
         ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
                 .getProcessedExpressionDataMatrix( subset.getSourceExperiment() );
-        if ( dmatrix == null ) {
-            throw new RuntimeException( String.format( "There are no processed EVs for %s.", subset.getSourceExperiment() ) );
-        }
 
         ExperimentalFactor ef = config.getSubsetFactor();
         Collection<BioMaterial> bmTmp = new HashSet<>();
@@ -403,9 +400,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
                 .getProcessedExpressionDataMatrix( expressionExperiment );
-        if ( dmatrix == null ) {
-            throw new RuntimeException( String.format( "There are no processed EVs for %s.", expressionExperiment ) );
-        }
 
         return this.run( expressionExperiment, dmatrix, config );
 

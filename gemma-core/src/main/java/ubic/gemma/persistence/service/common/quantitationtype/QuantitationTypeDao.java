@@ -50,6 +50,8 @@ public interface QuantitationTypeDao extends FilteringVoEnabledDao<QuantitationT
      */
     Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee );
 
+    Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee, Class<? extends DataVector> dataVectorType );
+
     /**
      * Find a QT matching the given template as per {@link QuantitationType#equals(Object)}.
      */

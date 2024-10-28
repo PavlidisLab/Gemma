@@ -33,7 +33,6 @@ import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.auditAndSecurity.eventType.GeeqEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
@@ -406,9 +405,8 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         String problems = "";
 
         if ( !hasRawData ) {
-            ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
-            hasProcessedVectors = dmatrix != null;
-            hasMissingValues = dmatrix != null && dmatrix.hasMissingValues();
+            hasProcessedVectors = expressionExperimentService.hasProcessedExpressionData( ee );
+            hasMissingValues = hasProcessedVectors && expressionDataMatrixService.getProcessedExpressionDataMatrix( ee ).hasMissingValues();
         }
 
         score = hasRawData || ( !hasMissingValues && hasProcessedVectors ) ? GeeqServiceImpl.P_10 : GeeqServiceImpl.N_10;
