@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -23,6 +24,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 
 import java.util.*;
@@ -64,6 +66,11 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         }
 
         @Bean
+        public BioAssayService bioAssayService() {
+            return mock();
+        }
+
+        @Bean
         public AuditTrailService auditTrailService() {
             return mock();
         }
@@ -80,6 +87,12 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
 
     @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
+
+    @Autowired
+    private BioAssayService bioAssayService;
+
+    @Autowired
+    private AuditTrailService auditTrailService;
 
     private ExpressionExperiment ee;
     private ArrayDesign ad;
@@ -126,7 +139,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
 
     @After
     public void resetMocks() {
-        reset( expressionExperimentService );
+        reset( expressionExperimentService, bioAssayDimensionService, bioAssayService, singleCellExpressionExperimentService, auditTrailService );
     }
 
     @Test
@@ -140,17 +153,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         List<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( ee, ad, qt );
         SingleCellDimension dimension = vectors.iterator().next().getSingleCellDimension();
         // randomly assign cell types
-        CellTypeAssignment cta = new CellTypeAssignment();
-        int[] indices = new int[dimension.getCellIds().size()];
-        for ( int i = 0; i < dimension.getCellIds().size(); i++ ) {
-            indices[i] = random.nextInt( 4 );
-        }
-        cta.setCellTypes( IntStream.range( 0, 4 )
-                .mapToObj( i -> Characteristic.Factory.newInstance( Categories.CELL_TYPE, "c" + i, null ) )
-                .collect( Collectors.toList() ) );
-        cta.setNumberOfCellTypes( 4 );
-        cta.setCellTypeIndices( indices );
-        cta.setPreferred( true );
+        CellTypeAssignment cta = createCellTypeAssignment( dimension );
         dimension.getCellTypeAssignments().add( cta );
         when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, qt ) )
                 .thenReturn( Optional.of( cta ) );
@@ -160,6 +163,17 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true );
         assertThat( newQt.getName() ).isEqualTo( "Counts aggregated by cell type" );
         assertThat( newQt.getDescription() ).isEqualTo( "Expression data has been aggregated by cell type using SUM." );
+        assertThat( newQt.getIsPreferred() ).isTrue();
+        verify( bioAssayDimensionService ).findOrCreate( any() );
+        ArgumentCaptor<Collection<BioAssay>> capt2 = ArgumentCaptor.captor();
+        verify( bioAssayService ).update( capt2.capture() );
+        assertThat( capt2.getValue() )
+                .hasSize( 16 )
+                .allSatisfy( ba -> {
+                    assertThat( ba.getNumberOfCells() ).isNotNull();
+                    assertThat( ba.getNumberOfDesignElements() ).isNotNull();
+                    assertThat( ba.getNumberOfCellsByDesignElements() ).isNotNull();
+                } );
         ArgumentCaptor<Collection<RawExpressionDataVector>> capt = ArgumentCaptor.captor();
         verify( expressionExperimentService ).addRawDataVectors( eq( ee ), eq( newQt ), capt.capture() );
         assertThat( capt.getValue() )
@@ -175,6 +189,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                             .hasSize( 16 )
                             .containsExactly( 165.0, 165.0, 165.0, 165.0, 161.0, 161.0, 161.0, 161.0, 124.0, 124.0, 124.0, 124.0, 0.0, 0.0, 0.0, 0.0 );
                 } );
+        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any() );
     }
 
     @Test
@@ -188,19 +203,9 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         List<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( ee, ad, qt );
         SingleCellDimension dimension = vectors.iterator().next().getSingleCellDimension();
         // randomly assign cell types
-        CellTypeAssignment cta = new CellTypeAssignment();
-        int[] indices = new int[dimension.getCellIds().size()];
-        for ( int i = 0; i < dimension.getCellIds().size(); i++ ) {
-            indices[i] = random.nextInt( 4 );
-        }
-        cta.setCellTypes( IntStream.range( 0, 4 )
-                .mapToObj( i -> Characteristic.Factory.newInstance( Categories.CELL_TYPE, "c" + i, null ) )
-                .collect( Collectors.toList() ) );
-        cta.setNumberOfCellTypes( 4 );
-        cta.setCellTypeIndices( indices );
-        cta.setPreferred( true );
+        CellTypeAssignment cta = createCellTypeAssignment( dimension );
         dimension.getCellTypeAssignments().add( cta );
-        when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee ) )
+        when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, qt ) )
                 .thenReturn( Optional.of( cta ) );
         when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
                 .thenReturn( vectors );
@@ -208,6 +213,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true );
         assertThat( newQt.getName() ).isEqualTo( "log2cpm aggregated by cell type" );
         assertThat( newQt.getDescription() ).isEqualTo( "Expression data has been aggregated by cell type using LOG_SUM." );
+        assertThat( newQt.getIsPreferred() ).isTrue();
         ArgumentCaptor<Collection<RawExpressionDataVector>> capt = ArgumentCaptor.captor();
         verify( expressionExperimentService ).addRawDataVectors( eq( ee ), eq( newQt ), capt.capture() );
         assertThat( capt.getValue() )
@@ -223,6 +229,8 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                             .hasSize( 16 )
                             .containsExactly( 5.979489082617791, 5.979489082617791, 5.979489082617791, 5.979489082617791, 5.93240457783411, 5.93240457783411, 5.93240457783411, 5.93240457783411, 5.761516807620513, 5.761516807620513, 5.761516807620513, 5.761516807620513, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY );
                 } );
+        verify( bioAssayService ).update( anyCollection() );
+        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any() );
     }
 
     @Test
@@ -236,19 +244,9 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         List<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( ee, ad, qt );
         SingleCellDimension dimension = vectors.iterator().next().getSingleCellDimension();
         // randomly assign cell types
-        CellTypeAssignment cta = new CellTypeAssignment();
-        int[] indices = new int[dimension.getCellIds().size()];
-        for ( int i = 0; i < dimension.getCellIds().size(); i++ ) {
-            indices[i] = random.nextInt( 4 );
-        }
-        cta.setCellTypes( IntStream.range( 0, 4 )
-                .mapToObj( i -> Characteristic.Factory.newInstance( Categories.CELL_TYPE, "c" + i, null ) )
-                .collect( Collectors.toList() ) );
-        cta.setNumberOfCellTypes( 4 );
-        cta.setCellTypeIndices( indices );
-        cta.setPreferred( true );
+        CellTypeAssignment cta = createCellTypeAssignment( dimension );
         dimension.getCellTypeAssignments().add( cta );
-        when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee ) )
+        when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, qt ) )
                 .thenReturn( Optional.of( cta ) );
         when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
                 .thenReturn( vectors );
@@ -256,6 +254,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true );
         assertThat( newQt.getName() ).isEqualTo( "log1p aggregated by cell type" );
         assertThat( newQt.getDescription() ).isEqualTo( "Expression data has been aggregated by cell type using LOG1P_SUM." );
+        assertThat( newQt.getIsPreferred() ).isTrue();
         ArgumentCaptor<Collection<RawExpressionDataVector>> capt = ArgumentCaptor.captor();
         verify( expressionExperimentService ).addRawDataVectors( eq( ee ), eq( newQt ), capt.capture() );
         assertThat( capt.getValue() )
@@ -272,7 +271,52 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                             .containsExactly( 5.111987788356544, 5.111987788356544, 5.111987788356544, 5.111987788356544, 5.087596335232384, 5.087596335232384, 5.087596335232384, 5.087596335232384, 4.8283137373023015, 4.8283137373023015, 4.8283137373023015, 4.8283137373023015, 0.0, 0.0, 0.0, 0.0
                             );
                 } );
+        verify( bioAssayService ).update( anyCollection() );
+        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any() );
     }
+
+    @Test
+    public void testAggregateToNonPreferredVectors() {
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "log1p" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.COUNT );
+        qt.setScale( ScaleType.LOG1P );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        List<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( ee, ad, qt );
+        SingleCellDimension dimension = vectors.iterator().next().getSingleCellDimension();
+        // randomly assign cell types
+        CellTypeAssignment cta = createCellTypeAssignment( dimension );
+        dimension.getCellTypeAssignments().add( cta );
+        when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, qt ) )
+                .thenReturn( Optional.of( cta ) );
+        when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
+                .thenReturn( vectors );
+
+        QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, false );
+        assertThat( newQt.getName() ).isEqualTo( "log1p aggregated by cell type" );
+        assertThat( newQt.getDescription() ).isEqualTo( "Expression data has been aggregated by cell type using LOG1P_SUM." );
+        assertThat( newQt.getIsPreferred() ).isFalse();
+        ArgumentCaptor<Collection<RawExpressionDataVector>> capt = ArgumentCaptor.captor();
+        verify( expressionExperimentService ).addRawDataVectors( eq( ee ), eq( newQt ), capt.capture() );
+        assertThat( capt.getValue() )
+                .hasSameSizeAs( ad.getCompositeSequences() )
+                .anySatisfy( rawVec -> {
+                    assertThat( rawVec.getDesignElement().getName() ).isEqualTo( "cs1" );
+                    assertThat( rawVec.getBioAssayDimension().getName() )
+                            .isEqualTo( "Bunch of test cells aggregated by cell type" );
+                    assertThat( rawVec.getBioAssayDimension().getBioAssays() )
+                            .hasSize( 4 * 4 );
+                    assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
+                    assertThat( byteArrayToDoubles( rawVec.getData() ) )
+                            .hasSize( 16 )
+                            .containsExactly( 5.111987788356544, 5.111987788356544, 5.111987788356544, 5.111987788356544, 5.087596335232384, 5.087596335232384, 5.087596335232384, 5.087596335232384, 4.8283137373023015, 4.8283137373023015, 4.8283137373023015, 4.8283137373023015, 0.0, 0.0, 0.0, 0.0
+                            );
+                } );
+        verifyNoInteractions( bioAssayService );
+        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any() );
+    }
+
 
     @Test
     public void testUnsupportedTransformation() {
@@ -285,6 +329,22 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         List<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( ee, ad, qt );
         SingleCellDimension dimension = vectors.iterator().next().getSingleCellDimension();
         // randomly assign cell types
+        CellTypeAssignment cta = createCellTypeAssignment( dimension );
+        dimension.getCellTypeAssignments().add( cta );
+        when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, qt ) )
+                .thenReturn( Optional.of( cta ) );
+        when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
+                .thenReturn( vectors );
+
+        assertThatThrownBy( () -> singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true ) )
+                .isInstanceOf( UnsupportedOperationException.class )
+                .hasMessage( "Unsupported scale type for aggregation: PERCENT" );
+
+        verifyNoInteractions( bioAssayService );
+        verifyNoInteractions( auditTrailService );
+    }
+
+    private CellTypeAssignment createCellTypeAssignment( SingleCellDimension dimension ) {
         CellTypeAssignment cta = new CellTypeAssignment();
         int[] indices = new int[dimension.getCellIds().size()];
         for ( int i = 0; i < dimension.getCellIds().size(); i++ ) {
@@ -296,14 +356,6 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         cta.setNumberOfCellTypes( 4 );
         cta.setCellTypeIndices( indices );
         cta.setPreferred( true );
-        dimension.getCellTypeAssignments().add( cta );
-        when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee ) )
-                .thenReturn( Optional.of( cta ) );
-        when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
-                .thenReturn( vectors );
-
-        assertThatThrownBy( () -> singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true ) )
-                .isInstanceOf( UnsupportedOperationException.class )
-                .hasMessage( "Unsupported scale type for aggregation: PERCENT" );
+        return cta;
     }
 }

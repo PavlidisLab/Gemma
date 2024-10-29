@@ -61,7 +61,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
             throw new IllegalStateException( ee + " does not have single-cell vectors for " + quantitationType + "." );
         }
         ExpressionExperiment finalEe = ee;
-        CellTypeAssignment cta = singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee )
+        CellTypeAssignment cta = singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, quantitationType )
                 .orElseThrow( () -> new IllegalStateException( finalEe + " does not have a preferred cell type assignment." ) );
         ExperimentalFactor cellTypeFactor = singleCellExpressionExperimentService.getCellTypeFactor( ee )
                 .orElseThrow( () -> new IllegalStateException( finalEe + " does not have a cell type factor." ) );
