@@ -152,6 +152,9 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         int numVectorsAdded = ee.getSingleCellExpressionDataVectors().size() - previousSize;
         ee.getQuantitationTypes().add( quantitationType );
         applyPreferredSingleCellVectors( ee, quantitationType );
+        if ( quantitationType.getIsSingleCellPreferred() ) {
+            applyBioAssaySparsityMetrics( ee, scd, vectors );
+        }
         expressionExperimentDao.update( ee ); // will take care of creating vectors
         if ( quantitationType.getIsSingleCellPreferred() && scdCreated ) {
             CellTypeAssignment preferredLabelling = scd.getCellTypeAssignments().stream().filter( CellTypeAssignment::isPreferred ).findFirst().orElse( null );
@@ -200,6 +203,9 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         log.info( String.format( "Adding %d single-cell vectors to %s for %s", vectors.size(), ee, quantitationType ) );
         ee.getSingleCellExpressionDataVectors().addAll( vectors );
         applyPreferredSingleCellVectors( ee, quantitationType );
+        if ( quantitationType.getIsSingleCellPreferred() ) {
+            applyBioAssaySparsityMetrics( ee, scd, vectors );
+        }
         expressionExperimentDao.update( ee );
         if ( quantitationType.getIsSingleCellPreferred() && scdCreated ) {
             CellTypeAssignment preferredLabelling = scd.getCellTypeAssignments().stream().filter( CellTypeAssignment::isPreferred ).findFirst().orElse( null );
@@ -229,6 +235,31 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 qt.setIsSingleCellPreferred( false );
                 break; // there is at most one set of preferred SC vectors
             }
+        }
+    }
+
+    /**
+     * Apply various single-cell sparsity metrics to the bioassays.
+     */
+    private void applyBioAssaySparsityMetrics( ExpressionExperiment ee, SingleCellDimension dimension, Collection<SingleCellExpressionDataVector> vectors ) {
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            int sampleIndex = dimension.getBioAssays().indexOf( ba );
+            if ( sampleIndex != -1 ) {
+                // TODO
+            } else {
+                log.warn( ba + " is not used in " + dimension + ", the single-cell sparsity metrics will be set to null." );
+                ba.setNumberOfCells( null );
+                ba.setNumberOfDesignElements( null );
+                ba.setNumberOfCellsByDesignElements( null );
+            }
+        }
+    }
+
+    private void clearBioAssaySparsityMetrics( ExpressionExperiment ee ) {
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            ba.setNumberOfCells( null );
+            ba.setNumberOfDesignElements( null );
+            ba.setNumberOfCellsByDesignElements( null );
         }
     }
 
@@ -290,6 +321,10 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             scd = null;
             log.warn( "No vectors with the quantitation type: " + quantitationType );
             removedVectors = 0;
+        }
+        if ( quantitationType.getIsSingleCellPreferred() ) {
+            log.info( "Removing preferred single-cell vectors, clearing sparsity metrics..." );
+            clearBioAssaySparsityMetrics( ee );
         }
         expressionExperimentDao.update( ee );
         if ( removedVectors > 0 ) {

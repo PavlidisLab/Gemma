@@ -18,6 +18,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 
 import java.util.*;
@@ -44,21 +45,22 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
     private BioAssayDimensionService bioAssayDimensionService;
 
     @Autowired
+    private BioAssayService bioAssayService;
+
+    @Autowired
     private AuditTrailService auditTrailService;
 
-    /**
-     */
     @Override
     @Transactional
     public QuantitationType aggregateVectors( ExpressionExperiment ee, QuantitationType quantitationType, List<BioAssay> cellBAs, boolean makePreferred ) {
         // FIXME: this is needed because if EE is not in the session, getPreferredSingleCellDataVectors() will retrieve
         //        a distinct QT than that of ee.getQuantitationTypes()
         ee = expressionExperimentService.loadOrFail( ee.getId() );
-        ExpressionExperiment finalEe = ee;
         Collection<SingleCellExpressionDataVector> vectors = singleCellExpressionExperimentService.getSingleCellDataVectors( ee, quantitationType );
         if ( vectors.isEmpty() ) {
-            throw new IllegalStateException( finalEe + " does not have single-cell vectors for " + quantitationType + "." );
+            throw new IllegalStateException( ee + " does not have single-cell vectors for " + quantitationType + "." );
         }
+        ExpressionExperiment finalEe = ee;
         CellTypeAssignment cta = singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee )
                 .orElseThrow( () -> new IllegalStateException( finalEe + " does not have a preferred cell type assignment." ) );
         ExperimentalFactor cellTypeFactor = singleCellExpressionExperimentService.getCellTypeFactor( ee )
@@ -154,6 +156,9 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
                 + "Expression data has been aggregated by " + cellTypeFactorName + " using " + method + "." );
         newQt.setIsPreferred( makePreferred );
 
+        Map<BioAssay, Integer> cellsByBioAssay = new HashMap<>();
+        Map<BioAssay, Integer> designElementsByBioAssay = new HashMap<>();
+        Map<BioAssay, Integer> cellByDesignElementByBioAssay = new HashMap<>();
         Collection<RawExpressionDataVector> rawVectors = new ArrayList<>( vectors.size() );
         for ( SingleCellExpressionDataVector v : vectors ) {
             RawExpressionDataVector rawVector = new RawExpressionDataVector();
@@ -161,8 +166,18 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
             rawVector.setQuantitationType( newQt );
             rawVector.setBioAssayDimension( newBad );
             rawVector.setDesignElement( v.getDesignElement() );
-            rawVector.setData( aggregateData( v, newBad, cellTypeAssignment, sourceBioAssayMap, cellTypes, method ) );
+            rawVector.setData( aggregateData( v, newBad, cellTypeAssignment, sourceBioAssayMap, cellTypes, method, cellsByBioAssay, designElementsByBioAssay, cellByDesignElementByBioAssay ) );
             rawVectors.add( rawVector );
+        }
+
+        if ( makePreferred ) {
+            log.info( "Applying single-cell sparsity metrics to the aggregated assays..." );
+            for ( BioAssay ba : cellBAs ) {
+                ba.setNumberOfCells( cellsByBioAssay.getOrDefault( ba, 0 ) );
+                ba.setNumberOfDesignElements( designElementsByBioAssay.getOrDefault( ba, 0 ) );
+                ba.setNumberOfCellsByDesignElements( cellByDesignElementByBioAssay.getOrDefault( ba, 0 ) );
+            }
+            bioAssayService.update( cellBAs );
         }
 
         int newVecs = expressionExperimentService.addRawDataVectors( ee, newQt, rawVectors );
@@ -176,7 +191,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
     /**
      * Aggregate the single-cell data to match the target BAD.
      */
-    private byte[] aggregateData( SingleCellExpressionDataVector scv, BioAssayDimension bad, CellTypeAssignment cta, Map<BioAssay, BioAssay> sourceBioAssayMap, Map<BioAssay, Characteristic> cellTypes, SingleCellExpressionAggregationMethod method ) {
+    private byte[] aggregateData( SingleCellExpressionDataVector scv, BioAssayDimension bad, CellTypeAssignment cta, Map<BioAssay, BioAssay> sourceBioAssayMap, Map<BioAssay, Characteristic> cellTypes, SingleCellExpressionAggregationMethod method, Map<BioAssay, Integer> cellsByBioAssay, Map<BioAssay, Integer> designElementsByBioAssay, Map<BioAssay, Integer> cellByDesignElementByBioAssay ) {
         List<BioAssay> samples = bad.getBioAssays();
         int numSamples = samples.size();
         double[] rv = new double[numSamples];
@@ -214,6 +229,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
             } else if ( method == SingleCellExpressionAggregationMethod.LOG1P_SUM ) {
                 rv[i] = Math.log1p( rv[i] );
             }
+            // TODO: update the metrics
         }
         return doubleArrayToBytes( rv );
     }

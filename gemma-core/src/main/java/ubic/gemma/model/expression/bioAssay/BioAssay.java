@@ -18,9 +18,9 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -30,7 +30,6 @@ import javax.annotation.Nullable;
 import javax.persistence.Transient;
 import java.io.Serializable;
 import java.util.Date;
-import java.util.Objects;
 
 /**
  * Represents the bringing together of a biomaterial with an assay of some sort (typically an expression assay). We
@@ -42,32 +41,101 @@ public class BioAssay extends AbstractDescribable implements SecuredChild, Seria
 
     private static final long serialVersionUID = -7868768731812964045L;
 
-    private Boolean isOutlier = false;
-    private Date processingDate;
-    @Nullable
-    private Long sequenceReadCount;
-    @Nullable
-    private Integer sequenceReadLength;
-    @Nullable
-    private Boolean sequencePairedReads;
-
+    /**
+     * Platform used in this assay.
+     */
     private ArrayDesign arrayDesignUsed;
 
     /**
-     * If the sample data was switched to another platform, this is what it was originally.
+     * If the assay data was switched to another platform, this is what it was originally.
      */
     @Nullable
     private ArrayDesign originalPlatform;
 
+    /**
+     * Sample used in this assay.
+     */
     private BioMaterial sampleUsed;
+
+    /**
+     * Accession for this assay.
+     */
     private DatabaseEntry accession;
+
+    /**
+     * Indicates if the assay should be considered an outlier based on QC.
+     * <p>
+     * The audit trail for the owning {@link ubic.gemma.model.expression.experiment.ExpressionExperiment} tracks when
+     * this was done.
+     */
+    private Boolean isOutlier = false;
+
+    /**
+     * Indicates the date that the assay was processed in the original study. This would correspond to "batch" in the
+     * experimental design.
+     */
+    @Nullable
+    private Date processingDate;
+
+    /**
+     * Free-form additional metadata.
+     */
+    @Nullable
     private String metadata;
 
+    /**
+     * For sequence-read based data, the total number of reads in the assay, computed from the data as the total of the
+     * values for the elements assayed.
+     */
+    @Nullable
+    private Long sequenceReadCount;
+    /**
+     * For sequencing-based data, the length of the reads. If it was paired reads, this is understood to be the length
+     * for each "end". If the read length was variable (due to quality trimming, etc.) this will be treated as
+     * representing the mean read length.
+     */
+    @Nullable
+    private Integer sequenceReadLength;
+    /**
+     * For sequence-based data, this should be set to true if the sequencing was paired-end reads and false otherwise.
+     * It should be left as null if it isn't known.
+     */
+    @Nullable
+    private Boolean sequencePairedReads;
     /**
      * For RNA-seq representation of representative headers from the FASTQ file(s). If there is more than on FASTQ file,
      * this string will contain multiple newline-delimited headers.
      */
+    @Nullable
     private String fastqHeaders;
+
+    /**
+     * Number of cells for the assay that have at least one expressed gene.
+     * <p>
+     * If this assay correspond to a pseudo-bulk, it is the number of such cells in the aggregate.
+     * <p>
+     * This applies to the preferred set of single-cell vectors.
+     */
+    @Nullable
+    private Integer numberOfCells;
+    /**
+     * Number of design elements in the assay with at least one cell expressing it.
+     * <p>
+     * If this assay correspond to a pseudo-bulk, it is the number of such design elements in the aggregate.
+     * <p>
+     * This applies to the preferred set of single-cell vectors.
+     */
+    @Nullable
+    private Integer numberOfDesignElements;
+    /**
+     * Number of cell-gene pairs with non-zero expression values.
+     * <p>
+     * If this assay correspond to a pseudo-bulk, it is the number of such pairs in the aggregate.
+     * <p>
+     * This applies to the preferred set of single-cell vectors.
+     */
+    @Nullable
+    private Integer numberOfCellsByDesignElements;
 
     @Override
     public boolean equals( Object object ) {
@@ -120,11 +188,6 @@ public class BioAssay extends AbstractDescribable implements SecuredChild, Seria
         this.arrayDesignUsed = arrayDesignUsed;
     }
 
-    /**
-     * @return Used to indicate if the sample should be considered an outlier based on QC. The audit trail for the
-     *         entity tracks
-     *         when this was done.
-     */
     public Boolean getIsOutlier() {
         return this.isOutlier;
     }
@@ -133,15 +196,12 @@ public class BioAssay extends AbstractDescribable implements SecuredChild, Seria
         this.isOutlier = isOutlier;
     }
 
-    /**
-     * @return Indicates the date that the assay was processed in the original study. This would correspond to "batch"
-     *         information and will often be a "scan date" or similar information extracted from the raw data files.
-     */
+    @Nullable
     public Date getProcessingDate() {
         return this.processingDate;
     }
 
-    public void setProcessingDate( Date processingDate ) {
+    public void setProcessingDate( @Nullable Date processingDate ) {
         this.processingDate = processingDate;
     }
 
@@ -160,11 +220,6 @@ public class BioAssay extends AbstractDescribable implements SecuredChild, Seria
         return null;
     }
 
-    /**
-     * @return For sequence-based data, this should be set to true if the sequencing was paired-end reads and false
-     *         otherwise.
-     *         It should be left as null if it isn't known.
-     */
     @Nullable
     public Boolean getSequencePairedReads() {
         return this.sequencePairedReads;
@@ -174,11 +229,6 @@ public class BioAssay extends AbstractDescribable implements SecuredChild, Seria
         this.sequencePairedReads = sequencePairedReads;
     }
 
-    /**
-     * @return For sequence-read based data, the total number of reads in the sample, computed from the data as the
-     *         total of the
-     *         values for the elements assayed.
-     */
     @Nullable
     public Long getSequenceReadCount() {
         return this.sequenceReadCount;
@@ -188,12 +238,6 @@ public class BioAssay extends AbstractDescribable implements SecuredChild, Seria
         this.sequenceReadCount = sequenceReadCount;
     }
 
-    /**
-     * @return For sequencing-based data, the length of the reads. If it was paired reads, this is understood to be the
-     *         length
-     *         for each "end". If the read length was variable (due to quality trimming, etc.) this will be treated as
-     *         representing the mean read length.
-     */
     @Nullable
     public Integer getSequenceReadLength() {
         return this.sequenceReadLength;
@@ -203,11 +247,12 @@ public class BioAssay extends AbstractDescribable implements SecuredChild, Seria
         this.sequenceReadLength = sequenceReadLength;
     }
 
+    @Nullable
     public String getMetadata() {
         return metadata;
     }
 
-    public void setMetadata( String metadata ) {
+    public void setMetadata( @Nullable String metadata ) {
         this.metadata = metadata;
     }
 
@@ -216,19 +261,44 @@ public class BioAssay extends AbstractDescribable implements SecuredChild, Seria
         return originalPlatform;
     }
 
-    public void setOriginalPlatform( ArrayDesign originalPlatform ) {
-        if ( this.originalPlatform != null && !( this.originalPlatform.equals( originalPlatform ) ) ) {
-            System.err.println( "Warning: setting 'original platform' to a different value?" );
-        }
+    public void setOriginalPlatform( @Nullable ArrayDesign originalPlatform ) {
         this.originalPlatform = originalPlatform;
     }
 
+    @Nullable
     public String getFastqHeaders() {
         return fastqHeaders;
     }
 
-    public void setFastqHeaders( String fastqHeaders ) {
+    public void setFastqHeaders( @Nullable String fastqHeaders ) {
         this.fastqHeaders = fastqHeaders;
+    }
+
+    @Nullable
+    public Integer getNumberOfCells() {
+        return numberOfCells;
+    }
+
+    public void setNumberOfCells( @Nullable Integer numberOfCells ) {
+        this.numberOfCells = numberOfCells;
+    }
+
+    @Nullable
+    public Integer getNumberOfDesignElements() {
+        return numberOfDesignElements;
+    }
+
+    public void setNumberOfDesignElements( @Nullable Integer numberOfDesignElements ) {
+        this.numberOfDesignElements = numberOfDesignElements;
+    }
+
+    @Nullable
+    public Integer getNumberOfCellsByDesignElements() {
+        return numberOfCellsByDesignElements;
+    }
+
+    public void setNumberOfCellsByDesignElements( @Nullable Integer numberOfCellsByDesignElements ) {
+        this.numberOfCellsByDesignElements = numberOfCellsByDesignElements;
     }
 
     public static final class Factory {
