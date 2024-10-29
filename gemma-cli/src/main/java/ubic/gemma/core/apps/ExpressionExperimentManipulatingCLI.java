@@ -47,6 +47,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -92,6 +93,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     protected AuditEventService auditEventService;
     @Autowired
     protected EntityLocator entityLocator;
+    @Autowired
+    protected EntityUrlBuilder entityUrlBuilder;
 
     /**
      * Single-experiment mode.
@@ -533,6 +536,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      * Enable the single-experiment mode.
      */
     protected void setSingleExperimentMode() {
+        Assert.state( !this.singleExperimentMode, "Single experiment mode is already enabled." );
         this.singleExperimentMode = true;
     }
 
@@ -547,6 +551,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      * The default is false.
      */
     protected void setUseReferencesIfPossible() {
+        Assert.state( !this.useReferencesIfPossible, "Use references if possible is already enabled." );
         this.useReferencesIfPossible = true;
     }
 
@@ -554,6 +559,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      * Set this to stop processing experiments if an error occurs.
      */
     protected void setAbortOnError() {
+        Assert.state( !this.abortOnError, "Abort on error is already enabled." );
         this.abortOnError = true;
     }
 
@@ -562,11 +568,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      */
     private String experimentToString( BioAssaySet bas ) {
         if ( Hibernate.isInitialized( bas ) ) {
-            return String.valueOf( bas );
+            return bas + " " + entityUrlBuilder.fromHostUrl().entity( bas ).web().toUriString();
         } else if ( bas instanceof ExpressionExperiment ) {
-            return "ExpressionExperiment Id=" + bas.getId();
+            return "ExpressionExperiment Id=" + bas.getId() + " " + entityUrlBuilder.fromHostUrl().entity( ( ExpressionExperiment ) bas ).web().toUriString();
         } else if ( bas instanceof ExpressionExperimentSubSet ) {
-            return "ExpressionExperimentSubSet Id=" + bas.getId();
+            return "ExpressionExperimentSubSet Id=" + bas.getId() + entityUrlBuilder.fromHostUrl().entity( ( ExpressionExperimentSubSet ) bas ).web().toUriString();
         } else {
             return "BioAssaySet Id=" + bas.getId();
         }

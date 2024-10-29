@@ -38,9 +38,6 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentManipulatin
     @Autowired
     private PreprocessorService preprocessorService;
 
-    @Autowired
-    private EntityUrlBuilder entityUrlBuilder;
-
     @Nullable
     private String qtName;
     @Nullable

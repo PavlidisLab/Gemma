@@ -142,6 +142,7 @@ public abstract class AbstractAutoSeekingCLI<T extends Auditable> extends Abstra
      * Enable the forcing mode.
      */
     protected void setForce() {
+        Assert.state( !this.force, "Force mode is already enabled." );
         this.force = true;
     }
 
