@@ -32,6 +32,9 @@ _$*
 *.Z
 *.elc
 *.ln
+.envrc
+.ipynb_checkpoints/
+
 # Project ignores (converted from .cvsignore files)
 gemma-web/.settings/org.eclipse.m2e.core.prefs
 gemma-web/surefire*
