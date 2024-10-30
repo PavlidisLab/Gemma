@@ -1,5 +1,6 @@
 package ubic.gemma.rest.providers;
 
+import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.io.MexMatrixBundler;
 
@@ -21,6 +22,7 @@ import static ubic.gemma.rest.DatasetsWebService.APPLICATION_10X_MEX_TYPE;
 @Provider
 @Produces(APPLICATION_10X_MEX)
 @Singleton
+@CommonsLog
 public class MexBundlerProvider implements MessageBodyWriter<ExpressionDataFileService.LockedPath> {
 
     private final MexMatrixBundler bundler = new MexMatrixBundler();
@@ -33,7 +35,12 @@ public class MexBundlerProvider implements MessageBodyWriter<ExpressionDataFileS
 
     @Override
     public long getSize( ExpressionDataFileService.LockedPath lockedPath, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType ) {
-        return -1;
+        try {
+            return bundler.calculateSize( lockedPath.getPath() );
+        } catch ( IOException e ) {
+            log.warn( "Failed to calculate size of MEX bundle at " + lockedPath.getPath() + "", e );
+            return -1;
+        }
     }
 
     @Override
