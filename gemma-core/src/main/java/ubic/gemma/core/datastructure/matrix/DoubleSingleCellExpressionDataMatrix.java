@@ -26,6 +26,8 @@ public class DoubleSingleCellExpressionDataMatrix implements SingleCellExpressio
     private final CompRowMatrix matrix;
     private final List<CompositeSequence> designElements;
 
+    private final double defaultValue;
+
     public DoubleSingleCellExpressionDataMatrix( Collection<SingleCellExpressionDataVector> vectors ) {
         Assert.isTrue( !vectors.isEmpty(), "At least one vector must be supplied. Use EmptyExpressionDataMatrix for empty data matrices instead." );
         Assert.isTrue( vectors.stream().map( SingleCellExpressionDataVector::getQuantitationType ).distinct().count() == 1,
@@ -58,6 +60,17 @@ public class DoubleSingleCellExpressionDataMatrix implements SingleCellExpressio
             }
             i++;
         }
+        switch ( quantitationType.getScale() ) {
+            case LOG2:
+            case LN:
+            case LOG10:
+            case LOGBASEUNKNOWN:
+                defaultValue = Double.NEGATIVE_INFINITY;
+                break;
+            case LOG1P: // in log1p, 0 is mapped back to 0
+            default:
+                defaultValue = 0;
+        }
     }
 
     /**
@@ -79,14 +92,21 @@ public class DoubleSingleCellExpressionDataMatrix implements SingleCellExpressio
 
     @Override
     public Double get( int row, int column ) {
-        return matrix.get( row, column );
+        double result = matrix.get( row, column );
+        if ( result == 0 && defaultValue != 0 ) {
+            int j = Arrays.binarySearch( matrix.getColumnIndices(), matrix.getRowPointers()[row], matrix.getRowPointers()[row + 1], column );
+            if ( j < 0 ) {
+                result = defaultValue;
+            }
+        }
+        return result;
     }
 
     @Override
     public Double[] getColumn( int column ) {
-        Double[] vec = new Double[matrix.numRows()];
-        for ( int j = 0; j < matrix.numRows(); j++ ) {
-            vec[j] = matrix.get( j, column );
+        Double[] vec = new Double[rows()];
+        for ( int i = 0; i < vec.length; i++ ) {
+            vec[i] = get( i, column );
         }
         return vec;
     }

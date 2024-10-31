@@ -38,10 +38,10 @@ public class SingleCellTestUtils {
     }
 
     public static List<SingleCellExpressionDataVector> randomSingleCellVectors() {
-        return randomSingleCellVectors( 100, 4, 1000, 0.9 );
+        return randomSingleCellVectors( 100, 4, 1000, 0.9, ScaleType.COUNT );
     }
 
-    public static List<SingleCellExpressionDataVector> randomSingleCellVectors( int numDesignElements, int numSamples, int numCellsPerBioAssay, double sparsity ) {
+    public static List<SingleCellExpressionDataVector> randomSingleCellVectors( int numDesignElements, int numSamples, int numCellsPerBioAssay, double sparsity, ScaleType scaleType ) {
         ArrayDesign arrayDesign = new ArrayDesign();
         for ( int i = 0; i < numDesignElements; i++ ) {
             arrayDesign.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "cs" + i ) );
@@ -56,7 +56,7 @@ public class SingleCellTestUtils {
         QuantitationType qt = new QuantitationType();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.COUNT );
-        qt.setScale( ScaleType.COUNT );
+        qt.setScale( scaleType );
         qt.setRepresentation( PrimitiveType.DOUBLE );
         return randomSingleCellVectors( ee, arrayDesign, qt, numCellsPerBioAssay, sparsity );
     }
