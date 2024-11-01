@@ -16,7 +16,7 @@
 	<parent>
 		<groupId>ubc.pavlab</groupId>
 		<artifactId>pavlab-starter-parent</artifactId>
-		<version>1.2.16</version>
+		<version>1.2.17</version>
 	</parent>
 	<modules>
 		<module>gemma-core</module>
@@ -547,8 +547,9 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
+				<version>3.21.0</version>
 				<configuration>
-					<relativizeDecorationLinks>false</relativizeDecorationLinks>
+					<relativizeSiteLinks>false</relativizeSiteLinks>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -561,7 +562,6 @@
 					<links>
 						<link>https://gemma.msl.ubc.ca/resources/baseCode/apidocs/</link>
 						<link>https://dst.lbl.gov/ACSSoftware/colt/api/</link>
-						<link>https://static.springsource.org/spring/docs/${spring.version}/javadoc-api/</link>
 						<link>https://docs.jboss.org/hibernate/orm/4.2/javadocs/</link>
 					</links>
 					<additionalJOptions>
@@ -659,7 +659,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-site-plugin</artifactId>
-					<version>3.12.1</version>
+					<version>3.21.0</version>
 				</plugin>
 			</plugins>
 		</pluginManagement>
@@ -693,7 +693,7 @@
 			<distributionManagement>
 				<site>
 					<id>pavlab</id>
-					<url>file:///space/web/maven-sites/${project.groupId}/gemma-${project.version}</url>
+					<url>file://${pavlab.repoDir}/${project.groupId}/gemma-${project.version}</url>
 				</site>
 			</distributionManagement>
 		</profile>
@@ -701,7 +701,7 @@
 	<distributionManagement>
 		<site>
 			<id>pavlab</id>
-			<url>scpexe://frink.msl.ubc.ca/space/web/maven-sites/${project.groupId}/gemma-${project.version}</url>
+			<url>scpexe://${pavlab.server}${pavlab.siteDir}/${project.groupId}/gemma-${project.version}</url>
 		</site>
 	</distributionManagement>
 	<reporting>
@@ -719,7 +719,6 @@
 					<links>
 						<link>https://gemma.msl.ubc.ca/resources/baseCode/apidocs/</link>
 						<link>https://dst.lbl.gov/ACSSoftware/colt/api/</link>
-						<link>https://static.springsource.org/spring/docs/${spring.version}/javadoc-api/</link>
 						<link>https://docs.jboss.org/hibernate/orm/4.2/javadocs/</link>
 					</links>
 					<additionalJOptions>
