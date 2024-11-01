@@ -2,8 +2,10 @@ package ubic.gemma.core.datastructure.matrix;
 
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.springframework.util.Assert;
+import ubic.gemma.core.datastructure.SparseRangeArrayList;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -25,6 +27,7 @@ public class DoubleSingleCellExpressionDataMatrix implements SingleCellExpressio
     private final SingleCellDimension singleCellDimension;
     private final CompRowMatrix matrix;
     private final List<CompositeSequence> designElements;
+    private final List<BioAssay> bioAssays;
 
     private final double defaultValue;
 
@@ -71,6 +74,7 @@ public class DoubleSingleCellExpressionDataMatrix implements SingleCellExpressio
             default:
                 defaultValue = 0;
         }
+        bioAssays = new SparseRangeArrayList<>( singleCellDimension.getBioAssays(), singleCellDimension.getBioAssaysOffset(), singleCellDimension.getNumberOfCells() );
     }
 
     /**
@@ -112,6 +116,26 @@ public class DoubleSingleCellExpressionDataMatrix implements SingleCellExpressio
     }
 
     @Override
+    public List<BioAssay> getBioAssays() {
+        return bioAssays;
+    }
+
+    @Override
+    public BioAssay getBioAssayForColumn( int j ) {
+        return bioAssays.get( j );
+    }
+
+    @Override
+    public List<String> getCellIds() {
+        return singleCellDimension.getCellIds();
+    }
+
+    @Override
+    public String getCellIdForColumn( int j ) {
+        return singleCellDimension.getCellIds().get( j );
+    }
+
+    @Override
     public List<CompositeSequence> getDesignElements() {
         return designElements;
     }
@@ -133,6 +157,7 @@ public class DoubleSingleCellExpressionDataMatrix implements SingleCellExpressio
     @Override
     public Double[] getRow( int index ) {
         Double[] vec = new Double[matrix.numColumns()];
+        Arrays.fill( vec, defaultValue );
         int[] rowptr = matrix.getRowPointers();
         int[] colind = matrix.getColumnIndices();
         double[] data = matrix.getData();

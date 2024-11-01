@@ -1,7 +1,10 @@
 package ubic.gemma.core.datastructure.matrix;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
+
+import java.util.List;
 
 /**
  * In a single-cell expression data matrix, each column represents a cell.
@@ -32,4 +35,24 @@ public interface SingleCellExpressionDataMatrix<T> extends ExpressionDataMatrix<
      */
     @Override
     T[] getColumn( int column );
+
+    /**
+     * Obtain the list of bioassays.
+     */
+    List<BioAssay> getBioAssays();
+
+    /**
+     * Obtain a bioassay applicable to a given column.
+     */
+    BioAssay getBioAssayForColumn( int j );
+
+    /**
+     * Note: cell IDs are only unique within a given assay
+     */
+    List<String> getCellIds();
+
+    /**
+     * Obtain the cell ID of a given column.
+     */
+    String getCellIdForColumn( int j );
 }

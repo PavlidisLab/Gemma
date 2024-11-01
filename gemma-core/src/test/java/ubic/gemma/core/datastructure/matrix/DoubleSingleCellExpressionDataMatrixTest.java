@@ -2,6 +2,7 @@ package ubic.gemma.core.datastructure.matrix;
 
 import org.junit.Test;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 
 import java.util.List;
@@ -11,6 +12,25 @@ import static ubic.gemma.persistence.service.expression.experiment.SingleCellTes
 import static ubic.gemma.persistence.service.expression.experiment.SingleCellTestUtils.setSeed;
 
 public class DoubleSingleCellExpressionDataMatrixTest {
+
+    @Test
+    public void test() {
+        List<SingleCellExpressionDataVector> vecs = randomSingleCellVectors();
+        DoubleSingleCellExpressionDataMatrix mat = new DoubleSingleCellExpressionDataMatrix( vecs );
+        assertThat( mat.getBioAssays() )
+                .hasSize( 4000 );
+        assertThat( mat.getCellIds() )
+                .hasSize( 4000 );
+        assertThat( mat.getCellIds() )
+                .hasSize( 4000 );
+        assertThat( mat.getCellIdForColumn( 0 ) )
+                .isEqualTo( "1" );
+        assertThat( mat.getCellIdForColumn( 1231 ) )
+                .isEqualTo( "1232" );
+        assertThat( mat.getBioAssayForColumn( 1231 ) )
+                .extracting( BioAssay::getName )
+                .isEqualTo( "ba1" );
+    }
 
     /**
      * On a log-scale, zero is mapped to negative infinity.
