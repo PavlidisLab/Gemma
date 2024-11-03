@@ -11,10 +11,17 @@
         <constructor-arg name="hostUrl" value="${gemma.hosturl}"/>
     </bean>
 
-    <!-- Local tasks executor -->
-    <bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+    <!-- Local tasks executor for short-lived tasks -->
+    <bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor" primary="true">
         <property name="threadNamePrefix" value="gemma-local-tasks-thread-"/>
         <property name="corePoolSize" value="${gemma.localTasks.corePoolSize}"/>
+    </bean>
+
+    <!-- Task executor used for generating data files -->
+    <bean id="expressionDataFileTaskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+        <property name="threadNamePrefix" value="gemma-expression-data-file-tasks-thread-"/>
+        <property name="corePoolSize" value="${gemma.expressionDataFileTasks.corePoolSize}"/>
+        <property name="queueCapacity" value="${gemma.expressionDataFileTasks.queueCapacity}"/>
     </bean>
 
     <!-- Configure Velocity for sending e-mail -->

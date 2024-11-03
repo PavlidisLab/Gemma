@@ -24,7 +24,9 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -65,6 +67,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -110,6 +114,9 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     private EntityUrlBuilder entityUrlBuilder;
     @Autowired
     private BuildInfo buildInfo;
+    @Autowired
+    @Qualifier("expressionDataFileTaskExecutor")
+    private AsyncTaskExecutor expressionDataFileTaskExecutor;
 
     @Value("${gemma.appdata.home}/metadata")
     private Path metadataDir;
@@ -462,6 +469,15 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         }
     }
 
+    @Override
+    public Future<Path> writeOrLocateTabularSingleCellExpressionDataAsync( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) {
+        return expressionDataFileTaskExecutor.submit( () -> {
+            try ( LockedPath lockedPath = writeOrLocateMexSingleCellExpressionData( ee, qt, useStreaming, fetchSize, forceWrite ) ) {
+                return lockedPath.getPath();
+            }
+        } );
+    }
+
     private int writeTabularSingleCellExpressionDataInternal( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useStreaming, int fetchSize, Writer writer ) throws IOException {
         Map<CompositeSequence, Set<Gene>> cs2gene = new HashMap<>();
         TabularMatrixWriter matrixWriter = new TabularMatrixWriter( entityUrlBuilder, buildInfo );
@@ -545,6 +561,15 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                 return lockedPath.toShared();
             }
         }
+    }
+
+    @Override
+    public Future<Path> writeOrLocateMexSingleCellExpressionDataAsync( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) {
+        return expressionDataFileTaskExecutor.submit( () -> {
+            try ( LockedPath lockedPath = writeOrLocateMexSingleCellExpressionData( ee, qt, useStreaming, fetchSize, forceWrite ) ) {
+                return lockedPath.getPath();
+            }
+        } );
     }
 
     @Override

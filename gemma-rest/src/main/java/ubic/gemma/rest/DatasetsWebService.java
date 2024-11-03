@@ -35,7 +35,6 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.SecurityConfig;
 import org.springframework.security.access.annotation.Secured;
@@ -101,6 +100,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -173,8 +173,6 @@ public class DatasetsWebService {
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
     @Autowired
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
-    @Autowired
-    private AsyncTaskExecutor taskExecutor;
     @Autowired
     private AccessDecisionManager accessDecisionManager;
 
@@ -1317,15 +1315,13 @@ public class DatasetsWebService {
                             .header( "Content-Disposition", "attachment; filename=\"" + p.getPath().getFileName() + ".tar\"" )
                             .build();
                 } else {
-                    taskExecutor.submit( () -> {
-                        try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, true, 30, false ) ) {
-                            return lockedPath.getPath();
-                        }
-                    } );
+                    expressionDataFileService.writeOrLocateMexSingleCellExpressionDataAsync( ee, qt, true, 30, false );
                     throw new ServiceUnavailableException( "MEX single-cell data for " + qt + " is still being generated.", 30L );
                 }
             } catch ( TimeoutException e ) {
                 throw new ServiceUnavailableException( "MEX single-cell data for " + qt + " is still being generated.", 30L, e );
+            } catch ( RejectedExecutionException e ) {
+                throw new ServiceUnavailableException( "Too many file generation tasks are being processed at this time.", 30L, e );
             } catch ( InterruptedException e ) {
                 throw new InternalServerErrorException( e );
             }
@@ -1340,16 +1336,15 @@ public class DatasetsWebService {
                     // generate the file in the background and stream it
                     // TODO: limit the number of threads writing SC data to disk to not overwhelm the short-lived task pool
                     log.info( "Single-cell data for " + qt + " is not available, will generate it in the background and stream it in the meantime." );
-                    taskExecutor.submit( () -> {
-                        try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeOrLocateTabularSingleCellExpressionData( ee, qt, true, 30, force ) ) {
-                            return lockedPath.getPath();
-                        }
-                    } );
+                    expressionDataFileService.writeOrLocateTabularSingleCellExpressionDataAsync( ee, qt, true, 30, force );
                     return streamTabularDatasetSingleCellExpression( ee, qt, download );
                 }
             } catch ( TimeoutException e ) {
                 // file is being written, recommend to the user to wait a little bit, stacktrace is superfluous
                 log.warn( "Single-cell data for " + qt + " is still being generated, it will be streamed in the meantime." );
+                return streamTabularDatasetSingleCellExpression( ee, qt, download );
+            } catch ( RejectedExecutionException e ) {
+                log.warn( "Too many file generation tasks are being executed, will stream the single-cell data instead.", e );
                 return streamTabularDatasetSingleCellExpression( ee, qt, download );
             } catch ( InterruptedException e ) {
                 throw new InternalServerErrorException( e );

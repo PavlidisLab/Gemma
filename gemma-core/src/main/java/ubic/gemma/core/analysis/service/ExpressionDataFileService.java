@@ -31,6 +31,8 @@ import java.io.Writer;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -243,6 +245,12 @@ public interface ExpressionDataFileService {
     LockedPath writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) throws IOException;
 
     /**
+     * @see #writeOrLocateTabularSingleCellExpressionData(ExpressionExperiment, QuantitationType, boolean, int, boolean)
+     * @throws RejectedExecutionException if the queue for creating data files is full
+     */
+    Future<Path> writeOrLocateTabularSingleCellExpressionDataAsync( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) throws RejectedExecutionException;
+
+    /**
      * Write single-cell expression data to a given output stream for a given quantitation type.
      * <p>
      * Note: this method is memory intensive because the whole matrix needs to be in-memory to write each individual
@@ -277,6 +285,12 @@ public interface ExpressionDataFileService {
      * @see ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter
      */
     LockedPath writeOrLocateMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) throws IOException;
+
+    /**
+     * @see #writeOrLocateMexSingleCellExpressionData(ExpressionExperiment, QuantitationType, boolean, int, boolean)
+     * @throws RejectedExecutionException if the queue for creating data files is full
+     */
+    Future<Path> writeOrLocateMexSingleCellExpressionDataAsync( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) throws RejectedExecutionException;
 
     /**
      * Write raw expression data to a given writer for a given quantitation type.
