@@ -8,8 +8,8 @@ import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static ubic.gemma.persistence.service.expression.experiment.SingleCellTestUtils.randomSingleCellVectors;
-import static ubic.gemma.persistence.service.expression.experiment.SingleCellTestUtils.setSeed;
+import static ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils.randomSingleCellVectors;
+import static ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils.setSeed;
 
 public class DoubleSingleCellExpressionDataMatrixTest {
 

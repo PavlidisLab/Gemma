@@ -198,9 +198,49 @@ public class QuantitationTypeDetectionUtilsTest {
         assertThat( matrix.rows() ).isEqualTo( 10000 );
         assertThat( matrix.columns() ).isEqualTo( 2 );
         assertThat( inferQuantitationType( matrix ) ).satisfies( qt -> {
+            assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.COUNT );
             assertThat( qt.getScale() ).isEqualTo( ScaleType.COUNT );
             assertThat( qt.getIsRatio() ).isFalse();
             detectSuspiciousValues( matrix, qt );
+        } );
+    }
+
+    @Test
+    public void testRandomLogTransformedCountMatrix() {
+        ExpressionExperiment ee = getTestExpressionExperiment( TechnologyType.SEQUENCING );
+        matrix = randomCountMatrix( ee, ScaleType.LOG2 );
+        assertThat( matrix.rows() ).isEqualTo( 10000 );
+        assertThat( matrix.columns() ).isEqualTo( 2 );
+        assertThat( inferQuantitationType( matrix ) ).satisfies( qt -> {
+            assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.COUNT );
+            assertThat( qt.getScale() ).isEqualTo( ScaleType.LOG2 );
+            assertThat( qt.getIsRatio() ).isFalse();
+        } );
+    }
+
+    @Test
+    public void testRandomLnTransformedCountMatrix() {
+        ExpressionExperiment ee = getTestExpressionExperiment( TechnologyType.SEQUENCING );
+        matrix = randomCountMatrix( ee, ScaleType.LN );
+        assertThat( matrix.rows() ).isEqualTo( 10000 );
+        assertThat( matrix.columns() ).isEqualTo( 2 );
+        assertThat( inferQuantitationType( matrix ) ).satisfies( qt -> {
+            assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.COUNT );
+            assertThat( qt.getScale() ).isEqualTo( ScaleType.LN );
+            assertThat( qt.getIsRatio() ).isFalse();
+        } );
+    }
+
+    @Test
+    public void testRandomLog1pTransformedCountMatrix() {
+        ExpressionExperiment ee = getTestExpressionExperiment( TechnologyType.SEQUENCING );
+        matrix = randomCountMatrix( ee, ScaleType.LOG1P );
+        assertThat( matrix.rows() ).isEqualTo( 10000 );
+        assertThat( matrix.columns() ).isEqualTo( 2 );
+        assertThat( inferQuantitationType( matrix ) ).satisfies( qt -> {
+            assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.COUNT );
+            assertThat( qt.getScale() ).isEqualTo( ScaleType.LOG1P );
+            assertThat( qt.getIsRatio() ).isFalse();
         } );
     }
 

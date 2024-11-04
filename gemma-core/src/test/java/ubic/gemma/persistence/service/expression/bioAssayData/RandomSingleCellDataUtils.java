@@ -1,6 +1,7 @@
-package ubic.gemma.persistence.service.expression.experiment;
+package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import cern.jet.random.NegativeBinomial;
+import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -11,7 +12,6 @@ import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.expression.bioAssayData.NegativeBinomialDistribution;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -22,9 +22,15 @@ import java.util.stream.IntStream;
 
 import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 
-public class SingleCellTestUtils {
+/**
+ * Utilities for generating random single-cell data.
+ * @author poirigui
+ * @see ubic.gemma.persistence.service.expression.bioAssayData.RandomExpressionDataMatrixUtils
+ */
+public class RandomSingleCellDataUtils {
 
     private static final NegativeBinomialDistribution countDistribution = new NegativeBinomialDistribution( 6, 0.5 );
+    private static final LogNormalDistribution logNormalDistribution = new LogNormalDistribution( 6, 0.5 );
     private static final UniformRealDistribution uniform100Distribution = new UniformRealDistribution( 0, 100 );
     private static final Random random = new Random();
 
@@ -33,6 +39,7 @@ public class SingleCellTestUtils {
      */
     public static void setSeed( int seed ) {
         countDistribution.reseedRandomGenerator( seed );
+        logNormalDistribution.reseedRandomGenerator( seed );
         uniform100Distribution.reseedRandomGenerator( seed );
         random.setSeed( seed );
     }
@@ -79,9 +86,13 @@ public class SingleCellTestUtils {
      * @param sparsity            sparsity of the vectors
      */
     public static List<SingleCellExpressionDataVector> randomSingleCellVectors( ExpressionExperiment ee, ArrayDesign ad, QuantitationType qt, int numCellsPerBioAssay, double sparsity ) {
-        Assert.isTrue( qt.getGeneralType() == GeneralType.QUANTITATIVE );
-        Assert.isTrue( qt.getType() == StandardQuantitationType.COUNT );
-        Assert.isTrue( qt.getScale() == ScaleType.COUNT || qt.getScale() == ScaleType.LOG2 || qt.getScale() == ScaleType.LOG1P || qt.getScale() == ScaleType.PERCENT );
+        Assert.isTrue( qt.getGeneralType() == GeneralType.QUANTITATIVE,
+                "Can only generate quantitative data." );
+        Assert.isTrue( qt.getType() == StandardQuantitationType.COUNT || qt.getType() == StandardQuantitationType.AMOUNT );
+        Assert.isTrue( qt.getScale() == ScaleType.COUNT || qt.getScale() == ScaleType.LINEAR
+                        || qt.getScale() == ScaleType.LOG2 || qt.getScale() == ScaleType.LOG1P
+                        || qt.getScale() == ScaleType.PERCENT || qt.getScale() == ScaleType.PERCENT1,
+                "Unsupported scale type for random data vectors: " + qt.getScale() );
         Assert.isTrue( qt.getRepresentation() == PrimitiveType.DOUBLE,
                 "Can only generate double vectors." );
         Assert.isTrue( sparsity >= 0.0 && sparsity <= 1.0, "Sparsity must be between 0 and 1." );
@@ -118,8 +129,14 @@ public class SingleCellTestUtils {
             for ( int i = 0; i < N; i++ ) {
                 if ( qt.getScale() == ScaleType.PERCENT ) {
                     X[i] = uniform100Distribution.sample();
+                } else if ( qt.getScale() == ScaleType.PERCENT1 ) {
+                    X[i] = uniform100Distribution.sample() / 100.0;
                 } else {
-                    X[i] = transform( countDistribution.sample(), qt.getScale() );
+                    if ( qt.getType() == StandardQuantitationType.AMOUNT ) {
+                        X[i] = RandomExpressionDataMatrixUtils.transform( logNormalDistribution.sample(), qt.getScale() );
+                    } else if ( qt.getType() == StandardQuantitationType.COUNT ) {
+                        X[i] = RandomExpressionDataMatrixUtils.transform( countDistribution.sample(), qt.getScale() );
+                    }
                 }
                 IX[i] = ( i * step ) + random.nextInt( step );
             }
@@ -128,19 +145,5 @@ public class SingleCellTestUtils {
             results.add( vector );
         }
         return results;
-    }
-
-    private static double transform( int i, ScaleType scale ) {
-        switch ( scale ) {
-            case LINEAR:
-            case COUNT:
-                return i;
-            case LOG2:
-                return Math.log( i ) / Math.log( 2 );
-            case LOG1P:
-                return Math.log1p( i );
-            default:
-                throw new IllegalArgumentException( "Unsupported scale type: " + scale );
-        }
     }
 }

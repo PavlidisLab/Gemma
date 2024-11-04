@@ -35,6 +35,21 @@ public class RandomExpressionDataMatrixUtils {
         return randomExpressionMatrix( ee, qt, new NegativeBinomialDistribution( 6, 0.5 ) );
     }
 
+    public static ExpressionDataDoubleMatrix randomCountMatrix( ExpressionExperiment ee, ScaleType scaleType ) {
+        ExpressionDataDoubleMatrix matrix = randomCountMatrix( ee );
+        for ( QuantitationType qt : matrix.getQuantitationTypes() ) {
+            qt.setScale( scaleType );
+        }
+        if ( scaleType == ScaleType.COUNT || scaleType == ScaleType.LINEAR ) {
+            return matrix;
+        }
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            for ( int j = 0; j < matrix.columns(); j++ ) {
+                matrix.set( i, j, transform( matrix.get( i, j ), scaleType ) );
+            }
+        }
+        return matrix;
+    }
 
     public static ExpressionDataDoubleMatrix randomLinearMatrix( ExpressionExperiment ee ) {
         QuantitationType qt = new QuantitationType();
@@ -126,6 +141,25 @@ public class RandomExpressionDataMatrixUtils {
             }
         }
         return matrix;
+    }
+
+    static double transform( double val, ScaleType scale ) {
+        switch ( scale ) {
+            case LINEAR:
+                return val;
+            case COUNT:
+                return Math.rint( val );
+            case LOG2:
+                return Math.log( val ) / Math.log( 2 );
+            case LN:
+                return Math.log( val );
+            case LOG10:
+                return Math.log10( val );
+            case LOG1P:
+                return Math.log1p( val );
+            default:
+                throw new IllegalArgumentException( "Unsupported scale type: " + scale );
+        }
     }
 
     /**

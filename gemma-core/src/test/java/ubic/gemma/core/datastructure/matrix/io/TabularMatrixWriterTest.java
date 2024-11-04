@@ -14,8 +14,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static ubic.gemma.persistence.service.expression.experiment.SingleCellTestUtils.randomSingleCellVectors;
-import static ubic.gemma.persistence.service.expression.experiment.SingleCellTestUtils.setSeed;
+import static ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils.randomSingleCellVectors;
+import static ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils.setSeed;
 
 public class TabularMatrixWriterTest {
 

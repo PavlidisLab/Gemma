@@ -26,6 +26,7 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
+import ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -35,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static ubic.gemma.persistence.service.expression.experiment.SingleCellTestUtils.randomSingleCellVectors;
+import static ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils.randomSingleCellVectors;
 import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToDoubles;
 
 @ContextConfiguration
@@ -101,7 +102,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
 
     @Before
     public void setUp() {
-        SingleCellTestUtils.setSeed( 123 );
+        RandomSingleCellDataUtils.setSeed( 123 );
         random = new Random( 123 );
         ad = new ArrayDesign();
         ad.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "cs1" ) );

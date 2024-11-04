@@ -126,6 +126,12 @@ public class QuantitationTypeDetectionUtils {
             return new InferredQuantitationType( StandardQuantitationType.ZSCORE, maximum < 20 ? ScaleType.LOGBASEUNKNOWN : ScaleType.OTHER, false );
         }
 
+        // check for log-transformed counts
+        InferredQuantitationType iqt;
+        if ( ( iqt = isLogTransformedCount( matrix ) ) != null ) {
+            return iqt;
+        }
+
         // various upper-bounds to use for log-based scales
         // see https://github.com/PavlidisLab/Gemma/issues/600 for the rationale behind the following thresholds
         final double[] upperBounds = { 4.81, 11, 20 };
@@ -289,6 +295,62 @@ public class QuantitationTypeDetectionUtils {
             isCount &= x >= 0 && Math.rint( x ) == x;
         }
         return isCount;
+    }
+
+    /**
+     * Check if the data is log-transformed counts.
+     */
+    @Nullable
+    private static InferredQuantitationType isLogTransformedCount( Object matrix ) {
+        // TODO:
+        double[] distinctValues;
+        if ( matrix instanceof DoubleMatrix2D ) {
+            distinctValues = Arrays.stream( ( ( DoubleMatrix2D ) matrix ).viewColumn( 0 ).toArray() )
+                    .filter( Double::isFinite )
+                    .sorted()
+                    .distinct()
+                    .toArray();
+        } else if ( matrix instanceof CompRowMatrix ) {
+            distinctValues = Arrays.stream( ( ( CompRowMatrix ) matrix ).getData() )
+                    .filter( Double::isFinite )
+                    .sorted()
+                    .distinct()
+                    .toArray();
+        } else {
+            throw new UnsupportedOperationException();
+        }
+
+        if ( distinctValues.length < 10 ) {
+            log.warn( "Too few values to detect log-transformed counts." );
+            return null;
+        }
+
+        double[] logBases = { 2, Math.E, 10 };
+        ScaleType[] scaleTypes = { ScaleType.LOG2, ScaleType.LN, ScaleType.LOG10 };
+        // this is only to account for very little floating point differences between different math libraries and also
+        // distinguishing log from log1p
+        double atol = 1e-32;
+
+        for ( int i = 0; i < logBases.length; i++ ) {
+            double base = logBases[i];
+            boolean allLogCounts = true;
+            for ( double val : distinctValues ) {
+                allLogCounts &= Math.abs( Math.log( Math.rint( Math.pow( base, val ) ) ) / Math.log( base ) - val ) < atol;
+            }
+            if ( allLogCounts ) {
+                return new InferredQuantitationType( StandardQuantitationType.COUNT, scaleTypes[i], false );
+            }
+        }
+
+        boolean allLogCounts = true;
+        for ( double val : distinctValues ) {
+            allLogCounts &= Math.abs( Math.log1p( Math.rint( Math.expm1( val ) ) ) ) - val < atol;
+        }
+        if ( allLogCounts ) {
+            return new InferredQuantitationType( StandardQuantitationType.COUNT, ScaleType.LOG1P, false );
+        }
+
+        return null;
     }
 
     private static boolean isPercent( Object matrix ) {
