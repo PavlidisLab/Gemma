@@ -1453,7 +1453,11 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 } else {
                     rdof = fit.getResidualDof();
                 }
-                LinearModelAnalyzer.log.info( "Moderate test statistics: " + timer.getTime() + "ms; Mean.residual.dof=" + rdof + " dfPrior=" + fit.getDfPrior() + " varPrior=" + fit.getVarPrior() );
+                LinearModelAnalyzer.log.info( "Moderate test statistics: " + timer.getTime() + "ms; Mean.residual.dof=" + String.format( "%.3f", rdof ) + " dfPrior=" + fit.getDfPrior() + " varPrior=" + String.format( "%.3f", fit.getVarPrior() ) );
+
+                if ( Double.isNaN( fit.getDfPrior() ) || Double.isInfinite( fit.getDfPrior() ) ) {
+                    throw new IllegalStateException( "Prior degrees of freedom (dfPrior) is NaN or infinite, cannot use eBayes." );
+                }
             }
 
             timer.reset();
