@@ -34,8 +34,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.util.*;
 
-import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
-
 /**
  * @author pavlidis
  */
@@ -135,7 +133,7 @@ public class MatrixConversionTest extends TestCase {
             for ( int k = 0; k < data.length; k++ ) {
                 data[k] = k;
             }
-            vector.setData( doubleArrayToBytes( data ) );
+            vector.setDataAsDoubles( data );
 
             CompositeSequence cs = sequencesb.get( ( int ) j );
             vector.setDesignElement( cs );

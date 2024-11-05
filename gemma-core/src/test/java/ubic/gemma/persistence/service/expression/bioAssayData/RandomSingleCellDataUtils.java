@@ -20,8 +20,6 @@ import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
-
 /**
  * Utilities for generating random single-cell data.
  * @author poirigui
@@ -140,7 +138,7 @@ public class RandomSingleCellDataUtils {
                 }
                 IX[i] = ( i * step ) + random.nextInt( step );
             }
-            vector.setData( doubleArrayToBytes( X ) );
+            vector.setDataAsDoubles( X );
             vector.setDataIndices( IX );
             results.add( vector );
         }

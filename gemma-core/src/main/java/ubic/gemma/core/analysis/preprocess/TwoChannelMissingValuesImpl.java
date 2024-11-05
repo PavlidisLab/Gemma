@@ -46,8 +46,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import java.util.Collection;
 import java.util.HashSet;
 
-import static ubic.gemma.persistence.util.ByteArrayUtils.booleanArrayToBytes;
-
 /**
  * Computes a missing value matrix for ratiometric data sets.
  * <p>
@@ -331,7 +329,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
             this.fillGapsInCalls( detectionCalls );
         }
 
-        vect.setData( booleanArrayToBytes( ArrayUtils.toPrimitive( detectionCalls ) ) );
+        vect.setDataAsBooleans( ArrayUtils.toPrimitive( detectionCalls ) );
         results.add( vect );
 
         if ( ++count % 4000 == 0 ) {

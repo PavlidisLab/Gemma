@@ -55,7 +55,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import java.util.*;
 
 import static org.junit.Assert.*;
-import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToDoubles;
 
 /**
  * @author pavlidis
@@ -402,7 +401,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
              */
             if ( vector.getDesignElement().getName().equals( "40" ) ) {
                 foundVector = true;
-                Double[] d = ArrayUtils.toObject( byteArrayToDoubles( vector.getData() ) );
+                Double[] d = ArrayUtils.toObject( vector.getDataAsDoubles() );
                 assertEquals( 20, d.length );
                 assertEquals( Double.NaN, d[1], 0.001 );
                 assertEquals( -1.152, d[10], 0.001 );

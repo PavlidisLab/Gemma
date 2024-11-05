@@ -35,11 +35,9 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.annotation.Nullable;
 import java.text.NumberFormat;
 import java.util.*;
-
-import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToDoubles;
-import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 
 /**
  * A data structure that holds a reference to the data for a given expression experiment. The data can be queried by row
@@ -387,7 +385,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     }
 
     @Override
-    public void set( int row, int column, Double value ) {
+    public void set( int row, int column, @Nullable Double value ) {
         if ( value == null ) {
             matrix.set( row, column, Double.NaN );
         } else {
@@ -406,12 +404,11 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         }
         BioAssayDimension bad = this.getBestBioAssayDimension();
         for ( int i = 0; i < this.rows(); i++ ) {
-            Double[] data = this.getRow( i );
             ProcessedExpressionDataVector v = ProcessedExpressionDataVector.Factory.newInstance();
             v.setBioAssayDimension( bad );
             v.setDesignElement( this.getRowNames().get( i ) );
             v.setQuantitationType( qt );
-            v.setData( doubleArrayToBytes( data ) );
+            v.setDataAsDoubles( this.getRawRow( i ) );
             v.setExpressionExperiment( this.expressionExperiment );
             // we don't fill in the ranks because we only have the mean value here.
             result.add( v );
@@ -434,12 +431,11 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
         BioAssayDimension bad = this.getBestBioAssayDimension();
         for ( int i = 0; i < this.rows(); i++ ) {
-            Double[] data = this.getRow( i );
             RawExpressionDataVector v = RawExpressionDataVector.Factory.newInstance();
             v.setBioAssayDimension( bad );
             v.setDesignElement( this.getRowNames().get( i ) );
             v.setQuantitationType( qt );
-            v.setData( doubleArrayToBytes( data ) );
+            v.setDataAsDoubles( this.getRawRow( i ) );
             v.setExpressionExperiment( this.expressionExperiment );
             // we don't fill in the ranks because we only have the mean value here.
             result.add( v );
@@ -462,7 +458,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         return this.ranks;
     }
 
-    public double[] getRawRow( Integer index ) {
+    public double[] getRawRow( int index ) {
         return matrix.getRow( index );
     }
 
@@ -589,7 +585,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         Map<Integer, CompositeSequence> rowNames = new TreeMap<>();
         for ( BulkExpressionDataVector vector : vectors ) {
             BioAssayDimension dimension = vector.getBioAssayDimension();
-            byte[] bytes = vector.getData();
 
             CompositeSequence designElement = vector.getDesignElement();
             assert designElement != null : "No design element for " + vector;
@@ -599,12 +594,12 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
             rowNames.put( rowIndex, designElement );
 
-            double[] vals = byteArrayToDoubles( bytes );
+            double[] vals = vector.getDataAsDoubles();
 
             Collection<BioAssay> bioAssays = dimension.getBioAssays();
             if ( bioAssays.size() != vals.length )
                 throw new IllegalStateException(
-                        "Mismatch: " + vals.length + " values in vector ( " + bytes.length + " bytes) for "
+                        "Mismatch: " + vals.length + " values in vector ( " + vector.getData().length + " bytes) for "
                                 + designElement + " got " + bioAssays.size() + " bioassays in the bioAssayDimension" );
 
             Iterator<BioAssay> it = bioAssays.iterator();

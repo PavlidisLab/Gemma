@@ -50,8 +50,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
-
 /**
  * Convert a simple matrix and some meta-data into an ExpressionExperiment. Used to handle flat file conversion.
  *
@@ -316,20 +314,16 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         }
 
         for ( int i = 0; i < matrix.rows(); i++ ) {
-            byte[] bdata = doubleArrayToBytes( matrix.getRow( i ) );
-
-            RawExpressionDataVector vector = RawExpressionDataVector.Factory.newInstance();
-            vector.setData( bdata );
-
             CompositeSequence cs = csMap.get( matrix.getRowName( i ) );
             if ( cs == null ) {
                 continue;
             }
+            RawExpressionDataVector vector = RawExpressionDataVector.Factory.newInstance();
             vector.setDesignElement( cs );
             vector.setQuantitationType( quantitationType );
             vector.setExpressionExperiment( expressionExperiment );
             vector.setBioAssayDimension( bioAssayDimension );
-
+            vector.setDataAsDoubles( matrix.getRow( i ) );
             vectors.add( vector );
 
         }

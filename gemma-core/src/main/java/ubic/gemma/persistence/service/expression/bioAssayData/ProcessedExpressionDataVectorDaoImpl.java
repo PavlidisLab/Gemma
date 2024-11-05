@@ -44,7 +44,6 @@ import ubic.gemma.persistence.util.CommonQueries;
 import java.util.*;
 
 import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.ensureLog2Scale;
-import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 import static ubic.gemma.persistence.util.QueryUtils.batchIdentifiableParameterList;
 import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
 
@@ -151,7 +150,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             vec.setBioAssayDimension( preferredMaskedDataDimension );
             vec.setDesignElement( cs );
             // assert this.getBioAssays().size() > 0;
-            vec.setData( doubleArrayToBytes( dvvo.getData() ) );
+            vec.setDataAsDoubles( dvvo.getData() );
             vec.setRankByMax( dvvo.getRankByMax() );
             vec.setRankByMean( dvvo.getRankByMean() );
 

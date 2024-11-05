@@ -32,8 +32,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
-import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
-
 /**
  * Load single cell data from <a href="https://kb.10xgenomics.com/hc/en-us/articles/115000794686-How-is-the-MEX-format-used-for-the-gene-barcode-matrices">10X Genomics MEX format</a>.
  *
@@ -349,7 +347,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
                 }
                 offset += baNnz;
             }
-            vector.setData( doubleArrayToBytes( X ) );
+            vector.setDataAsDoubles( X );
             vector.setDataIndices( IX );
             return vector;
         } );

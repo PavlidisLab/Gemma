@@ -56,7 +56,7 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
      * Obtain the type assignment of a given cell.
      *
      * @return the type assignment of a given cell, or null if the type was assigne to {@link #UNKNOWN_CELL_TYPE}.
-     * @throws IndexOutOfBoundsException if the cell index is out of range or if the value is ousitde the range o
+     * @throws IndexOutOfBoundsException if the cell index is out of bounds
      */
     @Nullable
     public Characteristic getCellType( int cellIndex ) throws IndexOutOfBoundsException {

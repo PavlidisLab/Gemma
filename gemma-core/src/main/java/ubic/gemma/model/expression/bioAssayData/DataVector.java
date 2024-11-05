@@ -20,11 +20,16 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.util.Assert;
 import ubic.gemma.model.common.AbstractIdentifiable;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.persistence.Transient;
 import java.util.Objects;
+
+import static ubic.gemma.persistence.util.ByteArrayUtils.*;
 
 /**
  * An abstract class representing a one-dimensional vector of data about some aspect of an {@link ExpressionExperiment}.
@@ -37,6 +42,51 @@ public abstract class DataVector extends AbstractIdentifiable {
     private ExpressionExperiment expressionExperiment;
     private QuantitationType quantitationType;
     private byte[] data;
+
+    @Transient
+    public double[] getDataAsDoubles() {
+        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.DOUBLE );
+        return byteArrayToDoubles( data );
+    }
+
+    public void setDataAsDoubles( double[] data ) {
+        setData( doubleArrayToBytes( data ) );
+    }
+
+    @Transient
+    public boolean[] getDataAsBooleans() {
+        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.BOOLEAN );
+        return byteArrayToBooleans( data );
+    }
+
+    public void setDataAsBooleans( boolean[] data ) {
+        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.BOOLEAN );
+        setData( booleanArrayToBytes( data ) );
+    }
+
+    @Transient
+    public char[] getDataAsChars() {
+        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.CHAR );
+        return byteArrayToChars( data );
+    }
+
+    @Transient
+    public int[] getDataAsInts() {
+        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.INT );
+        return byteArrayToInts( data );
+    }
+
+    @Transient
+    public long[] getDataAsLongs() {
+        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.LONG );
+        return byteArrayToLongs( data );
+    }
+
+    @Transient
+    public String[] getDataAsStrings() {
+        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.STRING );
+        return byteArrayToStrings( data );
+    }
 
     /**
      * Returns a hash code based on this entity's identifiers.

@@ -55,7 +55,6 @@ import java.nio.file.Path;
 import java.util.*;
 
 import static org.junit.Assert.*;
-import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 
 /**
  * @author keshav
@@ -227,18 +226,14 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         bioAssayDimension.setBioAssays( assays );
 
         RawExpressionDataVector vector1 = RawExpressionDataVector.Factory.newInstance();
-        double[] ddata1 = { 74.9, 101.7 };
-        byte[] bdata1 = doubleArrayToBytes( ddata1 );
-        vector1.setData( bdata1 );
         vector1.setQuantitationType( qt );
         vector1.setBioAssayDimension( bioAssayDimension );
+        vector1.setDataAsDoubles( new double[] { 74.9, 101.7 } );
 
         RawExpressionDataVector vector2 = RawExpressionDataVector.Factory.newInstance();
-        double[] ddata2 = { 404.6, 318.7 };
-        byte[] bdata2 = doubleArrayToBytes( ddata2 );
-        vector2.setData( bdata2 );
         vector2.setQuantitationType( qt );
         vector2.setBioAssayDimension( bioAssayDimension );
+        vector2.setDataAsDoubles( new double[] { 404.6, 318.7 } );
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( "test ar" );

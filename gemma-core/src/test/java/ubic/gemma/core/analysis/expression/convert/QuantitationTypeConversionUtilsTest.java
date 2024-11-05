@@ -19,7 +19,6 @@ import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.*;
 import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.ensureLog2Scale;
-import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 
 public class QuantitationTypeConversionUtilsTest {
 
@@ -34,12 +33,12 @@ public class QuantitationTypeConversionUtilsTest {
         ad.setTechnologyType( TechnologyType.ONECOLOR );
         CompositeSequence cs = CompositeSequence.Factory.newInstance( "test", ad );
         ev.setDesignElement( cs );
-        ev.setData( doubleArrayToBytes( new Double[] { 4.0 } ) );
         qt = new QuantitationType();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setRepresentation( PrimitiveType.DOUBLE );
         ev.setQuantitationType( qt );
+        ev.setDataAsDoubles( new double[] { 4.0 } );
         BioAssayDimension bad = new BioAssayDimension();
         BioAssay ba = new BioAssay();
         BioMaterial bm = new BioMaterial();

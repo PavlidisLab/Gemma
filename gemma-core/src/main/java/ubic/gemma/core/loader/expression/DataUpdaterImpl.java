@@ -65,8 +65,6 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.*;
 
-import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
-
 /**
  * Update or fill in the data associated with an experiment. Cases include reprocessing data from CEL files (Affymetrix,
  * GEO only), inserting data for RNA-seq data sets but also generic cases where data didn't come from GEO and we need to
@@ -992,29 +990,22 @@ public class DataUpdaterImpl implements DataUpdater {
         assert !bioAssayDimension.getBioAssays().isEmpty();
 
         for ( int i = 0; i < data.rows(); i++ ) {
-            byte[] bdata = doubleArrayToBytes( data.getRow( i ) );
-
-            RawExpressionDataVector vector = RawExpressionDataVector.Factory.newInstance();
-            vector.setData( bdata );
-
             CompositeSequence cs = data.getRowElement( i ).getDesignElement();
-
             if ( cs == null ) {
                 continue;
             }
-
             if ( !cs.getArrayDesign().equals( targetPlatform ) ) {
                 throw new IllegalArgumentException(
                         "Input data must use the target platform (was: " + cs.getArrayDesign() + ", expected: "
                                 + targetPlatform );
             }
-
+            RawExpressionDataVector vector = RawExpressionDataVector.Factory.newInstance();
             vector.setDesignElement( cs );
             vector.setQuantitationType( qt );
             vector.setExpressionExperiment( ee );
             vector.setBioAssayDimension( bioAssayDimension );
+            vector.setDataAsDoubles( data.getRawRow( i ) );
             vectors.add( vector );
-
         }
         return vectors;
     }

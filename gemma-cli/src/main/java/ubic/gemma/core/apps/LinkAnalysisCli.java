@@ -57,8 +57,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
-
 /**
  * Commandline tool to conduct link (coexpression) analysis.
  *
@@ -364,10 +362,9 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 BioAssayDimension bad = this.makeBioAssayDimension( arrayDesign, matrix );
 
                 for ( int i = 0; i < matrix.rows(); i++ ) {
-                    byte[] bData = doubleArrayToBytes( matrix.getRow( i ) );
 
                     ProcessedExpressionDataVector vector = ProcessedExpressionDataVector.Factory.newInstance();
-                    vector.setData( bData );
+                    vector.setDataAsDoubles( matrix.getRow( i ) );
 
                     CompositeSequence cs = csMap.get( matrix.getRowName( i ) );
                     if ( cs == null ) {

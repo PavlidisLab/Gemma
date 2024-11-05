@@ -46,9 +46,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import javax.annotation.Nullable;
 import java.util.*;
 
-import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToDoubles;
-import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
-
 /**
  * Transactional methods.
  *
@@ -132,13 +129,13 @@ class ProcessedExpressionDataVectorHelperServiceImpl
 
         for ( ProcessedExpressionDataVector v : processedDataVectors ) {
             assert newBioAssayDimension != null;
-            double[] data = byteArrayToDoubles( v.getData() );
+            double[] data = v.getDataAsDoubles();
             // put the data in the order of the bioAssayDimension.
             double[] resortedData = new double[data.length];
             for ( int k = 0; k < data.length; k++ ) {
                 resortedData[k] = data[indexes[k]];
             }
-            v.setData( doubleArrayToBytes( resortedData ) );
+            v.setDataAsDoubles( resortedData );
             v.setBioAssayDimension( newBioAssayDimension );
         }
 

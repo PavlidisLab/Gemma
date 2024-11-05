@@ -37,8 +37,6 @@ import ubic.gemma.persistence.util.ChannelUtils;
 import javax.annotation.Nullable;
 import java.util.*;
 
-import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToDoubles;
-
 /**
  * Utility methods for taking an ExpressionExperiment and returning various types of ExpressionDataMatrices, such as the
  * processed data, preferred data, background, etc. This class is not database aware; use the
@@ -803,8 +801,8 @@ public class ExpressionDataMatrixBuilder {
                 numMissingValues.put( qt, 0 );
             }
 
-            for ( Double d : byteArrayToDoubles( vector.getData() ) ) {
-                if ( d.isNaN() ) {
+            for ( double d : vector.getDataAsDoubles() ) {
+                if ( Double.isNaN( d ) ) {
                     anyMissing = true;
                     numMissingValues.put( qt, numMissingValues.get( qt ) + 1 );
                 }

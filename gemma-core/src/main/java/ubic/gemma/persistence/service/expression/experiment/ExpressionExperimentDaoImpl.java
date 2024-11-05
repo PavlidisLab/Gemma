@@ -2298,14 +2298,8 @@ public class ExpressionExperimentDaoImpl
                 int[] row = it.next();
                 // the first sample starts at zero, the use the end as the start of the next one
                 int start = 0;
-                int end;
                 for ( int i = 0; i < dimension.getBioAssays().size(); i++ ) {
-                    int sampleOffset = dimension.getBioAssaysOffset()[i];
-                    int nextSampleOffset = sampleOffset + dimension.getNumberOfCellsBySample( i );
-                    end = Arrays.binarySearch( row, start, row.length, nextSampleOffset );
-                    if ( end < 0 ) {
-                        end = -end - 1;
-                    }
+                    int end = SingleCellExpressionDataVectorUtils.getSampleEnd( dimension, row, i, start );
                     nnzs[i] += end - start;
                     start = end;
                 }

@@ -30,7 +30,10 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.Filter;
+import ubic.gemma.persistence.util.FilterQueryUtils;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Subquery;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -526,12 +529,12 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         qt.setIsSingleCellPreferred( true );
         ee.getQuantitationTypes().add( qt );
         SingleCellExpressionDataVector vector = new SingleCellExpressionDataVector();
-        vector.setData( ByteArrayUtils.doubleArrayToBytes( new double[] { 1.0, 2.0, 1.0, 2.0 } ) );
-        vector.setDataIndices( new int[] { 0, 1, 2, 4 } );
         vector.setExpressionExperiment( ee );
         vector.setDesignElement( cs );
         vector.setQuantitationType( qt );
         vector.setSingleCellDimension( scd );
+        vector.setDataAsDoubles( new double[] { 1.0, 2.0, 1.0, 2.0 } );
+        vector.setDataIndices( new int[] { 0, 1, 2, 4 } );
         ee.getSingleCellExpressionDataVectors().add( vector );
         sessionFactory.getCurrentSession().persist( ee );
         sessionFactory.getCurrentSession().flush();

@@ -39,8 +39,13 @@ public interface CellLevelCharacteristics extends Identifiable {
      */
     int[] getIndices();
 
+    /**
+     * Obtain the characteristic assigned to a given cell.
+     * @return the characteristic or {@code null} if the cell is assigned to {@link #UNKNOWN_CHARACTERISTIC}.
+     * @throws IndexOutOfBoundsException if the cell index is out of bounds
+     */
     @Nullable
-    Characteristic getCharacteristic( int cellIndex );
+    Characteristic getCharacteristic( int cellIndex ) throws IndexOutOfBoundsException;
 
     class Factory {
 

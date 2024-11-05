@@ -32,6 +32,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static ubic.gemma.persistence.service.expression.experiment.SingleCellSparsityMetrics.*;
+
 @Service
 @CommonsLog
 public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpressionExperimentService {
@@ -245,7 +247,10 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         for ( BioAssay ba : ee.getBioAssays() ) {
             int sampleIndex = dimension.getBioAssays().indexOf( ba );
             if ( sampleIndex != -1 ) {
-                // TODO
+                log.info( "Applying sparsity metrics to " + ba + "..." );
+                ba.setNumberOfCells( getNumberOfCells( vectors, ba, sampleIndex, null ) );
+                ba.setNumberOfDesignElements( getNumberOfDesignElements( vectors, ba, sampleIndex, null ) );
+                ba.setNumberOfCellsByDesignElements( getNumberOfCellsByDesignElements( vectors, ba, sampleIndex, null ) );
             } else {
                 log.warn( ba + " is not used in " + dimension + ", the single-cell sparsity metrics will be set to null." );
                 ba.setNumberOfCells( null );

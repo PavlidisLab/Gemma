@@ -10,7 +10,6 @@ import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.util.ByteArrayUtils;
 
 import java.util.*;
 
@@ -56,7 +55,7 @@ public class DoubleSingleCellExpressionDataMatrix implements SingleCellExpressio
         i = 0;
         for ( SingleCellExpressionDataVector v : sortedVectors ) {
             designElements.add( v.getDesignElement() );
-            double[] row = ByteArrayUtils.byteArrayToDoubles( v.getData() );
+            double[] row = v.getDataAsDoubles();
             int[] indices = v.getDataIndices();
             for ( int j = 0; j < row.length; j++ ) {
                 matrix.set( i, indices[j], row[j] );

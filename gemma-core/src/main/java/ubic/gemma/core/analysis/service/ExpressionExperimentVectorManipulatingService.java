@@ -27,8 +27,6 @@ import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataV
 import java.util.Arrays;
 import java.util.List;
 
-import static ubic.gemma.persistence.util.ByteArrayUtils.*;
-
 /**
  * @author pavlidis
  */
@@ -46,36 +44,28 @@ public abstract class ExpressionExperimentVectorManipulatingService {
      * @param oldV vector to be converted
      */
     protected void convertFromBytes( List<Object> data, PrimitiveType representation, DesignElementDataVector oldV ) {
-        byte[] rawDat = oldV.getData();
-
         if ( representation.equals( PrimitiveType.BOOLEAN ) ) {
-            boolean[] convertedDat = byteArrayToBooleans( rawDat );
-            for ( boolean b : convertedDat ) {
+            for ( boolean b : oldV.getDataAsBooleans() ) {
                 data.add( b );
             }
         } else if ( representation.equals( PrimitiveType.CHAR ) ) {
-            char[] convertedDat = byteArrayToChars( rawDat );
-            for ( char b : convertedDat ) {
+            for ( char b : oldV.getDataAsChars() ) {
                 data.add( b );
             }
         } else if ( representation.equals( PrimitiveType.DOUBLE ) ) {
-            double[] convertedDat = byteArrayToDoubles( rawDat );
-            for ( double b : convertedDat ) {
+            for ( double b : oldV.getDataAsDoubles() ) {
                 data.add( b );
             }
         } else if ( representation.equals( PrimitiveType.INT ) ) {
-            int[] convertedDat = byteArrayToInts( rawDat );
-            for ( int b : convertedDat ) {
+            for ( int b : oldV.getDataAsInts() ) {
                 data.add( b );
             }
         } else if ( representation.equals( PrimitiveType.LONG ) ) {
-            long[] convertedDat = byteArrayToLongs( rawDat );
-            for ( long b : convertedDat ) {
+            for ( long b : oldV.getDataAsLongs() ) {
                 data.add( b );
             }
         } else if ( representation.equals( PrimitiveType.STRING ) ) {
-            String[] convertedDat = byteArrayToStrings( rawDat );
-            data.addAll( Arrays.asList( convertedDat ) );
+            data.addAll( Arrays.asList( oldV.getDataAsStrings() ) );
         } else {
             throw new UnsupportedOperationException( "Don't know how to handle " + representation );
         }

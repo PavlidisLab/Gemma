@@ -46,7 +46,6 @@ import java.util.*;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 
 /**
  * Other tests can extend this class if they want an expression experiment with complete block design and biological
@@ -475,12 +474,9 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
             double[] dvals = new double[bioMaterials.size()];
             for ( int j = 0; j < dvals.length; j++ ) {
-
                 dvals[j] = dataMatrix.get( i, j );
             }
-
-            byte[] bvals = doubleArrayToBytes( dvals );
-            vector.setData( bvals );
+            vector.setDataAsDoubles( dvals );
 
             vectors.add( vector );
 

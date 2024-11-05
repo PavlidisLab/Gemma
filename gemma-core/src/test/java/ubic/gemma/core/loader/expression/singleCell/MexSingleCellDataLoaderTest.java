@@ -7,7 +7,6 @@ import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.util.ByteArrayUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -64,7 +63,7 @@ public class MexSingleCellDataLoaderTest {
         assertThat( vectors.stream().filter( v -> v.getDesignElement().getName().equals( "ENSMUSG00000074782" ) ).findFirst() )
                 .hasValueSatisfying( v -> {
                     assertThat( v.getOriginalDesignElement() ).isEqualTo( "ENSMUSG00000074782" );
-                    assertThat( ByteArrayUtils.byteArrayToDoubles( v.getData() ) )
+                    assertThat( v.getDataAsDoubles() )
                             .containsExactly( 1, 1, 1, 1, 1, 1, 1 );
                     assertThat( v.getDataIndices() )
                             .containsExactly( 38, 256, 382, 431, 788, 814, 942 );
@@ -73,7 +72,7 @@ public class MexSingleCellDataLoaderTest {
         assertThat( vectors.stream().filter( v -> v.getDesignElement().getName().equals( "ENSMUSG00000038206" ) ).findFirst() )
                 .hasValueSatisfying( v -> {
                     int lastSampleOffset = dimension.getBioAssaysOffset()[3];
-                    assertThat( ByteArrayUtils.byteArrayToDoubles( v.getData() ) )
+                    assertThat( v.getDataAsDoubles() )
                             .hasSize( 594 );
                     assertThat( v.getDataIndices() )
                             .hasSize( 594 )
@@ -117,7 +116,7 @@ public class MexSingleCellDataLoaderTest {
 
         assertThat( vectors.stream().filter( v -> v.getDesignElement().getName().equals( "ENSMUSG00000039108" ) ).findFirst() )
                 .hasValueSatisfying( v -> {
-                    assertThat( ByteArrayUtils.byteArrayToDoubles( v.getData() ) )
+                    assertThat( v.getDataAsDoubles() )
                             .hasSize( 155 )
                             .startsWith( 2, 1, 1, 1, 1 );
                     assertThat( v.getDataIndices() )
@@ -127,7 +126,7 @@ public class MexSingleCellDataLoaderTest {
 
         assertThat( vectors.stream().filter( v -> v.getDesignElement().getName().equals( "ENSMUSG00000027291" ) ).findFirst() )
                 .hasValueSatisfying( v -> {
-                    assertThat( ByteArrayUtils.byteArrayToDoubles( v.getData() ) )
+                    assertThat( v.getDataAsDoubles() )
                             .containsExactly( 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
                                     1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0,
                                     1.0, 1.0, 1.0, 1.0, 1.0, 3.0, 1.0, 2.0, 1.0, 1.0, 3.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
@@ -188,7 +187,7 @@ public class MexSingleCellDataLoaderTest {
 
         assertThat( vectors.stream().filter( v -> v.getDesignElement().getName().equals( "ENSMUSG00000039108" ) ).findFirst() )
                 .hasValueSatisfying( v -> {
-                    assertThat( ByteArrayUtils.byteArrayToDoubles( v.getData() ) )
+                    assertThat( v.getDataAsDoubles() )
                             .hasSize( 155 )
                             .startsWith( 2, 1, 1, 1, 1 );
                     assertThat( v.getDataIndices() )

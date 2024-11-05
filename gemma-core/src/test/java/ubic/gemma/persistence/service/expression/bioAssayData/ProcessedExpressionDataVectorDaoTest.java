@@ -15,7 +15,6 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
-import ubic.gemma.core.analysis.preprocess.detect.QuantitationMismatchException;
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
@@ -39,7 +38,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomExpressionDataMatrixUtils.randomExpressionMatrix;
-import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 
 @ContextConfiguration
 @TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
@@ -257,11 +255,11 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
         int i = 0;
         for ( double[] row : matrix ) {
             RawExpressionDataVector ev = new RawExpressionDataVector();
-            ev.setBioAssayDimension( bad );
-            ev.setDesignElement( probes.get( i ) );
-            ev.setData( doubleArrayToBytes( row ) );
             ev.setExpressionExperiment( ee );
             ev.setQuantitationType( qt );
+            ev.setBioAssayDimension( bad );
+            ev.setDesignElement( probes.get( i ) );
+            ev.setDataAsDoubles( row );
             vectors.add( ev );
             i++;
         }

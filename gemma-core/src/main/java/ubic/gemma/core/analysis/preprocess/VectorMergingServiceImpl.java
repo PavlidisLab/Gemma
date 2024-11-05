@@ -514,7 +514,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
             buf.append( vector.getDesignElement() );
             QuantitationType qtype = vector.getQuantitationType();
             if ( qtype.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
-                double[] vals = byteArrayToDoubles( vector.getData() );
+                double[] vals = vector.getDataAsDoubles();
                 for ( double d : vals ) {
                     buf.append( "\t" ).append( d );
                 }

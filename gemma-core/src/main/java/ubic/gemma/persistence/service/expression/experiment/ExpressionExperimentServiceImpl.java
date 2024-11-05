@@ -284,8 +284,6 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     public int replaceAllRawDataVectors( ExpressionExperiment ee,
             Collection<RawExpressionDataVector> newVectors ) {
-        ee = ensureInSession( ee );
-       
         if ( newVectors.isEmpty() ) {
             throw new UnsupportedOperationException( "Only use this method for replacing vectors, not erasing them" );
         }

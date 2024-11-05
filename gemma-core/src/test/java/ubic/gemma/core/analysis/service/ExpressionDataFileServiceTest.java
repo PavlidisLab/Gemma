@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
@@ -118,6 +119,11 @@ public class ExpressionDataFileServiceTest extends AbstractJUnit4SpringContextTe
 
         @Bean
         public EntityUrlBuilder entityUrlBuilder() {
+            return mock();
+        }
+
+        @Bean
+        public AsyncTaskExecutor expressionDataFileTaskExecutor() {
             return mock();
         }
     }

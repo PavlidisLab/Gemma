@@ -38,7 +38,7 @@ import java.util.zip.GZIPOutputStream;
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.convertVector;
 import static ubic.gemma.core.util.TsvUtils.SUB_DELIMITER;
 import static ubic.gemma.core.util.TsvUtils.format;
-import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToDoubles;
+import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.getSampleEnd;
 
 /**
  * Writes {@link SingleCellExpressionDataMatrix} to the <a href="https://www.10xgenomics.com/support/software/cell-ranger/latest/analysis/outputs/cr-outputs-mex-matrices">10x MEX format</a>.
@@ -317,7 +317,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
         if ( vector.getQuantitationType().getRepresentation() != PrimitiveType.DOUBLE ) {
             throw new UnsupportedOperationException( "Unsupported vector representation type " + vector.getQuantitationType().getRepresentation() );
         }
-        writeDoubleVector( vector, convertVector( byteArrayToDoubles( vector.getData() ), vector.getQuantitationType(), scaleType ), row, writers );
+        writeDoubleVector( vector, convertVector( vector.getDataAsDoubles(), vector.getQuantitationType(), scaleType ), row, writers );
     }
 
     private void writeDoubleVector( SingleCellExpressionDataVector vector, double[] data, int row, MatrixVectorWriter[] writers ) {
@@ -325,15 +325,8 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
         // the first sample always start at zero
         int start = 0;
         for ( int sampleIndex = 0; sampleIndex < vector.getSingleCellDimension().getBioAssays().size(); sampleIndex++ ) {
+            int end = getSampleEnd( vector, sampleIndex, start );
             int sampleOffset = vector.getSingleCellDimension().getBioAssaysOffset()[sampleIndex];
-            int numberOfCells = vector.getSingleCellDimension().getNumberOfCellsBySample( sampleIndex );
-            int nextSampleOffset = sampleOffset + numberOfCells;
-
-            // check where the next sample begins, only search past this sample starting point
-            int end = Arrays.binarySearch( colind, start, colind.length, nextSampleOffset );
-            if ( end < 0 ) {
-                end = -end - 1;
-            }
             int sampleNnz = end - start;
 
             int[] sampleRows = new int[sampleNnz];
