@@ -1,5 +1,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
+import org.assertj.core.data.Offset;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -162,9 +163,12 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                 .thenReturn( vectors );
 
         QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true );
-        assertThat( newQt.getName() ).isEqualTo( "Counts aggregated by cell type" );
-        assertThat( newQt.getDescription() ).isEqualTo( "Expression data has been aggregated by cell type using SUM." );
+        assertThat( newQt.getName() ).isEqualTo( "Counts aggregated by cell type (log2cpm)" );
+        assertThat( newQt.getDescription() ).isEqualTo( "Expression data has been aggregated by cell type using SUM. The data was subsequently converted to log2cpm." );
         assertThat( newQt.getIsPreferred() ).isTrue();
+        assertThat( newQt.getType() ).isEqualTo( StandardQuantitationType.AMOUNT );
+        assertThat( newQt.getScale() ).isEqualTo( ScaleType.LOG2 );
+
         verify( bioAssayDimensionService ).findOrCreate( any() );
         ArgumentCaptor<Collection<BioAssay>> capt2 = ArgumentCaptor.captor();
         verify( bioAssayService ).update( capt2.capture() );
@@ -179,6 +183,16 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         verify( expressionExperimentService ).addRawDataVectors( eq( ee ), eq( newQt ), capt.capture() );
         assertThat( capt.getValue() )
                 .hasSameSizeAs( ad.getCompositeSequences() )
+                .satisfies( vecs -> {
+                    // make sure the data is log2cpm
+                    double total = 0;
+                    for ( RawExpressionDataVector vec : vecs ) {
+                        total += Math.pow( 2, byteArrayToDoubles( vec.getData() )[0] );
+                    }
+                    // because the numerator (librarySize + 1) and numerical error from log/exp transformation, the
+                    // offset will be pretty large. This is attenuated by large library sizes.
+                    assertThat( total ).isEqualTo( 1e6, Offset.offset( 1e4 ) );
+                } )
                 .anySatisfy( rawVec -> {
                     assertThat( rawVec.getDesignElement().getName() ).isEqualTo( "cs1" );
                     assertThat( rawVec.getBioAssayDimension().getName() )
@@ -188,9 +202,9 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                     assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
                     assertThat( byteArrayToDoubles( rawVec.getData() ) )
                             .hasSize( 16 )
-                            .containsExactly( 165.0, 165.0, 165.0, 165.0, 161.0, 161.0, 161.0, 161.0, 124.0, 124.0, 124.0, 124.0, 0.0, 0.0, 0.0, 0.0 );
+                            .containsExactly( 19.927216544784468, 19.927216544784468, 19.927216544784468, 19.927216544784468, 19.927108921133478, 19.927108921133478, 19.927108921133478, 19.927108921133478, 19.925786216730167, 19.925786216730167, 19.925786216730167, 19.925786216730167, Double.NaN, Double.NaN, Double.NaN, Double.NaN );
                 } );
-        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any() );
+        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
     }
 
     @Test
@@ -212,9 +226,12 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                 .thenReturn( vectors );
 
         QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true );
-        assertThat( newQt.getName() ).isEqualTo( "log2cpm aggregated by cell type" );
-        assertThat( newQt.getDescription() ).isEqualTo( "Expression data has been aggregated by cell type using LOG_SUM." );
+        assertThat( newQt.getName() ).isEqualTo( "log2cpm aggregated by cell type (log2cpm)" );
+        assertThat( newQt.getDescription() ).isEqualTo( "Expression data has been aggregated by cell type using LOG_SUM. The data was subsequently converted to log2cpm." );
         assertThat( newQt.getIsPreferred() ).isTrue();
+        assertThat( newQt.getType() ).isEqualTo( StandardQuantitationType.AMOUNT );
+        assertThat( newQt.getScale() ).isEqualTo( ScaleType.LOG2 );
+
         ArgumentCaptor<Collection<RawExpressionDataVector>> capt = ArgumentCaptor.captor();
         verify( expressionExperimentService ).addRawDataVectors( eq( ee ), eq( newQt ), capt.capture() );
         assertThat( capt.getValue() )
@@ -228,10 +245,10 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                     assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
                     assertThat( byteArrayToDoubles( rawVec.getData() ) )
                             .hasSize( 16 )
-                            .containsExactly( 5.979489082617791, 5.979489082617791, 5.979489082617791, 5.979489082617791, 5.93240457783411, 5.93240457783411, 5.93240457783411, 5.93240457783411, 5.761516807620513, 5.761516807620513, 5.761516807620513, 5.761516807620513, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY );
+                            .containsExactly( 19.929746930992494, 19.929746930992494, 19.929746930992494, 19.929746930992494, 19.9296592830575, 19.9296592830575, 19.9296592830575, 19.9296592830575, 19.929304310569375, 19.929304310569375, 19.929304310569375, 19.929304310569375, Double.NaN, Double.NaN, Double.NaN, Double.NaN );
                 } );
         verify( bioAssayService ).update( anyCollection() );
-        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any() );
+        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
     }
 
     @Test
@@ -273,7 +290,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                             );
                 } );
         verify( bioAssayService ).update( anyCollection() );
-        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any() );
+        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
     }
 
     @Test
@@ -315,7 +332,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                             );
                 } );
         verifyNoInteractions( bioAssayService );
-        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any() );
+        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
     }
 
 

@@ -22,4 +22,15 @@ public interface SingleCellExpressionExperimentAggregatorService {
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     QuantitationType aggregateVectors( ExpressionExperiment ee, QuantitationType qt, List<BioAssay> cellBAs, boolean makePreferred ) throws UnsupportedScaleTypeForAggregationException;
+
+    /**
+     * Remove aggregated vectors for the given quantitation type.
+     * <p>
+     * This performs additional cleanups such as removing unused dimension(s), resetting single-cell sparsity metrics
+     * from the {@link BioAssay}s, etc.
+     * @see ExpressionExperimentService#removeRawDataVectors(ExpressionExperiment, QuantitationType)
+     * @return the number of vectors removed
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    int removeAggregatedVectors( ExpressionExperiment ee, QuantitationType qt );
 }
