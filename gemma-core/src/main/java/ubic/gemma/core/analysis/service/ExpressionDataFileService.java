@@ -19,6 +19,7 @@ import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 
@@ -103,12 +104,63 @@ public interface ExpressionDataFileService {
     }
 
     /**
-     * Delete any existing coexpression, data, or differential expression data files.
+     * Delete any existing design, coexpression, data, or differential expression data files.
      * <p>
      * Experiment metadata are not deleted, use {@link #deleteMetadataFile(ExpressionExperiment, ExpressionExperimentMetaFileType)}
      * for that purpose.
+     * @see #deleteDesignFile(ExpressionExperiment)
+     * @see #deleteAllDataFiles(ExpressionExperiment, QuantitationType)
+     * @see #deleteAllProcessedDataFiles(ExpressionExperiment)
+     * @see #deleteAllAnnotatedFiles(ExpressionExperiment)
      */
-    void deleteAllFiles( ExpressionExperiment ee );
+    int deleteAllFiles( ExpressionExperiment ee );
+
+    /**
+     * Delete the experimental design file for a given experiment.
+     */
+    boolean deleteDesignFile( ExpressionExperiment ee );
+
+    /**
+     * Delete all files that contain platform annotations for a given experiment.
+     * <p>
+     * This includes all the data and analysis files.
+     * @see #deleteAllDataFiles(ExpressionExperiment, QuantitationType)
+     * @see #deleteAllProcessedDataFiles(ExpressionExperiment)
+     * @see #deleteDiffExArchiveFile(DifferentialExpressionAnalysis)
+     */
+    int deleteAllAnnotatedFiles( ExpressionExperiment ee );
+
+    /**
+     * Delete all data files for a given QT.
+     * <p>
+     * This includes all the possible file types enumerated in {@link ExpressionExperimentDataFileType}.
+     */
+    int deleteAllDataFiles( ExpressionExperiment ee, QuantitationType qt );
+
+    /**
+     * Delete all the processed files for a given experiment.
+     * <p>
+     * This includes all the possible file types enumerated in {@link ExpressionExperimentDataFileType}.
+     */
+    int deleteAllProcessedDataFiles( ExpressionExperiment ee );
+
+    /**
+     * Delete all analyses files for a given experiment.
+     * @see #deleteDiffExArchiveFile(DifferentialExpressionAnalysis)
+     * @see #deleteCoexpressionDataFile(ExpressionExperiment)
+     */
+    int deleteAllAnalysisFiles( ExpressionExperiment ee );
+
+    /**
+     * Delete a diff. ex. analysis archive file for a given analysis.
+     * @return true if any file was deleted
+     */
+    boolean deleteDiffExArchiveFile( DifferentialExpressionAnalysis analysis );
+
+    /**
+     * Delete a coexpression data file if it exists.
+     */
+    boolean deleteCoexpressionDataFile( ExpressionExperiment ee );
 
     /**
      * Locate a metadata file.
@@ -156,7 +208,7 @@ public interface ExpressionDataFileService {
     LockedPath getDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException;
 
     /**
-     * Delete a raw data file if it exists.
+     * Delete a raw or single-cell data file if it exists.
      * <p>
      * If the data file is in use, this method will block until it is released.
      * @return true if the file was deleted, false if it did not exist
@@ -176,15 +228,16 @@ public interface ExpressionDataFileService {
      *
      * @param ee           the experiment to use
      * @param qt           the quantitation type to retrieve
+     * @param scaleType    a scale type to use or null to leave the data untransformed
      * @param useStreaming retrieve data in a streaming fashion
      * @see ubic.gemma.core.datastructure.matrix.io.TabularMatrixWriter
      */
-    int writeTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, Writer writer ) throws IOException;
+    int writeTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useStreaming, int fetchSize, Writer writer ) throws IOException;
 
     /**
      * Write single-cell expression data to a standard location for a given quantitation type in tabular format.
      * @return a path where the vectors were written
-     * @see #writeTabularSingleCellExpressionData(ExpressionExperiment, QuantitationType, boolean, int, Writer)
+     * @see #writeTabularSingleCellExpressionData(ExpressionExperiment, QuantitationType, ScaleType, boolean, int, Writer)
      * @see ubic.gemma.core.datastructure.matrix.io.TabularMatrixWriter
      */
     LockedPath writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) throws IOException;
@@ -197,28 +250,30 @@ public interface ExpressionDataFileService {
      *
      * @param ee            the experiment to use
      * @param qt            the quantitation type to retrieve
+     * @param scaleType     a scale type to use or null to leave the data untransformed
      * @param useEnsemblIds use Ensembl IDs instead of official gene symbols
      * @see ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter
      */
-    int writeMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useEnsemblIds, OutputStream stream ) throws IOException;
+    int writeMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, OutputStream stream ) throws IOException;
 
     /**
      * Write single-cell expression data to a given output stream for a given quantitation type.
      *
      * @param ee            the experiment to use
      * @param qt            the quantitation type to retrieve
+     * @param scaleType     a scale type to use or null to leave the data untransformed
      * @param useEnsemblIds use Ensembl IDs instead of official gene symbols
      * @param useStreaming  retrieve data in a streaming fashion
      * @param fetchSize     fetch size to use for streaming
      * @param forceWrite    whether to force write and ignore any pre-existing directory
      * @see ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter
      */
-    int writeMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useEnsemblIds, boolean useStreaming, int fetchSize, boolean forceWrite, Path destDir ) throws IOException;
+    int writeMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, boolean useStreaming, int fetchSize, boolean forceWrite, Path destDir ) throws IOException;
 
     /**
      * Write single-cell expression data to a standard location for a given quantitation type.
      * @return a path where the vectors were written
-     * @see #writeMexSingleCellExpressionData(ExpressionExperiment, QuantitationType, boolean, boolean, int, boolean, Path)
+     * @see #writeMexSingleCellExpressionData(ExpressionExperiment, QuantitationType, ScaleType, boolean, boolean, int, boolean, Path)
      * @see ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter
      */
     LockedPath writeOrLocateMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) throws IOException;
@@ -337,10 +392,4 @@ public interface ExpressionDataFileService {
     LockedPath writeOrLocateDiffExArchiveFile( Long analysisId, boolean forceCreate ) throws IOException;
 
     LockedPath writeDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, @Nullable DifferentialExpressionAnalysisConfig config ) throws IOException;
-
-    /**
-     * Delete a diff. ex. analysis archive file for a given analysis.
-     * @return true if any file was deleted
-     */
-    boolean deleteDiffExArchiveFile( DifferentialExpressionAnalysis analysis );
 }

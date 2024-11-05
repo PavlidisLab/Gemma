@@ -6,12 +6,11 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.common.quantitationtype.NonUniqueQuantitationTypeByNameException;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
@@ -23,12 +22,18 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
 @SuppressWarnings("unused")
-public class SingleCellDataWriterCli extends ExpressionExperimentManipulatingCLI {
+public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipulatingCli<SingleCellExpressionDataVector> {
+
+    public SingleCellDataWriterCli() {
+        super( SingleCellExpressionDataVector.class );
+        setUsePreferredQuantitationType();
+    }
 
     enum MatrixFormat {
         TABULAR,
@@ -44,8 +49,9 @@ public class SingleCellDataWriterCli extends ExpressionExperimentManipulatingCLI
     @Autowired
     private ExpressionDataFileService expressionDataFileService;
 
-    private String quantitationTypeName;
     private MatrixFormat format;
+    @Nullable
+    private ScaleType scaleType;
     private boolean useEnsemblIds;
     private boolean useStreaming;
     private int fetchSize;
@@ -56,30 +62,29 @@ public class SingleCellDataWriterCli extends ExpressionExperimentManipulatingCLI
     @Nullable
     @Override
     public String getCommandName() {
-        return "getSingleCellData";
+        return "getSingleCellDataMatrix";
     }
 
     @Nullable
     @Override
     public String getShortDesc() {
-        return "Write single-cell data to disk with gene information if available.";
+        return "Write single-cell data matrix to a file; gene information is included if available.";
     }
 
     @Override
-    protected void buildExperimentOptions( Options options ) {
-        options.addOption( "qtName", "quantitation-type-name", true, "Name of the quantitation type to obtain (defaults to the preferred one)" );
+    protected void buildExperimentVectorsOptions( Options options ) {
         options.addOption( "format", "format", true, "Format to write the matrix for (possible values: tabular, MEX, defaults to tabular)" );
+        options.addOption( "scaleType", "scale-type", true, "Scale type to use when generating data to disk (possible values: " + Arrays.stream( ScaleType.values() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) + ")." );
         options.addOption( "useEnsemblIds", "use-ensembl-ids", false, "Use Ensembl IDs instead of official gene symbols (only for MEX output)" );
         options.addOption( "noStreaming", "no-streaming", false, "Use in-memory storage instead streaming for retrieving and writing vectors (defaults to false)" );
         options.addOption( Option.builder( "fetchSize" ).longOpt( "fetch-size" ).hasArg( true ).type( Integer.class ).desc( "Fetch size to use when retrieving vectors, incompatible with -noStreaming/--no-streaming." ).build() );
-        options.addOption( "standardLocation", "standard-location", false, "Write the file to the standard location under, this is incompatible with -o/--output." );
+        options.addOption( "standardLocation", "standard-location", false, "Write the file to the standard location under, this is incompatible with -scaleType/--scale-type, -useEnsemblIds/--use-ensembl-ids and -o/--output." );
         options.addOption( Option.builder( "o" ).longOpt( "output" ).hasArg( true ).type( Path.class ).desc( "Destination for the matrix file, or a directory if -format is set to MEX." ).build() );
         addForceOption( options );
     }
 
     @Override
-    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
-        this.quantitationTypeName = commandLine.getOptionValue( "qtName" );
+    protected void processExperimentVectorsOptions( CommandLine commandLine ) throws ParseException {
         this.useEnsemblIds = commandLine.hasOption( "useEnsemblIds" );
         if ( commandLine.hasOption( "noStreaming" ) && commandLine.hasOption( "fetchSize" ) ) {
             throw new ParseException( "Cannot use -noStreaming/--no-streaming and -fetchSize/--fetch-size at the same time." );
@@ -91,8 +96,14 @@ public class SingleCellDataWriterCli extends ExpressionExperimentManipulatingCLI
         } else {
             this.format = MatrixFormat.TABULAR;
         }
+        if ( commandLine.hasOption( "scaleType" ) ) {
+            this.scaleType = ScaleType.valueOf( commandLine.getOptionValue( "scaleType" ).toUpperCase() );
+        }
         this.standardLocation = commandLine.hasOption( "standardLocation" );
         this.outputFile = commandLine.getParsedOptionValue( "o" );
+        if ( standardLocation && scaleType != null ) {
+            throw new ParseException( "Cannot use -standardLocation/--standard-location and -scaleType/--scale-type at the same time." );
+        }
         if ( standardLocation && outputFile != null ) {
             throw new ParseException( "Cannot use -standardLocation/--standard-location and -o/--output at the same time." );
         }
@@ -110,24 +121,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentManipulatingCLI
     }
 
     @Override
-    protected void processExpressionExperiment( ExpressionExperiment ee ) {
-        QuantitationType qt;
-        if ( quantitationTypeName != null ) {
-            try {
-                qt = quantitationTypeService.findByNameAndVectorType( ee, quantitationTypeName, SingleCellExpressionDataVector.class );
-                if ( qt == null ) {
-                    String availableQts = singleCellExpressionExperimentService.getSingleCellQuantitationTypes( ee )
-                            .stream().map( AbstractDescribable::getName )
-                            .collect( Collectors.joining( "\t\n" ) );
-                    throw new RuntimeException( ee + " does not have a quantitation type named " + quantitationTypeName + ", possible options are:\n" + availableQts + "." );
-                }
-            } catch ( NonUniqueQuantitationTypeByNameException e ) {
-                throw new RuntimeException( e );
-            }
-        } else {
-            qt = singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee )
-                    .orElseThrow( () -> new RuntimeException( ee + " does not have preferred a single-cell quantitation type." ) );
-        }
+    protected void processExpressionExperimentVectors( ExpressionExperiment ee, QuantitationType qt ) {
         try {
             switch ( format ) {
                 case TABULAR:
@@ -137,7 +131,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentManipulatingCLI
                         }
                     } else {
                         try ( Writer writer = new OutputStreamWriter( openOutputFile( isForce() ), StandardCharsets.UTF_8 ) ) {
-                            int written = expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, useStreaming, fetchSize, writer );
+                            int written = expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, scaleType, useStreaming, fetchSize, writer );
                             addSuccessObject( ee, "Wrote " + written + " vectors for " + qt + "." );
                         }
                     }
@@ -150,14 +144,14 @@ public class SingleCellDataWriterCli extends ExpressionExperimentManipulatingCLI
                     } else if ( outputFile == null || outputFile.toString().endsWith( ".tar" ) || outputFile.toString().endsWith( ".tar.gz" ) ) {
                         log.warn( "Writing MEX to a stream requires a lot of memory and cannot be streamed, you can cancel this any anytime with Ctrl-C." );
                         try ( OutputStream stream = openOutputFile( isForce() ) ) {
-                            int written = expressionDataFileService.writeMexSingleCellExpressionData( ee, qt, useEnsemblIds, stream );
+                            int written = expressionDataFileService.writeMexSingleCellExpressionData( ee, qt, scaleType, useEnsemblIds, stream );
                             addSuccessObject( ee, "Wrote " + written + " vectors for " + qt + ( useEnsemblIds ? " using Ensembl IDs " : "" ) + "." );
                         }
                     } else {
                         if ( !isForce() && Files.exists( outputFile ) ) {
                             throw new RuntimeException( outputFile + " already exists, use -force/--force to override." );
                         }
-                        int written = expressionDataFileService.writeMexSingleCellExpressionData( ee, qt, useEnsemblIds, useStreaming, fetchSize, isForce(), outputFile );
+                        int written = expressionDataFileService.writeMexSingleCellExpressionData( ee, qt, scaleType, useEnsemblIds, useStreaming, fetchSize, isForce(), outputFile );
                         addSuccessObject( ee, "Wrote " + written + " vectors for " + qt + ( useEnsemblIds ? " using Ensembl IDs " : "" ) + "." );
                     }
                     break;

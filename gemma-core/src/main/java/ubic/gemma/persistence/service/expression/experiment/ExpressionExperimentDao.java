@@ -4,7 +4,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.CacheMode;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -69,13 +69,13 @@ public interface ExpressionExperimentDao
     @Nullable
     ExpressionExperiment findOneByAccession( String accession );
 
-    Collection<ExpressionExperiment> findByBibliographicReference( Long bibRefID );
+    Collection<ExpressionExperiment> findByBibliographicReference( BibliographicReference bibRef );
 
     ExpressionExperiment findByBioAssay( BioAssay ba );
 
-    ExpressionExperiment findByBioMaterial( BioMaterial bm );
+    Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm );
 
-    Map<ExpressionExperiment, BioMaterial> findByBioMaterials( Collection<BioMaterial> bms );
+    Map<ExpressionExperiment, Collection<BioMaterial>> findByBioMaterials( Collection<BioMaterial> bms );
 
     Collection<ExpressionExperiment> findByExpressedGene( Gene gene, Double rank );
 
@@ -175,6 +175,11 @@ public interface ExpressionExperimentDao
     Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids );
 
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment );
+
+    /**
+     * Retrieve all the {@link BioAssayDimension}s associated to an experiment, quantitation type and vector type.
+     */
+    Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt, Class<? extends BulkExpressionDataVector> dataVectorType );
 
     long getBioMaterialCount( ExpressionExperiment expressionExperiment );
 
@@ -280,13 +285,17 @@ public interface ExpressionExperimentDao
 
     void thawLite( ExpressionExperiment expressionExperiment );
 
+    void thawLiter( ExpressionExperiment expressionExperiment );
+
     void thawBioAssays( ExpressionExperiment expressionExperiment );
 
-    void thawForFrontEnd( ExpressionExperiment expressionExperiment );
+    void thawRawVectors( ExpressionExperiment ee );
 
-    Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( Long eeId );
+    void thawProcessedVectors( ExpressionExperiment ee );
 
-    Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId );
+    Collection<Characteristic> getAnnotationsByBioMaterials( ExpressionExperiment ee );
+
+    Collection<Statement> getAnnotationsByFactorValues( ExpressionExperiment ee );
 
     /**
      * Obtain all annotations, grouped by applicable level.

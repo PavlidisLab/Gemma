@@ -104,12 +104,14 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     void addFactorValues( ExpressionExperiment ee, Map<BioMaterial, FactorValue> fvs );
 
     /**
-     * Obtain raw vectors for a given QT.
+     * Obtain raw vectors for a given experiment and QT.
      * <p>
      * This is preferable to using {@link ExpressionExperiment#getRawExpressionDataVectors()} as it only loads vectors
      * relevant to the given QT.
+     * <p>
+     * Vectors are thawed as per {@link ExpressionExperimentDao#thawRawVectors(ExpressionExperiment)}.
      */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
     Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, QuantitationType qt );
 
     /**
@@ -288,11 +290,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * @return experiment the given biomaterial is associated with
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperiment findByBioMaterial( BioMaterial bm );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
-        // slight security overkill, if they got the biomaterial...
-    Map<ExpressionExperiment, BioMaterial> findByBioMaterials( Collection<BioMaterial> bioMaterials );
+    Collection<ExpressionExperiment> findByBioMaterial( BioMaterial bm );
 
     /**
      * @param gene gene
@@ -358,10 +356,10 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Map<Long, Long> getAnnotationCountsByIds( Collection<Long> ids );
 
     /**
-     * @param eeId experiment id.
-     * @return the terms associated this expression experiment.
+     * Retrieve annotations for a given experiment.
      */
-    Set<AnnotationValueObject> getAnnotationsById( Long eeId );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Set<AnnotationValueObject> getAnnotations( ExpressionExperiment ee );
 
     /**
      * Apply ontological inference to augment a filter with additional terms.
@@ -496,6 +494,12 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment );
 
     /**
+     * @see ExpressionExperimentDao#getBioAssayDimensions(ExpressionExperiment, QuantitationType, Class)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt, Class<? extends BulkExpressionDataVector> dataVectorType );
+
+    /**
      * @param expressionExperiment experiment
      * @return the amount of biomaterials associated with the given expression experiment.
      */
@@ -594,6 +598,12 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment );
 
     /**
+     * Retrieve all the quantitation types used by the given experiment and dimension.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment, BioAssayDimension dimension );
+
+    /**
      * Load all {@link QuantitationType} associated to an expression experiment as VOs.
      * @see #getQuantitationTypes(ExpressionExperiment)
      */
@@ -686,24 +696,36 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      */
     void addCharacteristic( ExpressionExperiment ee, Characteristic vc );
 
+    /**
+     * Fully thaw an experiment including biassays, raw and processed vectors.
+     * <p>
+     * Single-cell vectors are *not* thawed.
+     * @see ExpressionExperimentDao#thaw(ExpressionExperiment)
+     */
     @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
 
+    /**
+     * Thaw the bioassays of a given experiment.
+     * @see ExpressionExperimentDao#thawBioAssays(ExpressionExperiment)
+     */
     @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
 
     /**
-     * Partially thaw the expression experiment given - do not thaw the raw data.
-     *
-     * @param expressionExperiment experiment
-     * @return thawed experiment
+     * Partially thaw the expression experiment given - does not thaw the raw, processed and single-cell data.
+     * @see ExpressionExperimentDao#thawLite(ExpressionExperiment)
      */
     @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawLite( ExpressionExperiment expressionExperiment );
 
+    /**
+     * Lightly thaw an experiment.
+     * @see ExpressionExperimentDao#thawLiter(ExpressionExperiment)
+     */
     @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawLiter( ExpressionExperiment expressionExperiment );

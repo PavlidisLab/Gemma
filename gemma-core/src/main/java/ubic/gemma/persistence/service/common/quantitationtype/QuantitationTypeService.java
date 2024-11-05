@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.common.quantitationtype;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseService;
@@ -72,6 +73,13 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
      */
     Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee, Class<? extends DataVector> dataVectorType );
 
+    Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee, Collection<Class<? extends DataVector>> vectorTypes );
+
+    /**
+     * @see QuantitationTypeDao#findByExpressionExperimentAndDimension(ExpressionExperiment, BioAssayDimension)
+     */
+    Collection<QuantitationType> findByExpressionExperimentAndDimension( ExpressionExperiment expressionExperiment, BioAssayDimension dimension );
+
     @Override
     @Secured({ "GROUP_USER" })
     QuantitationType findOrCreate( QuantitationType quantitationType );
@@ -116,5 +124,11 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
 
     List<QuantitationTypeValueObject> loadValueObjectsWithExpressionExperiment( Collection<QuantitationType> qts, ExpressionExperiment expressionExperiment );
 
+    @Nullable
     Class<? extends DataVector> getDataVectorType( QuantitationType qt );
+
+    /**
+     * Infer all the mapped vector types that are subclasses of the given vector type.
+     */
+    Collection<Class<? extends DataVector>> getMappedDataVectorType( Class<? extends DataVector> vectorType );
 }

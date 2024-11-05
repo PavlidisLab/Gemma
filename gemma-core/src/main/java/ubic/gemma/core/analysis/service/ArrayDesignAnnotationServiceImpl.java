@@ -258,7 +258,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
                 log.info( "Deleting data files for " + ees.size() + " experiments which use " + ad.getShortName()
                         + ", that may have outdated annotations" );
             for ( ExpressionExperiment ee : ees ) {
-                this.expressionDataFileService.deleteAllFiles( ee );
+                this.expressionDataFileService.deleteAllAnnotatedFiles( ee );
             }
         } else {
             log.warn( "Not deleting data files for experiments that use " + ad.getShortName() + "; if annotations have changed please delete these files manually" );

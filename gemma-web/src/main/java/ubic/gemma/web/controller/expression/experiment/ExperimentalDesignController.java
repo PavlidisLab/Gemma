@@ -53,7 +53,6 @@ import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
-import javax.servlet.ServletContext;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -686,8 +685,13 @@ public class ExperimentalDesignController extends BaseController {
         if ( biomaterials.isEmpty() ) return;
 
         BioMaterial bm = biomaterials.iterator().next();
-        ExpressionExperiment ee = expressionExperimentService.findByBioMaterial( bm );
-        if ( ee == null ) throw new IllegalStateException( "No Experiment for biomaterial: " + bm );
+        Collection<ExpressionExperiment> ees = expressionExperimentService.findByBioMaterial( bm );
+        if ( ees.isEmpty() ) {
+            throw new IllegalStateException( "No Experiment for biomaterial: " + bm );
+        } else if ( ees.size() > 1 ) {
+            throw new IllegalStateException( "There is more than one experiment for biomaterial: " + bm );
+        }
+        ExpressionExperiment ee = ees.iterator().next();
 
         ee = expressionExperimentService.thawLite( ee );
 

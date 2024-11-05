@@ -1,5 +1,6 @@
 package ubic.gemma.core.datastructure.matrix.io;
 
+import lombok.Setter;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
@@ -9,13 +10,13 @@ import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.util.ByteArrayUtils;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import javax.annotation.Nullable;
@@ -27,10 +28,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
-import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.constructSampleName;
+import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.*;
 import static ubic.gemma.core.util.TsvUtils.SUB_DELIMITER;
 import static ubic.gemma.core.util.TsvUtils.format;
+import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToDoubles;
 
 /**
  * Write a set of single-cell vectors to a simple tabular format.
@@ -46,10 +47,14 @@ import static ubic.gemma.core.util.TsvUtils.format;
  * - value
  * @author poirigui
  */
+@Setter
 public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter {
 
     private final EntityUrlBuilder entityUrlBuilder;
     private final BuildInfo buildInfo;
+
+    @Nullable
+    private ScaleType scaleType;
 
     public TabularMatrixWriter( EntityUrlBuilder entityUrlBuilder, BuildInfo buildInfo ) {
         this.entityUrlBuilder = entityUrlBuilder;
@@ -113,10 +118,8 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
     }
 
     private void writeHeader( ExpressionExperiment ee, QuantitationType qt, SingleCellDimension scd, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer pwriter ) throws IOException {
-        StringBuffer buf = new StringBuffer();
         String experimentUrl = ee.getId() != null ? entityUrlBuilder.fromHostUrl().entity( ee ).web().toUriString() : null;
-        appendBaseHeader( ee, "Single-cell expression data", experimentUrl, buildInfo, buf );
-        pwriter.write( buf.toString() );
+        appendBaseHeader( ee, "Single-cell expression data", experimentUrl, buildInfo, pwriter );
         pwriter.append( "# Dataset: " ).append( format( ee ) ).append( "\n" );
         pwriter.append( "# Single-cell dimension: " ).append( format( scd ) ).append( "\n" );
         pwriter.append( "# Quantitation type: " ).append( format( qt ) ).append( "\n" );
@@ -138,7 +141,7 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
         if ( vector.getQuantitationType().getRepresentation() != PrimitiveType.DOUBLE ) {
             throw new UnsupportedOperationException( "Writing single-cell vectors of " + vector.getQuantitationType().getRepresentation() + " is not supported." );
         }
-        writeDoubleVector( vector.getDesignElement(), cs2gene, vector.getSingleCellDimension(), ByteArrayUtils.byteArrayToDoubles( vector.getData() ), vector.getDataIndices(), pwriter );
+        writeDoubleVector( vector.getDesignElement(), cs2gene, vector.getSingleCellDimension(), convertVector( byteArrayToDoubles( vector.getData() ), vector.getQuantitationType(), scaleType ), vector.getDataIndices(), pwriter );
     }
 
     private void writeDoubleVector( CompositeSequence cs, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, SingleCellDimension dimension, double[] vec, int[] indices, Writer pwriter ) throws IOException {

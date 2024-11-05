@@ -33,6 +33,8 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
 
+import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
+
 /**
  * Output compatible with {@link ExperimentalDesignImporterImpl}.
  *
@@ -97,10 +99,8 @@ public class ExperimentalDesignWriter {
 
         List<ExperimentalFactor> orderedFactors = new ArrayList<>( efs );
 
-        StringBuffer buf = new StringBuffer();
-
         if ( writeHeader ) {
-            this.writeHeader( ee, orderedFactors, writeBaseHeader, buf );
+            this.writeHeader( ee, orderedFactors, writeBaseHeader, writer );
         }
 
         for ( BioMaterial bioMaterial : bioMaterials.keySet() ) {
@@ -108,50 +108,46 @@ public class ExperimentalDesignWriter {
             /* column 0 of the design matrix */
             String rowName = ExpressionDataWriterUtils
                     .constructSampleName( bioMaterial, bioMaterials.get( bioMaterial ) );
-            buf.append( rowName );
+            writer.append( rowName );
 
-            buf.append( "\t" );
+            writer.append( "\t" );
 
             /* column 1 */
             String externalId = ExpressionDataWriterUtils.constructSampleExternalId( bioMaterial, bioMaterials.get( bioMaterial ) );
 
-            buf.append( externalId );
+            writer.append( externalId );
 
             /* columns 2 ... n where n+1 is the number of factors */
             Collection<FactorValue> candidateFactorValues = bioMaterial.getAllFactorValues();
             for ( ExperimentalFactor ef : orderedFactors ) {
-                buf.append( "\t" );
+                writer.append( "\t" );
                 for ( FactorValue candidateFactorValue : candidateFactorValues ) {
                     if ( candidateFactorValue.getExperimentalFactor().equals( ef ) ) {
                         log.debug( candidateFactorValue.getExperimentalFactor() + " matched." );
                         String matchedFactorValue = ExpressionDataWriterUtils
                                 .constructFactorValueName( candidateFactorValue );
-                        buf.append( matchedFactorValue );
+                        writer.append( matchedFactorValue );
                         break;
                     }
                     log.debug( candidateFactorValue.getExperimentalFactor()
                             + " didn't match ... trying the next factor." );
                 }
             }
-            buf.append( "\n" );
+            writer.append( "\n" );
         }
 
-        if ( log.isDebugEnabled() )
-            log.debug( buf.toString() );
-
-        writer.write( buf.toString() );
         writer.flush();
-
     }
 
     /**
      * Write an (R-friendly) header
      */
     private void writeHeader( ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors,
-            boolean writeBaseHeader, StringBuffer buf ) {
+            boolean writeBaseHeader, Writer buf ) throws IOException {
 
         if ( writeBaseHeader ) {
-            ExpressionDataWriterUtils.appendBaseHeader( expressionExperiment, true, entityUrlBuilder.fromHostUrl().entity( expressionExperiment ).web().toUriString(), buildInfo, buf );
+            String experimentUrl = entityUrlBuilder.fromHostUrl().entity( expressionExperiment ).web().toUriString();
+            appendBaseHeader( expressionExperiment, "Expression design", experimentUrl, buildInfo, buf );
         }
 
         for ( ExperimentalFactor ef : factors ) {

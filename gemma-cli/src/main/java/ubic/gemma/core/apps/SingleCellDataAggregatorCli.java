@@ -3,11 +3,12 @@ package ubic.gemma.core.apps;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
+import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
@@ -21,16 +22,20 @@ import ubic.gemma.persistence.service.expression.experiment.UnsupportedScaleType
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @CommonsLog
-public class SingleCellDataAggregatorCli extends ExpressionExperimentManipulatingCLI {
+public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsManipulatingCli<SingleCellExpressionDataVector> {
 
     @Autowired
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
+
+    @Autowired
+    private ExpressionDataFileService expressionDataFileService;
 
     @Autowired
     private AggregatorHelperService helperService;
@@ -39,10 +44,13 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentManipulatin
     private PreprocessorService preprocessorService;
 
     @Nullable
-    private String qtName;
-    @Nullable
     private String ctaName;
     private boolean makePreferred;
+
+    public SingleCellDataAggregatorCli() {
+        super( SingleCellExpressionDataVector.class );
+        setUsePreferredQuantitationType();
+    }
 
     @Nullable
     @Override
@@ -57,29 +65,21 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentManipulatin
     }
 
     @Override
-    protected void buildExperimentOptions( Options options ) {
-        options.addOption( "qt", "quantitation-type", true, "Identifier of the single-cell quantitation type to use (defaults to the preferred one)" );
+    protected void buildExperimentVectorsOptions( Options options ) {
         options.addOption( "cta", "cell-type-assignment", true, "Name of the cell type assignment to use (defaults to the preferred one)" );
         options.addOption( "p", "make-preferred", false, "Make the resulting aggregated data the preferred raw data for the experiment" );
     }
 
     @Override
-    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
-        qtName = commandLine.getOptionValue( "qt" );
+    protected void processExperimentVectorsOptions( CommandLine commandLine ) {
         ctaName = commandLine.getOptionValue( "cta" );
         makePreferred = commandLine.hasOption( "p" );
     }
 
     @Override
-    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        log.info( "Splitting single cell data into pseudo-bulks for: " + expressionExperiment );
-        QuantitationType qt;
-        if ( qtName != null ) {
-            qt = entityLocator.locateQuantitationType( expressionExperiment, qtName, SingleCellExpressionDataVector.class );
-        } else {
-            qt = singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( expressionExperiment )
-                    .orElseThrow( () -> new IllegalStateException( expressionExperiment + " does not have a preferred set of single-cell vectors." ) );
-        }
+    protected void processExpressionExperimentVectors( ExpressionExperiment expressionExperiment, QuantitationType qt ) {
+        log.info( "Splitting single cell data into pseudo-bulks for: " + expressionExperiment + " and " + qt );
+
         CellTypeAssignment cta;
         if ( ctaName != null ) {
             cta = entityLocator.locateCellTypeAssignment( expressionExperiment, qt, ctaName );
@@ -91,6 +91,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentManipulatin
         QuantitationType newQt;
         try {
             newQt = helperService.splitAndAggregate( expressionExperiment, qt, cta, makePreferred );
+            addSuccessObject( expressionExperiment, "Aggregated single-cell data into " + newQt + "." );
         } catch ( UnsupportedScaleTypeForAggregationException e ) {
             addErrorObject( expressionExperiment, String.format( "Aggregation is not support for data of scale type %s, change it first in the GUI %s.",
                     qt.getScale(), entityUrlBuilder.fromHostUrl().entity( expressionExperiment ).web().edit().toUriString() ), e );
@@ -99,11 +100,21 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentManipulatin
 
         // create/recreate processed vectors
         if ( newQt.getIsPreferred() ) {
-            log.info( "Reprocessing experiment since a new set of raw data vectors was added or replaced..." );
-            preprocessorService.process( expressionExperiment );
-        }
+            log.info( "Creating a data file for " + newQt + "..." );
+            try ( ExpressionDataFileService.LockedPath lockedFile = expressionDataFileService.writeOrLocateRawExpressionDataFile( expressionExperiment, newQt, true ) ) {
+                addSuccessObject( expressionExperiment, "Created a data file for " + newQt + ": " + lockedFile.getPath() );
+            } catch ( IOException e ) {
+                addErrorObject( expressionExperiment, "Failed to generate a data file for " + newQt + ".", e );
+            }
 
-        addSuccessObject( expressionExperiment );
+            log.info( "Reprocessing experiment since a new set of raw data vectors was added or replaced..." );
+            try {
+                preprocessorService.process( expressionExperiment );
+                addSuccessObject( expressionExperiment, "Post-processed data from " + newQt + "." );
+            } catch ( Exception e ) {
+                addErrorObject( expressionExperiment, "Failed to post-process the data from " + newQt + ".", e );
+            }
+        }
     }
 
     /**
@@ -124,8 +135,9 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentManipulatin
         @Transactional
         public QuantitationType splitAndAggregate( ExpressionExperiment expressionExperiment, QuantitationType qt, CellTypeAssignment cta, boolean makePreferred ) {
             List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSplitService.splitByCellType( expressionExperiment, cta );
-            log.info( String.format( "Created %d subsets of %s for each cell type:\n%s", subsets.size(), expressionExperiment,
-                    subsets.stream().map( subset -> subset.getName() + "\t" + entityUrlBuilder.fromHostUrl().entity( subset ).web().toUri() ).collect( Collectors.joining( "\n\t" ) ) ) );
+            int longestSubsetName = subsets.stream().map( ExpressionExperimentSubSet::getName ).mapToInt( String::length ).max().orElse( 0 );
+            log.info( String.format( "Created %d subsets of %s for each cell type:\n\t%s", subsets.size(), expressionExperiment,
+                    subsets.stream().map( subset -> StringUtils.rightPad( subset.getName(), longestSubsetName ) + "\t" + entityUrlBuilder.fromHostUrl().entity( subset ).web().toUri() ).collect( Collectors.joining( "\n\t" ) ) ) );
 
             List<BioAssay> cellBAs = new ArrayList<>();
             for ( ExpressionExperimentSubSet subset : subsets ) {

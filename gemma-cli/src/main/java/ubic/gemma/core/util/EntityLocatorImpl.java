@@ -20,7 +20,9 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
+import java.util.Collection;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
@@ -153,16 +155,52 @@ public class EntityLocatorImpl implements EntityLocator {
 
     @Override
     public QuantitationType locateQuantitationType( ExpressionExperiment ee, String qt, Class<? extends DataVector> vectorType ) {
+        QuantitationType result;
         try {
-            quantitationTypeService.loadByIdAndVectorType( Long.parseLong( qt ), ee, vectorType );
+            if ( ( result = quantitationTypeService.loadByIdAndVectorType( Long.parseLong( qt ), ee, vectorType ) ) != null ) {
+                return result;
+            }
         } catch ( NumberFormatException e ) {
             // ignore
         }
         try {
-            return requireNonNull( quantitationTypeService.findByNameAndVectorType( ee, qt, vectorType ) );
+            if ( ( result = quantitationTypeService.findByNameAndVectorType( ee, qt, vectorType ) ) != null ) {
+                return result;
+            }
         } catch ( NonUniqueQuantitationTypeByNameException e ) {
             throw new RuntimeException( e );
         }
+        Collection<QuantitationType> possibleValues = quantitationTypeService.findByExpressionExperiment( ee, vectorType );
+        throw new NullPointerException( String.format( "No quantitation type in %s for %s matching %s.%s",
+                ee, vectorType.getSimpleName(), qt,
+                !possibleValues.isEmpty() ? " Possible values are: " + possibleValues.stream().map( QuantitationType::getName ).collect( Collectors.joining( ", " ) ) : "" ) );
+    }
+
+    @Override
+    public QuantitationType locateQuantitationType( ExpressionExperiment ee, String qt, Collection<Class<? extends DataVector>> vectorTypes ) {
+        QuantitationType result;
+        for ( Class<? extends DataVector> vectorType : vectorTypes ) {
+            try {
+                if ( ( result = quantitationTypeService.loadByIdAndVectorType( Long.parseLong( qt ), ee, vectorType ) ) != null ) {
+                    return result;
+                }
+            } catch ( NumberFormatException e ) {
+                // ignore
+            }
+            try {
+                if ( ( result = quantitationTypeService.findByNameAndVectorType( ee, qt, vectorType ) ) != null ) {
+                    return result;
+                }
+            } catch ( NonUniqueQuantitationTypeByNameException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+        Collection<QuantitationType> possibleValues = quantitationTypeService.findByExpressionExperiment( ee, vectorTypes );
+        throw new NullPointerException( String.format( "No quantitation type in %s for any of %s matching %s.%s",
+                ee, vectorTypes.stream().map( Class::getSimpleName ).collect( Collectors.joining( ", " ) ), qt,
+                !possibleValues.isEmpty() ? " Possible values are: " + possibleValues.stream().map( QuantitationType::getName ).collect( Collectors.joining( ", " ) ) : "" )
+
+        );
     }
 
     @Override

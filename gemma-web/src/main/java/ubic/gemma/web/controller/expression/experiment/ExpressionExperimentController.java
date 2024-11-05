@@ -334,7 +334,7 @@ public class ExpressionExperimentController {
     public Collection<AnnotationValueObject> getAnnotation( EntityDelegator<ExpressionExperiment> e ) {
         if ( e == null || e.getId() == null )
             return null;
-        return expressionExperimentService.getAnnotationsById( e.getId() );
+        return expressionExperimentService.getAnnotations( expressionExperimentService.loadOrFail( e.getId(), EntityNotFoundException::new ) );
     }
 
     /**

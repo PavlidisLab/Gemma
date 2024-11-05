@@ -23,9 +23,11 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
@@ -39,6 +41,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
 import static ubic.gemma.core.util.TsvUtils.SUB_DELIMITER;
 import static ubic.gemma.core.util.TsvUtils.format;
 
@@ -189,9 +192,13 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
     private void writeHeader( List<BioMaterial> orderedBioMaterials, BulkExpressionDataMatrix<?> matrix,
             @Nullable Map<CompositeSequence, ?> geneAnnotations, Writer writer ) throws IOException {
 
-        StringBuffer buf = new StringBuffer();
-        ExpressionDataWriterUtils.appendBaseHeader( matrix.getExpressionExperiment(), false, entityUrlBuilder.fromHostUrl().entity( matrix.getExpressionExperiment() ).web().toUriString(), buildInfo, buf );
-        writer.append( buf );
+        ExpressionExperiment experiment = matrix.getExpressionExperiment();
+        String experimentUrl = entityUrlBuilder.fromHostUrl().entity( matrix.getExpressionExperiment() ).web().toUriString();
+        appendBaseHeader( experiment, "Expression data", experimentUrl, buildInfo, writer );
+
+        for ( QuantitationType qt : matrix.getQuantitationTypes() ) {
+            writer.append( "# Quantitation type: " ).append( qt.toString() ).append( "\n" );
+        }
 
         writer.append( "Probe\tSequence" );
 

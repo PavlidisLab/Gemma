@@ -646,7 +646,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasStatus( Response.Status.OK )
                 .hasHeader( "Cache-Control", "max-age=1200" );
         verify( expressionExperimentService ).load( 1L );
-        verify( expressionExperimentService ).getAnnotationsById( 1L );
+        verify( expressionExperimentService ).getAnnotations( ee );
     }
 
     @Test

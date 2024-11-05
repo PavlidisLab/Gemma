@@ -101,6 +101,8 @@ import java.text.DecimalFormat;
 import java.util.List;
 import java.util.*;
 
+import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
+
 //
 
 /**
@@ -171,16 +173,14 @@ public class ExpressionExperimentQCController extends BaseController {
 
         // and write it out
         StringWriter writer = new StringWriter();
-        StringBuffer buf = writer.getBuffer();
-
-        ExpressionDataWriterUtils.appendBaseHeader( ee, "Outliers removed", entityUrlBuilder.fromHostUrl().entity( ee ).toUriString(), buildInfo, buf );
+        appendBaseHeader( ee, "Outliers removed", entityUrlBuilder.fromHostUrl().entity( ee ).toUriString(), buildInfo, writer );
 
         ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo );
         ee = expressionExperimentService.thawLiter( ee );
         edWriter.write( writer, ee, bioAssays, false, true );
 
         ModelAndView mav = new ModelAndView( new TextView() );
-        mav.addObject( TextView.TEXT_PARAM, buf.toString() );
+        mav.addObject( TextView.TEXT_PARAM, writer.toString() );
         return mav;
     }
 
@@ -212,16 +212,14 @@ public class ExpressionExperimentQCController extends BaseController {
 
         // and write it out
         StringWriter writer = new StringWriter();
-        StringBuffer buf = writer.getBuffer();
-
-        ExpressionDataWriterUtils.appendBaseHeader( ee, "Sample outlier", entityUrlBuilder.fromHostUrl().entity( ee ).toUriString(), buildInfo, buf );
+        appendBaseHeader( ee, "Sample outlier", entityUrlBuilder.fromHostUrl().entity( ee ).toUriString(), buildInfo, writer );
 
         ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo );
         ee = expressionExperimentService.thawLiter( ee );
         edWriter.write( writer, ee, bioAssays, false, true );
 
         return new ModelAndView( new TextView( "tab-separated-values" ) )
-                .addObject( TextView.TEXT_PARAM, buf.toString() );
+                .addObject( TextView.TEXT_PARAM, writer.toString() );
     }
 
     @RequestMapping(value = "/expressionExperiment/pcaFactors.html", method = { RequestMethod.GET, RequestMethod.HEAD })

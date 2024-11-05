@@ -99,7 +99,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         expressionExperimentDao.thaw( ee );
         expressionExperimentDao.thawBioAssays( ee );
         expressionExperimentDao.thawLite( ee );
-        expressionExperimentDao.thawForFrontEnd( ee );
+        expressionExperimentDao.thawLiter( ee );
     }
 
     @Test
@@ -122,11 +122,11 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     }
 
     @Test
-    public void testThawForFrontEnd() {
+    public void testThawLiter() {
         ee = createExpressionExperiment();
         ee = reload( ee );
         assertFalse( Hibernate.isInitialized( ee.getExperimentalDesign() ) );
-        expressionExperimentDao.thawForFrontEnd( ee );
+        expressionExperimentDao.thawLiter( ee );
         assertTrue( Hibernate.isInitialized( ee.getExperimentalDesign() ) );
     }
 

@@ -11,8 +11,7 @@ import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -187,7 +186,7 @@ public class QuantitationTypeDaoTest extends BaseDatabaseTest {
     }
 
     @Test
-    public void testGetVectorType() {
+    public void testGetDataVectorType() {
         ArrayDesign ad = createPlatform();
         ExpressionExperiment ee = new ExpressionExperiment();
         BioAssayDimension bad = new BioAssayDimension();
@@ -203,7 +202,17 @@ public class QuantitationTypeDaoTest extends BaseDatabaseTest {
         ee.getRawExpressionDataVectors().add( vector );
         sessionFactory.getCurrentSession().persist( ee );
         // attach some vectors to it
-        assertThat( quantitationTypeDao.getVectorType( qt ) ).isEqualTo( RawExpressionDataVector.class );
+        assertThat( quantitationTypeDao.getDataVectorType( qt ) ).isEqualTo( RawExpressionDataVector.class );
+    }
+
+    @Test
+    public void testGetMappedDataVectorTypes() {
+        assertThat( quantitationTypeDao.getMappedDataVectorTypes( DataVector.class ) )
+                .containsExactlyInAnyOrder( RawExpressionDataVector.class, ProcessedExpressionDataVector.class, SingleCellExpressionDataVector.class );
+        assertThat( quantitationTypeDao.getMappedDataVectorTypes( BulkExpressionDataVector.class ) )
+                .containsExactlyInAnyOrder( RawExpressionDataVector.class, ProcessedExpressionDataVector.class );
+        assertThat( quantitationTypeDao.getMappedDataVectorTypes( SingleCellExpressionDataVector.class ) )
+                .containsExactlyInAnyOrder( SingleCellExpressionDataVector.class );
     }
 
     private ArrayDesign createPlatform() {

@@ -123,7 +123,7 @@ public class SettingsConfig {
             if ( !r.exists() ) {
                 throw new RuntimeException( p + " could not be loaded." );
             }
-            warnIfReadableByGroupOrOthers( p );
+            warnIfReadableByOthers( p );
             result.addLast( new ResourcePropertySource( r.getDescription() + " (from -Dgemma.config)", r ) );
             userConfigLoaded = true;
         }
@@ -136,7 +136,7 @@ public class SettingsConfig {
             FileSystemResource r = new FileSystemResource( p.toFile() );
             if ( r.exists() ) {
                 log.debug( "Loading user configuration from " + p.toAbsolutePath() + " since $CATALINA_BASE is defined." );
-                warnIfReadableByGroupOrOthers( p );
+                warnIfReadableByOthers( p );
                 result.addLast( new ResourcePropertySource( r.getDescription() + " (from $CATALINA_BASE)", r ) );
                 userConfigLoaded = true;
             }
@@ -148,7 +148,7 @@ public class SettingsConfig {
         FileSystemResource r = new FileSystemResource( p.toFile() );
         if ( !userConfigLoaded && r.exists() ) {
             log.debug( "Loading user configuration from " + p.toAbsolutePath() + "." );
-            warnIfReadableByGroupOrOthers( p );
+            warnIfReadableByOthers( p );
             result.addLast( new ResourcePropertySource( r.getDescription() + " (from $HOME)", r ) );
             userConfigLoaded = true;
         }
@@ -206,16 +206,15 @@ public class SettingsConfig {
         return props;
     }
 
-    private static void warnIfReadableByGroupOrOthers( Path path ) throws IOException {
+    private static void warnIfReadableByOthers( Path path ) throws IOException {
         Set<PosixFilePermission> permissions;
         try {
             permissions = Files.getPosixFilePermissions( path );
         } catch ( UnsupportedOperationException e ) {
             return;
         }
-        if ( permissions.contains( PosixFilePermission.GROUP_READ ) || permissions.contains( PosixFilePermission.OTHERS_READ ) ) {
-            log.warn( String.format( "%s may contain credentials and is not exclusively readable by its owner. Adjust the permissions by running 'chmod go-r %s' to remove this warning.",
-                    path.getFileName(), path.toAbsolutePath() ) );
+        if ( permissions.contains( PosixFilePermission.OTHERS_READ ) ) {
+            log.warn( String.format( "%s may contain credentials and is readable by others. Adjust the permissions by running 'chmod o-r %s' to remove this warning.", path.getFileName(), path.toAbsolutePath() ) );
         }
     }
 }

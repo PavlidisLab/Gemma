@@ -22,19 +22,23 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Prints preferred data matrix to a file.
@@ -46,8 +50,9 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     @Autowired
     private ExpressionDataFileService fs;
 
+    @Nullable
+    private Path outputFile;
     private boolean filter;
-    private String outFileName;
 
     @Override
     public String getCommandName() {
@@ -56,24 +61,25 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
     @Override
     public String getShortDesc() {
-        return "Prints preferred data matrix to a file; gene information is included if available.";
+        return "Write processed data matrix to a file; gene information is included if available.";
     }
 
     @Override
     protected void buildExperimentOptions( Options options ) {
-        options.addOption( Option.builder( "o" ).longOpt( "outputFileName" ).desc( "File name. If omitted, the file name will be based on the short name of the experiment." ).argName( "filename" ).hasArg().build() );
+        options.addOption( Option.builder( "o" ).longOpt( "outputFileName" ).desc( "File name. If omitted, the file name will be based on the short name of the experiment." ).argName( "filename" ).hasArg().type( Path.class ).build() );
         options.addOption( "filter", "Filter expression matrix under default parameters" );
+        addForceOption( options );
     }
 
     @Override
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
-        outFileName = commandLine.getOptionValue( 'o' );
+        outputFile = commandLine.getParsedOptionValue( 'o' );
         filter = commandLine.hasOption( "filter" );
     }
 
     @Override
     protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
-        if ( StringUtils.isNotBlank( outFileName ) ) {
+        if ( outputFile != null ) {
             throw new IllegalArgumentException( "Output file name can only be used for single experiment output" );
         }
         super.processBioAssaySets( expressionExperiments );
@@ -81,15 +87,18 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
-        String fileName;
-        if ( StringUtils.isNotBlank( outFileName ) ) {
-            fileName = outFileName;
+        Path fileName;
+        if ( outputFile != null ) {
+            fileName = outputFile;
         } else {
-            fileName = FileTools.cleanForFileName( ee.getShortName() ) + ".txt";
+            fileName = Paths.get( ExpressionDataFileUtils.getDataOutputFilename( ee, filter, ExpressionDataFileUtils.TABULAR_BULK_DATA_FILE_SUFFIX ) );
         }
-        try ( Writer writer = Files.newBufferedWriter( Paths.get( fileName ) ) ) {
+        if ( !isForce() && Files.exists( fileName ) ) {
+            throw new RuntimeException( "Output file " + fileName + " already exists, use -force to overwrite." );
+        }
+        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( fileName ) ), StandardCharsets.UTF_8 ) ) {
             int written = fs.writeProcessedExpressionData( ee, filter, writer );
-            addSuccessObject( ee, "Wrote " + written + " vectors to " + fileName );
+            addSuccessObject( ee, "Wrote " + written + " vectors to " + fileName + "." );
         } catch ( IOException | FilteringException e ) {
             throw new RuntimeException( e );
         }

@@ -1,6 +1,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -75,19 +76,40 @@ public class SingleCellExpressionExperimentSplitServiceImpl implements SingleCel
             }
             results.add( expressionExperimentSubSetService.create( subset ) );
         }
+        String note = "Created " + results.size() + " aggregated single-cell subsets for " + cellTypeFactor;
         StringBuilder details = new StringBuilder();
-        details.append( "Cell-type assignment: " ).append( cta ).append( "\n" );
-        details.append( "Factor: " ).append( cellTypeFactor ).append( "\n" );
-        details.append( "Mapping:\n" );
-        mappedCellTypeFactors.forEach( ( k, v ) -> {
-            details.append( "\t" ).append( k ).append( " -> " ).append( v ).append( "\n" );
-        } );
-        details.append( "Subsets:\n" );
-        for ( ExpressionExperimentSubSet subset : results ) {
-            details.append( "\t" ).append( subset ).append( "\n" );
+        details.append( "Cell type assignment: " );
+        boolean first = true;
+        for ( Characteristic ct : cta.getCellTypes() ) {
+            if ( !first ) {
+                details.append( ", " );
+            }
+            first = false;
+            details.append( formatCellType( ct ) );
         }
-        auditTrailService.addUpdateEvent( ee, SingleCellSubSetsCreatedEvent.class, "Created " + results.size() + " aggregated single-cell subsets for " + cellTypeFactor, details.toString() );
+        details.append( "\n" );
+        details.append( "Cell type factor: " ).append( cellTypeFactor ).append( "\n" );
+        details.append( "Mapping of cell types to factor values:\n" );
+        int longestCellType = cta.getCellTypes().stream()
+                .mapToInt( ct -> formatCellType( ct ).length() )
+                .max()
+                .orElse( 0 );
+        mappedCellTypeFactors.forEach( ( k, v ) -> details.append( "\t" ).append( StringUtils.rightPad( formatCellType( k ), longestCellType ) ).append( " → " ).append( v ).append( "\n" ) );
+        details.append( "Subsets:" );
+        for ( ExpressionExperimentSubSet subset : results ) {
+            details.append( "\n" ).append( "\t" ).append( subset );
+        }
+        log.info( note + "\n" + details );
+        auditTrailService.addUpdateEvent( ee, SingleCellSubSetsCreatedEvent.class, note, details.toString() );
         return results;
+    }
+
+    private String formatCellType( Characteristic ct ) {
+        if ( ct.getValueUri() != null ) {
+            return "[" + ct.getValue() + "]" + " (" + ct.getValueUri() + ")";
+        } else {
+            return ct.getValue();
+        }
     }
 
     private BioAssay createBioAssayForCellPopulation( BioAssay sample, Map<Characteristic, FactorValue> mappedCellTypeFactors, Characteristic cellType, String cellTypeName ) {

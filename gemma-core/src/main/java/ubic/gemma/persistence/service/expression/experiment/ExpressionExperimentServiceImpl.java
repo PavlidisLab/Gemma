@@ -33,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
+import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
@@ -41,10 +42,7 @@ import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
-import ubic.gemma.model.common.description.AnnotationValueObject;
-import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -79,6 +77,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.model.common.description.CharacteristicUtils.*;
 import static ubic.gemma.persistence.util.SubqueryUtils.guessAliases;
 
 /**
@@ -244,7 +243,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, QuantitationType qt ) {
         return expressionExperimentDao.getRawDataVectors( ee, qt );
     }
@@ -285,6 +284,8 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     public int replaceAllRawDataVectors( ExpressionExperiment ee,
             Collection<RawExpressionDataVector> newVectors ) {
+        ee = ensureInSession( ee );
+       
         if ( newVectors.isEmpty() ) {
             throw new UnsupportedOperationException( "Only use this method for replacing vectors, not erasing them" );
         }
@@ -433,7 +434,7 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByBibliographicReference( final BibliographicReference bibRef ) {
-        return this.expressionExperimentDao.findByBibliographicReference( bibRef.getId() );
+        return this.expressionExperimentDao.findByBibliographicReference( bibRef );
     }
 
     /**
@@ -450,17 +451,8 @@ public class ExpressionExperimentServiceImpl
      */
     @Override
     @Transactional(readOnly = true)
-    public ExpressionExperiment findByBioMaterial( final BioMaterial bm ) {
+    public Collection<ExpressionExperiment> findByBioMaterial( final BioMaterial bm ) {
         return this.expressionExperimentDao.findByBioMaterial( bm );
-    }
-
-    /**
-     * @see ExpressionExperimentService#findByBioMaterials(Collection)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Map<ExpressionExperiment, BioMaterial> findByBioMaterials( final Collection<BioMaterial> bioMaterials ) {
-        return this.expressionExperimentDao.findByBioMaterials( bioMaterials );
     }
 
     /**
@@ -582,12 +574,11 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Set<AnnotationValueObject> getAnnotationsById( Long eeId ) {
-        ExpressionExperiment expressionExperiment = requireNonNull( this.load( eeId ) );
+    public Set<AnnotationValueObject> getAnnotations( ExpressionExperiment ee ) {
         Set<AnnotationValueObject> annotations = new HashSet<>();
         Collection<String> seenTerms = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
 
-        for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
+        for ( Characteristic c : ee.getCharacteristics() ) {
             AnnotationValueObject annotationValue = new AnnotationValueObject( c, ExpressionExperiment.class );
             if ( seenTerms.add( annotationValue.getTermName() ) ) {
                 annotations.add( annotationValue );
@@ -598,7 +589,7 @@ public class ExpressionExperimentServiceImpl
          * TODO If can be done without much slowdown, add: certain characteristics from factor values? (non-baseline,
          * non-batch, non-redundant with tags). This is tricky because they are so specific...
          */
-        for ( AnnotationValueObject v : this.getAnnotationsByFactorValues( eeId ) ) {
+        for ( AnnotationValueObject v : this.getAnnotationsByFactorValues( ee ) ) {
             if ( seenTerms.add( v.getTermName() ) ) {
                 annotations.add( v );
             }
@@ -608,13 +599,98 @@ public class ExpressionExperimentServiceImpl
          * TODO If can be done without much slowdown, add: certain selected (constant?) characteristics from
          * biomaterials? (non-redundant with tags)
          */
-        for ( AnnotationValueObject v : this.getAnnotationsByBioMaterials( eeId ) ) {
+        for ( AnnotationValueObject v : this.getAnnotationsByBioMaterials( ee ) ) {
             if ( seenTerms.add( v.getTermName() ) ) {
                 annotations.add( v );
             }
         }
 
         return annotations;
+    }
+
+    /**
+     * URIs checked for validity Aug 2024
+     * FIXME filtering here is going to have to be more elaborate for this to be useful.
+     */
+    private Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( ExpressionExperiment ee ) {
+        Collection<Statement> raw = this.expressionExperimentDao.getAnnotationsByFactorValues( ee );
+
+        Collection<AnnotationValueObject> results = new HashSet<>();
+        for ( Statement c : raw ) {
+            // ignore baseline conditions
+            if ( BaselineSelection.isBaselineCondition( c ) ) {
+                continue;
+            }
+
+            // ignore batch factors
+            if ( CharacteristicUtils.hasCategory( c, Categories.BLOCK ) ) {
+                continue;
+            }
+
+            // ignore timepoints
+            if ( CharacteristicUtils.hasCategory( c, Categories.TIMEPOINT ) ) {
+                continue;
+            }
+
+            // DE_include/exclude
+            if ( "http://gemma.msl.ubc.ca/ont/TGEMO_00013".equals( c.getSubjectUri() ) )
+                continue;
+            if ( "http://gemma.msl.ubc.ca/ont/TGEMO_00014".equals( c.getSubjectUri() ) )
+                continue;
+
+            // ignore free text values
+            if ( c.getSubjectUri() != null ) {
+                results.add( new AnnotationValueObject( c, FactorValue.class ) );
+            }
+
+            if ( c.getObject() != null && c.getObjectUri() != null ) {
+                results.add( new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getObjectUri(), c.getObject(), FactorValue.class ) );
+            }
+
+            if ( c.getSecondObject() != null && c.getSecondObjectUri() != null ) {
+                results.add( new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getSecondObjectUri(), c.getSecondObject(), FactorValue.class ) );
+            }
+        }
+
+        return results;
+
+    }
+
+    private Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( ExpressionExperiment ee ) {
+        Collection<Characteristic> raw = this.expressionExperimentDao.getAnnotationsByBioMaterials( ee );
+
+        Collection<AnnotationValueObject> results = new HashSet<>();
+        /*
+         * TODO we need to filter these better; some criteria could be included in the query
+         */
+        for ( Characteristic c : raw ) {
+
+            // filter. Could include this in the query if it isn't too complicated.
+            if ( isUncategorized( c ) || isFreeTextCategory( c ) ) {
+                continue;
+            }
+
+            if ( isFreeText( c ) ) {
+                continue;
+            }
+
+            if ( "MaterialType".equalsIgnoreCase( c.getCategory() )
+                    || "molecular entity".equalsIgnoreCase( c.getCategory() )
+                    || "LabelCompound".equalsIgnoreCase( c.getCategory() ) ) {
+                continue;
+            }
+
+            if ( BaselineSelection.isBaselineCondition( c ) ) {
+                continue;
+            }
+
+            AnnotationValueObject annotationValue = new AnnotationValueObject( c, BioMaterial.class );
+
+            results.add( annotationValue );
+        }
+
+        return results;
+
     }
 
     /**
@@ -1051,6 +1127,11 @@ public class ExpressionExperimentServiceImpl
         }
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt, Class<? extends BulkExpressionDataVector> dataVectorType ) {
+        return expressionExperimentDao.getBioAssayDimensions( ee, qt, dataVectorType );
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -1152,6 +1233,11 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment ) {
         return this.quantitationTypeService.findByExpressionExperiment( expressionExperiment );
+    }
+
+    @Override
+    public Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment, BioAssayDimension dimension ) {
+        return this.quantitationTypeService.findByExpressionExperimentAndDimension( expressionExperiment, dimension );
     }
 
     @Override
@@ -1350,7 +1436,7 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public ExpressionExperiment thawLiter( final ExpressionExperiment expressionExperiment ) {
         ExpressionExperiment result = ensureInSession( expressionExperiment );
-        this.expressionExperimentDao.thawForFrontEnd( result );
+        this.expressionExperimentDao.thawLiter( result );
         return result;
     }
 
@@ -1418,15 +1504,6 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     public void remove( Collection<ExpressionExperiment> entities ) {
         entities.forEach( this::remove );
-    }
-
-    private Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId ) {
-        return this.expressionExperimentDao.getAnnotationsByFactorValues( eeId );
-    }
-
-    private Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( Long eeId ) {
-        return this.expressionExperimentDao.getAnnotationsByBioMaterials( eeId );
-
     }
 
     /**

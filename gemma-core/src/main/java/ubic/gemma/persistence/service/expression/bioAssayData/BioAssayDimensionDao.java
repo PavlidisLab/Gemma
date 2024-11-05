@@ -18,19 +18,20 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
+
+import javax.annotation.Nullable;
 
 /**
  * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimension
  */
 public interface BioAssayDimensionDao extends BaseVoEnabledDao<BioAssayDimension, BioAssayDimensionValueObject> {
 
-    @SuppressWarnings("UnusedReturnValue")
-        // Possible external use
     void thawLite( BioAssayDimension bioAssayDimension );
 
     void thaw( BioAssayDimension bioAssayDimension );
-
 }

@@ -259,7 +259,8 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     }
 
     private void removeInvalidatedData( ExpressionExperiment expExp ) {
-        dataFileService.deleteAllFiles( expExp );
+        dataFileService.deleteAllProcessedDataFiles( expExp );
+        dataFileService.deleteAllAnalysisFiles( expExp );
     }
 
     private void checkQuantitationType( ExpressionDataDoubleMatrix correctedData ) {

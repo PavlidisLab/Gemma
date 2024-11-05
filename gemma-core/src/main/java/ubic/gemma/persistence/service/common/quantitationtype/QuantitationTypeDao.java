@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.common.quantitationtype;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
@@ -51,6 +52,13 @@ public interface QuantitationTypeDao extends FilteringVoEnabledDao<QuantitationT
     Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee );
 
     Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee, Class<? extends DataVector> dataVectorType );
+
+    /**
+     * Retrieve all the QTs associated with the given experiment and dimension.
+     * <p>
+     * This method will only consider vectors of type {@link ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector}.
+     */
+    Collection<QuantitationType> findByExpressionExperimentAndDimension( ExpressionExperiment expressionExperiment, BioAssayDimension dimension );
 
     /**
      * Find a QT matching the given template as per {@link QuantitationType#equals(Object)}.
@@ -102,5 +110,10 @@ public interface QuantitationTypeDao extends FilteringVoEnabledDao<QuantitationT
      * @return a data vector type, or null if the QT is not associated to any vectors
      */
     @Nullable
-    Class<? extends DataVector> getVectorType( QuantitationType qt );
+    Class<? extends DataVector> getDataVectorType( QuantitationType qt );
+
+    /**
+     * Obtain the vector types that are mapped and subclass of the given vector type.
+     */
+    Collection<Class<? extends DataVector>> getMappedDataVectorTypes( Class<? extends DataVector> vectorType );
 }

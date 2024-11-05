@@ -14,6 +14,7 @@ import ubic.gemma.core.datastructure.matrix.DoubleSingleCellExpressionDataMatrix
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
+import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.convertVector;
 import static ubic.gemma.core.util.TsvUtils.SUB_DELIMITER;
 import static ubic.gemma.core.util.TsvUtils.format;
 import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToDoubles;
@@ -49,6 +51,9 @@ import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToDoubles;
 @CommonsLog
 @Setter
 public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
+
+    @Nullable
+    private ScaleType scaleType;
 
     /**
      * Use Ensembl gene IDs instead of gene symbols.
@@ -312,7 +317,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
         if ( vector.getQuantitationType().getRepresentation() != PrimitiveType.DOUBLE ) {
             throw new UnsupportedOperationException( "Unsupported vector representation type " + vector.getQuantitationType().getRepresentation() );
         }
-        writeDoubleVector( vector, byteArrayToDoubles( vector.getData() ), row, writers );
+        writeDoubleVector( vector, convertVector( byteArrayToDoubles( vector.getData() ), vector.getQuantitationType(), scaleType ), row, writers );
     }
 
     private void writeDoubleVector( SingleCellExpressionDataVector vector, double[] data, int row, MatrixVectorWriter[] writers ) {

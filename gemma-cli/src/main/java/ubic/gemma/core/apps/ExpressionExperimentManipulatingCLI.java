@@ -102,6 +102,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     private boolean singleExperimentMode = false;
 
     /**
+     * Default to all datasets if no options are supplied.
+     */
+    private boolean defaultToAll = false;
+
+    /**
      * Try to use references instead of actual entities.
      */
     private boolean useReferencesIfPossible = false;
@@ -164,7 +169,9 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
             return;
         }
 
-        options.addOption( "all", false, "Process all expression experiments" );
+        if ( !defaultToAll ) {
+            options.addOption( "all", false, "Process all expression experiments" );
+        }
 
         Option eeFileListOption = Option.builder( "f" ).hasArg().type( Path.class ).argName( "file" )
                 .desc( "File with list of short names or IDs of expression experiments (one per line; use instead of '-e')" )
@@ -201,11 +208,15 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
 
     @Override
     protected final void processOptions( CommandLine commandLine ) throws ParseException {
-        Assert.isTrue( commandLine.hasOption( "all" ) || commandLine.hasOption( "eeset" )
-                        || commandLine.hasOption( "e" ) || commandLine.hasOption( 'f' ) || commandLine.hasOption( 'q' ),
-                "At least one of -all, -e, -eeset, -f, or -q must be provided." );
+        boolean hasAnyDatasetOptions = commandLine.hasOption( "all" ) || commandLine.hasOption( "eeset" )
+                || commandLine.hasOption( "e" ) || commandLine.hasOption( 'f' ) || commandLine.hasOption( 'q' );
+        Assert.isTrue( hasAnyDatasetOptions || defaultToAll, "At least one of -all, -e, -eeset, -f, or -q must be provided." );
         super.processOptions( commandLine );
-        this.all = commandLine.hasOption( "all" );
+        if ( defaultToAll && !hasAnyDatasetOptions ) {
+            this.all = true;
+        } else {
+            this.all = commandLine.hasOption( "all" );
+        }
         if ( commandLine.hasOption( 'e' ) ) {
             String optionValue = commandLine.getOptionValue( 'e' );
             Assert.isTrue( StringUtils.isNotBlank( optionValue ), "List of EE identifiers must not be blank." );
@@ -293,7 +304,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
             throw new RuntimeException( "No expression experiments matched the given options." );
         } else if ( expressionExperiments.size() == 1 ) {
             BioAssaySet ee = expressionExperiments.iterator().next();
-            log.info( "Final dataset: " + experimentToString( ee ) );
+            log.info( "Final dataset: " + formatExperiment( ee ) );
             processBioAssaySet( expressionExperiments.iterator().next() );
         } else {
             log.info( String.format( "Final list: %d expression experiments", expressionExperiments.size() ) );
@@ -321,7 +332,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
                 if ( abortOnError ) {
                     throw e;
                 } else {
-                    log.error( "An error occurred while processing " + bas + ".", e );
+                    addErrorObject( bas, e );
                 }
             }
         }
@@ -541,6 +552,16 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     }
 
     /**
+     * Default to all datasets if no options are provided.
+     * <p>
+     * This is a very dangerous setting that should be combined with {@link #useReferencesIfPossible}.
+     */
+    public void setDefaultToAll() {
+        Assert.state( !this.defaultToAll, "Default to all is already enabled." );
+        this.defaultToAll = true;
+    }
+
+    /**
      * Set this to allow reference to be retrieved instead of actual entities.
      * <p>
      * This only works for entities retrieved by ID.
@@ -556,6 +577,13 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     }
 
     /**
+     * Indicate if this CLI should abort on error or move on to the next experiment.
+     */
+    public boolean isAbortOnError() {
+        return abortOnError;
+    }
+
+    /**
      * Set this to stop processing experiments if an error occurs.
      */
     protected void setAbortOnError() {
@@ -565,8 +593,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
 
     /**
      * Render an experiment to string, with special handling in case of an uninitialized proxy.
+     * <p>
+     * Use this for printing datasets if {@link #useReferencesIfPossible} is set to prevent {@link org.hibernate.LazyInitializationException}.
      */
-    private String experimentToString( BioAssaySet bas ) {
+    protected String formatExperiment( BioAssaySet bas ) {
         if ( Hibernate.isInitialized( bas ) ) {
             return bas + " " + entityUrlBuilder.fromHostUrl().entity( bas ).web().toUriString();
         } else if ( bas instanceof ExpressionExperiment ) {

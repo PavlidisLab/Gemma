@@ -33,10 +33,7 @@ import org.springframework.util.MultiValueMap;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
-import ubic.gemma.model.expression.bioAssayData.DataVector;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.hibernate.TypedResultTransformer;
 import ubic.gemma.persistence.service.AbstractCriteriaFilteringVoEnabledDao;
@@ -168,13 +165,14 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
 
     @Override
     public QuantitationType findByNameAndVectorType( ExpressionExperiment ee, String name, Class<? extends DataVector> dataVectorType ) {
-        String entityName = getSessionFactory().getClassMetadata( dataVectorType ).getEntityName();
-        return ( QuantitationType ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct v.quantitationType from " + entityName + " v "
-                        + "where v.expressionExperiment = :ee and v.quantitationType.name = :name" )
-                .setParameter( "ee", ee )
-                .setParameter( "name", name )
+        Long id = ( Long ) getSessionFactory().getCurrentSession()
+                .createCriteria( dataVectorType )
+                .add( Restrictions.eq( "expressionExperiment", ee ) )
+                .createCriteria( "quantitationType" )
+                .add( Restrictions.eq( "name", name ) )
+                .setProjection( Projections.distinct( Projections.id() ) )
                 .uniqueResult();
+        return id != null ? load( id ) : null;
     }
 
     @Override
@@ -188,13 +186,14 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
 
     @Override
     public QuantitationType loadByIdAndVectorType( Long id, ExpressionExperiment ee, Class<? extends DataVector> dataVectorType ) {
-        String entityName = getSessionFactory().getClassMetadata( dataVectorType ).getEntityName();
-        return ( QuantitationType ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct v.quantitationType from " + entityName + " v "
-                        + "where v.expressionExperiment = :ee and v.quantitationType.id = :id" )
-                .setParameter( "ee", ee )
-                .setParameter( "id", id )
+        id = ( Long ) getSessionFactory().getCurrentSession()
+                .createCriteria( dataVectorType )
+                .add( Restrictions.eq( "expressionExperiment", ee ) )
+                .createCriteria( "quantitationType" )
+                .add( Restrictions.idEq( id ) )
+                .setProjection( Projections.distinct( Projections.id() ) )
                 .uniqueResult();
+        return id != null ? load( id ) : null;
     }
 
     @Override
@@ -222,6 +221,24 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     }
 
     @Override
+    public Collection<QuantitationType> findByExpressionExperimentAndDimension( ExpressionExperiment expressionExperiment, BioAssayDimension dimension ) {
+        Set<QuantitationType> qts = new HashSet<>();
+        for ( Class<? extends DataVector> vectorType : dataVectorTypes ) {
+            if ( BulkExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
+                //noinspection unchecked
+                qts.addAll( load( ( List<Long> ) getSessionFactory().getCurrentSession()
+                        .createCriteria( vectorType )
+                        .add( Restrictions.eq( "expressionExperiment", expressionExperiment ) )
+                        .add( Restrictions.eq( "bioAssayDimension", dimension ) )
+                        .createCriteria( "quantitationType" )
+                        .setProjection( Projections.distinct( Projections.property( "id" ) ) )
+                        .list() ) );
+            }
+        }
+        return qts;
+    }
+
+    @Override
     protected QuantitationTypeValueObject doLoadValueObject( QuantitationType entity ) {
         return new QuantitationTypeValueObject( entity );
     }
@@ -234,7 +251,7 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     }
 
     @Override
-    public Class<? extends DataVector> getVectorType( QuantitationType qt ) {
+    public Class<? extends DataVector> getDataVectorType( QuantitationType qt ) {
         for ( Class<? extends DataVector> vectorType : dataVectorTypes ) {
             if ( ( ( Long ) getSessionFactory().getCurrentSession()
                     .createCriteria( vectorType )
@@ -245,6 +262,16 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
             }
         }
         return null;
+    }
+
+    @Override
+    public Collection<Class<? extends DataVector>> getMappedDataVectorTypes( Class<? extends DataVector> vectorType ) {
+        //noinspection unchecked
+        return getSessionFactory().getAllClassMetadata().values().stream()
+                .map( ClassMetadata::getMappedClass )
+                .filter( vectorType::isAssignableFrom )
+                .map( clazz -> ( Class<? extends DataVector> ) clazz )
+                .collect( Collectors.toSet() );
     }
 
     /**
@@ -278,8 +305,9 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
             //noinspection unchecked
             List<Long> qtIds = getSessionFactory().getCurrentSession().createCriteria( vectorType )
                     .add( Restrictions.eq( "expressionExperiment", ee ) )
-                    .add( Restrictions.in( "quantitationType.id", optimizeParameterList( ids ) ) )
-                    .setProjection( Projections.distinct( Projections.property( "quantitationType.id" ) ) )
+                    .createCriteria( "quantitationType" )
+                    .add( Restrictions.in( "id", optimizeParameterList( ids ) ) )
+                    .setProjection( Projections.distinct( Projections.id() ) )
                     .list();
             qtIds.forEach( id -> vectorTypeById.add( id, vectorType ) );
         }

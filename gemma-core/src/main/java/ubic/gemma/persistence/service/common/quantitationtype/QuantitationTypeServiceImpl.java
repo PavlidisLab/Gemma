@@ -24,12 +24,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -62,6 +64,22 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee, Collection<Class<? extends DataVector>> vectorTypes ) {
+        Collection<QuantitationType> results = new HashSet<>();
+        for ( Class<? extends DataVector> vectorType : vectorTypes ) {
+            results.addAll( findByExpressionExperiment( ee, vectorType ) );
+        }
+        return results;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<QuantitationType> findByExpressionExperimentAndDimension( ExpressionExperiment expressionExperiment, BioAssayDimension dimension ) {
+        return quantitationTypeDao.findByExpressionExperimentAndDimension( expressionExperiment, dimension );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<QuantitationTypeValueObject> loadValueObjectsWithExpressionExperiment( Collection<QuantitationType> qts, ExpressionExperiment expressionExperiment ) {
         return this.quantitationTypeDao.loadValueObjectsWithExpressionExperiment( qts, expressionExperiment );
     }
@@ -69,7 +87,13 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
     @Override
     @Transactional(readOnly = true)
     public Class<? extends DataVector> getDataVectorType( QuantitationType qt ) {
-        return quantitationTypeDao.getVectorType( qt );
+        return quantitationTypeDao.getDataVectorType( qt );
+    }
+
+    @Override
+    // no need for a transaction
+    public Collection<Class<? extends DataVector>> getMappedDataVectorType( Class<? extends DataVector> vectorType ) {
+        return quantitationTypeDao.getMappedDataVectorTypes( vectorType );
     }
 
     @Override
