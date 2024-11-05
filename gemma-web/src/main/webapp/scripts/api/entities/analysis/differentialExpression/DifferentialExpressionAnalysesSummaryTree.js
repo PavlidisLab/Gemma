@@ -339,7 +339,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                 /* Show how many probes are differentially expressed; */
 
                 var numbers = resultSet.numberOfDiffExpressedProbes + ' of ' + this.totalProbes
-                    + ' probes were differentially expressed<br>';
+                    + ' elements were differentially expressed<br>';
 
                 // if (resultSet.upregulatedCount != 0) {
                 numbers += resultSet.upregulatedCount + "&nbsp;Up";
@@ -770,7 +770,7 @@ function visualizeDiffExpressionHandler(eeid, diffResultId, factorDetails, facto
     var visDiffWindow = new Gemma.VisualizationWithThumbsWindow({
         thumbnails: false,
         readMethod: DEDVController.getDEDVForDiffExVisualizationByThreshold,
-        title: "Top diff. ex. probes for &quot;" + factorDetails + "&quot;",
+        title: "Top diff. ex. elements for &quot;" + factorDetails + "&quot;",
         showLegend: false,
         downloadLink: String.format(ctxBasePath + "/dedv/downloadDEDV.html?ee={0}&rs={1}&thresh={2}&diffex=1", eeid,
             diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD)
