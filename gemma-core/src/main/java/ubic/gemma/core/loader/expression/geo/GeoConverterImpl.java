@@ -27,7 +27,6 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceProcessingServiceImpl;
 import ubic.gemma.core.loader.expression.geo.model.*;
 import ubic.gemma.core.loader.expression.geo.model.GeoDataset.ExperimentType;
@@ -116,7 +115,6 @@ public class GeoConverterImpl implements GeoConverter {
     private static final String RAT = "Rattus norvegicus";
     private static final Log log = LogFactory.getLog( ArrayDesignSequenceProcessingServiceImpl.class.getName() );
     private static final Map<String, String> organismDatabases = new HashMap<>();
-    private static final ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
 
     static {
         GeoConverterImpl.organismDatabases.put( "Saccharomyces cerevisiae", "SGD" );

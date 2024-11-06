@@ -20,8 +20,6 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 
-import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToBooleans;
-
 /**
  * This is used to represent missing value data.
  *
@@ -39,8 +37,7 @@ public class BooleanVectorValueObject extends DataVectorValueObject {
         if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
             throw new IllegalArgumentException( "Can only store boolean vectors, got " + dedv.getQuantitationType() );
         }
-
-        this.data = byteArrayToBooleans( dedv.getData() );
+        this.data = dedv.getDataAsBooleans();
     }
 
     public boolean[] getData() {

@@ -43,7 +43,6 @@ import java.util.Collection;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.*;
-import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToBooleans;
 
 /**
  * @author pavlidis
@@ -87,8 +86,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         boolean foundB = false;
         for ( DesignElementDataVector vector : calls ) {
             if ( vector.getDesignElement().getName().equals( "26" ) ) {
-                byte[] dat = vector.getData();
-                boolean[] row = byteArrayToBooleans( dat );
+                boolean[] row = vector.getDataAsBooleans();
                 int i = 0;
                 for ( BioAssay bas : dim.getBioAssays() ) {
                     if ( bas.getName().equals( "expression array ME-TMZ" ) ) {
@@ -99,8 +97,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
                 }
             }
             if ( vector.getDesignElement().getName().equals( "27" ) ) {
-                byte[] dat = vector.getData();
-                boolean[] row = byteArrayToBooleans( dat );
+                boolean[] row = vector.getDataAsBooleans();
                 int i = 0;
                 for ( BioAssay bas : dim.getBioAssays() ) {
                     if ( bas.getName().equals( "expression array ME-TMZ" ) ) {
@@ -246,8 +243,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         System.err.print( "\n" );
         for ( DesignElementDataVector vector : calls ) {
             System.err.print( vector.getDesignElement() );
-            byte[] dat = vector.getData();
-            boolean[] row = byteArrayToBooleans( dat );
+            boolean[] row = vector.getDataAsBooleans();
             for ( boolean b : row ) {
                 System.err.print( "\t" + b );
             }

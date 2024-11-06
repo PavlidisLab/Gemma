@@ -27,12 +27,7 @@ public enum PrimitiveType {
     LONG( 8 ),
     CHAR( 2 ),
     BOOLEAN( 1 ),
-    STRING( -1 ),
-    INTARRAY( -1 ),
-    DOUBLEARRAY( -1 ),
-    CHARARRAY( -1 ),
-    BOOLEANARRAY( -1 ),
-    STRINGARRAY( -1 );
+    STRING( -1 );
 
     private final int sizeInBytes;
 

@@ -44,7 +44,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.util.*;
 
-import static ubic.gemma.persistence.util.ByteArrayUtils.*;
+import static ubic.gemma.persistence.util.ByteArrayUtils.toBytes;
 
 /**
  * Tackles the problem of concatenating DesignElementDataVectors for a single experiment. This is necessary When a study
@@ -519,17 +519,17 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
                     buf.append( "\t" ).append( d );
                 }
             } else if ( qtype.getRepresentation().equals( PrimitiveType.INT ) ) {
-                int[] vals = byteArrayToInts( vector.getData() );
+                int[] vals = vector.getDataAsInts();
                 for ( int i : vals ) {
                     buf.append( "\t" ).append( i );
                 }
             } else if ( qtype.getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
-                boolean[] vals = byteArrayToBooleans( vector.getData() );
+                boolean[] vals = vector.getDataAsBooleans();
                 for ( boolean d : vals ) {
                     buf.append( "\t" ).append( d );
                 }
             } else if ( qtype.getRepresentation().equals( PrimitiveType.STRING ) ) {
-                String[] vals = byteArrayToStrings( vector.getData() );
+                String[] vals = vector.getDataAsStrings();
                 for ( String d : vals ) {
                     buf.append( "\t" ).append( d );
                 }

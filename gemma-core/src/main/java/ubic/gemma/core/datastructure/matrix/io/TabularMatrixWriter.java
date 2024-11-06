@@ -31,7 +31,6 @@ import java.util.stream.Stream;
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.*;
 import static ubic.gemma.core.util.TsvUtils.SUB_DELIMITER;
 import static ubic.gemma.core.util.TsvUtils.format;
-import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToDoubles;
 
 /**
  * Write a set of single-cell vectors to a simple tabular format.
@@ -141,7 +140,7 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
         if ( vector.getQuantitationType().getRepresentation() != PrimitiveType.DOUBLE ) {
             throw new UnsupportedOperationException( "Writing single-cell vectors of " + vector.getQuantitationType().getRepresentation() + " is not supported." );
         }
-        writeDoubleVector( vector.getDesignElement(), cs2gene, vector.getSingleCellDimension(), convertVector( byteArrayToDoubles( vector.getData() ), vector.getQuantitationType(), scaleType ), vector.getDataIndices(), pwriter );
+        writeDoubleVector( vector.getDesignElement(), cs2gene, vector.getSingleCellDimension(), convertVector( vector.getDataAsDoubles(), vector.getQuantitationType(), scaleType ), vector.getDataIndices(), pwriter );
     }
 
     private void writeDoubleVector( CompositeSequence cs, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, SingleCellDimension dimension, double[] vec, int[] indices, Writer pwriter ) throws IOException {

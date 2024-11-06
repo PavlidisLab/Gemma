@@ -7,14 +7,12 @@ import ubic.basecode.dataStructure.matrix.IntegerMatrix;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.util.*;
-
-import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToInts;
 
 /**
  * Warning, not fully tested.
@@ -179,8 +177,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
 
             rowNames.put( rowIndex, designElement );
 
-            byte[] bytes = vector.getData();
-            int[] vals = byteArrayToInts( bytes );
+            int[] vals = vector.getDataAsInts();
 
             BioAssayDimension dimension = vector.getBioAssayDimension();
             Collection<BioAssay> bioAssays = dimension.getBioAssays();

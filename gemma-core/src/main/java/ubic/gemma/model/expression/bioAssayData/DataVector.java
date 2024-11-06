@@ -20,7 +20,6 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.util.Assert;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -45,47 +44,54 @@ public abstract class DataVector extends AbstractIdentifiable {
 
     @Transient
     public double[] getDataAsDoubles() {
-        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.DOUBLE );
+        ensureRepresentation( PrimitiveType.DOUBLE );
         return byteArrayToDoubles( data );
     }
 
     public void setDataAsDoubles( double[] data ) {
+        ensureRepresentation( PrimitiveType.DOUBLE );
         setData( doubleArrayToBytes( data ) );
     }
 
     @Transient
     public boolean[] getDataAsBooleans() {
-        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.BOOLEAN );
+        ensureRepresentation( PrimitiveType.BOOLEAN );
         return byteArrayToBooleans( data );
     }
 
     public void setDataAsBooleans( boolean[] data ) {
-        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.BOOLEAN );
+        ensureRepresentation( PrimitiveType.BOOLEAN );
         setData( booleanArrayToBytes( data ) );
     }
 
     @Transient
     public char[] getDataAsChars() {
-        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.CHAR );
+        ensureRepresentation( PrimitiveType.CHAR );
         return byteArrayToChars( data );
     }
 
     @Transient
     public int[] getDataAsInts() {
-        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.INT );
+        ensureRepresentation( PrimitiveType.INT );
         return byteArrayToInts( data );
     }
 
     @Transient
     public long[] getDataAsLongs() {
-        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.LONG );
+        ensureRepresentation( PrimitiveType.LONG );
         return byteArrayToLongs( data );
     }
 
     @Transient
     public String[] getDataAsStrings() {
-        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.STRING );
+        ensureRepresentation( PrimitiveType.STRING );
         return byteArrayToStrings( data );
+    }
+
+    @Transient
+    public String getDataAsString() {
+        ensureRepresentation( PrimitiveType.STRING );
+        return byteArrayToAsciiString( data );
     }
 
     /**
@@ -96,5 +102,12 @@ public abstract class DataVector extends AbstractIdentifiable {
         // also, we cannot hash the ID because it is assigned on creation
         // hashing the data is wasteful because subclasses will have a design element to distinguish distinct vectors
         return Objects.hash( expressionExperiment, quantitationType );
+    }
+
+    private void ensureRepresentation( PrimitiveType primitiveType ) {
+        if ( quantitationType.getRepresentation() != primitiveType ) {
+            throw new IllegalStateException( String.format( "This vector stores data of type %s, but %s was requested.",
+                    quantitationType.getRepresentation(), primitiveType ) );
+        }
     }
 }

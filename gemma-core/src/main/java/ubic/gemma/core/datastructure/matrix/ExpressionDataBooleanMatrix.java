@@ -32,8 +32,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.util.*;
 
-import static ubic.gemma.persistence.util.ByteArrayUtils.*;
-
 /**
  * Matrix of booleans mapped from an ExpressionExperiment.
  *
@@ -194,7 +192,6 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
 
         for ( BulkExpressionDataVector vector : vectors ) {
             BioAssayDimension dimension = vector.getBioAssayDimension();
-            byte[] bytes = vector.getData();
 
             CompositeSequence designElement = vector.getDesignElement();
 
@@ -203,7 +200,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
 
             rowNames.put( rowIndex, designElement );
 
-            boolean[] vals = this.getVals( vector, bytes );
+            boolean[] vals = this.getVals( vector );
 
             Collection<BioAssay> bioAssays = dimension.getBioAssays();
 
@@ -229,12 +226,12 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
     /**
      * Note that if we have trouble interpreting the data, it gets left as false.
      */
-    private boolean[] getVals( DesignElementDataVector vector, byte[] bytes ) {
+    private boolean[] getVals( DesignElementDataVector vector ) {
         boolean[] vals = null;
         if ( vector.getQuantitationType().getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
-            vals = byteArrayToBooleans( bytes );
+            vals = vector.getDataAsBooleans();
         } else if ( vector.getQuantitationType().getRepresentation().equals( PrimitiveType.CHAR ) ) {
-            char[] charVals = byteArrayToChars( bytes );
+            char[] charVals = vector.getDataAsChars();
             vals = new boolean[charVals.length];
             int j = 0;
             for ( char c : charVals ) {
@@ -255,7 +252,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
                 j++;
             }
         } else if ( vector.getQuantitationType().getRepresentation().equals( PrimitiveType.STRING ) ) {
-            String val = byteArrayToAsciiString( bytes );
+            String val = vector.getDataAsString();
             String[] fields = StringUtils.split( val, '\t' );
             vals = new boolean[fields.length];
             int j = 0;

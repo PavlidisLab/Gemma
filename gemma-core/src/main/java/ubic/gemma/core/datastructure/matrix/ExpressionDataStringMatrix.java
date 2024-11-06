@@ -32,8 +32,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToStrings;
-
 /**
  * @author pavlidis
  */
@@ -188,8 +186,7 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
 
             mat.addRowName( rowIndex );
 
-            byte[] bytes = vector.getData();
-            String[] vals = byteArrayToStrings( bytes );
+            String[] vals = vector.getDataAsStrings();
 
             BioAssayDimension dimension = vector.getBioAssayDimension();
             Collection<BioAssay> bioAssays = dimension.getBioAssays();
