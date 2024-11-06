@@ -129,16 +129,15 @@ public class MatrixConversionTest extends TestCase {
             QuantitationType quantType, BioAssayDimension baDimA, long j, int i2 ) {
         for ( ; j < i2; j++ ) {
             RawExpressionDataVector vector = RawExpressionDataVector.Factory.newInstance();
+            CompositeSequence cs = sequencesb.get( ( int ) j );
+            vector.setDesignElement( cs );
+            vector.setQuantitationType( quantType );
+            vector.setBioAssayDimension( baDimA );
             double[] data = new double[baDimA.getBioAssays().size()];
             for ( int k = 0; k < data.length; k++ ) {
                 data[k] = k;
             }
             vector.setDataAsDoubles( data );
-
-            CompositeSequence cs = sequencesb.get( ( int ) j );
-            vector.setDesignElement( cs );
-            vector.setQuantitationType( quantType );
-            vector.setBioAssayDimension( baDimA );
             vectors.add( vector );
         }
         return j;
