@@ -18,47 +18,11 @@
  */
 package ubic.gemma.model.genome;
 
-import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.AbstractIdentifiable;
 
-import java.io.Serializable;
+public abstract class ChromosomeLocation extends AbstractIdentifiable {
 
-public abstract class ChromosomeLocation implements Identifiable, Serializable {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -4932607147290671454L;
-
-    private Long id;
     private Chromosome chromosome;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    @SuppressWarnings("WeakerAccess") // Required by Spring
-    public ChromosomeLocation() {
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public abstract int compareTo( Object o );
-
-    /**
-     * Returns <code>true</code> if the argument is an ChromosomeLocation instance and all identifiers for this entity
-     * equal the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof ChromosomeLocation ) ) {
-            return false;
-        }
-        final ChromosomeLocation that = ( ChromosomeLocation ) object;
-        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
-    }
 
     public Chromosome getChromosome() {
         return this.chromosome;
@@ -67,15 +31,4 @@ public abstract class ChromosomeLocation implements Identifiable, Serializable {
     public void setChromosome( Chromosome chromosome ) {
         this.chromosome = chromosome;
     }
-
-    @Override
-    public Long getId() {
-        return this.id;
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
 }

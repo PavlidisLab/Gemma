@@ -19,9 +19,9 @@
 
 package ubic.gemma.model.genome.gene;
 
-import ubic.gemma.model.common.auditAndSecurity.SecuredNotChild;
 import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
+import ubic.gemma.model.common.auditAndSecurity.SecuredNotChild;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;

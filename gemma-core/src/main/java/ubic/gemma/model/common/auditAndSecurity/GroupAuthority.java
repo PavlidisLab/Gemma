@@ -18,26 +18,16 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import ubic.gemma.model.common.AbstractIdentifiable;
+
+import java.util.Objects;
+
 /**
  * Authority for groups (kind of like a "user role", but for group-based authorization)
  */
-public abstract class GroupAuthority implements gemma.gsec.model.GroupAuthority {
+public class GroupAuthority extends AbstractIdentifiable implements gemma.gsec.model.GroupAuthority {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 6376142653264312139L;
     private String authority;
-    private Long id;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    @SuppressWarnings("WeakerAccess") // Required by Spring
-    public GroupAuthority() {
-    }
 
     @Override
     public String getAuthority() {
@@ -48,20 +38,9 @@ public abstract class GroupAuthority implements gemma.gsec.model.GroupAuthority 
         this.authority = authority;
     }
 
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
+        return Objects.hash( authority );
     }
 
     @Override
@@ -73,17 +52,21 @@ public abstract class GroupAuthority implements gemma.gsec.model.GroupAuthority 
             return false;
         }
         final GroupAuthority that = ( GroupAuthority ) object;
-        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        } else {
+            return Objects.equals( authority, that.authority );
+        }
     }
 
     public static final class Factory {
 
-        public static ubic.gemma.model.common.auditAndSecurity.GroupAuthority newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.GroupAuthorityImpl();
+        public static GroupAuthority newInstance() {
+            return new GroupAuthority();
         }
 
-        public static ubic.gemma.model.common.auditAndSecurity.GroupAuthority newInstance( String authority ) {
-            final ubic.gemma.model.common.auditAndSecurity.GroupAuthority entity = new ubic.gemma.model.common.auditAndSecurity.GroupAuthorityImpl();
+        public static GroupAuthority newInstance( String authority ) {
+            final GroupAuthority entity = new GroupAuthority();
             entity.setAuthority( authority );
             return entity;
         }

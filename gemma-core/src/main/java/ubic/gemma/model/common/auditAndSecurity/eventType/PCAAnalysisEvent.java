@@ -18,12 +18,6 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
-public class PCAAnalysisEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -7387174169412782003L;
+public class PCAAnalysisEvent extends ExpressionExperimentAnalysisEvent {
 
 }

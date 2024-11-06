@@ -19,26 +19,20 @@
 
 package ubic.gemma.model.analysis;
 
+import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
-import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 
 import javax.persistence.Transient;
 
+/**
+ * An analysis of a single experiment or subset.
+ */
 public abstract class SingleExperimentAnalysis extends ExpressionAnalysis implements SecuredChild {
-
-    private static final long serialVersionUID = -6301345978501023402L;
 
     private BioAssaySet experimentAnalyzed;
     private Integer numberOfElementsAnalyzed;
-
-    public SingleExperimentAnalysis() {
-    }
-
-    public SingleExperimentAnalysis( BioAssaySet experimentAnalyzed ) {
-        this.experimentAnalyzed = experimentAnalyzed;
-    }
 
     public BioAssaySet getExperimentAnalyzed() {
         return this.experimentAnalyzed;

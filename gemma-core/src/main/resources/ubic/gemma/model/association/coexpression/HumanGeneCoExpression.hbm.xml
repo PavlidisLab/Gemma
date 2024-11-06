@@ -4,8 +4,8 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 				   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
 
-	<class name="ubic.gemma.model.association.coexpression.HumanGeneCoExpressionImpl" table="HUMAN_GENE_COEXPRESSION"
-		dynamic-insert="true" dynamic-update="true">
+	<class name="ubic.gemma.model.association.coexpression.HumanGeneCoExpression" table="HUMAN_GENE_COEXPRESSION"
+           dynamic-insert="true" dynamic-update="true">
 		<id access="field" name="id" type="java.lang.Long" unsaved-value="null">
 			<column name="ID" sql-type="BIGINT" />
 			<generator class="org.hibernate.id.MultipleHiLoPerTableGenerator" />
@@ -24,8 +24,8 @@
 			<column name="SECOND_GENE_FK" not-null="true" sql-type="BIGINT" unique="false" />
 		</property>
 		<many-to-one access="field" name="supportDetails"
-			class="ubic.gemma.model.analysis.expression.coexpression.HumanCoexpressionSupportDetailsImpl" lazy="proxy" fetch="select"
-			cascade="none">
+                     class="ubic.gemma.model.analysis.expression.coexpression.HumanCoexpressionSupportDetails" lazy="proxy" fetch="select"
+                     cascade="none">
 			<column name="SUPPORT_DETAILS_FK" not-null="false" sql-type="BIGINT" />
 		</many-to-one>
 	</class>

@@ -20,9 +20,4 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 public class FailedMissingValueAnalysisEvent extends NeedsAttentionEvent {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -8827983770602337826L;
-
 }

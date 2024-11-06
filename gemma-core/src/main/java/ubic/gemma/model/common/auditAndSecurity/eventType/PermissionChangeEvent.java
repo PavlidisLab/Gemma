@@ -20,12 +20,9 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * Represents a change in permissions
- *
+ * Represents a change in permissions of an {@link ubic.gemma.model.common.auditAndSecurity.Auditable} entity.
  * @author paul
  */
 public class PermissionChangeEvent extends AuditEventType {
-
-    private static final long serialVersionUID = -7205154783209555418L;
 
 }

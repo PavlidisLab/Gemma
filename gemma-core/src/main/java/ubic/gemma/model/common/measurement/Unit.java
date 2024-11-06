@@ -18,26 +18,13 @@
  */
 package ubic.gemma.model.common.measurement;
 
-import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.AbstractIdentifiable;
 
-import java.io.Serializable;
 import java.util.Objects;
 
-@SuppressWarnings("WeakerAccess") // Possible frontend use
-public class Unit implements Identifiable, Serializable {
+public class Unit extends AbstractIdentifiable {
 
-    private static final long serialVersionUID = 6348133346610787608L;
     private String unitNameCV;
-    private Long id;
-    @Override
-    public Long getId() {
-        return this.id;
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public void setId( Long id ) {
-        this.id = id;
-    }
 
     public String getUnitNameCV() {
         return this.unitNameCV;

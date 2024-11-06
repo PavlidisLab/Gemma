@@ -7,4 +7,5 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * @see CellLevelCharacteristicsRemovedEvent
  */
 public abstract class CellLevelCharacteristicsEvent extends ExpressionExperimentAnalysisEvent {
+
 }

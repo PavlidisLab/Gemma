@@ -29,7 +29,6 @@ import java.util.*;
 
 public class PrincipalComponentAnalysis extends SingleExperimentAnalysis {
 
-    private static final long serialVersionUID = 7046708934564931841L;
     private Integer numComponentsStored;
     private Integer maxNumProbesPerComponent;
     private BioAssayDimension bioAssayDimension;

@@ -18,8 +18,8 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -29,7 +29,6 @@ import java.util.Set;
  */
 public class GeneDifferentialExpressionMetaAnalysis extends ExpressionAnalysis implements Securable {
 
-    private static final long serialVersionUID = -2588180973962410595L;
     private Integer numGenesAnalyzed;
     private Double qvalueThresholdForStorage;
     private Set<ExpressionAnalysisResultSet> resultSetsIncluded = new HashSet<>();

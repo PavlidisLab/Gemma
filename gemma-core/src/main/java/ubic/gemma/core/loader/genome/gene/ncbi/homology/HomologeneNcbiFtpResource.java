@@ -3,7 +3,6 @@ package ubic.gemma.core.loader.genome.gene.ncbi.homology;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.core.io.AbstractResource;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.model.common.description.LocalFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,7 +30,7 @@ class HomologeneNcbiFtpResource extends AbstractResource {
     @Override
     public InputStream getInputStream() throws IOException {
         HomologeneFetcher hf = new HomologeneFetcher();
-        Collection<LocalFile> downloadedFiles = hf.fetch( filename );
+        Collection<File> downloadedFiles = hf.fetch( filename );
 
         if ( downloadedFiles == null || downloadedFiles.isEmpty() ) {
             throw new IOException( "Unable to download Homologene File. Aborting" );
@@ -41,8 +40,7 @@ class HomologeneNcbiFtpResource extends AbstractResource {
             log.info( "Downloaded more than 1 file for homologene.  Using 1st.  " );
         }
 
-        File f;
-        f = downloadedFiles.iterator().next().asFile();
+        File f = downloadedFiles.iterator().next();
         if ( !f.canRead() ) {
             throw new IOException( "Downloaded Homologene File. But unable to read Aborting" );
         }

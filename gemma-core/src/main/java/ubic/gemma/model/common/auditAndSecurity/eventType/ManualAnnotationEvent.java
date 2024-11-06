@@ -20,9 +20,4 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 public class ManualAnnotationEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationEvent {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -4919680073334263746L;
-
 }

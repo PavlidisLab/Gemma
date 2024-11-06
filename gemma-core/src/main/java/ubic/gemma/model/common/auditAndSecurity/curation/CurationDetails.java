@@ -18,12 +18,11 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.curation;
 
-import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -33,11 +32,8 @@ import java.util.Date;
  *
  * @author tesarst
  */
-public class CurationDetails implements Identifiable, Serializable {
+public class CurationDetails extends AbstractIdentifiable {
 
-    private static final long serialVersionUID = -3418540112052921387L;
-
-    private Long id;
     @Nullable
     private Date lastUpdated;
     @Nullable
@@ -50,9 +46,6 @@ public class CurationDetails implements Identifiable, Serializable {
     private AuditEvent lastNoteUpdateEvent;
     @Nullable
     private String curationNote;
-
-    public CurationDetails() {
-    }
 
     /**
      * Compares the objects type and IDs.
@@ -69,16 +62,16 @@ public class CurationDetails implements Identifiable, Serializable {
             return false;
         }
         final CurationDetails that = ( CurationDetails ) object;
-        return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        } else {
+            return false;
+        }
     }
 
     @Override
-    public Long getId() {
-        return id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
+    public int hashCode() {
+        return 0;
     }
 
     @Nullable

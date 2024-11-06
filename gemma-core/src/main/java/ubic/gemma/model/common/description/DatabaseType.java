@@ -1,8 +1,4 @@
-
-
 package ubic.gemma.model.common.description;
-
-import java.util.*;
 
 public enum DatabaseType {
     ONTOLOGY,

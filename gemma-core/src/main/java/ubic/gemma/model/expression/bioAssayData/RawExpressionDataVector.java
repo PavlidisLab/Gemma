@@ -18,18 +18,13 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
-import java.io.Serializable;
 import java.util.Objects;
 
 /**
  * Data for one design element, across one or more bioassays, for a single quantitation type. For example, the
  * "expression profile" for a probe (gene) across a set of samples
  */
-public class RawExpressionDataVector extends BulkExpressionDataVector implements Serializable {
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -7410374297463625206L;
+public class RawExpressionDataVector extends BulkExpressionDataVector {
 
     @Override
     public boolean equals( Object object ) {

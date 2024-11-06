@@ -28,7 +28,6 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.util.Date;
@@ -92,10 +91,9 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
     @Test
     public void testHandleAddEventAuditableAuditEvent() {
         auditTrailService.addUpdateEvent( auditable, "this is a test" );
-        AuditEvent ev = auditable.getAuditTrail().getLast();
+        AuditEvent ev = auditable.getAuditTrail().getEvents().isEmpty() ? null : auditable.getAuditTrail().getEvents().get( auditable.getAuditTrail().getEvents().size() - 1 );
         assertNotNull( ev );
         assertNotNull( ev.getId() );
         assertTrue( auditable.getAuditTrail().getEvents().size() > 1 );
-
     }
 }

@@ -25,15 +25,6 @@ public abstract class AbstractDescribable extends AbstractIdentifiable implement
     private String name;
     private String description;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    @SuppressWarnings("WeakerAccess") // Required by spring
-    public AbstractDescribable() {
-    }
-
     @Override
     public String getName() {
         return this.name;

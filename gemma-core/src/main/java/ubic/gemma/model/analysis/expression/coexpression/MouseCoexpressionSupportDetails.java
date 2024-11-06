@@ -24,19 +24,17 @@ import ubic.gemma.model.genome.Gene;
 /**
  * @author Paul
  */
-public class MouseCoexpressionSupportDetailsImpl extends SupportDetails {
+public class MouseCoexpressionSupportDetails extends SupportDetails {
 
-    private static final long serialVersionUID = 3935257719971070260L;
-
-    public MouseCoexpressionSupportDetailsImpl( Gene firstGene, Gene secondGene, Boolean isPositive ) {
+    public MouseCoexpressionSupportDetails( Gene firstGene, Gene secondGene, Boolean isPositive ) {
         super( firstGene, secondGene, isPositive );
     }
 
-    public MouseCoexpressionSupportDetailsImpl( Long firstGene, Long secondGene, Boolean isPositive ) {
+    public MouseCoexpressionSupportDetails( Long firstGene, Long secondGene, Boolean isPositive ) {
         super( firstGene, secondGene, isPositive );
     }
 
-    public MouseCoexpressionSupportDetailsImpl() {
+    public MouseCoexpressionSupportDetails() {
         this( ( Long ) null, null, null );
     }
 }

@@ -27,9 +27,4 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 @Deprecated
 public class FailedBatchInformationMissingEvent extends BatchInformationMissingEvent {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -3235885345623521195L;
-
 }

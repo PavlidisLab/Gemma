@@ -23,7 +23,6 @@ import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
-import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -31,22 +30,10 @@ import java.util.Objects;
  * (Affymetrix), oligo (oligo arrays) or cDNA clone/EST (cDNA arrays)
  */
 @Indexed
-public class CompositeSequence extends AbstractDescribable implements Serializable {
+public class CompositeSequence extends AbstractDescribable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -3859507822452159349L;
     private BioSequence biologicalCharacteristic;
     private ArrayDesign arrayDesign;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public CompositeSequence() {
-    }
 
     @Override
     @DocumentId
@@ -121,9 +108,7 @@ public class CompositeSequence extends AbstractDescribable implements Serializab
         }
 
         public static CompositeSequence newInstance( String name, ArrayDesign ad, BioSequence bioSequence ) {
-            CompositeSequence cs = new CompositeSequence();
-            cs.setName( name );
-            cs.setArrayDesign( ad );
+            CompositeSequence cs = newInstance( name, ad );
             cs.setBiologicalCharacteristic( bioSequence );
             return cs;
         }

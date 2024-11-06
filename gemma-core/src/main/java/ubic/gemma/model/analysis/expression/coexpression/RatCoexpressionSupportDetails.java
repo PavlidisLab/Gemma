@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2014 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,23 +17,24 @@
  *
  */
 
-package ubic.gemma.model.association.coexpression;
+package ubic.gemma.model.analysis.expression.coexpression;
 
-import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * @author Paul
  */
-public class HumanExperimentCoexpressionLinkImpl extends ExperimentCoexpressionLink {
-    private static final long serialVersionUID = 8753430934473629791L;
+public class RatCoexpressionSupportDetails extends SupportDetails {
 
-    public HumanExperimentCoexpressionLinkImpl() {
-        this( null, null, null, null );
+    public RatCoexpressionSupportDetails( Gene firstGene, Gene secondGene, Boolean isPositive ) {
+        super( firstGene, secondGene, isPositive );
     }
 
-    public HumanExperimentCoexpressionLinkImpl( BioAssaySet bioAssaySet, Long linkId, Long firstGene,
-            Long secondGene ) {
-        super( bioAssaySet, linkId, firstGene, secondGene );
+    public RatCoexpressionSupportDetails( Long firstGene, Long secondGene, Boolean isPositive ) {
+        super( firstGene, secondGene, isPositive );
     }
 
+    public RatCoexpressionSupportDetails() {
+        this( ( Long ) null, null, null );
+    }
 }

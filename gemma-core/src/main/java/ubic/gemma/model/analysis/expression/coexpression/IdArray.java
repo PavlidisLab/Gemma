@@ -25,9 +25,7 @@ import java.util.*;
  * @author Paul
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public abstract class IdArray implements Serializable {
-
-    private static final long serialVersionUID = -7563304392793946778L;
+public abstract class IdArray {
 
     // keep visible to subclasses.
     protected EWAHCompressedBitmap data = new EWAHCompressedBitmap();

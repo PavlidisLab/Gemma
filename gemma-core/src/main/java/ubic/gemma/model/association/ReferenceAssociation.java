@@ -25,7 +25,6 @@ import ubic.gemma.model.common.description.DatabaseEntry;
  */
 public class ReferenceAssociation extends BioSequence2GeneProduct {
 
-    private static final long serialVersionUID = -6338026603382275762L;
     private DatabaseEntry referencedDatabaseEntry;
 
     public DatabaseEntry getReferencedDatabaseEntry() {
@@ -35,6 +34,22 @@ public class ReferenceAssociation extends BioSequence2GeneProduct {
     @SuppressWarnings("unused") // Possible external use
     public void setReferencedDatabaseEntry( DatabaseEntry referencedDatabaseEntry ) {
         this.referencedDatabaseEntry = referencedDatabaseEntry;
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof ReferenceAssociation ) ) {
+            return false;
+        }
+        ReferenceAssociation other = ( ReferenceAssociation ) object;
+        if ( getId() != null && other.getId() != null ) {
+            return getId().equals( other.getId() );
+        } else {
+            return false;
+        }
     }
 
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use

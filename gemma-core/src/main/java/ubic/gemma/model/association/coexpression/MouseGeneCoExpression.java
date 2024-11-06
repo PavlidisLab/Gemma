@@ -16,21 +16,21 @@
  * limitations under the License.
  *
  */
+
 package ubic.gemma.model.association.coexpression;
 
-public abstract class MouseGeneCoExpression extends Gene2GeneCoexpression {
-
-    private static final long serialVersionUID = 6475614056538630827L;
+/**
+ * @see MouseGeneCoExpression
+ */
+public class MouseGeneCoExpression extends Gene2GeneCoexpression {
 
     public static final class Factory {
 
         public static MouseGeneCoExpression newInstance( Double effect, Long firstGene, Long secondGene ) {
-            final MouseGeneCoExpression entity = new MouseGeneCoExpressionImpl();
+            final MouseGeneCoExpression entity = new MouseGeneCoExpression();
             assert effect != null && firstGene != null && secondGene != null;
             Gene2GeneCoexpression.tryWriteFields( effect, firstGene, secondGene, entity );
             return entity;
         }
-
     }
-
 }

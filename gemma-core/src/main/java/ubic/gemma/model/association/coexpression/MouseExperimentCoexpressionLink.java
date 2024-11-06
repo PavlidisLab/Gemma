@@ -1,7 +1,7 @@
 /*
- * The Gemma project.
+ * The gemma project
  *
- * Copyright (c) 2006-2012 University of British Columbia
+ * Copyright (c) 2013 University of British Columbia
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,20 @@
 
 package ubic.gemma.model.association.coexpression;
 
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+
 /**
- * @see ubic.gemma.model.association.coexpression.RatGeneCoExpression
+ * @author Paul
  */
-public class RatGeneCoExpressionImpl extends RatGeneCoExpression {
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 5889802151081696108L;
+public class MouseExperimentCoexpressionLink extends ExperimentCoexpressionLink {
+
+    public MouseExperimentCoexpressionLink() {
+        this( null, null, null, null );
+    }
+
+    public MouseExperimentCoexpressionLink( BioAssaySet bioAssaySet, Long linkId, Long firstGene,
+            Long secondGene ) {
+        super( bioAssaySet, linkId, firstGene, secondGene );
+    }
 
 }

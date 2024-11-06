@@ -24,11 +24,6 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * added.
  * </p>
  */
-public class CommentedEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -9053488530090657730L;
+public class CommentedEvent extends AuditEventType {
 
 }

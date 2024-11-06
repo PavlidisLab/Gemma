@@ -18,45 +18,32 @@
  */
 package ubic.gemma.model.genome;
 
-import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
-import java.io.Serializable;
 import java.util.Objects;
 
 /**
  * Immutable representation of a chromosome
  */
-public class Chromosome implements Identifiable, Serializable {
+public class Chromosome extends AbstractIdentifiable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 7394734846565885136L;
-    final private String name;
-    final private ExternalDatabase assemblyDatabase;
-    final private BioSequence sequence;
-    final private Taxon taxon;
-    @SuppressWarnings("unused")// Hibernate sets it with reflection;
-    private Long id;
+    private String name;
+    private ExternalDatabase assemblyDatabase;
+    private BioSequence sequence;
+    private Taxon taxon;
 
     /**
      * No-arg constructor added to satisfy javabean contract
      */
     public Chromosome() {
-        this.name = null;
-        this.taxon = null;
-        this.assemblyDatabase = null;
-        this.sequence = null;
 
     }
 
     public Chromosome( String name, Taxon taxon ) {
         this.name = name;
         this.taxon = taxon;
-        this.assemblyDatabase = null;
-        this.sequence = null;
     }
 
     public Chromosome( String name, ExternalDatabase assemblyDatabase, BioSequence sequence, Taxon taxon ) {
@@ -64,6 +51,29 @@ public class Chromosome implements Identifiable, Serializable {
         this.assemblyDatabase = assemblyDatabase;
         this.sequence = sequence;
         this.taxon = taxon;
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    /**
+     * @return The database where we have the assesmbly of the chromosome, such as the GoldenPath.
+     */
+    public ExternalDatabase getAssemblyDatabase() {
+        return this.assemblyDatabase;
+    }
+
+    /**
+     * @return The sequence of the chromosome. This is typically going to be just a reference to the sequence in an external
+     * database.
+     */
+    public BioSequence getSequence() {
+        return this.sequence;
+    }
+
+    public Taxon getTaxon() {
+        return this.taxon;
     }
 
     @Override
@@ -91,33 +101,4 @@ public class Chromosome implements Identifiable, Serializable {
     public String toString() {
         return this.getTaxon().getScientificName() + " Chromosome " + this.getName();
     }
-
-    /**
-     * @return The database where we have the assesmbly of the chromosome, such as the GoldenPath.
-     */
-    public ExternalDatabase getAssemblyDatabase() {
-        return this.assemblyDatabase;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    @Override
-    public Long getId() {
-        return id;
-    }
-
-    /**
-     * @return The sequence of the chromosome. This is typically going to be just a reference to the sequence in an external
-     * database.
-     */
-    public BioSequence getSequence() {
-        return this.sequence;
-    }
-
-    public Taxon getTaxon() {
-        return this.taxon;
-    }
-
 }

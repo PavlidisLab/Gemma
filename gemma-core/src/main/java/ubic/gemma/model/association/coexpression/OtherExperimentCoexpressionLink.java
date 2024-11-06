@@ -1,7 +1,7 @@
 /*
- * The Gemma project
+ * The gemma project
  *
- * Copyright (c) 2010 University of British Columbia
+ * Copyright (c) 2014 University of British Columbia
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,23 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.loader.util.fetcher;
 
-import ubic.gemma.model.common.description.LocalFile;
+package ubic.gemma.model.association.coexpression;
 
-import java.io.File;
-import java.util.Collection;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 
 /**
- * Interface for downloading via http files and unarchiving them
- *
- * @author ldonnison
+ * @author Paul
  */
-public interface HttpArchiveFetcherInterface extends Fetcher {
+public class OtherExperimentCoexpressionLink extends ExperimentCoexpressionLink {
 
-    File unPackFile( Collection<LocalFile> localFile );
+    public OtherExperimentCoexpressionLink() {
+        this( null, null, null, null );
+    }
+
+    public OtherExperimentCoexpressionLink( BioAssaySet bioAssaySet, Long linkId, Long firstGene,
+            Long secondGene ) {
+        super( bioAssaySet, linkId, firstGene, secondGene );
+    }
 
 }

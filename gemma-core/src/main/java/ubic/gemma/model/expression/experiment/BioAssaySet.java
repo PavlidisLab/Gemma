@@ -34,7 +34,6 @@ import java.util.Set;
  */
 public abstract class BioAssaySet extends Investigation {
 
-    private static final long serialVersionUID = 2368063046639481521L;
     @Nullable
     private DatabaseEntry accession;
     private Set<BioAssay> bioAssays = new HashSet<>();

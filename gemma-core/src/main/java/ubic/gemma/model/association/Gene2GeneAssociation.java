@@ -21,7 +21,6 @@ package ubic.gemma.model.association;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.genome.Gene;
 
-import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -33,9 +32,7 @@ import java.util.Objects;
  *
  * @author paul
  */
-public abstract class Gene2GeneAssociation implements Identifiable, Serializable {
-
-    private static final long serialVersionUID = -322186137554528167L;
+public abstract class Gene2GeneAssociation implements Identifiable {
 
     final private Long id = null;
     final private Gene firstGene = null;

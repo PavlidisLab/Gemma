@@ -34,10 +34,6 @@ import java.util.Set;
 @Indexed
 public class Gene extends ChromosomeFeature {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -5693198926006383546L;
     private String officialSymbol;
     private String officialName;
     private Integer ncbiGeneId;

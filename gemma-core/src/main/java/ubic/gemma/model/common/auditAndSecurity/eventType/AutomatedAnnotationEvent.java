@@ -27,9 +27,4 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 @Deprecated
 public class AutomatedAnnotationEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationEvent {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 8510568858539453569L;
-
 }

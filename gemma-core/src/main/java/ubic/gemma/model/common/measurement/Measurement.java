@@ -18,20 +18,14 @@
  */
 package ubic.gemma.model.common.measurement;
 
-import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.util.Objects;
 
-@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public class Measurement implements Identifiable, Serializable {
+public class Measurement extends AbstractIdentifiable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 1833568047451431226L;
     private MeasurementType type;
     /**
      * The measurement value.
@@ -43,17 +37,7 @@ public class Measurement implements Identifiable, Serializable {
     private MeasurementKind kindCV;
     private String otherKind;
     private PrimitiveType representation;
-    private Long id;
     private Unit unit;
-
-    @Override
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
 
     public MeasurementKind getKindCV() {
         return this.kindCV;
@@ -131,8 +115,6 @@ public class Measurement implements Identifiable, Serializable {
         return this.getValue();
     }
 
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static final class Factory {
 
         public static Measurement newInstance() {

@@ -25,7 +25,6 @@ import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.net.URL;
 import java.util.Date;
 import java.util.HashSet;
@@ -35,12 +34,8 @@ import java.util.Set;
 /**
  * @author Paul
  */
-public class ExternalDatabase extends AbstractDescribable implements Auditable, Versioned, Serializable {
+public class ExternalDatabase extends AbstractDescribable implements Auditable, Versioned {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 6807023718405086508L;
     private String localInstallDbName;
     private String webUri;
     private String ftpUri;
@@ -57,12 +52,6 @@ public class ExternalDatabase extends AbstractDescribable implements Auditable, 
     private URL releaseUrl;
     @Nullable
     private Date lastUpdated;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     */
-    public ExternalDatabase() {
-    }
 
     public Contact getDatabaseSupplier() {
         return this.databaseSupplier;

@@ -18,8 +18,6 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
-import java.util.*;
-
 public enum GeneralType {
     QUANTITATIVE,
     CATEGORICAL,

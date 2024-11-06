@@ -26,7 +26,6 @@ import java.util.Set;
  */
 public class User extends Person implements gemma.gsec.model.User {
 
-    private static final long serialVersionUID = 5910497757956461559L;
     private String userName;
     private String password;
     private String passwordHint;

@@ -8,7 +8,10 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.TaxonValueObject;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**

@@ -1,8 +1,4 @@
-
-
 package ubic.gemma.model.association;
-
-import java.util.*;
 
 /**
  * This enumeration was originally based on GO, but is used for all entities that have evidenciary aspects; Thus it has

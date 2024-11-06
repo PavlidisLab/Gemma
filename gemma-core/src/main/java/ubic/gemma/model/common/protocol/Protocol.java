@@ -18,16 +18,13 @@
  */
 package ubic.gemma.model.common.protocol;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.description.Characteristic;
 
-import java.io.Serializable;
 import java.util.Set;
 
-public class Protocol extends AbstractDescribable implements Securable, Serializable {
-
-    private static final long serialVersionUID = -1902891452989019766L;
+public class Protocol extends AbstractDescribable implements Securable {
 
     /**
      * Characteristics describing the protocol.

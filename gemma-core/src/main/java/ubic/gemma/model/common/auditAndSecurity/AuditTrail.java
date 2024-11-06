@@ -18,24 +18,31 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.AbstractIdentifiable;
 
-import javax.annotation.Nullable;
-import javax.persistence.Transient;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * The trail of events (create or update) that occurred in an objects lifetime. The first event added must be a "Create"
  * event, or an exception will be thrown.
  */
-public class AuditTrail implements Identifiable, Serializable {
+public class AuditTrail extends AbstractIdentifiable {
 
-    private static final long serialVersionUID = -7450755789163303140L;
-    private Long id;
     private List<AuditEvent> events = new ArrayList<>();
+
+    public List<AuditEvent> getEvents() {
+        return this.events;
+    }
+
+    public void setEvents( List<AuditEvent> events ) {
+        this.events = events;
+    }
+
+    @Override
+    public int hashCode() {
+        return 0;
+    }
 
     @Override
     public boolean equals( Object object ) {
@@ -46,53 +53,11 @@ public class AuditTrail implements Identifiable, Serializable {
             return false;
         }
         final AuditTrail that = ( AuditTrail ) object;
-        return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
-    }
-
-    public List<AuditEvent> getEvents() {
-        return this.events;
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public void setEvents( List<AuditEvent> events ) {
-        this.events = events;
-    }
-
-    @Override
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    /**
-     * @return the first event in the audit trail.
-     */
-    @Transient
-    public AuditEvent getCreationEvent() {
-        assert this.getEvents() != null;
-        if ( this.getEvents().size() == 0 ) {
-            return null;
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        } else {
+            return false;
         }
-        AuditEvent auditEvent = this.getEvents().get( 0 );
-
-        assert auditEvent.getAction().equals( AuditAction.CREATE );
-
-        return auditEvent;
-    }
-
-    /**
-     * @return the last (most recent) event in the AuditTrail.
-     */
-    @Transient
-    public AuditEvent getLast() {
-        assert this.getEvents() != null;
-        if ( this.getEvents().size() == 0 ) {
-            return null;
-        }
-        return this.getEvents().get( this.getEvents().size() - 1 );
     }
 
     public static final class Factory {
@@ -100,7 +65,5 @@ public class AuditTrail implements Identifiable, Serializable {
         public static AuditTrail newInstance() {
             return new AuditTrail();
         }
-
     }
-
 }

@@ -4,7 +4,7 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
 
-   <class name="ubic.gemma.model.common.auditAndSecurity.GroupAuthorityImpl" table="GROUP_AUTHORITY">
+   <class name="ubic.gemma.model.common.auditAndSecurity.GroupAuthority" table="GROUP_AUTHORITY">
       <cache usage="read-write" />
       <id name="id" type="java.lang.Long" unsaved-value="null">
          <column name="ID" sql-type="BIGINT"/>

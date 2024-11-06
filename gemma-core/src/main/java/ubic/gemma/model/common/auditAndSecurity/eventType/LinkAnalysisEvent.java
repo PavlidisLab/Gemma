@@ -19,24 +19,8 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * <p>
  * Computing coexpression links for an expression experiment
- * </p>
  */
-public class LinkAnalysisEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -9218026901325452759L;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public LinkAnalysisEvent() {
-    }
+public class LinkAnalysisEvent extends ExpressionExperimentAnalysisEvent {
 
 }

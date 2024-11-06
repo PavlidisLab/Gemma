@@ -19,17 +19,10 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
+ * Signifies that the probes were renamed from their original values.
  * <p>
- * Signifies that the probes were renamed from their original values. This is sometimes done if the original data input
- * had very generic identifiers (such as consecutive integers).
- * </p>
+ * This is sometimes done if the original data input had very generic identifiers (such as consecutive integers).
  */
-public class ArrayDesignProbeRenamingEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -5458770150436736181L;
+public class ArrayDesignProbeRenamingEvent extends ArrayDesignAnalysisEvent {
 
 }

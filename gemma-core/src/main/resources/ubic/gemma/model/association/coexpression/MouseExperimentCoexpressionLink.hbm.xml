@@ -3,7 +3,7 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
 
-    <class name="ubic.gemma.model.association.coexpression.MouseExperimentCoexpressionLinkImpl"
+    <class name="ubic.gemma.model.association.coexpression.MouseExperimentCoexpressionLink"
            table="MOUSE_EXPERIMENT_COEXPRESSION"
            dynamic-insert="true" dynamic-update="true">
         <cache usage="read-write"/>

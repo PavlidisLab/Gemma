@@ -22,20 +22,16 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.util.Objects;
 
 /**
- * Represents the processed data that is used for actual analyses. The vectors in this class would have been masked to
- * remove missing values.
+ * Represents the processed data that is used for actual analyses.
+ * <p>
+ * The vectors in this class would have been masked to remove missing values.
  */
 @Getter
 @Setter
-public class ProcessedExpressionDataVector extends BulkExpressionDataVector implements Serializable {
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -3948846630785289034L;
+public class ProcessedExpressionDataVector extends BulkExpressionDataVector {
 
     /**
      * Relative expression level of this vector in the study. Used as a quick-and-dirty way to provide feedback

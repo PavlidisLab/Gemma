@@ -23,12 +23,6 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * Indicates that a data type (for a specific QuantitationType, possibly new) was added. This is always 'raw' data.
  * </p>
  */
-public class DataAddedEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -492849538043540166L;
+public class DataAddedEvent extends ExpressionExperimentAnalysisEvent {
 
 }

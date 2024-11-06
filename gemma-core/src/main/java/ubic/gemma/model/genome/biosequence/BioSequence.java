@@ -28,7 +28,6 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Taxon;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.util.Objects;
 import java.util.Set;
 
@@ -42,14 +41,9 @@ import java.util.Set;
  * physical item, and not the database entry for the sequence.
  * </p>
  */
-@SuppressWarnings("unused")
 @Indexed
-public class BioSequence extends AbstractDescribable implements Serializable {
+public class BioSequence extends AbstractDescribable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -6620431603579954167L;
     private Long length;
     private String sequence;
     private Boolean isApproximateLength;
@@ -62,14 +56,6 @@ public class BioSequence extends AbstractDescribable implements Serializable {
     private ubic.gemma.model.common.description.DatabaseEntry sequenceDatabaseEntry;
     private Taxon taxon;
     private Set<BioSequence2GeneProduct> bioSequence2GeneProduct = new java.util.HashSet<>();
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public BioSequence() {
-    }
 
     @Override
     @DocumentId
@@ -219,5 +205,4 @@ public class BioSequence extends AbstractDescribable implements Serializable {
             return entity;
         }
     }
-
 }

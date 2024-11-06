@@ -20,7 +20,6 @@ package ubic.gemma.core.loader.util.fetcher;
 
 import junit.framework.TestCase;
 import org.apache.commons.lang3.RandomStringUtils;
-import ubic.gemma.model.common.description.LocalFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -76,7 +75,7 @@ public class AbstractFetcherTest extends TestCase {
     static class TestFetcher extends AbstractFetcher {
 
         @Override
-        public Collection<LocalFile> fetch( String identifier ) {
+        public Collection<File> fetch( String identifier ) {
             return null;
         }
 

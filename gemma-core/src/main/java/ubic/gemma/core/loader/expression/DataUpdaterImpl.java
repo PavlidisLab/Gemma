@@ -39,7 +39,6 @@ import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -62,6 +61,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import javax.annotation.Nullable;
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
@@ -408,7 +408,7 @@ public class DataUpdaterImpl implements DataUpdater {
 
         RawDataFetcher f = new RawDataFetcher();
 
-        Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
+        Collection<File> files = f.fetch( ee.getAccession().getAccession() );
 
         if ( files == null || files.isEmpty() ) {
             auditTrailService.addUpdateEvent( ee, FailedDataReplacedEvent.class, "Data was apparently not available" );
@@ -789,7 +789,7 @@ public class DataUpdaterImpl implements DataUpdater {
      *               "original platform".
      */
     private Map<ArrayDesign, Collection<BioAssay>> determinePlatformsFromCELs( ExpressionExperiment ee,
-            Collection<LocalFile> files ) {
+            Collection<File> files ) {
         Map<BioAssay, String> bm2chips = AffyChipTypeExtractor.getChipTypes( ee, files );
         /*
          * Reverse the map (probably should just make this part of getChipTypes)

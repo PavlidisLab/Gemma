@@ -7,4 +7,5 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * @author poirigui
  */
 public class BatchInformationMissingEvent extends BatchInformationEvent {
+
 }

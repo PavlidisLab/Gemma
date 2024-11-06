@@ -21,7 +21,6 @@ package ubic.gemma.model.expression.bioAssayData;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
@@ -29,9 +28,7 @@ import java.util.Objects;
  * Stores the order of BioAssays referred to in DataVectors.
  * Note: Not a SecuredChild - maybe should be?
  */
-public class BioAssayDimension extends AbstractDescribable implements Serializable {
-
-    private static final long serialVersionUID = -3786404705366085672L;
+public class BioAssayDimension extends AbstractDescribable {
 
     private List<BioAssay> bioAssays = new java.util.ArrayList<>();
 

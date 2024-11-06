@@ -21,25 +21,13 @@ package ubic.gemma.model.expression.biomaterial;
 
 import ubic.gemma.model.common.AbstractDescribable;
 
-import java.io.Serializable;
-
 /**
  * @author Paul
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public class Treatment extends AbstractDescribable implements Serializable {
+public class Treatment extends AbstractDescribable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 265514192370169605L;
     private Integer orderApplied = 1;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     */
-    public Treatment() {
-    }
 
     /**
      * @return The order in which this treatment was applied to the biomaterial, relative to the other treatments.

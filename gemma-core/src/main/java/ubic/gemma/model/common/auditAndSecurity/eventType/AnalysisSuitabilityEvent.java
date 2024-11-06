@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2021 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,11 +21,9 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
  * Used for indication of the suitability, or unsuitability, of an entity for a particular type of analysis.
- * 
+ *
  * @author paul
  */
 public abstract class AnalysisSuitabilityEvent extends AuditEventType {
-
-    private static final long serialVersionUID = 7754007995197256846L;
 
 }

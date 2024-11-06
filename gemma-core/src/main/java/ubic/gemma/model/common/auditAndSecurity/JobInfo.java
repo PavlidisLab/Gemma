@@ -21,12 +21,10 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 import ubic.gemma.model.common.Identifiable;
 
-import java.io.Serializable;
 import java.util.Date;
 
-public class JobInfo implements Identifiable, Serializable, SecuredNotChild {
+public class JobInfo implements Identifiable, SecuredNotChild {
 
-    private static final long serialVersionUID = -4998165708433543706L;
     private Boolean runningStatus = Boolean.TRUE;
     private String failedMessage;
     private Date startTime;

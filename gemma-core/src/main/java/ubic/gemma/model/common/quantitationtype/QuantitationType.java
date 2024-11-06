@@ -21,15 +21,9 @@ package ubic.gemma.model.common.quantitationtype;
 import org.apache.commons.lang.StringUtils;
 import ubic.gemma.model.common.AbstractDescribable;
 
-import java.io.Serializable;
 import java.util.Objects;
 
-public class QuantitationType extends AbstractDescribable implements Serializable {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -9139594736279728431L;
+public class QuantitationType extends AbstractDescribable {
 
     /**
      * This will be false except for some Qts on two-colour platforms.
@@ -83,14 +77,6 @@ public class QuantitationType extends AbstractDescribable implements Serializabl
     private PrimitiveType representation;
     private ScaleType scale;
     private StandardQuantitationType type;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public QuantitationType() {
-    }
 
     public GeneralType getGeneralType() {
         return this.generalType;

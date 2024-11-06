@@ -18,28 +18,19 @@
  */
 package ubic.gemma.model.analysis.expression.coexpression;
 
+import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+
+import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * Holds the data of the sample coexpression matrix
  */
-public class SampleCoexpressionMatrix implements java.io.Serializable {
+public class SampleCoexpressionMatrix extends AbstractIdentifiable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 8168483585163161355L;
     private BioAssayDimension bioAssayDimension;
     private byte[] coexpressionMatrix;
-    private Long id;
-
-    protected SampleCoexpressionMatrix() {
-    }
-
-    public SampleCoexpressionMatrix( BioAssayDimension bioAssayDimension, byte[] coexpressionMatrix ) {
-        this.bioAssayDimension = bioAssayDimension;
-        this.coexpressionMatrix = coexpressionMatrix;
-    }
 
     public BioAssayDimension getBioAssayDimension() {
         return this.bioAssayDimension;
@@ -57,24 +48,12 @@ public class SampleCoexpressionMatrix implements java.io.Serializable {
         this.coexpressionMatrix = coexpressionMatrix;
     }
 
-    public Long getId() {
-        return this.id;
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
     /**
      * Returns a hash code based on this entity's identifiers.
      */
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
+        return Objects.hash( bioAssayDimension );
     }
 
     /**
@@ -90,7 +69,21 @@ public class SampleCoexpressionMatrix implements java.io.Serializable {
             return false;
         }
         final SampleCoexpressionMatrix that = ( SampleCoexpressionMatrix ) object;
-        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+        if ( this.getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        } else {
+            return Objects.equals( getBioAssayDimension(), that.getBioAssayDimension() )
+                    && Arrays.equals( getCoexpressionMatrix(), that.getCoexpressionMatrix() );
+        }
     }
 
+    public static class Factory {
+
+        public static SampleCoexpressionMatrix newInstance( BioAssayDimension bioAssayDimension, byte[] coexpressionMatrix ) {
+            SampleCoexpressionMatrix matrix = new SampleCoexpressionMatrix();
+            matrix.setBioAssayDimension( bioAssayDimension );
+            matrix.setCoexpressionMatrix( coexpressionMatrix );
+            return matrix;
+        }
+    }
 }

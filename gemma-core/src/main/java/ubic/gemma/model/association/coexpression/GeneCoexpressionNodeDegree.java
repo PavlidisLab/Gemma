@@ -21,7 +21,6 @@ package ubic.gemma.model.association.coexpression;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.genome.Gene;
 
-import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -29,9 +28,8 @@ import java.util.Objects;
  *
  * @author paul
  */
-public class GeneCoexpressionNodeDegree implements Identifiable, Serializable {
+public class GeneCoexpressionNodeDegree implements Identifiable {
 
-    private static final long serialVersionUID = -1456064687251594963L;
     // our primary key
     private Long geneId = null;
     /**

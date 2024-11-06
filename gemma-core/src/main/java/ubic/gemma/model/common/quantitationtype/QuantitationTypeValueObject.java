@@ -22,8 +22,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 

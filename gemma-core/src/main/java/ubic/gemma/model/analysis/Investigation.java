@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,9 +19,9 @@
 
 package ubic.gemma.model.analysis;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 
@@ -32,8 +32,6 @@ import java.util.Set;
  * An abstract concept of a scientific study
  */
 public abstract class Investigation extends AbstractAuditable implements Securable {
-
-    private static final long serialVersionUID = -5191564466698945873L;
 
     private Set<Characteristic> characteristics = new HashSet<>();
     private Set<BibliographicReference> otherRelevantPublications = new HashSet<>();

@@ -23,7 +23,6 @@ import lombok.Setter;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
 import java.util.Objects;
 
 /**

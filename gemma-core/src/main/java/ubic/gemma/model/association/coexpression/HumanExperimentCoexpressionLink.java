@@ -1,7 +1,7 @@
 /*
- * The Gemma project.
+ * The gemma project
  *
- * Copyright (c) 2006-2012 University of British Columbia
+ * Copyright (c) 2014 University of British Columbia
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,20 @@
 
 package ubic.gemma.model.association.coexpression;
 
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+
 /**
- * @see HumanGeneCoExpression
+ * @author Paul
  */
-public class HumanGeneCoExpressionImpl extends HumanGeneCoExpression {
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -1143581426457333084L;
+public class HumanExperimentCoexpressionLink extends ExperimentCoexpressionLink {
+
+    public HumanExperimentCoexpressionLink() {
+        this( null, null, null, null );
+    }
+
+    public HumanExperimentCoexpressionLink( BioAssaySet bioAssaySet, Long linkId, Long firstGene,
+            Long secondGene ) {
+        super( bioAssaySet, linkId, firstGene, secondGene );
+    }
 
 }

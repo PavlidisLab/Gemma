@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,8 +22,31 @@ import ubic.gemma.model.association.BioSequence2GeneProduct;
 
 public class BlatAssociation extends BioSequence2GeneProduct {
 
-    private static final long serialVersionUID = -4620329339018727407L;
     private BlatResult blatResult;
+
+    public BlatResult getBlatResult() {
+        return this.blatResult;
+    }
+
+    public void setBlatResult( BlatResult blatResult ) {
+        this.blatResult = blatResult;
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof BlatAssociation ) ) {
+            return false;
+        }
+        BlatAssociation other = ( BlatAssociation ) object;
+        if ( getId() != null && other.getId() != null ) {
+            return getId().equals( other.getId() );
+        } else {
+            return false;
+        }
+    }
 
     @Override
     public String toString() {
@@ -43,19 +66,10 @@ public class BlatAssociation extends BioSequence2GeneProduct {
         return buf.toString();
     }
 
-    public BlatResult getBlatResult() {
-        return this.blatResult;
-    }
-
-    public void setBlatResult( BlatResult blatResult ) {
-        this.blatResult = blatResult;
-    }
-    
     public static final class Factory {
         public static BlatAssociation newInstance() {
             return new BlatAssociation();
         }
 
     }
-
 }

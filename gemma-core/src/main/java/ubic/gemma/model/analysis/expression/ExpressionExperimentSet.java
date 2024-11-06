@@ -19,17 +19,16 @@
 
 package ubic.gemma.model.analysis.expression;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import org.hibernate.search.annotations.DocumentId;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
 import org.hibernate.search.annotations.Store;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Taxon;
 
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -40,10 +39,6 @@ import java.util.Set;
 @Indexed
 public class ExpressionExperimentSet extends AbstractAuditable implements Securable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -1034074709420077917L;
     private Taxon taxon;
     private Set<BioAssaySet> experiments = new HashSet<>();
 

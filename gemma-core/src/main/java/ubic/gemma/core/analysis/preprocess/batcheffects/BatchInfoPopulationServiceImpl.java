@@ -30,7 +30,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformation
 import ubic.gemma.model.common.auditAndSecurity.eventType.SingleBatchDeterminationEvent;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
@@ -119,7 +118,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
             return;
         }
 
-        Collection<LocalFile> files = null;
+        Collection<File> files = null;
         try {
             if ( isRNASeq ) {
                 this.createBatchFactorFromFASTQHeaders( ee );
@@ -142,8 +141,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
             throw new BatchInfoPopulationException( ee, e );
         } finally {
             if ( BatchInfoPopulationServiceImpl.CLEAN_UP && files != null ) {
-                for ( LocalFile localFile : files ) {
-                    File file = localFile.asFile();
+                for ( File file : files ) {
                     FileUtils.deleteQuietly( file );
                 }
             }
@@ -188,7 +186,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      * @param  ee ee
      * @return local file
      */
-    private Collection<LocalFile> fetchRawDataFiles( ExpressionExperiment ee ) {
+    private Collection<File> fetchRawDataFiles( ExpressionExperiment ee ) {
         RawDataFetcher fetcher = new RawDataFetcher();
         DatabaseEntry accession = ee.getAccession();
         if ( accession == null ) {
@@ -240,7 +238,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      * @param  files Local copies of raw data files obtained from the data provider (e.g. GEO), adds audit event.
      * @param  ee    ee
      */
-    private void getBatchDataFromRawFiles( ExpressionExperiment ee, Collection<LocalFile> files ) throws BatchInfoPopulationException {
+    private void getBatchDataFromRawFiles( ExpressionExperiment ee, Collection<File> files ) throws BatchInfoPopulationException {
         BatchInfoParser batchInfoParser = new BatchInfoParser();
         ee = expressionExperimentService.thaw( ee );
 

@@ -28,15 +28,14 @@ package ubic.gemma.model.analysis.expression.coexpression;
  */
 public class GeneCoexpressedGenes extends IdArray {
 
-    private static final long serialVersionUID = 6715464097628664297L;
     private Long geneId;
-
-    // Required by spring
-    public GeneCoexpressedGenes() {
-    }
 
     public GeneCoexpressedGenes( Long geneId ) {
         this.geneId = geneId;
+    }
+
+    public GeneCoexpressedGenes() {
+
     }
 
     public Long getGeneId() {

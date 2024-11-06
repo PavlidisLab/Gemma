@@ -20,28 +20,14 @@ package ubic.gemma.model.genome;
 
 import ubic.gemma.model.common.AbstractDescribable;
 
-import java.io.Serializable;
-
 /**
  * Some part of a chromosome
  */
-public abstract class ChromosomeFeature extends AbstractDescribable implements Serializable {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -8627296370886752496L;
+public abstract class ChromosomeFeature extends AbstractDescribable {
 
     private String previousNcbiId;
 
     private PhysicalLocation physicalLocation;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     */
-    @SuppressWarnings("WeakerAccess") // Required by spring
-    public ChromosomeFeature() {
-    }
 
     public PhysicalLocation getPhysicalLocation() {
         return this.physicalLocation;
@@ -61,5 +47,4 @@ public abstract class ChromosomeFeature extends AbstractDescribable implements S
     public void setPreviousNcbiId( String previousNcbiId ) {
         this.previousNcbiId = previousNcbiId;
     }
-
 }

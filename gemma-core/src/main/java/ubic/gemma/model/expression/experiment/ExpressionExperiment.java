@@ -363,6 +363,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
             return false;
         }
     }
+
     @Override
     public String toString() {
         return super.toString() + ( shortName != null ? " Short Name=" + shortName : "" );

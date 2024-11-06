@@ -28,7 +28,6 @@ import ubic.gemma.model.common.description.Characteristic;
 
 import javax.annotation.Nullable;
 import javax.persistence.Transient;
-import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -39,12 +38,7 @@ import java.util.Set;
  * @author Paul
  */
 @Indexed
-public class ExperimentalFactor extends AbstractDescribable implements SecuredChild, Serializable {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 4615731059510436891L;
+public class ExperimentalFactor extends AbstractDescribable implements SecuredChild {
 
     private FactorType type;
     @Nullable

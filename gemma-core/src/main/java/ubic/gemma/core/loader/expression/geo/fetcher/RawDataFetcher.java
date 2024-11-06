@@ -24,7 +24,6 @@ import ubic.basecode.util.NetUtils;
 import ubic.gemma.core.loader.expression.geo.util.GeoUtil;
 import ubic.gemma.core.loader.util.fetcher.AbstractFetcher;
 import ubic.gemma.core.loader.util.fetcher.FtpArchiveFetcher;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.core.config.Settings;
 
 import java.io.File;
@@ -70,7 +69,7 @@ public class RawDataFetcher extends FtpArchiveFetcher {
      * @return            local files
      */
     @Override
-    public Collection<LocalFile> fetch( String identifier ) {
+    public Collection<File> fetch( String identifier ) {
         try {
             if ( this.ftpClient == null || !this.ftpClient.isConnected() )
                 this.ftpClient = ( new GeoUtil() ).connect( FTP.BINARY_FILE_TYPE );
@@ -99,7 +98,7 @@ public class RawDataFetcher extends FtpArchiveFetcher {
             }
             long expectedSize = this.getExpectedSize( seekFile );
             FutureTask<Boolean> future = this.defineTask( outputFileName, seekFile );
-            Collection<LocalFile> result = this.doTask( future, expectedSize, seekFile, outputFileName );
+            Collection<File> result = this.doTask( future, expectedSize, seekFile, outputFileName );
 
             if ( result == null || result.isEmpty() ) {
                 throw new IOException( "Files were not obtained, or download was cancelled." );

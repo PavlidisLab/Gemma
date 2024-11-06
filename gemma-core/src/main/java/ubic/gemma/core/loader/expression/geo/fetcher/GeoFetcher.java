@@ -21,7 +21,6 @@ package ubic.gemma.core.loader.expression.geo.fetcher;
 import ubic.gemma.core.loader.expression.geo.util.GeoUtil;
 import ubic.gemma.core.loader.util.fetcher.AbstractFetcher;
 import ubic.gemma.core.loader.util.fetcher.FtpFetcher;
-import ubic.gemma.model.common.description.LocalFile;
 
 import java.io.File;
 import java.util.Collection;
@@ -44,10 +43,10 @@ abstract public class GeoFetcher extends FtpFetcher {
         return newDir.getAbsolutePath() + File.separator + identifier + GeoFetcher.SOFT_GZ;
     }
 
-    Collection<LocalFile> getFile( String accession, String seekFileName ) {
-        LocalFile file = this.fetchedFile( seekFileName );
+    Collection<File> getFile( String accession, String seekFileName ) {
+        File file = this.fetchedFile( seekFileName );
         AbstractFetcher.log.info( "Found " + seekFileName + " for experiment(set) " + accession + "." );
-        Collection<LocalFile> result = new HashSet<>();
+        Collection<File> result = new HashSet<>();
         result.add( file );
         return result;
     }

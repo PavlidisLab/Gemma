@@ -18,18 +18,18 @@
  */
 package ubic.gemma.model.analysis.expression.pca;
 
+import ubic.gemma.model.common.AbstractIdentifiable;
+
+import java.util.Arrays;
+import java.util.Objects;
+
 /**
  * A right singular vector (a.k.a. eigengenes)
  */
-public class Eigenvector implements java.io.Serializable {
+public class Eigenvector extends AbstractIdentifiable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 5122763307995485698L;
     private Integer componentNumber;
     private double[] vector;
-    private Long id;
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -43,14 +43,6 @@ public class Eigenvector implements java.io.Serializable {
 
     public void setComponentNumber( Integer componentNumber ) {
         this.componentNumber = componentNumber;
-    }
-
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
     }
 
     /**
@@ -69,10 +61,7 @@ public class Eigenvector implements java.io.Serializable {
      */
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
+        return Objects.hash( componentNumber );
     }
 
     @Override
@@ -84,7 +73,12 @@ public class Eigenvector implements java.io.Serializable {
             return false;
         }
         final Eigenvector that = ( Eigenvector ) object;
-        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+        if ( getId() != null && that.getId() != null ) {
+            return Objects.equals( getId(), that.getId() );
+        } else {
+            return Objects.equals( componentNumber, that.componentNumber )
+                    && Arrays.equals( vector, that.vector );
+        }
     }
 
     public static final class Factory {

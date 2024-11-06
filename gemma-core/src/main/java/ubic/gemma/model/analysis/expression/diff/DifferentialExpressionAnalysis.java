@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,8 +30,6 @@ import java.util.Set;
  * An analysis of changes in expression levels across experimental conditions
  */
 public class DifferentialExpressionAnalysis extends SingleExperimentAnalysis {
-
-    private static final long serialVersionUID = -7855180617739271699L;
 
     private Set<ExpressionAnalysisResultSet> resultSets = new HashSet<>();
 

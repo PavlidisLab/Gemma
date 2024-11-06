@@ -1,8 +1,8 @@
 /*
  * The gemma project
- * 
+ *
  * Copyright (c) 2014 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,16 +24,13 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 /**
  * @author Paul
  */
-public class OtherExperimentCoexpressionLinkImpl extends ExperimentCoexpressionLink {
+public class RatExperimentCoexpressionLink extends ExperimentCoexpressionLink {
 
-    private static final long serialVersionUID = -1684811922186491341L;
-
-    public OtherExperimentCoexpressionLinkImpl() {
+    public RatExperimentCoexpressionLink() {
         this( null, null, null, null );
     }
 
-    public OtherExperimentCoexpressionLinkImpl( BioAssaySet bioAssaySet, Long linkId, Long firstGene,
-            Long secondGene ) {
+    public RatExperimentCoexpressionLink( BioAssaySet bioAssaySet, Long linkId, Long firstGene, Long secondGene ) {
         super( bioAssaySet, linkId, firstGene, secondGene );
     }
 

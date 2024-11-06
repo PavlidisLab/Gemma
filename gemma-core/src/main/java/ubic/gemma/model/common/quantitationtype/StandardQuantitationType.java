@@ -1,7 +1,5 @@
 package ubic.gemma.model.common.quantitationtype;
 
-import java.util.*;
-
 public enum StandardQuantitationType {
     PRESENTABSENT,
     FAILED,

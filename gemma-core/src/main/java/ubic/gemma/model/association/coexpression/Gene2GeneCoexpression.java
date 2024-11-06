@@ -36,7 +36,6 @@ import java.util.Objects;
 public abstract class Gene2GeneCoexpression extends Gene2GeneIdAssociation
         implements Comparable<Gene2GeneCoexpression> {
 
-    private static final long serialVersionUID = 6088623734153830393L;
     /**
      * If true, this represents a positive correlation; false indicates it is negative (sorry, 0 doesn't exist, I guess
      * we could use null).

@@ -174,7 +174,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
             log.warn( "Regressed coexpression matrix could not be computed, review experimental design? Experiment " + thawedee );
         }
 
-        SampleCoexpressionAnalysis analysis = new SampleCoexpressionAnalysis( thawedee, // Analyzed experiment
+        SampleCoexpressionAnalysis analysis = SampleCoexpressionAnalysis.Factory.newInstance( thawedee, // Analyzed experiment
                 matrix, // Full
                 regressedMatrix );// Regressed
 
@@ -267,7 +267,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
                     bestBioAssayDimension.getBioAssays().size(), cormat.rows() ) );
         }
 
-        return new SampleCoexpressionMatrix( bestBioAssayDimension, doubleMatrixToBytes( cormat.getRawMatrix() ) );
+        return SampleCoexpressionMatrix.Factory.newInstance( bestBioAssayDimension, doubleMatrixToBytes( cormat.getRawMatrix() ) );
     }
 
     private DoubleMatrix<BioAssay, BioAssay> dataToDoubleMat( ExpressionDataDoubleMatrix matrix ) {

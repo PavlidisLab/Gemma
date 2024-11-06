@@ -19,16 +19,8 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * <p>
  * Indicates the experiment was the subject of a differential expression analysis.
- * </p>
  */
-public class DifferentialExpressionAnalysisEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -2254124666542924604L;
+public class DifferentialExpressionAnalysisEvent extends ExpressionExperimentAnalysisEvent {
 
 }

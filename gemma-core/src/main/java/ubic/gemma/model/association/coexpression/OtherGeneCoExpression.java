@@ -16,22 +16,22 @@
  * limitations under the License.
  *
  */
+
 package ubic.gemma.model.association.coexpression;
 
-public abstract class OtherGeneCoExpression extends Gene2GeneCoexpression {
-
-    private static final long serialVersionUID = 7730779544234187004L;
+/**
+ * @see OtherGeneCoExpression
+ */
+public class OtherGeneCoExpression extends Gene2GeneCoexpression {
 
     public static final class Factory {
 
         @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
         public static OtherGeneCoExpression newInstance( Double effect, Long firstGene, Long secondGene ) {
-            final OtherGeneCoExpression entity = new OtherGeneCoExpressionImpl();
+            final OtherGeneCoExpression entity = new OtherGeneCoExpression();
             assert effect != null && firstGene != null && secondGene != null;
             Gene2GeneCoexpression.tryWriteFields( effect, firstGene, secondGene, entity );
-
             return entity;
         }
     }
-
 }

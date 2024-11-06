@@ -83,7 +83,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
     public final void testAddOKEvent() {
         auditable.getCurationDetails().setTroubled( true );
         auditTrailService.addUpdateEvent( auditable, NotTroubledStatusFlagEvent.class, "nothing special, just testing" );
-        AuditEvent ev = auditable.getAuditTrail().getLast();
+        AuditEvent ev = auditable.getAuditTrail().getEvents().isEmpty() ? null : auditable.getAuditTrail().getEvents().get( auditable.getAuditTrail().getEvents().size() - 1 );
         assertNotNull( ev );
         assertNotNull( ev.getId() );
         assertTrue( ev.getEventType() instanceof NotTroubledStatusFlagEvent );
@@ -104,7 +104,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
     @Test
     public final void testAddTroubleEvent() {
         auditTrailService.addUpdateEvent( auditable, TroubledStatusFlagEvent.class, "nothing special, just testing" );
-        AuditEvent ev = auditable.getAuditTrail().getLast();
+        AuditEvent ev = auditable.getAuditTrail().getEvents().isEmpty() ? null : auditable.getAuditTrail().getEvents().get( auditable.getAuditTrail().getEvents().size() - 1 );
         assertNotNull( ev );
         assertNotNull( ev.getId() );
         assertTrue( ev.getEventType() instanceof TroubledStatusFlagEvent );
@@ -131,7 +131,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         auditable = arrayDesignService.thawLite( auditable );
         AuditTrail auditTrail = auditable.getAuditTrail();
         assertNotNull( auditTrail );
-        AuditEvent ev = auditable.getAuditTrail().getLast();
+        AuditEvent ev = auditable.getAuditTrail().getEvents().isEmpty() ? null : auditable.getAuditTrail().getEvents().get( auditable.getAuditTrail().getEvents().size() - 1 );
         assertNotNull( ev );
         assertNotNull( ev.getId() );
         assertNotNull( auditable.getCurationDetails() );
@@ -149,7 +149,8 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         auditable = arrayDesignService.load( auditable.getId() );
         assertNotNull( auditable );
         auditable = arrayDesignService.thawLite( auditable );
-        AuditEvent ev = auditable.getAuditTrail().getLast();
+        AuditTrail auditTrail = auditable.getAuditTrail();
+        AuditEvent ev = auditTrail.getEvents().isEmpty() ? null : auditTrail.getEvents().get( auditTrail.getEvents().size() - 1 );
         assertNotNull( ev );
         assertNotNull( ev.getId() );
         assertEquals( size + 1, auditable.getAuditTrail().getEvents().size() );
@@ -158,7 +159,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
     @Test
     public final void testAddNeedsAttentionEvent() {
         auditTrailService.addUpdateEvent( auditable, NeedsAttentionEvent.class, "nothing special, just testing" );
-        AuditEvent ev = auditable.getAuditTrail().getLast();
+        AuditEvent ev = auditable.getAuditTrail().getEvents().isEmpty() ? null : auditable.getAuditTrail().getEvents().get( auditable.getAuditTrail().getEvents().size() - 1 );
         assertNotNull( ev );
         assertNotNull( ev.getId() );
         assertNotNull( ev.getEventType() );
@@ -185,7 +186,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
     @Test
     public final void testAddDoesNotNeedsAttentionEvent() {
         auditTrailService.addUpdateEvent( auditable, DoesNotNeedAttentionEvent.class, "nothing special, just testing" );
-        AuditEvent ev = auditable.getAuditTrail().getLast();
+        AuditEvent ev = auditable.getAuditTrail().getEvents().isEmpty() ? null : auditable.getAuditTrail().getEvents().get( auditable.getAuditTrail().getEvents().size() - 1 );
         assertNotNull( ev );
         assertNotNull( ev.getId() );
         assertNotNull( ev.getEventType() );
@@ -212,7 +213,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
     @Test
     public final void testGetEntitiesWithEvent() {
         auditTrailService.addUpdateEvent( auditable, SampleRemovalEvent.class, "nothing special, just testing" );
-        AuditEvent ev = auditable.getAuditTrail().getLast();
+        AuditEvent ev = auditable.getAuditTrail().getEvents().isEmpty() ? null : auditable.getAuditTrail().getEvents().get( auditable.getAuditTrail().getEvents().size() - 1 );
         assertNotNull( ev );
         assertNotNull( ev.getId() );
 
@@ -257,7 +258,8 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
             session.close();
         }
         auditable = arrayDesignService.thaw( auditable );
-        AuditEvent e = auditable.getAuditTrail().getLast();
+        AuditTrail auditTrail = auditable.getAuditTrail();
+        AuditEvent e = auditTrail.getEvents().isEmpty() ? null : auditTrail.getEvents().get( auditTrail.getEvents().size() - 1 );
         Assert.assertEquals( AuditAction.UPDATE, e.getAction() );
         assertEquals( "test", e.getNote() );
         assertNotNull( e.getDetail() );

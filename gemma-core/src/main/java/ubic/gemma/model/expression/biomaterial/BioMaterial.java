@@ -19,9 +19,9 @@
 
 package ubic.gemma.model.expression.biomaterial;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -31,7 +31,6 @@ import ubic.gemma.model.genome.Taxon;
 
 import javax.annotation.Nullable;
 import javax.persistence.Transient;
-import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -48,9 +47,7 @@ import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialU
  * sub-biomaterials inherit characteristics, factors and treatments from their source biomaterials.
  */
 @Indexed
-public class BioMaterial extends AbstractDescribable implements SecuredChild, Serializable {
-
-    private static final long serialVersionUID = 4374359557498220256L;
+public class BioMaterial extends AbstractDescribable implements SecuredChild {
 
     @Nullable
     private BioMaterial sourceBioMaterial;
@@ -61,22 +58,6 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild, Se
     private Set<Characteristic> characteristics = new HashSet<>();
     @Nullable
     private DatabaseEntry externalAccession;
-
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object )
-            return true;
-        if ( !( object instanceof BioMaterial ) )
-            return false;
-        final BioMaterial that = ( BioMaterial ) object;
-        if ( this.getId() != null && that.getId() != null ) {
-            return this.getId().equals( that.getId() );
-        } else if ( getName() != null && that.getName() != null ) {
-            return getName().equals( that.getName() );
-        } else {
-            return false;
-        }
-    }
 
     @Override
     @DocumentId
@@ -203,6 +184,22 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild, Se
         Set<Treatment> result = new HashSet<>();
         visitBioMaterials( this, bm -> result.addAll( bm.getTreatments() ) );
         return unmodifiableSet( result );
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof BioMaterial ) )
+            return false;
+        final BioMaterial that = ( BioMaterial ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return this.getId().equals( that.getId() );
+        } else if ( getName() != null && that.getName() != null ) {
+            return getName().equals( that.getName() );
+        } else {
+            return false;
+        }
     }
 
     public static final class Factory {

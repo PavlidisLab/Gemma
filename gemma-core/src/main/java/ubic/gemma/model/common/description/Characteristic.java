@@ -29,7 +29,6 @@ import ubic.gemma.model.common.AbstractDescribable;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Objects;
 
@@ -46,9 +45,7 @@ import static org.apache.commons.lang3.StringUtils.stripToNull;
  * @author Paul
  */
 @Indexed
-public class Characteristic extends AbstractDescribable implements Serializable, Comparable<Characteristic> {
-
-    private static final long serialVersionUID = -7242166109264718620L;
+public class Characteristic extends AbstractDescribable implements Comparable<Characteristic> {
 
     private static final Comparator<Characteristic> BY_CATEGORY_COMPARATOR = ( c1, c2 ) -> CharacteristicUtils.compareTerm( c1.category, c1.categoryUri, c2.category, c2.categoryUri );
 

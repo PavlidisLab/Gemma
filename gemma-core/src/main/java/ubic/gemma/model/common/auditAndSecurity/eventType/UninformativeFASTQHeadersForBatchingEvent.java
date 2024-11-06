@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2021 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,17 +20,12 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * 
+ *
  * Indicates that FASTQ headers were present, but they were not usable for determining batches, typically because of
  * invalid formatting or lack of information.
- * 
+ *
  * @author paul
  */
 public class UninformativeFASTQHeadersForBatchingEvent extends FailedBatchInformationFetchingEvent {
-
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 8836148437542742955L;
 
 }

@@ -18,46 +18,25 @@
  */
 package ubic.gemma.model.genome;
 
-import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.description.ExternalDatabase;
 
-public class Taxon implements Identifiable, java.io.Serializable {
+import java.util.Objects;
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 9219471082900615778L;
+public class Taxon extends AbstractIdentifiable {
+
     private String scientificName;
     private String commonName;
     private Integer ncbiId;
     private boolean isGenesUsable;
     private Integer secondaryNcbiId;
-    private Long id;
     private ExternalDatabase externalDatabase;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public Taxon() {
-    }
 
     @Override
     public int hashCode() {
-        if ( this.getNcbiId() != null ) {
-            return this.getNcbiId().hashCode();
-        } else if ( this.getScientificName() != null ) {
-            return this.getScientificName().hashCode();
-        } else {
-            return super.hashCode();
-        }
+        return Objects.hash( scientificName, commonName, ncbiId, isGenesUsable, secondaryNcbiId, externalDatabase );
     }
 
-    /**
-     * Returns <code>true</code> if the argument is a Taxon instance and all identifiers for this entity equal the
-     * identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -68,23 +47,16 @@ public class Taxon implements Identifiable, java.io.Serializable {
         }
         final Taxon that = ( Taxon ) object;
 
-        if ( this.getId() == null || that.getId() == null || !this.getId().equals( that.getId() ) ) {
-
-            // use ncbi id OR scientific name.
-
-            if ( this.getNcbiId() != null && that.getNcbiId() != null && !this.getNcbiId().equals( that.getNcbiId() ) )
-                return false;
-
-            //noinspection SimplifiableIfStatement // Better readability
-            if ( this.getSecondaryNcbiId() != null && that.getSecondaryNcbiId() != null && !this.getSecondaryNcbiId()
-                    .equals( that.getSecondaryNcbiId() ) )
-                return false;
-
-            return this.getScientificName() == null || that.getScientificName() == null || this.getScientificName()
-                    .equals( that.getScientificName() );
-
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
         }
-        return true;
+
+        return Objects.equals( this.getCommonName(), that.getCommonName() )
+                && Objects.equals( this.getIsGenesUsable(), that.getIsGenesUsable() )
+                && Objects.equals( this.getExternalDatabase(), that.getExternalDatabase() )
+                && Objects.equals( this.getSecondaryNcbiId(), that.getSecondaryNcbiId() )
+                && Objects.equals( this.getNcbiId(), that.getNcbiId() )
+                && Objects.equals( this.getScientificName(), that.getScientificName() );
     }
 
     /**
@@ -125,15 +97,6 @@ public class Taxon implements Identifiable, java.io.Serializable {
         this.externalDatabase = externalDatabase;
     }
 
-    @Override
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
     public boolean getIsGenesUsable() {
         return this.isGenesUsable;
     }
@@ -167,6 +130,7 @@ public class Taxon implements Identifiable, java.io.Serializable {
         return this.secondaryNcbiId;
     }
 
+    @SuppressWarnings("unused")
     public void setSecondaryNcbiId( Integer secondaryNcbiId ) {
         this.secondaryNcbiId = secondaryNcbiId;
     }
@@ -183,7 +147,6 @@ public class Taxon implements Identifiable, java.io.Serializable {
             entity.setCommonName( commonName );
             entity.setNcbiId( ncbiId );
             entity.setIsGenesUsable( isGenesUsable );
-
             return entity;
         }
 

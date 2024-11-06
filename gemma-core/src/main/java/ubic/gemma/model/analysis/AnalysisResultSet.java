@@ -21,17 +21,10 @@ package ubic.gemma.model.analysis;
 
 import ubic.gemma.model.common.Identifiable;
 
-import java.io.Serializable;
-
 /**
  * An abstract class representing a related set of generic analysis results, part of an analysis.
  */
-public abstract class AnalysisResultSet<R extends AnalysisResult> implements Identifiable, Serializable {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -6749501453616281312L;
+public abstract class AnalysisResultSet<R extends AnalysisResult> implements Identifiable {
 
     private Long id = null;
 

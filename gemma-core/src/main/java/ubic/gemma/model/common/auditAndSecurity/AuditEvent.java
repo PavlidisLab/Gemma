@@ -19,23 +19,18 @@
 
 package ubic.gemma.model.common.auditAndSecurity;
 
-import lombok.ToString;
-import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * An event in the life of an object.
  */
-@ToString(of = { "id", "eventType", "action", "date", "performer" })
-public class AuditEvent implements Identifiable, Serializable {
+public class AuditEvent extends AbstractIdentifiable {
 
-    private static final long serialVersionUID = -1212093157703833905L;
-
-    private Long id = null;
     private AuditAction action = null;
     private Date date = null;
     @Nullable
@@ -48,6 +43,11 @@ public class AuditEvent implements Identifiable, Serializable {
     private User performer = null;
 
     @Override
+    public int hashCode() {
+        return Objects.hash( action, date, detail, eventType, note, performer );
+    }
+
+    @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
             return true;
@@ -58,8 +58,15 @@ public class AuditEvent implements Identifiable, Serializable {
         final AuditEvent that = ( AuditEvent ) object;
 
         //noinspection ConstantConditions // Hibernate populates id through reflection
-        return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
+        return !( this.getId() == null || that.getId() == null || !this.getId().equals( that.getId() ) );
     }
+
+    @Override
+    public String toString() {
+        return String.format( "%s Action=%s Date=%s Performer=%s EventType=%s Note=%s Detail=%s",
+                super.toString(), action, date, performer, eventType, note, detail );
+    }
+
 
     public AuditAction getAction() {
         return this.action;
@@ -77,11 +84,6 @@ public class AuditEvent implements Identifiable, Serializable {
     @Nullable
     public AuditEventType getEventType() {
         return this.eventType;
-    }
-
-    @Override
-    public Long getId() {
-        return this.id;
     }
 
     @Nullable
@@ -111,5 +113,4 @@ public class AuditEvent implements Identifiable, Serializable {
             return entity;
         }
     }
-
 }

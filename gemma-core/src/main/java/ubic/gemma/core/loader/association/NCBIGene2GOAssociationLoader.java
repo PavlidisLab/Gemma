@@ -23,9 +23,9 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.security.concurrent.DelegatingSecurityContextRunnable;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.persistence.persister.Persister;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -108,10 +108,10 @@ public class NCBIGene2GOAssociationLoader {
         }
     }
 
-    public void load( LocalFile ncbiFile ) {
+    public void load( File ncbiFile ) {
 
         try ( InputStream inputStream = FileTools
-                .getInputStreamFromPlainOrCompressedFile( ncbiFile.asFile().getAbsolutePath() ) ) {
+                .getInputStreamFromPlainOrCompressedFile( ncbiFile.getAbsolutePath() ) ) {
             this.load( inputStream );
 
         } catch ( IOException e ) {

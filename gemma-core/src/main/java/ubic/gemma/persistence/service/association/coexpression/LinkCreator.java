@@ -50,22 +50,22 @@ public class LinkCreator {
         Class<? extends SupportDetails> supportClazz;
         if ( TaxonUtils.isMouse( taxon ) ) {
             clazz = MouseGeneCoExpression.Factory.class;
-            eeClazz = MouseExperimentCoexpressionLinkImpl.class;
-            supportClazz = MouseCoexpressionSupportDetailsImpl.class;
+            eeClazz = MouseExperimentCoexpressionLink.class;
+            supportClazz = MouseCoexpressionSupportDetails.class;
         } else if ( TaxonUtils.isRat( taxon ) ) {
             clazz = RatGeneCoExpression.Factory.class;
-            eeClazz = RatExperimentCoexpressionLinkImpl.class;
-            supportClazz = RatCoexpressionSupportDetailsImpl.class;
+            eeClazz = RatExperimentCoexpressionLink.class;
+            supportClazz = RatCoexpressionSupportDetails.class;
 
         } else if ( TaxonUtils.isHuman( taxon ) ) {
             clazz = HumanGeneCoExpression.Factory.class;
-            eeClazz = HumanExperimentCoexpressionLinkImpl.class;
-            supportClazz = HumanCoexpressionSupportDetailsImpl.class;
+            eeClazz = HumanExperimentCoexpressionLink.class;
+            supportClazz = HumanCoexpressionSupportDetails.class;
 
         } else {
             clazz = OtherGeneCoExpression.Factory.class;
-            eeClazz = OtherExperimentCoexpressionLinkImpl.class;
-            supportClazz = OtherCoexpressionSupportDetailsImpl.class;
+            eeClazz = OtherExperimentCoexpressionLink.class;
+            supportClazz = OtherCoexpressionSupportDetails.class;
         }
 
         try {

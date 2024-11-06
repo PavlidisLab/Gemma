@@ -537,16 +537,6 @@ public class BusinessKey {
         }
     }
 
-    public static void checkValidKey( ubic.gemma.model.common.description.LocalFile localFile ) {
-        if ( localFile == null || ( localFile.getLocalURL() == null && localFile.getRemoteURL() == null ) ) {
-            if ( localFile != null )
-                BusinessKey.log
-                        .error( "Localfile without valid key: localURL=" + localFile.getLocalURL() + " remoteUrL="
-                                + localFile.getRemoteURL() + " size=" + localFile.getSize() );
-            throw new IllegalArgumentException( "localFile was null or had no valid business keys" );
-        }
-    }
-
     public static void checkValidKey( Unit unit ) {
         if ( unit == null || StringUtils.isBlank( unit.getUnitNameCV() ) ) {
             throw new IllegalArgumentException( unit + " did not have a valid key" );

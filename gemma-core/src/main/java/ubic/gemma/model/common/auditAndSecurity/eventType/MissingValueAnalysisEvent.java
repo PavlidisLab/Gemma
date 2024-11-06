@@ -19,16 +19,8 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * <p>
  * Computing missing values for an expression experiment
- * </p>
  */
-public class MissingValueAnalysisEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -4000136638329943603L;
+public class MissingValueAnalysisEvent extends ExpressionExperimentAnalysisEvent {
 
 }

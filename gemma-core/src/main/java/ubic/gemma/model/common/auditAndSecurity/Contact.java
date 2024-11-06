@@ -21,7 +21,6 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 import ubic.gemma.model.common.AbstractDescribable;
 
-import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -30,23 +29,16 @@ import java.util.Objects;
  *
  * @author Paul
  */
-public class Contact extends AbstractDescribable implements Serializable {
+public class Contact extends AbstractDescribable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 2410750024818017046L;
     private String email;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     */
-    public Contact() {
+    public String getEmail() {
+        return this.email;
     }
 
-    @Override
-    public Long getId() {
-        return super.getId();
+    public void setEmail( String email ) {
+        this.email = email;
     }
 
     @Override
@@ -61,19 +53,6 @@ public class Contact extends AbstractDescribable implements Serializable {
         }
         return Objects.equals( getName(), that.getName() )
                 && Objects.equals( getEmail(), that.getEmail() );
-    }
-
-    @Override
-    public String getName() {
-        return super.getName();
-    }
-
-    public String getEmail() {
-        return this.email;
-    }
-
-    public void setEmail( String email ) {
-        this.email = email;
     }
 
     public static final class Factory {

@@ -5,8 +5,4 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  */
 public class ExpressionExperimentUpdateFromGEOEvent extends AuditEventType {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 5823969791153895703L;
 }

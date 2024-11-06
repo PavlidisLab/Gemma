@@ -29,8 +29,8 @@ import ubic.gemma.core.loader.util.fetcher.Fetcher;
 import ubic.gemma.core.loader.util.sdo.SourceDomainObjectGenerator;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.description.LocalFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
@@ -215,7 +215,7 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
     }
 
     private String fetchDataSetToLocalFile( String geoDataSetAccession ) {
-        Collection<LocalFile> result = datasetFetcher.fetch( geoDataSetAccession );
+        Collection<File> result = datasetFetcher.fetch( geoDataSetAccession );
 
         if ( result == null )
             return null;
@@ -225,10 +225,10 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
                     "Got " + result.size() + " files for " + geoDataSetAccession + ", expected only one." );
         }
 
-        LocalFile dataSetFile = ( result.iterator() ).next();
+        File dataSetFile = ( result.iterator() ).next();
         String dataSetPath;
 
-        dataSetPath = dataSetFile.getLocalURL().getPath();
+        dataSetPath = dataSetFile.getPath();
 
         return dataSetPath;
     }
@@ -278,14 +278,14 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
 
     private GeoPlatform processPlatform( String geoAccession, GeoFamilyParser parser ) {
         assert platformFetcher != null;
-        Collection<LocalFile> platforms = platformFetcher.fetch( geoAccession );
+        Collection<File> platforms = platformFetcher.fetch( geoAccession );
         if ( platforms == null ) {
             throw new RuntimeException( "No series file found for " + geoAccession );
         }
-        LocalFile platformFile = ( platforms.iterator() ).next();
+        File platformFile = ( platforms.iterator() ).next();
         String platformPath;
 
-        platformPath = platformFile.getLocalURL().getPath();
+        platformPath = platformFile.getPath();
 
         parser.setProcessPlatformsOnly( true );
         try {
@@ -302,13 +302,13 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      */
     private GeoSeries processSeries( String seriesAccession, GeoFamilyParser parser ) {
 
-        Collection<LocalFile> fullSeries = seriesFetcher.fetch( seriesAccession );
+        Collection<File> fullSeries = seriesFetcher.fetch( seriesAccession );
         if ( fullSeries == null ) {
             GeoDomainObjectGenerator.log.warn( "No series file found for " + seriesAccession );
             return null;
         }
-        LocalFile seriesFile = ( fullSeries.iterator() ).next();
-        String seriesPath = seriesFile.getLocalURL().getPath();
+        File seriesFile = ( fullSeries.iterator() ).next();
+        String seriesPath = seriesFile.getPath();
 
         parser.setProcessPlatformsOnly( this.processPlatformsOnly );
 
@@ -354,14 +354,14 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
     }
 
     private Collection<GeoPlatform> processSeriesPlatforms( String seriesAccession, GeoFamilyParser parser ) {
-        Collection<LocalFile> fullSeries = seriesFetcher.fetch( seriesAccession );
+        Collection<File> fullSeries = seriesFetcher.fetch( seriesAccession );
         if ( fullSeries == null ) {
             throw new RuntimeException( "No series file found for " + seriesAccession );
         }
-        LocalFile seriesFile = ( fullSeries.iterator() ).next();
+        File seriesFile = ( fullSeries.iterator() ).next();
         String seriesPath;
 
-        seriesPath = seriesFile.getLocalURL().getPath();
+        seriesPath = seriesFile.getPath();
 
         parser.setProcessPlatformsOnly( this.processPlatformsOnly );
         try {

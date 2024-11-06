@@ -28,7 +28,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 import javax.annotation.Nullable;
 import javax.persistence.Transient;
-import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -37,9 +36,7 @@ import java.util.Date;
  * slots that are used specifically to support sequence-based data, but is intended to be generic.
  */
 @Indexed
-public class BioAssay extends AbstractDescribable implements SecuredChild, Serializable {
-
-    private static final long serialVersionUID = -7868768731812964045L;
+public class BioAssay extends AbstractDescribable implements SecuredChild {
 
     /**
      * Platform used in this assay.

@@ -21,7 +21,6 @@ package ubic.gemma.model.analysis.expression.diff;
 import ubic.gemma.model.analysis.AnalysisResult;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
-import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -31,12 +30,8 @@ import java.util.Set;
  * factor. These statistics are based on ANOVA-style analysis, with a collection of ContrastResults storing the
  * associated contrasts.
  */
-@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public class DifferentialExpressionAnalysisResult extends AnalysisResult implements Serializable {
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 8952834115689524169L;
+public class DifferentialExpressionAnalysisResult extends AnalysisResult {
+
     private Double pvalue;
     /**
      * Typically actually a qvalue.
@@ -49,12 +44,6 @@ public class DifferentialExpressionAnalysisResult extends AnalysisResult impleme
     private ExpressionAnalysisResultSet resultSet;
     private CompositeSequence probe;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     */
-    public DifferentialExpressionAnalysisResult() {
-    }
-
     private static int getBin( Double value ) {
         return ( int ) Math.min( 5, Math.floor( -Math.log10( value ) ) );
     }
@@ -64,7 +53,6 @@ public class DifferentialExpressionAnalysisResult extends AnalysisResult impleme
         return Objects.hash( getResultSet(), getProbe() );
     }
 
-    @SuppressWarnings("SimplifiableIfStatement") // Better readability
     @Override
     public boolean equals( Object obj ) {
         if ( this == obj )

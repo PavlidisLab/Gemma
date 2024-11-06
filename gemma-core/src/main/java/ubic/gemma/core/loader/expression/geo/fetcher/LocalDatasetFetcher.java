@@ -18,8 +18,6 @@
  */
 package ubic.gemma.core.loader.expression.geo.fetcher;
 
-import ubic.gemma.model.common.description.LocalFile;
-
 import java.io.File;
 import java.util.Collection;
 
@@ -38,7 +36,7 @@ public class LocalDatasetFetcher extends DatasetFetcher {
     }
 
     @Override
-    public Collection<LocalFile> fetch( String accession ) {
+    public Collection<File> fetch( String accession ) {
         log.info( "Seeking GSE file for " + accession );
 
         assert localPath != null;
