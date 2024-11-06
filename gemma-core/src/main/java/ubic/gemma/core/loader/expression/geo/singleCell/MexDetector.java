@@ -202,8 +202,10 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
                                         break;
                                     }
                                 } else if ( skipForLargeArchiveEntry( geoAccession, file, te, barcodesT, featuresT, matrixT ) ) {
+                                    skippedArchives.add( file );
                                     break;
                                 } else if ( skipForTooManySkippedEntries( geoAccession, ++skipped, file, barcodesT, featuresT, matrixT ) ) {
+                                    skippedArchives.add( file );
                                     break;
                                 } else {
                                     log.debug( "Skipping " + file + "!" + te.getName() );
@@ -427,8 +429,10 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
                                 matrixT = te.getName();
                                 dest = sampleDirectory.resolve( "matrix.mtx.gz" );
                             } else if ( skipForLargeArchiveEntry( geoAccession, file, te, barcodesT, featuresT, matrixT ) ) {
+                                skippedArchives.add( file );
                                 break;
                             } else if ( skipForTooManySkippedEntries( geoAccession, ++skipped, file, barcodesT, featuresT, matrixT ) ) {
+                                skippedArchives.add( file );
                                 break;
                             } else {
                                 // skip to the next entry
@@ -639,7 +643,6 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
                 geoAccession, file, te.getName(), byteCountToDisplaySize( te.getSize() ), byteCountToDisplaySize( maxEntrySizeInArchiveToSkip ) );
         if ( barcodesT == null && featuresT == null && matrixT == null ) {
             log.warn( m + ", the rest of the archive will be ignored." );
-            skippedArchives.add( file );
             return true;
         } else {
             log.warn( m + ", but a MEX file was already found, the rest of the archive will be read." );
@@ -657,7 +660,6 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
         String m = String.format( "%s: %d entries have been skipped from %s", geoAccession, skipped, file );
         if ( barcodesT == null && featuresT == null && matrixT == null ) {
             log.warn( m + ", the rest of the archive will be ignored." );
-            skippedArchives.add( file );
             return true;
         } else if ( skipped == maxNumberOfEntriesToSkip ) {
             log.warn( m + ", but a MEX file was already found, the rest of the archive will be read." );
