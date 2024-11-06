@@ -573,6 +573,8 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public Set<AnnotationValueObject> getAnnotations( ExpressionExperiment ee ) {
+        ee = ensureInSession( ee );
+
         Set<AnnotationValueObject> annotations = new HashSet<>();
         Collection<String> seenTerms = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
 

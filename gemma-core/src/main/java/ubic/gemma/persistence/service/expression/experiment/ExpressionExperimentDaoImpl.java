@@ -1324,7 +1324,7 @@ public class ExpressionExperimentDaoImpl
                 .createQuery( "select ee,ev from ExpressionExperiment ee "
                         + "join ee.auditTrail trail "
                         + "join trail.events ev join ev.eventType et join fetch ev.performer "
-                        + "where ee in (:ees) and et.class = :etClass" )
+                        + "where ee in (:ees) and type(et) = :etClass" )
                 .setParameterList( "ees", optimizeIdentifiableParameterList( expressionExperiments ) )
                 .setParameter( "etClass", SampleRemovalEvent.class )
                 .list();

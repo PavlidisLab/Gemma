@@ -30,6 +30,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import java.io.IOException;
 
@@ -113,6 +114,11 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
         @Bean
         public EntityLocator entityLocator() {
             return mock();
+        }
+
+        @Bean
+        public EntityUrlBuilder entityUrlBuilder() {
+            return new EntityUrlBuilder( "https://gemma.msl.ubc.ca" );
         }
     }
 
