@@ -542,7 +542,7 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         // compute it once to save time
-        boolean hasSingleCellDataInSeries = singleCellDetector.hasSingleCellData( series );
+        boolean hasSingleCellDataInSeries = singleCellDetector.hasSingleCellDataInSeries( series );
 
         for ( GeoSample sample : series.getSamples() ) {
             String reason;
@@ -569,14 +569,14 @@ public class GeoConverterImpl implements GeoConverter {
                 } else {
                     reason = "Unsupported library source.";
                 }
+            } else {
+                reason = "Unsupported sample type.";
             }
 
             // single-cell RNA-Seq
             // cannot be grouped with RNA-Seq because we retrieve data from supplementary files, not SRA/MPSS
-            else if ( singleCellDetector.isSingleCell( sample, hasSingleCellDataInSeries ) ) {
+            if ( singleCellDetector.isSingleCell( sample, hasSingleCellDataInSeries ) ) {
                 continue;
-            } else {
-                reason = "Unsupported sample type.";
             }
 
             GeoConverterImpl.log.info( String.format( "Skipping ineligible sample: %s: Type=%s LibSource=%s LibStrategy=%s Reason=%s",
