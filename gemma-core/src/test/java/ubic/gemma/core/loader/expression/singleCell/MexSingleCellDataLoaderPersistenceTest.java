@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.loader.expression.MapBasedDesignElementMapper;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -101,8 +102,8 @@ public class MexSingleCellDataLoaderPersistenceTest extends BaseDatabaseTest {
         SingleCellDimension dimension = loader.getSingleCellDimension( ee.getBioAssays() );
         QuantitationType qt = loader.getQuantitationTypes().iterator().next();
         sessionFactory.getCurrentSession().persist( qt );
-        try ( Stream<SingleCellExpressionDataVector> stream = loader.loadVectors( elementsMapping, dimension, qt ) ) {
-            singleCellExpressionExperimentService.addSingleCellDataVectors( ee, qt, stream.collect( Collectors.toList() ) );
+        try ( Stream<SingleCellExpressionDataVector> stream = loader.loadVectors( new MapBasedDesignElementMapper( "test", elementsMapping ), dimension, qt ) ) {
+            singleCellExpressionExperimentService.addSingleCellDataVectors( ee, qt, stream.collect( Collectors.toList() ), null );
         }
     }
 }

@@ -68,7 +68,7 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
         qt.setRepresentation( PrimitiveType.DOUBLE );
         qt.setScale( ScaleType.COUNT );
         qt.setIsSingleCellPreferred( true );
-        singleCellExpressionExperimentService.addSingleCellDataVectors( ee, qt, randomSingleCellVectors( ee, ad, qt ) );
+        singleCellExpressionExperimentService.addSingleCellDataVectors( ee, qt, randomSingleCellVectors( ee, ad, qt ), null );
 
         SingleCellDimension scd = singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithCellLevelCharacteristics( ee )
                 .orElse( null );

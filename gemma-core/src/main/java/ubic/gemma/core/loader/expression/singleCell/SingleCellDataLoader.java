@@ -1,5 +1,6 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
+import ubic.gemma.core.loader.expression.DesignElementMapper;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -116,5 +117,5 @@ public interface SingleCellDataLoader {
      * @return a stream of single-cell expression data vectors that must be closed when done, preferably using a
      * try-with-resource block.
      */
-    Stream<SingleCellExpressionDataVector> loadVectors( Map<String, CompositeSequence> elementsMapping, SingleCellDimension dimension, QuantitationType quantitationType ) throws IOException, IllegalArgumentException;
+    Stream<SingleCellExpressionDataVector> loadVectors( DesignElementMapper elementsMapping, SingleCellDimension dimension, QuantitationType quantitationType ) throws IOException, IllegalArgumentException;
 }

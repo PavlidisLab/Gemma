@@ -2,10 +2,9 @@ package ubic.gemma.core.loader.expression.singleCell;
 
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
+import ubic.gemma.core.loader.expression.DesignElementMapper;
 import ubic.gemma.core.loader.util.anndata.*;
 import ubic.gemma.core.loader.util.hdf5.H5Dataset;
 import ubic.gemma.core.loader.util.hdf5.H5FundamentalType;
@@ -20,7 +19,6 @@ import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -545,7 +543,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
     @Override
     public Stream<SingleCellExpressionDataVector> loadVectors(
-            Map<String, CompositeSequence> elementsMapping,
+            DesignElementMapper elementsMapping,
             SingleCellDimension dimension,
             QuantitationType quantitationType ) throws IOException {
         Assert.notNull( sampleFactorName, "A sample factor name must be set." );
@@ -560,10 +558,10 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 genes = obs.getColumn( obs.getIndexColumn(), String.class );
             }
             Set<String> genesSet = genes.uniqueValues();
-            if ( !CollectionUtils.containsAny( genesSet, elementsMapping.keySet() ) ) {
+            if ( !elementsMapping.containsAny( genesSet ) ) {
                 throw new IllegalArgumentException( "None of the genes are present in the elements mapping." );
             }
-            Set<String> unknownGenes = SetUtils.difference( genesSet, elementsMapping.keySet() );
+            Set<String> unknownGenes = genesSet.stream().filter( g -> !elementsMapping.contains( g ) ).collect( Collectors.toSet() );
             if ( !unknownGenes.isEmpty() ) {
                 String msg;
                 if ( unknownGenes.size() > 10 ) {
@@ -606,7 +604,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         }
     }
 
-    private Stream<SingleCellExpressionDataVector> loadVectorsFromSparseMatrix( SparseMatrix matrix, Dataframe.Column<?, String> samples, Dataframe.Column<?, String> genes, QuantitationType qt, SingleCellDimension scd, Map<String, CompositeSequence> elementsMapping ) {
+    private Stream<SingleCellExpressionDataVector> loadVectorsFromSparseMatrix( SparseMatrix matrix, Dataframe.Column<?, String> samples, Dataframe.Column<?, String> genes, QuantitationType qt, SingleCellDimension scd, DesignElementMapper elementsMapping ) {
         Assert.isTrue( genes.size() == matrix.getShape()[0],
                 "The number of supplied genes does not match the number of rows in the sparse matrix." );
         Assert.isTrue( samples.size() == matrix.getShape()[1],
@@ -652,7 +650,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
         return IntStream.range( 0, matrix.getShape()[0] )
                 // ignore entries that are missing a gene mapping
-                .filter( i -> elementsMapping.containsKey( genes.get( i ) ) )
+                .filter( i -> elementsMapping.contains( genes.get( i ) ) )
                 .mapToObj( i -> {
                     assert matrix.getIndptr()[i] < matrix.getIndptr()[i + 1];
                     SingleCellExpressionDataVector vector = new SingleCellExpressionDataVector();

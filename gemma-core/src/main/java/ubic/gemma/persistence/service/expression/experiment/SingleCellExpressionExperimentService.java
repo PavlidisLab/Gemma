@@ -83,15 +83,16 @@ public interface SingleCellExpressionExperimentService {
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     int addSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType,
-            Collection<SingleCellExpressionDataVector> vectors );
+            Collection<SingleCellExpressionDataVector> vectors, @Nullable String details );
 
     /**
      * Replace existing single-cell data vectors for the given quantitation type.
+     * @param details additional details to include in the audit event
      * @return the number of vectors that were replaced
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     int replaceSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType,
-            Collection<SingleCellExpressionDataVector> vectors );
+            Collection<SingleCellExpressionDataVector> vectors, @Nullable String details );
 
     /**
      * Remove single-cell data vectors for the given quantitation type.

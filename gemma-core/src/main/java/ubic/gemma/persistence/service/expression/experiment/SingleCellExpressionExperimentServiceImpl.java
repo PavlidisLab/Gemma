@@ -128,7 +128,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
-    public int addSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors ) {
+    public int addSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors, String details ) {
         Assert.notNull( ee.getId(), "The dataset must be persistent." );
         Assert.isTrue( !ee.getQuantitationTypes().contains( quantitationType ),
                 String.format( "%s already have vectors for the quantitation type: %s; use replaceSingleCellDataVectors() to replace existing vectors.",
@@ -169,13 +169,13 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             }
         }
         auditTrailService.addUpdateEvent( ee, DataAddedEvent.class,
-                String.format( "Added %d vectors for %s with dimension %s.", numVectorsAdded, quantitationType, scd ) );
+                String.format( "Added %d vectors for %s with dimension %s.", numVectorsAdded, quantitationType, scd ), details );
         return numVectorsAdded;
     }
 
     @Override
     @Transactional
-    public int replaceSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors ) {
+    public int replaceSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors, String details ) {
         Assert.notNull( ee.getId(), "The dataset must be persistent." );
         Assert.notNull( quantitationType.getId(), "The quantitation type must be persistent." );
         Assert.isTrue( ee.getQuantitationTypes().contains( quantitationType ),

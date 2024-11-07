@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
 import org.junit.Test;
+import ubic.gemma.core.loader.expression.MapBasedDesignElementMapper;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -50,7 +51,7 @@ public class MexSingleCellDataLoaderTest {
         assertThat( dimension.getNumberOfCellsBySample( 9 ) ).isEqualTo( 1000 );
         assertThat( dimension.getBioAssaysOffset() )
                 .containsExactly( 0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000 );
-        List<SingleCellExpressionDataVector> vectors = loader.loadVectors( elementsMapping, dimension, qt ).collect( Collectors.toList() );
+        List<SingleCellExpressionDataVector> vectors = loader.loadVectors( new MapBasedDesignElementMapper( "test", elementsMapping ), dimension, qt ).collect( Collectors.toList() );
         assertThat( vectors )
                 .hasSize( 1000 )
                 .allSatisfy( v -> {
@@ -105,7 +106,7 @@ public class MexSingleCellDataLoaderTest {
                 .containsExactly( "GSM7022370", "GSM7022375" );
         assertThat( dimension.getBioAssaysOffset() )
                 .containsExactly( 0, 1000 );
-        List<SingleCellExpressionDataVector> vectors = loader.loadVectors( elementsMapping, dimension, qt ).collect( Collectors.toList() );
+        List<SingleCellExpressionDataVector> vectors = loader.loadVectors( new MapBasedDesignElementMapper( "", elementsMapping ), dimension, qt ).collect( Collectors.toList() );
         assertThat( vectors )
                 .hasSize( 1000 )
                 .allSatisfy( v -> {
@@ -176,7 +177,7 @@ public class MexSingleCellDataLoaderTest {
                 .containsExactly( "GSM7022370" );
         assertThat( dimension.getBioAssaysOffset() )
                 .containsExactly( 0 );
-        List<SingleCellExpressionDataVector> vectors = loader.loadVectors( elementsMapping, dimension, qt ).collect( Collectors.toList() );
+        List<SingleCellExpressionDataVector> vectors = loader.loadVectors( new MapBasedDesignElementMapper( "test", elementsMapping ), dimension, qt ).collect( Collectors.toList() );
         assertThat( vectors )
                 .hasSize( 1000 )
                 .allSatisfy( v -> {

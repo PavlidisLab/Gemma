@@ -12,6 +12,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.config.SettingsConfig;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.loader.expression.MapBasedDesignElementMapper;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.singleCell.ArchiveBasedSingleCellDetector;
@@ -107,7 +108,7 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
         elementsMapping.put( "SLCO3A1", CompositeSequence.Factory.newInstance( "SLCO3A1" ) );
 
         // loading vectors will fail because the matrix is stored in transposed
-        assertThatThrownBy( () -> loader.loadVectors( elementsMapping, dim, qt ) )
+        assertThatThrownBy( () -> loader.loadVectors( new MapBasedDesignElementMapper( "test", elementsMapping), dim, qt ) )
                 .isInstanceOf( UnsupportedOperationException.class )
                 .hasMessage( "The matrix at 'X' is stored as CSR and transposition is enabled; it must be converted to CSC for being loaded." );
     }

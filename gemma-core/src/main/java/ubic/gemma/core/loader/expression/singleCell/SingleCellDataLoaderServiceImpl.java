@@ -6,6 +6,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.core.loader.expression.DesignElementMapper;
+import ubic.gemma.core.loader.expression.EnsemblIdDesignElementMapper;
+import ubic.gemma.core.loader.expression.MapBasedDesignElementMapper;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoBioAssayToSampleNameMatcher;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
@@ -298,10 +301,17 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     }
 
     private void loadVectors( SingleCellDataLoader loader, ExpressionExperiment ee, SingleCellDimension dim, QuantitationType qt, ArrayDesign platform, SingleCellDataLoaderConfig config ) {
-        Map<String, CompositeSequence> elementsMapping = createElementsMapping( platform );
+        DesignElementMapper mapper;
         Set<SingleCellExpressionDataVector> vectors;
+        String mappingDetails;
         try {
-            vectors = loader.loadVectors( elementsMapping, dim, qt ).collect( Collectors.toSet() );
+            Set<String> genes = loader.getGenes();
+            mapper = createElementsMapping( platform, genes );
+            DesignElementMapper.MappingStatistics stats = mapper.getMappingStatistics( genes );
+            mappingDetails = String.format( "Genes are mapped by %s. %.2f%% of genes are mapped and %.2f%% of the platform elements are covered.",
+                    mapper.getName(), 100.0 * stats.getOverlap(), 100.0 * stats.getCoverage() );
+            log.info( mappingDetails );
+            vectors = loader.loadVectors( mapper, dim, qt ).collect( Collectors.toSet() );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -310,40 +320,74 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
             log.info( String.format( "Switched %d bioassays to %s.", switched, platform ) );
         }
         if ( config.isReplaceExistingQuantitationType() ) {
-            int replacedVectors = singleCellExpressionExperimentService.replaceSingleCellDataVectors( ee, qt, vectors );
+            int replacedVectors = singleCellExpressionExperimentService.replaceSingleCellDataVectors( ee, qt, vectors, mappingDetails );
             log.info( String.format( "Replaced %d single-cell vectors in %s.", replacedVectors, qt ) );
         } else {
-            int addedVectors = singleCellExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors );
+            int addedVectors = singleCellExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, mappingDetails );
             log.info( String.format( "Added %d single-cell vectors to %s in %s.", addedVectors, ee, qt ) );
         }
     }
 
-    private Map<String, CompositeSequence> createElementsMapping( ArrayDesign platform ) {
+    /**
+     * Default mapper for design elements which implement a few strategies:
+     * <ol>
+     *     <li>CompositeSequence name</li>
+     *     <li>NCBI Gene ID</li>
+     *     <li>Ensembl ID -- version numbers are ignored</li>
+     *     <li>Official symbols</li>
+     *     <li>Gene names</li>
+     * </ol>
+     *
+     * @author poirigui
+     */
+    private DesignElementMapper createElementsMapping( ArrayDesign platform, Collection<String> geneIdentifiers ) {
         platform = arrayDesignService.thawCompositeSequences( platform );
         // create mapping by precedence of ID type
         Map<CompositeSequence, Set<Gene>> cs2g = arrayDesignService.getGenesByCompositeSequence( platform );
+        List<DesignElementMapper> mappers = new ArrayList<>();
         // highest precedence is the probe name
         Map<String, CompositeSequence> elementsMapping = new HashMap<>();
         for ( CompositeSequence cs : platform.getCompositeSequences() ) {
             elementsMapping.putIfAbsent( cs.getName(), cs );
         }
+        mappers.add( new MapBasedDesignElementMapper( "Design Element Name", elementsMapping ) );
         // then look for gene, E
-        addMappings( elementsMapping, cs2g, gene -> gene.getNcbiGeneId() != null ? String.valueOf( gene.getNcbiGeneId() ) : null );
-        addMappings( elementsMapping, cs2g, Gene::getEnsemblId );
-        addMappings( elementsMapping, cs2g, Gene::getOfficialSymbol );
-        addMappings( elementsMapping, cs2g, Gene::getName );
-        return elementsMapping;
+        mappers.add( createElementMapping( "NCBI Gene ID", platform, cs2g, gene -> gene.getNcbiGeneId() != null ? String.valueOf( gene.getNcbiGeneId() ) : null ) );
+        mappers.add( new EnsemblIdDesignElementMapper( platform, cs2g ) );
+        mappers.add( createElementMapping( "Gene Official Symbol", platform, cs2g, Gene::getOfficialSymbol ) );
+        mappers.add( createElementMapping( "Gene Name", platform, cs2g, Gene::getName ) );
+        DesignElementMapper bestMapper = null;
+        long numGenes = 0;
+        for ( DesignElementMapper mapper : mappers ) {
+            if ( log.isDebugEnabled() ) {
+                log.debug( mapper.getName() + ": " + mapper.getMappingStatistics( geneIdentifiers ) );
+            }
+            long g = geneIdentifiers.stream().filter( mapper::contains ).count();
+            if ( g > numGenes ) {
+                bestMapper = mapper;
+                numGenes = g;
+            }
+        }
+        if ( bestMapper == null ) {
+            throw new IllegalArgumentException( "None of the available gene identifier mapping strategy applies to the given gene identifiers." );
+        }
+        return bestMapper;
     }
 
-    private void addMappings( Map<String, CompositeSequence> elementsMapping, Map<CompositeSequence, Set<Gene>> cs2g, Function<Gene, String> g2s ) {
-        for ( Map.Entry<CompositeSequence, Set<Gene>> e : cs2g.entrySet() ) {
-            for ( Gene g : e.getValue() ) {
+    private DesignElementMapper createElementMapping( String name, ArrayDesign platform, Map<CompositeSequence, Set<Gene>> cs2g, Function<Gene, String> g2s ) {
+        Map<String, CompositeSequence> elementsMapping = new HashMap<>();
+        for ( CompositeSequence cs : platform.getCompositeSequences() ) {
+            if ( !cs2g.containsKey( cs ) ) {
+                continue;
+            }
+            for ( Gene g : cs2g.get( cs ) ) {
                 String k = g2s.apply( g );
                 if ( k != null ) {
-                    elementsMapping.putIfAbsent( k, e.getKey() );
+                    elementsMapping.putIfAbsent( k, cs );
                 }
             }
         }
+        return new MapBasedDesignElementMapper( name, elementsMapping );
     }
 
     /**

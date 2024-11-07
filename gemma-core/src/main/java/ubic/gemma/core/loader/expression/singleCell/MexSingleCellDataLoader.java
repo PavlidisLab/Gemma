@@ -9,6 +9,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.util.Assert;
+import ubic.gemma.core.loader.expression.DesignElementMapper;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -211,7 +212,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     @Override
-    public Stream<SingleCellExpressionDataVector> loadVectors( Map<String, CompositeSequence> elementsMapping, SingleCellDimension scd, QuantitationType quantitationType ) throws IOException {
+    public Stream<SingleCellExpressionDataVector> loadVectors( DesignElementMapper elementsMapping, SingleCellDimension scd, QuantitationType quantitationType ) throws IOException {
         // location of a given element in individual matrices
         Map<CompositeSequence, int[]> elementsToSampleMatrixRow = new HashMap<>();
         Map<CompositeSequence, String[]> elementsToOriginalGeneIds = new HashMap<>();

@@ -2,6 +2,7 @@ package ubic.gemma.core.loader.expression.singleCell;
 
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
+import ubic.gemma.core.loader.expression.MapBasedDesignElementMapper;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -141,7 +142,7 @@ public class AnnDataSingleCellDataLoaderTest {
         elementsMapping.put( "SLCO3A1", CompositeSequence.Factory.newInstance( "SLCO3A1" ) );
 
         QuantitationType qt = qts.iterator().next();
-        try ( Stream<SingleCellExpressionDataVector> vectors = loader.loadVectors( elementsMapping, dimension, qt ) ) {
+        try ( Stream<SingleCellExpressionDataVector> vectors = loader.loadVectors( new MapBasedDesignElementMapper( "test", elementsMapping ), dimension, qt ) ) {
             List<SingleCellExpressionDataVector> v = vectors.collect( Collectors.toList() );
             assertThat( v )
                     .hasSize( 1 )
@@ -207,7 +208,7 @@ public class AnnDataSingleCellDataLoaderTest {
 
         Map<String, CompositeSequence> elementsMapping = new HashMap<>();
         elementsMapping.put( "SLCO3A1", CompositeSequence.Factory.newInstance( "SLCO3A1" ) );
-        assertThat( loader.loadVectors( elementsMapping, dim, qt ) )
+        assertThat( loader.loadVectors( new MapBasedDesignElementMapper( "test", elementsMapping ), dim, qt ) )
                 .first().satisfies( v -> {
                     assertThat( v.getDesignElement().getName() ).isEqualTo( "SLCO3A1" );
                     assertThat( v.getDataAsDoubles() )
@@ -249,7 +250,7 @@ public class AnnDataSingleCellDataLoaderTest {
         elementsMapping.put( "SLCO3A1", CompositeSequence.Factory.newInstance( "SLCO3A1" ) );
 
         QuantitationType qt = qts.iterator().next();
-        try ( Stream<SingleCellExpressionDataVector> vectors = loader.loadVectors( elementsMapping, dimension, qt ) ) {
+        try ( Stream<SingleCellExpressionDataVector> vectors = loader.loadVectors( new MapBasedDesignElementMapper( "test", elementsMapping ), dimension, qt ) ) {
             List<SingleCellExpressionDataVector> v = vectors.collect( Collectors.toList() );
             assertThat( v )
                     .hasSize( 1 )

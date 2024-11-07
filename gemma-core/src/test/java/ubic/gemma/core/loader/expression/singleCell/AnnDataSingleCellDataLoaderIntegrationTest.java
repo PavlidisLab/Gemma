@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import ubic.gemma.core.loader.expression.MapBasedDesignElementMapper;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.singleCell.AnnDataDetector;
 import ubic.gemma.core.loader.expression.geo.singleCell.NoSingleCellDataFoundException;
@@ -87,7 +88,7 @@ public class AnnDataSingleCellDataLoaderIntegrationTest extends BaseIntegrationT
                             .containsExactlyInAnyOrder( "Astrocytes", "D1-Matrix", "D1-Striosome", "D1/D2-Hybrid", "D2-Matrix", "D2-Striosome", "Endothelial", "Int-CCK", "Int-PTHLH", "Int-SST", "Int-TH", "Microglia", "Mural", "Oligos", "Oligos_Pre" );
                 } );
 
-        assertThat( loader.loadVectors( elementMapping, dimension, qt ).count() )
+        assertThat( loader.loadVectors( new MapBasedDesignElementMapper( "test", elementMapping ), dimension, qt ).count() )
                 .isEqualTo( 31393 );
     }
 
