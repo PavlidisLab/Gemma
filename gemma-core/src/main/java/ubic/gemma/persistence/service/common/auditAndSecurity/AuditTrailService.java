@@ -61,7 +61,7 @@ public interface AuditTrailService extends BaseImmutableService<AuditTrail> {
      * @see #addUpdateEvent(Auditable, Class, String, String, Date)
      */
     @Secured({ "GROUP_AGENT" })
-    AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, String detail );
+    AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, @Nullable String note, @Nullable String detail );
 
     /**
      * Add an update audit event with an exception.

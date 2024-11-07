@@ -200,8 +200,8 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThat( scExpressionExperimentService.getSingleCellDimensions( ee ) )
                 .hasSize( 2 );
 
-        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " [Preferred] with dimension " + scd + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt2 + " with dimension " + scd2 + "." );
+        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " [Preferred] with dimension " + scd + ".", ( String ) null );
+        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt2 + " with dimension " + scd2 + ".", ( String ) null );
     }
 
     @Test
@@ -214,7 +214,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThatThrownBy( () -> scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null ) )
                 .isInstanceOf( IllegalArgumentException.class )
                 .hasMessageContaining( "already have vectors for the quantitation type" );
-        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " with dimension " + scd + "." );
+        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " with dimension " + scd + ".", ( String ) null );
     }
 
     @Test
@@ -241,9 +241,9 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         ExperimentalFactor ctf2 = scExpressionExperimentService.getCellTypeFactor( ee ).orElseThrow( AssertionError::new );
         assertThat( ctf2.getName() ).isEqualTo( "cell type" );
         assertThat( ctf2.getDescription() ).isEqualTo( "Cell type factor pre-populated from " + ctl2 + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " [Preferred] with dimension " + scd + "." );
+        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " [Preferred] with dimension " + scd + ".", ( String ) null );
         verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + ctf + " from preferred cell type assignment " + ctl + "." );
-        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt2 + " with dimension " + scd2 + "." );
+        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt2 + " with dimension " + scd2 + ".", ( String ) null );
         verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Removed the cell type factor " + ctf + "." );
         verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class, "Created a cell type factor " + ctf2 + " from preferred cell type assignment " + ctl2 + "." );
     }
@@ -268,7 +268,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
                 .doesNotContainAnyElementsOf( vectors )
                 .containsAll( vectors2 );
 
-        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " with dimension " + scd + "." );
+        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " with dimension " + scd + ".", ( String ) null );
         verify( auditTrailService ).addUpdateEvent( ee, DataReplacedEvent.class, "Replaced 10 vectors with 10 vectors for " + qt + " with dimension " + scd2 + "." );
     }
 
@@ -296,7 +296,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
                 .hasSize( 10 );
 
         verify( auditTrailService )
-                .addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " with dimension " + scd + "." );
+                .addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " with dimension " + scd + ".", ( String ) null );
         verify( auditTrailService )
                 .addUpdateEvent( ee, DataRemovedEvent.class, "Removed 10 vectors for " + qt + " with dimension " + scd + "." );
     }
@@ -326,7 +326,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThat( ee.getSingleCellExpressionDataVectors() )
                 .hasSize( 10 );
 
-        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " with dimension " + scd + "." );
+        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " with dimension " + scd + ".", ( String ) null );
         verify( auditTrailService ).addUpdateEvent( ee, DataRemovedEvent.class, "Removed 10 vectors for " + qt + " with dimension " + scd + "." );
     }
 

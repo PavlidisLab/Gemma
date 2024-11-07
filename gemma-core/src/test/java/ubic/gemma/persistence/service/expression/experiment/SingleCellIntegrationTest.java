@@ -107,8 +107,8 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
         }
         QuantitationType aggregatedQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true );
 
-        assertThat( aggregatedQt.getName() ).isEqualTo( "counts aggregated by cell type" );
-        assertThat( aggregatedQt.getDescription() ).isEqualTo( "Expression data has been aggregated by cell type using SUM." );
+        assertThat( aggregatedQt.getName() ).isEqualTo( "counts aggregated by cell type (log2cpm)" );
+        assertThat( aggregatedQt.getDescription() ).isEqualTo( "Expression data has been aggregated by cell type using SUM. The data was subsequently converted to log2cpm." );
         assertThat( aggregatedQt.getIsPreferred() ).isTrue();
 
         Collection<RawExpressionDataVector> vectors = expressionExperimentService.getRawDataVectors( ee, aggregatedQt );
