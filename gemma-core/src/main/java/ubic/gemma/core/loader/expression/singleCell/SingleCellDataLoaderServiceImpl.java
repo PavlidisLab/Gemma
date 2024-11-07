@@ -65,12 +65,14 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Transactional
     public QuantitationType load( ExpressionExperiment ee, ArrayDesign platform, SingleCellDataLoaderConfig config ) {
         Assert.isNull( config.getDataPath(), "An explicit path cannot be provided when detecting the data type automatically." );
+        ee = expressionExperimentService.loadOrFail( ee.getId() );
         return load( ee, platform, getLoader( ee, config ), config );
     }
 
     @Override
     @Transactional
     public QuantitationType load( ExpressionExperiment ee, ArrayDesign platform, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
+        ee = expressionExperimentService.loadOrFail( ee.getId() );
         if ( config.getDataPath() != null ) {
             log.info( "Loading single-cell data for " + ee + " from " + config.getDataPath() + "..." );
         }
