@@ -1,21 +1,17 @@
 package ubic.gemma.persistence.hibernate;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
-import org.springframework.jdbc.support.lob.DefaultLobHandler;
-import org.springframework.jdbc.support.lob.LobHandler;
 import org.springframework.util.Assert;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
+import java.io.*;
+import java.nio.channels.Channels;
+import java.nio.channels.Pipe;
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -36,8 +32,6 @@ import static java.util.Objects.requireNonNull;
 public class CompressedStringListType implements UserType, ParameterizedType {
 
     private String delimiter = null;
-
-    private final LobHandler lobHandler = new DefaultLobHandler();
 
     @Override
     public int[] sqlTypes() {
@@ -62,7 +56,7 @@ public class CompressedStringListType implements UserType, ParameterizedType {
     @Override
     public List<String> nullSafeGet( ResultSet rs, String[] names, SessionImplementor session, Object owner ) throws HibernateException, SQLException {
         Assert.notNull( delimiter, "The 'delimiter' parameter must be set." );
-        InputStream gzippedStream = lobHandler.getBlobAsBinaryStream( rs, names[0] );
+        InputStream gzippedStream = rs.getBinaryStream( names[0] );
         if ( gzippedStream != null ) {
             try ( InputStream is = new GZIPInputStream( gzippedStream ) ) {
                 return Arrays.asList( StringUtils.split( IOUtils.toString( is, StandardCharsets.UTF_8 ), delimiter ) );
@@ -77,23 +71,15 @@ public class CompressedStringListType implements UserType, ParameterizedType {
     @Override
     public void nullSafeSet( PreparedStatement st, @Nullable Object value, int index, SessionImplementor session ) throws HibernateException, SQLException {
         Assert.notNull( delimiter, "The 'delimiter' parameter must be set." );
-        byte[] blob;
         if ( value != null ) {
             //noinspection unchecked
             List<String> s = ( List<String> ) value;
             Assert.isTrue( s.stream().noneMatch( k -> k.contains( delimiter ) ),
                     String.format( "The list of strings may not contain the delimiter %s.", delimiter ) );
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            try ( OutputStream out = new GZIPOutputStream( baos ) ) {
-                IOUtils.write( String.join( delimiter, s ), out, StandardCharsets.UTF_8 );
-            } catch ( IOException e ) {
-                throw new HibernateException( e );
-            }
-            blob = baos.toByteArray();
+            st.setBlob( index, compress( s ) );
         } else {
-            blob = null;
+            st.setBlob( index, ( InputStream ) null );
         }
-        lobHandler.getLobCreator().setBlobAsBytes( st, index, blob );
     }
 
     @Override
@@ -127,5 +113,39 @@ public class CompressedStringListType implements UserType, ParameterizedType {
     public void setParameterValues( @Nullable Properties parameters ) {
         String m = "A non-null value must be used as delimiter.";
         this.delimiter = ( String ) requireNonNull( requireNonNull( parameters, m ).get( "delimiter" ), m );
+    }
+
+    /**
+     * Compress the given list of strings into a gzip-compressed input stream.
+     * <p>
+     * Because Java lacks a gzip-compressing input stream implementation, we create a pipe and write the compressed
+     * output on one end and retrieve the it as an input stream on the other end.
+     * <p>
+     * I'm (poirigui) not too concerned by the thread creation since those are limited by the number of database
+     * connection.
+     * FIXME: replace this by a compressing input stream
+     */
+    private InputStream compress( List<String> s ) {
+        Pipe pipe;
+        try {
+            pipe = Pipe.open();
+        } catch ( IOException e ) {
+            throw new HibernateException( e );
+        }
+        new Thread( () -> {
+            try ( Writer out = new OutputStreamWriter( new GZIPOutputStream( Channels.newOutputStream( pipe.sink() ) ) ) ) {
+                boolean first = true;
+                for ( String s1 : s ) {
+                    if ( !first ) {
+                        out.write( delimiter );
+                    }
+                    out.write( s1 );
+                    first = false;
+                }
+            } catch ( IOException e ) {
+                throw new HibernateException( e );
+            }
+        } ).start();
+        return Channels.newInputStream( pipe.source() );
     }
 }

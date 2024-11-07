@@ -4,17 +4,12 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
-import org.springframework.jdbc.support.lob.DefaultLobHandler;
-import org.springframework.jdbc.support.lob.LobHandler;
 import org.springframework.util.Assert;
 import ubic.gemma.persistence.util.ByteArrayUtils;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
+import java.sql.*;
 import java.util.Arrays;
 import java.util.Properties;
 
@@ -42,8 +37,6 @@ public class ByteArrayType implements UserType, ParameterizedType {
             this.arrayClass = arrayClass;
         }
     }
-
-    private final LobHandler lobHandler = new DefaultLobHandler();
 
     private ByteArrayTypes arrayType;
 
@@ -83,7 +76,8 @@ public class ByteArrayType implements UserType, ParameterizedType {
 
     @Override
     public Object nullSafeGet( ResultSet rs, String[] names, SessionImplementor session, Object owner ) throws HibernateException, SQLException {
-        byte[] data = lobHandler.getBlobAsBytes( rs, names[0] );
+        Blob blob = rs.getBlob( names[0] );
+        byte[] data = blob.getBytes( 1, ( int ) blob.length() );
         if ( data != null ) {
             switch ( arrayType ) {
                 case INT:
@@ -100,8 +94,8 @@ public class ByteArrayType implements UserType, ParameterizedType {
 
     @Override
     public void nullSafeSet( PreparedStatement st, @Nullable Object value, int index, SessionImplementor session ) throws HibernateException, SQLException {
-        byte[] blob;
         if ( value != null ) {
+            byte[] blob;
             switch ( arrayType ) {
                 case INT:
                     blob = ByteArrayUtils.intArrayToBytes( ( int[] ) value );
@@ -112,10 +106,10 @@ public class ByteArrayType implements UserType, ParameterizedType {
                 default:
                     throw unsupportedArrayType( arrayType );
             }
+            st.setBytes( index, blob );
         } else {
-            blob = null;
+            st.setBytes( index, null );
         }
-        lobHandler.getLobCreator().setBlobAsBytes( st, index, blob );
     }
 
     @Override
