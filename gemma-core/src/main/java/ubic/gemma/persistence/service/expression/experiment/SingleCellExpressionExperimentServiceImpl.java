@@ -247,10 +247,11 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         for ( BioAssay ba : ee.getBioAssays() ) {
             int sampleIndex = dimension.getBioAssays().indexOf( ba );
             if ( sampleIndex != -1 ) {
-                log.info( "Applying sparsity metrics to " + ba + "..." );
-                ba.setNumberOfCells( getNumberOfCells( vectors, ba, sampleIndex, null ) );
-                ba.setNumberOfDesignElements( getNumberOfDesignElements( vectors, ba, sampleIndex, null ) );
-                ba.setNumberOfCellsByDesignElements( getNumberOfCellsByDesignElements( vectors, ba, sampleIndex, null ) );
+                ba.setNumberOfCells( getNumberOfCells( vectors, sampleIndex, null ) );
+                ba.setNumberOfDesignElements( getNumberOfDesignElements( vectors, sampleIndex, null ) );
+                ba.setNumberOfCellsByDesignElements( getNumberOfCellsByDesignElements( vectors, sampleIndex, null ) );
+                log.info( String.format( "Sparsity metrics for %s: %d cells, %d design elements, %d cells by design elements.",
+                        ba, ba.getNumberOfCells(), ba.getNumberOfDesignElements(), ba.getNumberOfCellsByDesignElements() ) );
             } else {
                 log.warn( ba + " is not used in " + dimension + ", the single-cell sparsity metrics will be set to null." );
                 ba.setNumberOfCells( null );

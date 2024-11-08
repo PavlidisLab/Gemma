@@ -36,6 +36,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -44,6 +45,7 @@ import java.util.stream.IntStream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
+import static ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils.randomSingleCellVector;
 
 /**
  * Tests covering integration of single-cell.
@@ -144,6 +146,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
 
     @Test
     public void testGetSingleCellDataMatrix() {
+        RandomSingleCellDataUtils.setSeed( 123 );
         Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
         QuantitationType qt = vectors.iterator().next().getQuantitationType();
         SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
@@ -156,10 +159,10 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30 )
                 .forEach( System.out::println );
         assertThat( scExpressionExperimentService.getNumberOfNonZeroes( ee, qt ) )
-                .isEqualTo( 1000L );
+                .isEqualTo( 100L ); // 90% sparsity
         assertThat( scExpressionExperimentService.getNumberOfNonZeroesBySample( ee, qt, 30 ) )
                 .containsOnlyKeys( ee.getBioAssays() )
-                .containsValues( 250L, 250L, 250L, 250L );
+                .containsValues( 26L, 24L, 23L, 27L );
     }
 
     @Test
@@ -509,17 +512,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
     private Collection<SingleCellExpressionDataVector> createSingleCellVectors( SingleCellDimension scd, QuantitationType qt ) {
         Collection<SingleCellExpressionDataVector> vectors = new HashSet<>();
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
-            SingleCellExpressionDataVector v = new SingleCellExpressionDataVector();
-            v.setDesignElement( cs );
-            v.setSingleCellDimension( scd );
-            v.setQuantitationType( qt );
-            v.setData( new byte[8 * 100] );
-            int[] ix = new int[100];
-            for ( int i = 0; i < 100; i++ ) {
-                ix[i] = i;
-            }
-            v.setDataIndices( ix );
-            vectors.add( v );
+            vectors.add( randomSingleCellVector( ee, cs, qt, scd, 0.9 ) );
         }
         return vectors;
     }

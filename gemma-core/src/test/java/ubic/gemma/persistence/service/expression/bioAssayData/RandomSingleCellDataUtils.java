@@ -114,34 +114,42 @@ public class RandomSingleCellDataUtils {
         sortedCs.sort( Comparator.comparing( CompositeSequence::getName ) );
         List<SingleCellExpressionDataVector> results = new ArrayList<>();
         for ( CompositeSequence compositeSequence : sortedCs ) {
-            SingleCellExpressionDataVector vector = new SingleCellExpressionDataVector();
-            vector.setExpressionExperiment( ee );
-            vector.setDesignElement( compositeSequence );
-            vector.setQuantitationType( qt );
-            vector.setSingleCellDimension( dimension );
-            double density = 1.0 - sparsity;
-            int N = ( int ) Math.ceil( density * numCells );
-            double[] X = new double[N];
-            int[] IX = new int[X.length];
-            int step = ( int ) ( 1.0 / density );
-            for ( int i = 0; i < N; i++ ) {
-                if ( qt.getScale() == ScaleType.PERCENT ) {
-                    X[i] = uniform100Distribution.sample();
-                } else if ( qt.getScale() == ScaleType.PERCENT1 ) {
-                    X[i] = uniform100Distribution.sample() / 100.0;
-                } else {
-                    if ( qt.getType() == StandardQuantitationType.AMOUNT ) {
-                        X[i] = RandomExpressionDataMatrixUtils.transform( logNormalDistribution.sample(), qt.getScale() );
-                    } else if ( qt.getType() == StandardQuantitationType.COUNT ) {
-                        X[i] = RandomExpressionDataMatrixUtils.transform( countDistribution.sample(), qt.getScale() );
-                    }
-                }
-                IX[i] = ( i * step ) + random.nextInt( step );
-            }
-            vector.setDataAsDoubles( X );
-            vector.setDataIndices( IX );
+            SingleCellExpressionDataVector vector = randomSingleCellVector( ee, compositeSequence, qt, dimension, sparsity );
             results.add( vector );
         }
         return results;
+    }
+
+    /**
+     * Generate a single random single-cell vector.
+     */
+    public static SingleCellExpressionDataVector randomSingleCellVector( ExpressionExperiment ee, CompositeSequence compositeSequence, QuantitationType qt, SingleCellDimension dimension, double sparsity ) {
+        SingleCellExpressionDataVector vector = new SingleCellExpressionDataVector();
+        vector.setExpressionExperiment( ee );
+        vector.setDesignElement( compositeSequence );
+        vector.setQuantitationType( qt );
+        vector.setSingleCellDimension( dimension );
+        double density = 1.0 - sparsity;
+        int N = ( int ) Math.ceil( density * dimension.getNumberOfCells() );
+        double[] X = new double[N];
+        int[] IX = new int[X.length];
+        int step = ( int ) ( 1.0 / density );
+        for ( int i = 0; i < N; i++ ) {
+            if ( qt.getScale() == ScaleType.PERCENT ) {
+                X[i] = uniform100Distribution.sample();
+            } else if ( qt.getScale() == ScaleType.PERCENT1 ) {
+                X[i] = uniform100Distribution.sample() / 100.0;
+            } else {
+                if ( qt.getType() == StandardQuantitationType.AMOUNT ) {
+                    X[i] = RandomExpressionDataMatrixUtils.transform( logNormalDistribution.sample(), qt.getScale() );
+                } else if ( qt.getType() == StandardQuantitationType.COUNT ) {
+                    X[i] = RandomExpressionDataMatrixUtils.transform( countDistribution.sample(), qt.getScale() );
+                }
+            }
+            IX[i] = ( i * step ) + random.nextInt( step );
+        }
+        vector.setDataAsDoubles( X );
+        vector.setDataIndices( IX );
+        return vector;
     }
 }
