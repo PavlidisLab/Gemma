@@ -44,6 +44,16 @@ import static java.util.Objects.requireNonNull;
 public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
     /**
+     * Prefix used for naming the QT.
+     */
+    private static final String QT_NAME_PREFIX = "AnnData";
+
+    /**
+     * Prefix used for naming the QT derived from a specific layer.
+     */
+    private static final String LAYERED_QT_NAME_PREFIX = QT_NAME_PREFIX + " from layer ";
+
+    /**
      * Path to the HDF5 file.
      */
     private final Path file;
@@ -184,19 +194,28 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         Set<QuantitationType> qts = new HashSet<>();
         try ( AnnData h5File = AnnData.open( file ) ) {
             if ( h5File.getX() != null ) {
-                qts.add( createQt( h5File, h5File.getX() ) );
+                qts.add( createQt( h5File, h5File.getX(), null ) );
             }
             for ( String layer : h5File.getLayers() ) {
-                qts.add( createQt( h5File, h5File.getLayer( layer ) ) );
+                qts.add( createQt( h5File, h5File.getLayer( layer ), layer ) );
             }
         }
         return qts;
     }
 
-    private QuantitationType createQt( AnnData h5File, Layer layer ) {
+    private QuantitationType createQt( AnnData h5File, Layer layer, @Nullable String layerName ) {
         QuantitationType qt = new QuantitationType();
-        qt.setName( layer.getPath() );
-        qt.setDescription( "AnnData data from layer " + layer.getPath() + " in " + this.file.getFileName().toString() + "." );
+        // FIXME: rename this layer to include 'AnnData', but we need to layer name later on for loading vectors
+        if ( layerName != null ) {
+            qt.setName( LAYERED_QT_NAME_PREFIX + " " + layerName );
+        } else {
+            qt.setName( QT_NAME_PREFIX );
+        }
+        if ( layerName != null ) {
+            qt.setDescription( "AnnData data loaded from layer " + layerName + "." );
+        } else {
+            qt.setDescription( "AnnData" );
+        }
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         H5FundamentalType fundamentalType;
         try ( Matrix matrix = layer.getMatrix(); H5Type datasetType = matrix.getDataType() ) {
@@ -542,13 +561,26 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     @Override
+    public Stream<SingleCellExpressionDataVector> loadVectors( DesignElementMapper elementsMapping, SingleCellDimension dimension, QuantitationType quantitationType ) throws IOException, IllegalArgumentException {
+        String layerName;
+        if ( quantitationType.getName().startsWith( LAYERED_QT_NAME_PREFIX ) ) {
+            layerName = quantitationType.getName().substring( LAYERED_QT_NAME_PREFIX.length() );
+        } else {
+            layerName = null;
+        }
+        return loadVectors( elementsMapping, dimension, quantitationType, layerName );
+    }
+
+    /**
+     * Load single-cell vectors from a particular layer in the AnnData file.
+     * @param layerName the name of the layer to load under {@code layers/}, or null to load the {@code X}
+     */
     public Stream<SingleCellExpressionDataVector> loadVectors(
             DesignElementMapper elementsMapping,
             SingleCellDimension dimension,
-            QuantitationType quantitationType ) throws IOException {
+            QuantitationType quantitationType,
+            @Nullable String layerName ) throws IOException {
         Assert.notNull( sampleFactorName, "A sample factor name must be set." );
-        Assert.isTrue( quantitationType.getName().equals( "X" ) || quantitationType.getName().startsWith( "layers/" ),
-                "The name of the quantitation must refer to a valid path in the HDF5 file." );
         // we don't want to close it since it will be closed by the stream
         AnnData h5File = AnnData.open( file );
         try {
@@ -581,8 +613,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 samples = v.getColumn( sampleFactorName, String.class );
             }
             Layer layer;
-            if ( quantitationType.getName().startsWith( "layers/" ) ) {
-                String layerName = quantitationType.getName().substring( "layers/".length() );
+            if ( layerName != null ) {
                 layer = h5File.getLayer( layerName );
             } else {
                 layer = requireNonNull( h5File.getX(), h5File + " does not have a layer for path 'X'." );
@@ -592,9 +623,9 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 return loadVectorsFromSparseMatrix( layer.getSparseMatrix(), samples, genes, quantitationType, dimension, elementsMapping )
                         .onClose( h5File::close );
             } else if ( matrixEncodingType.equals( "csr_matrix" ) ) {
-                throw new UnsupportedOperationException( "The matrix at '" + quantitationType.getName() + "' is stored as CSR and transposition is enabled; it must be converted to CSC for being loaded." );
+                throw new UnsupportedOperationException( "The matrix at '" + layer.getPath() + "' is stored as CSR and transposition is enabled; it must be converted to CSC for being loaded." );
             } else if ( matrixEncodingType.equals( "csc_matrix" ) ) {
-                throw new UnsupportedOperationException( "The matrix at '" + quantitationType.getName() + "' is stored as CSC; it must be converted to CSR for being loaded." );
+                throw new UnsupportedOperationException( "The matrix at '" + layer.getPath() + "' is stored as CSC; it must be converted to CSR for being loaded." );
             } else {
                 throw new UnsupportedOperationException( "Loading single-cell data from " + matrixEncodingType + " is not supported." );
             }

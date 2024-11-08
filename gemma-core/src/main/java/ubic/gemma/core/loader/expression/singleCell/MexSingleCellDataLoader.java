@@ -141,7 +141,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
     public Set<QuantitationType> getQuantitationTypes() throws IOException {
         QuantitationType qt = new QuantitationType();
         qt.setName( "10x MEX" );
-        qt.setDescription( "10x MEX data loaded from: " + matrixFiles.stream().map( Path::getFileName ).map( Path::toString ).collect( Collectors.joining( ", " ) ) + "." );
+        qt.setDescription( "10x MEX data loaded from " + numberOfSamples + " sets of files (i.e. features.tsv.gz, barcodes.tsv.gz and matrix.mtx.gz)." );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         boolean allCounts = true;
         for ( Path matrix : matrixFiles ) {

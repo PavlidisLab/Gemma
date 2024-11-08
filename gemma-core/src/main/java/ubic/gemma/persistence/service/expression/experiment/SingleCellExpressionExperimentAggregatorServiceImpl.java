@@ -369,15 +369,15 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
                     if ( v == null ) {
                         v = new boolean[scv.getSingleCellDimension().getNumberOfCells()];
                     }
-                    addExpressedCells( scv, sourceSample, sourceSampleIndex, cellType, v );
+                    addExpressedCells( scv, sourceSampleIndex, cellType, v );
                     return v;
                 } );
             }
             if ( designElementsByBioAssay != null ) {
-                designElementsByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + getNumberOfDesignElements( Collections.singleton( scv ), sourceSample, sourceSampleIndex, cellType ) );
+                designElementsByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + getNumberOfDesignElements( Collections.singleton( scv ), sourceSampleIndex, cellType ) );
             }
             if ( cellByDesignElementByBioAssay != null ) {
-                cellByDesignElementByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + getNumberOfCellsByDesignElements( Collections.singleton( scv ), sourceSample, sourceSampleIndex, cellType ) );
+                cellByDesignElementByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + getNumberOfCellsByDesignElements( Collections.singleton( scv ), sourceSampleIndex, cellType ) );
             }
         }
 
