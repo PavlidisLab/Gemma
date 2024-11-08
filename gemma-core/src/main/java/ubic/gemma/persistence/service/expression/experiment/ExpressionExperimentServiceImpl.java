@@ -1262,6 +1262,12 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> getSubSetsByDimension( ExpressionExperiment expressionExperiment ) {
+        return expressionExperimentDao.getSubSetsByDimension( expressionExperiment );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets ) {
         return this.expressionExperimentDao.getTaxa( bioAssaySets );
     }

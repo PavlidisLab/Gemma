@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.controller.expression.bioAssay;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,15 +32,16 @@ import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.tasks.analysis.expression.BioAssayOutlierProcessingTaskCommand;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
+import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.util.EntityNotFoundException;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
+import javax.annotation.Nullable;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -66,6 +66,52 @@ public class BioAssayController {
     @Autowired
     private OutlierDetectionService outlierDetectionService;
 
+    @Autowired
+    private BioAssayDimensionService bioAssayDimensionService;
+
+    @RequestMapping(value = { "/showBioAssay.html", "/" }, method = { RequestMethod.GET, RequestMethod.HEAD })
+    public ModelAndView show( @RequestParam("id") Long id, @RequestParam(value = "dimension", required = false) Long dimensionId ) {
+        BioAssay bioAssay = bioAssayService.loadOrFail( id, EntityNotFoundException::new );
+        bioAssay = bioAssayService.thaw( bioAssay );
+        return new ModelAndView( "bioAssay.detail" )
+                .addObject( "bioAssay", bioAssay )
+                .addAllObjects( getBioAssayHierarchy( bioAssay, dimensionId ) )
+                .addObject( "bioAssaySets", bioAssayService.getBioAssaySets( bioAssay ).stream().sorted( Comparator.comparing( BioAssaySet::getName ) ).collect( Collectors.toList() ) );
+    }
+
+    private Map<String, ?> getBioAssayHierarchy( BioAssay bioAssay, @Nullable Long dimensionId ) {
+        if ( dimensionId == null ) {
+            return Collections.emptyMap();
+        }
+        List<BioAssay> parents;
+        if ( bioAssay.getSampleUsed().getSourceBioMaterial() != null ) {
+            parents = bioAssay.getSampleUsed().getSourceBioMaterial().getBioAssaysUsedIn().stream()
+                    .sorted( Comparator.comparing( BioAssay::getName ) )
+                    .collect( Collectors.toList() );
+        } else {
+            parents = Collections.emptyList();
+        }
+        // only show siblings that share a common BAD
+        BioAssayDimension dim = bioAssayDimensionService.loadOrFail( dimensionId, EntityNotFoundException::new );
+        Set<BioAssay> sharedBas = new HashSet<>( dim.getBioAssays() );
+        List<BioAssay> siblings = bioAssayService.findSiblings( bioAssay ).stream()
+                .filter( sharedBas::contains )
+                .sorted( Comparator.comparing( BioAssay::getName ) )
+                .collect( Collectors.toList() );
+        List<BioAssay> children = bioAssayService.findSubBioAssays( bioAssay, true ).stream()
+                .filter( sharedBas::contains )
+                .sorted( Comparator.comparing( BioAssay::getName ) )
+                .collect( Collectors.toList() );
+        Map<String, Object> result = new HashMap<>();
+        result.put( "dimension", dim );
+        result.put( "parents", parents );
+        result.put( "singleParent", parents.size() == 1 ? parents.iterator().next() : null );
+        result.put( "children", children );
+        result.put( "siblings", siblings );
+        return result;
+    }
+
+    @SuppressWarnings("unused") // Is used in EEManager.js
     public Collection<BioAssayValueObject> getBioAssays( Long eeId ) {
         ExpressionExperiment ee = eeService.loadAndThawLiteOrFail( eeId,
                 EntityNotFoundException::new, "Could not load experiment with ID=" + eeId );
@@ -94,39 +140,4 @@ public class BioAssayController {
     public String unmarkOutlier( Collection<Long> ids ) {
         return taskRunningService.submitTaskCommand( new BioAssayOutlierProcessingTaskCommand( ids, true ) );
     }
-
-    @RequestMapping(value = { "/showBioAssay.html", "/" }, method = { RequestMethod.GET, RequestMethod.HEAD })
-    public ModelAndView show( @RequestParam("id") Long id ) {
-        BioAssay bioAssay = bioAssayService.load( id );
-        if ( bioAssay == null ) {
-            throw new EntityNotFoundException( id + " not found" );
-        }
-        bioAssay = bioAssayService.thaw( bioAssay );
-        return new ModelAndView( "bioAssay.detail" )
-                .addObject( "bioAssay", new BioAssayValueObject( bioAssay, false ) );
-    }
-
-    @RequestMapping(value = "/showAllBioAssays.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public ModelAndView showAllBioAssays( @RequestParam(value = "id", required = false) String sId ) {
-        Collection<BioAssay> bioAssays = new ArrayList<>();
-        if ( StringUtils.isBlank( sId ) ) {
-            /*
-             * Probably not desirable ... there are >380,000 of them
-             */
-            bioAssays = bioAssayService.loadAll();
-        } else {
-            String[] idList = StringUtils.split( sId, ',' );
-            for ( String anIdList : idList ) {
-                Long id = Long.parseLong( anIdList );
-                BioAssay bioAssay = bioAssayService.load( id );
-                if ( bioAssay == null ) {
-                    throw new EntityNotFoundException( id + " not found" );
-                }
-                bioAssay = bioAssayService.thaw( bioAssay );
-                bioAssays.add( bioAssay );
-            }
-        }
-        return new ModelAndView( "bioAssays" ).addObject( "bioAssays", bioAssays );
-    }
-
 }

@@ -25,10 +25,7 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**
@@ -232,6 +229,8 @@ public interface ExpressionExperimentDao
             Collection<ExpressionExperiment> expressionExperiments );
 
     Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment );
+
+    Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> getSubSetsByDimension( ExpressionExperiment expressionExperiment );
 
     <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets );
 

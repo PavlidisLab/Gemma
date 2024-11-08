@@ -1,4 +1,5 @@
-<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ page pageEncoding="UTF-8" contentType="text/html;charset=UTF-8" trimDirectiveWhitespaces="true" %>
+<jsp:useBean id="appConfig" scope="application" type="java.util.Map" />
 <!DOCTYPE html>
 <html lang="en">
 <head>

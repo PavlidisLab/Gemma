@@ -1,152 +1,208 @@
-<%@ include file="/common/taglibs.jsp"%>
-<jsp:useBean id="bioMaterial" scope="request"
-	class="ubic.gemma.model.expression.biomaterial.BioMaterial" />
+<%@ include file="/common/taglibs.jsp" %>
 
 <head>
-<title><fmt:message key="bioMaterial.details" /></title>
-<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
+<title>${fn:escapeXml(bioMaterial.name)}</title>
+<c:choose>
+    <c:when test="${not empty bioMaterial.description}">
+        <meta name="description" content="${fn:escapeXml(bioMaterial.description)}" />
+    </c:when>
+    <c:when test="${not empty bioMaterial.sourceBioMaterial.description}">
+        <meta name="description" content="${fn:escapeXml(bioMaterial.sourceBioMaterial.description)}" />
+    </c:when>
+    <c:otherwise><i>Description not available</i></c:otherwise>
+</c:choose>
 <jwr:script src='/scripts/app/bmFactorValues.js' />
-
-<script type='text/javascript'>
-   Ext.namespace( 'Gemma' );
-   Ext.onReady( function() {
-      Ext.QuickTips.init();
-
-      var bmId = Ext.get( "bmId" ).getValue();
-      var bmClass = Ext.get( "bmClass" ).getValue();
-      var canEdit = Ext.get( 'canEdit' ) === null ? false : Ext.get( 'canEdit' ).getValue();
-      var grid = new Gemma.AnnotationGrid( {
-         renderTo : "bmAnnotations",
-         readMethod : BioMaterialController.getAnnotation,
-         readParams : [ {
-            id : bmId,
-            classDelegatingFor : bmClass
-         } ],
-         writeMethod : AnnotationController.createBioMaterialTag,
-         removeMethod : AnnotationController.removeBioMaterialTag,
-         entId : bmId,
-         editable : canEdit,
-         mgedTermKey : "experiment"
-      } );
-   } );
-</script>
-
-
 </head>
 
 <div class="padded">
 
-	<h2>
-		BioMaterial: ${bioMaterial.name} from
-		<a title="${expressionExperiment.name}"
-			href="${pageContext.request.contextPath}/expressionExperiment/showExpressionExperiment.html?id=${expressionExperiment.id}">${expressionExperiment.shortName}</a>
-	</h2>
-	
-	<table style="width: 650px" class="row-separated pad-cols v-padded">
+    <h2>${fn:escapeXml(bioMaterial.name)}</h2>
 
-		<tr>
-			<td valign="top">
-				<b> <fmt:message key="bioMaterial.description" />
-				</b>
-			</td>
-			<td>
-				<c:choose>
-					<c:when test="${not empty bioMaterial.description}">
-						<c:out value="${bioMaterial.description}" />
-					</c:when>
-					<c:otherwise>Description not available</c:otherwise>
-				</c:choose>
-			</td>
-		</tr>
+    <table>
 
-		<tr>
-			<td valign="top">
-				<b> <fmt:message key="taxon.title" />
-				</b>
-			</td>
-			<td>
-				<c:choose>
-					<c:when test="${not empty bioMaterial.sourceTaxon}">
-						<c:out value="${bioMaterial.sourceTaxon.scientificName}" />
-					</c:when>
-					<c:otherwise>Taxon not available</c:otherwise>
-				</c:choose>
-			</td>
-		</tr>
+        <tr>
+            <td class="label"><fmt:message key="bioMaterial.description" />:</td>
+            <td>
+                <c:choose>
+                    <c:when test="${not empty bioMaterial.description}">
+                        <c:out value="${bioMaterial.description}" />
+                    </c:when>
+                    <c:when test="${not empty bioMaterial.sourceBioMaterial.description}">
+                        <c:out value="${bioMaterial.sourceBioMaterial.description}" /> <b>(inherited)</b>
+                    </c:when>
+                    <c:otherwise><i>Description not available</i></c:otherwise>
+                </c:choose>
+            </td>
+        </tr>
 
-		<tr>
-			<td valign="top">
-				<b> <fmt:message key="databaseEntry.title" />
-				</b>
-			</td>
+        <tr>
+            <td class="label"><fmt:message key="taxon.title" />:</td>
+            <td>
+                <c:choose>
+                    <c:when test="${not empty bioMaterial.sourceTaxon}">
+                        <Gemma:entityLink
+                                entity="${bioMaterial.sourceTaxon}">${bioMaterial.sourceTaxon.scientificName}</Gemma:entityLink>
+                    </c:when>
+                    <c:otherwise><i>Taxon not available</i></c:otherwise>
+                </c:choose>
+            </td>
+        </tr>
 
-			<td>
-				<c:choose>
-					<c:when test="${not empty bioMaterial.externalAccession}">
-						<c:out value="${bioMaterial.externalAccession.accession}" />
-					</c:when>
-					<c:otherwise>No external identifier</c:otherwise>
-				</c:choose>
-			</td>
-		</tr>
+        <tr>
+            <td class="label"><fmt:message key="databaseEntry.title" />:</td>
 
-		<tr>
-			<td valign="top">
-				<b>Assays used in</b>
-			</td>
-			<td>
-				<ul>
-					<c:forEach items="${bioMaterial.bioAssaysUsedIn}" var="assay">
-						<li><a
-								href="${pageContext.request.contextPath}/bioAssay/showBioAssay.html?id=${assay.id}">${assay.name}</a></li>
-					</c:forEach>
-				</ul>
-			</td>
-		</tr>
+            <td>
+                <c:choose>
+                    <c:when test="${not empty bioMaterial.externalAccession}">
+                        <c:out value="${bioMaterial.externalAccession.accession}" />
+                    </c:when>
+                    <c:when test="${not empty bioMaterial.sourceBioMaterial.externalAccession}">
+                        <c:out value="${bioMaterial.sourceBioMaterial.externalAccession}" /> <b>(inherited)</b>
+                    </c:when>
+                    <c:otherwise><i>No external identifier available</i></c:otherwise>
+                </c:choose>
+            </td>
+        </tr>
 
-	</table>
-	
-	<hr class="normal">
+        <tr>
+            <td class="label">Assays used in:</td>
+            <td>
+                <ul>
+                    <c:forEach items="${bioMaterial.bioAssaysUsedIn}" var="assay">
+                        <li>
+                            <a href="${pageContext.request.contextPath}/bioAssay/showBioAssay.html?id=${assay.id}&dimension=${dimension.id}">${assay.name}</a>
+                        </li>
+                    </c:forEach>
+                </ul>
+            </td>
+        </tr>
 
-	<h3>
-		<fmt:message key="treatments.title" />
-	</h3>
-	<display:table name="bioMaterial.treatments" defaultsort="1"
-		class="list" requestURI="" id="treatmentList" pagesize="30"
-		decorator="ubic.gemma.web.taglib.displaytag.expression.biomaterial.BioMaterialWrapper">
-		<display:column sortable="true" property="name" maxWords="20" />
-		<display:column sortable="true" property="description" maxWords="100" />
-		<display:column sortable="true" property="orderApplied" maxWords="100" />
-	</display:table>
+        <tr>
+            <td class="label">Experiments used in</td>
+            <td>
+                <c:forEach items="${expressionExperiments.entrySet()}" var="e">
+                    <c:forEach items="${e.value.entrySet()}" var="ba2bm">
+                        <Gemma:entityLink entity="${ba2bm.value}">${ba2bm.value.shortName}</Gemma:entityLink>
+                        <c:if test="${not (e.key eq bioMaterial)}">
+                            (via <a
+                                href="${pageContext.request.contextPath}/bioMaterial/showBioMaterial.html?id=${e.key.id}&dimension=${dimension.id}">${e.key.name}</a> &rarr;
+                            <a href="${pageContext.request.contextPath}/bioAssay/showBioAssay.html?id=${ba2bm.key.id}&dimension=${dimension.id}">${ba2bm.key.name}</a>)
+                        </c:if>
+                    </c:forEach>
+                </c:forEach>
+            </td>
+        </tr>
 
-	<hr class="normal">
+    </table>
 
-	<h3>
-		<fmt:message key="experimentalDesign.factorValues" />
-	</h3>
-	<div id="bmFactorValues" class="x-grid-mso" style="overflow: hidden; width: 650px;"></div>
-		
-	<hr class="normal">
+    <c:if test="${not empty parent || not empty siblings || not empty children}">
 
-	<h3>Annotations</h3>
-	<div id="bmAnnotations" class="x-grid-mso" style="overflow: hidden; width: 650px;"></div>
-	
-	<input type="hidden" name="bmId" id="bmId" value="${bioMaterial.id}" />
-	<input type="hidden" name="bmClass" id="bmClass"
-		value="${bioMaterial['class'].name}" />
-		
-	<br>
+        <hr class="normal">
 
-	<security:accesscontrollist domainObject="${bioMaterial}"
-		hasPermission="WRITE,ADMINISTRATION">
-		<input type="hidden" name="canEdit" id="canEdit" value="true" />
-		<TD COLSPAN="2">
-			<DIV align="left">
-				<input type="button"
-					onclick="location.href='${pageContext.request.contextPath}/bioMaterial/editBioMaterial.html?id=${bioMaterial.id}'"
-					value="Edit">
-			</DIV>
-		</td>
-	</security:accesscontrollist>
+        <h3>Hierarchy for ${fn:escapeXml(dimension.name)}</h3>
+        <ul>
+            <li>
+                <c:if test="${parent != null}">
+                    <h4>Parent:</h4>
+                    <a href="${pageContext.request.contextPath}/bioMaterial/showBioMaterial.html?id=${parent.id}&dimension=${dimension.id}">${parent.name}</a>
+                    <br>
+                </c:if>
+                <c:if test="${not empty siblings}">
+                    <h4>Siblings:</h4>
+                    <ul style="max-height: 300px; overflow-y: scroll;">
+                        <c:forEach items="${siblings}" var="sibling">
+                            <li>
+                                <a href="${pageContext.request.contextPath}/bioMaterial/showBioMaterial.html?id=${sibling.id}&dimension=${dimension.id}">${sibling.name}</a>
+                            </li>
+                        </c:forEach>
+                    </ul>
+                </c:if>
+                <c:if test="${not empty children}">
+                    <h4>Children:</h4>
+                    <ul style="max-height: 300px; overflow-y: scroll;">
+                        <c:forEach items="${children}" var="child">
+                            <li>
+                                <a href="${pageContext.request.contextPath}/bioMaterial/showBioMaterial.html?id=${child.id}&dimension=${dimension.id}">${child.name}</a>
+                            </li>
+                        </c:forEach>
+                    </ul>
+                </c:if>
+            </li>
+        </ul>
+    </c:if>
+
+    <c:if test="${not empty bioMaterial.treatments}">
+        <hr class="normal">
+        <h3><fmt:message key="treatments.title" /></h3>
+        <table>
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Order Applied</th>
+            </tr>
+            </thead>
+            <c:forEach var="treatment" items="${bioMaterial.treatments}">
+                <tr>
+                    <td>${fn:escapeXml(treatment.name)}</td>
+                    <td>${fn:escapeXml(treatment.description)}</td>
+                    <td style="text-align: center;">${treatment.orderApplied}</td>
+                </tr>
+            </c:forEach>
+        </table>
+    </c:if>
+
+    <hr class="normal">
+
+    <h3>
+        <fmt:message key="experimentalDesign.factorValues" />
+    </h3>
+    <div id="bmFactorValues" class="x-grid-mso" style="overflow: hidden; width: 650px;"></div>
+
+    <hr class="normal">
+
+    <h3>Annotations</h3>
+    <div id="bmAnnotations" class="x-grid-mso" style="overflow: hidden; width: 650px;"></div>
+
+    <input type="hidden" name="bmId" id="bmId" value="${bioMaterial.id}" />
+    <input type="hidden" name="bmClass" id="bmClass"
+            value="${bioMaterial['class'].name}" />
+    <input type="hidden" name="canEdit" id="canEdit" value="true" />
+
+    <br>
+
+    <security:accesscontrollist domainObject="${bioMaterial}"
+            hasPermission="WRITE,ADMINISTRATION">
+        <td colspan="2">
+            <div>
+                <input type="button"
+                        onclick="location.href='${pageContext.request.contextPath}/bioMaterial/editBioMaterial.html?id=${bioMaterial.id}'"
+                        value="Edit">
+            </div>
+        </td>
+    </security:accesscontrollist>
 
 </div>
+
+<script type='text/javascript'>
+Ext.namespace( 'Gemma' );
+Ext.onReady( function() {
+   Ext.QuickTips.init();
+   const bmId = Ext.get( "bmId" ).getValue();
+   const bmClass = Ext.get( "bmClass" ).getValue();
+   const canEdit = Ext.get( 'canEdit' ) === null ? false : Ext.get( 'canEdit' ).getValue();
+   const grid = new Gemma.AnnotationGrid( {
+      renderTo : "bmAnnotations",
+      readMethod : BioMaterialController.getAnnotation,
+      readParams : [ {
+         id : bmId,
+         classDelegatingFor : bmClass
+      } ],
+      writeMethod : AnnotationController.createBioMaterialTag,
+      removeMethod : AnnotationController.removeBioMaterialTag,
+      entId : bmId,
+      editable : canEdit,
+      mgedTermKey : "experiment"
+   } );
+} );
+</script>

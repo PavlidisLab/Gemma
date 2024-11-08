@@ -196,6 +196,8 @@ public class EntityUrlBuilder {
                 this.entityPath = "/bioAssay/showBioAssay.html?id=";
             } else if ( entity instanceof BioMaterial ) {
                 this.entityPath = "/bioMaterial/showBioMaterial.html?id=";
+            } else if ( entity instanceof Taxon ) {
+                this.entityPath = "/taxon/showTaxon.html?id=";
             } else {
                 throw new UnsupportedOperationException( "Cannot generate a Web URL for entities of type " + entity.getClass() + "." );
             }

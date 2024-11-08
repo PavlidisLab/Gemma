@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -32,10 +33,12 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
+
+import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
 
 /**
  * <p>
@@ -61,6 +64,30 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
         BusinessKey.checkKey( entity );
         BusinessKey.createQueryObject( queryObject, entity );
         return ( ExpressionExperimentSubSet ) queryObject.uniqueResult();
+    }
+
+    @Nullable
+    @Override
+    public ExpressionExperimentSubSet loadWithBioAssays( Long id ) {
+        ExpressionExperimentSubSet subSet = load( id );
+        if ( subSet != null ) {
+            Hibernate.initialize( subSet.getAccession() );
+            Hibernate.initialize( subSet.getBioAssays() );
+            Hibernate.initialize( subSet.getCharacteristics() );
+            Hibernate.initialize( subSet.getSourceExperiment().getAccession() );
+            Hibernate.initialize( subSet.getSourceExperiment().getCharacteristics() );
+            Hibernate.initialize( subSet.getSourceExperiment().getPrimaryPublication() );
+        }
+        return subSet;
+    }
+
+    @Override
+    public Collection<ExpressionExperimentSubSet> findByBioAssayIn( Collection<BioAssay> bioAssays ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct eess from ExpressionExperimentSubSet eess join eess.bioAssays ba where ba in :bas" )
+                .setParameterList( "bas", optimizeIdentifiableParameterList( bioAssays ) )
+                .list();
     }
 
     @Override

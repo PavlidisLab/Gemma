@@ -1,12 +1,13 @@
+<%@ page isErrorPage="true" pageEncoding="UTF-8" contentType="text/html; charset=utf-8"
+        trimDirectiveWhitespaces="true" %>
+
 <%@ include file="/common/taglibs.jsp" %>
 
-<!--
-This page handles servlet errors sent via HttpServletResponse.sendError().
+<%--
+This page handles servlet errors sent via HttpServletResponse.sendError(). See the <error-page/> declaration in web.xml.
 
 If you can, avoid producing error this way and prefer raising an exception that will be caught by Spring MVC ExceptionResolver.
--->
-
-<%@ page isErrorPage="true" %>
+--%>
 
 <page:applyDecorator name="default">
     <c:choose>
@@ -38,7 +39,8 @@ If you can, avoid producing error this way and prefer raising an exception that 
             <div class="padded">
                 <h2>Unsupported Status Code</h2>
                 <p>
-                    There is no error page configured for the status code <c:out value="${requestScope['javax.servlet.error.status_code']}"/>.
+                    There is no error page configured for the status code <c:out
+                        value="${requestScope['javax.servlet.error.status_code']}" />.
                 </p>
                 <hr class="normal">
                 <%@ include file="/common/exception.jsp" %>

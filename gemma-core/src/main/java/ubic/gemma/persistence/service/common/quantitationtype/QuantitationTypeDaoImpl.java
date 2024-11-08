@@ -30,7 +30,6 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.bioAssayData.*;
@@ -39,10 +38,7 @@ import ubic.gemma.persistence.hibernate.TypedResultTransformer;
 import ubic.gemma.persistence.service.AbstractCriteriaFilteringVoEnabledDao;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;

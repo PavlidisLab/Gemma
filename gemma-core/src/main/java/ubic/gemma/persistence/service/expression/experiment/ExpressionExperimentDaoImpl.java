@@ -1351,6 +1351,22 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> getSubSetsByDimension( ExpressionExperiment expressionExperiment ) {
+        //noinspection unchecked
+        List<Object[]> results = getSessionFactory().getCurrentSession()
+                .createQuery( "select eess, bad from ExpressionExperimentSubSet eess join eess.bioAssays ba, "
+                        + "BioAssayDimension bad join bad.bioAssays ba2 "
+                        + "where eess.sourceExperiment = :ee and ba = ba2 "
+                        + "group by eess, bad "
+                        // require all the subset's assays to be matched
+                        + "having size(eess.bioAssays) = count(ba)" )
+                .setParameter( "ee", expressionExperiment )
+                .list();
+        return results.stream()
+                .collect( Collectors.groupingBy( row -> ( BioAssayDimension ) row[1], Collectors.mapping( row -> ( ExpressionExperimentSubSet ) row[0], Collectors.toSet() ) ) );
+    }
+
+    @Override
     public <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets ) {
         if ( bioAssaySets.isEmpty() )
             return Collections.emptyMap();

@@ -18,17 +18,24 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.BaseDao;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
  * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet
  */
 public interface ExpressionExperimentSubSetDao extends BaseDao<ExpressionExperimentSubSet> {
+
+    @Nullable
+    ExpressionExperimentSubSet loadWithBioAssays( Long id );
+
+    Collection<ExpressionExperimentSubSet> findByBioAssayIn( Collection<BioAssay> bioAssays );
 
     /**
      * Obtain the {@link FactorValue} used by the samples from this subset in the given factor.
