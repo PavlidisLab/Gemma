@@ -1,77 +1,48 @@
+<%@ page errorPage="/pages/error/500.jsp" pageEncoding="UTF-8" contentType="text/html; charset=utf-8"
+        trimDirectiveWhitespaces="true" %>
+<%@ include file="/common/taglibs.jsp" %>
 <!DOCTYPE html>
-<%-- Include common set of tag library declarations for each layout --%>
-<%@ include file="/common/taglibs.jsp"%>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 <head>
-<%-- Include common set of meta tags for each layout --%>
-<%@ include file="/common/meta.jsp"%>
-
-<link rel="shortcut icon" href="${pageContext.request.contextPath}/images/logo/gemmaTinyTrans.gif" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width; initial-scale=1" />
 <title><decorator:title /> | <fmt:message key="webapp.name" /></title>
-
+<meta name="author" content="Gemma admin (${appConfig["gemma.support.email"]})" />
+<meta name="description"
+        content="<decorator:getProperty property="meta.description" default="Database of curated, reanalyzed genomics datasets for meta-analysis"/>" />
+<meta name="keywords"
+        content="<decorator:getProperty property="meta.keywords" default="genomics,bioinformatics,genetics,transcriptomes,rnaseq,microarrays,biotechnology,medicine,biomedical,meta-analysis,statistics,search,open source,database,software"/>" />
+<link rel="shortcut icon" href="${pageContext.request.contextPath}/favicon.ico" />
 <jwr:style src="/bundles/gemma-all.css" />
-<script type='text/javascript' src='${pageContext.request.contextPath}/dwr/engine.js'></script>
-<script type='text/javascript' src='${pageContext.request.contextPath}/dwr/util.js'></script>
-
-<jwr:script src="/bundles/include.js" />
-<jwr:script src="/bundles/gemma-lib.js" />
-
-<%-- for dwr creation of javascript objects to mirror java value objects; including one of these causes all the objects to be exposed.--%>
-<script type='text/javascript' src='${pageContext.request.contextPath}/dwr/interface/EmptyController.js'></script>
-<%-- We should use this as soon as we figure out how to set generateDtoClasses option to dtoall 
-		script type='text/javascript' src='/Gemma/dwr/dtoall.js'></script>	--%>
-
+<script type="application/javascript">
+const ctxBasePath = "${pageContext.request.contextPath}";
+const recaptchaPublicKey = "${appConfig["gemma.recaptcha.publicKey"]}";
+const gemBrowUrl = "${appConfig["gemma.gemBrow.url"]}";
+</script>
 <%-- for registration, possible from any page--%>
 <script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script>
-
-<%-- log javascript errors --%>
-<script type="text/javascript">
-			window.onerror = function(errorMessage, url, line){		
-				// message == text-based error description
-			    // url     == url which exhibited the script error
-			    // line    == the line number being executed when the error occurred
-				JavascriptLogger.writeToErrorLog(errorMessage, url, line, document.location.href, navigator.userAgent);				
-			};
-		</script>
-
+<jsp:include page="/common/analytics.jsp" />
+<!-- DWR -->
+<jsp:include page="/common/dwr.jsp" />
+<jwr:script src="/bundles/include.js" />
+<jwr:script src="/bundles/gemma-lib.js" />
 <decorator:head />
-
-
 </head>
-<body <decorator:getProperty property="body.id" writeEntireProperty="true"/>
-	<decorator:getProperty property="body.class" writeEntireProperty="true"/>>
 
-	<div id="page">
-
-		<div id="headerclearnopadding" class="clearfix">
-			<jsp:include page="/common/header.inner.jsp" />
-		</div>
-
-
-		<div id="content">
-
-
-
-			<div id="main">
-				<%@ include file="/common/messages.jsp"%>
-
-				<h2>
-					<decorator:getProperty property="page.heading" />
-				</h2>
-
-
-				<decorator:body />
-			</div>
-
-
-		</div>
-
-		<jsp:include page="/common/userStatusVariables.jsp" />
-
-		<jsp:include page="/common/analytics.jsp" />
-
-	</div>
-
+<body>
+<!-- variables -->
+<jsp:include page="/common/variables.jsp" />
+<div id="page">
+    <div id="headerclearnopadding" class="clearfix">
+        <jsp:include page="/common/header.inner.jsp" />
+    </div>
+    <div id="content">
+        <div id="main">
+            <%@ include file="/common/messages.jsp" %>
+            <decorator:body />
+        </div>
+    </div>
+</div>
 </body>
 </html>
 

@@ -1,7 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-<title>System stats</title>
-<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
+<title>System Stats</title>
 <jwr:script src='/scripts/app/monitoring.js' />
 
 <style>

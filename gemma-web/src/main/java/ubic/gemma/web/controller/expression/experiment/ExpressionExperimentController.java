@@ -97,6 +97,7 @@ import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectStatistics;
 import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectType;
@@ -941,7 +942,8 @@ public class ExpressionExperimentController {
         return new ModelAndView( "expressionExperiment.detail" )
                 .addObject( "expressionExperiment", ee )
                 .addObject( "eeId", ee.getId() )
-                .addObject( "eeClass", ee.getClass() );
+                .addObject( "eeClass", ee.getClass() )
+                .addObject( "annotations", expressionExperimentService.getAnnotations( ee ).stream().map( AnnotationValueObject::getTermName ).collect( Collectors.joining( "," ) ) );
     }
 
     /**

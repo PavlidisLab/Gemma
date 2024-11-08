@@ -2,7 +2,6 @@
 
 <head>
 <title>Expression Experiments with QC Issues</title>
-<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
 </head>
 <body>
 

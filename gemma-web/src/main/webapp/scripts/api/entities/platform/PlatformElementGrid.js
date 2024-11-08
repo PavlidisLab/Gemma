@@ -1,7 +1,7 @@
 Ext.namespace( 'Gemma' );
 
 /**
- * 
+ *
  * @class Gemma.PlatformElementGrid
  * @extends Ext.grid.GridPanel
  */
@@ -26,7 +26,7 @@ Gemma.PlatformElementGrid = Ext
 
          /**
           * Show first batch of data.
-          * 
+          *
           * @param {Object}
           *           isArrayDesign
           * @param {Object}
@@ -168,6 +168,9 @@ Gemma.PlatformElementGrid = Ext
                                    header : "Element Name",
                                    width : 130,
                                    dataIndex : "compositeSequenceName",
+                                   renderer : ( data, metadata, record ) => {
+                                      return '<a href="' + ctxBasePath + '/compositeSequence/show.html?id=' + record.data.compositeSequenceId + '">' + data + '</a>';
+                                   },
                                    tooltip : "Element or probe name"
                                 },
                                 {
@@ -269,7 +272,7 @@ Gemma.PlatformElementGrid = Ext
 
          /**
           * Event handler for searches. Update the lower grid.
-          * 
+          *
           * @param {Object}
           *           event
           */
