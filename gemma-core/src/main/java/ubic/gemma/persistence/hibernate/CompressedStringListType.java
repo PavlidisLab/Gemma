@@ -10,8 +10,6 @@ import org.springframework.util.Assert;
 
 import javax.annotation.Nullable;
 import java.io.*;
-import java.nio.channels.Channels;
-import java.nio.channels.Pipe;
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -126,26 +124,28 @@ public class CompressedStringListType implements UserType, ParameterizedType {
      * FIXME: replace this by a compressing input stream
      */
     private InputStream compress( List<String> s ) {
-        Pipe pipe;
+        PipedInputStream is;
+        PipedOutputStream out;
         try {
-            pipe = Pipe.open();
+            out = new PipedOutputStream();
+            is = new PipedInputStream( out );
         } catch ( IOException e ) {
             throw new HibernateException( e );
         }
         new Thread( () -> {
-            try ( Writer out = new OutputStreamWriter( new GZIPOutputStream( Channels.newOutputStream( pipe.sink() ) ) ) ) {
+            try ( Writer w = new OutputStreamWriter( new GZIPOutputStream( out ) ) ) {
                 boolean first = true;
                 for ( String s1 : s ) {
                     if ( !first ) {
-                        out.write( delimiter );
+                        w.write( delimiter );
                     }
-                    out.write( s1 );
+                    w.write( s1 );
                     first = false;
                 }
             } catch ( IOException e ) {
-                throw new HibernateException( e );
+                throw new RuntimeException( e );
             }
         } ).start();
-        return Channels.newInputStream( pipe.source() );
+        return is;
     }
 }
