@@ -9,12 +9,12 @@
 <link rel="shortcut icon" href="${pageContext.request.contextPath}/images/logo/gemmaTinyTrans.gif" />
 <title><decorator:title /> | <fmt:message key="webapp.name" /></title>
 
-<jwr:style src="/bundles/gemma-all.css" />
+<Gemma:style href="/bundles/gemma-all.css" />
 <script type='text/javascript' src='${pageContext.request.contextPath}/dwr/engine.js'></script>
 <script type='text/javascript' src='${pageContext.request.contextPath}/dwr/util.js'></script>
 
-<jwr:script src="/bundles/include.js" />
-<jwr:script src="/bundles/gemma-lib.js" />
+<Gemma:script src="/bundles/include.js" />
+<Gemma:script src="/bundles/gemma-lib.js" />
 
 <%-- for dwr creation of javascript objects to mirror java value objects; including one of these causes all the objects to be exposed.--%>
 <script type='text/javascript' src='${pageContext.request.contextPath}/dwr/interface/EmptyController.js'></script>

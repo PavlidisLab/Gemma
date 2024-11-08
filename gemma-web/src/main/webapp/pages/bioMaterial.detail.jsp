@@ -4,8 +4,8 @@
 
 <head>
 <title><fmt:message key="bioMaterial.details" /></title>
-<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
-<jwr:script src='/scripts/app/bmFactorValues.js' />
+<Gemma:script src='/scripts/api/ext/data/DwrProxy.js' />
+<Gemma:script src='/scripts/app/bmFactorValues.js' />
 
 <script type='text/javascript'>
    Ext.namespace( 'Gemma' );

@@ -1,6 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
+<Gemma:script src='/scripts/api/ext/data/DwrProxy.js' />
 
 <script type="text/javascript">
    Ext.namespace( 'Gemma' );

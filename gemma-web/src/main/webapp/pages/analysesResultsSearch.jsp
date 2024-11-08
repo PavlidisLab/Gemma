@@ -6,9 +6,9 @@
 	
 	
 	
-	<jwr:script src='/scripts/api/ext/data/DwrProxy.js'
-		useRandomParam="false" />
-	<jwr:script src='/scripts/app/eeDataFetch.js' useRandomParam="false" />
+	<Gemma:script src='/scripts/api/ext/data/DwrProxy.js'
+		 />
+	<Gemma:script src='/scripts/app/eeDataFetch.js' />
 
 		
 		

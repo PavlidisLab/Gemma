@@ -1,6 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-	<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />    
+	<Gemma:script src='/scripts/api/ext/data/DwrProxy.js' />
      <script type='text/javascript' src='${pageContext.request.contextPath}/static/heatmaplib.js'></script>
 	 
 	 <script type='text/javascript' src='${pageContext.request.contextPath}/dwr/interface/DifferentialExpressionSearchController.js'></script>

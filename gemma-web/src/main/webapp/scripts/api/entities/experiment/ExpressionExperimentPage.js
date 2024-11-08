@@ -9,6 +9,8 @@ function scoreToColor(i) {
     return 'hsl(' + hue + ', 100%, 70%)';
 }
 
+Gemma.scoreToColor = scoreToColor;
+
 function scoreToColorNormalized(i) {
     // < 0.1 -> 0; > 0.6 -> 1; 0.3 -> middle;
     i = i * 1.6; // Puts 0.3 almost in the middle (close enough)
@@ -24,12 +26,16 @@ function scoreToColorNormalized(i) {
     return 'hsl(' + hue + ', 100%, 70%)';
 }
 
+Gemma.scoreToColorNormalized = scoreToColorNormalized;
+
 function getStatusBadge(faIconClass, colorClass, title, qTip) {
     return '<span class="ee-status-badge bg-' + colorClass + ' " ext:qtip="' + qTip + '" >' +
         '<i class=" fa fa-' + faIconClass + ' fa-lg"></i> ' + title + '</span>';
 }
 
-function getGeeqBadges(quality, suitability) {
+Gemma.getStatusBadge = getStatusBadge;
+
+Gemma.getGeeqBadges = function(quality, suitability) {
     var val = '';
     val = val   +
             '<span class="ee-status-badge geeq-badge" style="background-color: ' + scoreToColorNormalized(Number(quality)) + '" ' +
@@ -53,7 +59,7 @@ function getGeeqIcon(score) {
     return "<i class='fa fa-lg " + getSmileyCls(score) + "'></i></span>";
 }
 
-function getGeeqIconColored(score) { // PP removed  ext:qtip="Suitability:&nbsp;' + roundScore(score, 1) +
+Gemma.getGeeqIconColored = function(score) { // PP removed  ext:qtip="Suitability:&nbsp;' + roundScore(score, 1) +
     return '' +
         '<span class="fa fa-stack">' +
          '   <i class="fa fa-lg fa-stack-1x fa-circle" style="color:' + scoreToColorNormalized(Number(score)) + '"></i>' +
@@ -74,7 +80,9 @@ function roundScore(value, valDecimals) {
     return (Math.round(Number(value) * (Math.pow(10, valDecimals))) / Math.pow(10, valDecimals)).toFixed(valDecimals);
 }
 
-function getBatchInfoBadges(ee) {
+Gemma.roundScore = roundScore;
+
+Gemma.getBatchInfoBadges = function(ee) {
     var result = "";
 
     var hasBatchConfound = ee.batchConfound !== null && ee.batchConfound !== "";
@@ -304,7 +312,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
     },
 
     makeDesignTab: function (experimentDetails) {
-        var batchInfo = '<div class="ed-batch-info">' + getBatchInfoBadges(experimentDetails) + '</div>';
+        var batchInfo = '<div class="ed-batch-info">' + Gemma.getBatchInfoBadges(experimentDetails) + '</div>';
 
         return {
             title: 'Experimental Design',

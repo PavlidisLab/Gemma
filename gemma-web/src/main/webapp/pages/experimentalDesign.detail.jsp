@@ -6,9 +6,9 @@
 <head>
 <title>${expressionExperiment.shortName} | <fmt:message key="experimentalDesign.details" /></title>
 
-<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
-<jwr:script src='/scripts/app/eeDataFetch.js' />
-<jwr:script src='/scripts/app/ExperimentalDesign.js' />
+<Gemma:script src='/scripts/api/ext/data/DwrProxy.js' />
+<Gemma:script src='/scripts/app/eeDataFetch.js' />
+<Gemma:script src='/scripts/app/ExperimentalDesign.js' />
 </head>
 
 <script>

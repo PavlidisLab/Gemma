@@ -3,10 +3,10 @@
 
 	<title>Expression data upload</title>
 
-	<jwr:script src='/scripts/api/util/FileUploadForm.js' useRandomParam="false" />
+	<Gemma:script src='/scripts/api/util/FileUploadForm.js' />
 
 	<security:authorize access="hasAnyAuthority('GROUP_USER','GROUP_ADMIN')">
-		<jwr:script src='/scripts/app/UserExpressionDataUpload.js' useRandomParam="false" />
+		<Gemma:script src='/scripts/app/UserExpressionDataUpload.js' />
 	</security:authorize>
 </head>
 

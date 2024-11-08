@@ -3,7 +3,7 @@
 
 <title><fmt:message key="processProgress.title" />
 </title>
-<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
+<Gemma:script src='/scripts/api/ext/data/DwrProxy.js' />
 
 <h1>
 	<fmt:message key="processProgress.title" />

@@ -7,7 +7,7 @@ Gemma.PHENOCARTA_CITATION = "If you use this file for your research, please cite
 (function() {
 	Gemma.helpTip = function(selecter, message, theme) {
 		return function(c) {
-			jQuery(selecter).qtip({
+			window.jQuery(selecter).qtip({
 				content: message,
 				style: {
 					name: theme ? theme : 'cream'

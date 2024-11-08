@@ -42,3 +42,6 @@ indent_size=4
 
 [typo.css]
 indent_style=tab
+
+[Gemma.tld]
+indent_style=tab

@@ -1,8 +1,8 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
 <title>System stats</title>
-<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
-<jwr:script src='/scripts/app/monitoring.js' />
+<Gemma:script src='/scripts/api/ext/data/DwrProxy.js' />
+<Gemma:script src='/scripts/app/monitoring.js' />
 
 <style>
 .padded {

@@ -3,8 +3,8 @@
 <head>
 <title>GEO Record browser</title>
 
-<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
-<jwr:script src='/scripts/app/geoBrowse.js' />
+<Gemma:script src='/scripts/api/ext/data/DwrProxy.js' />
+<Gemma:script src='/scripts/app/geoBrowse.js' />
 
 <script type="text/javascript">
    Ext.BLANK_IMAGE_URL = '${pageContext.request.contextPath}/images/default/s.gif';

@@ -1,7 +1,7 @@
 <%@ include file="/common/taglibs.jsp" %>
 <head>
-    <jwr:script src='/scripts/api/ext/data/DwrProxy.js'/>
-    <jwr:script src='/scripts/app/bioassay.draganddrop.js'/>
+    <Gemma:script src='/scripts/api/ext/data/DwrProxy.js'/>
+    <Gemma:script src='/scripts/app/bioassay.draganddrop.js'/>
 </head>
 
 <jsp:useBean id="expressionExperiment" scope="request"

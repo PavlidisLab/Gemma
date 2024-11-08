@@ -3,8 +3,8 @@
 <head>
 	<title>Index Gemma</title>
 
-	<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
-	<jwr:script src='/scripts/app/ontologyReIndexer.js' />
+	<Gemma:script src='/scripts/api/ext/data/DwrProxy.js' />
+	<Gemma:script src='/scripts/app/ontologyReIndexer.js' />
 
 </head>
 

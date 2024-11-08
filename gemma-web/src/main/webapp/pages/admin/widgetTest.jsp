@@ -2,10 +2,9 @@
 
 <head>
 <title>Widget tests</title>
-<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
+<Gemma:script src='/scripts/api/ext/data/DwrProxy.js' />
 
-<jwr:script src='/scripts/app/AnalysisResultsSearch.js' />
-<link rel="stylesheet" href="${pageContext.request.contextPath}/styles/font-awesome.css">
+<Gemma:style href="/styles/font-awesome.css" />
 <script>
    Ext.namespace( 'Gemma' );
    Ext.BLANK_IMAGE_URL = '${pageContext.request.contextPath}/images/default/s.gif';
@@ -14,20 +13,20 @@
    Ext.onReady( function() {
       Ext.QuickTips.init();
 
-      var k = new Gemma.DatasetGroupCombo( {
+	  new Gemma.DatasetGroupCombo( {
          renderTo : 'eesetcombo'
       } );
 
-      /*var k = new Gemma.ExpressionExperimentPage( {
+      new Gemma.ExpressionExperimentPage( {
       	renderTo : 'eepage',
       	eeId: '2763'
-      });*/
+      });
 
-      k = new Gemma.DatasetGroupComboPanel( {
+      new Gemma.DatasetGroupComboPanel( {
          renderTo : 'eesetpanel'
       } );
 
-      k = new Gemma.DatasetSearchField( {
+      let k = new Gemma.DatasetSearchField( {
          renderTo : 'datasetsearchfield',
          taxon : {
             id : 1
@@ -39,24 +38,24 @@
          Ext.DomHelper.overwrite( 'dsresults', results.length + " found." );
       } );
 
-      k = new Gemma.GeneCombo( {
+      new Gemma.GeneCombo( {
          renderTo : 'genecombo'
       } );
 
-      k = new Gemma.GeneGroupCombo( {
+      new Gemma.GeneGroupCombo( {
          renderTo : 'genegroupcombo'
       } );
 
-      k = new Gemma.TaxonCombo( {
+      new Gemma.TaxonCombo( {
          renderTo : 'taxoncombo'
       } );
 
-      k = new Gemma.GeneGrid( {
+      new Gemma.GeneGrid( {
          renderTo : 'genepicker',
          height : 200
       } );
 
-      k = new Gemma.DatasetGroupGridPanel( {
+      new Gemma.DatasetGroupGridPanel( {
          renderTo : 'datasetGroupGrid',
          width : 750,
          tbar : new Gemma.DatasetGroupEditToolbar()
@@ -82,10 +81,6 @@
          },
          height : 200,
          width : 520
-      } );
-
-      new Gemma.MGEDCombo( {
-         renderTo : 'mgedcombo'
       } );
 
       new Gemma.FactorValueCombo( {
@@ -120,7 +115,7 @@
 
        var v = new Gemma.ProgressWidget({renderTo : 'progressWidget', width : 400});
        v.allMessages = "Here are some messages for you, widget test.";
-      
+
 
        var testdata = Gemma.testVisData();
        var viswin = new Gemma.VisualizationWithThumbsWindow ({
@@ -181,8 +176,6 @@
 <div class="widget" id="genegroupcombo"></div>
 
 
-<h2>MGEDCombo</h2>
-<div class="widget" id="mgedcombo"></div>
 <h2>ArrayDesignCombo</h2>
 <div class="widget" id="adCombo"></div>
 

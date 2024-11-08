@@ -106,8 +106,6 @@ public class StartupListener extends ContextLoaderListener {
 
         servletContext.setAttribute( Constants.CONFIG, config );
 
-        this.configureJawr( ctx );
-
         sw.stop();
 
         StartupListener.log.info( String.format( "Initialization of Gemma Web context took %d s. The following profiles are active: %s.",
@@ -124,20 +122,6 @@ public class StartupListener extends ContextLoaderListener {
         }
         if ( !Settings.getBoolean( "load.homologene" ) ) {
             log.warn( "Homologene is not enabled, set load.homologene=true in Gemma.properties to load it on startup." );
-        }
-    }
-
-    private static final String JAWR_DEBUG_ON_SYSTEM_PROPERTY = "net.jawr.debug.on";
-
-    /**
-     * Set the net.jawr.debug.on system property to true if the current profile is {@link EnvironmentProfiles#DEV} and no
-     * value has been explicitly set by the user.
-     */
-    private void configureJawr( ApplicationContext ctx ) {
-        if ( ctx.getEnvironment().acceptsProfiles( EnvironmentProfiles.DEV )
-                && System.getProperty( JAWR_DEBUG_ON_SYSTEM_PROPERTY ) == null ) {
-            log.info( String.format( "Enabling debug mode for JAWR by setting %s=true.", JAWR_DEBUG_ON_SYSTEM_PROPERTY ) );
-            System.setProperty( JAWR_DEBUG_ON_SYSTEM_PROPERTY, "true" );
         }
     }
 

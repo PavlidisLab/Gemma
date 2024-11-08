@@ -5,7 +5,7 @@
 			property="name" /></title>
 
 
-	<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
+	<Gemma:script src='/scripts/api/ext/data/DwrProxy.js' />
 
 
 

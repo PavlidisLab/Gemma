@@ -2,7 +2,7 @@
 <head>
     <title><fmt:message key="bioAssays.title"/></title>
 
-    <jwr:script src='/scripts/api/ext/data/DwrProxy.js'/>
+    <Gemma:script src='/scripts/api/ext/data/DwrProxy.js'/>
 
     <script type="text/javascript">
         Ext.BLANK_IMAGE_URL = '${pageContext.request.contextPath}/images/default/s.gif';

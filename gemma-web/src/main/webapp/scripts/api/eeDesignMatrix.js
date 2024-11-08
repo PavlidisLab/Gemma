@@ -5,7 +5,7 @@
  * @author Luke, Paul
  * @type
  */
-var DesignMatrix = {
+DesignMatrix = {
 
    /**
     * @memberOf DesignMatrix

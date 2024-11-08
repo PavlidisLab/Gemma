@@ -2,8 +2,8 @@
 <head>
 
 	<title>Dataset manager</title>
-	<jwr:script src='/scripts/api/ext/data/DwrProxy.js'
-		useRandomParam="false" />
+	<Gemma:script src='/scripts/api/ext/data/DwrProxy.js'
+		 />
 
 </head>
 	<script>

@@ -1,8 +1,8 @@
 <%@ include file="/common/taglibs.jsp"%>
 
 <head>
-	<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
-	<jwr:script src='/scripts/app/loadExpressionExperiment.js' />
+	<Gemma:script src='/scripts/api/ext/data/DwrProxy.js' />
+	<Gemma:script src='/scripts/app/loadExpressionExperiment.js' />
 </head>
 
 <title>

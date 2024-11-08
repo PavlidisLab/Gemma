@@ -3,8 +3,8 @@
 <title><fmt:message key="activeUsers.title" /></title>
 
 
-<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
-<jwr:script src='/scripts/app/jobmonitoring.js' />
+<Gemma:script src='/scripts/api/ext/data/DwrProxy.js' />
+<Gemma:script src='/scripts/app/jobmonitoring.js' />
 
 </head>
 

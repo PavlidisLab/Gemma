@@ -1,21 +1,20 @@
 /**
  * dwrServices.js
  *
- * Manual bundling of DWR interfaces into one file. This is necessary because DWR 2 does not support any bundling; and
- * JAWR does not currently support DWR+Spring.
+ * Manual bundling of DWR interfaces into one file. This is necessary because DWR 2 does not support any bundling.
  *
  * See analytics.jsp for definition of googleAnalyticsTrackPageviewIfConfigured().
  *
  */
 if ( typeof dwr === 'undefined' ) {
-    var dwr = {};
+    dwr = {};
 }
 if ( typeof dwr.engine === 'undefined' ) {
     dwr.engine = {};
 }
 // ====================================================================================
 if ( typeof AnnotationController === 'undefined' ) {
-    var AnnotationController = {};
+    AnnotationController = {};
 }
 AnnotationController._path = ctxBasePath + '/dwr';
 AnnotationController.findTerm = function( p0, p1, callback ) {
@@ -48,7 +47,7 @@ AnnotationController.validateTags = function( p0, callback ) {
 
 // ====================================================================================
 if ( typeof ArrayDesignController === 'undefined' ) {
-    var ArrayDesignController = {};
+    ArrayDesignController = {};
 }
 ArrayDesignController._path = ctxBasePath + '/dwr';
 ArrayDesignController.remove = function( p0, callback ) {
@@ -93,7 +92,7 @@ ArrayDesignController.updateReportById = function( p0, callback ) {
 };
 // ====================================================================================
 if ( typeof ArrayDesignRepeatScanController === 'undefined' ) {
-    var ArrayDesignRepeatScanController = {};
+    ArrayDesignRepeatScanController = {};
 }
 ArrayDesignRepeatScanController._path = ctxBasePath + '/dwr';
 ArrayDesignRepeatScanController.run = function( p0, callback ) {
@@ -102,7 +101,7 @@ ArrayDesignRepeatScanController.run = function( p0, callback ) {
 };
 // ====================================================================================
 if ( typeof AuditController === 'undefined' ) {
-    var AuditController = {};
+    AuditController = {};
 }
 AuditController._path = ctxBasePath + '/dwr';
 AuditController.addAuditEvent = function( p0, p1, p2, p3, callback ) {
@@ -114,7 +113,7 @@ AuditController.getEvents = function( p0, callback ) {
 
 // ====================================================================================
 if ( typeof BatchInfoFetchController === 'undefined' ) {
-    var BatchInfoFetchController = {};
+    BatchInfoFetchController = {};
 }
 BatchInfoFetchController._path = ctxBasePath + '/dwr';
 BatchInfoFetchController.run = function( p0, callback ) {
@@ -122,7 +121,7 @@ BatchInfoFetchController.run = function( p0, callback ) {
 };
 // ====================================================================================
 if ( typeof BibliographicReferenceController === 'undefined' ) {
-    var BibliographicReferenceController = {};
+    BibliographicReferenceController = {};
 }
 BibliographicReferenceController._path = ctxBasePath + '/dwr';
 BibliographicReferenceController.update = function( p0, callback ) {
@@ -151,7 +150,7 @@ BibliographicReferenceController.loadFromPubmedID = function( p0, callback ) {
 };
 // ====================================================================================
 if ( typeof BioAssayController === 'undefined' ) {
-    var BioAssayController = {};
+    BioAssayController = {};
 }
 BioAssayController._path = ctxBasePath + '/dwr';
 BioAssayController.markOutlier = function( p0, callback ) {
@@ -169,7 +168,7 @@ BioAssayController.getBioAssays = function( p0, callback ) {
 
 // ====================================================================================
 if ( typeof BioMaterialController === 'undefined' ) {
-    var BioMaterialController = {};
+    BioMaterialController = {};
 }
 BioMaterialController._path = ctxBasePath + '/dwr';
 BioMaterialController.getAnnotation = function( p0, callback ) {
@@ -186,7 +185,7 @@ BioMaterialController.addFactorValueTo = function( p0, p1, callback ) {
 };
 // ====================================================================================
 if ( typeof CharacteristicBrowserController === 'undefined' ) {
-    var CharacteristicBrowserController = {};
+    CharacteristicBrowserController = {};
 }
 CharacteristicBrowserController._path = ctxBasePath + '/dwr';
 CharacteristicBrowserController.findCharacteristics = function( p0, callback ) {
@@ -214,7 +213,7 @@ CharacteristicBrowserController.count = function( callback ) {
 };
 // ====================================================================================
 if ( typeof CompositeSequenceController === 'undefined' ) {
-    var CompositeSequenceController = {};
+    CompositeSequenceController = {};
 }
 CompositeSequenceController._path = ctxBasePath + '/dwr';
 CompositeSequenceController.search = function( p0, p1, callback ) {
@@ -234,7 +233,7 @@ CompositeSequenceController.getGeneMappingSummary = function( p0, callback ) {
 };
 // ====================================================================================
 if ( typeof IndexService === 'undefined' ) {
-    var IndexService = {};
+    IndexService = {};
 }
 IndexService._path = ctxBasePath + '/dwr';
 IndexService.index = function( p0, callback ) {
@@ -242,7 +241,7 @@ IndexService.index = function( p0, callback ) {
 };
 // ====================================================================================
 if ( typeof DEDVController === 'undefined' ) {
-    var DEDVController = {};
+    DEDVController = {};
 }
 DEDVController._path = ctxBasePath + '/dwr';
 DEDVController.getDEDV = function( p0, p1, callback ) {
@@ -279,7 +278,7 @@ DEDVController.getDEDVForDiffExVisualizationByExperiment = function( p0, p1, p2,
 
 // ====================================================================================
 if ( typeof DifferentialExpressionAnalysisController === 'undefined' ) {
-    var DifferentialExpressionAnalysisController = {};
+    DifferentialExpressionAnalysisController = {};
 }
 DifferentialExpressionAnalysisController._path = ctxBasePath + '/dwr';
 DifferentialExpressionAnalysisController.run = function( p0, callback ) {
@@ -313,7 +312,7 @@ DifferentialExpressionAnalysisController.refreshStats = function( p0, p1, callba
 };
 // ====================================================================================
 if ( typeof DifferentialExpressionSearchController === 'undefined' ) {
-    var DifferentialExpressionSearchController = {};
+    DifferentialExpressionSearchController = {};
 }
 DifferentialExpressionSearchController._path = ctxBasePath + '/dwr';
 DifferentialExpressionSearchController.getDifferentialExpression = function( p0, p1, p2, callback ) {
@@ -339,7 +338,7 @@ DifferentialExpressionSearchController.scheduleDiffExpSearchTask = function( p0,
 
 // ====================================================================================
 if ( typeof DiffExMetaAnalyzerController === 'undefined' ) {
-    var DiffExMetaAnalyzerController = {};
+    DiffExMetaAnalyzerController = {};
 }
 DiffExMetaAnalyzerController._path = ctxBasePath + '/dwr';
 DiffExMetaAnalyzerController.analyzeResultSets = function( p0, callback ) {
@@ -369,7 +368,7 @@ DiffExMetaAnalyzerController.saveResultSets = function( p0, p1, p2, callback ) {
 
 // ====================================================================================
 if ( typeof ExperimentalDesignController === 'undefined' ) {
-    var ExperimentalDesignController = {};
+    ExperimentalDesignController = {};
 }
 ExperimentalDesignController._path = ctxBasePath + '/dwr';
 ExperimentalDesignController.updateBioMaterials = function( p0, callback ) {
@@ -457,7 +456,7 @@ ExperimentalDesignController.clearFactorValuesNeedsAttention = function( p0, p1,
 };
 // ====================================================================================
 if ( typeof ExpressionDataFileUploadController === 'undefined' ) {
-    var ExpressionDataFileUploadController = {};
+    ExpressionDataFileUploadController = {};
 }
 ExpressionDataFileUploadController._path = ctxBasePath + '/dwr';
 ExpressionDataFileUploadController.load = function( p0, callback ) {
@@ -471,7 +470,7 @@ ExpressionDataFileUploadController.validate = function( p0, callback ) {
 };
 // ====================================================================================
 if ( typeof ExpressionExperimentController === 'undefined' ) {
-    var ExpressionExperimentController = {};
+    ExpressionExperimentController = {};
 }
 ExpressionExperimentController._path = ctxBasePath + '/dwr';
 ExpressionExperimentController.getAnnotation = function( p0, callback ) {
@@ -637,7 +636,7 @@ ExpressionExperimentController.setGeeqManualSettings = function( p0, p1, callbac
 
 // ====================================================================================
 if ( typeof ExpressionExperimentDataFetchController === 'undefined' ) {
-    var ExpressionExperimentDataFetchController = {};
+    ExpressionExperimentDataFetchController = {};
 }
 ExpressionExperimentDataFetchController._path = ctxBasePath + '/dwr';
 ExpressionExperimentDataFetchController.getDataFile = function( p0, callback ) {
@@ -663,7 +662,7 @@ ExpressionExperimentDataFetchController.getCoExpressionDataFile = function( p0, 
 };
 // ====================================================================================
 if ( typeof ExpressionExperimentLoadController === 'undefined' ) {
-    var ExpressionExperimentLoadController = {};
+    ExpressionExperimentLoadController = {};
 }
 ExpressionExperimentLoadController._path = ctxBasePath + '/dwr';
 ExpressionExperimentLoadController.load = function( p0, callback ) {
@@ -673,7 +672,7 @@ ExpressionExperimentLoadController.load = function( p0, callback ) {
 
 // ====================================================================================
 if ( typeof ExpressionExperimentSetController === 'undefined' ) {
-    var ExpressionExperimentSetController = {};
+    ExpressionExperimentSetController = {};
 }
 ExpressionExperimentSetController._path = ctxBasePath + '/dwr';
 ExpressionExperimentSetController.remove = function( p0, callback ) {
@@ -768,7 +767,7 @@ ExpressionExperimentSetController.canCurrentUserEditGroup = function( p0, callba
 // ====================================================================================
 
 if ( typeof ExpressionExperimentReportGenerationController === 'undefined' ) {
-    var ExpressionExperimentReportGenerationController = {};
+    ExpressionExperimentReportGenerationController = {};
 }
 ExpressionExperimentReportGenerationController._path = ctxBasePath + '/dwr';
 
@@ -782,7 +781,7 @@ ExpressionExperimentReportGenerationController.runAll = function( callback ) {
 };
 // ====================================================================================
 if ( typeof CoexpressionSearchController === 'undefined' ) {
-    var CoexpressionSearchController = {};
+    CoexpressionSearchController = {};
 }
 CoexpressionSearchController._path = ctxBasePath + '/dwr';
 
@@ -804,7 +803,7 @@ CoexpressionSearchController.doBackgroundCoexSearch = function( p0, callback ) {
 };
 // ====================================================================================
 if ( typeof FileUploadController === 'undefined' ) {
-    var FileUploadController = {};
+    FileUploadController = {};
 }
 FileUploadController._path = ctxBasePath + '/dwr';
 FileUploadController.upload = function( p0, callback ) {
@@ -816,7 +815,7 @@ FileUploadController.getUploadStatus = function( callback ) {
 };
 // ====================================================================================
 if ( typeof GeneController === 'undefined' ) {
-    var GeneController = {};
+    GeneController = {};
 }
 GeneController._path = ctxBasePath + '/dwr';
 GeneController.getProducts = function( p0, callback ) {
@@ -834,7 +833,7 @@ GeneController.loadGeneDetails = function( p0, callback ) {
 };
 // ====================================================================================
 if ( typeof GenePickerController === 'undefined' ) {
-    var GenePickerController = {};
+    GenePickerController = {};
 }
 GenePickerController._path = ctxBasePath + '/dwr';
 GenePickerController.getGenes = function( p0, callback ) {
@@ -895,7 +894,7 @@ GenePickerController.getGeneSetByGOId = function( p0, p1, callback ) {
 };
 // ====================================================================================
 if ( typeof GeoRecordBrowserController === 'undefined' ) {
-    var GeoRecordBrowserController = {};
+    GeoRecordBrowserController = {};
 }
 GeoRecordBrowserController._path = ctxBasePath + '/dwr';
 GeoRecordBrowserController.browse = function( p0, p1, p2, callback ) {
@@ -910,7 +909,7 @@ GeoRecordBrowserController.toggleUsability = function( p0, callback ) {
 };
 // ====================================================================================
 if ( typeof SecurityController === 'undefined' ) {
-    var SecurityController = {};
+    SecurityController = {};
 }
 SecurityController._path = ctxBasePath + '/dwr';
 SecurityController.createGroup = function( p0, callback ) {
@@ -987,7 +986,7 @@ SecurityController.getAuthenticatedUserCount = function( callback ) {
 };
 // ==============================================================================
 if ( typeof GeneSetController === 'undefined' ) {
-    var GeneSetController = {};
+    GeneSetController = {};
 }
 GeneSetController._path = ctxBasePath + '/dwr';
 GeneSetController.getGenesInGroup = function( p0, p1, callback ) {
@@ -1074,7 +1073,7 @@ GeneSetController.canCurrentUserEditGroup = function( p0, callback ) {
 };
 // ====================================================================================
 if ( typeof SystemMonitorController === 'undefined' ) {
-    var SystemMonitorController = {};
+    SystemMonitorController = {};
 }
 SystemMonitorController._path = ctxBasePath + '/dwr';
 SystemMonitorController.getHibernateStatus = function( callback ) {
@@ -1101,7 +1100,7 @@ SystemMonitorController.resetHibernateStatus = function( callback ) {
 
 // ====================================================================================
 if ( typeof LinkAnalysisController === 'undefined' ) {
-    var LinkAnalysisController = {};
+    LinkAnalysisController = {};
 }
 LinkAnalysisController._path = ctxBasePath + '/dwr';
 LinkAnalysisController.run = function( p0, callback ) {
@@ -1111,7 +1110,7 @@ LinkAnalysisController.run = function( p0, callback ) {
 
 // ====================================================================================
 if ( typeof PreprocessController === 'undefined' ) {
-    var PreprocessController = {};
+    PreprocessController = {};
 }
 PreprocessController._path = ctxBasePath + '/dwr';
 PreprocessController.run = function( p0, callback ) {
@@ -1124,7 +1123,7 @@ PreprocessController.diagnostics = function( p0, callback ) {
 };
 // ====================================================================================
 if ( typeof ProgressStatusService === 'undefined' ) {
-    var ProgressStatusService = {};
+    ProgressStatusService = {};
 }
 ProgressStatusService._path = ctxBasePath + '/dwr';
 ProgressStatusService.getProgressStatus = function( p0, callback ) {
@@ -1145,7 +1144,7 @@ ProgressStatusService.getSubmittedTasks = function( callback ) {
 // ====================================================================================
 
 if ( typeof TwoChannelMissingValueController === 'undefined' ) {
-    var TwoChannelMissingValueController = {};
+    TwoChannelMissingValueController = {};
 }
 TwoChannelMissingValueController._path = ctxBasePath + '/dwr';
 TwoChannelMissingValueController.run = function( p0, callback ) {
@@ -1158,7 +1157,7 @@ TwoChannelMissingValueController.run = function( p0, callback ) {
 };
 // ====================================================================================
 if ( typeof SvdController === 'undefined' ) {
-    var SvdController = {};
+    SvdController = {};
 }
 SvdController._path = ctxBasePath + '/dwr';
 SvdController.run = function( p0, callback ) {
@@ -1167,7 +1166,7 @@ SvdController.run = function( p0, callback ) {
 
 // ====================================================================================
 if ( typeof SearchService === 'undefined' ) {
-    var SearchService = {};
+    SearchService = {};
 }
 SearchService._path = ctxBasePath + '/dwr';
 SearchService.ajaxSearch = function( p0, callback ) {
@@ -1176,7 +1175,7 @@ SearchService.ajaxSearch = function( p0, callback ) {
 };
 // ====================================================================================
 if ( typeof TaskCompletionController === 'undefined' ) {
-    var TaskCompletionController = {};
+    TaskCompletionController = {};
 }
 TaskCompletionController._path = ctxBasePath + '/dwr';
 TaskCompletionController.checkResult = function( p0, callback ) {
@@ -1184,7 +1183,7 @@ TaskCompletionController.checkResult = function( p0, callback ) {
 };
 // ====================================================================================
 if ( typeof FeedReader === 'undefined' ) {
-    var FeedReader = {};
+    FeedReader = {};
 }
 FeedReader._path = ctxBasePath + '/dwr';
 FeedReader.getLatestNews = function( callback ) {
@@ -1192,7 +1191,7 @@ FeedReader.getLatestNews = function( callback ) {
 };
 // ====================================================================================
 if ( typeof UserListController === 'undefined' ) {
-    var UserListController = {};
+    UserListController = {};
 }
 UserListController._path = ctxBasePath + '/dwr';
 UserListController.getUsers = function( callback ) {
@@ -1203,7 +1202,7 @@ UserListController.saveUser = function( p0, callback ) {
 };
 // =====================================================================================
 if ( typeof LinkOutController === 'undefined' ) {
-    var LinkOutController = {};
+    LinkOutController = {};
 }
 LinkOutController._path = ctxBasePath + '/dwr';
 LinkOutController.getAllenBrainAtlasLink = function( p0, callback ) {
@@ -1212,7 +1211,7 @@ LinkOutController.getAllenBrainAtlasLink = function( p0, callback ) {
 // =====================================================================================
 // =====================================================================================
 if ( typeof JavascriptLogger === 'undefined' ) {
-    var JavascriptLogger = {};
+    JavascriptLogger = {};
 }
 JavascriptLogger._path = ctxBasePath + '/dwr';
 JavascriptLogger.writeToLog = function( p0, p1, p2, p3, p4, callback ) {
@@ -1235,7 +1234,7 @@ JavascriptLogger.writeToFatalLog = function( p0, p1, p2, p3, p4, callback ) {
 };
 // ====================================================================================
 if ( typeof SignupController === 'undefined' ) {
-    var SignupController = {};
+    SignupController = {};
 }
 SignupController._path = ctxBasePath + '/dwr';
 SignupController.loginCheck = function( callback ) {

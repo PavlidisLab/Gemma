@@ -2,8 +2,8 @@
 <head>
 <title>Meta-analysis Manager</title>
 
-<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
-<jwr:script src='/scripts/app/eeDataFetch.js' />
+<Gemma:script src='/scripts/api/ext/data/DwrProxy.js' />
+<Gemma:script src='/scripts/app/eeDataFetch.js' />
 </head>
 
 <script type="text/javascript">

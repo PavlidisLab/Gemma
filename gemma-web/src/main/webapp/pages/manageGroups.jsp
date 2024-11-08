@@ -2,8 +2,8 @@
 
 <head>
 	<title>Manage groups</title>
-	<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
-	<jwr:script src='/scripts/app/manageGroups.js' useRandomParam='false' />
+	<Gemma:script src='/scripts/api/ext/data/DwrProxy.js' />
+	<Gemma:script src='/scripts/app/manageGroups.js' />
 </head>
 <body>
 <input type="hidden" id="reloadOnLogout" value="true">

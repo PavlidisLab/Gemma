@@ -3,8 +3,8 @@
 <head>
 <title>Dataset Group Manager</title>
 
-<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
-<jwr:script src='/scripts/api/entities/DatasetGroupEditor.js' />
+<Gemma:script src='/scripts/api/ext/data/DwrProxy.js' />
+<Gemma:script src='/scripts/api/entities/DatasetGroupEditor.js' />
 
 
 </head>

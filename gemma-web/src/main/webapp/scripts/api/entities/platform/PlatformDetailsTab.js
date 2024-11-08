@@ -30,7 +30,7 @@ Gemma.PlatformDetails = Ext
                     html: platformDetails.taxon,
                     listeners: {
                         'afterrender': function (c) {
-                            jQuery('#taxonHelp').qtip({
+                            window.jQuery('#taxonHelp').qtip({
                                 content: "The primary taxon for sequences on this platform (i.e., what it was designed for).",
                                 style: {
                                     name: 'cream'

@@ -7,8 +7,8 @@ author: keshav
 
 <head>
 <title>Password reset</title>
-	<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
-	<jwr:script src='/scripts/app/resetPassword.js'/>
+	<Gemma:script src='/scripts/api/ext/data/DwrProxy.js' />
+	<Gemma:script src='/scripts/app/resetPassword.js'/>
 </head>
 
 <div id='resetPassword' style='width: 500px; margin-bottom: 1em;'></div>

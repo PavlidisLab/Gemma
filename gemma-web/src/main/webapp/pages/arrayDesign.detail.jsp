@@ -2,7 +2,7 @@
 <!--  FIXME use a value object. -->
 
 <head>
-<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
+<Gemma:script src='/scripts/api/ext/data/DwrProxy.js' />
 
 <script type="text/javascript">
    Ext.namespace( 'Gemma' );
