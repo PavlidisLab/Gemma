@@ -77,7 +77,7 @@ public class ExperimentalDesignWriter {
      */
     public void write( Writer writer, ExpressionExperiment ee, Collection<BioAssay> bioAssays, boolean writeBaseHeader,
             boolean writeHeader ) throws IOException {
-        Assert.isTrue( ee.getExperimentalDesign() != null && ee.getExperimentalDesign().getExperimentalFactors().isEmpty(),
+        Assert.isTrue( ee.getExperimentalDesign() != null && !ee.getExperimentalDesign().getExperimentalFactors().isEmpty(),
                 ee + " does not have an experimental design." );
 
         ExperimentalDesign ed = ee.getExperimentalDesign();
