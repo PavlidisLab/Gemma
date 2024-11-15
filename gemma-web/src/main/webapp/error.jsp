@@ -1,5 +1,4 @@
-<%@ page isErrorPage="true" pageEncoding="UTF-8" contentType="text/html; charset=utf-8"
-        trimDirectiveWhitespaces="true" %>
+<%@ page isErrorPage="true" %>
 
 <%@ include file="/common/taglibs.jsp" %>
 

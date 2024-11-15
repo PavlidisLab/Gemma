@@ -1,5 +1,3 @@
-<%@ page pageEncoding="UTF-8" contentType="text/html; charset=utf-8"
-        trimDirectiveWhitespaces="true" %>
 <%@ include file="/common/taglibs.jsp" %>
 <jsp:useBean id="appConfig" scope="application" type="java.util.Map" />
 <!DOCTYPE html>

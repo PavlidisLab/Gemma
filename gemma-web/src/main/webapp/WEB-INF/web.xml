@@ -242,6 +242,14 @@
         <url-pattern>/robots.txt</url-pattern>
         <url-pattern>/sitemap.xml</url-pattern>
     </servlet-mapping>
+    
+    <jsp-config>
+        <jsp-property-group>
+            <url-pattern>*.jsp</url-pattern>
+            <page-encoding>utf-8</page-encoding>
+            <trim-directive-whitespaces>true</trim-directive-whitespaces>
+        </jsp-property-group>
+    </jsp-config>
 
     <session-config>
         <session-timeout>60</session-timeout>

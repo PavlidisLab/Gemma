@@ -1,4 +1,3 @@
-<%@ page trimDirectiveWhitespaces="true" %>
 <%@ include file="/common/taglibs.jsp" %>
 <jsp:useBean id="appConfig" scope="application" type="java.util.Map" />
 
