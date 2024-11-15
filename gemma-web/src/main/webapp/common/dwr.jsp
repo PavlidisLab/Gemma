@@ -4,12 +4,3 @@
 <script type="text/javascript" src="${pageContext.request.contextPath}/dwr/interface/EmptyController.js"></script>
 <%-- We should use this as soon as we figure out how to set generateDtoClasses option to dtoall
 		script type="text/javascript" src="/Gemma/dwr/dtoall.js"></script>	--%>
-<%-- log javascript errors --%>
-<script type="text/javascript">
-window.onerror = function( errorMessage, url, line ) {
-   // message == text-based error description
-   // url     == url which exhibited the script error
-   // line    == the line number being executed when the error occurred
-   JavascriptLogger.writeToErrorLog( errorMessage, url, line, document.location.href, navigator.userAgent );
-};
-</script>

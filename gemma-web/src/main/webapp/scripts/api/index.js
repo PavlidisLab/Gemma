@@ -30,6 +30,7 @@ import './util/StatefulRemoteCombo'
 import './util/TutorialQtips'
 import './util/WizardTabPanel'
 import './util/WizardTabPanelItemPanel'
+import './util/JavascriptLogger'
 
 import './analysisSearch/AnalysesSearchUtils'
 import './analysisSearch/AnalysisResultsSearchExamples'
