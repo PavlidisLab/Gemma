@@ -437,14 +437,21 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Collection<Characteristic> getAnnotationsBySubSets( ExpressionExperiment ee ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct c from ExpressionExperimentSubSet subset "
+                        + "join subset.characteristics c "
+                        + "where subset.sourceExperiment = :ee" )
+                .setParameter( "ee", ee )
+                .list();
+    }
+
+    @Override
     public Collection<Characteristic> getAnnotationsByBioMaterials( ExpressionExperiment ee ) {
-        /*
-         * Note we're not using 'distinct' here but the 'equals' for AnnotationValueObject should aggregate these. More
-         * work to do.
-         */
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select c from ExpressionExperiment e "
+                .createQuery( "select distinct c from ExpressionExperiment e "
                         + "join e.bioAssays ba join ba.sampleUsed bm "
                         + "join bm.characteristics c where e = :ee" )
                 .setParameter( "ee", ee )
@@ -452,10 +459,21 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Collection<Characteristic> getAnnotationsByBioMaterials( ExpressionExperimentSubSet subset ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct c from ExpressionExperimentSubSet subset "
+                        + "join subset.bioAssays ba join ba.sampleUsed bm "
+                        + "join bm.characteristics c where subset = :subset" )
+                .setParameter( "subset", subset )
+                .list();
+    }
+
+    @Override
     public Collection<Statement> getAnnotationsByFactorValues( ExpressionExperiment ee ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select c from ExpressionExperiment e "
+                .createQuery( "select distinct c from ExpressionExperiment e "
                         + "join e.experimentalDesign ed join ed.experimentalFactors ef join ef.factorValues fv "
                         + "join fv.characteristics c where e = :ee" )
                 .setParameter( "ee", ee )
@@ -485,7 +503,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public List<Characteristic> getExperimentAnnotations( ExpressionExperiment expressionExperiment ) {
-        return getAnnotationsByLevel( expressionExperiment, BioMaterial.class );
+        return getAnnotationsByLevel( expressionExperiment, ExpressionExperiment.class );
     }
 
     @Override

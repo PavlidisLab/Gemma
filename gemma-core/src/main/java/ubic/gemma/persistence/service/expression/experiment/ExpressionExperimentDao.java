@@ -292,27 +292,48 @@ public interface ExpressionExperimentDao
 
     void thawProcessedVectors( ExpressionExperiment ee );
 
+    Collection<Characteristic> getAnnotationsBySubSets( ExpressionExperiment ee );
+
+    /**
+     * Obtain sample-level annotations for an experiment.
+     */
     Collection<Characteristic> getAnnotationsByBioMaterials( ExpressionExperiment ee );
 
+    /**
+     * Obtain sample-level annotations for a given subset.
+     */
+    Collection<Characteristic> getAnnotationsByBioMaterials( ExpressionExperimentSubSet subset );
+
+    /**
+     * Obtain all the statements in the experimental design of an experiment.
+     */
     Collection<Statement> getAnnotationsByFactorValues( ExpressionExperiment ee );
 
     /**
      * Obtain all annotations, grouped by applicable level.
+     * <p>
+     * This uses the {@code EE2C} table under the hood.
      */
     Map<Class<? extends Identifiable>, List<Characteristic>> getAllAnnotations( ExpressionExperiment expressionExperiment );
 
     /**
      * Obtain experiment-level annotations.
+     * <p>
+     * This uses the {@code EE2C} table under the hood.
      */
     List<Characteristic> getExperimentAnnotations( ExpressionExperiment expressionExperiment );
 
     /**
      * Obtain sample-level annotations.
+     * <p>
+     * This uses the {@code EE2C} table under the hood.
      */
     List<Characteristic> getBioMaterialAnnotations( ExpressionExperiment expressionExperiment );
 
     /**
      * Obtain experimental design-level annotations.
+     * <p>
+     * This uses the {@code EE2C} table under the hood.
      */
     List<Characteristic> getExperimentalDesignAnnotations( ExpressionExperiment expressionExperiment );
 

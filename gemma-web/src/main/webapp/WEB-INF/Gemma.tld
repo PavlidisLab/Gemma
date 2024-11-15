@@ -256,4 +256,10 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 	</tag>
+
+	<function>
+		<name>urlEncode</name>
+		<function-class>java.net.URLEncoder</function-class>
+		<function-signature>java.lang.String encode(java.lang.String, java.lang.String)</function-signature>
+	</function>
 </taglib>

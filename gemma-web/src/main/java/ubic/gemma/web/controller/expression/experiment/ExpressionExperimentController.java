@@ -949,9 +949,17 @@ public class ExpressionExperimentController {
                 .collect( Collectors.joining( "," ) );
     }
 
-    @RequestMapping(value = { "/showAllExpressionExperimentSubSets.html", "/showSubsets" }, method = { RequestMethod.GET, RequestMethod.HEAD })
+    @RequestMapping(value = { "/showAllExpressionExperimentSubSets.html", "/showSubsets" }, method = { RequestMethod.GET, RequestMethod.HEAD }, params = { "id" })
     public ModelAndView showAllSubSets( @RequestParam("id") Long id ) {
-        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new, "No expression experiment with ID " + id );
+        return showAllSubSets( getExperimentById( id, true ) );
+    }
+
+    @RequestMapping(value = { "/showAllExpressionExperimentSubSets.html", "/showSubsets" }, method = { RequestMethod.GET, RequestMethod.HEAD }, params = { "shortName" })
+    public ModelAndView showAllSubSets( @RequestParam("shortName") String shortName ) {
+        return showAllSubSets( getExperimentByShortName( shortName, true ) );
+    }
+
+    private ModelAndView showAllSubSets( ExpressionExperiment ee ) {
         Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> subsetsByDimension = expressionExperimentService.getSubSetsByDimension( ee );
         Map<BioAssayDimension, List<QuantitationType>> quantitationTypesByDimension = new LinkedHashMap<>();
         for ( BioAssayDimension bad : subsetsByDimension.keySet() ) {
@@ -989,28 +997,44 @@ public class ExpressionExperimentController {
             throw new EntityNotFoundException( "No experiment subset with ID " + id + "." );
         }
         BioAssayDimension dimension;
+        Collection<BioAssayDimension> possibleDimensions = bioAssayDimensionService.findByBioAssayContainsAll( subset.getBioAssays() );
         if ( dimensionId != null ) {
             dimension = bioAssayDimensionService.loadOrFail( dimensionId, EntityNotFoundException::new );
             if ( !CollectionUtils.containsAll( dimension.getBioAssays(), subset.getBioAssays() ) ) {
                 throw new IllegalArgumentException( dimension + " is not applicable to the requested subset." );
             }
+            possibleDimensions = Collections.emptySet();
+        } else if ( possibleDimensions.size() == 1 ) {
+            dimension = possibleDimensions.iterator().next();
         } else {
-            Collection<BioAssayDimension> dims = bioAssayDimensionService.findByBioAssayContainsAll( subset.getBioAssays() );
-            dimension = dims.iterator().next();
+            // either no dimension or multiple dimensions, one must be picked
+            dimension = null;
         }
-        Collection<ExpressionExperimentSubSet> otherSubSets = expressionExperimentSubSetService.findByBioAssayIn( dimension.getBioAssays() ).stream()
-                .filter( ss -> !ss.equals( subset ) )
-                .sorted( Comparator.comparing( ExpressionExperimentSubSet::getName ) )
-                .collect( Collectors.toList() );
-        List<BioAssay> bioAssays = subset.getBioAssays().stream().sorted( Comparator.comparing( BioAssay::getName ) )
-                .filter( ba -> dimension.getBioAssays().contains( ba ) )
-                .collect( Collectors.toList() );
+        Collection<ExpressionExperimentSubSet> otherSubSets;
+        List<BioAssay> bioAssays;
+        if ( dimension != null ) {
+            otherSubSets = expressionExperimentSubSetService.findByBioAssayIn( dimension.getBioAssays() ).stream()
+                    .filter( ss -> !ss.equals( subset ) )
+                    .sorted( Comparator.comparing( ExpressionExperimentSubSet::getName ) )
+                    .collect( Collectors.toList() );
+            bioAssays = subset.getBioAssays().stream().sorted( Comparator.comparing( BioAssay::getName ) )
+                    .filter( ba -> dimension.getBioAssays().contains( ba ) )
+                    .collect( Collectors.toList() );
+        } else {
+            otherSubSets = Collections.emptySet();
+            bioAssays = Collections.emptyList();
+        }
+        Set<AnnotationValueObject> annotations = expressionExperimentService.getAnnotations( subset );
         return new ModelAndView( "expressionExperimentSubSet.detail" )
                 .addObject( "subSet", subset )
-                .addObject( "otherSubSets", otherSubSets )
                 .addObject( "dimension", dimension )
+                .addObject( "possibleDimensions", possibleDimensions )
+                .addObject( "otherSubSets", otherSubSets )
                 .addObject( "bioAssays", bioAssays )
-                .addObject( "keywords", getKeywords( subset.getSourceExperiment() ) );
+                .addObject( "annotations", annotations )
+                .addObject( "keywords", annotations.stream()
+                        .map( AnnotationValueObject::getTermName )
+                        .collect( Collectors.joining( "," ) ) );
     }
 
     /**
@@ -1762,5 +1786,17 @@ public class ExpressionExperimentController {
             return this.expressionExperimentService.loadOrFail( id,
                     EntityNotFoundException::new, "No experiment with ID " + id + "." );
         }
+    }
+
+
+    /**
+     * Load an {@link ExpressionExperiment} by short name, optionally thawing it with {@link ExpressionExperimentService#thawLite}.
+     */
+    private ExpressionExperiment getExperimentByShortName( String shortName, boolean thawLite ) throws EntityNotFoundException {
+        ExpressionExperiment ee = this.expressionExperimentService.findByShortName( shortName );
+        if ( ee == null ) {
+            throw new EntityNotFoundException( "No experiment with short name " + shortName + "." );
+        }
+        return thawLite ? expressionExperimentService.thawLite( ee ) : ee;
     }
 }
