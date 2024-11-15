@@ -19,7 +19,7 @@
  * @author Kelsey
  */
 
-var Heatmap = function() {
+Heatmap = function() {
 
    // row labels
    var MAX_LABEL_LENGTH_PIXELS = 400;

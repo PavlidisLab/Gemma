@@ -1,7 +1,7 @@
 <%@ include file="/common/taglibs.jsp" %>
 <head>
 <title>Edit your profile</title>
-<jwr:script src='/scripts/app/editUser.js' useRandomParam='false' />
+<Gemma:script src='/scripts/app/editUser.js' />
 </head>
 <body>
 <div class="padded">

@@ -2,7 +2,7 @@
 
 <head>
 <title><fmt:message key="characteristicBrowser.title" /></title>
-<jwr:script src='/scripts/app/CharacteristicBrowser.js' />
+<Gemma:script src='/scripts/app/CharacteristicBrowser.js' />
 </head>
 
 <div class="padded">

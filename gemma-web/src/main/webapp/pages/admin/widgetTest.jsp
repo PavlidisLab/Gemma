@@ -2,9 +2,8 @@
 
 <head>
 <title>Widget tests</title>
-<jwr:script src='/scripts/app/AnalysisResultsSearch.js' />
-<link rel="stylesheet" href="${pageContext.request.contextPath}/styles/font-awesome.css">
-<style>
+<Gemma:style href="/styles/font-awesome.css" />
+<style type="text/css">
     .widget {
         padding: 10px;
         margin: 5px;
@@ -101,20 +100,20 @@ Ext.state.Manager.setProvider( new Ext.state.CookieProvider() );
 Ext.onReady( function() {
    Ext.QuickTips.init();
 
-   var k = new Gemma.DatasetGroupCombo( {
+   new Gemma.DatasetGroupCombo( {
       renderTo : 'eesetcombo'
    } );
 
-   /*var k = new Gemma.ExpressionExperimentPage( {
-       renderTo : 'eepage',
-       eeId: '2763'
-   });*/
+   new Gemma.ExpressionExperimentPage( {
+      renderTo : 'eepage',
+      eeId : '2763'
+   } );
 
-   k = new Gemma.DatasetGroupComboPanel( {
+   new Gemma.DatasetGroupComboPanel( {
       renderTo : 'eesetpanel'
    } );
 
-   k = new Gemma.DatasetSearchField( {
+   let k = new Gemma.DatasetSearchField( {
       renderTo : 'datasetsearchfield',
       taxon : {
          id : 1
@@ -126,24 +125,24 @@ Ext.onReady( function() {
       Ext.DomHelper.overwrite( 'dsresults', results.length + " found." );
    } );
 
-   k = new Gemma.GeneCombo( {
+   new Gemma.GeneCombo( {
       renderTo : 'genecombo'
    } );
 
-   k = new Gemma.GeneGroupCombo( {
+   new Gemma.GeneGroupCombo( {
       renderTo : 'genegroupcombo'
    } );
 
-   k = new Gemma.TaxonCombo( {
+   new Gemma.TaxonCombo( {
       renderTo : 'taxoncombo'
    } );
 
-   k = new Gemma.GeneGrid( {
+   new Gemma.GeneGrid( {
       renderTo : 'genepicker',
       height : 200
    } );
 
-   k = new Gemma.DatasetGroupGridPanel( {
+   new Gemma.DatasetGroupGridPanel( {
       renderTo : 'datasetGroupGrid',
       width : 750,
       tbar : new Gemma.DatasetGroupEditToolbar()
@@ -169,10 +168,6 @@ Ext.onReady( function() {
       },
       height : 200,
       width : 520
-   } );
-
-   new Gemma.MGEDCombo( {
-      renderTo : 'mgedcombo'
    } );
 
    new Gemma.FactorValueCombo( {

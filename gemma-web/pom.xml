@@ -23,6 +23,46 @@
 		</testResources>
 		<plugins>
 			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>3.4.1</version>
+				<executions>
+					<execution>
+						<id>webpack-install-dependencies</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>npm</executable>
+							<arguments>
+								<argument>--prefix</argument>
+								<argument>${project.basedir}/src/main/webapp</argument>
+								<argument>ci</argument>
+							</arguments>
+							<skip>${skipWebpack}</skip>
+						</configuration>
+					</execution>
+					<execution>
+						<id>webpack-build</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>npm</executable>
+							<arguments>
+								<argument>--prefix</argument>
+								<argument>${project.basedir}/src/main/webapp</argument>
+								<argument>run</argument>
+								<argument>build</argument>
+							</arguments>
+							<skip>${skipWebpack}</skip>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
 				<configuration>
@@ -126,19 +166,6 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- Static assets compression -->
-		<dependency>
-			<groupId>net.jawr</groupId>
-			<artifactId>jawr-core</artifactId>
-			<version>${jawr.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>net.jawr.extensions</groupId>
-			<artifactId>jawr-dwr2.x-extension</artifactId>
-			<version>${jawr.version}</version>
-			<scope>runtime</scope>
-		</dependency>
-
 		<!-- Tomcat (defined by production deployment constraints) -->
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
@@ -204,4 +231,9 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<properties>
+		<skipWebpack>false</skipWebpack>
+	</properties>
+
 </project>

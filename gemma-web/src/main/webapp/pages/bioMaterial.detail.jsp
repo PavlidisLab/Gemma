@@ -11,7 +11,7 @@
     </c:when>
     <c:otherwise><i>Description not available</i></c:otherwise>
 </c:choose>
-<jwr:script src='/scripts/app/bmFactorValues.js' />
+<Gemma:script src='/scripts/app/bmFactorValues.js' />
 </head>
 
 <div class="padded">

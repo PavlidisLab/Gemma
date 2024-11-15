@@ -3,8 +3,7 @@
 <%@ include file="/common/taglibs.jsp" %>
 <head>
 <title>Home</title>
-<%-- <jwr:script src='/scripts/app/HomePageAnalysisSearch.js' /> --%>
-<jwr:script src='/scripts/scriptsnonjawr/arbor.js' />
+<%-- <Gemma:script src='/scripts/app/HomePageAnalysisSearch.js' /> --%>
 </head>
 
 <input type="hidden" id="reloadOnLogout" value="false">
@@ -38,20 +37,21 @@
                  width="340" height="240"
                  alt="A pie chart representing proportion of taxa among Gemma datasets." />--%>
         <div class="flex flex-grow flex-wrap flex-md-nowrap g-5 justify-space-around w-100">
-            <img class="w-100" style="box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5); max-width: 348px;"
-                    src="${pageContext.request.contextPath}/images/showoff.png"
+            <Gemma:img cssClass="w-100" cssStyle="box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5); max-width: 348px;"
+                    src="/images/showoff.png"
                     alt="Example of a dataset view overlaid with a heatmap of top differentially expressed probes." />
-            <%--  <img style="position: absolute; top: 180px; left: 435px;"
-                      src="${pageContext.request.contextPath}/images/slideShow/humanOutline_35_3.png"
-                      alt="An overlay of a human on top of its section of the pie chart."
-                      width="35" height="53" />
-              <img style="position: absolute; top: 300px; left: 420px;"
-                      src="${pageContext.request.contextPath}/images/slideShow/mouseOutline65_simplified.png"
-                      alt="An overlay of a mouse on top of its section of the pie chart."
-                      width="65" height="17" />--%>
-            <!-- img style="position:absolute;top:17px;left:300px" src="/Gemma/images/slideShow/rightBrace.png"/-->
-            <%--   <div id="featuredNumberOfDatasets" class="slideTextTD"></div>--%>
-
+            <%--
+            <Gemma:img cssStyle="position: absolute; top: 180px; left: 435px;"
+                    src="/images/slideShow/humanOutline_35_3.png"
+                    alt="An overlay of a human on top of its section of the pie chart."
+                    width="35" height="53" />
+            <Gemma:img cssStyle="position: absolute; top: 300px; left: 420px;"
+                    src="/images/slideShow/mouseOutline65_simplified.png"
+                    alt="An overlay of a mouse on top of its section of the pie chart."
+                    width="65" height="17" />
+            <Gemma:img cssStyle="position:absolute;top:17px;left:300px" src="/Gemma/images/slideShow/rightBrace.png" />
+            <div id="featuredNumberOfDatasets" class="slideTextTD"></div>
+            --%>
             <div id="summaryPanel-div" class="w-100" style="max-width: 270px;"></div>
         </div>
     </div>
@@ -82,12 +82,12 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
             </p>
             <div class="flex flex-grow g-3 justify-space-around">
                 <a href="https://doi.org/doi:10.18129/B9.bioc.gemma.R">
-                    <img src="${pageContext.request.contextPath}/images/slideShow/bioconductor-logo.png"
+                    <Gemma:img src="/images/slideShow/bioconductor-logo.png"
                             alt="Bioconductor Logo"
                             width="175" />
                 </a>
                 <a href="https://pypi.org/project/gemmapy/">
-                    <img src="${pageContext.request.contextPath}/images/slideShow/pypi-logo.svg"
+                    <Gemma:img src="/images/slideShow/pypi-logo.svg"
                             alt="PyPi Logo"
                             width="75" />
                 </a>
@@ -100,8 +100,8 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
                 and more features and improvements are planned, but we'd love to hear your feedback.
             </p>
             <a href="${appConfig['gemma.gemBrow.url']}">
-                <img style="width: 100%; box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);"
-                        src="${pageContext.request.contextPath}/images/slideShow/gemma-browser-preview.png"
+                <Gemma:img cssStyle="width: 100%; box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);"
+                        src="/images/slideShow/gemma-browser-preview.png"
                         alt="A screenshot of the new Gemma Browser." />
             </a>
         </div>

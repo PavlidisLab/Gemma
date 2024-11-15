@@ -8,7 +8,8 @@
 	<c:if test="${not empty status.errorMessages}">
 		<div class="error">
 			<c:forEach var="error" items="${status.errorMessages}">
-				<img src="<c:url value="/images/iconWarning.gif"/>" alt="<fmt:message key="icon.warning"/>" class="icon" />
+				<fmt:message key="icon.warning" var="warningIconAlt"/>
+				<Gemma:img src="/images/iconWarning.gif" alt="${warningIconAlt}" cssClass="icon" />
 				<c:out value="${error}" escapeXml="false" />
 				<br />
 			</c:forEach>

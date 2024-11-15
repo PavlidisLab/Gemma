@@ -6,8 +6,8 @@
 <head>
 <title>${expressionExperiment.shortName} | <fmt:message key="experimentalDesign.details" /></title>
 
-<jwr:script src='/scripts/app/eeDataFetch.js' />
-<jwr:script src='/scripts/app/ExperimentalDesign.js' />
+<Gemma:script src='/scripts/app/eeDataFetch.js' />
+<Gemma:script src='/scripts/app/ExperimentalDesign.js' />
 </head>
 
 <input type="hidden" id="reloadOnLogout" value="true">

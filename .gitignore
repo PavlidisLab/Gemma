@@ -138,3 +138,6 @@ atlassian-ide-plugin.xml
 /Gemma.properties
 /gemma-data
 /gemma-logs
+
+node_modules/
+bundles/

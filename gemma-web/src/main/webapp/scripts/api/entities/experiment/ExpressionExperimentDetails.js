@@ -145,34 +145,34 @@ Gemma.ExpressionExperimentDetails = Ext
                 }
 
                 if (ee.needsAttention === true) {
-                    result = result + getStatusBadge('exclamation-circle', 'gold', 'in curation', 'The curation of this experiment is not done yet, so the quality and suitability scores may change significantly.')
+                    result = result + Gemma.getStatusBadge('exclamation-circle', 'gold', 'in curation', 'The curation of this experiment is not done yet, so the quality and suitability scores may change significantly.')
                 }
                 if (ee.geeq !== null) {
-                    result = result + getGeeqBadges(ee.geeq.publicQualityScore, ee.geeq.publicSuitabilityScore);
+                    result = result + Gemma.getGeeqBadges(ee.geeq.publicQualityScore, ee.geeq.publicSuitabilityScore);
                 }
 
                 if (ee.troubled) {
-                    result = result + getStatusBadge('exclamation-triangle', 'red', 'unusable',
+                    result = result + Gemma.getStatusBadge('exclamation-triangle', 'red', 'unusable',
                         ee.troubleDetails)
                 }
 
                 if (ee.hasMultiplePreferredQuantitationTypes) {
-                    result = result + getStatusBadge('exclamation-triangle', 'orange', 'multi-QT',
+                    result = result + Gemma.getStatusBadge('exclamation-triangle', 'orange', 'multi-QT',
                         Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultiplePreferredQuantitationTypes)
                 }
 
                 if (ee.hasMultipleTechnologyTypes) {
-                    result = result + getStatusBadge('exclamation-triangle', 'orange', 'multi-Tech',
+                    result = result + Gemma.getStatusBadge('exclamation-triangle', 'orange', 'multi-Tech',
                         Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultipleTechnologyTypes)
                 }
 
-                result = result + getBatchInfoBadges(ee);
+                result = result + Gemma.getBatchInfoBadges(ee);
 
                 if (ee.reprocessedFromRawData) {
-                    result = result + getStatusBadge('cog', 'gray-blue', 'reprocessed',
+                    result = result + Gemma.getStatusBadge('cog', 'gray-blue', 'reprocessed',
                         Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.dataReprocessed)
                 } else {
-                    result = result + getStatusBadge('cloud-download', 'gray-blue', 'external',
+                    result = result + Gemma.getStatusBadge('cloud-download', 'gray-blue', 'external',
                         Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.dataExternal)
                 }
 
@@ -348,7 +348,7 @@ Gemma.ExpressionExperimentDetails = Ext
                     html: h,
                     listeners: {
                         'afterrender': function (c) {
-                            jQuery('#otherPartsHelp').qtip({
+                            window.jQuery('#otherPartsHelp').qtip({
                                 content: "If this experiment was originally part of a larger study, other parts that are retained in the system are listed here.",
                                 style: {
                                     name: 'cream'
@@ -803,7 +803,7 @@ Gemma.ExpressionExperimentDetails = Ext
                                         width: 400,
                                         listeners: {
                                             'afterrender': function (c) {
-                                                jQuery('#downloads').find('i')
+                                                window.jQuery('#downloads').find('i')
                                                     .qtip(
                                                         {
                                                             content: Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.profileDownloadTT,

@@ -4,7 +4,7 @@
 <title>${fn:escapeXml(expressionExperiment.shortName)} - ${fn:escapeXml(expressionExperiment.name)}</title>
 <meta name="description" content="${fn:escapeXml(expressionExperiment.description)}" />
 <meta name="keywords" content="${fn:escapeXml(keywords)}" />
-<jwr:script src="/scripts/app/eeDataFetch.js" useRandomParam="false" />
+<Gemma:script src='/scripts/app/eeDataFetch.js' />
 </head>
 
 <input id="eeId" type="hidden" value="${expressionExperiment.id}" />

@@ -2,7 +2,7 @@
 
 <head>
 <title>Manage Search Indexes</title>
-<jwr:script src='/scripts/app/indexer.js' />
+<Gemma:script src='/scripts/app/indexer.js' />
 </head>
 
 <body>

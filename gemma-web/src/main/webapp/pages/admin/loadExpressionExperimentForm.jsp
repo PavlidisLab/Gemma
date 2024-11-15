@@ -4,6 +4,7 @@
 <title>
     <fmt:message key="expressionExperimentLoad.title" />
 </title>
+<Gemma:script src='/scripts/app/loadExpressionExperiment.js' />
 </head>
 
 <div class="padded">
@@ -167,7 +168,6 @@
 
 <div id="progress-area" style="padding: 5px;"></div>
 
-<jwr:script src='/scripts/app/loadExpressionExperiment.js' />
 <script>
 $( document ).ready( function() {
    $( 'i[title]' ).qtip();

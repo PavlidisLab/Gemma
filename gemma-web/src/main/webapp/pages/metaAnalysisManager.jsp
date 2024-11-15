@@ -1,7 +1,7 @@
 <%@ include file="/common/taglibs.jsp" %>
 <head>
 <title>Meta-analysis Manager</title>
-<jwr:script src='/scripts/app/eeDataFetch.js' />
+<Gemma:script src='/scripts/app/eeDataFetch.js' />
 </head>
 
 <input type="hidden" id="reloadOnLogin" value="false" />

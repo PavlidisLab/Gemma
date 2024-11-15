@@ -6,7 +6,7 @@ author: keshav
 
 <head>
 <title>Users</title>
-<jwr:script src='/scripts/app/userManager.js' useRandomParam='false' />
+<Gemma:script src='/scripts/app/userManager.js' />
 </head>
 
 <body>

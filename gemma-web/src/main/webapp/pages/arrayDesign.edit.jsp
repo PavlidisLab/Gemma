@@ -5,16 +5,16 @@
 </head>
 
 <spring:bind path="arrayDesign.*">
-    <c:if test="${not empty status.errorMessages}">
-        <div class="error">
-            <c:forEach var="error" items="${status.errorMessages}">
-                <img src="<c:url value="/images/iconWarning.gif"/>" alt="<fmt:message key="icon.warning"/>"
-                        class="icon" />
-                <c:out value="${error}" escapeXml="false" />
-                <br />
-            </c:forEach>
-        </div>
-    </c:if>
+	<c:if test="${not empty status.errorMessages}">
+		<div class="error">
+			<c:forEach var="error" items="${status.errorMessages}">
+				<fmt:message key="icon.warning" var="warningIconAlt"/>
+				<Gemma:img src="/images/iconWarning.gif" alt="${warningIconAlt}" cssClass="icon" />
+				<c:out value="${error}" escapeXml="false" />
+				<br />
+			</c:forEach>
+		</div>
+	</c:if>
 </spring:bind>
 
 <form method="post" action="<c:url value="/arrayDesign/editArrayDesign.html"/>" id="arrayDesignForm"

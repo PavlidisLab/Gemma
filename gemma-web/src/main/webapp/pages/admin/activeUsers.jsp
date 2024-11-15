@@ -2,7 +2,7 @@
 <jsp:useBean id="appConfig" scope="application" type="java.util.Map" />
 <head>
 <title><fmt:message key="activeUsers.title" /></title>
-<jwr:script src='/scripts/app/jobmonitoring.js' />
+<Gemma:script src='/scripts/app/jobmonitoring.js' />
 </head>
 
 <div class="padded">

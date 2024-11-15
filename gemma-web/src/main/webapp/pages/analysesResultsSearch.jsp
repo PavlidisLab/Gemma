@@ -3,7 +3,7 @@
 <head>
 <title>Search Analyses Results</title>
 <meta name="keywords" content="coexpression,differential expression">
-<jwr:script src='/scripts/app/eeDataFetch.js' useRandomParam="false" />
+<Gemma:script src='/scripts/app/eeDataFetch.js' />
 </head>
 
 <div id="browser-warnings"></div>

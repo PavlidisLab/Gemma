@@ -103,7 +103,7 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
             html: text,
             listeners: {
                 'afterrender': function (c) {
-                    jQuery('#multifuncHelp').qtip({
+                    window.jQuery('#multifuncHelp').qtip({
                         content: Gemma.HelpText.WidgetDefaults.GeneDetails.multifuncTT,
                         style: {
                             name: 'cream'
@@ -158,7 +158,7 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
             html: text,
             listeners: {
                 'afterrender': function (c) {
-                    jQuery('#phenotypeHelp').qtip({
+                    window.jQuery('#phenotypeHelp').qtip({
                         content: Gemma.HelpText.WidgetDefaults.GeneDetails.phenotypeTT,
                         style: {
                             name: 'cream'
@@ -278,7 +278,7 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
                                         }
                                     });
                             }
-                            jQuery("#nodeDegreeHelp").qtip({
+                            window.jQuery("#nodeDegreeHelp").qtip({
                                 content: Gemma.HelpText.WidgetDefaults.GeneDetails.nodeDegreeTT,
                                 style: {
                                     name: 'cream'
@@ -295,7 +295,7 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
                 html: "[ Not available ]",
                 listeners: {
                     'afterrender': function (c) {
-                        jQuery("#nodeDegreeHelp").qtip({
+                        window.jQuery("#nodeDegreeHelp").qtip({
                             content: Gemma.HelpText.WidgetDefaults.GeneDetails.nodeDegreeTT,
                             style: {
                                 name: 'cream'
@@ -413,7 +413,7 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
                                         + "&#39;).changeTab(&#39;elements&#39;)'>",
                                         listeners: {
                                             'afterrender': function (c) {
-                                                jQuery('#elementsHelp')
+                                                window.jQuery('#elementsHelp')
                                                     .qtip(
                                                         {
                                                             content: Gemma.HelpText.WidgetDefaults.GeneDetails.probesTT,

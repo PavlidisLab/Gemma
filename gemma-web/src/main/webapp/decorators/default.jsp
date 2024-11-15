@@ -14,7 +14,7 @@
 <meta name="keywords"
         content="<decorator:getProperty property="meta.keywords" default="genomics,bioinformatics,genetics,transcriptomes,rnaseq,microarrays,biotechnology,medicine,biomedical,meta-analysis,statistics,search,open source,database,software"/>" />
 <link rel="shortcut icon" href="${pageContext.request.contextPath}/favicon.ico" />
-<jwr:style src="/bundles/gemma-all.css" />
+<Gemma:style href="/bundles/gemma-all.css" />
 <script type="application/javascript">
 const ctxBasePath = "${pageContext.request.contextPath}";
 const recaptchaPublicKey = "${appConfig["gemma.recaptcha.publicKey"]}";
@@ -24,8 +24,8 @@ const gemBrowUrl = "${appConfig["gemma.gemBrow.url"]}";
 <script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script>
 <jsp:include page="/common/analytics.jsp" />
 <jsp:include page="/common/dwr.jsp" />
-<jwr:script src="/bundles/include.js" />
-<jwr:script src="/bundles/gemma-lib.js" />
+<Gemma:script src="/bundles/include.js" />
+<Gemma:script src="/bundles/gemma-lib.js" />
 <decorator:head />
 </head>
 <body>

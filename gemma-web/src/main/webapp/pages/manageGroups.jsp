@@ -2,7 +2,7 @@
 
 <head>
 <title>Manage groups</title>
-<jwr:script src='/scripts/app/manageGroups.js' useRandomParam='false' />
+<Gemma:script src='/scripts/app/manageGroups.js' />
 </head>
 
 <input type="hidden" id="reloadOnLogout" value="true">

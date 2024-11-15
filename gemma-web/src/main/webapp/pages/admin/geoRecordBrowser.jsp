@@ -2,7 +2,7 @@
 
 <head>
 <title>GEO Record browser</title>
-<jwr:script src='/scripts/app/geoBrowse.js' />
+<Gemma:script src='/scripts/app/geoBrowse.js' />
 </head>
 
 <div id="messages"></div>

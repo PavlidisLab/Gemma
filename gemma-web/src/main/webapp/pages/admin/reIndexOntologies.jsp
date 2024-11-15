@@ -2,7 +2,7 @@
 
 <head>
 	<title>Index Gemma</title>
-	<jwr:script src='/scripts/app/ontologyReIndexer.js' />
+	<Gemma:script src='/scripts/app/ontologyReIndexer.js' />
 </head>
 
 

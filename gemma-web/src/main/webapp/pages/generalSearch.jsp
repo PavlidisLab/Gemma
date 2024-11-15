@@ -1,7 +1,7 @@
 <%@ include file="/common/taglibs.jsp" %>
 <head>
 <title><fmt:message key="generalSearch.title" /></title>
-<jwr:script src='/scripts/api/search/search.js' />
+<Gemma:script src='/scripts/api/search/search.js' />
 </head>
 
 <input type="hidden" id="reloadOnLogout" value="false">

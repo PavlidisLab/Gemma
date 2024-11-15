@@ -5,7 +5,7 @@
 
 <head>
 <title>Edit ${expressionExperiment.shortName}</title>
-<jwr:script src='/scripts/app/bioassay.draganddrop.js' />
+<Gemma:script src='/scripts/app/bioassay.draganddrop.js'/>
 </head>
 
 <spring:bind path="expressionExperiment.*">

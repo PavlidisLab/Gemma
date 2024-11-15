@@ -105,6 +105,8 @@ function updateArrayDesignReport( id, callerScope ) {
    ArrayDesignController.updateReport.apply( this, callParams );
 }
 
+Gemma.updateArrayDesignReport = updateArrayDesignReport;
+
 function remove( id ) {
    alert( "Are you sure?" );
 }

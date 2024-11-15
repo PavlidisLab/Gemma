@@ -3,8 +3,7 @@
 
 <head>
 <title>Manage Gene Groups</title>
-<jwr:script src='/scripts/api/entities/gene/GeneGroupManager.js'
-        useRandomParam='false' />
+<Gemma:script src='/scripts/api/entities/gene/GeneGroupManager.js' />
 </head>
 
 <input type="hidden" id="reloadOnLogout" value="true">
