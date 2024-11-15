@@ -155,6 +155,8 @@ public class ExpressionDataMatrixColumnSort {
                                 for ( FactorValue bfv : bm.getFactorValues() ) {
                                     if ( fv.equals( bfv ) ) {
                                         arbitraryBaselineFV = fv;
+                                        // FIXME: consider gathering up all of the eligible factorvalues,
+                                        // and choosing one in a deterministic way i.e. alphabetically or some other convention.
                                         break;
                                     }
                                 }
