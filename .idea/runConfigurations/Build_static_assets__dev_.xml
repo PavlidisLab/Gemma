@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Build static assets (dev)" type="js.build_tools.npm">
+    <package-json value="$PROJECT_DIR$/gemma-web/src/main/webapp/package.json" />
+    <command value="run" />
+    <scripts>
+      <script value="devbuild" />
+    </scripts>
+    <node-interpreter value="project" />
+    <envs />
+    <method v="2" />
+  </configuration>
+</component>
