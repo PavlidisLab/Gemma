@@ -10,7 +10,10 @@ module.exports = {
       // some modules don't properly import jQuery, so this plugin will "provide" it
       new webpack.ProvidePlugin( {
          $ : "jquery",
-         jQuery : "jquery"
+         jQuery : "jquery",
+         // this is mostly for flotr2 which improperly imports bean and underscore
+         bean: "bean",
+         _: "underscore"
       } )
    ],
    entry : {

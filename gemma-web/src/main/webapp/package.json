@@ -21,6 +21,9 @@
     "jquery": "^2.1.1",
     "jquery-sparkline": "^2.1.2",
     "jquery-ui": "^1.10.4",
-    "qtip2": "^2.2.0"
+    "qtip2": "^2.2.0",
+    "bean": "^1.0.15",
+    "underscore": "^1.13.7",
+    "flotr2": "^0.1.0"
   }
 }

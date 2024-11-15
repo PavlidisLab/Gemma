@@ -265,7 +265,7 @@ Gemma.ProfileTemplate = Ext.extend( Ext.XTemplate, {
          /*
           * Note: passing in 'newDiv' works in FF but not in IE. (flotr, anyway)
           */
-         LinePlot.draw( Ext.get( shortName + "_vis" + randomnumber ), record.profiles, this.graphConfig, null,
+         Gemma.LinePlot.draw( Ext.get( shortName + "_vis" + randomnumber ), record.profiles, this.graphConfig, null,
             record.factorValuesToNames ); // no
          // sample
          // names
@@ -498,7 +498,7 @@ Gemma.VisualizationZoomPanel = Ext
                   Ext.DomHelper.overwrite( this.legendDiv, '' );
                }
 
-               LinePlot.draw( Ext.get( this.body.id ), profiles, graphConfig, sampleNames, conditionLabels,
+               Gemma.LinePlot.draw( Ext.get( this.body.id ), profiles, graphConfig, sampleNames, conditionLabels,
                   conditionLabelKey );
 
                // make the line chart legend clickable. Selector is based on
