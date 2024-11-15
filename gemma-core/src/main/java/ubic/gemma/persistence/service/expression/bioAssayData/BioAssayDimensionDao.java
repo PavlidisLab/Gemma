@@ -18,18 +18,22 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
-import javax.annotation.Nullable;
+import java.util.Collection;
 
 /**
  * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimension
  */
 public interface BioAssayDimensionDao extends BaseVoEnabledDao<BioAssayDimension, BioAssayDimensionValueObject> {
+
+    /**
+     * Find all the dimensions that contains all the given assays.
+     */
+    Collection<BioAssayDimension> findByBioAssayContainsAll( Collection<BioAssay> bioAssays );
 
     void thawLite( BioAssayDimension bioAssayDimension );
 

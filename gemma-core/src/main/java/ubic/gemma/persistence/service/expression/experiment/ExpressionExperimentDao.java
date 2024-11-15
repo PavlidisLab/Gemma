@@ -25,10 +25,7 @@ import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**
@@ -233,6 +230,8 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment );
 
+    Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> getSubSetsByDimension( ExpressionExperiment expressionExperiment );
+
     <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets );
 
     /**
@@ -293,27 +292,48 @@ public interface ExpressionExperimentDao
 
     void thawProcessedVectors( ExpressionExperiment ee );
 
+    Collection<Characteristic> getAnnotationsBySubSets( ExpressionExperiment ee );
+
+    /**
+     * Obtain sample-level annotations for an experiment.
+     */
     Collection<Characteristic> getAnnotationsByBioMaterials( ExpressionExperiment ee );
 
+    /**
+     * Obtain sample-level annotations for a given subset.
+     */
+    Collection<Characteristic> getAnnotationsByBioMaterials( ExpressionExperimentSubSet subset );
+
+    /**
+     * Obtain all the statements in the experimental design of an experiment.
+     */
     Collection<Statement> getAnnotationsByFactorValues( ExpressionExperiment ee );
 
     /**
      * Obtain all annotations, grouped by applicable level.
+     * <p>
+     * This uses the {@code EE2C} table under the hood.
      */
     Map<Class<? extends Identifiable>, List<Characteristic>> getAllAnnotations( ExpressionExperiment expressionExperiment );
 
     /**
      * Obtain experiment-level annotations.
+     * <p>
+     * This uses the {@code EE2C} table under the hood.
      */
     List<Characteristic> getExperimentAnnotations( ExpressionExperiment expressionExperiment );
 
     /**
      * Obtain sample-level annotations.
+     * <p>
+     * This uses the {@code EE2C} table under the hood.
      */
     List<Characteristic> getBioMaterialAnnotations( ExpressionExperiment expressionExperiment );
 
     /**
      * Obtain experimental design-level annotations.
+     * <p>
+     * This uses the {@code EE2C} table under the hood.
      */
     List<Characteristic> getExperimentalDesignAnnotations( ExpressionExperiment expressionExperiment );
 

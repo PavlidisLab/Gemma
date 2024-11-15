@@ -1,7 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-<title>System stats</title>
-<Gemma:script src='/scripts/api/ext/data/DwrProxy.js' />
+<title>System Stats</title>
 <Gemma:script src='/scripts/app/monitoring.js' />
 
 <style>

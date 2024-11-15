@@ -495,9 +495,7 @@ public class ArrayDesignController {
 
     private ModelAndView showArrayDesignInternal( ArrayDesign arrayDesign ) {
         return new ModelAndView( "arrayDesign.detail" )
-                .addObject( "arrayDesignId", arrayDesign.getId() )
-                .addObject( "arrayDesignShortName", arrayDesign.getShortName() )
-                .addObject( "arrayDesignName", arrayDesign.getName() );
+                .addObject( "arrayDesign", arrayDesign );
     }
 
     @RequestMapping(value = "/showCompositeSequenceSummary.html", method = { RequestMethod.GET, RequestMethod.HEAD })

@@ -357,9 +357,30 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
 
     /**
      * Retrieve annotations for a given experiment.
+     * <p>
+     * The following are included:
+     * <ul>
+     *     <li>Experiment-level tags</li>
+     *     <li>Experimental design tags</li>
+     *     <li>Sample-level tags</li>
+     * </ul>
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Set<AnnotationValueObject> getAnnotations( ExpressionExperiment ee );
+
+    /**
+     * Retrieve annotations for a given experiment subset.
+     * <p>
+     * The following are included:
+     * <ul>
+     *     <li>Experiment-level tags</li>
+     *     <li>Subset-level tags</li>
+     *     <li>Experimental design tags minus the subset factor</li>
+     *     <li>Sample-level tags for the samples within the subset</li>
+     * </ul>
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee );
 
     /**
      * Apply ontological inference to augment a filter with additional terms.
@@ -620,6 +641,9 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> getSubSetsByDimension( ExpressionExperiment expressionExperiment );
 
     /**
      * Return the taxon for each of the given experiments (or subsets).

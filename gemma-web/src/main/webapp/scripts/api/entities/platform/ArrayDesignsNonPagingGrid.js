@@ -268,7 +268,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext
                         }
                      } );
                   } else if ( action === 'icon-refresh' ) {
-                     updateArrayDesignReport( record.id, grid ); // function in arrayDesign.js
+                     Gemma.updateArrayDesignReport( record.id, grid ); // function in arrayDesign.js
                   }
                },
                // You can cancel the action by returning false from this

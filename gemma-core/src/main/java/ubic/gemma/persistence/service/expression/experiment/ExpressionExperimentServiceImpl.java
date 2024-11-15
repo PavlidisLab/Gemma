@@ -585,20 +585,19 @@ public class ExpressionExperimentServiceImpl
             }
         }
 
-        /*
-         * TODO If can be done without much slowdown, add: certain characteristics from factor values? (non-baseline,
-         * non-batch, non-redundant with tags). This is tricky because they are so specific...
-         */
+        for ( Characteristic c : expressionExperimentDao.getAnnotationsBySubSets( ee ) ) {
+            AnnotationValueObject annotationValue = new AnnotationValueObject( c, ExpressionExperimentSubSet.class );
+            if ( seenTerms.add( annotationValue.getTermName() ) ) {
+                annotations.add( annotationValue );
+            }
+        }
+
         for ( AnnotationValueObject v : this.getAnnotationsByFactorValues( ee ) ) {
             if ( seenTerms.add( v.getTermName() ) ) {
                 annotations.add( v );
             }
         }
 
-        /*
-         * TODO If can be done without much slowdown, add: certain selected (constant?) characteristics from
-         * biomaterials? (non-redundant with tags)
-         */
         for ( AnnotationValueObject v : this.getAnnotationsByBioMaterials( ee ) ) {
             if ( seenTerms.add( v.getTermName() ) ) {
                 annotations.add( v );
@@ -608,90 +607,144 @@ public class ExpressionExperimentServiceImpl
         return annotations;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee ) {
+        Set<AnnotationValueObject> annotations = new HashSet<>();
+        Collection<String> seenTerms = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
+
+        // inherited from the EE
+        for ( Characteristic c : ee.getSourceExperiment().getCharacteristics() ) {
+            AnnotationValueObject annotationValue = new AnnotationValueObject( c, ExpressionExperiment.class );
+            if ( seenTerms.add( annotationValue.getTermName() ) ) {
+                annotations.add( annotationValue );
+            }
+        }
+
+        // specifically for the subset
+        for ( Characteristic c : ee.getCharacteristics() ) {
+            AnnotationValueObject annotationValue = new AnnotationValueObject( c, ExpressionExperimentSubSet.class );
+            if ( seenTerms.add( annotationValue.getTermName() ) ) {
+                annotations.add( annotationValue );
+            }
+        }
+
+        for ( AnnotationValueObject v : this.getAnnotationsByFactorValues( ee.getSourceExperiment() ) ) {
+            // TODO: exclude annotations for the subset itself
+            if ( seenTerms.add( v.getTermName() ) ) {
+                annotations.add( v );
+            }
+        }
+
+        for ( AnnotationValueObject v : this.getAnnotationsByBioMaterials( ee ) ) {
+            if ( seenTerms.add( v.getTermName() ) ) {
+                annotations.add( v );
+            }
+        }
+
+        return annotations;
+    }
+
+
+    /**
+     * TODO: If can be done without much slowdown, add: certain characteristics from factor values? (non-baseline,
+     *       non-batch, non-redundant with tags). This is tricky because they are so specific...
+     */
+    private Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( ExpressionExperiment ee ) {
+        return this.expressionExperimentDao.getAnnotationsByFactorValues( ee ).stream()
+                .filter( this::filterFactorValueAnnotation )
+                .flatMap( c -> {
+                    List<AnnotationValueObject> results = new ArrayList<>( 3 );
+                    // ignore free text values
+                    if ( c.getSubjectUri() != null ) {
+                        results.add( new AnnotationValueObject( c, FactorValue.class ) );
+                    }
+
+                    if ( c.getObject() != null && c.getObjectUri() != null ) {
+                        results.add( new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getObjectUri(), c.getObject(), FactorValue.class ) );
+                    }
+
+                    if ( c.getSecondObject() != null && c.getSecondObjectUri() != null ) {
+                        results.add( new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getSecondObjectUri(), c.getSecondObject(), FactorValue.class ) );
+                    }
+                    return results.stream();
+                } )
+                .collect( Collectors.toSet() );
+    }
+
     /**
      * URIs checked for validity Aug 2024
      * FIXME filtering here is going to have to be more elaborate for this to be useful.
      */
-    private Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( ExpressionExperiment ee ) {
-        Collection<Statement> raw = this.expressionExperimentDao.getAnnotationsByFactorValues( ee );
-
-        Collection<AnnotationValueObject> results = new HashSet<>();
-        for ( Statement c : raw ) {
-            // ignore baseline conditions
-            if ( BaselineSelection.isBaselineCondition( c ) ) {
-                continue;
-            }
-
-            // ignore batch factors
-            if ( CharacteristicUtils.hasCategory( c, Categories.BLOCK ) ) {
-                continue;
-            }
-
-            // ignore timepoints
-            if ( CharacteristicUtils.hasCategory( c, Categories.TIMEPOINT ) ) {
-                continue;
-            }
-
-            // DE_include/exclude
-            if ( "http://gemma.msl.ubc.ca/ont/TGEMO_00013".equals( c.getSubjectUri() ) )
-                continue;
-            if ( "http://gemma.msl.ubc.ca/ont/TGEMO_00014".equals( c.getSubjectUri() ) )
-                continue;
-
-            // ignore free text values
-            if ( c.getSubjectUri() != null ) {
-                results.add( new AnnotationValueObject( c, FactorValue.class ) );
-            }
-
-            if ( c.getObject() != null && c.getObjectUri() != null ) {
-                results.add( new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getObjectUri(), c.getObject(), FactorValue.class ) );
-            }
-
-            if ( c.getSecondObject() != null && c.getSecondObjectUri() != null ) {
-                results.add( new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getSecondObjectUri(), c.getSecondObject(), FactorValue.class ) );
-            }
+    private boolean filterFactorValueAnnotation( Statement c ) {
+        // ignore baseline conditions
+        if ( BaselineSelection.isBaselineCondition( c ) ) {
+            return false;
         }
 
-        return results;
+        // ignore batch factors
+        if ( CharacteristicUtils.hasCategory( c, Categories.BLOCK ) ) {
+            return false;
+        }
 
+        // ignore timepoints
+        if ( CharacteristicUtils.hasCategory( c, Categories.TIMEPOINT ) ) {
+            return false;
+        }
+
+        // DE_include/exclude
+        if ( "http://gemma.msl.ubc.ca/ont/TGEMO_00013".equals( c.getSubjectUri() ) )
+            return false;
+        if ( "http://gemma.msl.ubc.ca/ont/TGEMO_00014".equals( c.getSubjectUri() ) )
+            return false;
+
+        return true;
     }
 
     private Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( ExpressionExperiment ee ) {
-        Collection<Characteristic> raw = this.expressionExperimentDao.getAnnotationsByBioMaterials( ee );
+        return expressionExperimentDao.getAnnotationsByBioMaterials( ee ).stream()
+                .filter( this::filterBioMaterialAnnotation )
+                .map( c -> new AnnotationValueObject( c, BioMaterial.class ) )
+                .collect( Collectors.toSet() );
+    }
 
-        Collection<AnnotationValueObject> results = new HashSet<>();
-        /*
-         * TODO we need to filter these better; some criteria could be included in the query
-         */
-        for ( Characteristic c : raw ) {
+    /**
+     * TODO: If can be done without much slowdown, add: certain selected (constant?) characteristics from
+     *       biomaterials? (non-redundant with tags)
+     */
+    private Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( ExpressionExperimentSubSet subset ) {
+        return expressionExperimentDao.getAnnotationsByBioMaterials( subset ).stream()
+                .filter( this::filterBioMaterialAnnotation )
+                .map( c -> new AnnotationValueObject( c, BioMaterial.class ) )
+                .collect( Collectors.toSet() );
+    }
 
-            // filter. Could include this in the query if it isn't too complicated.
-            if ( isUncategorized( c ) || isFreeTextCategory( c ) ) {
-                continue;
-            }
-
-            if ( isFreeText( c ) ) {
-                continue;
-            }
-
-            if ( "MaterialType".equalsIgnoreCase( c.getCategory() )
-                    || "molecular entity".equalsIgnoreCase( c.getCategory() )
-                    || "LabelCompound".equalsIgnoreCase( c.getCategory() ) ) {
-                continue;
-            }
-
-            if ( BaselineSelection.isBaselineCondition( c ) ) {
-                continue;
-            }
-
-            AnnotationValueObject annotationValue = new AnnotationValueObject( c, BioMaterial.class );
-
-            results.add( annotationValue );
+    /**
+     * TODO we need to filter these better; some criteria could be included in the query
+     */
+    private boolean filterBioMaterialAnnotation( Characteristic c ) {
+        // filter. Could include this in the query if it isn't too complicated.
+        if ( isUncategorized( c ) || isFreeTextCategory( c ) ) {
+            return false;
         }
 
-        return results;
+        if ( isFreeText( c ) ) {
+            return false;
+        }
 
+        if ( "MaterialType".equalsIgnoreCase( c.getCategory() )
+                || "molecular entity".equalsIgnoreCase( c.getCategory() )
+                || "LabelCompound".equalsIgnoreCase( c.getCategory() ) ) {
+            return false;
+        }
+
+        if ( BaselineSelection.isBaselineCondition( c ) ) {
+            return false;
+        }
+
+        return true;
     }
+
 
     /**
      * Only the mention of these properties will result in inferred term expansion.
@@ -1258,6 +1311,12 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSubSet> getSubSets( final ExpressionExperiment expressionExperiment ) {
         return this.expressionExperimentDao.getSubSets( expressionExperiment );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> getSubSetsByDimension( ExpressionExperiment expressionExperiment ) {
+        return expressionExperimentDao.getSubSetsByDimension( expressionExperiment );
     }
 
     @Override

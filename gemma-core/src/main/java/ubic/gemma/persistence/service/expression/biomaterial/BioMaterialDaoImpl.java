@@ -25,6 +25,7 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -95,12 +96,12 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
     }
 
     @Override
-    public List<BioMaterial> findSubBioMaterials( BioMaterial bioMaterial ) {
-        return findSubBioMaterials( Collections.singleton( bioMaterial ) );
+    public List<BioMaterial> findSubBioMaterials( BioMaterial bioMaterial, boolean direct ) {
+        return findSubBioMaterials( Collections.singleton( bioMaterial ), direct );
     }
 
     @Override
-    public List<BioMaterial> findSubBioMaterials( Collection<BioMaterial> bioMaterials ) {
+    public List<BioMaterial> findSubBioMaterials( Collection<BioMaterial> bioMaterials, boolean direct ) {
         if ( bioMaterials.isEmpty() ) {
             return Collections.emptyList();
         }
@@ -121,6 +122,9 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
             // drop already visited bioassays
             Assert.state( !fringe.removeAll( visited ), "Circular biomaterial detected!" );
             results.addAll( fringe );
+            if ( direct ) {
+                break;
+            }
         }
         return results;
     }
@@ -160,10 +164,16 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
     }
 
     @Override
-    public ExpressionExperiment getExpressionExperiment( Long bioMaterialId ) {
-        return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct e from ExpressionExperiment e inner join e.bioAssays ba inner join ba.sampleUsed bm where bm.id =:bmid " )
-                .setParameter( "bmid", bioMaterialId ).uniqueResult();
+    public Map<BioMaterial, Map<BioAssay, ExpressionExperiment>> getExpressionExperiments( BioMaterial bm ) {
+        Set<BioMaterial> bms = new HashSet<>();
+        visitBioMaterials( bm, bms::add );
+        //noinspection unchecked
+        List<Object[]> results = ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select bm, ba, e from ExpressionExperiment e join e.bioAssays ba join ba.sampleUsed bm where bm in :bms group by bm, ba, e" )
+                .setParameterList( "bms", bms )
+                .list();
+        return results.stream().collect( Collectors.groupingBy( row -> ( BioMaterial ) row[0],
+                Collectors.toMap( row -> ( BioAssay ) row[1], row -> ( ExpressionExperiment ) row[2] ) ) );
     }
 
     @Override

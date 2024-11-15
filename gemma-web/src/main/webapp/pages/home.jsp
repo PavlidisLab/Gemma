@@ -3,30 +3,8 @@
 <%@ include file="/common/taglibs.jsp" %>
 <head>
 <title>Home</title>
-
-<Gemma:script src='/scripts/api/ext/data/DwrProxy.js' />
 <%-- <Gemma:script src='/scripts/app/HomePageAnalysisSearch.js' /> --%>
 </head>
-
-<script type="text/javascript">
-Ext.BLANK_IMAGE_URL = '${pageContext.request.contextPath}/images/default/s.gif';
-Ext.onReady( function() {
-
-   Ext.QuickTips.init();
-
-   Ext.state.Manager.setProvider( new Ext.state.CookieProvider() );
-   var summaryPanel = new Gemma.ExpressionExperimentsSummaryPanel( {
-      height : 200,
-      flex : '0'
-   } );
-   summaryPanel.render( "summaryPanel-div" );
-
-   var generalSearchPanel = new Gemma.Search.GeneralSearchSimple();
-   generalSearchPanel.render( "generalSearchSimple-div" );
-
-
-} );
-</script>
 
 <input type="hidden" id="reloadOnLogout" value="false">
 
@@ -152,7 +130,7 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
         </div>
         <div>Copyright &copy; 2007-2024</div>
         <div class="d-lg">
-             <a href='<c:url value="https://pavlidislab.github.io/Gemma/terms.html" />'>Terms and conditions</a>
+            <a href='<c:url value="https://pavlidislab.github.io/Gemma/terms.html" />'>Terms and conditions</a>
         </div>
         <!-- <div><jsp:include page="/common/social.jsp"/></div> -->
         <div class="flex-grow"></div>
@@ -162,3 +140,23 @@ $.getJSON( '${pageContext.request.contextPath}' + '/rest/v2/datasets/count', fun
         </a>
     </div>
 </div>
+
+<script type="text/javascript">
+Ext.BLANK_IMAGE_URL = '${pageContext.request.contextPath}/images/default/s.gif';
+Ext.onReady( function() {
+
+   Ext.QuickTips.init();
+
+   Ext.state.Manager.setProvider( new Ext.state.CookieProvider() );
+   var summaryPanel = new Gemma.ExpressionExperimentsSummaryPanel( {
+      height : 200,
+      flex : '0'
+   } );
+   summaryPanel.render( "summaryPanel-div" );
+
+   var generalSearchPanel = new Gemma.Search.GeneralSearchSimple();
+   generalSearchPanel.render( "generalSearchSimple-div" );
+
+
+} );
+</script>

@@ -30,6 +30,7 @@ import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author kelsey
@@ -126,6 +127,8 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
 
     @Nullable
     Class<? extends DataVector> getDataVectorType( QuantitationType qt );
+
+    Map<QuantitationType, Class<? extends DataVector>> getDataVectorTypes( Collection<QuantitationType> qts );
 
     /**
      * Infer all the mapped vector types that are subclasses of the given vector type.

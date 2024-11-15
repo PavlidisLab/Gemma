@@ -1,31 +1,27 @@
-<%@ include file="/common/taglibs.jsp"%>
+<%@ include file="/common/taglibs.jsp" %>
 
 <head>
 <title>Expression Experiments with QC Issues</title>
-<Gemma:script src='/scripts/api/ext/data/DwrProxy.js' />
 </head>
-<body>
 
-	<input type="hidden" id="reloadOnLogout" value="true">
-	<input type="hidden" id="reloadOnLogin" value="true" />
+<input type="hidden" id="reloadOnLogout" value="true">
+<input type="hidden" id="reloadOnLogin" value="true" />
 
-	<script type="text/javascript">
-      Ext.state.Manager.setProvider( new Ext.state.CookieProvider() );
+<div id='errorMessage' style='width: 500px; margin-bottom: 1em;'></div>
 
-      Ext.onReady( function() {
+<script type="text/javascript">
+Ext.state.Manager.setProvider( new Ext.state.CookieProvider() );
 
-         Ext.QuickTips.init();
+Ext.onReady( function() {
 
-         new Gemma.GemmaViewPort( {
-            centerPanelConfig : new Gemma.ExpressionExperimentQCGrid( {
-               header : true,
-               experimentNameAsLink : true
-            } )
-         } );
+   Ext.QuickTips.init();
 
-      } );
-   </script>
+   new Gemma.GemmaViewPort( {
+      centerPanelConfig : new Gemma.ExpressionExperimentQCGrid( {
+         header : true,
+         experimentNameAsLink : true
+      } )
+   } );
 
-	<div id='errorMessage' style='width: 500px; margin-bottom: 1em;'></div>
-
-</body>
+} );
+</script>

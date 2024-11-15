@@ -55,7 +55,7 @@ public class BioMaterialDaoTest extends BaseDatabaseTest {
         bm4.setSourceTaxon( taxon );
         bm4.setSourceBioMaterial( bm2 );
         bm4 = bioMaterialDao.create( bm4 );
-        assertThat( bioMaterialDao.findSubBioMaterials( bm1 ) )
+        assertThat( bioMaterialDao.findSubBioMaterials( bm1, false ) )
                 .containsExactlyInAnyOrder( bm2, bm3, bm4 );
     }
 

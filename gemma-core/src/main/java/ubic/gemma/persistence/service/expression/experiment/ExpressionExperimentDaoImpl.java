@@ -437,14 +437,21 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Collection<Characteristic> getAnnotationsBySubSets( ExpressionExperiment ee ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct c from ExpressionExperimentSubSet subset "
+                        + "join subset.characteristics c "
+                        + "where subset.sourceExperiment = :ee" )
+                .setParameter( "ee", ee )
+                .list();
+    }
+
+    @Override
     public Collection<Characteristic> getAnnotationsByBioMaterials( ExpressionExperiment ee ) {
-        /*
-         * Note we're not using 'distinct' here but the 'equals' for AnnotationValueObject should aggregate these. More
-         * work to do.
-         */
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select c from ExpressionExperiment e "
+                .createQuery( "select distinct c from ExpressionExperiment e "
                         + "join e.bioAssays ba join ba.sampleUsed bm "
                         + "join bm.characteristics c where e = :ee" )
                 .setParameter( "ee", ee )
@@ -452,10 +459,21 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Collection<Characteristic> getAnnotationsByBioMaterials( ExpressionExperimentSubSet subset ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct c from ExpressionExperimentSubSet subset "
+                        + "join subset.bioAssays ba join ba.sampleUsed bm "
+                        + "join bm.characteristics c where subset = :subset" )
+                .setParameter( "subset", subset )
+                .list();
+    }
+
+    @Override
     public Collection<Statement> getAnnotationsByFactorValues( ExpressionExperiment ee ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select c from ExpressionExperiment e "
+                .createQuery( "select distinct c from ExpressionExperiment e "
                         + "join e.experimentalDesign ed join ed.experimentalFactors ef join ef.factorValues fv "
                         + "join fv.characteristics c where e = :ee" )
                 .setParameter( "ee", ee )
@@ -485,7 +503,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public List<Characteristic> getExperimentAnnotations( ExpressionExperiment expressionExperiment ) {
-        return getAnnotationsByLevel( expressionExperiment, BioMaterial.class );
+        return getAnnotationsByLevel( expressionExperiment, ExpressionExperiment.class );
     }
 
     @Override
@@ -1348,6 +1366,22 @@ public class ExpressionExperimentDaoImpl
                 .createQuery( "select eess from ExpressionExperimentSubSet eess where eess.sourceExperiment = :ee" )
                 .setParameter( "ee", expressionExperiment )
                 .list();
+    }
+
+    @Override
+    public Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> getSubSetsByDimension( ExpressionExperiment expressionExperiment ) {
+        //noinspection unchecked
+        List<Object[]> results = getSessionFactory().getCurrentSession()
+                .createQuery( "select eess, bad from ExpressionExperimentSubSet eess join eess.bioAssays ba, "
+                        + "BioAssayDimension bad join bad.bioAssays ba2 "
+                        + "where eess.sourceExperiment = :ee and ba = ba2 "
+                        + "group by eess, bad "
+                        // require all the subset's assays to be matched
+                        + "having size(eess.bioAssays) = count(ba)" )
+                .setParameter( "ee", expressionExperiment )
+                .list();
+        return results.stream()
+                .collect( Collectors.groupingBy( row -> ( BioAssayDimension ) row[1], Collectors.mapping( row -> ( ExpressionExperimentSubSet ) row[0], Collectors.toSet() ) ) );
     }
 
     @Override

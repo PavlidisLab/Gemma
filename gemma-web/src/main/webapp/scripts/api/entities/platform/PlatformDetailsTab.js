@@ -117,7 +117,7 @@ Gemma.PlatformDetails = Ext
                 var updateT = '';
                 var isAdmin = Ext.get("hasAdmin").getValue() == 'true';
                 if (isAdmin) {
-                    updateT = '&nbsp;<input type="button" value="Refresh report" onClick="updateArrayDesignReport('
+                    updateT = '&nbsp;<input type="button" value="Refresh report" onClick="Gemma.updateArrayDesignReport('
                         + platformDetails.id + ')" />';
                 }
 

@@ -17,6 +17,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -48,6 +49,12 @@ public class ExpressionExperimentSubSetServiceImpl extends AbstractService<Expre
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<ExpressionExperimentSubSet> findByBioAssayIn( Collection<BioAssay> bioAssays ) {
+        return expressionExperimentSubSetDao.findByBioAssayIn( bioAssays );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor ) {
         return this.expressionExperimentSubSetDao.getFactorValuesUsed( entity, factor );
     }
@@ -61,6 +68,12 @@ public class ExpressionExperimentSubSetServiceImpl extends AbstractService<Expre
             result.add( new FactorValueValueObject( fv ) );
         }
         return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperimentSubSet loadWithBioAssays( Long id ) {
+        return expressionExperimentSubSetDao.loadWithBioAssays( id );
     }
 
     /**

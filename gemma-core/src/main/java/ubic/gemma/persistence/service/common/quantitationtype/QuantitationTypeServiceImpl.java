@@ -29,10 +29,7 @@ import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author keshav
@@ -88,6 +85,18 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
     @Transactional(readOnly = true)
     public Class<? extends DataVector> getDataVectorType( QuantitationType qt ) {
         return quantitationTypeDao.getDataVectorType( qt );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<QuantitationType, Class<? extends DataVector>> getDataVectorTypes( Collection<QuantitationType> qts ) {
+        Map<QuantitationType, Class<? extends DataVector>> vectorTypes = new HashMap<>();
+        for ( QuantitationType qt : qts ) {
+            if ( !vectorTypes.containsKey( qt ) ) {
+                vectorTypes.put( qt, getDataVectorType( qt ) );
+            }
+        }
+        return vectorTypes;
     }
 
     @Override

@@ -145,15 +145,8 @@ public class GeneController extends BaseController {
         Long id = geneVO.getId();
 
         assert id != null;
-        ModelAndView mav = new ModelAndView( "gene.detail" );
-        mav.addObject( "geneId", id );
-        mav.addObject( "geneOfficialSymbol", geneVO.getOfficialSymbol() );
-        mav.addObject( "geneOfficialName", geneVO.getOfficialName() );
-        mav.addObject( "geneNcbiId", geneVO.getNcbiId() );
-        mav.addObject( "geneTaxonCommonName", geneVO.getTaxonCommonName() );
-        mav.addObject( "geneTaxonId", geneVO.getTaxonId() );
-
-        return mav;
+        return new ModelAndView( "gene.detail" )
+                .addObject( "gene", geneVO );
     }
 
     @RequestMapping(value = "/downloadGeneList.html", method = { RequestMethod.GET, RequestMethod.HEAD })

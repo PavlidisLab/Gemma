@@ -21,10 +21,12 @@ package ubic.gemma.web.controller.common.description.bibref;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -67,36 +69,104 @@ public class BibliographicReferenceController extends BaseController {
     @Autowired
     private PubMedXMLFetcher pubMedXmlFetcher;
 
-    @RequestMapping(value = "/bibRefAdd.html", method = RequestMethod.POST)
-    public ModelAndView add( @RequestParam("accession") String pubMedId, HttpServletRequest request ) {
-        // FIXME: allow use of the primary key as well.
+    @RequestMapping(value = "/showAllEeBibRefs.html", method = { RequestMethod.GET, RequestMethod.HEAD })
+    public ModelAndView showAllForExperiments() {
+        Map<ExpressionExperiment, BibliographicReference> eeToBibRefs = bibliographicReferenceService
+                .getAllExperimentLinkedReferences();
 
-        if ( StringUtils.isBlank( pubMedId ) ) {
-            throw new IllegalArgumentException( "Must provide a PubMed Id" );
+        // map sorted in natural order of the keys
+        SortedMap<CitationValueObject, Collection<ExpressionExperimentValueObject>> citationToEEs = new TreeMap<>();
+        for ( Entry<ExpressionExperiment, BibliographicReference> entry : eeToBibRefs.entrySet() ) {
+            if ( entry.getValue().getTitle() == null || entry.getValue().getTitle().isEmpty()
+                    || entry.getValue().getAuthorList() == null || entry.getValue().getAuthorList().isEmpty() ) {
+                continue;
+            }
+            CitationValueObject cvo = CitationValueObject.convert2CitationValueObject( entry.getValue() );
+            if ( !citationToEEs.containsKey( cvo ) ) {
+                citationToEEs.put( cvo, new ArrayList<>() );
+            }
+            citationToEEs.get( cvo ).add( new ExpressionExperimentValueObject( entry.getKey(), true, true ) );
         }
 
-        BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
-        BibliographicReferenceValueObject vo;
+        return new ModelAndView( "bibRefAllExperiments" )
+                .addObject( "citationToEEs", citationToEEs );
+    }
+
+    @RequestMapping(value = "/searchBibRefs.html", method = { RequestMethod.GET, RequestMethod.HEAD })
+    public ModelAndView searchBibRefs() {
+        return new ModelAndView( "bibRefList" );
+    }
+
+    @RequestMapping(value = "/bibRefView.html", method = { RequestMethod.GET, RequestMethod.HEAD }, params = { "id" })
+    public ModelAndView showById( @RequestParam(value = "id") Long id ) {
+        BibliographicReference bibRef = bibliographicReferenceService.loadOrFail( id, EntityNotFoundException::new );
+        return new ModelAndView( "bibRefView" )
+                .addObject( "bibliographicReference", bibRef );
+    }
+
+    @RequestMapping(value = "/bibRefView.html", method = { RequestMethod.GET, RequestMethod.HEAD }, params = { "accession" })
+    public ModelAndView showByAccession( @RequestParam(value = "accession") String accession ) {
+        BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( accession, ExternalDatabases.PUBMED );
+        if ( bibRef == null ) {
+            // attempt to fetch it from PubMed
+            try {
+                bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( accession ) );
+                return new ModelAndView( "bibRefAdd" )
+                        .addObject( "bibliographicReference", bibRef );
+            } catch ( NumberFormatException e ) {
+                // ignore, this will be treated as an EntityNotFoundException
+            } catch ( IOException e ) {
+                throw new RuntimeException( "Failed to retrieve publication with PubMed ID: " + accession, e );
+            }
+        }
+        if ( bibRef == null ) {
+            throw new EntityNotFoundException( "Could not locate reference with PubMed ID " + accession + ", either in Gemma or by querying NCBI." );
+        }
+        return new ModelAndView( "bibRefView" )
+                .addObject( "bibliographicReference", bibRef );
+    }
+
+    private boolean isIncomplete( BibliographicReference bibRef ) {
+        return bibRef.getPublicationDate() == null;
+    }
+
+    @RequestMapping(value = "/bibRefAdd.html", method = RequestMethod.POST)
+    public RedirectView add( @RequestParam("accession") Integer pubMedId, @RequestParam(value = "refresh", required = false) Boolean refresh, HttpServletRequest request ) {
+        // FIXME: allow use of the primary key as well.
+        BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( String.valueOf( pubMedId ), ExternalDatabases.PUBMED );
         if ( bibRef == null ) {
             try {
-                bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+                bibRef = this.pubMedXmlFetcher.retrieveByHTTP( pubMedId );
             } catch ( IOException e ) {
-                throw new RuntimeException( "Failed to retrieve publication with PubMed ID: " + pubMedId, e );
+                throw new RuntimeException( "Failed to retrieve publication with PubMed ID " + pubMedId + ".", e );
             }
             if ( bibRef == null ) {
-                throw new EntityNotFoundException( "Could not locate reference with pubmed id=" + pubMedId );
+                throw new EntityNotFoundException( "Could not locate reference with PubMed ID " + pubMedId + "." );
             }
-            vo = new BibliographicReferenceValueObject( ( BibliographicReference ) persisterHelper.persist( bibRef ) );
+            bibRef = ( BibliographicReference ) persisterHelper.persist( bibRef );
             this.saveMessage( request, "Added " + pubMedId + " to the system." );
-        } else if ( StringUtils.isNotBlank( request.getParameter( "refresh" ) ) ) {
-            vo = this.update( pubMedId );
-            this.saveMessage( request, "Updated record for pubmed id " + pubMedId );
+        } else if ( refresh != null && refresh ) {
+            bibRef = this.bibliographicReferenceService.refresh( String.valueOf( pubMedId ) );
+            this.saveMessage( request, "Updated record for   PubMed ID " + pubMedId + "." );
         } else {
-            throw new IllegalArgumentException( "Action not understood" );
+            this.saveMessage( request, "There is already a bibliographic reference with PubMed ID " + pubMedId + "." );
         }
+        return new RedirectView( "/bibRef/bibRefView.html?id=" + bibRef.getId(), true );
+    }
 
-        return new ModelAndView( "bibRefView" ).addObject( "bibliographicReferenceId", vo.getId() )
-                .addObject( "existsInSystem", Boolean.TRUE ).addObject( "bibliographicReference", vo );
+    @RequestMapping(value = "/deleteBibRef.html", method = RequestMethod.POST)
+    public ModelAndView delete( @RequestParam("acc") String pubMedId, HttpServletRequest request ) {
+        BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
+        if ( bibRef == null ) {
+            String message = "There is no reference with PubMed ID " + pubMedId + " in the system any more.";
+            this.saveMessage( request, message );
+            throw new EntityNotFoundException( message );
+        }
+        bibliographicReferenceService.remove( bibRef );
+        log.info( "Bibliographic reference with pubMedId: " + bibRef.getPubAccession().getAccession() + " deleted" );
+        this.addMessage( request, "object.deleted",
+                new Object[] { messagePrefix, bibRef.getPubAccession().getAccession() } );
+        return new ModelAndView( "bibRefView", "bibliographicReference", bibRef );
     }
 
     @SuppressWarnings("unused")
@@ -123,56 +193,19 @@ public class BibliographicReferenceController extends BaseController {
         return new JsonReaderResponse<>( valueObjects, ( int ) count );
     }
 
-    @RequestMapping(value = "/deleteBibRef.html", method = RequestMethod.POST)
-    public ModelAndView delete( @RequestParam("acc") String pubMedId, HttpServletRequest request ) {
-        BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
-        if ( bibRef == null ) {
-            String message = "There is no reference with PubMed ID " + pubMedId + " in the system any more.";
-            this.saveMessage( request, message );
-            throw new EntityNotFoundException( message );
-        }
-        bibliographicReferenceService.remove( bibRef );
-        log.info( "Bibliographic reference with pubMedId: " + bibRef.getPubAccession().getAccession() + " deleted" );
-        this.addMessage( request, "object.deleted",
-                new Object[] { messagePrefix, bibRef.getPubAccession().getAccession() } );
-        return new ModelAndView( "bibRefView", "bibliographicReference", bibRef );
-    }
-
-    public BibliographicReferenceValueObject load( Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "ID cannot be null" );
-        }
-        Collection<Long> ids = new ArrayList<>();
-        ids.add( id );
-        JsonReaderResponse<BibliographicReferenceValueObject> returnVal = this.loadMultiple( ids );
-        if ( returnVal.getRecords() != null && !returnVal.getRecords().isEmpty() ) {
-            return returnVal.getRecords().iterator().next();
-        }
-        throw new EntityNotFoundException( "Error retrieving bibliographic reference for id = " + id );
-
-    }
-
     @SuppressWarnings("unused")
-    public Collection<BibliographicReferenceValueObject> loadAllForExperiments() {
-        Map<ExpressionExperiment, BibliographicReference> eeToBibRefs = bibliographicReferenceService
-                .getAllExperimentLinkedReferences();
-        Collection<BibliographicReference> bibRefs = eeToBibRefs.values();
-
-        return BibliographicReferenceValueObject.convert2ValueObjects( bibRefs );
+    public BibliographicReferenceValueObject load( Long id ) {
+        Assert.notNull( id, "ID cannot be null." );
+        BibliographicReference bss = bibliographicReferenceService.loadOrFail( id, EntityNotFoundException::new );
+        bss = bibliographicReferenceService.thaw( bss );
+        BibliographicReferenceValueObject bibRefs = bibliographicReferenceService.loadValueObject( bss );
+        return new JsonReaderResponse<>( Collections.singletonList( bibRefs ), 1 ).getRecords().iterator().next();
     }
 
     @SuppressWarnings("unused")
     public BibliographicReferenceValueObject loadFromPubmedID( String pubMedID ) {
+        Assert.notNull( pubMedID, "PubMed ID cannot be null." );
         return bibliographicReferenceService.findVOByExternalId( pubMedID );
-    }
-
-    public JsonReaderResponse<BibliographicReferenceValueObject> loadMultiple( Collection<Long> ids ) {
-
-        Collection<BibliographicReference> bss = bibliographicReferenceService.load( ids );
-        bss = bibliographicReferenceService.thaw( bss );
-        Collection<BibliographicReferenceValueObject> bibRefs = bibliographicReferenceService.loadValueObjects( bss );
-
-        return new JsonReaderResponse<>( new ArrayList<>( bibRefs ), bibRefs.size() );
     }
 
     public JsonReaderResponse<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings ) {
@@ -184,84 +217,14 @@ public class BibliographicReferenceController extends BaseController {
         }
     }
 
-    @RequestMapping(value = "/searchBibRefs.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public ModelAndView searchBibRefs() {
-        return new ModelAndView( "bibRefList" );
-    }
-
-    @RequestMapping(value = "/bibRefView.html", method = { RequestMethod.GET, RequestMethod.HEAD }, params = { "id" })
-    public ModelAndView showById( @RequestParam(value = "id") Long id, HttpServletRequest request ) {
-        BibliographicReference bibRef = bibliographicReferenceService.loadOrFail( id, EntityNotFoundException::new );
-        return show( bibRef, request, true )
-                .addObject( "byAccession", Boolean.FALSE );
-    }
-
-    @RequestMapping(value = "/bibRefView.html", method = { RequestMethod.GET, RequestMethod.HEAD }, params = { "accession" })
-    public ModelAndView showByAccession( @RequestParam(value = "accession") String accession, HttpServletRequest request ) {
-        BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( accession, ExternalDatabases.PUBMED );
-        boolean existsInSystem = bibRef != null;
-        if ( bibRef == null ) {
-            // attempt to fetch it from PubMed
-            try {
-                bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( accession ) );
-            } catch ( NumberFormatException e ) {
-                // ignore, this will be treated as an EntityNotFoundException
-            } catch ( IOException e ) {
-                throw new RuntimeException( "Failed to retrieve publication with PubMed ID: " + accession, e );
-            }
-        }
-        if ( bibRef == null ) {
-            throw new EntityNotFoundException( "Could not locate reference with PubMwd ID " + accession + ", either in Gemma or by querying NCBI." );
-        }
-        return show( bibRef, request, existsInSystem )
-                .addObject( "byAccession", Boolean.TRUE )
-                .addObject( "accession", accession );
-    }
-
-    private ModelAndView show( BibliographicReference bibRef, HttpServletRequest request, boolean existsInSystem ) {
-        this.addMessage( request, "object.found", new Object[] { messagePrefix, } );
-        return new ModelAndView( "bibRefView" )
-                .addObject( "bibliographicReferenceId", bibRef.getId() )
-                .addObject( "existsInSystem", existsInSystem )
-                .addObject( "incompleteEntry", bibRef.getPublicationDate() == null );
-    }
-
-    @RequestMapping(value = "/showAllEeBibRefs.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public ModelAndView showAllForExperiments() {
-        Map<ExpressionExperiment, BibliographicReference> eeToBibRefs = bibliographicReferenceService
-                .getAllExperimentLinkedReferences();
-
-        // map sorted in natural order of the keys
-        SortedMap<CitationValueObject, Collection<ExpressionExperimentValueObject>> citationToEEs = new TreeMap<>();
-        for ( Entry<ExpressionExperiment, BibliographicReference> entry : eeToBibRefs.entrySet() ) {
-            if ( entry.getValue().getTitle() == null || entry.getValue().getTitle().isEmpty()
-                    || entry.getValue().getAuthorList() == null || entry.getValue().getAuthorList().isEmpty() ) {
-                continue;
-            }
-            CitationValueObject cvo = CitationValueObject.convert2CitationValueObject( entry.getValue() );
-            if ( !citationToEEs.containsKey( cvo ) ) {
-                citationToEEs.put( cvo, new ArrayList<>() );
-            }
-            citationToEEs.get( cvo ).add( new ExpressionExperimentValueObject( entry.getKey(), true, true ) );
-        }
-
-        return new ModelAndView( "bibRefAllExperiments" ).addObject( "citationToEEs", citationToEEs );
-    }
-
     public BibliographicReferenceValueObject update( String pubMedId ) {
-        BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
-        if ( bibRef == null ) {
-            throw new EntityNotFoundException( "Could not locate reference with that id" );
-        }
-        return new BibliographicReferenceValueObject( this.bibliographicReferenceService.refresh( pubMedId ) );
+        Assert.notNull( pubMedId, "PubMed ID cannot be null." );
+        return new BibliographicReferenceValueObject( bibliographicReferenceService.refresh( pubMedId ) );
     }
 
     private List<BibliographicReference> getBatch( ListBatchCommand batch ) {
-        List<BibliographicReference> records;
         if ( StringUtils.isNotBlank( batch.getSort() ) ) {
-
             String o = batch.getSort();
-
             String orderBy;
             switch ( o ) {
                 case "title":
@@ -279,14 +242,11 @@ public class BibliographicReferenceController extends BaseController {
                 default:
                     throw new IllegalArgumentException( "Unknown sort field: " + o );
             }
-
             boolean descending = batch.getDir() != null && batch.getDir().equalsIgnoreCase( "DESC" );
-            records = bibliographicReferenceService.browse( batch.getStart(), batch.getLimit(), orderBy, descending );
+            return bibliographicReferenceService.browse( batch.getStart(), batch.getLimit(), orderBy, descending );
 
         } else {
-            records = bibliographicReferenceService.browse( batch.getStart(), batch.getLimit() );
+            return bibliographicReferenceService.browse( batch.getStart(), batch.getLimit() );
         }
-        return records;
     }
-
 }

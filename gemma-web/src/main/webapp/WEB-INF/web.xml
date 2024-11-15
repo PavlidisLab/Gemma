@@ -221,10 +221,10 @@
         <servlet-name>default</servlet-name>
         <!-- scripts -->
         <url-pattern>*.js</url-pattern>
-        <url-pattern>*.js.map</url-pattern>
         <!-- styles -->
         <url-pattern>*.css</url-pattern>
-        <url-pattern>*.css.map</url-pattern>
+        <!-- source mappings -->
+        <url-pattern>*.map</url-pattern>
         <!-- images -->
         <url-pattern>*.png</url-pattern>
         <url-pattern>*.jpg</url-pattern>
@@ -242,6 +242,14 @@
         <url-pattern>/robots.txt</url-pattern>
         <url-pattern>/sitemap.xml</url-pattern>
     </servlet-mapping>
+    
+    <jsp-config>
+        <jsp-property-group>
+            <url-pattern>*.jsp</url-pattern>
+            <page-encoding>utf-8</page-encoding>
+            <trim-directive-whitespaces>true</trim-directive-whitespaces>
+        </jsp-property-group>
+    </jsp-config>
 
     <session-config>
         <session-timeout>60</session-timeout>

@@ -25,6 +25,7 @@ import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.measurement.MeasurementType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -73,6 +74,23 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<BioMaterial> findSubBioMaterials( BioMaterial bioMaterial, boolean direct ) {
+        return bioMaterialDao.findSubBioMaterials( bioMaterial, direct );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<BioMaterial> findSiblings( BioMaterial bioMaterial ) {
+        if ( bioMaterial.getSourceBioMaterial() == null ) {
+            return Collections.emptySet();
+        }
+        Collection<BioMaterial> siblings = findSubBioMaterials( bioMaterial.getSourceBioMaterial(), true );
+        siblings.remove( bioMaterial );
+        return siblings;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment ) {
         return this.bioMaterialDao.findByExperiment( experiment );
     }
@@ -85,8 +103,10 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionExperiment getExpressionExperiment( Long id ) {
-        return this.bioMaterialDao.getExpressionExperiment( id );
+    public Map<BioMaterial, Map<BioAssay, ExpressionExperiment>> getExpressionExperiments( BioMaterial bm ) {
+        // source biomaterials need to be visited, so this must be in the session
+        bm = ensureInSession( bm );
+        return this.bioMaterialDao.getExpressionExperiments( bm );
     }
 
     @Override

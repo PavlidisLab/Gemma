@@ -22,7 +22,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.persistence.service.BaseVoEnabledDao;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
 import java.util.Collection;
@@ -39,6 +39,8 @@ public interface BioAssayDao extends FilteringVoEnabledDao<BioAssay, BioAssayVal
     Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay );
 
     Collection<BioAssay> findByAccession( String accession );
+
+    Collection<BioAssaySet> getBioAssaySets( BioAssay bioAssay );
 
     List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, Map<Long, ArrayDesignValueObject> arrayDesignValueObjects, boolean basic );
 }

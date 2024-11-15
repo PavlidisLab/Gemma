@@ -107,7 +107,8 @@ public class PubMedQueryController extends BaseController implements Initializin
         }
 
         status.setComplete();
-        return new ModelAndView( "bibRefView" ).addObject( "bibliographicReference", bibRefFound );
+        return new ModelAndView( "bibRefView" )
+                .addObject( "bibliographicReference", bibRefFound );
     }
 
 }

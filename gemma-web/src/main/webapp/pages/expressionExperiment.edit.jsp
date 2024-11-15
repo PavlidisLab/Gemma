@@ -1,24 +1,26 @@
 <%@ include file="/common/taglibs.jsp" %>
-<head>
-    <Gemma:script src='/scripts/api/ext/data/DwrProxy.js'/>
-    <Gemma:script src='/scripts/app/bioassay.draganddrop.js'/>
-</head>
 
 <jsp:useBean id="expressionExperiment" scope="request"
-             class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentEditValueObject"/>
+        class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentEditValueObject" />
+
+<head>
+<title>Edit ${expressionExperiment.shortName}</title>
+<Gemma:script src='/scripts/app/bioassay.draganddrop.js'/>
+</head>
+
 <spring:bind path="expressionExperiment.*">
     <c:if test="${not empty status.errorMessages}">
         <div class="error">
             <c:forEach var="error" items="${status.errorMessages}">
                 <i class="red fa fa-warning fa-lg fa-fw"></i>
-                <c:out value="${error}" escapeXml="false"/>
-                <br/>
+                <c:out value="${error}" escapeXml="false" />
+                <br />
             </c:forEach>
         </div>
     </c:if>
 </spring:bind>
 
-<title><fmt:message key="expressionExperiment.title"/> ${expressionExperiment.shortName}</title>
+<title><fmt:message key="expressionExperiment.title" /> ${expressionExperiment.shortName}</title>
 
 <div class="padded">
     <form method="post" action="<c:url value="/expressionExperiment/editExpressionExperiment.html"/>">
@@ -50,50 +52,50 @@
                     </tr>
 
                     <c:forEach var="index" begin="0" end="<%=expressionExperiment.getQuantitationTypes().size() - 1%>"
-                               step="1">
+                            step="1">
                         <spring:nestedPath path="expressionExperiment.quantitationTypes[${index}]">
                             <tr>
                                 <td><spring:bind path="name">
                                     <input type="text" size="20" name="<c:out value="${status.expression}"/>"
-                                           value="<c:out value="${status.value}"/>"/>
+                                            value="<c:out value="${status.value}"/>" />
                                 </spring:bind></td>
                                 <td><spring:bind path="description">
                                     <input type="text" size="35" name="<c:out value="${status.expression}"/>"
-                                           value="<c:out value="${status.value}"/>"/>
+                                            value="<c:out value="${status.value}"/>" />
                                 </spring:bind></td>
                                 <td><spring:bind path="isPreferred">
                                     <input id="preferredCheckbox" type="checkbox" name="${status.expression}"
-                                           <c:if test="${status.value == true}">checked="checked"</c:if> />
+                                            <c:if test="${status.value == true}">checked="checked"</c:if> />
                                     <input type="hidden" name="_<c:out value="${status.expression}"/>">
                                 </spring:bind></td>
                                 <td><spring:bind path="isRecomputedFromRawData">
                                     <input id="preferredCheckbox" type="checkbox" name="${status.expression}"
-                                           <c:if test="${status.value == true}">checked="checked"</c:if> />
+                                            <c:if test="${status.value == true}">checked="checked"</c:if> />
                                     <input type="hidden" name="_<c:out value="${status.expression}"/>">
                                 </spring:bind></td>
                                 <td><spring:bind path="isBatchCorrected">
                                     <input id="preferredCheckbox" type="checkbox" name="${status.expression}"
-                                           <c:if test="${status.value == true}">checked="checked"</c:if> />
+                                            <c:if test="${status.value == true}">checked="checked"</c:if> />
                                     <input type="hidden" name="_<c:out value="${status.expression}"/>">
                                 </spring:bind></td>
                                 <td><spring:bind path="isRatio">
                                     <input id="ratioCheckbox" type="checkbox" name="${status.expression}"
-                                           <c:if test="${status.value == true}">checked="checked"</c:if> />
+                                            <c:if test="${status.value == true}">checked="checked"</c:if> />
                                     <input type="hidden" name="_<c:out value="${status.expression}"/>">
                                 </spring:bind></td>
                                 <td><spring:bind path="isBackground">
                                     <input id="backgroundCheckbox" type="checkbox" name="${status.expression}"
-                                           <c:if test="${status.value == true}">checked="checked"</c:if> />
+                                            <c:if test="${status.value == true}">checked="checked"</c:if> />
                                     <input type="hidden" name="_<c:out value="${status.expression}"/>">
                                 </spring:bind></td>
                                 <td><spring:bind path="isBackgroundSubtracted">
                                     <input id="bkgsubCheckbox" type="checkbox" name="${status.expression}"
-                                           <c:if test="${status.value == true}">checked="checked"</c:if> />
+                                            <c:if test="${status.value == true}">checked="checked"</c:if> />
                                     <input type="hidden" name="_<c:out value="${status.expression}"/>">
                                 </spring:bind></td>
                                 <td><spring:bind path="isNormalized">
                                     <input id="normCheckbox" type="checkbox" name="${status.expression}"
-                                           <c:if test="${status.value == true}">checked="checked"</c:if> />
+                                            <c:if test="${status.value == true}">checked="checked"</c:if> />
                                     <input type="hidden" name="_<c:out value="${status.expression}"/>">
                                 </spring:bind></td>
                                 <td><spring:bind path="generalType">
@@ -152,15 +154,15 @@
 
         <div class="v-padded">
             <input type="button" onClick="Ext.getCmp('eemanager').unmatchBioAssays(${expressionExperiment.id})"
-                   value="Unmatch all bioassays"/>
+                    value="Unmatch all bioassays" />
         </div>
 
 
-        <Gemma:assayView bioAssays="${expressionExperiment.bioAssays}" edit="true"></Gemma:assayView>
+        <Gemma:assayView bioAssays="${expressionExperiment.bioAssays}" edit="true"/>
 
         <div class="v-padded">
-            <input type="submit" class="button" name="save" value="<fmt:message key="button.save"/>"/>
-            <input type="submit" class="button" name="cancel" value="<fmt:message key="button.cancel"/>"/>
+            <input type="submit" class="button" name="save" value="<fmt:message key="button.save"/>" />
+            <input type="submit" class="button" name="cancel" value="<fmt:message key="button.cancel"/>" />
         </div>
 
     </form>
