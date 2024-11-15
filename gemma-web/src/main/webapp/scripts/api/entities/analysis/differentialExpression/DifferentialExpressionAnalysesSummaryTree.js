@@ -472,7 +472,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                 linkText += '</span>';
                 /* provide link for visualization. */
                 var tipText = "View top differentially expressed genes for &quot;" + factorString + "&quot;";
-                linkText += '<span class="link" onClick="visualizeDiffExpressionHandler(\'' + eeID + '\',\''
+                linkText += '<span class="link" onClick="Gemma.visualizeDiffExpressionHandler(\'' + eeID + '\',\''
                    + resultSet.resultSetId + '\',\'' + factorString
                    + '\', \'' + primaryFactorID + '\')">&nbsp;'
                    + "<i class='orange fa fa-area-chart fa-fw fa-lg' ext:qtip='" + tipText + "'></i></span>";
@@ -765,7 +765,7 @@ Ext.reg('differentialExpressionAnalysesSummaryTree', Gemma.DifferentialExpressio
  * fix for now, should replace visualize 'button' with ext button that calls this function, and move function inside
  * Gemma.DifferentialExpressionAnalysesSummaryTree
  */
-function visualizeDiffExpressionHandler(eeid, diffResultId, factorDetails, factorId) {
+Gemma.visualizeDiffExpressionHandler = function(eeid, diffResultId, factorDetails, factorId) {
 
     var visDiffWindow = new Gemma.VisualizationWithThumbsWindow({
         thumbnails: false,
