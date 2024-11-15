@@ -1,9 +1,18 @@
 <%@ include file="/common/taglibs.jsp" %>
-<jsp:useBean id="eeSet" scope="request" type="ubic.gemma.model.analysis.expression.ExpressionExperimentSet"/>
 <head>
 <title>${fn:escapeXml(eeSet.name)}</title>
 <meta name="description" content="${fn:escapeXml(eeSet.description)}" />
 </head>
+
+<input id="eeSetId" type="hidden" value="${eeSet.id}" />
+<input id="eeSetName" type="hidden" value="${eeSet.name}" />
+
+<input type="hidden" id="reloadOnLogout" value="true">
+<input type="hidden" id="reloadOnLogin" value="true" />
+
+<div spellcheck="false">
+    <div id="messages"></div>
+</div>
 
 <script>
 Ext.namespace( 'Gemma' );
@@ -25,15 +34,4 @@ Ext.onReady( function() {
       } )
    } );
 } );
-
 </script>
-
-<input id="eeSetId" type="hidden" value="${eeSet.id}" />
-<input id="eeSetName" type="hidden" value="${eeSet.name}" />
-
-<input type="hidden" id="reloadOnLogout" value="true">
-<input type="hidden" id="reloadOnLogin" value="true" />
-
-<div spellcheck="false">
-    <div id="messages"></div>
-</div>
