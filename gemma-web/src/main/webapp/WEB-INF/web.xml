@@ -221,10 +221,10 @@
         <servlet-name>default</servlet-name>
         <!-- scripts -->
         <url-pattern>*.js</url-pattern>
-        <url-pattern>*.js.map</url-pattern>
         <!-- styles -->
         <url-pattern>*.css</url-pattern>
-        <url-pattern>*.css.map</url-pattern>
+        <!-- source mappings -->
+        <url-pattern>*.map</url-pattern>
         <!-- images -->
         <url-pattern>*.png</url-pattern>
         <url-pattern>*.jpg</url-pattern>
