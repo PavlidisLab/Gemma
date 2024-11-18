@@ -21,7 +21,6 @@ const gemBrowUrl = "${appConfig["gemma.gemBrow.url"]}";
 <%-- for registration, possible from any page--%>
 <script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script>
 <jsp:include page="/common/analytics.jsp" />
-<jsp:include page="/common/dwr.jsp" />
 <Gemma:script src="/bundles/include.js" />
 <Gemma:script src="/bundles/gemma-lib.js" />
 <decorator:head />

@@ -1,6 +1,6 @@
 import './globals'
 
-import './dwrServices'
+import './dwr'
 
 import './ext/data/DwrProxy'
 import './ext/data/ListRangeReader'
@@ -12,7 +12,6 @@ import './DownloadWindow'
 import './Eventbus'
 import './eeDesignMatrix'
 import './userHelpMessages'
-import './valueObjectsInheritanceStructure'
 
 import './util/Error'
 import './util/Evidence'
