@@ -19,7 +19,7 @@
  * @author Kelsey
  */
 
-Heatmap = function() {
+Gemma.Heatmap = function() {
 
    // row labels
    var MAX_LABEL_LENGTH_PIXELS = 400;

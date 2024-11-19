@@ -7,4 +7,5 @@ ExpressionDataFileUploadController.validate = function(p0, callback) {
 ExpressionDataFileUploadController.load = function(p0, callback) {
   dwr.engine._execute(ExpressionDataFileUploadController._path, 'ExpressionDataFileUploadController', 'load', p0, callback);
 }
-window.ExpressionDataFileUploadController = ExpressionDataFileUploadController
+window.ExpressionDataFileUploadController = ExpressionDataFileUploadController;
+export default ExpressionDataFileUploadController;

@@ -43,7 +43,7 @@
             <p>
                 Download design File:
                 <a href="#"
-                        onClick="fetchData(false, ${expressionExperiment.id }, 'text', null, ${expressionExperiment.experimentalDesign.id})">Click
+                        onClick="Gemma.ExpressionExperimentDataFetch.fetchData(false, ${expressionExperiment.id }, 'text', null, ${expressionExperiment.experimentalDesign.id})">Click
                     to start download</a>
                 <i class="qtp fa fa-question-circle fa-fw"
                         title="Tab-delimited design file for this experiment, if available.">
@@ -134,7 +134,7 @@
                             href="<c:url value='https://pavlidislab.github.io/Gemma/designs.html' />">here</a>
                     . If you want to use the upload method, you can get a blank
                     <a href="#"
-                            onClick="fetchData(false, ${expressionExperiment.id }, 'text', null, ${expressionExperiment.experimentalDesign.id})">template
+                            onClick="Gemma.ExpressionExperimentDataFetch.fetchData(false, ${expressionExperiment.id }, 'text', null, ${expressionExperiment.experimentalDesign.id})">template
                         file</a>
                     to get started.
                 </p>

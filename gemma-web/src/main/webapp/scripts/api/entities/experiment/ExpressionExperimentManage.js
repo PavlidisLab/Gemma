@@ -34,7 +34,7 @@ Gemma.MyDatasetsPanel = Ext.extend(Ext.Panel,
                             + Gemma.EEReportGridColumnRenderers.shortNameRenderer(record.get('shortName'), null, record)
                             + '</span>&nbsp;&nbsp;<span class="medium">' + record.get('name') + "</span><p>" + data
                             + "</p>" + '<span class="link" onClick="Ext.getCmp(\'eemanager\').showAuditWindow(' + record.id
-                            + ');" ><img ext:qtip="Show history" src="' + ctxBasePath + '/images/icons/pencil.png" /></span>');
+                            + ');" ><img ext:qtip="Show history" src="' + Gemma.CONTEXT_PATH + '/images/icons/pencil.png" /></span>');
                         detailsMask.hide();
                     }.createDelegate(this)
                 });
@@ -353,14 +353,14 @@ Gemma.EEReportGridColumnRenderers = {
     },
 
     shortNameRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
-        return '<a href="' + ctxBasePath + '/expressionExperiment/showExpressionExperiment.html?id='
+        return '<a href="' + Gemma.CONTEXT_PATH + '/expressionExperiment/showExpressionExperiment.html?id='
             + (record.get("sourceExperiment") ? record.get("sourceExperiment") : record.get("id"))
             + '" target="_blank">' + value + '</a>';
     },
 
     experimentalDesignEditRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
         var id = record.get('id');
-        var url = '<a target="_blank" href="' + ctxBasePath + '/experimentalDesign/showExperimentalDesign.html?eeid='
+        var url = '<a target="_blank" href="' + Gemma.CONTEXT_PATH + '/experimentalDesign/showExperimentalDesign.html?eeid='
             + id
             + '"><i class="gray-blue fa fa-pencil fa-lg -fa-fw" ext:qtip="view/edit experimental design"></i></a>';
         return value + '&nbsp;' + url;
@@ -975,7 +975,7 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar,
                     xtype: 'button',
                     minWidth: 20,
                     cls: 'x-btn-icon',
-                    icon: ctxBasePath + '/images/icons/cross.png',
+                    icon: Gemma.CONTEXT_PATH + '/images/icons/cross.png',
                     handler: this.refresh,
                     tooltip: "Clear filters",
                     scope: this
@@ -983,7 +983,7 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar,
                     xtype: 'button',
                     minWidth: 20,
                     cls: 'x-btn-icon',
-                    icon: ctxBasePath + '/images/icons/link.png',
+                    icon: Gemma.CONTEXT_PATH + '/images/icons/link.png',
                     handler: this.getBookmark,
                     tooltip: "Bookmarkable link",
                     scope: this
@@ -991,7 +991,7 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar,
                     xtype: 'button',
                     minWidth: 20,
                     cls: 'x-btn-icon',
-                    icon: ctxBasePath + '/images/icons/disk.png',
+                    icon: Gemma.CONTEXT_PATH + '/images/icons/disk.png',
                     handler: function () {
                         this.fireEvent('showAsText', []);
                     }.createDelegate(this),

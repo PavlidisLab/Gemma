@@ -4,4 +4,5 @@ FeedReader._path = '/dwr';
 FeedReader.getLatestNews = function(callback) {
   dwr.engine._execute(FeedReader._path, 'FeedReader', 'getLatestNews', callback);
 }
-window.FeedReader = FeedReader
+window.FeedReader = FeedReader;
+export default FeedReader;

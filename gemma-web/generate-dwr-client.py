@@ -1,61 +1,30 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #
 # This script generates the DWR client so that it can be bundled with the remaining static assets
 #
 
 import re
+from getpass import getpass
 
 import requests
+from bs4 import BeautifulSoup
 
-gemma_host_url = 'https://gemma.msl.ubc.ca'
-header = "/* this code is generated, see generate-dwr-client.sh for details */"
+gemma_host_url = 'http://localhost:8080'
+header = "/* this code is generated, see generate-dwr-client.py for details */"
 dwr_script_dir = "src/main/webapp/scripts/api/dwr"
 
-controllers = """
-AnnotationController
-ArrayDesignController
-ArrayDesignRepeatScanController
-AuditController
-BatchInfoFetchController
-BibliographicReferenceController
-BioAssayController
-BioMaterialController
-CharacteristicBrowserController
-CoexpressionSearchController
-CompositeSequenceController
-DEDVController
-DiffExMetaAnalyzerController
-DifferentialExpressionAnalysisController
-DifferentialExpressionSearchController
-EmptyController
-ExperimentalDesignController
-ExpressionDataFileUploadController
-ExpressionExperimentController
-ExpressionExperimentDataFetchController
-ExpressionExperimentLoadController
-ExpressionExperimentReportGenerationController
-ExpressionExperimentSetController
-FeedReader
-FileUploadController
-GeneController
-GenePickerController
-GeneSetController
-GeoRecordBrowserController
-IndexService
-JavascriptLogger
-LinkAnalysisController
-PreprocessController
-ProgressStatusService
-SearchService
-SecurityController
-SignupController
-SvdController
-SystemMonitorController
-TaskCompletionController
-TwoChannelMissingValueController
-UserListController
-""".split()
+res = requests.get('http://localhost:8080/dwr/index.html',
+                   cookies={'JSESSIONID': getpass('Supply your JSESSIONID: ')})
+res.raise_for_status()
+s = BeautifulSoup(res.text, features='html.parser')
+controllers = []
+for l in s.find_all('a'):
+    if l.get('href').startswith('/dwr/test/'):
+        controllers.append(l.get('href')[len('/dwr/test/'):])
+controllers.sort()
+
+print(f'Found {len(controllers)} DWR controllers')
 
 with open(dwr_script_dir + '/index.js', 'w') as index:
     index.write(header + '\n')
@@ -71,7 +40,9 @@ with open(dwr_script_dir + '/index.js', 'w') as index:
         f.write(e)
         f.write('window.dwr = dwr;\n')
         f.write('window.DWREngine = DWREngine;\n')
-    index.write("import './engine'\n")
+        f.write('export default dwr;\n')
+    index.write("import dwr from './engine'\n")
+    print('Wrote engine.js')
 
     with open(dwr_script_dir + '/util.js', 'w') as f:
         res = requests.get(gemma_host_url + '/dwr/util.js')
@@ -83,7 +54,9 @@ with open(dwr_script_dir + '/index.js', 'w') as index:
         f.write(header + '\n')
         f.write(u)
         f.write("window.DWRUtil = DWRUtil;\n")
+        f.write('export default dwr.util;\n')
     index.write("import './util'\n")
+    print('Wrote util.js')
 
     wrote_models = False
     for controller in controllers:
@@ -96,14 +69,20 @@ with open(dwr_script_dir + '/index.js', 'w') as index:
                 with open(dwr_script_dir + '/models.js', 'w') as mf:
                     mf.write(header + "\n")
                     mf.write(m)
-                    matches = re.findall(r'function (.+)\(\) \{', m)
+                    matches = sorted(re.findall(r'function (.+)\(\) \{', m))
                     for match in matches:
                         mf.write("window." + match + " = " + match + "\n")
+                    mf.write("module.exports = {" + ', '.join(matches) + "};\n")
+                    print('Wrote models.js')
                     wrote_models = True
                 index.write("import './models'\n")
             f.write(header + '\n')
             f.write(c)
-            f.write("window." + controller + " = " + controller + "\n")
+            f.write("window." + controller + " = " + controller + ";\n")
+            f.write("export default " + controller + ";\n")
+            print('Wrote interface/' + controller + '.js')
         index.write("import './interface/" + controller + "'\n")
 
     index.write("import './overrides'\n")
+    index.write("export default dwr;")
+    print('Wrote index.js')

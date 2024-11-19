@@ -1,5 +1,5 @@
 Ext.namespace( "Gemma.Search" );
-Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
+Ext.BLANK_IMAGE_URL = Gemma.CONTEXT_PATH + '/images/default/s.gif';
 
 Gemma.Search.GeneralSearchSimple = Ext.extend( Ext.Panel, {
    layout : 'hbox',
@@ -64,7 +64,7 @@ Gemma.Search.GeneralSearchSimple = Ext.extend( Ext.Panel, {
    getSearchURL : function() {
       var scopeLetterArr = this.searchTypeCombo.getURLScopeLetters();
       var query = this.queryField.getValue();
-      var url = ctxBasePath + "/searcher.html?query=" + query + "&scope=" + scopeLetterArr.join();
+      var url = Gemma.CONTEXT_PATH + "/searcher.html?query=" + query + "&scope=" + scopeLetterArr.join();
       return url;
    }
 } );

@@ -1,12 +1,14 @@
 Ext.namespace( 'Gemma' );
 
-Gemma.isRunningOutsideOfGemma = function() {
+Gemma.Evidence = {}
+
+function isRunningOutsideOfGemma() {
    var hostname = window.location.hostname;
 
    return (hostname.indexOf( 'msl.ubc.ca' ) < 0 && hostname.indexOf( 'chibi.ubc.ca' ) < 0 && hostname.indexOf( 'localhost' ) < 0);
 };
 
-Gemma.convertToEvidenceError = function( validateEvidenceValueObject ) {
+Gemma.Evidence.convertToEvidenceError = function( validateEvidenceValueObject ) {
    var isWarning = false;
    var errorMessage = '';
 

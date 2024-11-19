@@ -270,7 +270,7 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
     formatAnalysisInfo: function (value, metadata, record, row, col, ds) {
         if (value)
             return '<i id="aliasHelp" class="fa fa-check fa-fw" style="font-size:smaller;color:green"></i>';
-        //   return "<img src='" + ctxBasePath + "/images/icons/ok.png' height='16' width='16' ext:qtip='Has analysis' />";
+        //   return "<img src='" + Gemma.CONTEXT_PATH + "/images/icons/ok.png' height='16' width='16' ext:qtip='Has analysis' />";
 
         return '';
     },
@@ -281,7 +281,7 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
     formatEE: function (value, metadata, record, row, col, ds) {
         var eeTemplate = new Ext.XTemplate(
-            '<tpl for="."><a target="_blank" title="{name}" href="' + ctxBasePath + '/expressionExperiment/showExpressionExperiment.html?id=',
+            '<tpl for="."><a target="_blank" title="{name}" href="' + Gemma.CONTEXT_PATH + '/expressionExperiment/showExpressionExperiment.html?id=',
             '{id}"', ' ext:qtip="{name}">{shortName}</a></tpl>');
         return this.experimentNameAsLink ? eeTemplate.apply(record.data) : value;
     },

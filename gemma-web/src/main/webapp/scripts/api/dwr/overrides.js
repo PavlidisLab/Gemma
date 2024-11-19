@@ -40,12 +40,3 @@ FreeTextGeneResultsValueObject.prototype.constructor = FreeTextGeneResultsValueO
 
 GOGroupValueObject.prototype = new SessionBoundGeneSetValueObject();
 GOGroupValueObject.prototype.constructor = GOGroupValueObject;
-
-PhenotypeGroupValueObject.prototype = new SessionBoundGeneSetValueObject();
-PhenotypeGroupValueObject.prototype.constructor = PhenotypeGroupValueObject;
-
-ExperimentalEvidenceValueObject.prototype = new EvidenceValueObject();
-ExperimentalEvidenceValueObject.prototype.constructor = ExperimentalEvidenceValueObject;
-
-LiteratureEvidenceValueObject.prototype = new EvidenceValueObject();
-LiteratureEvidenceValueObject.prototype.constructor = LiteratureEvidenceValueObject;

@@ -30,7 +30,7 @@
         </h2>
         <h3>Quantitation Types</h3>
         <c:choose>
-            <c:when test='<%=expressionExperiment.getQuantitationTypes().size() == 0%>'>
+            <c:when test='<%=expressionExperiment.getQuantitationTypes().isEmpty()%>'>
                 No quantitation types! Data may be corrupted (likely data import error)
             </c:when>
             <c:otherwise>

@@ -3,7 +3,7 @@
  */
 
 Ext.namespace( 'Gemma' );
-Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
+Ext.BLANK_IMAGE_URL = Gemma.CONTEXT_PATH + '/images/default/s.gif';
 Ext.onReady( function() {
 
    Ext.QuickTips.init();

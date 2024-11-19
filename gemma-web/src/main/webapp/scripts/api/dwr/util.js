@@ -1487,3 +1487,4 @@ dwr.util._debug = function(message, stacktrace) {
 };
 
 window.DWRUtil = DWRUtil;
+export default dwr.util;

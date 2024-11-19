@@ -27,7 +27,7 @@ Gemma.Application.currentUser.addEvents( 'logIn', 'logOut' );
 
 Gemma.AjaxLogin.logoutFn = function() {
    Ext.Ajax.request( {
-      url : ctxBasePath + '/j_spring_security_logout',
+      url : Gemma.CONTEXT_PATH + '/j_spring_security_logout',
       method : 'GET',
 
       /**
@@ -254,7 +254,7 @@ Gemma.AjaxLogin.AjaxLoginWindow = Ext.extend( Ext.Window, {
                                     inputType : 'checkbox'
                                  },
                                  {
-                                    html : '<a href="' + ctxBasePath + '/passwordHint.html">'
+                                    html : '<a href="' + Gemma.CONTEXT_PATH + '/passwordHint.html">'
                                        + Gemma.HelpText.WidgetDefaults.AjaxLogin_AjaxLoginWindow.passwordHintLink
                                        + '</a>',
                                     name : 'passwordHint',
@@ -310,7 +310,7 @@ Gemma.AjaxLogin.AjaxLoginWindow = Ext.extend( Ext.Window, {
       var sb = Ext.getCmp( 'my-status_ajax' );
       sb.showBusy();
       Ext.getCmp( "_loginForm" ).getForm().submit( {
-         url : ctxBasePath + '/j_spring_security_check',
+         url : Gemma.CONTEXT_PATH + '/j_spring_security_check',
          success : function( form, action ) {
 
             var sb = Ext.getCmp( 'my-status_ajax' );
@@ -320,7 +320,7 @@ Gemma.AjaxLogin.AjaxLoginWindow = Ext.extend( Ext.Window, {
 
             var link = Ext.getDom( 'footer-login-link' );
             if ( link ) {
-               link.href = ctxBasePath + "/j_spring_security_logout";
+               link.href = Gemma.CONTEXT_PATH + "/j_spring_security_logout";
                link.innerHTML = "Logout";
             }
 

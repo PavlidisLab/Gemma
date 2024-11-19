@@ -1,4 +1,4 @@
-Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
+Ext.BLANK_IMAGE_URL = Gemma.CONTEXT_PATH + '/images/default/s.gif';
 Ext.namespace( 'Gemma.CharacteristicBrowser' );
 Ext.onReady( function() {
    Ext.QuickTips.init();
@@ -25,7 +25,7 @@ Ext.onReady( function() {
    Gemma.CharacteristicBrowser.handleError = function( msg, e ) {
       Ext.DomHelper.overwrite( "messages", {
          tag : 'img',
-         src : ctxBasePath + '/images/icons/warning.png'
+         src : Gemma.CONTEXT_PATH + '/images/icons/warning.png'
       } );
       Ext.DomHelper.append( "messages", {
          tag : 'span',

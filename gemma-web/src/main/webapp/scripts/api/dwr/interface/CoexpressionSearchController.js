@@ -10,4 +10,5 @@ CoexpressionSearchController.doSearch = function(p0, callback) {
 CoexpressionSearchController.doSearchQuickComplete = function(p0, p1, callback) {
   dwr.engine._execute(CoexpressionSearchController._path, 'CoexpressionSearchController', 'doSearchQuickComplete', p0, p1, callback);
 }
-window.CoexpressionSearchController = CoexpressionSearchController
+window.CoexpressionSearchController = CoexpressionSearchController;
+export default CoexpressionSearchController;

@@ -4,4 +4,5 @@ SvdController._path = '/dwr';
 SvdController.run = function(p0, callback) {
   dwr.engine._execute(SvdController._path, 'SvdController', 'run', p0, callback);
 }
-window.SvdController = SvdController
+window.SvdController = SvdController;
+export default SvdController;

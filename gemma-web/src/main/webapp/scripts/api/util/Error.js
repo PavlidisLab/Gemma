@@ -1,13 +1,15 @@
 Ext.namespace( 'Gemma' );
 
-Gemma.genericErrorHandler = function( err, exception ) {
+Gemma.Error = {};
+
+Gemma.Error.genericErrorHandler = function( err, exception ) {
    if ( typeof this.getEl == 'function' && this.getEl() != null && typeof this.getEl().unmask == 'function' ) {
       this.getEl().unmask();
    }
 
    console.log( exception );
    if ( err.stack ) {
-      var f = Gemma.parseException( err.stack );
+      var f = parseException( err.stack );
       console.log( f );
 
       Ext.Msg.alert( "There was an error", err + ":<br/>" + f );
@@ -27,7 +29,7 @@ Gemma.genericErrorHandler = function( err, exception ) {
    }
 };
 
-Gemma.alertUserToError = function( baseValueObject, title ) {
+Gemma.Error.alertUserToError = function( baseValueObject, title ) {
    // Set the minimum width of message box so that title is not wrapped if it is longer than message box body text.
    Ext.MessageBox.minWidth = 250;
 
@@ -44,11 +46,11 @@ Gemma.alertUserToError = function( baseValueObject, title ) {
    }
 };
 
-Gemma.parseException = function( ex ) {
+function parseException( ex ) {
    if ( ex.constructor === Array ) {
       var s = "";
       try {
-         for (var i = 0; i < ex.length; i++) {
+         for ( var i = 0; i < ex.length; i++ ) {
             var l = ex[i];
             if ( l.fileName == "<generated>" || l.lineNumber < 0 ) {
                continue;
@@ -60,7 +62,7 @@ Gemma.parseException = function( ex ) {
             }
          }
          return s;
-      } catch (e) {
+      } catch ( e ) {
          return "Error stack trace could not be parsed";
       }
    } else {

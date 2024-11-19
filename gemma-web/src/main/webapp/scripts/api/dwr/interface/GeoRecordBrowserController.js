@@ -10,4 +10,5 @@ GeoRecordBrowserController.toggleUsability = function(p0, callback) {
 GeoRecordBrowserController.browse = function(p0, p1, p2, callback) {
   dwr.engine._execute(GeoRecordBrowserController._path, 'GeoRecordBrowserController', 'browse', p0, p1, p2, callback);
 }
-window.GeoRecordBrowserController = GeoRecordBrowserController
+window.GeoRecordBrowserController = GeoRecordBrowserController;
+export default GeoRecordBrowserController;

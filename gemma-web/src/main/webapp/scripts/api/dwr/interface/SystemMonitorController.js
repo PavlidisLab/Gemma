@@ -4,9 +4,6 @@ SystemMonitorController._path = '/dwr';
 SystemMonitorController.clearCache = function(p0, callback) {
   dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'clearCache', p0, callback);
 }
-SystemMonitorController.enableStatistics = function(callback) {
-  dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'enableStatistics', callback);
-}
 SystemMonitorController.clearAllCaches = function(callback) {
   dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'clearAllCaches', callback);
 }
@@ -22,4 +19,8 @@ SystemMonitorController.getHibernateStatus = function(callback) {
 SystemMonitorController.resetHibernateStatus = function(callback) {
   dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'resetHibernateStatus', callback);
 }
-window.SystemMonitorController = SystemMonitorController
+SystemMonitorController.enableStatistics = function(callback) {
+  dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'enableStatistics', callback);
+}
+window.SystemMonitorController = SystemMonitorController;
+export default SystemMonitorController;

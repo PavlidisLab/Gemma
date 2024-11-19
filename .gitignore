@@ -139,5 +139,3 @@ atlassian-ide-plugin.xml
 /gemma-data
 /gemma-logs
 
-node_modules/
-bundles/

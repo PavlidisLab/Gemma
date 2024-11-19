@@ -133,7 +133,7 @@ Gemma.CoexpressionGridLight = Ext.extend(Ext.grid.GridPanel, {
             Ext.DomHelper.applyStyles("coexpression-msg", "height: 2.2em");
             Ext.DomHelper.overwrite("coexpression-msg", [{
                 tag: 'img',
-                src: ctxBasePath + '/images/icons/information.png'
+                src: Gemma.CONTEXT_PATH + '/images/icons/information.png'
             }, {
                 tag: 'span',
                 html: "&nbsp;&nbsp;" + errorMessage
@@ -264,10 +264,10 @@ Gemma.CoexpressionGridLight = Ext.extend(Ext.grid.GridPanel, {
     },
 
     geneTemplate: new Ext.Template("<a style='cursor:pointer;font-weight:{fontWeight};' "
-        + "target='_blank' href='" + ctxBasePath + "/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}"),
+        + "target='_blank' href='" + Gemma.CONTEXT_PATH + "/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}"),
 
     visStyler: function (value, metadata, record, row, col, ds) {
-        return "<img style='cursor:pointer' src='" + ctxBasePath + "/images/icons/chart_curve.png' ext:qtip='Visualize the data' />";
+        return "<img style='cursor:pointer' src='" + Gemma.CONTEXT_PATH + "/images/icons/chart_curve.png' ext:qtip='Visualize the data' />";
     },
 
     /**
@@ -298,7 +298,7 @@ Gemma.CoexpressionGridLight = Ext.extend(Ext.grid.GridPanel, {
                     experiments: activeExperiments,
                     queryGene: queryGene,
                     foundGene: foundGene,
-                    downloadLink: String.format(ctxBasePath + "/dedv/downloadDEDV.html?ee={0}&g={1},{2}", activeExperiments
+                    downloadLink: String.format(Gemma.CONTEXT_PATH + "/dedv/downloadDEDV.html?ee={0}&g={1},{2}", activeExperiments
                         .join(','), queryGene.id, foundGene.id),
                     title: "Coexpression for:  " + queryGene.name + " + " + foundGene.name
                 });

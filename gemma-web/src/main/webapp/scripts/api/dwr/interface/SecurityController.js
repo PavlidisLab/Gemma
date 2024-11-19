@@ -4,29 +4,20 @@ SecurityController._path = '/dwr';
 SecurityController.createGroup = function(p0, callback) {
   dwr.engine._execute(SecurityController._path, 'SecurityController', 'createGroup', p0, callback);
 }
-SecurityController.deleteGroup = function(p0, callback) {
-  dwr.engine._execute(SecurityController._path, 'SecurityController', 'deleteGroup', p0, callback);
+SecurityController.removeGroupReadable = function(p0, p1, callback) {
+  dwr.engine._execute(SecurityController._path, 'SecurityController', 'removeGroupReadable', p0, p1, callback);
 }
-SecurityController.addUserToGroup = function(p0, p1, callback) {
-  dwr.engine._execute(SecurityController._path, 'SecurityController', 'addUserToGroup', p0, p1, callback);
+SecurityController.removeGroupWriteable = function(p0, p1, callback) {
+  dwr.engine._execute(SecurityController._path, 'SecurityController', 'removeGroupWriteable', p0, p1, callback);
 }
-SecurityController.getAuthenticatedUserCount = function(callback) {
-  dwr.engine._execute(SecurityController._path, 'SecurityController', 'getAuthenticatedUserCount', callback);
+SecurityController.removeUsersFromGroup = function(p0, p1, callback) {
+  dwr.engine._execute(SecurityController._path, 'SecurityController', 'removeUsersFromGroup', p0, p1, callback);
 }
-SecurityController.getAuthenticatedUserNames = function(callback) {
-  dwr.engine._execute(SecurityController._path, 'SecurityController', 'getAuthenticatedUserNames', callback);
+SecurityController.updatePermission = function(p0, callback) {
+  dwr.engine._execute(SecurityController._path, 'SecurityController', 'updatePermission', p0, callback);
 }
-SecurityController.getAvailableSids = function(callback) {
-  dwr.engine._execute(SecurityController._path, 'SecurityController', 'getAvailableSids', callback);
-}
-SecurityController.makePrivate = function(p0, callback) {
-  dwr.engine._execute(SecurityController._path, 'SecurityController', 'makePrivate', p0, callback);
-}
-SecurityController.makePublic = function(p0, callback) {
-  dwr.engine._execute(SecurityController._path, 'SecurityController', 'makePublic', p0, callback);
-}
-SecurityController.getGroupMembers = function(p0, callback) {
-  dwr.engine._execute(SecurityController._path, 'SecurityController', 'getGroupMembers', p0, callback);
+SecurityController.updatePermissions = function(p0, callback) {
+  dwr.engine._execute(SecurityController._path, 'SecurityController', 'updatePermissions', p0, callback);
 }
 SecurityController.getAvailableGroups = function(callback) {
   dwr.engine._execute(SecurityController._path, 'SecurityController', 'getAvailableGroups', callback);
@@ -46,19 +37,29 @@ SecurityController.makeGroupReadable = function(p0, p1, callback) {
 SecurityController.makeGroupWriteable = function(p0, p1, callback) {
   dwr.engine._execute(SecurityController._path, 'SecurityController', 'makeGroupWriteable', p0, p1, callback);
 }
-SecurityController.removeGroupReadable = function(p0, p1, callback) {
-  dwr.engine._execute(SecurityController._path, 'SecurityController', 'removeGroupReadable', p0, p1, callback);
+SecurityController.getGroupMembers = function(p0, callback) {
+  dwr.engine._execute(SecurityController._path, 'SecurityController', 'getGroupMembers', p0, callback);
 }
-SecurityController.removeGroupWriteable = function(p0, p1, callback) {
-  dwr.engine._execute(SecurityController._path, 'SecurityController', 'removeGroupWriteable', p0, p1, callback);
+SecurityController.deleteGroup = function(p0, callback) {
+  dwr.engine._execute(SecurityController._path, 'SecurityController', 'deleteGroup', p0, callback);
 }
-SecurityController.removeUsersFromGroup = function(p0, p1, callback) {
-  dwr.engine._execute(SecurityController._path, 'SecurityController', 'removeUsersFromGroup', p0, p1, callback);
+SecurityController.addUserToGroup = function(p0, p1, callback) {
+  dwr.engine._execute(SecurityController._path, 'SecurityController', 'addUserToGroup', p0, p1, callback);
 }
-SecurityController.updatePermission = function(p0, callback) {
-  dwr.engine._execute(SecurityController._path, 'SecurityController', 'updatePermission', p0, callback);
+SecurityController.makePrivate = function(p0, callback) {
+  dwr.engine._execute(SecurityController._path, 'SecurityController', 'makePrivate', p0, callback);
 }
-SecurityController.updatePermissions = function(p0, callback) {
-  dwr.engine._execute(SecurityController._path, 'SecurityController', 'updatePermissions', p0, callback);
+SecurityController.makePublic = function(p0, callback) {
+  dwr.engine._execute(SecurityController._path, 'SecurityController', 'makePublic', p0, callback);
 }
-window.SecurityController = SecurityController
+SecurityController.getAuthenticatedUserCount = function(callback) {
+  dwr.engine._execute(SecurityController._path, 'SecurityController', 'getAuthenticatedUserCount', callback);
+}
+SecurityController.getAuthenticatedUserNames = function(callback) {
+  dwr.engine._execute(SecurityController._path, 'SecurityController', 'getAuthenticatedUserNames', callback);
+}
+SecurityController.getAvailableSids = function(callback) {
+  dwr.engine._execute(SecurityController._path, 'SecurityController', 'getAvailableSids', callback);
+}
+window.SecurityController = SecurityController;
+export default SecurityController;

@@ -15,7 +15,7 @@ function reportFeedback( type, text, e ) {
       if ( messagesDiv ) {
          Ext.DomHelper.overwrite( "messages", {
             tag : 'img',
-            src : ctxBasePath + '/images/icons/warning.png'
+            src : Gemma.CONTEXT_PATH + '/images/icons/warning.png'
          } );
          Ext.DomHelper.append( "messages", {
             tag : 'span',
@@ -34,7 +34,7 @@ function reportFeedback( type, text, e ) {
       if ( messagesDiv ) {
          Ext.DomHelper.overwrite( "messages", {
             tag : 'img',
-            src : ctxBasePath + '/images/default/tree/loading.gif'
+            src : Gemma.CONTEXT_PATH + '/images/default/tree/loading.gif'
          } );
       }
    } else if ( type === "success" ) {
@@ -76,7 +76,10 @@ function handleDoneUpdateReport( id, callerScope, callback ) {
 
 }
 
-function updateArrayDesignReport( id, callerScope ) {
+if ( Gemma.ArrayDesign === undefined ) {
+   Gemma.ArrayDesign = {};
+}
+Gemma.ArrayDesign.updateArrayDesignReport = function( id, callerScope ) {
 
    var callParams = [];
    callParams.push( {
@@ -104,8 +107,6 @@ function updateArrayDesignReport( id, callerScope ) {
 
    ArrayDesignController.updateReport.apply( this, callParams );
 }
-
-Gemma.updateArrayDesignReport = updateArrayDesignReport;
 
 function remove( id ) {
    alert( "Are you sure?" );

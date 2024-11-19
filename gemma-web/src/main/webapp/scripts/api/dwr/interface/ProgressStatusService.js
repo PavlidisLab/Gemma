@@ -16,4 +16,5 @@ ProgressStatusService.getSubmittedTasks = function(callback) {
 ProgressStatusService.addEmailAlert = function(p0, callback) {
   dwr.engine._execute(ProgressStatusService._path, 'ProgressStatusService', 'addEmailAlert', p0, callback);
 }
-window.ProgressStatusService = ProgressStatusService
+window.ProgressStatusService = ProgressStatusService;
+export default ProgressStatusService;

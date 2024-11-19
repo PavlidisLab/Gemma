@@ -1,5 +1,5 @@
 Ext.namespace('Gemma');
-Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
+Ext.BLANK_IMAGE_URL = Gemma.CONTEXT_PATH + '/images/default/s.gif';
 
 /**
  * This provides a summary of the differential analyses done for a particular dataset/expression experiment. It is
@@ -298,7 +298,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                 return String
                     .format(
                         "<span class='link'"
-                        + " onClick='fetchDiffExpressionData({0})' > " +
+                        + " onClick='Gemma.ExpressionExperimentDataFetch.fetchDiffExpressionData({0})' > " +
                         "<i class='gray-blue fa fa-cloud-download fa-lg' ext:qtip='Download all differential expression data for this analysis in a tab-delimited format'></i></span>",
                         analysis.id);
             },
@@ -472,13 +472,13 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                 linkText += '</span>';
                 /* provide link for visualization. */
                 var tipText = "View top differentially expressed genes for &quot;" + factorString + "&quot;";
-                linkText += '<span class="link" onClick="Gemma.visualizeDiffExpressionHandler(\'' + eeID + '\',\''
+                linkText += '<span class="link" onClick="Gemma.DifferentialExpressionAnalysesSummaryTree.visualizeDiffExpressionHandler(\'' + eeID + '\',\''
                    + resultSet.resultSetId + '\',\'' + factorString
                    + '\', \'' + primaryFactorID + '\')">&nbsp;'
                    + "<i class='orange fa fa-area-chart fa-fw fa-lg' ext:qtip='" + tipText + "'></i></span>";
 
                 var pValueDistImageSize = 16;
-                var imageUrl = ctxBasePath + '/expressionExperiment/visualizePvalueDist.html?' + 'id=' + eeID + '&analysisId='
+                var imageUrl = Gemma.CONTEXT_PATH + '/expressionExperiment/visualizePvalueDist.html?' + 'id=' + eeID + '&analysisId='
                     + resultSet.analysisId + '&rsid=' + resultSet.resultSetId;
                 var placeholderImageUrl = imageUrl + '&size=' + pValueDistImageSize;
                 // -8px -6px is used as background-position property because the image has gray border.
@@ -741,7 +741,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                 var eeInfoTitle = "P-value distribution for "
                     + factorName
                     + " in: "
-                    + "<a ext:qtip='Click for details on experiment (opens in new window)' target='_blank'  href='" + ctxBasePath + "/expressionExperiment/showExpressionExperiment.html?id="
+                    + "<a ext:qtip='Click for details on experiment (opens in new window)' target='_blank'  href='" + Gemma.CONTEXT_PATH + "/expressionExperiment/showExpressionExperiment.html?id="
                     + this.ee.id + "'>" + this.ee.shortName + "</a> (" + Ext.util.Format.ellipsis(this.ee.name, 35) + ")";
 
                 new Ext.Window({
@@ -765,14 +765,14 @@ Ext.reg('differentialExpressionAnalysesSummaryTree', Gemma.DifferentialExpressio
  * fix for now, should replace visualize 'button' with ext button that calls this function, and move function inside
  * Gemma.DifferentialExpressionAnalysesSummaryTree
  */
-Gemma.visualizeDiffExpressionHandler = function(eeid, diffResultId, factorDetails, factorId) {
+Gemma.DifferentialExpressionAnalysesSummaryTree.visualizeDiffExpressionHandler = function(eeid, diffResultId, factorDetails, factorId) {
 
     var visDiffWindow = new Gemma.VisualizationWithThumbsWindow({
         thumbnails: false,
         readMethod: DEDVController.getDEDVForDiffExVisualizationByThreshold,
         title: "Top diff. ex. probes for &quot;" + factorDetails + "&quot;",
         showLegend: false,
-        downloadLink: String.format(ctxBasePath + "/dedv/downloadDEDV.html?ee={0}&rs={1}&thresh={2}&diffex=1", eeid,
+        downloadLink: String.format(Gemma.CONTEXT_PATH + "/dedv/downloadDEDV.html?ee={0}&rs={1}&thresh={2}&diffex=1", eeid,
             diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD)
     });
 

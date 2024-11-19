@@ -149,7 +149,7 @@ Gemma.prepareProfiles = function( data, showPValues ) {
             }
          }
       } else {
-         orderedGeneLinksArr.push( "<a href='" + ctxBasePath + "/compositeSequence/show.html?id=" + probeId
+         orderedGeneLinksArr.push( "<a href='" + Gemma.CONTEXT_PATH + "/compositeSequence/show.html?id=" + probeId
             + "' target='_blank' ext:qtip= '" + qtip + "'>Unmapped</a>" );
          orderedGeneNamesArr.push( "" );
       }
@@ -302,7 +302,7 @@ Gemma.HeatmapTemplate = Ext.extend( Ext.XTemplate, {
          /*
           * Note: 'newDiv' works in FF but not in IE.
           */
-         Heatmap.draw( Ext.get( shortName + "_vis_" + randomnumber ), record.profiles, this.graphConfig, null,
+         Gemma.Heatmap.draw( Ext.get( shortName + "_vis_" + randomnumber ), record.profiles, this.graphConfig, null,
             record.factorValuesToNames, null ); // no
          // sample
          // names
@@ -427,7 +427,7 @@ Gemma.VisualizationZoomPanel = Ext
                var eeInfoTitle = "";
 
                eeInfoTitle = "<a ext.qtip='Click for details on experiment (opens in new window)' target='_blank'  href='"
-                  + ctxBasePath + "/expressionExperiment/showExpressionExperiment.html?shortName="
+                  + Gemma.CONTEXT_PATH + "/expressionExperiment/showExpressionExperiment.html?shortName="
                   + eevo.shortName
                   + " '>"
                   + eevo.shortName
@@ -488,7 +488,7 @@ Gemma.VisualizationZoomPanel = Ext
             if ( doHeatmap ) {
                graphConfig.legend.container = this.legendDiv ? this.legendDiv : this.body.id;
                profiles.sort( Gemma.sortByImportance );
-               Heatmap.draw( Ext.get( this.body.id ), profiles, graphConfig, sampleNames, conditionLabels,
+               Gemma.Heatmap.draw( Ext.get( this.body.id ), profiles, graphConfig, sampleNames, conditionLabels,
                   conditionLabelKey );
             } else {
                profiles.sort( Gemma.sortByImportance );
@@ -997,7 +997,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend( Ext.Panel, {
                xtype : 'button',
                ref : 'downloadDataBtn',
                // border : true,
-               icon : ctxBasePath + '/images/download.gif',
+               icon : Gemma.CONTEXT_PATH + '/images/download.gif',
                // iconCls : 'fa fa-download fa-lg', // uses extension.
                // glyph : 'xf0192FontAwesome', // ext 4
                cls : 'x-btn-text-icon',

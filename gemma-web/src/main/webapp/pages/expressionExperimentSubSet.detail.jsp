@@ -162,4 +162,9 @@
             </c:forEach>
         </table>
     </c:if>
+    <div id="app"></div>
 </div>
+
+<script>
+new Gemma.EESubSet().mount( '#app', ${subSet.id} );
+</script>

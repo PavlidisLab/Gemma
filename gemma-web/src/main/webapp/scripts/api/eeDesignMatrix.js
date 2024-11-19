@@ -5,7 +5,7 @@
  * @author Luke, Paul
  * @type
  */
-DesignMatrix = {
+Gemma.DesignMatrix = {
 
    /**
     * @memberOf DesignMatrix

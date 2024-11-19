@@ -1,5 +1,5 @@
 Ext.namespace( 'Gemma' );
-Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
+Ext.BLANK_IMAGE_URL = Gemma.CONTEXT_PATH + '/images/default/s.gif';
 /**
  * 
  * Panel containing the most interesting info about a gene group. Used as one tab of the EE page
@@ -42,7 +42,7 @@ Gemma.GeneSetSummary = Ext
          renderStatus : function( g ) {
             var statusString = "";
             if ( g.modifiable ) {
-               statusString += "<img src='" + ctxBasePath + "/images/icons/shield.png' height='16' width='16' "
+               statusString += "<img src='" + Gemma.CONTEXT_PATH + "/images/icons/shield.png' height='16' width='16' "
                   + "title='Protected; cannot have members changed, usually applies to automatically generated groups.' />&nbsp;";
             }
             var sl = Gemma.SecurityManager.getSecurityLink( "ubic.gemma.model.genome.gene.GeneSet", g.id,
@@ -202,7 +202,7 @@ Gemma.GeneSetSummary = Ext
 
             var deleteEEButton = new Ext.Button( {
                text : 'Delete Gene Group',
-               icon : ctxBasePath + '/images/icons/cross.png',
+               icon : Gemma.CONTEXT_PATH + '/images/icons/cross.png',
                toolTip : 'Delete the gene group from the system',
                disabled : !this.editable,
                handler : this.deleteGeneSet,
@@ -298,7 +298,7 @@ Gemma.GeneSetSummary = Ext
 
             geneMembersGrid.on( 'geneSetCreated', function( geneSet ) {
                Ext.getBody().mask( 'Loading new set' );
-               window.location = ctxBasePath + "/geneSet/showGeneSet.html?id=" + geneSet.id;
+               window.location = Gemma.CONTEXT_PATH + "/geneSet/showGeneSet.html?id=" + geneSet.id;
             } );
 
             this.add( geneMembersGrid );
@@ -348,7 +348,7 @@ Gemma.GeneSetSummary = Ext
                      this.deleteMask.show();
                      callParams.push( {
                         callback : function( data ) {
-                           window.location = ctxBasePath + '/home.html';
+                           window.location = Gemma.CONTEXT_PATH + '/home.html';
                         }.createDelegate( this ),
                         errorHandler : function( error ) {
                            Ext.Msg.alert( "Deletion failed", error );

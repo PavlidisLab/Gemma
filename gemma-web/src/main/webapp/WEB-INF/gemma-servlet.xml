@@ -177,10 +177,6 @@
         <dwr:remote javascript="JavascriptLogger"/>
     </bean>
 
-    <bean id="emptyController" class="ubic.gemma.web.controller.EmptyController">
-        <dwr:remote javascript="EmptyController"/>
-    </bean>
-
     <bean id="differentialExpressionSearchController"
           class="ubic.gemma.web.controller.diff.DifferentialExpressionSearchController">
         <dwr:remote javascript="DifferentialExpressionSearchController">

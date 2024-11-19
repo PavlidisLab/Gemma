@@ -128,7 +128,7 @@ Gemma.Metaheatmap.ControlPanel = Ext
                                              // '+
                                              // 'Allows you to hide a gene based on how many conditions it\'s missing
                                              // data for"
-                                             // src=ctxBasePath + "/images/icons/question_blue.png"/>:',
+                                             // src=Gemma.CONTEXT_PATH + "/images/icons/question_blue.png"/>:',
                                              html : 'Missing data filter:',
                                              height : 15
                                           },
@@ -246,7 +246,7 @@ Gemma.Metaheatmap.ControlPanel = Ext
                                              // '+
                                              // 'Allows you to hide a condition based on how many genes it\'s missing
                                              // data for"
-                                             // src=ctxBasePath + "/images/icons/question_blue.png"/>:',
+                                             // src=Gemma.CONTEXT_PATH + "/images/icons/question_blue.png"/>:',
                                              height : 15
                                           },
                                           {
@@ -284,7 +284,7 @@ Gemma.Metaheatmap.ControlPanel = Ext
 
                                              html : 'Specificity filter <img ext:qtip="'
                                                 + 'An experiment\'s specificity is measured as the total number of probes <b>differentially</b> expressed versus the total '
-                                                + 'number of probes expressed. " src="' + ctxBasePath + '/images/icons/question_blue.png"/>:',
+                                                + 'number of probes expressed. " src="' + Gemma.CONTEXT_PATH + '/images/icons/question_blue.png"/>:',
                                              // text : 'Specificity filter',
                                              height : 15
                                           },
