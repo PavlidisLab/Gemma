@@ -618,6 +618,9 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Map<Class<? extends DataVector>, Set<QuantitationType>> getQuantitationTypesByVectorType( ExpressionExperiment ee );
+
     /**
      * Retrieve all the quantitation types used by the given experiment and dimension.
      */
@@ -768,6 +771,13 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<ExpressionExperiment> getExperimentsLackingPublications();
+
+    /**
+     * Update a quantitation type.
+     * @see ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService#update(QuantitationType)
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void updateQuantitationType( ExpressionExperiment ee, QuantitationType qt );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr );

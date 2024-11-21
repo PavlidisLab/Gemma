@@ -193,16 +193,27 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     }
 
     @Override
-    public Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee ) {
+    public Map<Class<? extends DataVector>, Set<QuantitationType>> findByExpressionExperiment( ExpressionExperiment ee ) {
+        Map<Class<? extends DataVector>, Set<QuantitationType>> result = new HashMap<>();
         //noinspection unchecked
         Set<QuantitationType> qts = new HashSet<>( ( List<QuantitationType> ) getSessionFactory().getCurrentSession()
                 .createQuery( "select qt from ExpressionExperiment ee join ee.quantitationTypes qt where ee = :ee" )
                 .setParameter( "ee", ee )
                 .list() );
         for ( Class<? extends DataVector> vectorType : dataVectorTypes ) {
-            qts.addAll( findByExpressionExperiment( ee, vectorType ) );
+            Collection<QuantitationType> q = findByExpressionExperiment( ee, vectorType );
+            if (!q.isEmpty()) {
+                result.computeIfAbsent( vectorType, k -> new HashSet<>() )
+                        .addAll( q );
+                qts.removeAll( q );
+            }
         }
-        return qts;
+        if ( !qts.isEmpty() ) {
+            log.warn( ee + " has " + qts.size() + " quantitation types that are not associated to any vectors." );
+            result.computeIfAbsent( null, k -> new HashSet<>() )
+                    .addAll( qts );
+        }
+        return result;
     }
 
     @Override

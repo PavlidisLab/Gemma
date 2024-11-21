@@ -35,6 +35,13 @@
         <param-value>classpath*:ubic/gemma/applicationContext-*.xml</param-value>
     </context-param>
 
+    <!-- Make HTML escaping the default in Spring JSP/JSTL tags -->
+    <!-- See https://github.com/spring-projects/spring-framework/issues/7891 for more details -->
+    <context-param>
+        <param-name>defaultHtmlEscape</param-name>
+        <param-value>true</param-value>
+    </context-param>
+
     <!-- Filters.  -->
 
     <!-- Metrics -->
@@ -242,7 +249,7 @@
         <url-pattern>/robots.txt</url-pattern>
         <url-pattern>/sitemap.xml</url-pattern>
     </servlet-mapping>
-    
+
     <jsp-config>
         <jsp-property-group>
             <url-pattern>*.jsp</url-pattern>

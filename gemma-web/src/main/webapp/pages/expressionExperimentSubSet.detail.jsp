@@ -38,10 +38,10 @@
             <td>
                 <c:choose>
                     <c:when test="${not empty subSet.description}">
-                        ${fn:escapeXml(fn:trim(subSet.description))}
+                        <div style="white-space: pre-wrap;">${fn:escapeXml(fn:trim(subSet.description))}</div>
                     </c:when>
                     <c:when test="${not empty subSet.sourceExperiment.description}">
-                        ${fn:escapeXml(fn:trim(subSet.sourceExperiment.description))}&nbsp;<b>(inherited)</b>
+                        <div style="white-space: pre-wrap;">${fn:escapeXml(fn:trim(subSet.sourceExperiment.description))}&nbsp;<b>(inherited)</b></div>
                     </c:when>
                     <c:otherwise>
                         <i>No description available</i>
@@ -84,10 +84,12 @@
                     <c:forEach items="${possibleDimensions}" var="pd">
                         <c:choose>
                             <c:when test="${pd == dimension}">
-                                ${fn:escapeXml(pd.name)}
+                                ${fn:escapeXml(pd.name)} (${bioAssays.size()}/${pd.bioAssays.size()} samples)
                             </c:when>
                             <c:otherwise>
-                                <a href="${pageContext.request.contextPath}/expressionExperiment/ee/showAllExpressionExperimentSubSets.html?id=${subSet.id}&dimension=${pd.id}">${fn:escapeXml(pd.name)}</a>
+                                <Gemma:entityLink entity="${subSet}"
+                                        dimension="${pd}">${fn:escapeXml(pd.name)}</Gemma:entityLink>
+                                (${bioAssays.size()}/${pd.bioAssays.size()} samples)
                             </c:otherwise>
                         </c:choose>
                     </c:forEach>
@@ -162,9 +164,4 @@
             </c:forEach>
         </table>
     </c:if>
-    <div id="app"></div>
 </div>
-
-<script>
-new Gemma.EESubSet().mount( '#app', ${subSet.id} );
-</script>

@@ -893,10 +893,22 @@ public class ExpressionExperimentController {
     }
 
     @RequestMapping(value = { "/showBioAssaysFromExpressionExperiment.html", "/bioAssays" }, method = { RequestMethod.GET, RequestMethod.HEAD })
-    public ModelAndView showBioAssays( @RequestParam("id") Long id ) {
+    public ModelAndView showBioAssays( @RequestParam("id") Long id, @RequestParam(value = "platform", required = false) Long platformId ) {
         ExpressionExperiment expressionExperiment = getExperimentById( id, true );
+        ArrayDesign platform;
+        if ( platformId != null ) {
+            platform = arrayDesignService.loadOrFail( platformId, EntityNotFoundException::new );
+        } else {
+            platform = null;
+        }
+        List<BioAssay> bioAssays = expressionExperiment.getBioAssays().stream().sorted( Comparator.comparing( BioAssay::getName ) )
+                .filter( ba -> platform == null || ba.getArrayDesignUsed().equals( platform ) )
+                .collect( Collectors.toList() );
         return new ModelAndView( "expressionExperiment.bioAssays" )
                 .addObject( "expressionExperiment", expressionExperiment )
+                .addObject( "bioAssays", bioAssays )
+                // TODO: restrict assays in the view when the platform is non-null
+                .addObject( "platform", platform )
                 .addObject( "keywords", getKeywords( expressionExperiment ) )
                 .addAllObjects( addQCInfo( expressionExperiment ) );
     }
@@ -971,11 +983,16 @@ public class ExpressionExperimentController {
         Set<QuantitationType> qts = quantitationTypesByDimension.values().stream()
                 .flatMap( List::stream )
                 .collect( Collectors.toSet() );
+        boolean isAdmin = SecurityUtil.isUserAdmin();
         Map<QuantitationType, Class<? extends DataVector>> vectorTypes = quantitationTypeService.getDataVectorTypes( qts );
         Map<BioAssayDimension, List<ExpressionExperimentSubSet>> subsetsByDimensionSorted = subsetsByDimension.entrySet().stream()
+                // only retain dimensions with preferred vectors for non-admin users
+                .filter( e -> isAdmin || quantitationTypesByDimension.get( e.getKey() ).stream().anyMatch( QuantitationType::getIsPreferred ) )
                 .sorted( Map.Entry.comparingByKey( Comparator
+                        // show dimensions with preferred vectors first
+                        .comparing( ( BioAssayDimension d ) -> quantitationTypesByDimension.get( d ).stream().anyMatch( QuantitationType::getIsPreferred ), Comparator.reverseOrder() )
                         // show dimension with vectors first
-                        .comparing( ( BioAssayDimension d ) -> quantitationTypesByDimension.get( d ).size(), Comparator.reverseOrder() )
+                        .thenComparing( ( BioAssayDimension d ) -> quantitationTypesByDimension.get( d ).size(), Comparator.reverseOrder() )
                         .thenComparing( BioAssayDimension::getName )
                         .thenComparing( BioAssayDimension::getId ) ) )
                 .collect( Collectors.toMap( Map.Entry::getKey, e -> e.getValue().stream().sorted( Comparator.comparing( ExpressionExperimentSubSet::getName ) ).collect( Collectors.toList() ), ( a, b ) -> b, LinkedHashMap::new ) );
@@ -1003,7 +1020,7 @@ public class ExpressionExperimentController {
             if ( !CollectionUtils.containsAll( dimension.getBioAssays(), subset.getBioAssays() ) ) {
                 throw new IllegalArgumentException( dimension + " is not applicable to the requested subset." );
             }
-            possibleDimensions = Collections.emptySet();
+            possibleDimensions = Collections.singleton( dimension );
         } else if ( possibleDimensions.size() == 1 ) {
             dimension = possibleDimensions.iterator().next();
         } else {

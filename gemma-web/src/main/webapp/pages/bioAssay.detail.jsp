@@ -4,10 +4,10 @@
 <title>${fn:escapeXml(bioAssay.name)}</title>
 <c:choose>
     <c:when test="${not empty bioAssay.description}">
-        <meta name="description" content="${fn:escapeXml(bioAssay.description)}" />
+        <meta name="description" content="${fn:escapeXml(fn:trim(bioAssay.description))}" />
     </c:when>
     <c:when test="${not empty singleParent.description}">
-        <meta name="description" content="${fn:escapeXml(singleParent.description)}" />
+        <meta name="description" content="${fn:escapeXml(fn:trim(singleParent.description))}" />
     </c:when>
 </c:choose>
 </head>
@@ -37,10 +37,10 @@
             <td>
                 <c:choose>
                     <c:when test="${not empty bioAssay.description}">
-                        ${fn:escapeXml(bioAssay.description)}
+                        <div style="white-space: pre-wrap;">${fn:escapeXml(fn:trim(bioAssay.description))}</div>
                     </c:when>
                     <c:when test="${not empty singleParent.description}">
-                        ${fn:escapeXml(singleParent.description)} <b>(inherited)</b>
+                        <div style="white-space: pre-wrap;">${fn:escapeXml(fn:trim(singleParent.description))}&nbsp;<b>(inherited)</b></div>
                     </c:when>
                     <c:otherwise><i>No description available</i></c:otherwise>
                 </c:choose>
@@ -51,8 +51,9 @@
             <tr>
                 <td class="label">Experiments used in:</td>
                 <td>
-                    <c:forEach items="${bioAssaySets}" var="bioAssaySet">
-                        <Gemma:entityLink entity="${bioAssaySet}">
+                    <c:forEach items="${bioAssaySets}" var="bioAssaySet" varStatus="i">
+                        <c:if test="${!i.first}">, </c:if>
+                        <Gemma:entityLink entity="${bioAssaySet}" dimension="${dimension}">
                             ${fn:escapeXml(bioAssaySet.name)}
                         </Gemma:entityLink>
                     </c:forEach>
@@ -63,9 +64,9 @@
         <tr>
             <td class="label">Sample:</td>
             <td>
-                <a href="${pageContext.request.contextPath}/bioMaterial/showBioMaterial.html?id=${bioAssay.sampleUsed.id}&dimension=${dimension.id}">
+                <Gemma:entityLink entity="${bioAssay.sampleUsed}" dimension="${dimension}">
                     ${fn:escapeXml(bioAssay.sampleUsed.name)}
-                </a>
+                </Gemma:entityLink>
             </td>
         </tr>
         <tr>
@@ -74,6 +75,7 @@
                 <Gemma:entityLink entity="${bioAssay.arrayDesignUsed}">
                     ${fn:escapeXml(bioAssay.arrayDesignUsed.shortName)}
                 </Gemma:entityLink>
+                - ${fn:escapeXml(bioAssay.arrayDesignUsed.name)}
             </td>
         </tr>
 
@@ -84,7 +86,7 @@
                     <td>
                         <Gemma:entityLink
                                 entity="${bioAssay.originalPlatform}">${bioAssay.originalPlatform.shortName}</Gemma:entityLink>
-                            ${fn:escapeXml(bioAssay.originalPlatform.name)}
+                            - ${fn:escapeXml(bioAssay.originalPlatform.name)}
                     </td>
                 </tr>
             </c:when>
@@ -94,7 +96,7 @@
                     <td>
                         <Gemma:entityLink
                                 entity="${singleParent.originalPlatform}">${singleParent.originalPlatform.shortName}</Gemma:entityLink>
-                            ${fn:escapeXml(singleParent.originalPlatform.name)} <b>(inherited)</b>
+                            - ${fn:escapeXml(singleParent.originalPlatform.name)}&nbsp;<b>(inherited)</b>
                     </td>
                 </tr>
             </c:when>
@@ -113,9 +115,10 @@
             <ul style="max-height: 300px; overflow-y: scroll;">
                 <c:forEach items="${parents}" var="parent">
                     <li>
-                        <a href="${pageContext.request.contextPath}/bioAssay/showBioAssay.html?id=${parent.id}&dimension=${dimension.id}">${parent.name}</a>
-                        (via <a
-                            href="${pageContext.request.contextPath}/bioMaterial/showBioMaterial.html?id=${parent.sampleUsed.id}&dimension=${dimension.id}">${parent.sampleUsed.name}</a>)
+                        <Gemma:entityLink entity="${parent}"
+                                dimension="${dimension}">${fn:escapeXml(parent.name)}</Gemma:entityLink>
+                        (via&nbsp;<Gemma:entityLink entity="${parent.sampleUsed}"
+                            dimension="${dimension}">${fn:escapeXml(parent.sampleUsed.name)}</Gemma:entityLink>)
                     </li>
                 </c:forEach>
             </ul>
@@ -125,9 +128,10 @@
             <ul style="max-height: 300px; overflow-y: scroll;">
                 <c:forEach items="${siblings}" var="sibling">
                     <li>
-                        <a href="${pageContext.request.contextPath}/bioAssay/showBioAssay.html?id=${sibling.id}&dimension=${dimension.id}">${sibling.name}</a>
-                        (via <a
-                            href="${pageContext.request.contextPath}/bioMaterial/showBioMaterial.html?id=${sibling.sampleUsed.id}&dimension=${dimension.id}">${sibling.sampleUsed.name}</a>)
+                        <Gemma:entityLink entity="${sibling}"
+                                dimension="${dimension}">${fn:escapeXml(sibling.name)}</Gemma:entityLink>
+                        (via&nbsp;<Gemma:entityLink entity="${sibling.sampleUsed}"
+                            dimension="${dimension}">${fn:escapeXml(sibling.sampleUsed.name)}</Gemma:entityLink>)
                     </li>
                 </c:forEach>
             </ul>
@@ -137,9 +141,10 @@
             <ul style="max-height: 300px; overflow-y: scroll;">
                 <c:forEach items="${children}" var="child">
                     <li>
-                        <a href="${pageContext.request.contextPath}/bioAssay/showBioAssay.html?id=${child.id}&dimension=${dimension.id}">${child.name}</a>
-                        (via <a
-                            href="${pageContext.request.contextPath}/bioMaterial/showBioMaterial.html?id=${child.sampleUsed.id}&dimension=${dimension.id}">${child.sampleUsed.name}</a>)
+                        <Gemma:entityLink entity="${child}"
+                                dimension="${dimension}">${fn:escapeXml(child.name)}</Gemma:entityLink>
+                        (via&nbsp;<Gemma:entityLink entity="${child.sampleUsed}"
+                            dimension="${dimension}">${fn:escapeXml(child.sampleUsed.name)}</Gemma:entityLink>)
                     </li>
                 </c:forEach>
             </ul>

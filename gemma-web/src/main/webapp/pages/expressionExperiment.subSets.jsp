@@ -2,7 +2,7 @@
 
 <head>
 <title>Subsets of ${expressionExperiment.shortName} - ${expressionExperiment.name}</title>
-<meta name="description" content="${fn:escapeXml(expressionExperiment.description)}" />
+<meta name="description" content="${fn:escapeXml(fn:trim(expressionExperiment.description))}" />
 <meta name="keywords" content="${fn:escapeXml(keywords)}" />
 </head>
 
@@ -15,7 +15,9 @@
     <table>
         <tr>
             <td class="label">Description:</td>
-            <td>${expressionExperiment.description}</td>
+            <td>
+                <div style="white-space: pre-wrap;">${fn:escapeXml(fn:trim(expressionExperiment.description))}</div>
+            </td>
         </tr>
         <tr>
             <td class="label">Accession:</td>
@@ -35,7 +37,7 @@
             </c:if>
             <tr>
                 <td class="label">Dimension:</td>
-                <td>${fn:escapeXml(e.key.name)}</td>
+                <td>${fn:escapeXml(e.key.name)} (${e.key.bioAssays.size()} samples)</td>
             </tr>
             <c:if test="${quantitationTypesByDimension[e.key].size() > 0}">
                 <tr>
@@ -72,7 +74,7 @@
                     <ul>
                         <c:forEach items="${e.value}" var="subSet" varStatus="i">
                             <li>
-                                <a href="${pageContext.request.contextPath}/expressionExperiment/showExpressionExperimentSubSet.html?id=${subSet.id}&dimension=${e.key.id}">${fn:escapeXml(subSet.name)}</a>
+                                <Gemma:entityLink entity="${subSet}" dimension="${e.key}">${fn:escapeXml(subSet.name)}</Gemma:entityLink>
                             </li>
                         </c:forEach>
                     </ul>

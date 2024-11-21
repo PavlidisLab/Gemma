@@ -26,13 +26,15 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.core.util.MailEngine;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.controller.common.auditAndSecurity.recaptcha.ReCaptcha;
 import ubic.gemma.web.util.JsonUtil;
@@ -42,6 +44,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -58,6 +61,9 @@ public class SignupController extends BaseController implements InitializingBean
 
     @Autowired
     private UserManager userManager;
+
+    @Autowired
+    private MailEngine mailEngine;
 
     @Autowired
     private ServletContext servletContext;
@@ -104,10 +110,10 @@ public class SignupController extends BaseController implements InitializingBean
         boolean ok = userManager.validateSignupToken( username, key );
 
         if ( ok ) {
-            super.saveMessage( request, "Your account is now enabled. Log in to continue" );
+            messageUtil.saveMessage( "Your account is now enabled. Log in to continue" );
             response.sendRedirect( response.encodeRedirectURL( request.getContextPath() + "/home.html" ) );
         } else {
-            super.saveMessage( request, "Sorry, your registration could not be validated. Please register again." );
+            messageUtil.saveMessage( "Sorry, your registration could not be validated. Please register again." );
             response.sendRedirect( response.encodeRedirectURL( request.getContextPath() + "/signup.html" ) );
         }
 
@@ -220,14 +226,28 @@ public class SignupController extends BaseController implements InitializingBean
         Map<String, Object> model = new HashMap<>();
         model.put( "siteurl", Settings.getHostUrl() + servletContext.getContextPath() + "/" );
 
-        this.sendConfirmationEmail( request, u.getSignupToken(), u.getUsername(), email, model, "accountCreated.vm" );
+        this.sendConfirmationEmail( u.getSignupToken(), u.getUsername(), email, model, "accountCreated.vm" );
 
         // See if this comes from AjaxRegister.js, if it does don't save confirmation message
         String ajaxRegisterTrue = request.getParameter( "ajaxRegisterTrue" );
 
         if ( ajaxRegisterTrue == null || !ajaxRegisterTrue.equals( "true" ) ) {
-            this.saveMessage( request, "signup.email.sent", email,
+            messageUtil.saveMessage( "signup.email.sent", email,
                     "A confirmation email was sent. Please check your mail and click the link it contains" );
+        }
+    }
+
+    private void sendConfirmationEmail( String token, String username, String email, Map<String, Object> model, String templateName ) {
+        Locale locale = LocaleContextHolder.getLocale();
+        try {
+            model.put( "username", username );
+            model.put( "confirmLink",
+                    Settings.getHostUrl() + servletContext.getContextPath() + "/confirmRegistration.html?key=" + token + "&username=" + username );
+
+            mailEngine.sendMessage( username + "<" + email + ">", this.messageSource.getMessage( "signup.email.subject", null, locale ), templateName, model );
+
+        } catch ( Exception e ) {
+            log.error( "Couldn't send email to " + email, e );
         }
     }
 

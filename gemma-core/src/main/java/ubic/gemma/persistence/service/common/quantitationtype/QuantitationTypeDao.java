@@ -28,6 +28,7 @@ import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -49,7 +50,7 @@ public interface QuantitationTypeDao extends FilteringVoEnabledDao<QuantitationT
      * <p>
      * This method will scan through all the vector types and also the denormalized QTs in {@link ExpressionExperiment#getQuantitationTypes()}.
      */
-    Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee );
+    Map<Class<? extends DataVector>, Set<QuantitationType>> findByExpressionExperiment( ExpressionExperiment ee );
 
     Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee, Class<? extends DataVector> dataVectorType );
 

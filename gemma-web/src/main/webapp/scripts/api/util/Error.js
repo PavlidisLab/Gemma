@@ -9,14 +9,14 @@ Gemma.Error.genericErrorHandler = function( err, exception ) {
 
    console.log( exception );
    if ( err.stack ) {
-      var f = parseException( err.stack );
+      var f = Gemma.Error.parseException( err.stack );
       console.log( f );
 
       Ext.Msg.alert( "There was an error", err + ":<br/>" + f );
    } else if ( exception.stackTrace ) {
       var c = exception.javaClassName;
       var m = exception.message;
-      var f = Gemma.parseException( exception.stackTrace );
+      var f = Gemma.Error.parseException( exception.stackTrace );
       console.log( c + ": " + m + "<br/>" + f );
       Ext.Msg.alert( "There was an error", err + "<br/>" + c + (m ? ":<br/>Message: " + m : "")
          + (f ? "<br/>Details:<br/>" + f : 'No details') );
@@ -46,7 +46,7 @@ Gemma.Error.alertUserToError = function( baseValueObject, title ) {
    }
 };
 
-function parseException( ex ) {
+Gemma.Error.parseException = function( ex ) {
    if ( ex.constructor === Array ) {
       var s = "";
       try {

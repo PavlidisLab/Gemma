@@ -2,8 +2,9 @@ package ubic.gemma.web.taglib;
 
 import lombok.Setter;
 import org.springframework.util.Assert;
-import org.springframework.web.servlet.tags.RequestContextAwareTag;
+import org.springframework.web.servlet.tags.HtmlEscapingAwareTag;
 import org.springframework.web.servlet.tags.form.TagWriter;
+import org.springframework.web.util.HtmlUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.web.util.Constants;
 
@@ -17,7 +18,7 @@ import java.util.Map;
 import static java.util.Objects.requireNonNull;
 
 @Setter
-public class CharacteristicTag extends RequestContextAwareTag {
+public class CharacteristicTag extends HtmlEscapingAwareTag {
 
     /**
      * Characteristic to generate the tag for.
@@ -45,16 +46,16 @@ public class CharacteristicTag extends RequestContextAwareTag {
             if ( characteristic.getValueUri() != null ) {
                 tagWriter.startTag( "a" );
                 if ( external ) {
-                    tagWriter.writeAttribute( "href", characteristic.getValueUri() );
+                    tagWriter.writeAttribute( "href", htmlEscape( characteristic.getValueUri() ) );
                     tagWriter.writeAttribute( "target", "_blank" );
                     tagWriter.writeAttribute( "rel", "noreferred noopener" );
                 } else {
-                    tagWriter.writeAttribute( "href", gemBrowUrl + "/#/q/" + urlEncode( characteristic.getValueUri() ) );
+                    tagWriter.writeAttribute( "href", htmlEscape( gemBrowUrl + "/#/q/" + urlEncode( characteristic.getValueUri() ) ) );
                 }
-                tagWriter.writeOptionalAttributeValue( "title", characteristic.getCategory() );
+                tagWriter.writeOptionalAttributeValue( "title", htmlEscape( characteristic.getCategory() ) );
             }
             tagWriter.startTag( "span" );
-            tagWriter.appendValue( characteristic.getValue() );
+            tagWriter.appendValue( htmlEscape( characteristic.getValue() ) );
             tagWriter.endTag();
             if ( characteristic.getValueUri() != null ) {
                 tagWriter.endTag();
@@ -63,15 +64,15 @@ public class CharacteristicTag extends RequestContextAwareTag {
             if ( characteristic.getCategoryUri() != null ) {
                 tagWriter.startTag( "a" );
                 if ( external ) {
-                    tagWriter.writeAttribute( "href", characteristic.getCategoryUri() );
+                    tagWriter.writeAttribute( "href", htmlEscape( characteristic.getCategoryUri() ) );
                     tagWriter.writeAttribute( "target", "_blank" );
                     tagWriter.writeAttribute( "rel", "noreferred noopener" );
                 } else {
-                    tagWriter.writeAttribute( "href", gemBrowUrl + "/#/q/" + urlEncode( characteristic.getCategoryUri() ) );
+                    tagWriter.writeAttribute( "href", htmlEscape( gemBrowUrl + "/#/q/" + urlEncode( characteristic.getCategoryUri() ) ) );
                 }
             }
             tagWriter.startTag( "span" );
-            tagWriter.appendValue( characteristic.getCategory() );
+            tagWriter.appendValue( htmlEscape( characteristic.getCategory() ) );
             tagWriter.endTag();
             if ( characteristic.getCategoryUri() != null ) {
                 tagWriter.endTag();
@@ -87,6 +88,10 @@ public class CharacteristicTag extends RequestContextAwareTag {
     private Map<String, ?> getAppConfig() {
         //noinspection unchecked
         return ( Map<String, ?> ) requireNonNull( pageContext.getAttribute( Constants.CONFIG, PageContext.APPLICATION_SCOPE ) );
+    }
+
+    private String htmlEscape( String s ) {
+        return isHtmlEscape() ? HtmlUtils.htmlEscape( s ) : s;
     }
 
     private String urlEncode( String s ) {

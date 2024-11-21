@@ -33,6 +33,10 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<name>expressionExperimentId</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<name>edit</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
@@ -189,14 +193,18 @@
 		</attribute>
 		<attribute>
 			<name>title</name>
-			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
 			<name>external</name>
-			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
+		<attribute>
+			<description>Restrict the view to the given BioAssayDimension if applicable.</description>
+			<name>dimension</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<dynamic-attributes>true</dynamic-attributes>
 	</tag>
 
 	<tag>
@@ -208,6 +216,19 @@
 			<required>true</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
+		<attribute>
+			<name>type</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>async</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>defer</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<dynamic-attributes>true</dynamic-attributes>
 	</tag>
 
 	<tag>
@@ -219,6 +240,7 @@
 			<required>true</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
+		<dynamic-attributes>true</dynamic-attributes>
 	</tag>
 
 	<tag>
@@ -255,11 +277,18 @@
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
+		<dynamic-attributes>true</dynamic-attributes>
 	</tag>
 
 	<function>
 		<name>urlEncode</name>
 		<function-class>java.net.URLEncoder</function-class>
 		<function-signature>java.lang.String encode(java.lang.String, java.lang.String)</function-signature>
+	</function>
+
+	<function>
+		<name>formatDescription</name>
+		<function-class>ubic.gemma.web.taglib.Functions</function-class>
+		<function-signature>java.lang.String formatDescription(java.lang.String)</function-signature>
 	</function>
 </taglib>

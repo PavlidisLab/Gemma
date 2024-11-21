@@ -2,10 +2,12 @@ package ubic.gemma.web.util;
 
 import lombok.Getter;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
+import org.springframework.security.core.token.Sha512DigestUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import ubic.gemma.core.context.EnvironmentProfiles;
@@ -13,11 +15,13 @@ import ubic.gemma.web.taglib.AbstractStaticAssetTag;
 
 import javax.servlet.ServletContext;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Arrays;
+import java.util.Base64;
 
 /**
  * Configuration for serving static assets externally.

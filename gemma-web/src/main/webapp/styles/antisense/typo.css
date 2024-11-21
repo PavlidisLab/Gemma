@@ -531,3 +531,7 @@ a.tooltip:hover .tooltiptext {
 .buttonBold {
 	font-weight: bold;
 }
+
+.text-center {
+	text-align: center;
+}

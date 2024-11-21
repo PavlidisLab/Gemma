@@ -18,6 +18,8 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 
+import java.util.Collections;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -95,7 +97,7 @@ public class QuantitationTypeDaoTest extends BaseDatabaseTest {
 
         sessionFactory.getCurrentSession().persist( ee );
 
-        assertThat( quantitationTypeDao.findByExpressionExperiment( ee ) ).containsExactly( qt );
+        assertThat( quantitationTypeDao.findByExpressionExperiment( ee ) ).containsValues( Collections.singleton( qt ) );
     }
 
     @Test

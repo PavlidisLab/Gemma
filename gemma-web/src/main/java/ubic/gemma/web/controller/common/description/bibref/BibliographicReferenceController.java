@@ -44,7 +44,6 @@ import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
 import ubic.gemma.web.util.EntityNotFoundException;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
@@ -131,7 +130,7 @@ public class BibliographicReferenceController extends BaseController {
     }
 
     @RequestMapping(value = "/bibRefAdd.html", method = RequestMethod.POST)
-    public RedirectView add( @RequestParam("accession") Integer pubMedId, @RequestParam(value = "refresh", required = false) Boolean refresh, HttpServletRequest request ) {
+    public RedirectView add( @RequestParam("accession") Integer pubMedId, @RequestParam(value = "refresh", required = false) Boolean refresh ) {
         // FIXME: allow use of the primary key as well.
         BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( String.valueOf( pubMedId ), ExternalDatabases.PUBMED );
         if ( bibRef == null ) {
@@ -144,28 +143,28 @@ public class BibliographicReferenceController extends BaseController {
                 throw new EntityNotFoundException( "Could not locate reference with PubMed ID " + pubMedId + "." );
             }
             bibRef = ( BibliographicReference ) persisterHelper.persist( bibRef );
-            this.saveMessage( request, "Added " + pubMedId + " to the system." );
+            this.messageUtil.saveMessage( "Added " + pubMedId + " to the system." );
         } else if ( refresh != null && refresh ) {
             bibRef = this.bibliographicReferenceService.refresh( String.valueOf( pubMedId ) );
-            this.saveMessage( request, "Updated record for   PubMed ID " + pubMedId + "." );
+            this.messageUtil.saveMessage( "Updated record for   PubMed ID " + pubMedId + "." );
         } else {
-            this.saveMessage( request, "There is already a bibliographic reference with PubMed ID " + pubMedId + "." );
+            this.messageUtil.saveMessage( "There is already a bibliographic reference with PubMed ID " + pubMedId + "." );
         }
         return new RedirectView( "/bibRef/bibRefView.html?id=" + bibRef.getId(), true );
     }
 
     @RequestMapping(value = "/deleteBibRef.html", method = RequestMethod.POST)
-    public ModelAndView delete( @RequestParam("acc") String pubMedId, HttpServletRequest request ) {
+    public ModelAndView delete( @RequestParam("acc") String pubMedId ) {
         BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
         if ( bibRef == null ) {
             String message = "There is no reference with PubMed ID " + pubMedId + " in the system any more.";
-            this.saveMessage( request, message );
+            this.messageUtil.saveMessage( message );
             throw new EntityNotFoundException( message );
         }
         bibliographicReferenceService.remove( bibRef );
         log.info( "Bibliographic reference with pubMedId: " + bibRef.getPubAccession().getAccession() + " deleted" );
-        this.addMessage( request, "object.deleted",
-                new Object[] { messagePrefix, bibRef.getPubAccession().getAccession() } );
+        Object[] parameters = new Object[] { messagePrefix, bibRef.getPubAccession().getAccession() };
+        messageUtil.saveMessage( "object.deleted", parameters, "??" + "object.deleted" + "??" );
         return new ModelAndView( "bibRefView", "bibliographicReference", bibRef );
     }
 

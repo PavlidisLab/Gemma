@@ -31,6 +31,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author kelsey
@@ -66,8 +67,12 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
 
     /**
      * Find all the QT associated to the given experiment.
+     * <p>
+     * QTs are grouped by which vector type they are associated with. If no vector is found for a given QT, {@code null}
+     * will be used as their type in the returned mapping.
+     * @see QuantitationTypeDao#findByExpressionExperiment(ExpressionExperiment)
      */
-    Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee );
+    Map<Class<? extends DataVector>, Set<QuantitationType>> findByExpressionExperiment( ExpressionExperiment ee );
 
     /**
      * Find all the QT associated to the given experiment and data vector type.

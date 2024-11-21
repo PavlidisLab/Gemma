@@ -3,6 +3,7 @@
 
 <beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
        xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
        xmlns="http://www.springframework.org/schema/beans"
        xmlns:context="http://www.springframework.org/schema/context"
@@ -62,8 +63,6 @@
                 <prop key="/bioMaterial/*">bioMaterialController</prop>
                 <prop key="/compositeSequence/*">compositeSequenceController</prop>
                 <prop key="/experimentalDesign/*">experimentalDesignController</prop>
-                <prop key="/expressionExperiment/editExpressionExperiment.html">expressionExperimentFormController
-                </prop>
                 <prop key="/getData.html">expressionExperimentDataFetchController</prop>
                 <prop key="/getMetaData.html">expressionExperimentDataFetchController</prop>
                 <prop key="/checkJobProgress.html">taskCompletionController</prop>
@@ -129,23 +128,6 @@
 
     <bean id="experimentSetListContainer" class="ubic.gemma.web.persistence.ExperimentSetListContainer" scope="session">
         <aop:scoped-proxy/>
-    </bean>
-
-    <bean id="expressionExperimentFormController"
-          class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentFormController">
-        <property name="successView" value="redirect:/expressionExperiment/showAllExpressionExperiments.html"/>
-        <property name="commandName" value="expressionExperiment"/>
-        <property name="commandClass"
-                  value="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentEditValueObject"/>
-        <property name="formView" value="expressionExperiment.edit"/>
-        <property name="expressionExperimentService" ref="expressionExperimentService"/>
-        <property name="bioAssayService" ref="bioAssayService"/>
-        <property name="bioMaterialService" ref="bioMaterialService"/>
-        <property name="externalDatabaseService" ref="externalDatabaseService"/>
-        <property name="preprocessorService" ref="preprocessorService"/>
-        <property name="persisterHelper" ref="persisterHelper"/>
-        <property name="quantitationTypeService" ref="quantitationTypeService"/>
-        <property name="auditTrailService" ref="auditTrailService"/>
     </bean>
 
     <!-- <bean id="differentialExpressionSearchController" class="ubic.gemma.web.controller.diff.DifferentialExpressionSearchController">
@@ -682,7 +664,8 @@
                      javascript="FreeTextGeneResultsValueObject">
             <dwr:exclude method="securableClass"/>
         </dwr:convert>
-        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GOGroupValueObject" javascript="GOGroupValueObject">
+        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GOGroupValueObject"
+                     javascript="GOGroupValueObject">
             <dwr:exclude method="securableClass"/>
         </dwr:convert>
 

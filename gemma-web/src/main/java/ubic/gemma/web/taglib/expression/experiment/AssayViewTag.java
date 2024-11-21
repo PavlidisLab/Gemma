@@ -18,17 +18,24 @@
  */
 package ubic.gemma.web.taglib.expression.experiment;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.text.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONObject;
+import org.springframework.web.servlet.tags.HtmlEscapingAwareTag;
+import org.springframework.web.servlet.tags.form.TagWriter;
+import org.springframework.web.util.HtmlUtils;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.web.util.StaticAssetServer;
+import ubic.gemma.web.util.WebEntityUrlBuilder;
 
+import javax.annotation.Nullable;
 import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.tagext.TagSupport;
 import java.util.*;
 
 /**
@@ -38,39 +45,65 @@ import java.util.*;
  * @author joseph
  */
 @CommonsLog
-public class AssayViewTag extends TagSupport {
-    private static final long serialVersionUID = 8754490187937841260L;
+public class AssayViewTag extends HtmlEscapingAwareTag {
+
     /**
-     * How many 'extra' biomaterials to add to the editing table, so the user can assing bioassays to new biomaterials.
+     * How many 'extra' biomaterials to add to the editing table, so the user can passing assays to new biomaterials.
      */
     private static final int NUM_EXTRA_BIOMATERIALS = 12;
-    private boolean edit = false;
+
+    private StaticAssetServer staticAssetServer;
+    private WebEntityUrlBuilder entityUrlBuilder;
+
     private Collection<BioAssayValueObject> bioAssays;
 
-    /**
-     * Jackson serializer to map objects to JSON.
-     */
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Nullable
+    private Long expressionExperimentId;
 
-    @Override
-    public int doEndTag() {
-        return EVAL_PAGE;
+    private boolean edit = false;
+
+    /* internal state */
+    private int currentRow;
+    private int emptyAssays;
+
+    public void setBioAssays( Collection<BioAssayValueObject> bioAssays ) {
+        this.bioAssays = bioAssays;
+    }
+
+    /**
+     * An identifier to the expression experiment that owns the biossays.
+     */
+    public void setExpressionExperimentId( @Nullable Long eeId ) {
+        this.expressionExperimentId = eeId;
+    }
+
+    public void setEdit( boolean edit ) {
+        this.edit = edit;
     }
 
     @Override
-    public int doStartTag() throws JspException {
-        String contextPath = pageContext.getServletContext().getContextPath();
-        StringBuilder buf = new StringBuilder();
+    public int doStartTagInternal() throws Exception {
+        if ( staticAssetServer == null ) {
+            staticAssetServer = getRequestContext().getWebApplicationContext().getBean( StaticAssetServer.class );
+        }
+        if ( entityUrlBuilder == null ) {
+            entityUrlBuilder = getRequestContext().getWebApplicationContext().getBean( WebEntityUrlBuilder.class );
+        }
 
-        buf.append( "<div>" );
+        currentRow = 0;
+        emptyAssays = 0;
+
+        TagWriter writer = new TagWriter( pageContext );
+
+        writer.startTag( "div" );
 
         // create table
         Map<BioMaterialValueObject, Map<ArrayDesignValueObject, Collection<BioAssayValueObject>>> bioAssayMap = new HashMap<>();
-        Set<ArrayDesignValueObject> designs = new HashSet<>();
+        LinkedHashSet<ArrayDesignValueObject> designs = new LinkedHashSet<>();
         Map<ArrayDesignValueObject, Long> arrayMaterialCount = new HashMap<>();
 
         // package all of this information into JSON for javascript dynamic retrieval
-        Map<String, String> assayToMaterial = new HashMap<>();
+        JSONObject assayToMaterial = new JSONObject();
         for ( BioAssayValueObject assay : bioAssays ) {
             // map for bioassays linked to a specific arraydesign
             // map for the bioassays linked to a specific biomaterial
@@ -100,69 +133,108 @@ public class AssayViewTag extends TagSupport {
                 count++;
                 arrayMaterialCount.put( design, count );
             } else {
-                Long count = new Long( 1 );
-                arrayMaterialCount.put( design, count );
+                arrayMaterialCount.put( design, 1L );
             }
 
         }
-        int materialCount = bioAssayMap.keySet().size();
-        buf.append( "<table class='detail row-separated odd-gray'><tr>" );
-        buf.append( "<th>" + materialCount + " BioMaterials</th>" );
+        int materialCount = bioAssayMap.size();
+        writer.startTag( "table" );
+        writer.writeAttribute( "class", "detail row-separated odd-gray" );
+        writer.startTag( "tr" );
+        writer.startTag( "th" );
+        writer.appendValue( materialCount + " Biomaterials" );
+        if ( expressionExperimentId != null ) {
+            writer.appendValue( " (" );
+            writer.startTag( "a" );
+            ExpressionExperiment ee = new ExpressionExperiment();
+            ee.setId( expressionExperimentId );
+            String eeUri = entityUrlBuilder.fromContextPath().entity( ee ).web().bioMaterials().toUriString();
+            writer.writeAttribute( "href", htmlEscape( eeUri ) );
+            writer.appendValue( "list" );
+            writer.endTag(); // </a>
+            writer.appendValue( ")" );
+        }
+        writer.endTag(); // </th>
         // display arraydesigns
         for ( ArrayDesignValueObject design : designs ) {
             Long count = arrayMaterialCount.get( design );
-            buf.append( "<th>" + count
-                    + " BioAssays on<br /><a target='_blank' href=\"" + contextPath + "/arrays/showArrayDesign.html?id=" + design
-                    .getId() + "\" title=\"" + design.getName() + "\" >" + ( design.getShortName() == null ?
-                    design.getName() :
-                    design.getShortName() ) + "</a></th>" );
+            writer.startTag( "th" );
+            writer.appendValue( count + " Assays " );
+            if ( expressionExperimentId != null ) {
+                writer.appendValue( " (" );
+                writer.startTag( "a" );
+                writer.writeAttribute( "target", "_blank" );
+                ExpressionExperiment ee = new ExpressionExperiment();
+                ee.setId( expressionExperimentId );
+                String bioAssaysUri = entityUrlBuilder.fromContextPath().entity( ee ).web().bioAssays().toUriString();
+                writer.writeAttribute( "href", htmlEscape( bioAssaysUri ) + "&platform=" + design.getId() );
+                writer.appendValue( "list" );
+                writer.endTag();
+                writer.appendValue( ")" );
+            }
+            writer.appendValue( " on " );
+            writer.startTag( "a" );
+            writer.writeAttribute( "target", "_blank" );
+            String arrayDesignUri = entityUrlBuilder.fromContextPath().entity( ArrayDesign.class, design.getId() ).toUriString();
+            writer.writeAttribute( "href", htmlEscape( arrayDesignUri ) );
+            writer.writeAttribute( "title", htmlEscape( design.getName() ) );
+            writer.appendValue( htmlEscape( design.getShortName() ) );
+            writer.endTag(); // <a>
+            writer.endTag(); // </th>
         }
-        buf.append( "</tr>" );
+        writer.endTag(); // </tr>
 
         // display bioMaterials and the corresponding bioAssays
-        int count = 1;
 
         Iterator<BioMaterialValueObject> iter = bioAssayMap.keySet().iterator();
         List<BioMaterialValueObject> materials = new ArrayList<>();
         while ( iter.hasNext() ) {
             materials.add( iter.next() );
         }
-        Comparator<BioMaterialValueObject> comparator = new BioMaterialComparator();
-        Collections.sort( materials, comparator );
-        int elementCount = 1;
-        int emptyCount = 0;
+        materials.sort( Comparator.comparing( BioMaterialValueObject::getName ) );
         for ( BioMaterialValueObject material : materials ) {
-            if ( count % 2 == 0 ) {
-                buf.append( "<tr class='even' align=justify>" );
+            writer.startTag( "tr" );
+            if ( currentRow % 2 == 0 ) {
+                writer.writeAttribute( "class", "even" );
             } else {
-                buf.append( "<tr class='odd' align=justify>" );
+                writer.writeAttribute( "class", "odd" );
             }
 
-            String bmLink = "<a href='" + contextPath + "/bioMaterial/showBioMaterial.html?id=" + material.getId() + "'> " + material
-                    .getName() + "</a>";
-            buf.append( "<td>" + bmLink + "</td>" );
+            writer.startTag( "td" );
+            writer.startTag( "a" );
+            String bioMaterialUri = entityUrlBuilder.fromContextPath().entity( BioMaterial.class, material.getId() ).toUriString();
+            writer.writeAttribute( "href", htmlEscape( bioMaterialUri ) );
+            writer.appendValue( htmlEscape( material.getName() ) );
+            writer.endTag(); // </a>
+            writer.endTag(); // </td>
 
             Map<ArrayDesignValueObject, Collection<BioAssayValueObject>> assayMap = bioAssayMap.get( material );
 
-            String image = "&nbsp;&nbsp;&nbsp;<img height=16 width=16 src='" + contextPath + "/images/icons/arrow_switch.png' />&nbsp;&nbsp;&nbsp;";
             for ( ArrayDesignValueObject design : designs ) {
                 if ( assayMap.containsKey( design ) ) {
                     Collection<BioAssayValueObject> assays = assayMap.get( design );
-                    Collection<Long> ids = new ArrayList<>();
-                    Collection<String> tooltips = new ArrayList<>();
                     for ( BioAssayValueObject assay : assays ) {
-                        ids.add( assay.getId() );
-                        tooltips.add( StringUtils.abbreviate( assay.getName() + assay.getDescription(), 120 ) );
-                        this.addMaterial( assayToMaterial, assay.getId(), material.getId() );
+                        Long bioAssayId = assay.getId();
+                        assayToMaterial.put( bioAssayId.toString(), material.getId().toString() );
                     }
 
                     if ( assayMap.get( design ).size() > 1 ) {
-                        String link = "<a title='" + StringUtils.join( tooltips.toArray(), "\n" )
-                                + "' href='" + contextPath + "/bioAssay/showAllBioAssays.html?id=" + StringUtils
-                                .join( ids.toArray(), "," ) + "'> (list) </a>";
-                        buf.append(
-                                "<td>" + assayMap.get( design ).size() + link + "&nbsp;" + elementCount + "</td>\n" );
-
+                        writer.startTag( "td" );
+                        boolean first = true;
+                        for ( BioAssayValueObject assay : assays ) {
+                            if ( !first ) {
+                                writer.appendValue( ", " );
+                            }
+                            first = false;
+                            writer.startTag( "a" );
+                            writer.writeAttribute( "target", "_blank" );
+                            writer.writeAttribute( "title", htmlEscape( StringUtils.abbreviate( assay.getDescription(), 60 ) ) );
+                            String bioAssayUri = entityUrlBuilder.fromContextPath().entity( BioAssay.class, assay.getId() ).toUriString();
+                            writer.writeAttribute( "href", htmlEscape( bioAssayUri ) );
+                            writer.appendValue( htmlEscape( assay.getName() ) );
+                            writer.endTag(); // </a>
+                        }
+                        writer.endTag();
                     } else {
 
                         /*
@@ -170,145 +242,125 @@ public class AssayViewTag extends TagSupport {
                          * expressionExperiment.edit.jsp.
                          */
 
-                        BioAssayValueObject assay = ( ( List<BioAssayValueObject> ) assayMap.get( design ) ).get( 0 );
-                        String shortDesc = StringUtils.abbreviate( assay.getDescription(), 60 );
-                        String link = "<a target=\"_blank\" title='" + shortDesc
-                                + "' href='" + contextPath + "/bioAssay/showBioAssay.html?id=" + assay.getId() + "'>" + assay
-                                .getName() + "</a>";
-                        String editAttributes =
-                                " align='left' class='dragItem' id='bioassay." + assay.getId() + "' material='"
-                                        + material.getId() + "' assay='" + assay.getId() + "' arrayDesign='" + design
-                                        .getId() + "'";
+                        BioAssayValueObject assay = assayMap.get( design ).iterator().next();
+                        writer.startTag( "td" );
+                        writer.startTag( "span" );
                         if ( edit && designs.size() > 1 ) {
-                            buf.append( "\n<td><span " + editAttributes + ">" + image + link );
-                        } else {
-                            buf.append( "\n<td ><span>" + link + "&nbsp;" );
+                            writer.writeAttribute( "class", "dragItem" );
+                            writer.writeAttribute( "id", "bioassay." + assay.getId() );
+                            writer.writeAttribute( "material", material.getId().toString() );
+                            writer.writeAttribute( "assay", assay.getId().toString() );
+                            writer.writeAttribute( "arrayDesign", design.getId().toString() );
+                            writer.startTag( "img" );
+                            writer.writeAttribute( "height", "16" );
+                            writer.writeAttribute( "width", "16" );
+
+                            writer.writeAttribute( "src", staticAssetServer.resolveUrl( "/images/icons/arrow_switch.png" ) );
+                            writer.endTag();
+                            writer.appendValue( "&nbsp;" );
                         }
-                        buf.append( "</span></td>\n" );
+                        writer.startTag( "a" );
+                        writer.writeAttribute( "target", "_blank" );
+                        writer.writeAttribute( "title", htmlEscape( StringUtils.abbreviate( assay.getDescription(), 60 ) ) );
+                        String bioAssayUri = entityUrlBuilder.fromContextPath().entity( BioAssay.class, assay.getId() ).toUriString();
+                        writer.writeAttribute( "href", htmlEscape( bioAssayUri ) );
+                        writer.appendValue( htmlEscape( assay.getName() ) );
+                        writer.endTag(); // </a>
+                        writer.endTag(); // </span>
+                        writer.endTag(); // </td>
                     }
 
                 } else {
-                    emptyCount = addEmpty( buf, assayToMaterial, emptyCount, material, image, design );
+                    addEmptyBioAssay( assayToMaterial, material, design, writer );
                 }
             }
 
-            buf.append( "</tr>" );
-            count++;
-            elementCount++;
+            writer.endTag(); // </tr>
+            currentRow++;
         }
 
         // add a few blanks, but only if we are editing.
-        if ( edit ) {
-            addNovelBiomaterialSlots( buf, designs, assayToMaterial, count, emptyCount );
+        if ( edit && designs.size() > 1 ) {
+            addEmptyRows( designs, assayToMaterial, writer );
         }
 
-        buf.append( "</table>" );
+        writer.endTag(); // </table>
 
         if ( edit ) {
             // append JSON serialization
-            try {
-                String jsonSerialization = objectMapper.writeValueAsString( assayToMaterial );
-                buf.append( "<input type='hidden' id='assayToMaterialMap' name='assayToMaterialMap' value='"
-                        + StringEscapeUtils.escapeHtml4( jsonSerialization ) + "'/>" );
-            } catch ( JsonProcessingException e ) {
-                log.error( "Failed to serialize assayToMaterial to JSON.", e );
-            }
-
+            writer.startTag( "input" );
+            writer.writeAttribute( "type", "hidden" );
+            writer.writeAttribute( "id", "assayToMaterialMap" );
+            writer.writeAttribute( "name", "assayToMaterialMap" );
+            writer.writeAttribute( "value", htmlEscape( assayToMaterial.toString() ) );
+            writer.endTag();
         }
 
-        buf.append( "</div>" );
+        writer.endTag();
 
-        try {
-            pageContext.getOut().print( buf.toString() );
-        } catch ( Exception ex ) {
-            throw new JspException( "assayViewTag: " + ex.getMessage() );
-        }
         return SKIP_BODY;
-    }
-
-    public void setEdit( String edit ) {
-        this.edit = edit.equalsIgnoreCase( "true" );
-    }
-
-    public void setBioAssays( Collection<BioAssayValueObject> bioAssays ) {
-        this.bioAssays = bioAssays;
-    }
-
-    /**
-     * Add a 'unused' biomaterial/bioassay combination to the table.
-     *
-     * @return revised count of number of empty items.
-     */
-    private int addEmpty( StringBuilder buf, Map<String, String> assayToMaterial, int emptyCount,
-            BioMaterialValueObject material, String image, ArrayDesignValueObject design ) {
-        // put empty space in table if the bioMaterial does not
-        // use this array design
-        emptyCount++;
-        String editAttributes = "class='dragItem' id='bioassay.empty." + emptyCount + "' material='" + material.getId()
-                + "' assay='nullElement' arrayDesign='" + design.getId() + "'";
-
-        if ( edit ) {
-            buf.append( "\n<td><span " + editAttributes + ">" + image );
-        } else {
-            buf.append( "\n<td><span>&nbsp;" );
-        }
-        this.addMaterial( assayToMaterial, null, material.getId() );
-        buf.append( "</span></td>\n" );
-        return emptyCount;
-    }
-
-    private void addMaterial( Map<String, String> assayToMaterial, Long bioAssayId, Long bioMaterialId ) {
-        String bioAssayStr = "";
-        if ( bioAssayId == null ) {
-            bioAssayStr = "nullElement";
-        } else {
-            bioAssayStr = bioAssayId.toString();
-        }
-
-        assayToMaterial.put( bioAssayStr, bioMaterialId.toString() );
-
     }
 
     /**
      * Add places for completely new biomaterials to be added. These are the row labels.
      */
-    private void addNovelBiomaterialSlots( StringBuilder buf, Set<ArrayDesignValueObject> designs,
-            Map<String, String> assayToMaterial, int count, int emptyCount ) {
-        if ( designs.size() == 1 ) {
-            return;
-        }
-        String contextPath = pageContext.getServletContext().getContextPath();
-        for ( int i = 1; i <= NUM_EXTRA_BIOMATERIALS; i++ ) {
-
-            if ( count % 2 == 0 ) {
-                buf.append( "<tr class='even' align=justify>" );
+    private void addEmptyRows( LinkedHashSet<ArrayDesignValueObject> designs,
+            JSONObject assayToMaterial, TagWriter writer ) throws JspException {
+        for ( long i = 1; i <= NUM_EXTRA_BIOMATERIALS; i++ ) {
+            writer.startTag( "tr" );
+            if ( currentRow % 2 == 0 ) {
+                writer.writeAttribute( "class", "even" );
             } else {
-                buf.append( "<tr class='odd' align=justify>" );
+                writer.writeAttribute( "class", "odd" );
             }
 
             // FIXME this is a kludge: use negative ids to distinguish the new biomaterials.
-            BioMaterialValueObject material = new BioMaterialValueObject( 0L - i );
+            BioMaterialValueObject material = new BioMaterialValueObject( -i );
 
-            material.setName( "[New biomaterial " + i + "]" );
-            buf.append( "<td>" + material.getName() + "</td>" );
-            String image = "<img height=10 width=20 src='" + contextPath + "/images/arrow_out.png' />";
+            material.setName( "New Biomaterial #" + i );
+            writer.startTag( "td" );
+            writer.startTag( "i" );
+            writer.appendValue( htmlEscape( material.getName() ) );
+            writer.endTag(); // </i>
+            writer.endTag(); // </td>
             for ( ArrayDesignValueObject design : designs ) {
-                emptyCount = addEmpty( buf, assayToMaterial, emptyCount, material, image, design );
+                addEmptyBioAssay( assayToMaterial, material, design, writer );
+                emptyAssays++;
             }
-            buf.append( "</tr>" );
-            count++;
+            writer.endTag(); // </tr>
+            currentRow++;
         }
     }
 
     /**
-     * @author pavlidis
+     * Add an 'unused' assay for the given material.
      */
-    static class BioMaterialComparator implements Comparator<BioMaterialValueObject> {
-
-        @Override
-        public int compare( BioMaterialValueObject arg0, BioMaterialValueObject arg1 ) {
-
-            return arg0.getName().compareTo( arg1.getName() );
+    private void addEmptyBioAssay( JSONObject assayToMaterial, BioMaterialValueObject material, ArrayDesignValueObject design, TagWriter writer ) throws JspException {
+        // put empty space in table if the bioMaterial does not
+        // use this array design
+        writer.startTag( "td" );
+        writer.startTag( "span" );
+        if ( edit ) {
+            writer.writeAttribute( "class", "dragItem" );
+            writer.writeAttribute( "id", "bioassay.empty." + ( emptyAssays + 1 ) );
+            writer.writeAttribute( "material", material.getId().toString() );
+            writer.writeAttribute( "assay", "nullElement" );
+            writer.writeAttribute( "arrayDesign", design.getId().toString() );
+            writer.startTag( "img" );
+            writer.writeAttribute( "height", "10" );
+            writer.writeAttribute( "width", "20" );
+            writer.writeAttribute( "src", staticAssetServer.resolveUrl( "/images/arrow_out.png" ) );
+            writer.endTag(); // </img>
+            emptyAssays++;
+        } else {
+            writer.appendValue( "&nbsp;" );
         }
+        writer.endTag(); // </span>
+        writer.endTag(); // </td>
+        assayToMaterial.put( "nullElement", material.getId().toString() );
+    }
+
+    private String htmlEscape( String s ) {
+        return isHtmlEscape() ? HtmlUtils.htmlEscape( s ) : s;
     }
 }

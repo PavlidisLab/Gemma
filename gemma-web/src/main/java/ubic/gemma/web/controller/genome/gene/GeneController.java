@@ -106,7 +106,7 @@ public class GeneController extends BaseController {
                 geneVO = geneService.loadValueObjectById( id );
 
                 if ( geneVO == null ) {
-                    addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
+                    messageUtil.saveMessage( "object.notfound", new Object[] { "Gene " + id }, "??" + "object.notfound" + "??" );
                     return new ModelAndView( "index" );
                 }
             } else if ( StringUtils.isNotBlank( ncbiId ) ) {
@@ -133,12 +133,12 @@ public class GeneController extends BaseController {
             }
 
         } catch ( NumberFormatException e ) {
-            addMessage( request, "object.notfound", new Object[] { "Gene" } );
+            messageUtil.saveMessage( "object.notfound", new Object[] { "Gene" }, "??" + "object.notfound" + "??" );
             return new ModelAndView( "index" );
         }
 
         if ( geneVO == null ) {
-            addMessage( request, "object.notfound", new Object[] { "Gene" } );
+            messageUtil.saveMessage( "object.notfound", new Object[] { "Gene" }, "??" + "object.notfound" + "??" );
             return new ModelAndView( "index" );
         }
 

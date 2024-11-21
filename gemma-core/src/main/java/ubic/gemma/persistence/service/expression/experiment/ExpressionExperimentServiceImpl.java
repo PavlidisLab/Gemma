@@ -1285,7 +1285,16 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment ) {
-        return this.quantitationTypeService.findByExpressionExperiment( expressionExperiment );
+        return this.quantitationTypeService.findByExpressionExperiment( expressionExperiment ).values().stream()
+                .flatMap( Collection::stream )
+                .collect( Collectors.toSet() );
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Class<? extends DataVector>, Set<QuantitationType>> getQuantitationTypesByVectorType( ExpressionExperiment ee ) {
+        return this.quantitationTypeService.findByExpressionExperiment( ee );
     }
 
     @Override
@@ -1606,6 +1615,18 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> getExperimentsLackingPublications() {
         return this.expressionExperimentDao.getExperimentsLackingPublications();
+    }
+
+    @Override
+    @Transactional
+    public void updateQuantitationType( ExpressionExperiment ee, QuantitationType qt ) {
+        Assert.notNull( ee.getId(), "The experiment must be persistent." );
+        Assert.notNull( qt.getId(), "The quantitation type must be persistent." );
+        // FIXME: hashing depends on properties that might have been altered that would in turn affect hashCode(), so we
+        //        cannot use contains
+        Assert.isTrue( ee.getQuantitationTypes().stream().anyMatch( qt::equals ),
+                "The quantitation type does not belong to " + ee + "." );
+        quantitationTypeService.update( qt );
     }
 
     @Override

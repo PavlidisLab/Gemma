@@ -211,10 +211,17 @@ public class EntityUrlBuilder {
     public class ExpressionExperimentWebUrl extends WebEntityUrl<ExpressionExperiment> {
 
         private boolean byShortName = false;
-        private boolean edit = false;
+
+        private String entityPath = "/expressionExperiment/showExpressionExperiment.html";
 
         private ExpressionExperimentWebUrl( String baseUrl, ExpressionExperiment entity ) {
             super( baseUrl, entity );
+        }
+
+        public ExpressionExperimentWebUrl byShortName() {
+            Assert.isTrue( StringUtils.isNotBlank( entity.getShortName() ) );
+            byShortName = true;
+            return this;
         }
 
         public ExperimentalDesignWebUrl design() {
@@ -223,25 +230,27 @@ public class EntityUrlBuilder {
         }
 
         public ExpressionExperimentWebUrl edit() {
-            edit = true;
+            entityPath = "/expressionExperiment/editExpressionExperiment.html";
+            return this;
+        }
+
+        public ExpressionExperimentWebUrl bioAssays() {
+            entityPath = "/expressionExperiment/showBioAssaysFromExpressionExperiment.html";
+            return this;
+        }
+
+        public ExpressionExperimentWebUrl bioMaterials() {
+            entityPath = "/expressionExperiment/showBioMaterialsFromExpressionExperiment.html";
             return this;
         }
 
         @Override
         public URI toUri() {
-            if ( edit ) {
-                return URI.create( baseUrl + "/expressionExperiment/editExpressionExperiment.html?id=" + entity.getId() );
-            } else if ( byShortName ) {
-                return URI.create( baseUrl + "/expressionExperiment/showExpressionExperiment.html?shortName=" + urlEncode( entity.getShortName() ) );
+            if ( byShortName ) {
+                return URI.create( baseUrl + entityPath + "?shortName=" + urlEncode( entity.getShortName() ) );
             } else {
-                return super.toUri();
+                return URI.create( baseUrl + entityPath + "?id=" + entity.getId() );
             }
-        }
-
-        public ExpressionExperimentWebUrl byShortName() {
-            Assert.isTrue( StringUtils.isNotBlank( entity.getShortName() ) );
-            byShortName = true;
-            return this;
         }
     }
 

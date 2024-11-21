@@ -31,7 +31,11 @@ public interface ExperimentalDesignDao extends BaseDao<ExperimentalDesign> {
 
     ExperimentalDesign loadWithExperimentalFactors( Long id );
 
+    @Nullable
     ExpressionExperiment getExpressionExperiment( ExperimentalDesign experimentalDesign );
+
+    @Nullable
+    ExpressionExperiment getExpressionExperimentById( Long experimentalDesignId );
 
     /**
      * Pick a random experimental design that needs attention.

@@ -25,8 +25,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractService;
 
-import javax.annotation.Nullable;
-
 /**
  * Spring Service base class for <code>ubic.gemma.model.expression.experiment.ExperimentalDesignService</code>, provides
  * access to all services and entities referenced by this service.
@@ -59,7 +57,12 @@ public class ExperimentalDesignServiceImpl extends AbstractService<ExperimentalD
         return this.experimentalDesignDao.getExpressionExperiment( experimentalDesign );
     }
 
-    @Nullable
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperiment getExpressionExperimentById( Long experimentalDesignId ) {
+        return this.experimentalDesignDao.getExpressionExperimentById( experimentalDesignId );
+    }
+
     @Override
     @Transactional(readOnly = true)
     public ExperimentalDesign getRandomExperimentalDesignThatNeedsAttention( ExperimentalDesign excludedDesign ) {

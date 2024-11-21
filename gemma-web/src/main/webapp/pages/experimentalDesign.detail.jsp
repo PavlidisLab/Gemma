@@ -1,13 +1,9 @@
 <%@ include file="/common/taglibs.jsp" %>
-<jsp:useBean id="experimentalDesign" scope="request"
-        class="ubic.gemma.model.expression.experiment.ExperimentalDesign" />
-<jsp:useBean id="expressionExperiment" scope="request"
-        class="ubic.gemma.model.expression.experiment.ExpressionExperiment" />
 <head>
-<title>${expressionExperiment.shortName} | <fmt:message key="experimentalDesign.details" /></title>
-
-<Gemma:script src='/scripts/app/eeDataFetch.js' />
-<Gemma:script src='/scripts/app/ExperimentalDesign.js' />
+<title>
+    <fmt:message key="experimentalDesign.details" />
+    for ${fn:escapeXml(expressionExperiment.shortName)} - ${fn:escapeXml(expressionExperiment.name)}
+</title>
 </head>
 
 <input type="hidden" id="reloadOnLogout" value="true">
@@ -15,23 +11,22 @@
 
 <input type="hidden" id="expressionExperimentID"
         value="${expressionExperiment.id}" />
-<input type="hidden" id="taxonId" value="${taxonId}" />
+<input type="hidden" id="taxonId" value="${taxon.id}" />
 
 <input type="hidden" id="experimentalDesignID"
         value="${experimentalDesign.id}" />
 <input type="hidden" id="currentUserCanEdit"
-        value="${currentUserCanEdit}" />
+        value="${currentUserCanEdit ? 'true' : ''}" />
 
 <div id="messages" style="margin: 10px; width: 400px"></div>
 
-<div class="pleft-mbot">
+<div class="padded">
     <h2>
         <fmt:message key="experimentalDesign.details" />
         for
-        <a href='<c:out value="${expressionExperimentUrl}" />'>
-            <jsp:getProperty
-                    name="expressionExperiment" property="shortName" />
-        </a>
+        <Gemma:entityLink
+                entity="${expressionExperiment}">${fn:escapeXml(expressionExperiment.shortName)}</Gemma:entityLink>
+        - ${fn:escapeXml(expressionExperiment.name)}
     </h2>
 
     <c:choose>
@@ -41,10 +36,9 @@
         </c:when>
         <c:otherwise>
             <p>
-                Download design File:
                 <a href="#"
-                        onClick="Gemma.ExpressionExperimentDataFetch.fetchData(false, ${expressionExperiment.id }, 'text', null, ${expressionExperiment.experimentalDesign.id})">Click
-                    to start download</a>
+                        onClick="Gemma.ExpressionExperimentDataFetch.fetchData(false, ${expressionExperiment.id}, 'text', null, ${expressionExperiment.experimentalDesign.id})">
+                    Download design file</a>
                 <i class="qtp fa fa-question-circle fa-fw"
                         title="Tab-delimited design file for this experiment, if available.">
                 </i>
@@ -55,7 +49,7 @@
 
     <hr class="normal">
 
-    <table class="detail row-separated pad-cols">
+    <table class="detail row-separated pad-cols mb-3">
         <tr>
             <td class="label">
                 <b><fmt:message key="expressionExperiment.name" /> </b>
@@ -77,10 +71,9 @@
             <td>
                 <c:choose>
                     <c:when test="${not empty expressionExperiment.description}">
-                        <textarea rows="5" cols="50" class="pre-wrap"><c:out
-                                value="${expressionExperiment.description}" /></textarea>
+                        <div style="white-space: pre-wrap; max-height: 200px; overflow-y: scroll;">${fn:escapeXml(fn:trim(expressionExperiment.description))}</div>
                     </c:when>
-                    <c:otherwise>(Description not available)</c:otherwise>
+                    <c:otherwise><i>Description not available</i></c:otherwise>
                 </c:choose>
             </td>
         </tr>
@@ -116,9 +109,6 @@
         </tr>
 
     </table>
-</div>
-
-<div class="padded">
 
     <security:accesscontrollist domainObject="${expressionExperiment}"
             hasPermission="WRITE,ADMINISTRATION">
@@ -134,7 +124,7 @@
                             href="<c:url value='https://pavlidislab.github.io/Gemma/designs.html' />">here</a>
                     . If you want to use the upload method, you can get a blank
                     <a href="#"
-                            onClick="Gemma.ExpressionExperimentDataFetch.fetchData(false, ${expressionExperiment.id }, 'text', null, ${expressionExperiment.experimentalDesign.id})">template
+                            onClick="Gemma.ExpressionExperimentDataFetch.fetchData(false, ${expressionExperiment.id}, 'text', null, ${expressionExperiment.experimentalDesign.id})">template
                         file</a>
                     to get started.
                 </p>
@@ -169,6 +159,8 @@
 
 </div>
 
+<Gemma:script src='/scripts/app/eeDataFetch.js' />
+<Gemma:script src='/scripts/app/ExperimentalDesign.js' />
 <script>
 $( document ).ready( function() {
    $( 'i[title]' ).qtip();

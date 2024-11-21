@@ -49,7 +49,7 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee ) {
+    public Map<Class<? extends DataVector>, Set<QuantitationType>> findByExpressionExperiment( ExpressionExperiment ee ) {
         return quantitationTypeDao.findByExpressionExperiment( ee );
     }
 

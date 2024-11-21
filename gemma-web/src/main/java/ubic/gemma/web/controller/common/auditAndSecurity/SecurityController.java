@@ -249,7 +249,6 @@ public class SecurityController {
         return result;
     }
 
-    // @Transactional(readOnly = true)
     public SecurityInfoValueObject getSecurityInfo( EntityDelegator<? extends Securable> ed ) {
 
         // TODO Figure out why Transaction(readOnly = true) throws an error when this method is called from

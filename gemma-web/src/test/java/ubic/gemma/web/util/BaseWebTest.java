@@ -13,6 +13,8 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 import ubic.gemma.core.util.MailEngine;
 import ubic.gemma.core.util.test.BaseTest;
 
+import javax.servlet.ServletContext;
+
 import static org.mockito.Mockito.mock;
 
 /**
@@ -34,7 +36,7 @@ public abstract class BaseWebTest extends BaseTest {
 
         @Bean
         public MessageUtil messageUtil() {
-            return mock( MessageUtil.class );
+            return new MessageUtilImpl();
         }
 
         @Bean
@@ -43,8 +45,8 @@ public abstract class BaseWebTest extends BaseTest {
         }
 
         @Bean
-        public WebEntityUrlBuilder webEntityUrlBuilder() {
-            return mock();
+        public WebEntityUrlBuilder webEntityUrlBuilder( ServletContext servletContext ) {
+            return new WebEntityUrlBuilder( "http://localhost:8080", servletContext );
         }
     }
 

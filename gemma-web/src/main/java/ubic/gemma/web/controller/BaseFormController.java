@@ -30,14 +30,11 @@ import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.multipart.support.ByteArrayMultipartFileEditor;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
-import ubic.gemma.core.util.MailEngine;
 import ubic.gemma.web.util.MessageUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.text.NumberFormat;
-import java.util.Locale;
 
 /**
  * Implementation of <strong>SimpleFormController</strong> that contains convenience methods for subclasses. For
@@ -52,70 +49,7 @@ public abstract class BaseFormController extends SimpleFormController {
     protected static final Log log = LogFactory.getLog( BaseFormController.class.getName() );
 
     @Autowired
-    private MessageUtil messageUtil;
-
-    @Autowired
-    private MailEngine mailEngine;
-
-    /**
-     * @return the messageUtil
-     */
-    public MessageUtil getMessageUtil() {
-        return this.messageUtil;
-    }
-
-    /**
-     * @param messageUtil the messageUtil to set
-     */
-    public void setMessageUtil( MessageUtil messageUtil ) {
-        this.messageUtil = messageUtil;
-    }
-
-    /**
-     * @see ubic.gemma.web.util.MessageUtilImpl#getText(java.lang.String, java.util.Locale)
-     */
-    public String getText( String msgKey, Locale locale ) {
-        return this.messageUtil.getText( msgKey, locale );
-    }
-
-    /**
-     * @see ubic.gemma.web.util.MessageUtilImpl#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String)
-     */
-    public void saveMessage( HttpServletRequest request, String msg ) {
-        this.messageUtil.saveMessage( request, msg );
-    }
-
-    /**
-     * @see ubic.gemma.web.util.MessageUtilImpl#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String, java.lang.Object, java.lang.String)
-     */
-    public void saveMessage( HttpServletRequest request, String key, Object parameter, String defaultMessage ) {
-        this.messageUtil.saveMessage( request, key, parameter, defaultMessage );
-    }
-
-    /**
-     * @see ubic.gemma.web.util.MessageUtilImpl#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String, java.lang.Object[], java.lang.String)
-     */
-    public void saveMessage( HttpServletRequest request, String key, Object[] parameters, String defaultMessage ) {
-        this.messageUtil.saveMessage( request, key, parameters, defaultMessage );
-    }
-
-    /**
-     * @see ubic.gemma.web.util.MessageUtilImpl#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String, java.lang.String)
-     */
-    public void saveMessage( HttpServletRequest request, String key, String defaultMessage ) {
-        this.messageUtil.saveMessage( request, key, defaultMessage );
-    }
-
-    /**
-     * @see ubic.gemma.web.util.MessageUtilImpl#saveMessage(javax.servlet.http.HttpSession, java.lang.String)
-     */
-    public void saveMessage( HttpSession session, String msg ) {
-        this.messageUtil.saveMessage( session, msg );
-    }
-
-    public void setMailEngine( MailEngine mailEngine ) {
-        this.mailEngine = mailEngine;
-    }
+    protected MessageUtil messageUtil;
 
     /**
      * Override this to control which cancelView is used. The default behavior is to go to the success view if there is
@@ -168,7 +102,7 @@ public abstract class BaseFormController extends SimpleFormController {
     protected ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
         if ( request.getParameter( "cancel" ) != null ) {
-            messageUtil.saveMessage( request, "errors.cancel", "Cancelled" );
+            messageUtil.saveMessage( "errors.cancel", "Cancelled" );
             return getCancelView( request );
         }
 

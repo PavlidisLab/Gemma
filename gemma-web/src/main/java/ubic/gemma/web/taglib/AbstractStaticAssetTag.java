@@ -1,8 +1,9 @@
 package ubic.gemma.web.taglib;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.springframework.web.servlet.tags.RequestContextAwareTag;
+import org.springframework.web.servlet.tags.HtmlEscapingAwareTag;
 import org.springframework.web.servlet.tags.form.TagWriter;
+import org.springframework.web.util.HtmlUtils;
 import ubic.gemma.web.util.StaticAssetServer;
 
 import javax.servlet.jsp.JspException;
@@ -13,7 +14,7 @@ import javax.servlet.jsp.JspException;
  * @see StaticAssetServer
  */
 @CommonsLog
-public abstract class AbstractStaticAssetTag extends RequestContextAwareTag {
+public abstract class AbstractStaticAssetTag extends HtmlEscapingAwareTag {
 
     private StaticAssetServer staticAssetServer;
 
@@ -24,6 +25,11 @@ public abstract class AbstractStaticAssetTag extends RequestContextAwareTag {
         if ( staticAssetServer == null ) {
             staticAssetServer = getRequestContext().getWebApplicationContext().getBean( StaticAssetServer.class );
         }
-        tagWriter.writeAttribute( attributeName, staticAssetServer.resolveUrl( src ) );
+        String url = staticAssetServer.resolveUrl( src );
+        tagWriter.writeAttribute( attributeName, htmlEscape( url ) );
+    }
+
+    protected String htmlEscape( String value ) {
+        return isHtmlEscape() ? HtmlUtils.htmlEscape( value ) : value;
     }
 }
