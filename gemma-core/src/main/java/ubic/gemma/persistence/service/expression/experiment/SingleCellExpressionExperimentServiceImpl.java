@@ -244,19 +244,25 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
      * Apply various single-cell sparsity metrics to the bioassays.
      */
     private void applyBioAssaySparsityMetrics( ExpressionExperiment ee, SingleCellDimension dimension, Collection<SingleCellExpressionDataVector> vectors ) {
+        boolean isSupported = SingleCellSparsityMetrics.isSupported( vectors );
+        if ( !isSupported ) {
+            log.warn( "Sparsity metrics cannot be computed for " + ee + ", they will be all set to null." );
+        }
         for ( BioAssay ba : ee.getBioAssays() ) {
-            int sampleIndex = dimension.getBioAssays().indexOf( ba );
-            if ( sampleIndex != -1 ) {
-                ba.setNumberOfCells( getNumberOfCells( vectors, sampleIndex, null ) );
-                ba.setNumberOfDesignElements( getNumberOfDesignElements( vectors, sampleIndex, null ) );
-                ba.setNumberOfCellsByDesignElements( getNumberOfCellsByDesignElements( vectors, sampleIndex, null ) );
-                log.info( String.format( "Sparsity metrics for %s: %d cells, %d design elements, %d cells by design elements.",
-                        ba, ba.getNumberOfCells(), ba.getNumberOfDesignElements(), ba.getNumberOfCellsByDesignElements() ) );
-            } else {
-                log.warn( ba + " is not used in " + dimension + ", the single-cell sparsity metrics will be set to null." );
-                ba.setNumberOfCells( null );
-                ba.setNumberOfDesignElements( null );
-                ba.setNumberOfCellsByDesignElements( null );
+            ba.setNumberOfCells( null );
+            ba.setNumberOfDesignElements( null );
+            ba.setNumberOfCellsByDesignElements( null );
+            if ( isSupported ) {
+                int sampleIndex = dimension.getBioAssays().indexOf( ba );
+                if ( sampleIndex != -1 ) {
+                    ba.setNumberOfCells( getNumberOfCells( vectors, sampleIndex, null ) );
+                    ba.setNumberOfDesignElements( getNumberOfDesignElements( vectors, sampleIndex, null ) );
+                    ba.setNumberOfCellsByDesignElements( getNumberOfCellsByDesignElements( vectors, sampleIndex, null ) );
+                    log.info( String.format( "Sparsity metrics for %s: %d cells, %d design elements, %d cells by design elements.",
+                            ba, ba.getNumberOfCells(), ba.getNumberOfDesignElements(), ba.getNumberOfCellsByDesignElements() ) );
+                } else {
+                    log.warn( ba + " is not used in " + dimension + ", the single-cell sparsity metrics will be set to null." );
+                }
             }
         }
     }

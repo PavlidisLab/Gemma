@@ -10,6 +10,8 @@ import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderService;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
@@ -33,6 +35,9 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             DATA_PATH_OPTION = "p",
             PLATFORM_OPTION = "a",
             QT_NAME_OPTION = "qtName",
+            QT_NEW_NAME_OPTION = "qtNewName",
+            QT_NEW_TYPE_OPTION = "qtNewType",
+            QT_NEW_SCALE_TYPE_OPTION = "qtNewScaleType",
             PREFERRED_QT_OPTION = "preferredQt",
             REPLACE_OPTION = "replace",
             CELL_TYPE_ASSIGNMENT_FILE_OPTION = "ctaFile",
@@ -72,6 +77,9 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private SingleCellDataType dataType;
     @Nullable
     private String qtName;
+    private String newName;
+    private StandardQuantitationType newType;
+    private ScaleType newScaleType;
     private boolean preferredQt;
     private boolean replaceQt;
     @Nullable
@@ -114,6 +122,9 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .build() );
         options.addOption( PLATFORM_OPTION, "platform", true, "Target platform (must already exist in the system)" );
         options.addOption( QT_NAME_OPTION, "quantitation-type-name", true, "Quantitation type to import (optional, use if more than one is present in data)" );
+        options.addOption( QT_NEW_NAME_OPTION, "quantitation-type-new-name", true, "New name to use for the imported quantitation type (optional, defaults to the data)" );
+        options.addOption( QT_NEW_TYPE_OPTION, "quantitation-type-new-type", true, "New type to use for the imported quantitation type (optional, defaults to the data)" );
+        options.addOption( QT_NEW_SCALE_TYPE_OPTION, "quantitation-type-new-scale-type", true, "New scale type to use for the imported quantitation type (optional, defaults to the data)" );
         options.addOption( PREFERRED_QT_OPTION, "preferred-quantitation-type", false, "Make the quantitation type the preferred one." );
         options.addOption( REPLACE_OPTION, "replace", false, "Replace an existing quantitation type. The -" + QT_NAME_OPTION + "/--quantitation-type-name option must be set." );
         options.addOption( Option.builder( CELL_TYPE_ASSIGNMENT_FILE_OPTION )
@@ -167,6 +178,17 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             dataPath = commandLine.getParsedOptionValue( DATA_PATH_OPTION );
         }
         qtName = commandLine.getOptionValue( QT_NAME_OPTION );
+        newName = commandLine.getOptionValue( QT_NEW_NAME_OPTION );
+        if ( commandLine.hasOption( QT_NEW_TYPE_OPTION ) ) {
+            newType = StandardQuantitationType.valueOf( commandLine.getOptionValue( QT_NEW_TYPE_OPTION ).toUpperCase() );
+        } else {
+            newType = null;
+        }
+        if ( commandLine.hasOption( QT_NEW_SCALE_TYPE_OPTION ) ) {
+            newScaleType = ScaleType.valueOf( commandLine.getOptionValue( QT_NEW_SCALE_TYPE_OPTION ) );
+        } else {
+            newScaleType = null;
+        }
         if ( commandLine.hasOption( REPLACE_OPTION ) ) {
             if ( qtName == null ) {
                 throw new IllegalArgumentException( "The -" + QT_NAME_OPTION + " option must be set in order to replace an existing set of vectors." );
@@ -290,6 +312,9 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         if ( qtName != null ) {
             configBuilder
                     .quantitationTypeName( qtName )
+                    .quantitationTypeNewName( newName )
+                    .quantitationTypeNewType( newType )
+                    .quantitationTypeNewScaleType( newScaleType )
                     .replaceExistingQuantitationType( replaceQt );
         }
         configBuilder.markQuantitationTypeAsPreferred( preferredQt );

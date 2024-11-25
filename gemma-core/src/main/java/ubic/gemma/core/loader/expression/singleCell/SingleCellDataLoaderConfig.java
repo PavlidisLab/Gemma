@@ -3,6 +3,8 @@ package ubic.gemma.core.loader.expression.singleCell;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 import ubic.gemma.model.common.protocol.Protocol;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 
 import javax.annotation.Nullable;
 import java.nio.file.Path;
@@ -36,6 +38,24 @@ public class SingleCellDataLoaderConfig {
      * Requires {@link #quantitationTypeName} to be set.
      */
     private boolean replaceExistingQuantitationType;
+
+    /**
+     * Override the name of the resulting QT.
+     */
+    @Nullable
+    private String quantitationTypeNewName;
+
+    /**
+     * Override the type of the resulting QT.
+     */
+    @Nullable
+    private StandardQuantitationType quantitationTypeNewType;
+
+    /**
+     * Override the scale type of the resulting QT.
+     */
+    @Nullable
+    private ScaleType quantitationTypeNewScaleType;
 
     /**
      * Mark the QT as preferred.

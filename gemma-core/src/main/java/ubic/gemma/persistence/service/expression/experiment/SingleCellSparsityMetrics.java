@@ -14,6 +14,22 @@ import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataV
 public class SingleCellSparsityMetrics {
 
     /**
+     * Check if sparsity metrics can be computed for a given collection of vectors.
+     */
+    public static boolean isSupported( Collection<SingleCellExpressionDataVector> vectors ) {
+        if ( vectors.isEmpty() ) {
+            return false;
+        }
+        try {
+            //noinspection ResultOfMethodCallIgnored
+            isExpressed( 0, vectors.iterator().next().getQuantitationType().getScale() );
+            return true;
+        } catch ( IllegalArgumentException e ) {
+            return false;
+        }
+    }
+
+    /**
      * Calculate the number of cells with at least one gene expressed.
      * @param characteristic only cell with the given characteristic will be considered
      */

@@ -212,7 +212,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         }
         QuantitationType qt;
         if ( qts.isEmpty() ) {
-            throw new IllegalArgumentException( String.format( "No quantitation available%s. Choose one among:\n%s",
+            throw new IllegalArgumentException( String.format( "No quantitation available%s. Choose one among:\n\t%s",
                     qtName != null ? " with name " + qtName : "",
                     availableQts.stream().map( QuantitationType::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
         } else if ( qts.size() > 1 ) {
@@ -222,6 +222,20 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         } else {
             qt = qts.iterator().next();
         }
+        // apply any overrides
+        if ( config.getQuantitationTypeNewName() != null ) {
+            log.info( "Overriding the name to " + config.getQuantitationTypeNewName() + " (was " + qt.getName() + ")." );
+            qt.setName( config.getQuantitationTypeNewName() );
+        }
+        if ( config.getQuantitationTypeNewType() != null ) {
+            log.info( "Overriding the type to " + config.getQuantitationTypeNewType() + " (was " + qt.getType() + ")." );
+            qt.setType( config.getQuantitationTypeNewType() );
+        }
+        if ( config.getQuantitationTypeNewScaleType() != null ) {
+            log.info( "Overriding the scale type to " + config.getQuantitationTypeNewScaleType() + " (was " + qt.getScale() + ")." );
+            qt.setScale( config.getQuantitationTypeNewScaleType() );
+        }
+
         if ( config.isReplaceExistingQuantitationType() ) {
             // find the persistent QT matching the data
             QuantitationType existingQt = quantitationTypeService.find( ee, qt, SingleCellExpressionDataVector.class );
@@ -230,7 +244,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
                 log.info( "Data will be replaced for " + existingQt + "..." );
             } else {
                 availableQts = singleCellExpressionExperimentService.getSingleCellQuantitationTypes( ee );
-                throw new IllegalArgumentException( String.format( "%s does not match any existing single-cell quantitation type. Choose one among:\n%s",
+                throw new IllegalArgumentException( String.format( "%s does not match any existing single-cell quantitation type. Choose one among:\n\t%s",
                         qt,
                         availableQts.stream().map( QuantitationType::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
             }
