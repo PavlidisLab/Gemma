@@ -21,15 +21,21 @@ package ubic.gemma.model.genome;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.description.ExternalDatabase;
 
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 public class Taxon extends AbstractIdentifiable {
 
+    @Nullable
     private String scientificName;
+    @Nullable
     private String commonName;
+    @Nullable
     private Integer ncbiId;
     private boolean isGenesUsable;
+    @Nullable
     private Integer secondaryNcbiId;
+    @Nullable
     private ExternalDatabase externalDatabase;
 
     @Override
@@ -81,19 +87,21 @@ public class Taxon extends AbstractIdentifiable {
         return buf.toString();
     }
 
+    @Nullable
     public String getCommonName() {
         return this.commonName;
     }
 
-    public void setCommonName( String commonName ) {
+    public void setCommonName( @Nullable String commonName ) {
         this.commonName = commonName;
     }
 
+    @Nullable
     public ExternalDatabase getExternalDatabase() {
         return this.externalDatabase;
     }
 
-    public void setExternalDatabase( ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
+    public void setExternalDatabase( @Nullable ExternalDatabase externalDatabase ) {
         this.externalDatabase = externalDatabase;
     }
 
@@ -105,19 +113,21 @@ public class Taxon extends AbstractIdentifiable {
         this.isGenesUsable = isGenesUsable;
     }
 
+    @Nullable
     public Integer getNcbiId() {
         return this.ncbiId;
     }
 
-    public void setNcbiId( Integer ncbiId ) {
+    public void setNcbiId( @Nullable Integer ncbiId ) {
         this.ncbiId = ncbiId;
     }
 
+    @Nullable
     public String getScientificName() {
         return this.scientificName;
     }
 
-    public void setScientificName( String scientificName ) {
+    public void setScientificName( @Nullable String scientificName ) {
         this.scientificName = scientificName;
     }
 
@@ -126,12 +136,13 @@ public class Taxon extends AbstractIdentifiable {
      *         is
      *         budding yeast, which is id 4932 in GEO but genes use the (strain-specific) ID 559292.
      */
+    @Nullable
     public Integer getSecondaryNcbiId() {
         return this.secondaryNcbiId;
     }
 
     @SuppressWarnings("unused")
-    public void setSecondaryNcbiId( Integer secondaryNcbiId ) {
+    public void setSecondaryNcbiId( @Nullable Integer secondaryNcbiId ) {
         this.secondaryNcbiId = secondaryNcbiId;
     }
 

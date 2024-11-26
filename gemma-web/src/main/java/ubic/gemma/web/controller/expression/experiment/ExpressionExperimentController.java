@@ -530,7 +530,7 @@ public class ExpressionExperimentController {
         Locale locale = LocaleContextHolder.getLocale();
         NumberFormat integerFormat = NumberFormat.getIntegerInstance( locale );
         List<Taxon> taxaInOrder = new ArrayList<>( eesPerTaxon.keySet() );
-        taxaInOrder.sort( Comparator.comparing( Taxon::getCommonName ) );
+        taxaInOrder.sort( Comparator.comparing( Taxon::getCommonName, Comparator.nullsLast( Comparator.naturalOrder() ) ) );
 
         for ( Taxon t : taxaInOrder ) {
             Map<String, Object> taxLine = new HashMap<>();
