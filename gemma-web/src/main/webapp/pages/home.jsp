@@ -10,7 +10,7 @@
 
 <%-- jshowoff.css is included in the bundle --%>
 <div id="sloganText" class="container">
-    <h1 style="font-weight: bold; text-align: center;" class="gray">
+    <h1 style="font-weight: bold; text-align: center; padding-top: 1em;" class="gray">
         Database of curated and re-analyzed gene expression studies
     </h1>
 </div>

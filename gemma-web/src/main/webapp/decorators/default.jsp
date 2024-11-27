@@ -28,8 +28,8 @@ const gemBrowUrl = "${appConfig["gemma.gemBrow.url"]}";
 <body>
 <jsp:include page="/common/userStatusVariables.jsp" />
 <div id="page">
-    <div id="headerclearnopadding" class="clearfix">
-        <jsp:include page="/common/header.inner.jsp" />
+    <div id="header">
+        <jsp:include page="/common/header.jsp" />
     </div>
     <div id="content">
         <div id="main">
