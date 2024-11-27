@@ -13,12 +13,14 @@ import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.web.util.BaseWebTest;
 
 import java.util.Collections;
@@ -36,6 +38,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ContextConfiguration
 public class ExpressionExperimentEditControllerTest extends BaseWebTest {
 
+    @Autowired
+    private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
+
     @Configuration
     @TestComponent
     static class ExpressionExperimentFormControllerTestContextConfiguration extends BaseWebTestContextConfiguration {
@@ -47,6 +52,11 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
 
         @Bean
         public ExpressionExperimentService expressionExperimentService() {
+            return mock();
+        }
+
+        @Bean
+        public SingleCellExpressionExperimentService singleCellExpressionExperimentService() {
             return mock();
         }
 
@@ -109,7 +119,7 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
 
     @After
     public void tearDown() {
-        reset( expressionExperimentService, preprocessorService );
+        reset( expressionExperimentService, singleCellExpressionExperimentService, preprocessorService );
     }
 
     @Test
@@ -118,8 +128,7 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
                 .andExpect( status().isOk() )
                 .andExpect( view().name( "expressionExperiment.edit" ) )
                 .andExpect( model().attributeExists( "expressionExperiment", "keywords",
-                        "standardQuantitationTypes", "scaleTypes", "generalQuantitationTypes" ) )
-                .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "Editing dataset" ) ) );
+                        "standardQuantitationTypes", "scaleTypes", "generalQuantitationTypes" ) );
         perform( post( "/expressionExperiment/editExpressionExperiment.html?id=1" )
                 .param( "quantitationTypes[0].id", String.valueOf( qt.getId() ) )
                 .param( "quantitationTypes[0].name", "log2cpm" )
@@ -136,8 +145,7 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
                 .andExpect( status().isOk() )
                 .andExpect( view().name( "expressionExperiment.edit" ) )
                 .andExpect( model().attributeExists( "expressionExperiment", "keywords",
-                        "standardQuantitationTypes", "scaleTypes", "generalQuantitationTypes" ) )
-                .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "Quantitation types have been updated, but no reprocessing is needed." ) ) );
+                        "standardQuantitationTypes", "scaleTypes", "generalQuantitationTypes" ) );
 
         assertThat( qt.getName() ).isEqualTo( "log2cpm" );
 
@@ -164,7 +172,7 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
                 .param( "quantitationTypes[0].isPreferred", "true" ) )
                 .andExpect( status().isOk() )
                 .andExpect( view().name( "expressionExperiment.edit" ) )
-                .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "Quantitation types have been updated, reprocessing has been triggered." ) ) );
+                .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "Preferred quantitation type has been significantly changed, reprocessing will be performed." ) ) );
 
         verify( expressionExperimentService ).updateQuantitationType( ee, qt );
         verify( preprocessorService ).process( ee );
@@ -188,10 +196,35 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
                 .param( "quantitationTypes[0].isPreferred", "true" ) )
                 .andExpect( status().isOk() )
                 .andExpect( view().name( "expressionExperiment.edit" ) )
-                .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "Quantitation types have been updated, reprocessing has been triggered." ) ) );
+                .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "Preferred quantitation type has been significantly changed, reprocessing will be performed." ) ) );
 
         verify( expressionExperimentService ).updateQuantitationType( ee, qt );
         verify( preprocessorService ).process( ee );
+    }
+
+    @Test
+    public void testSwitchPreferredVectorToNonPreferred() throws Exception {
+        qt.setIsPreferred( true );
+        perform( post( "/expressionExperiment/editExpressionExperiment.html?id=1" )
+                .param( "quantitationTypes[0].id", String.valueOf( qt.getId() ) )
+                .param( "quantitationTypes[0].name", String.valueOf( qt.getName() ) )
+                .param( "quantitationTypes[0].generalType", qt.getGeneralType().name() )
+                .param( "quantitationTypes[0].type", qt.getType().name() )
+                .param( "quantitationTypes[0].scale", qt.getScale().name() )
+                .param( "quantitationTypes[0].representation", qt.getRepresentation().name() )
+                .param( "quantitationTypes[0].isBackground", String.valueOf( qt.getIsBackground() ) )
+                .param( "quantitationTypes[0].isBackgroundSubtracted", String.valueOf( qt.getIsBackgroundSubtracted() ) )
+                .param( "quantitationTypes[0].isNormalized", String.valueOf( qt.getIsNormalized() ) )
+                .param( "quantitationTypes[0].isBatchCorrected", String.valueOf( qt.getIsBatchCorrected() ) )
+                .param( "quantitationTypes[0].isRatio", String.valueOf( qt.getIsRatio() ) )
+                .param( "quantitationTypes[0].isRecomputedFromRawData", String.valueOf( qt.getIsRecomputedFromRawData() ) )
+                .param( "quantitationTypes[0].isPreferred", "false" ) )
+                .andExpect( status().isOk() )
+                .andExpect( view().name( "expressionExperiment.edit" ) )
+                .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "There is no preferred quantitation type, however existing processed data will be kept." ) ) );
+
+        verify( expressionExperimentService ).updateQuantitationType( ee, qt );
+        verifyNoInteractions( preprocessorService );
     }
 
     @Test
@@ -211,12 +244,62 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
                 .param( "quantitationTypes[0].isRatio", String.valueOf( qt.getIsRatio() ) )
                 .param( "quantitationTypes[0].isRecomputedFromRawData", String.valueOf( qt.getIsRecomputedFromRawData() ) ) )
                 .andExpect( status().isOk() )
-                .andExpect( view().name( "expressionExperiment.edit" ) )
-                .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "Quantitation types have been updated, but no reprocessing is needed." ) ) );
+                .andExpect( view().name( "expressionExperiment.edit" ) );
 
         assertThat( ee.getQuantitationTypes() ).contains( qt );
 
         verify( expressionExperimentService ).update( ee );
         verify( expressionExperimentService ).updateQuantitationType( ee, qt );
+    }
+
+    @Test
+    public void testUpdatePreferredSingleCellVectors() throws Exception {
+        when( expressionExperimentService.getQuantitationTypesByVectorType( ee ) ).thenReturn( Collections.singletonMap( SingleCellExpressionDataVector.class, Collections.singleton( qt ) ) );
+        perform( post( "/expressionExperiment/editExpressionExperiment.html?id=1" )
+                .param( "quantitationTypes[0].id", String.valueOf( qt.getId() ) )
+                .param( "quantitationTypes[0].name", String.valueOf( qt.getName() ) )
+                .param( "quantitationTypes[0].generalType", qt.getGeneralType().name() )
+                .param( "quantitationTypes[0].type", qt.getType().name() )
+                .param( "quantitationTypes[0].scale", qt.getScale().name() )
+                .param( "quantitationTypes[0].representation", qt.getRepresentation().name() )
+                .param( "quantitationTypes[0].isBackground", String.valueOf( qt.getIsBackground() ) )
+                .param( "quantitationTypes[0].isBackgroundSubtracted", String.valueOf( qt.getIsBackgroundSubtracted() ) )
+                .param( "quantitationTypes[0].isNormalized", String.valueOf( qt.getIsNormalized() ) )
+                .param( "quantitationTypes[0].isBatchCorrected", String.valueOf( qt.getIsBatchCorrected() ) )
+                .param( "quantitationTypes[0].isRatio", String.valueOf( qt.getIsRatio() ) )
+                .param( "quantitationTypes[0].isRecomputedFromRawData", String.valueOf( qt.getIsRecomputedFromRawData() ) )
+                .param( "quantitationTypes[0].isSingleCellPreferred", "true" ) )
+                .andExpect( status().isOk() )
+                .andExpect( view().name( "expressionExperiment.edit" ) )
+                .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "Preferred quantitation type has been significantly changed, single-cell sparsity metrics will be recomputed." ) ) );
+
+        verify( expressionExperimentService ).updateQuantitationType( ee, qt );
+        verify( singleCellExpressionExperimentService ).updateSparsityMetrics( ee );
+    }
+
+    @Test
+    public void testUpdatePreferredSingleCellVectorsToNonPreferred() throws Exception {
+        qt.setIsSingleCellPreferred( true );
+        when( expressionExperimentService.getQuantitationTypesByVectorType( ee ) ).thenReturn( Collections.singletonMap( SingleCellExpressionDataVector.class, Collections.singleton( qt ) ) );
+        perform( post( "/expressionExperiment/editExpressionExperiment.html?id=1" )
+                .param( "quantitationTypes[0].id", String.valueOf( qt.getId() ) )
+                .param( "quantitationTypes[0].name", String.valueOf( qt.getName() ) )
+                .param( "quantitationTypes[0].generalType", qt.getGeneralType().name() )
+                .param( "quantitationTypes[0].type", qt.getType().name() )
+                .param( "quantitationTypes[0].scale", qt.getScale().name() )
+                .param( "quantitationTypes[0].representation", qt.getRepresentation().name() )
+                .param( "quantitationTypes[0].isBackground", String.valueOf( qt.getIsBackground() ) )
+                .param( "quantitationTypes[0].isBackgroundSubtracted", String.valueOf( qt.getIsBackgroundSubtracted() ) )
+                .param( "quantitationTypes[0].isNormalized", String.valueOf( qt.getIsNormalized() ) )
+                .param( "quantitationTypes[0].isBatchCorrected", String.valueOf( qt.getIsBatchCorrected() ) )
+                .param( "quantitationTypes[0].isRatio", String.valueOf( qt.getIsRatio() ) )
+                .param( "quantitationTypes[0].isRecomputedFromRawData", String.valueOf( qt.getIsRecomputedFromRawData() ) )
+                .param( "quantitationTypes[0].isSingleCellPreferred", "false" ) )
+                .andExpect( status().isOk() )
+                .andExpect( view().name( "expressionExperiment.edit" ) )
+                .andExpect( request().sessionAttribute( "messages", Collections.singletonList( "There is no preferred single-cell quantitation type, single-cell sparsity metrics will be cleared." ) ) );
+
+        verify( expressionExperimentService ).updateQuantitationType( ee, qt );
+        verify( singleCellExpressionExperimentService ).updateSparsityMetrics( ee );
     }
 }

@@ -67,36 +67,45 @@
             </table>
         </c:when>
         <c:otherwise>
-            <Gemma:expressionQC ee="${expressionExperiment.id}" numOutliersRemoved="${numOutliersRemoved}"
-                    numPossibleOutliers="${numPossibleOutliers}"
-                    hasCorrMat="${hasCorrMat}" hasNodeDegreeDist="${hasNodeDegreeDist }"
-                    hasPCA="${hasPCA}" numFactors="${numFactors}" hasMeanVariance="${hasMeanVariance }"
-                    hasCorrDist="${hasCorrDist}"
-                    eeManagerId="eemanager" />
-            <span id="bioAssayTable" class="v-padded"></span>
-            <input id="eeId" type="hidden" value="${expressionExperiment.id}" />
-            <script type="text/javascript">
-            Ext.BLANK_IMAGE_URL = '${pageContext.request.contextPath}/images/default/s.gif';
+            <div class="mb-3">
+                <Gemma:expressionQC expressionExperiment="${expressionExperiment}"
+                        eeManagerId="eemanager"
+                        hasCorrMat="${hasCorrMat}"
+                        hasPCA="${hasPCA}"
+                        hasMeanVariance="${hasMeanVariance}"
+                        hasSingleCellData="${hasSingleCellData}"
+                        singleCellSparsityHeatmap="${singleCellSparsityHeatmap}"
+                        numFactors="${numFactors}"
+                        numOutliersRemoved="${numOutliersRemoved}"
+                        numPossibleOutliers="${numPossibleOutliers}"
+                        class="mb-3" />
+            </div>
+            <security:authorize access="hasAuthority('GROUP_ADMIN') || hasPermission(expressionExperiment, 'WRITE')">
+                <div id="bioAssayTable" class="v-padded mb-3"></div>
+                <input id="eeId" type="hidden" value="${expressionExperiment.id}" />
+                <script type="text/javascript">
+                Ext.BLANK_IMAGE_URL = '${pageContext.request.contextPath}/images/default/s.gif';
 
-            Ext.onReady( function() {
+                Ext.onReady( function() {
 
-               Ext.QuickTips.init();
-               Ext.state.Manager.setProvider( new Ext.state.CookieProvider() );
+                   Ext.QuickTips.init();
+                   Ext.state.Manager.setProvider( new Ext.state.CookieProvider() );
 
-               var manager = new Gemma.EEManager( {editable : true, id : "eemanager"} );
+                   var manager = new Gemma.EEManager( {editable : true, id : "eemanager"} );
 
-               manager.on( 'done', function() {
-                  window.location.reload( true );
-               } );
+                   manager.on( 'done', function() {
+                      window.location.reload( true );
+                   } );
 
-               new Gemma.BioAssayGrid( {
-                  editable : true,
-                  renderTo : 'bioAssayTable',
-                  eeId : Ext.get( "eeId" ).getValue()
-               } );
+                   new Gemma.BioAssayGrid( {
+                      editable : true,
+                      renderTo : 'bioAssayTable',
+                      eeId : Ext.get( "eeId" ).getValue()
+                   } );
 
-            } );
-            </script>
+                } );
+                </script>
+            </security:authorize>
         </c:otherwise>
     </c:choose>
 </div>

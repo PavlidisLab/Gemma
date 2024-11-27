@@ -188,6 +188,32 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
     }
 
     @Override
+    public List<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee, BioAssayDimension dimension, int offset, int limit ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "select dedv from ProcessedExpressionDataVector dedv "
+                                + "where dedv.expressionExperiment = :ee and dedv.bioAssayDimension = :dimension" )
+                .setParameter( "ee", ee )
+                .setParameter( "dimension", dimension )
+                .setFirstResult( offset )
+                .setMaxResults( limit )
+                .list();
+    }
+
+    @Override
+    public List<CompositeSequence> getProcessedVectorsDesignElements( ExpressionExperiment ee, BioAssayDimension dimension, int offset, int limit ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "select dedv.designElement from ProcessedExpressionDataVector dedv "
+                                + "where dedv.expressionExperiment = :ee and dedv.bioAssayDimension = :dimension" )
+                .setParameter( "ee", ee )
+                .setParameter( "dimension", dimension )
+                .setFirstResult( offset )
+                .setMaxResults( limit )
+                .list();
+    }
+
+    @Override
     public Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method ) {
 

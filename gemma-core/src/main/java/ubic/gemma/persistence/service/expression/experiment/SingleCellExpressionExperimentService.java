@@ -95,6 +95,14 @@ public interface SingleCellExpressionExperimentService {
             Collection<SingleCellExpressionDataVector> vectors, @Nullable String details );
 
     /**
+     * Update the sparsity metrics.
+     * <p>
+     * If no preferred single-cell vectors are present, the sparsity metrics will be cleared.
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void updateSparsityMetrics( ExpressionExperiment ee );
+
+    /**
      * Remove single-cell data vectors for the given quantitation type.
      * @return the number of vectors that were removed
      */
@@ -107,9 +115,21 @@ public interface SingleCellExpressionExperimentService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     List<SingleCellDimension> getSingleCellDimensions( ExpressionExperiment ee );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee );
+
     /**
      * Obtain a single-cell dimension used for a given dataset and QT.
      */
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    SingleCellDimension getSingleCellDimension( ExpressionExperiment ee, QuantitationType qt );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt );
+
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     SingleCellDimension getSingleCellDimensionWithCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt );
 
@@ -120,6 +140,14 @@ public interface SingleCellExpressionExperimentService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Optional<SingleCellDimension> getPreferredSingleCellDimension( ExpressionExperiment ee );
+
+    /**
+     * Obtain the preferred single-cell dimension without its cell IDs.
+     * <p>
+     * The returned object is not persistent since it's a projection.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Optional<SingleCellDimension> getPreferredSingleCellDimensionWithoutCellIds( ExpressionExperiment ee );
 
     /**
      * Obtain the preferred single-cell dimension.

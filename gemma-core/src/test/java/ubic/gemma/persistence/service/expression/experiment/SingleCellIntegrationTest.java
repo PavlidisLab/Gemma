@@ -73,7 +73,7 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
         SingleCellDimension scd = singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithCellLevelCharacteristics( ee )
                 .orElse( null );
         assertThat( scd ).isNotNull();
-        assertThat( scd.getCellIds() ).hasSize( 8000 );
+        assertThat( scd.getCellIds() ).isNotNull().hasSize( 8000 );
         assertThat( scd.getNumberOfCells() ).isEqualTo( 8000 );
 
         // at some point, we add single cell labels

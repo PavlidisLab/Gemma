@@ -5,6 +5,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.util.Assert;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
@@ -35,6 +36,7 @@ public abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends C
 
     @Override
     public Set<T> parse( Path metadataFile ) throws IOException {
+        Assert.notNull( singleCellDimension.getCellIds() );
         Map<BioAssay, Integer> bioAssayToIndex = ListUtils.indexOfElements( singleCellDimension.getBioAssays() );
         // maps cell IDs to their position in the cell id vector
         Map<BioAssay, Map<String, Integer>> bioAssayToCellIdIndex = new HashMap<>();
@@ -100,7 +102,7 @@ public abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends C
                         k = characteristics.size();
                         characteristics.add( c );
                         cellTypesToId.put( c, k );
-                        log.info( "New " + categoryId + " detected: " + c + ", it will be coded as " + k + "." );
+                        log.debug( "New " + categoryId + " detected: " + c + ", it will be coded as " + k + "." );
                     }
                     assignedBioAssays.add( ba );
                 } else {

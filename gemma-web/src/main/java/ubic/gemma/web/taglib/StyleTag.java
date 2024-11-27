@@ -13,23 +13,21 @@ import java.util.Map;
  */
 public class StyleTag extends AbstractStaticAssetTag implements DynamicAttributes {
 
-    private String href;
-
     private final Map<String, Object> dynamicAttributes = new LinkedHashMap<>();
+
+    public StyleTag() {
+        super( "href" );
+    }
 
     @Override
     protected int doStartTagInternal() throws JspException {
         TagWriter tagWriter = new TagWriter( pageContext );
         tagWriter.startTag( "link" );
-        writeStaticAssetAttribute( "href", href, tagWriter );
+        writeSrcAttribute( tagWriter );
         tagWriter.writeAttribute( "rel", "stylesheet" );
         TagWriterUtils.writeAttributes( dynamicAttributes, isHtmlEscape(), tagWriter );
         tagWriter.endTag();
         return SKIP_BODY;
-    }
-
-    public void setHref( String href ) {
-        this.href = href;
     }
 
     @Override

@@ -24,6 +24,7 @@ public class GenericMetadataSingleCellDataLoaderTest {
         dim.setBioAssays( Arrays.asList( BioAssay.Factory.newInstance( "A" ), BioAssay.Factory.newInstance( "B" ) ) );
         dim.setBioAssaysOffset( new int[] { 0, 10 } );
         dim.setCellIds( IntStream.rangeClosed( 1, 20 ).mapToObj( c -> "c" + c ).collect( Collectors.toList() ) );
+        dim.setNumberOfCells( 20 );
         SingleCellDataLoader delegate = mock();
         GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
                 Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata.tsv" ) ).toURI() ),
@@ -45,7 +46,6 @@ public class GenericMetadataSingleCellDataLoaderTest {
         assertThat( loader.getOtherCellLevelCharacteristics( dim ) )
                 .hasSize( 2 )
                 .satisfiesExactlyInAnyOrder( clc -> {
-                    System.out.println( Arrays.toString( clc.getIndices() ) );
                     assertThat( clc.getCharacteristics() )
                             .allSatisfy( c -> assertThat( c.getCategory() ).isEqualTo( "treatment" ) )
                             .extracting( Characteristic::getValue )

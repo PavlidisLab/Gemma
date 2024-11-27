@@ -18,15 +18,29 @@ public abstract class AbstractStaticAssetTag extends HtmlEscapingAwareTag {
 
     private StaticAssetServer staticAssetServer;
 
+    private final String srcAttributeName;
+    private String src;
+
+    protected AbstractStaticAssetTag( String srcAttributeName ) {
+        this.srcAttributeName = srcAttributeName;
+    }
+
+    public void setSrc( String src ) {
+        this.src = src;
+    }
+
     /**
      * Write a URL attribute for a static asset.
      */
-    protected void writeStaticAssetAttribute( String attributeName, String src, TagWriter tagWriter ) throws JspException {
+    protected void writeSrcAttribute( TagWriter tagWriter ) throws JspException {
+        tagWriter.writeAttribute( srcAttributeName, htmlEscape( resolveUrl( src ) ) );
+    }
+
+    protected String resolveUrl( String src ) {
         if ( staticAssetServer == null ) {
             staticAssetServer = getRequestContext().getWebApplicationContext().getBean( StaticAssetServer.class );
         }
-        String url = staticAssetServer.resolveUrl( src );
-        tagWriter.writeAttribute( attributeName, htmlEscape( url ) );
+        return staticAssetServer.resolveUrl( src );
     }
 
     protected String htmlEscape( String value ) {

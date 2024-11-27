@@ -44,7 +44,7 @@ public class MexSingleCellDataLoaderTest {
         assertThat( qt.getScale() ).isEqualTo( ScaleType.COUNT );
         assertThat( qt.getRepresentation() ).isEqualTo( PrimitiveType.DOUBLE );
         SingleCellDimension dimension = loader.getSingleCellDimension( bas );
-        assertThat( dimension.getCellIds() ).hasSize( 10000 );
+        assertThat( dimension.getCellIds() ).isNotNull().hasSize( 10000 );
         assertThat( dimension.getNumberOfCells() ).isEqualTo( 10000 );
         assertThat( dimension.getNumberOfCellsBySample( 0 ) ).isEqualTo( 1000 );
         assertThat( dimension.getNumberOfCellsBySample( 1 ) ).isEqualTo( 1000 );
@@ -98,7 +98,7 @@ public class MexSingleCellDataLoaderTest {
                 .isInstanceOf( UnsupportedOperationException.class );
         QuantitationType qt = loader.getQuantitationTypes().iterator().next();
         SingleCellDimension dimension = loader.getSingleCellDimension( bas );
-        assertThat( dimension.getCellIds() ).hasSize( 2000 );
+        assertThat( dimension.getCellIds() ).isNotNull().hasSize( 2000 );
         assertThat( dimension.getNumberOfCells() ).isEqualTo( 2000 );
         assertThat( dimension.getNumberOfCellsBySample( 0 ) ).isEqualTo( 1000 );
         assertThat( dimension.getNumberOfCellsBySample( 1 ) ).isEqualTo( 1000 );
@@ -170,7 +170,7 @@ public class MexSingleCellDataLoaderTest {
                 .isInstanceOf( UnsupportedOperationException.class );
         QuantitationType qt = loader.getQuantitationTypes().iterator().next();
         SingleCellDimension dimension = loader.getSingleCellDimension( bas );
-        assertThat( dimension.getCellIds() ).hasSize( 1000 );
+        assertThat( dimension.getCellIds() ).isNotNull().hasSize( 1000 );
         assertThat( dimension.getNumberOfCells() ).isEqualTo( 1000 );
         assertThat( dimension.getNumberOfCellsBySample( 0 ) ).isEqualTo( 1000 );
         assertThat( dimension.getBioAssays() ).extracting( BioAssay::getName )

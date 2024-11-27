@@ -14,6 +14,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
 import java.io.UnsupportedEncodingException;
@@ -198,6 +199,8 @@ public class EntityUrlBuilder {
                 this.entityPath = "/bioMaterial/showBioMaterial.html?id=";
             } else if ( entity instanceof Taxon ) {
                 this.entityPath = "/taxon/showTaxon.html?id=";
+            } else if ( entity instanceof Gene ) {
+                this.entityPath = "/gene/showGene.html?id=";
             } else {
                 throw new UnsupportedOperationException( "Cannot generate a Web URL for entities of type " + entity.getClass() + "." );
             }

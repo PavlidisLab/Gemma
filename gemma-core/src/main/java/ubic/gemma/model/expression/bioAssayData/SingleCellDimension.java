@@ -9,6 +9,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.persistence.hibernate.ByteArrayType;
 import ubic.gemma.persistence.hibernate.CompressedStringListType;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 import static ubic.gemma.core.util.ListUtils.getSparseRangeArrayElement;
@@ -31,7 +32,10 @@ public class SingleCellDimension extends AbstractDescribable implements Identifi
      * Those are user-supplied cell identifiers. Each cell from a given {@link BioAssay} must be assigned a unique id.
      * <p>
      * This is stored as a compressed, gzipped blob in the database. See {@link CompressedStringListType} for more details.
+     * <p>
+     * This may be set to {@code null} to keep the model lightweight.
      */
+    @Nullable
     private List<String> cellIds = new ArrayList<>();
 
     /**
@@ -58,6 +62,8 @@ public class SingleCellDimension extends AbstractDescribable implements Identifi
      * This must always contain {@code bioAssays.size()} elements.
      * <p>
      * This is stored in the database using {@link ByteArrayType}.
+     * <p>
+     * This may be set to {@code null} to keep the model lightweight.
      */
     private int[] bioAssaysOffset = new int[0];
 
@@ -84,8 +90,8 @@ public class SingleCellDimension extends AbstractDescribable implements Identifi
      * @throws IndexOutOfBoundsException if the index is out of bounds
      */
     public BioAssay getBioAssay( int cellIndex ) throws IndexOutOfBoundsException {
-        Assert.isTrue( cellIndex >= 0 && cellIndex < cellIds.size(), "The cell index must be in the range [0, " + cellIds.size() + "[." );
-        return getSparseRangeArrayElement( bioAssays, bioAssaysOffset, cellIds.size(), cellIndex );
+        Assert.isTrue( cellIndex >= 0 && cellIndex < numberOfCells, "The cell index must be in the range [0, " + numberOfCells + "[." );
+        return getSparseRangeArrayElement( bioAssays, bioAssaysOffset, numberOfCells, cellIndex );
     }
 
     /**
@@ -94,6 +100,7 @@ public class SingleCellDimension extends AbstractDescribable implements Identifi
      * @param sampleIndex the sample position in {@link #bioAssays}
      */
     public List<String> getCellIdsBySample( int sampleIndex ) {
+        Assert.notNull( cellIds, "Cell IDs are not available." );
         Assert.isTrue( sampleIndex >= 0 && sampleIndex < bioAssays.size(), "Sample index must be in range [0, " + bioAssays.size() + "[." );
         return Collections.unmodifiableList( cellIds.subList( bioAssaysOffset[sampleIndex], bioAssaysOffset[sampleIndex] + getNumberOfCellsBySample( sampleIndex ) ) );
     }
@@ -108,7 +115,7 @@ public class SingleCellDimension extends AbstractDescribable implements Identifi
     public int getNumberOfCellsBySample( int sampleIndex ) {
         Assert.isTrue( sampleIndex >= 0 && sampleIndex < bioAssays.size(), "Sample index must be in range [0, " + bioAssays.size() + "[." );
         if ( sampleIndex == bioAssays.size() - 1 ) {
-            return cellIds.size() - bioAssaysOffset[sampleIndex];
+            return numberOfCells - bioAssaysOffset[sampleIndex];
         } else {
             return bioAssaysOffset[sampleIndex + 1] - bioAssaysOffset[sampleIndex];
         }
@@ -116,8 +123,7 @@ public class SingleCellDimension extends AbstractDescribable implements Identifi
 
     @Override
     public int hashCode() {
-        // no need to hash numberOfCells, it's derived from cellIds's size
-        return Objects.hash( cellIds, bioAssays, Arrays.hashCode( bioAssaysOffset ) );
+        return Objects.hash( numberOfCells, bioAssays, Arrays.hashCode( bioAssaysOffset ) );
     }
 
     @Override

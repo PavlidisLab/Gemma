@@ -56,6 +56,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.util.EntityNotFoundException;
@@ -83,6 +84,8 @@ public class ExpressionExperimentEditController extends BaseController {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
     @Autowired
     private PreprocessorService preprocessorService;
     @Autowired
@@ -217,6 +220,9 @@ public class ExpressionExperimentEditController extends BaseController {
         // the backend only submits quantitationTypes and assayToMaterialMap, so we need to populate the remaining fields
         populateForm( form, expressionExperiment );
 
+        // FIXME: the update can alter properties affecting hashCode(), so an hash set is unsuitable here
+        Set<QuantitationType> preferredSingleCellQuantitationTypes = new TreeSet<>( Comparator.comparing( QuantitationType::getId ) );
+        Set<QuantitationType> preferredQuantitationTypes = new TreeSet<>( Comparator.comparing( QuantitationType::getId ) );
         Map<Long, Class<? extends DataVector>> qtbv = new LinkedHashMap<>();
         if ( form.getQuantitationTypes() != null ) {
             for ( Entry<Class<? extends DataVector>, Set<QuantitationType>> entry : expressionExperimentService
@@ -225,6 +231,12 @@ public class ExpressionExperimentEditController extends BaseController {
                 Set<QuantitationType> v = entry.getValue();
                 for ( QuantitationType qt : v ) {
                     qtbv.put( qt.getId(), key );
+                    if ( qt.getIsPreferred() ) {
+                        preferredQuantitationTypes.add( qt );
+                    }
+                    if ( qt.getIsSingleCellPreferred() ) {
+                        preferredSingleCellQuantitationTypes.add( qt );
+                    }
                 }
             }
             Map<Class<? extends DataVector>, List<QuantitationTypeEditForm>> qtf = new LinkedHashMap<>();
@@ -244,20 +256,46 @@ public class ExpressionExperimentEditController extends BaseController {
         }
 
         boolean reprocess = false;
+        boolean recomputeSingleCellSparsityMetrics = false;
         if ( form.getQuantitationTypes() != null ) {
-            QuantitationTypeUpdateStatus status = updateQuantitationTypes( expressionExperiment, form.getQuantitationTypes() );
-            if ( status == QuantitationTypeUpdateStatus.REPROCESS ) {
-                this.messageUtil.saveMessage( "Quantitation types have been updated, reprocessing has been triggered." );
-                reprocess = true;
-            } else if ( status == QuantitationTypeUpdateStatus.COSMETIC ) {
-                this.messageUtil.saveMessage( "Quantitation types have been updated, but no reprocessing is needed." );
+            Map<QuantitationType, QuantitationTypeUpdateStatus> status = updateQuantitationTypes( expressionExperiment, form.getQuantitationTypes() );
+            for ( Entry<QuantitationType, QuantitationTypeUpdateStatus> entry : status.entrySet() ) {
+                if ( entry.getValue() != QuantitationTypeUpdateStatus.SIGNIFICANT ) {
+                    continue;
+                }
+                if ( entry.getKey().getIsPreferred() ) {
+                    this.messageUtil.saveMessage( "Preferred quantitation type has been significantly changed, reprocessing will be performed." );
+                    reprocess = true;
+                } else if ( preferredQuantitationTypes.contains( entry.getKey() )
+                        && expressionExperiment.getQuantitationTypes().stream().noneMatch( QuantitationType::getIsPreferred ) ) {
+                    // FIXME: remove processed vectors when there are no preferred QTs
+                    this.messageUtil.saveMessage( "There is no preferred quantitation type, however existing processed data will be kept." );
+                }
+                if ( entry.getKey().getIsSingleCellPreferred() ) {
+                    this.messageUtil.saveMessage( "Preferred quantitation type has been significantly changed, single-cell sparsity metrics will be recomputed." );
+                    recomputeSingleCellSparsityMetrics = true;
+                } else if ( preferredSingleCellQuantitationTypes.contains( entry.getKey() )
+                        && expressionExperiment.getQuantitationTypes().stream().noneMatch( QuantitationType::getIsSingleCellPreferred ) ) {
+                    // sparsity metrics will be cleared if there are no other preferred SC QTs
+                    this.messageUtil.saveMessage( "There is no preferred single-cell quantitation type, single-cell sparsity metrics will be cleared." );
+                    recomputeSingleCellSparsityMetrics = true;
+                }
             }
         }
+
         if ( form.getAssayToMaterialMap() != null ) {
             if ( updateBioMaterialMap( expressionExperiment, form.getAssayToMaterialMap() ) ) {
-                this.messageUtil.saveMessage( "Assay to sample associations have been updated, reprocessing has been triggered." );
+                this.messageUtil.saveMessage( "Assay to sample associations have been changed; reprocessing will be performed." );
                 reprocess = true;
             }
+        }
+
+        if ( recomputeSingleCellSparsityMetrics ) {
+            // this does nothing if there is no single-cell data (beside clearing the metrics fields), maybe it
+            // should be moved to the pre-processor service at some point
+            taskExecutor.execute( new DelegatingSecurityContextRunnable( () -> {
+                singleCellExpressionExperimentService.updateSparsityMetrics( expressionExperiment );
+            } ) );
         }
 
         if ( reprocess ) {
@@ -353,20 +391,19 @@ public class ExpressionExperimentEditController extends BaseController {
          * Significant changes were done that might affect the processed vectors and analyses downstream, reprocessing
          * is needed.
          */
-        REPROCESS
+        SIGNIFICANT
     }
 
     /**
      * Update the quantitation types.
      */
-    private QuantitationTypeUpdateStatus updateQuantitationTypes( ExpressionExperiment expressionExperiment,
-            Collection<ExpressionExperimentEditController.QuantitationTypeEditForm> updatedQuantitationTypes ) {
+    private Map<QuantitationType, QuantitationTypeUpdateStatus> updateQuantitationTypes( ExpressionExperiment expressionExperiment, List<QuantitationTypeEditForm> updatedQuantitationTypes ) {
         fixDenormalizedQts( expressionExperiment );
 
         Map<Long, QuantitationType> qtMap = IdentifiableUtils.getIdMap( expressionExperiment.getQuantitationTypes() );
 
-        boolean anyDirty = false;
-        boolean reprocess = false;
+        Map<QuantitationType, QuantitationTypeUpdateStatus> result = new HashMap<>();
+
         for ( ExpressionExperimentEditController.QuantitationTypeEditForm editForm : updatedQuantitationTypes ) {
             QuantitationType qt = qtMap.get( editForm.getId() );
 
@@ -377,47 +414,24 @@ public class ExpressionExperimentEditController extends BaseController {
             BeanWrapper qtBw = new BeanWrapperImpl( qt );
 
             boolean dirty = false;
+            // a change in any of these fields will trigger reprocessing, that include switching the preferred set of vectors
+            boolean veryDirty = false;
 
             dirty |= setPropertyValue( qtBw, "name", StringUtils.strip( editForm.getName() ) );
             dirty |= setPropertyValue( qtBw, "description", StringUtils.stripToNull( editForm.getDescription() ) );
 
             if ( editForm.getIsSingleCellPreferred() != null ) {
-                dirty |= setPropertyValue( qtBw, "isSingleCellPreferred", editForm.getIsSingleCellPreferred() );
-                if ( qt.getIsSingleCellPreferred() ) {
-                    // set all other QTs to non-preferred
-                    for ( QuantitationType otherQt : qtMap.values() ) {
-                        if ( !otherQt.equals( qt ) ) {
-                            otherQt.setIsSingleCellPreferred( false );
-                        }
-                    }
-                }
+                veryDirty |= setPropertyValue( qtBw, "isSingleCellPreferred", editForm.getIsSingleCellPreferred() );
+            }
+
+            if ( editForm.getIsPreferred() != null ) {
+                veryDirty |= setPropertyValue( qtBw, "isPreferred", editForm.getIsPreferred() );
             }
 
             if ( editForm.getIsMaskedPreferred() != null ) {
                 dirty |= setPropertyValue( qtBw, "isMaskedPreferred", editForm.getIsMaskedPreferred() );
-                if ( qt.getIsMaskedPreferred() ) {
-                    // set all other QTs to non-preferred
-                    for ( QuantitationType otherQt : expressionExperiment.getQuantitationTypes() ) {
-                        if ( !otherQt.equals( qt ) ) {
-                            otherQt.setIsMaskedPreferred( false );
-                        }
-                    }
-                }
             }
 
-            // a change in any of these fields will trigger reprocessing, that include switching the preferred set of vectors
-            boolean veryDirty = false;
-            if ( editForm.getIsPreferred() != null ) {
-                veryDirty |= setPropertyValue( qtBw, "isPreferred", editForm.getIsPreferred() );
-                if ( qt.getIsPreferred() ) {
-                    // set all other QTs to non-preferred
-                    for ( QuantitationType otherQt : qtMap.values() ) {
-                        if ( !otherQt.equals( qt ) ) {
-                            otherQt.setIsPreferred( false );
-                        }
-                    }
-                }
-            }
             veryDirty |= setPropertyValue( qtBw, "generalType", GeneralType.valueOf( editForm.getGeneralType() ) );
             veryDirty |= setPropertyValue( qtBw, "type", StandardQuantitationType.valueOf( editForm.getType() ) );
             veryDirty |= setPropertyValue( qtBw, "scale", ScaleType.valueOf( editForm.getScale() ) );
@@ -433,32 +447,18 @@ public class ExpressionExperimentEditController extends BaseController {
 
             // only reprocess if the preferred QT has been significantly changed, including if the preferred QT has
             // changed
-            if ( qt.getIsPreferred() && veryDirty ) {
-                log.info( "The preferred set of raw vectors has changed, reprocessing is needed. " );
-                reprocess = true;
-            }
-
-            dirty |= veryDirty;
-
-            if ( dirty ) {
-                // update the quantitation type
+            if ( veryDirty ) {
                 expressionExperimentService.updateQuantitationType( expressionExperiment, qt );
+                result.put( qt, QuantitationTypeUpdateStatus.SIGNIFICANT );
+            } else if ( dirty ) {
+                expressionExperimentService.updateQuantitationType( expressionExperiment, qt );
+                result.put( qt, QuantitationTypeUpdateStatus.COSMETIC );
+            } else {
+                result.put( qt, QuantitationTypeUpdateStatus.NONE );
             }
-
-            if ( dirty && qt.getIsPreferred() ) {
-                reprocess = true;
-            }
-
-            anyDirty |= dirty;
         }
 
-        if ( reprocess ) {
-            return QuantitationTypeUpdateStatus.REPROCESS;
-        } else if ( anyDirty ) {
-            return QuantitationTypeUpdateStatus.COSMETIC;
-        } else {
-            return QuantitationTypeUpdateStatus.NONE;
-        }
+        return result;
     }
 
     /**
@@ -653,7 +653,9 @@ public class ExpressionExperimentEditController extends BaseController {
                 validateRequiredEnumField( "generalType", GeneralType.class, errors );
                 validateRequiredEnumField( "type", StandardQuantitationType.class, errors );
                 validateRequiredEnumField( "scale", ScaleType.class, errors );
-                validateRequiredEnumField( "representation", PrimitiveType.class, errors );
+                if ( qt.getRepresentation() != null ) {
+                    validateRequiredEnumField( "representation", PrimitiveType.class, errors );
+                }
                 errors.popNestedPath();
                 i++;
             }

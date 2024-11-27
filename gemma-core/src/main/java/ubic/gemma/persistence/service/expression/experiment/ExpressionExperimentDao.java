@@ -2,6 +2,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.CacheMode;
+import org.hibernate.Query;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -178,6 +179,20 @@ public interface ExpressionExperimentDao
      */
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt, Class<? extends BulkExpressionDataVector> dataVectorType );
 
+    /**
+     * @param dataVectorType the type of data vectors to consider, this is necessary because otherwise all the vector
+     *                       tables would have to be looked at
+     * @throws org.hibernate.NonUniqueResultException if there is more than one dimension for the given set of vectors
+     */
+    @Nullable
+    BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt, Class<? extends BulkExpressionDataVector> dataVectorType );
+
+    /**
+     * Obtain a bioassay dimension by ID.
+     */
+    @Nullable
+    BioAssayDimension getBioAssayDimensionById( ExpressionExperiment ee, Long dimensionId, Class<? extends BulkExpressionDataVector> dataVectorType );
+
     long getBioMaterialCount( ExpressionExperiment expressionExperiment );
 
     long getDesignElementDataVectorCount( ExpressionExperiment ee );
@@ -215,10 +230,17 @@ public interface ExpressionExperimentDao
     QuantitationType getPreferredSingleCellQuantitationType( ExpressionExperiment ee );
 
     /**
-     * Obtain the preferred quantitation type, if available.
+     * Obtain the preferred quantitation type for the raw vectors, if available.
      */
     @Nullable
     QuantitationType getPreferredQuantitationType( ExpressionExperiment ee );
+
+    /**
+     * Obtain the quantitation type for the processed vectors, if available.
+     * @throws org.hibernate.NonUniqueResultException if there is more than oen set of processed vectors
+     */
+    @Nullable
+    QuantitationType getProcessedQuantitationType( ExpressionExperiment ee );
 
     /**
      * Test if the dataset has preferred expression data vectors.
@@ -229,6 +251,8 @@ public interface ExpressionExperimentDao
             Collection<ExpressionExperiment> expressionExperiments );
 
     Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment );
+
+    Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment, BioAssayDimension bad );
 
     Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> getSubSetsByDimension( ExpressionExperiment expressionExperiment );
 
@@ -442,16 +466,35 @@ public interface ExpressionExperimentDao
     List<SingleCellDimension> getSingleCellDimensions( ExpressionExperiment ee );
 
     /**
+     * Obtain all the single cell dimensions used by the single-cell vectors of a given experiment.
+     * <p>
+     * Cell IDs are not loaded.
+     */
+    List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee );
+
+    /**
      * Obtain the single-cell dimension used by a specific QT.
      */
     @Nullable
     SingleCellDimension getSingleCellDimension( ExpressionExperiment ee, QuantitationType quantitationType );
 
     /**
+     * Load a single-cell dimension used by a specific QT without its cell IDs.
+     */
+    @Nullable
+    SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt );
+
+    /**
      * Obtain the preferred single cell dimension, that is the dimension associated to the preferred set of single-cell vectors.
      */
     @Nullable
     SingleCellDimension getPreferredSingleCellDimension( ExpressionExperiment ee );
+
+    /**
+     * Load a single-cell dimension without its cell IDs.
+     */
+    @Nullable
+    SingleCellDimension getPreferredSingleCellDimensionWithoutCellIds( ExpressionExperiment ee );
 
     /**
      * Create a single-cell dimension for a given experiment.
@@ -518,10 +561,13 @@ public interface ExpressionExperimentDao
     /**
      * Obtain a stream over the vectors for a given QT.
      * <p>
-     * Make absolutely sure that the resulting stream is closed because it is attached to a {@link org.hibernate.Session}
-     * object.
+     * @param fetchSize        number of vectors to fetch at once
+     * @param createNewSession create a new session held by the stream. If you set this to true, make absolutely sure
+     *                         that the resulting stream is closed because it is attached to a {@link org.hibernate.Session}
+     *                         object.
+     * @see ubic.gemma.persistence.util.QueryUtils#stream(Query, int)
      */
-    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize );
+    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean createNewSession );
 
     /**
      * Obtain the number of single-cell vectors for a given QT.
@@ -552,4 +598,6 @@ public interface ExpressionExperimentDao
      * Remove all single-cell data vectors and their quantitation types.
      */
     int removeAllSingleCellDataVectors( ExpressionExperiment ee );
+
+    Map<BioAssay, Long> getNumberOfDesignElementsPerSample( ExpressionExperiment expressionExperiment );
 }

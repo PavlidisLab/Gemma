@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service;
 
+import org.hibernate.ObjectNotFoundException;
 import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.CheckReturnValue;
@@ -132,6 +133,23 @@ public interface BaseDao<T> {
      */
     @Nonnull
     T loadReference( Long id );
+
+    /**
+     * Reload an entity from the persistent storage.
+     * <p>
+     * This does nothing if the entity is already in the session.
+     * @throws org.hibernate.ObjectNotFoundException if the entity does not exist.
+     */
+    @Nonnull
+    T reload( T entity ) throws ObjectNotFoundException;
+
+    /**
+     * Reload an entity from the persistent storage.
+     * <p>
+     * This does nothing for entities already in the session.
+     */
+    @Nonnull
+    Collection<T> reload( Collection<T> entities ) throws ObjectNotFoundException;
 
     /**
      * Counts all instances of specific class in the persitent storage.

@@ -70,7 +70,7 @@ public class StaticAssetServerTest extends BaseWebTest {
         MockPageContext pageContext = new MockPageContext( servletContext );
         StyleTag tag = new StyleTag();
         tag.setPageContext( pageContext );
-        tag.setHref( "/bundles/gemma-all.css" );
+        tag.setSrc( "/bundles/gemma-all.css" );
         tag.doStartTag();
         tag.doEndTag();
         assertThat( pageContext.getContentAsString() ).isEqualTo( "<link href=\"http://localhost:8082/bundles/gemma-all.css\" rel=\"stylesheet\"/>" );

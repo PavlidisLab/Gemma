@@ -21,6 +21,7 @@ package ubic.gemma.web.view;
 import org.springframework.util.Assert;
 import org.springframework.web.servlet.view.AbstractView;
 
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
@@ -41,6 +42,9 @@ public class TextView extends AbstractView {
 
     private final String contentType;
 
+    @Nullable
+    private String contentDisposition;
+
     /**
      * @param textMediaSubType the subtype of {@code text/*} media type to use.
      */
@@ -55,6 +59,10 @@ public class TextView extends AbstractView {
         this( "plain" );
     }
 
+    public void setContentDisposition( @Nullable String contentDisposition ) {
+        this.contentDisposition = contentDisposition;
+    }
+
     @Override
     protected void renderMergedOutputModel( Map<String, Object> model, HttpServletRequest request,
             HttpServletResponse response ) throws Exception {
@@ -62,6 +70,9 @@ public class TextView extends AbstractView {
         String textToRender = ( String ) model.get( TEXT_PARAM );
         response.setContentType( contentType );
         response.setContentLength( textToRender.getBytes().length );
+        if ( contentDisposition != null ) {
+            response.setHeader( "Content-Disposition", contentDisposition );
+        }
         response.getWriter().print( textToRender );
         response.getWriter().flush();
     }

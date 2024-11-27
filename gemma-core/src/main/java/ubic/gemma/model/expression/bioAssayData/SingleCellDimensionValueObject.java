@@ -9,6 +9,7 @@ import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 import java.util.ArrayList;
@@ -33,7 +34,11 @@ public class SingleCellDimensionValueObject extends IdentifiableValueObject<Sing
 
     /**
      * Cell identifiers.
+     * <p>
+     * This may be null if cell IDs are explicitly omitted (i.e. {@link ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao#getPreferredSingleCellDimensionWithoutCellIds(ExpressionExperiment)}),
+     * in which case it will not be serialized in JSON.
      */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<String> cellIds;
 
     /**
@@ -56,9 +61,9 @@ public class SingleCellDimensionValueObject extends IdentifiableValueObject<Sing
     public SingleCellDimensionValueObject( SingleCellDimension singleCellDimension ) {
         super( singleCellDimension );
         this.cellIds = singleCellDimension.getCellIds();
-        this.bioAssayIds = new ArrayList<>( singleCellDimension.getCellIds().size() );
+        this.bioAssayIds = new ArrayList<>( singleCellDimension.getNumberOfCells() );
         try {
-            for ( int i = 0; i < singleCellDimension.getCellIds().size(); i++ ) {
+            for ( int i = 0; i < singleCellDimension.getNumberOfCells(); i++ ) {
                 this.bioAssayIds.add( requireNonNull( singleCellDimension.getBioAssay( i ).getId() ) );
             }
         } catch ( IllegalArgumentException | IndexOutOfBoundsException e ) {

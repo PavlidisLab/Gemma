@@ -110,8 +110,7 @@
 
     </table>
 
-    <security:accesscontrollist domainObject="${expressionExperiment}"
-            hasPermission="WRITE,ADMINISTRATION">
+    <security:authorize access="hasAuthority('GROUP_ADMIN') || hasPermission(expressionExperiment, 'WRITE')">
         <c:if test="${!hasPopulatedDesign}">
             <div
                     style="width: 600px; background-color: #EEEEEE; margin: 7px; padding: 7px;">
@@ -130,7 +129,7 @@
                 </p>
             </div>
         </c:if>
-    </security:accesscontrollist>
+    </security:authorize>
 
     <security:authorize access="hasAuthority('GROUP_ADMIN')">
         <c:if test="${needsAttention}">

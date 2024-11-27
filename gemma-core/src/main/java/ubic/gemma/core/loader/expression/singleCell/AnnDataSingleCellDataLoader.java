@@ -640,7 +640,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 "The number of supplied genes does not match the number of rows in the sparse matrix." );
         Assert.isTrue( samples.size() == matrix.getShape()[1],
                 "The number of supplied samples does not match the number of columns in the sparse matrix." );
-        Assert.isTrue( scd.getCellIds().size() <= matrix.getShape()[1],
+        Assert.isTrue( scd.getNumberOfCells() <= matrix.getShape()[1],
                 "The number of cells in the dimension cannot exceed the number of columns in the sparse matrix." );
 
         // build a sample offset index for efficiently selecting samples

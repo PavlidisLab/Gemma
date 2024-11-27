@@ -1,9 +1,14 @@
 package ubic.gemma.model.expression.bioAssayData;
 
+import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 /**
  * Utilities for working with {@link SingleCellExpressionDataVector}.
@@ -98,5 +103,21 @@ public class SingleCellExpressionDataVectorUtils {
             }
         }
         return false;
+    }
+
+    public static Consumer<SingleCellExpressionDataVector> createStreamMonitor( String logCategory, long numVecs ) {
+        Log log = LogFactory.getLog( logCategory );
+        return new Consumer<SingleCellExpressionDataVector>() {
+            final StopWatch timer = StopWatch.createStarted();
+            final AtomicInteger i = new AtomicInteger();
+
+            @Override
+            public void accept( SingleCellExpressionDataVector x ) {
+                int done = i.incrementAndGet();
+                if ( done % 1000 == 0 ) {
+                    log.info( String.format( "Processed %d/%d vectors (%f.2 vectors/sec)", done, numVecs, 1000.0 * done / timer.getTime() ) );
+                }
+            }
+        };
     }
 }

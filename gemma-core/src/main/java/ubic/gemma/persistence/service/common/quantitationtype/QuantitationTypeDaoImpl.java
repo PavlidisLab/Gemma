@@ -202,7 +202,7 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
                 .list() );
         for ( Class<? extends DataVector> vectorType : dataVectorTypes ) {
             Collection<QuantitationType> q = findByExpressionExperiment( ee, vectorType );
-            if (!q.isEmpty()) {
+            if ( !q.isEmpty() ) {
                 result.computeIfAbsent( vectorType, k -> new HashSet<>() )
                         .addAll( q );
                 qts.removeAll( q );
@@ -272,12 +272,12 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     }
 
     @Override
-    public Collection<Class<? extends DataVector>> getMappedDataVectorTypes( Class<? extends DataVector> vectorType ) {
+    public <T extends DataVector> Collection<Class<? extends T>> getMappedDataVectorTypes( Class<T> vectorType ) {
         //noinspection unchecked
         return getSessionFactory().getAllClassMetadata().values().stream()
                 .map( ClassMetadata::getMappedClass )
                 .filter( vectorType::isAssignableFrom )
-                .map( clazz -> ( Class<? extends DataVector> ) clazz )
+                .map( clazz -> ( Class<? extends T> ) clazz )
                 .collect( Collectors.toSet() );
     }
 

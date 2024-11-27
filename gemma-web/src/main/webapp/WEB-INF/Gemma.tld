@@ -40,6 +40,10 @@
 			<name>edit</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
+		<attribute>
+			<name>htmlEscape</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
 	</tag>
 
 	<tag>
@@ -94,8 +98,8 @@
 		<tag-class>ubic.gemma.web.taglib.expression.experiment.ExperimentQCTag</tag-class>
 		<body-content>empty</body-content>
 		<attribute>
-			<description>ID of the experiment</description>
-			<name>ee</name>
+			<description>Experiment to show QC reports for</description>
+			<name>expressionExperiment</name>
 			<required>true</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
@@ -112,7 +116,7 @@
 		</attribute>
 		<attribute>
 			<description>default=false</description>
-			<name>hasCorrDist</name>
+			<name>hasPCA</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
@@ -121,13 +125,15 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
-			<description>default=false</description>
-			<name>hasPCA</name>
+			<name>numDesignElementsPerSample</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
-			<description>default=false</description>
-			<name>hasNodeDegreeDist</name>
+			<name>hasSingleCellData</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>singleCellSparsityHeatmap</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
@@ -145,6 +151,11 @@
 			<name>numPossibleOutliers</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
+		<attribute>
+			<name>htmlEscape</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<dynamic-attributes>true</dynamic-attributes>
 	</tag>
 
 	<tag>
@@ -154,12 +165,10 @@
 		<body-content>empty</body-content>
 		<attribute>
 			<name>databaseEntry</name>
-			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
 			<name>databaseEntryValueObject</name>
-			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 	</tag>
@@ -176,7 +185,26 @@
 		</attribute>
 		<attribute>
 			<name>category</name>
-			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>htmlEscape</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+	</tag>
+
+	<tag>
+		<description>Display a factor value</description>
+		<name>factorValue</name>
+		<tag-class>ubic.gemma.web.taglib.FactorValueTag</tag-class>
+		<body-content>empty</body-content>
+		<attribute>
+			<name>factorValue</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>htmlEscape</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 	</tag>
@@ -204,6 +232,10 @@
 			<name>dimension</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
+		<attribute>
+			<name>htmlEscape</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
 		<dynamic-attributes>true</dynamic-attributes>
 	</tag>
 
@@ -228,6 +260,10 @@
 			<name>defer</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
+		<attribute>
+			<name>htmlEscape</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
 		<dynamic-attributes>true</dynamic-attributes>
 	</tag>
 
@@ -236,8 +272,12 @@
 		<tag-class>ubic.gemma.web.taglib.StyleTag</tag-class>
 		<body-content>empty</body-content>
 		<attribute>
-			<name>href</name>
+			<name>src</name>
 			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>htmlEscape</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<dynamic-attributes>true</dynamic-attributes>
@@ -254,27 +294,82 @@
 		</attribute>
 		<attribute>
 			<name>alt</name>
-			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
 			<name>height</name>
-			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
 			<name>width</name>
-			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
 			<name>cssClass</name>
-			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
 			<name>cssStyle</name>
-			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>htmlEscape</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<dynamic-attributes>true</dynamic-attributes>
+	</tag>
+
+	<tag>
+		<name>expressionDataHeatmap</name>
+		<tag-class>ubic.gemma.web.taglib.expression.experiment.ExpressionDataHeatmapTag</tag-class>
+		<body-content>empty</body-content>
+		<attribute>
+			<name>heatmap</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>useResizeTrick</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>alt</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>maxWidth</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>maxHeight</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<dynamic-attributes>true</dynamic-attributes>
+	</tag>
+
+	<tag>
+		<name>singleCellSparsityHeatmap</name>
+		<tag-class>ubic.gemma.web.taglib.expression.experiment.SingleCellSparsityHeatmapTag</tag-class>
+		<body-content>empty</body-content>
+		<attribute>
+			<name>heatmap</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>useResizeTrick</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>alt</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>maxWidth</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>maxHeight</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<dynamic-attributes>true</dynamic-attributes>
@@ -284,11 +379,5 @@
 		<name>urlEncode</name>
 		<function-class>java.net.URLEncoder</function-class>
 		<function-signature>java.lang.String encode(java.lang.String, java.lang.String)</function-signature>
-	</function>
-
-	<function>
-		<name>formatDescription</name>
-		<function-class>ubic.gemma.web.taglib.Functions</function-class>
-		<function-signature>java.lang.String formatDescription(java.lang.String)</function-signature>
 	</function>
 </taglib>

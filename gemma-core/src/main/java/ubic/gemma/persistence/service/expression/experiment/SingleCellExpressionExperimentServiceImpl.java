@@ -32,7 +32,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static ubic.gemma.persistence.service.expression.experiment.SingleCellSparsityMetrics.*;
+import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.createStreamMonitor;
 
 @Service
 @CommonsLog
@@ -52,6 +52,9 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Autowired
     private QuantitationTypeService quantitationTypeService;
+
+    @Autowired
+    private SingleCellSparsityMetrics metrics;
 
     @Override
     @Transactional(readOnly = true)
@@ -73,7 +76,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional(readOnly = true)
     public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize ) {
-        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize );
+        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, true );
     }
 
     @Override
@@ -128,7 +131,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
-    public int addSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors, String details ) {
+    public int addSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors, @Nullable String details ) {
         Assert.notNull( ee.getId(), "The dataset must be persistent." );
         Assert.isTrue( !ee.getQuantitationTypes().contains( quantitationType ),
                 String.format( "%s already have vectors for the quantitation type: %s; use replaceSingleCellDataVectors() to replace existing vectors.",
@@ -155,6 +158,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         ee.getQuantitationTypes().add( quantitationType );
         applyPreferredSingleCellVectors( ee, quantitationType );
         if ( quantitationType.getIsSingleCellPreferred() ) {
+            log.info( "Recomputing single-cell sparsity metrics for " + quantitationType + "..." );
             applyBioAssaySparsityMetrics( ee, scd, vectors );
         }
         expressionExperimentDao.update( ee ); // will take care of creating vectors
@@ -175,7 +179,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
-    public int replaceSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors, String details ) {
+    public int replaceSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors, @Nullable String details ) {
         Assert.notNull( ee.getId(), "The dataset must be persistent." );
         Assert.notNull( quantitationType.getId(), "The quantitation type must be persistent." );
         Assert.isTrue( ee.getQuantitationTypes().contains( quantitationType ),
@@ -206,6 +210,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         ee.getSingleCellExpressionDataVectors().addAll( vectors );
         applyPreferredSingleCellVectors( ee, quantitationType );
         if ( quantitationType.getIsSingleCellPreferred() ) {
+            log.info( "Recomputing single-cell sparsity metrics for " + quantitationType + "..." );
             applyBioAssaySparsityMetrics( ee, scd, vectors );
         }
         expressionExperimentDao.update( ee );
@@ -222,6 +227,29 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         auditTrailService.addUpdateEvent( ee, DataReplacedEvent.class,
                 String.format( "Replaced %d vectors with %d vectors for %s with dimension %s.", numVectorsRemoved, vectors.size(), quantitationType, scd ) );
         return numVectorsRemoved;
+    }
+
+    @Override
+    @Transactional
+    public void updateSparsityMetrics( ExpressionExperiment ee ) {
+        ee = expressionExperimentDao.reload( ee );
+        Optional<QuantitationType> preferredQt = getPreferredSingleCellQuantitationType( ee );
+        if ( preferredQt.isPresent() ) {
+            SingleCellDimension dimension = expressionExperimentDao.getSingleCellDimensionWithoutCellIds( ee, preferredQt.get() );
+            if ( dimension == null ) {
+                throw new IllegalStateException( "There is not single-cell dimension associated to " + preferredQt + "." );
+            }
+            long numVecs = expressionExperimentDao.getNumberOfSingleCellDataVectors( ee, preferredQt.get() );
+            try ( Stream<SingleCellExpressionDataVector> vecs = expressionExperimentDao.streamSingleCellDataVectors( ee, preferredQt.get(), 30, false ) ) {
+                log.info( "Recomputing single-cell sparsity metrics for " + preferredQt.get() + "..." );
+                applyBioAssaySparsityMetrics( ee, dimension, vecs.peek( createStreamMonitor( SingleCellExpressionExperimentServiceImpl.class.getName(), numVecs ) ) );
+            }
+        } else {
+            // reset the metrics to null since there is no preferred vectors
+            log.info( "There is no preferred single-cell vectors for " + ee + ", clearing any sparsity metrics..." );
+            clearBioAssaySparsityMetrics( ee );
+        }
+        expressionExperimentDao.update( ee );
     }
 
     /**
@@ -244,26 +272,89 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
      * Apply various single-cell sparsity metrics to the bioassays.
      */
     private void applyBioAssaySparsityMetrics( ExpressionExperiment ee, SingleCellDimension dimension, Collection<SingleCellExpressionDataVector> vectors ) {
-        boolean isSupported = SingleCellSparsityMetrics.isSupported( vectors );
+        boolean isSupported = metrics.isSupported( vectors.iterator().next() );
         if ( !isSupported ) {
             log.warn( "Sparsity metrics cannot be computed for " + ee + ", they will be all set to null." );
         }
         for ( BioAssay ba : ee.getBioAssays() ) {
-            ba.setNumberOfCells( null );
-            ba.setNumberOfDesignElements( null );
-            ba.setNumberOfCellsByDesignElements( null );
-            if ( isSupported ) {
-                int sampleIndex = dimension.getBioAssays().indexOf( ba );
-                if ( sampleIndex != -1 ) {
-                    ba.setNumberOfCells( getNumberOfCells( vectors, sampleIndex, null ) );
-                    ba.setNumberOfDesignElements( getNumberOfDesignElements( vectors, sampleIndex, null ) );
-                    ba.setNumberOfCellsByDesignElements( getNumberOfCellsByDesignElements( vectors, sampleIndex, null ) );
-                    log.info( String.format( "Sparsity metrics for %s: %d cells, %d design elements, %d cells by design elements.",
-                            ba, ba.getNumberOfCells(), ba.getNumberOfDesignElements(), ba.getNumberOfCellsByDesignElements() ) );
-                } else {
-                    log.warn( ba + " is not used in " + dimension + ", the single-cell sparsity metrics will be set to null." );
+            if ( !isSupported ) {
+                ba.setNumberOfCells( null );
+                ba.setNumberOfDesignElements( null );
+                ba.setNumberOfCellsByDesignElements( null );
+                continue;
+            }
+            int sampleIndex = dimension.getBioAssays().indexOf( ba );
+            if ( sampleIndex == -1 ) {
+                log.warn( ba + " is not used in " + dimension + ", the single-cell sparsity metrics will be set to null." );
+                ba.setNumberOfCells( null );
+                ba.setNumberOfDesignElements( null );
+                ba.setNumberOfCellsByDesignElements( null );
+                continue;
+            }
+            ba.setNumberOfCells( metrics.getNumberOfCells( vectors, sampleIndex, null ) );
+            ba.setNumberOfDesignElements( metrics.getNumberOfDesignElements( vectors, sampleIndex, null ) );
+            ba.setNumberOfCellsByDesignElements( metrics.getNumberOfCellsByDesignElements( vectors, sampleIndex, null ) );
+            log.info( String.format( "Sparsity metrics for %s: %d cells, %d design elements, %d cells by design elements.",
+                    ba, ba.getNumberOfCells(), ba.getNumberOfDesignElements(), ba.getNumberOfCellsByDesignElements() ) );
+        }
+    }
+
+    /**
+     * Streaming variant of {@link #applyBioAssaySparsityMetrics(ExpressionExperiment, SingleCellDimension, Collection)}
+     */
+    @SuppressWarnings("DuplicatedCode")
+    private void applyBioAssaySparsityMetrics( ExpressionExperiment ee, SingleCellDimension dimension, Stream<SingleCellExpressionDataVector> vectors ) {
+        SingleCellSparsityMetrics metrics = new SingleCellSparsityMetrics();
+        int numberOfSamples = dimension.getBioAssays().size();
+        boolean[] isExpressed = new boolean[dimension.getNumberOfCells()];
+        int[] numberOfDesignElements = new int[dimension.getBioAssays().size()];
+        int[] numberOfCellByDesignElements = new int[dimension.getBioAssays().size()];
+        boolean alreadyCheckedForSupport = false;
+        boolean isSupported = true;
+        Iterator<SingleCellExpressionDataVector> it = vectors.iterator();
+        while ( it.hasNext() ) {
+            SingleCellExpressionDataVector vec = it.next();
+            if ( !alreadyCheckedForSupport ) {
+                if ( !metrics.isSupported( vec ) ) {
+                    isSupported = false;
+                    break;
+                }
+                alreadyCheckedForSupport = true;
+            }
+            for ( int sampleIndex = 0; sampleIndex < numberOfSamples; sampleIndex++ ) {
+                metrics.addExpressedCells( vec, sampleIndex, null, isExpressed );
+                numberOfDesignElements[sampleIndex] += metrics.getNumberOfDesignElements( vec, sampleIndex, null );
+                numberOfCellByDesignElements[sampleIndex] += metrics.getNumberOfCellsByDesignElements( vec, sampleIndex, null );
+                sampleIndex++;
+            }
+        }
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            if ( !isSupported ) {
+                ba.setNumberOfCells( null );
+                ba.setNumberOfDesignElements( null );
+                ba.setNumberOfCellsByDesignElements( null );
+                continue;
+            }
+            int sampleIndex = dimension.getBioAssays().indexOf( ba );
+            if ( sampleIndex == -1 ) {
+                log.warn( ba + " is not used in " + dimension + ", the single-cell sparsity metrics will be set to null." );
+                ba.setNumberOfCells( null );
+                ba.setNumberOfDesignElements( null );
+                ba.setNumberOfCellsByDesignElements( null );
+                continue;
+
+            }
+            int numberOfCells = 0;
+            int start = dimension.getBioAssaysOffset()[sampleIndex];
+            int end = start + dimension.getNumberOfCellsBySample( sampleIndex );
+            for ( int i = start; i < end; i++ ) {
+                if ( isExpressed[i] ) {
+                    numberOfCells++;
                 }
             }
+            ba.setNumberOfCells( numberOfCells );
+            ba.setNumberOfDesignElements( numberOfDesignElements[sampleIndex] );
+            ba.setNumberOfCellsByDesignElements( numberOfCellByDesignElements[sampleIndex] );
         }
     }
 
@@ -301,7 +392,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         // TODO: support counting data using integers too
         Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.DOUBLE,
                 "Only double is supported for single-cell data vector storage." );
-        int numCells = singleCellDimension.getCellIds().size();
+        int numCells = singleCellDimension.getNumberOfCells();
         int maximumDataLength = 8 * numCells;
         for ( SingleCellExpressionDataVector vector : vectors ) {
             Assert.isTrue( vector.getData().length <= maximumDataLength,
@@ -406,8 +497,32 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
+    public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee ) {
+        return expressionExperimentDao.getSingleCellDimensionsWithoutCellIds( ee );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SingleCellDimension getSingleCellDimension( ExpressionExperiment ee, QuantitationType qt ) {
+        return expressionExperimentDao.getSingleCellDimension( ee, qt );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt ) {
+        return expressionExperimentDao.getSingleCellDimensionWithoutCellIds( ee, qt );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<SingleCellDimension> getPreferredSingleCellDimension( ExpressionExperiment ee ) {
         return Optional.ofNullable( expressionExperimentDao.getPreferredSingleCellDimension( ee ) );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<SingleCellDimension> getPreferredSingleCellDimensionWithoutCellIds( ExpressionExperiment ee ) {
+        return Optional.ofNullable( expressionExperimentDao.getPreferredSingleCellDimensionWithoutCellIds( ee ) );
     }
 
     @Override
@@ -431,7 +546,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         cta.setPreferred( true );
         cta.setProtocol( protocol );
         cta.setDescription( description );
-        int[] ct = new int[dimension.getCellIds().size()];
+        int[] ct = new int[dimension.getNumberOfCells()];
         List<String> labels = newCellTypeLabels.stream().sorted().distinct().collect( Collectors.toList() );
         for ( int i = 0; i < ct.length; i++ ) {
             ct[i] = Collections.binarySearch( labels, newCellTypeLabels.get( i ) );
@@ -578,7 +693,6 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Optional<ExperimentalFactor> getCellTypeFactor( ExpressionExperiment ee ) {
         if ( ee.getExperimentalDesign() == null ) {
             log.warn( ee + " does not have an experimental design, returning null for the cell type factor." );

@@ -21,11 +21,14 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -50,6 +53,16 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
      * @return Processed data for the given experiment. NOTE the vectors are thawed before returning.
      */
     Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment expressionExperiment );
+
+    /**
+     * Retrieve a slice of processed vectors.
+     */
+    List<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, int offset, int limit );
+
+    /**
+     * Only retrieve the design elements for a slice of vectors.
+     */
+    List<CompositeSequence> getProcessedVectorsDesignElements( ExpressionExperiment ee, BioAssayDimension dimension, int offset, int limit );
 
     Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method );

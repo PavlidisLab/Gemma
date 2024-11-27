@@ -138,5 +138,5 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
     /**
      * Infer all the mapped vector types that are subclasses of the given vector type.
      */
-    Collection<Class<? extends DataVector>> getMappedDataVectorType( Class<? extends DataVector> vectorType );
+    <T extends DataVector> Collection<Class<? extends T>> getMappedDataVectorType( Class<T> vectorType );
 }

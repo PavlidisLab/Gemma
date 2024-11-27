@@ -7,6 +7,10 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
+/**
+ * Generate filenames for various types of data files.
+ * @author poirigui
+ */
 public class ExpressionDataFileUtils {
 
     // for single-cell vectors
@@ -61,5 +65,13 @@ public class ExpressionDataFileUtils {
                 // might be for a non-persistent diff ex. analysis
                 + ( diff.getId() != null ? "_" + diff.getId() : "" )
                 + ".zip";
+    }
+
+    public static String getMeanVarianceRelationFilename( ExpressionExperiment ee ) {
+        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_mvr" + TABULAR_BULK_DATA_FILE_SUFFIX;
+    }
+
+    public static String getEigenGenesFilename( ExpressionExperiment ee ) {
+        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_eigengenes" + TABULAR_BULK_DATA_FILE_SUFFIX;
     }
 }

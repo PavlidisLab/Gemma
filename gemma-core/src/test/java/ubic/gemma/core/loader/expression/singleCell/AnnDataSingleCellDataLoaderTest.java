@@ -38,10 +38,12 @@ public class AnnDataSingleCellDataLoaderTest {
         SingleCellDimension dimension = loader.getSingleCellDimension( bas );
         assertThat( dimension.getBioAssays() ).hasSize( 22 ).extracting( ba -> ba.getSampleUsed().getName() )
                 .startsWith( "C-1034", "C-1252", "C-1262", "C-1366" );
-        assertThat( dimension.getCellIds() ).startsWith(
-                "CCTCTAGCAAGTGATA_1", "GGGATGACAGTCAGCC_1", "AGACAGGGTACCTATG_1",
-                "GCGAGAATCCGGTAAT_1", "CAGGTATCACGGTAGA_1", "TGCAGGCTCCGTAGGC_1",
-                "GACACGCCAAGGGTCA_1", "CAGATCAGTACGCTAT_1", "TGAATGCCATACGCAT_1" );
+        assertThat( dimension.getCellIds() )
+                .isNotNull()
+                .startsWith(
+                        "CCTCTAGCAAGTGATA_1", "GGGATGACAGTCAGCC_1", "AGACAGGGTACCTATG_1",
+                        "GCGAGAATCCGGTAAT_1", "CAGGTATCACGGTAGA_1", "TGCAGGCTCCGTAGGC_1",
+                        "GACACGCCAAGGGTCA_1", "CAGATCAGTACGCTAT_1", "TGAATGCCATACGCAT_1" );
         assertThat( dimension.getNumberOfCells() ).isEqualTo( 1000 );
 
         assertThat( loader.getGenes() )
@@ -192,6 +194,7 @@ public class AnnDataSingleCellDataLoaderTest {
                 .hasSize( 2 )
                 .containsExactly( 0, 24 );
         assertThat( dim.getCellIds() )
+                .isNotNull()
                 .hasSize( 35 )
                 .containsExactly( "GTAGAGGCACCTGTCT_5", "GACTATGAGACTCCGC_5", "TTCGATTCAGCAAGAC_5",
                         "TCTCACGGTCGGTACC_5", "GGGTCTGGTCACCCTT_5", "CTTCAATAGTAGGCCA_5",
@@ -233,10 +236,12 @@ public class AnnDataSingleCellDataLoaderTest {
         assertThat( dimension.getBioAssays() ).hasSize( 22 )
                 .extracting( ba -> ba.getSampleUsed().getName() )
                 .startsWith( "C-1034", "C-1252", "C-1262", "C-1366" );
-        assertThat( dimension.getCellIds() ).startsWith(
-                "CCTCTAGCAAGTGATA_1", "GGGATGACAGTCAGCC_1", "AGACAGGGTACCTATG_1",
-                "GCGAGAATCCGGTAAT_1", "CAGGTATCACGGTAGA_1", "TGCAGGCTCCGTAGGC_1",
-                "GACACGCCAAGGGTCA_1", "CAGATCAGTACGCTAT_1", "TGAATGCCATACGCAT_1" );
+        assertThat( dimension.getCellIds() )
+                .isNotNull()
+                .startsWith(
+                        "CCTCTAGCAAGTGATA_1", "GGGATGACAGTCAGCC_1", "AGACAGGGTACCTATG_1",
+                        "GCGAGAATCCGGTAAT_1", "CAGGTATCACGGTAGA_1", "TGCAGGCTCCGTAGGC_1",
+                        "GACACGCCAAGGGTCA_1", "CAGATCAGTACGCTAT_1", "TGAATGCCATACGCAT_1" );
         assertThat( dimension.getNumberOfCells() ).isEqualTo( 1000 );
 
         //  reverse the BAs

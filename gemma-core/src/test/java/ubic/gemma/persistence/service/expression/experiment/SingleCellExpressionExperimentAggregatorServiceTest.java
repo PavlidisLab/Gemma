@@ -8,6 +8,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseTest;
@@ -44,6 +45,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
 
     @Configuration
     @TestComponent
+    @Import(SingleCellConfig.class)
     static class CC {
 
         @Bean
@@ -179,7 +181,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                             .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31, 33, 33, 33, 33 );
                 } )
                 .satisfies( bas -> {
-                    assertThat( bas)
+                    assertThat( bas )
                             .extracting( BioAssay::getNumberOfDesignElements )
                             .containsExactly( 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 );
                 } )
@@ -385,8 +387,8 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
 
     private CellTypeAssignment createCellTypeAssignment( SingleCellDimension dimension ) {
         CellTypeAssignment cta = new CellTypeAssignment();
-        int[] indices = new int[dimension.getCellIds().size()];
-        for ( int i = 0; i < dimension.getCellIds().size(); i++ ) {
+        int[] indices = new int[dimension.getNumberOfCells()];
+        for ( int i = 0; i < indices.length; i++ ) {
             indices[i] = random.nextInt( 4 );
         }
         cta.setCellTypes( IntStream.range( 0, 4 )

@@ -2,14 +2,17 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.hibernate.Hibernate;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.SessionFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ThrowingConsumer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
@@ -55,6 +58,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
 
     @Configuration
     @TestComponent
+    @Import(SingleCellConfig.class)
     static class SingleCellExpressionExperimentServiceTestContextConfiguration extends BaseDatabaseTestContextConfiguration {
 
         @Bean
@@ -142,6 +146,37 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
     @After
     public void resetMocks() {
         reset( auditTrailService );
+    }
+
+    @Test
+    public void testGetSingleCellDimensionWithoutCellIds() {
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
+        QuantitationType qt = vectors.iterator().next().getQuantitationType();
+        SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
+        assertThat( scd.getCellIds() ).isNotNull();
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null );
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+        ThrowingConsumer<SingleCellDimension> t = scd2 -> {
+            assertThat( scd2.getName() ).isEqualTo( scd.getName() );
+            assertThat( scd2.getDescription() ).isEqualTo( scd.getDescription() );
+            assertThat( scd2.getCellIds() ).isNull();
+            assertThat( scd2.getNumberOfCells() ).isEqualTo( 100 );
+            assertThat( scd2.getBioAssays() ).containsExactlyElementsOf( scd.getBioAssays() );
+            assertThat( scd2.getNumberOfCellsBySample( 0 ) ).isEqualTo( 25 );
+            assertThat( scd2.getNumberOfCellsBySample( 1 ) ).isEqualTo( 25 );
+            assertThat( scd2.getNumberOfCellsBySample( 2 ) ).isEqualTo( 25 );
+            assertThat( scd2.getNumberOfCellsBySample( 3 ) ).isEqualTo( 25 );
+            assertThat( Hibernate.isInitialized( scd2.getCellTypeAssignments() ) ).isFalse();
+            assertThat( Hibernate.isInitialized( scd2.getCellLevelCharacteristics() ) ).isFalse();
+        };
+        assertThat( scExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt ) )
+                .satisfies( t );
+        assertThat( scExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee ) )
+                .hasValueSatisfying( t );
+        assertThat( scExpressionExperimentService.getSingleCellDimensionsWithoutCellIds( ee ) )
+                .singleElement()
+                .satisfies( t );
     }
 
     @Test
@@ -343,6 +378,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThat( scExpressionExperimentService.getCellTypeAssignments( ee ) )
                 .hasSize( 1 );
         CellTypeAssignment cta = scExpressionExperimentService.getPreferredCellTypeAssignment( ee ).orElseThrow( AssertionError::new );
+        String ctaS = cta.toString();
         assertThat( scExpressionExperimentService.getCellTypes( ee ) ).hasSize( 2 )
                 .extracting( Characteristic::getValue )
                 .containsExactlyInAnyOrder( "A", "B" );
@@ -355,6 +391,9 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
             ct[i] = i < 75 ? "A" : "B";
         }
         CellTypeAssignment newLabelling = scExpressionExperimentService.relabelCellTypes( ee, scd, Arrays.asList( ct ), null, null );
+        String newLabellingS = newLabelling.toString();
+        ExperimentalFactor newCtf = scExpressionExperimentService.getCellTypeFactor( ee )
+                .orElseThrow( NullPointerException::new );
         assertThat( newLabelling ).satisfies( l -> {
             assertThat( l.getId() ).isNotNull();
             assertThat( l.isPreferred() ).isTrue();
@@ -373,7 +412,13 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         scExpressionExperimentService.removeCellTypeAssignment( ee, scd, newLabelling );
         assertThat( scExpressionExperimentService.getPreferredCellTypeAssignment( ee ) ).isEmpty();
         verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
-                "Created a cell type factor " + ctf + " from preferred cell type assignment CellTypeAssignment Id=8 Cell Types=A, B [Preferred]." );
+                "Created a cell type factor " + ctf + " from preferred cell type assignment " + ctaS + "." );
+        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
+                "Removed the cell type factor " + ctf + "." );
+        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
+                "Created a cell type factor " + newCtf + " from preferred cell type assignment " + newLabellingS + "." );
+        verify( auditTrailService ).addUpdateEvent( ee, ExperimentalDesignUpdatedEvent.class,
+                "Removed the cell type factor " + newCtf + "." );
     }
 
     /**
@@ -460,6 +505,25 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
 
         assertThat( scExpressionExperimentService.getCellLevelCharacteristics( ee, Categories.GENOTYPE ) )
                 .isEmpty();
+    }
+
+    @Test
+    public void testUpdateSparsityMetrics() {
+        Collection<SingleCellExpressionDataVector> vecs = createSingleCellVectors( false );
+        QuantitationType qt = vecs.iterator().next().getQuantitationType();
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vecs, null );
+        assertThat( ee.getBioAssays() ).allSatisfy( ba -> {
+            assertThat( ba.getNumberOfCells() ).isNull();
+            assertThat( ba.getNumberOfDesignElements() ).isNull();
+            assertThat( ba.getNumberOfCellsByDesignElements() ).isNull();
+        } );
+        qt.setIsSingleCellPreferred( true );
+        scExpressionExperimentService.updateSparsityMetrics( ee );
+        assertThat( ee.getBioAssays() ).allSatisfy( ba -> {
+            assertThat( ba.getNumberOfCells() ).isNotNull();
+            assertThat( ba.getNumberOfDesignElements() ).isNotNull();
+            assertThat( ba.getNumberOfCellsByDesignElements() ).isNotNull();
+        } );
     }
 
     private SingleCellDimension createSingleCellDimension() {

@@ -34,13 +34,14 @@
 
         <tr>
             <td class="label"><fmt:message key="bioAssay.description" />:</td>
-            <td>
+            <td style="max-width: 800px;">
                 <c:choose>
                     <c:when test="${not empty bioAssay.description}">
                         <div style="white-space: pre-wrap;">${fn:escapeXml(fn:trim(bioAssay.description))}</div>
                     </c:when>
                     <c:when test="${not empty singleParent.description}">
-                        <div style="white-space: pre-wrap;">${fn:escapeXml(fn:trim(singleParent.description))}&nbsp;<b>(inherited)</b></div>
+                        <div style="white-space: pre-wrap;">${fn:escapeXml(fn:trim(singleParent.description))}&nbsp;<b>(inherited)</b>
+                        </div>
                     </c:when>
                     <c:otherwise><i>No description available</i></c:otherwise>
                 </c:choose>
@@ -86,7 +87,7 @@
                     <td>
                         <Gemma:entityLink
                                 entity="${bioAssay.originalPlatform}">${bioAssay.originalPlatform.shortName}</Gemma:entityLink>
-                            - ${fn:escapeXml(bioAssay.originalPlatform.name)}
+                        - ${fn:escapeXml(bioAssay.originalPlatform.name)}
                     </td>
                 </tr>
             </c:when>
@@ -96,11 +97,32 @@
                     <td>
                         <Gemma:entityLink
                                 entity="${singleParent.originalPlatform}">${singleParent.originalPlatform.shortName}</Gemma:entityLink>
-                            - ${fn:escapeXml(singleParent.originalPlatform.name)}&nbsp;<b>(inherited)</b>
+                        - ${fn:escapeXml(singleParent.originalPlatform.name)}&nbsp;<b>(inherited)</b>
                     </td>
                 </tr>
             </c:when>
         </c:choose>
+
+        <c:if test="${bioAssay.numberOfCells != null}">
+            <tr>
+                <td class="label">Number of cells:</td>
+                <td>${bioAssay.numberOfCells}</td>
+            </tr>
+        </c:if>
+
+        <c:if test="${bioAssay.numberOfDesignElements != null}">
+            <tr>
+                <td class="label">Number of design elements:</td>
+                <td>${bioAssay.numberOfDesignElements}</td>
+            </tr>
+        </c:if>
+
+        <c:if test="${bioAssay.numberOfCellsByDesignElements != null}">
+            <tr>
+                <td class="label">Number of cells &times; design elements:</td>
+                <td>${bioAssay.numberOfCellsByDesignElements}</td>
+            </tr>
+        </c:if>
 
     </table>
 

@@ -22,6 +22,7 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -29,6 +30,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.util.Slice;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -171,6 +173,12 @@ public interface ProcessedExpressionDataVectorService
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Slice<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, int offset, int limit );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Slice<CompositeSequence> getProcessedDataVectorsDesignElements( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, int offset, int limit );
 
     /**
      * Retrieve and thaw a collection of vectors for a given experiment.

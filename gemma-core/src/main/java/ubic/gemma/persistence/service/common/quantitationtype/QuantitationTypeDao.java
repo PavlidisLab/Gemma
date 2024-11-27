@@ -116,5 +116,5 @@ public interface QuantitationTypeDao extends FilteringVoEnabledDao<QuantitationT
     /**
      * Obtain the vector types that are mapped and subclass of the given vector type.
      */
-    Collection<Class<? extends DataVector>> getMappedDataVectorTypes( Class<? extends DataVector> vectorType );
+    <T extends DataVector> Collection<Class<? extends T>> getMappedDataVectorTypes( Class<T> vectorType );
 }

@@ -101,7 +101,7 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
 
     @Override
     // no need for a transaction
-    public Collection<Class<? extends DataVector>> getMappedDataVectorType( Class<? extends DataVector> vectorType ) {
+    public <T extends DataVector> Collection<Class<? extends T>> getMappedDataVectorType( Class<T> vectorType ) {
         return quantitationTypeDao.getMappedDataVectorTypes( vectorType );
     }
 

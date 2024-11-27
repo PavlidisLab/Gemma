@@ -22,7 +22,7 @@
 
         <tr>
             <td class="label"><fmt:message key="bioMaterial.description" />:</td>
-            <td>
+            <td style="max-width: 800px;">
                 <c:choose>
                     <c:when test="${not empty bioMaterial.description}">
                         <div style="white-space: pre-wrap;">${fn:escapeXml(fn:trim(bioMaterial.description))}</div>
@@ -177,8 +177,7 @@
 
     <br>
 
-    <security:accesscontrollist domainObject="${bioMaterial}"
-            hasPermission="WRITE,ADMINISTRATION">
+    <security:authorize access="hasAuthority('GROUP_ADMIN') || hasPermission(bioMaterial, 'WRITE,ADMINISTRATION')">
         <td colspan="2">
             <div>
                 <input type="button"
@@ -186,7 +185,7 @@
                         value="Edit">
             </div>
         </td>
-    </security:accesscontrollist>
+    </security:authorize>
 
 </div>
 

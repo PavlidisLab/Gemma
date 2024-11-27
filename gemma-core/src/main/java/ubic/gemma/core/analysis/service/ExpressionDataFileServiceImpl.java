@@ -20,7 +20,6 @@ package ubic.gemma.core.analysis.service;
 
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,22 +66,20 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.core.analysis.service.ExpressionDataFileUtils.*;
+import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.createStreamMonitor;
 
 /**
  * Supports the creation and location of 'flat file' versions of data in the system, for download by users. Files are
@@ -488,11 +485,11 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         if ( useStreaming ) {
             AtomicLong numVecs = new AtomicLong();
             try ( Stream<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, qt, cs2gene, numVecs, fetchSize ) ) {
-                return matrixWriter.write( vectors.peek( createStreamMonitor( numVecs.get() ) ), cs2gene, writer );
+                return matrixWriter.write( vectors.peek( createStreamMonitor( ExpressionDataFileServiceImpl.class.getName(), numVecs.get() ) ), cs2gene, writer );
             }
         } else {
             Collection<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, qt, cs2gene );
-            return matrixWriter.write( vectors.stream().peek( createStreamMonitor( vectors.size() ) ), cs2gene, writer );
+            return matrixWriter.write( vectors.stream().peek( createStreamMonitor( ExpressionDataFileServiceImpl.class.getName(), vectors.size() ) ), cs2gene, writer );
         }
     }
 
@@ -533,7 +530,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                     if ( scaleType != null && qt.getScale() != scaleType ) {
                         log.info( "Data will be converted from " + qt.getScale() + " to " + scaleType + "." );
                     }
-                    return writer.write( vectors.peek( createStreamMonitor( numVecs.get() ) ), ( int ) numVecs.get(), nnzBySample, cs2gene, destDir );
+                    return writer.write( vectors.peek( createStreamMonitor( ExpressionDataFileServiceImpl.class.getName(), numVecs.get() ) ), ( int ) numVecs.get(), nnzBySample, cs2gene, destDir );
                 }
             } else {
                 SingleCellExpressionDataMatrix<Double> matrix = helperService.getSingleCellMatrix( ee, qt, cs2gene );
@@ -929,21 +926,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     private OutputStream openFile( Path file ) throws IOException {
         PathUtils.createParentDirectories( file );
         return Files.newOutputStream( file );
-    }
-
-    private Consumer<SingleCellExpressionDataVector> createStreamMonitor( long numVecs ) {
-        return new Consumer<SingleCellExpressionDataVector>() {
-            final StopWatch timer = StopWatch.createStarted();
-            final AtomicInteger i = new AtomicInteger();
-
-            @Override
-            public void accept( SingleCellExpressionDataVector x ) {
-                int done = i.incrementAndGet();
-                if ( done % 1000 == 0 ) {
-                    log.info( String.format( "Processed %d/%d vectors (%f.2 vectors/sec)", done, numVecs, 1000.0 * done / timer.getTime() ) );
-                }
-            }
-        };
     }
 
     private final Map<Path, ReadWriteLock> fileLocks = new WeakHashMap<>();

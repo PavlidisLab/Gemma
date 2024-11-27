@@ -13,25 +13,24 @@ import java.util.Map;
  */
 public class ScriptTag extends AbstractStaticAssetTag implements DynamicAttributes {
 
-    private String src;
     private boolean async;
     private boolean defer;
     private final Map<String, Object> dynamicAttributes = new LinkedHashMap<>();
+
+    public ScriptTag() {
+        super( "src" );
+    }
 
     @Override
     protected int doStartTagInternal() throws JspException {
         TagWriter tagWriter = new TagWriter( pageContext );
         tagWriter.startTag( "script" );
-        writeStaticAssetAttribute( "src", src, tagWriter );
+        writeSrcAttribute( tagWriter );
         TagWriterUtils.writeBooleanAttribute( "async", async, tagWriter );
         TagWriterUtils.writeBooleanAttribute( "defer", defer, tagWriter );
         TagWriterUtils.writeAttributes( dynamicAttributes, isHtmlEscape(), tagWriter );
         tagWriter.endTag( true );
         return SKIP_BODY;
-    }
-
-    public void setSrc( String src ) {
-        this.src = src;
     }
 
     public void setAsync( boolean async ) {

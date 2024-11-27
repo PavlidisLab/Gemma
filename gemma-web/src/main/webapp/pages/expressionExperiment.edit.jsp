@@ -66,8 +66,8 @@
                         <tr>
                             <td>
                                 <form:hidden path="id" />
-                                <form:input path="name" size="20" cssErrorClass="error" /><form:errors path="name"
-                                    cssClass="error" />
+                                <form:input path="name" size="20" cssErrorClass="error" />
+                                <form:errors path="name" cssClass="error" />
                             </td>
                             <td><form:input path="description" size="35" /><form:errors path="description" /></td>
                             <td class="text-center">
@@ -100,22 +100,26 @@
                                 <form:select path="generalType">
                                     <form:options items="${generalQuantitationTypes}" />
                                 </form:select>
+                                <form:errors path="generalType" cssClass="error" />
                             </td>
                             <td>
                                 <form:select path="type">
                                     <form:options items="${standardQuantitationTypes}" />
                                 </form:select>
+                                <form:errors path="type" cssClass="error" />
                             </td>
                             <td>
                                 <form:select path="scale">
                                     <form:options items="${scaleTypes}" />
                                 </form:select>
+                                <form:errors path="scale" cssClass="error" />
                             </td>
                             <td>
                                 <form:select path="representation" disabled="true"
                                         title="The representation cannot be changed without rewriting the vectors.">
                                     <form:options items="${representations}" />
                                 </form:select>
+                                <form:errors path="representation" cssClass="error" />
                             </td>
                         </tr>
                     </spring:nestedPath>

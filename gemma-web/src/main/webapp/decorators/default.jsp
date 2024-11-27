@@ -12,7 +12,7 @@
 <meta name="keywords"
         content="<decorator:getProperty property="meta.keywords" default="genomics,bioinformatics,genetics,transcriptomes,rnaseq,microarrays,biotechnology,medicine,biomedical,meta-analysis,statistics,search,open source,database,software"/>" />
 <link rel="shortcut icon" href="${pageContext.request.contextPath}/favicon.ico" />
-<Gemma:style href="/bundles/gemma-all.css" />
+<Gemma:style src="/bundles/gemma-all.css" />
 <script type="application/javascript">
 const ctxBasePath = "${pageContext.request.contextPath}";
 const recaptchaPublicKey = "${appConfig["gemma.recaptcha.publicKey"]}";

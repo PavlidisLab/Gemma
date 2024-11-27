@@ -16,8 +16,6 @@ import static ubic.gemma.web.taglib.TagWriterUtils.writeAttributes;
  */
 public class ImageTag extends AbstractStaticAssetTag implements DynamicAttributes {
 
-    private String src;
-
     @Nullable
     private String alt;
 
@@ -35,11 +33,15 @@ public class ImageTag extends AbstractStaticAssetTag implements DynamicAttribute
 
     private final Map<String, Object> dynamicAttributes = new LinkedHashMap<>();
 
+    public ImageTag() {
+        super( "src" );
+    }
+
     @Override
     protected int doStartTagInternal() throws JspException {
         TagWriter tagWriter = new TagWriter( pageContext );
         tagWriter.startTag( "img" );
-        writeStaticAssetAttribute( "src", src, tagWriter );
+        writeSrcAttribute( tagWriter );
         tagWriter.writeOptionalAttributeValue( "alt", htmlEscape( alt ) );
         tagWriter.writeOptionalAttributeValue( "height", height );
         tagWriter.writeOptionalAttributeValue( "width", width );
@@ -48,10 +50,6 @@ public class ImageTag extends AbstractStaticAssetTag implements DynamicAttribute
         writeAttributes( dynamicAttributes, isHtmlEscape(), tagWriter );
         tagWriter.endTag();
         return SKIP_BODY;
-    }
-
-    public void setSrc( String src ) {
-        this.src = src;
     }
 
     public void setAlt( @Nullable String alt ) {

@@ -22,6 +22,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
+import org.hibernate.ObjectNotFoundException;
 import org.hibernate.SessionFactory;
 import org.hibernate.WrongClassException;
 import org.hibernate.criterion.Projections;
@@ -266,6 +267,36 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
             log.trace( String.format( "Loaded reference to %s.", formatEntity( entity ) ) );
         }
         return entity;
+    }
+
+    @Nonnull
+    @Override
+    public T reload( T entity ) {
+        Assert.notNull( entity.getId(), "Cannot reload a transient entity." );
+        Long id = entity.getId();
+        //noinspection unchecked
+        entity = ( T ) sessionFactory.getCurrentSession().get( elementClass, id );
+        if ( entity == null ) {
+            throw new ObjectNotFoundException( id, elementClass.getName() );
+        }
+        if ( log.isTraceEnabled() ) {
+            log.trace( String.format( "Reloaded %s.", formatEntity( entity ) ) );
+        }
+        return entity;
+    }
+
+    @Nonnull
+    @Override
+    public Collection<T> reload( Collection<T> entities ) {
+        // TODO: implement batch reloading like for #load(Collection)
+        StopWatch timer = StopWatch.createStarted();
+        List<T> results = entities.stream()
+                .map( this::reload )
+                .collect( Collectors.toList() );
+        if ( log.isTraceEnabled() ) {
+            log.debug( String.format( "Reloaded %d %s entities in %d ms.", results.size(), elementClass.getSimpleName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
+        }
+        return results;
     }
 
     @Override

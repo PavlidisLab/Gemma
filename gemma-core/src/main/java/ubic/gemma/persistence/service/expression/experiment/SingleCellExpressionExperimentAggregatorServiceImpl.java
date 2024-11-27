@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.getSampleEnd;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.getSampleStart;
-import static ubic.gemma.persistence.service.expression.experiment.SingleCellSparsityMetrics.*;
 import static ubic.gemma.persistence.service.expression.experiment.SingleCellUtils.mapCellTypeAssignmentToCellTypeFactor;
 
 /**
@@ -52,6 +51,9 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
 
     @Autowired
     private AuditTrailService auditTrailService;
+
+    @Autowired
+    private SingleCellSparsityMetrics metrics;
 
     @Override
     @Transactional
@@ -369,15 +371,15 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
                     if ( v == null ) {
                         v = new boolean[scv.getSingleCellDimension().getNumberOfCells()];
                     }
-                    addExpressedCells( scv, sourceSampleIndex, cellType, v );
+                    metrics.addExpressedCells( scv, sourceSampleIndex, cellType, v );
                     return v;
                 } );
             }
             if ( designElementsByBioAssay != null ) {
-                designElementsByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + getNumberOfDesignElements( Collections.singleton( scv ), sourceSampleIndex, cellType ) );
+                designElementsByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + metrics.getNumberOfDesignElements( Collections.singleton( scv ), sourceSampleIndex, cellType ) );
             }
             if ( cellByDesignElementByBioAssay != null ) {
-                cellByDesignElementByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + getNumberOfCellsByDesignElements( Collections.singleton( scv ), sourceSampleIndex, cellType ) );
+                cellByDesignElementByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + metrics.getNumberOfCellsByDesignElements( Collections.singleton( scv ), sourceSampleIndex, cellType ) );
             }
         }
 

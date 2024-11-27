@@ -20,8 +20,7 @@
         ${subSet.name}
         (subset of <Gemma:entityLink
             entity="${subSet.sourceExperiment}">${subSet.sourceExperiment.shortName}</Gemma:entityLink>,
-        <a href="${pageContext.request.contextPath}/expressionExperiment/showAllExpressionExperimentSubSets.html?id=${subSet.sourceExperiment.id}">see
-            all subsets</a>)
+        <a href="${pageContext.request.contextPath}/expressionExperiment/showAllExpressionExperimentSubSets.html?id=${subSet.sourceExperiment.id}&dimension=${dimension.id}">see all subsets</a>)
     </h2>
     <table>
         <tr>
@@ -35,13 +34,14 @@
         </tr>
         <tr>
             <td class="label">Description:</td>
-            <td>
+            <td style="max-width: 800px;">
                 <c:choose>
                     <c:when test="${not empty subSet.description}">
                         <div style="white-space: pre-wrap;">${fn:escapeXml(fn:trim(subSet.description))}</div>
                     </c:when>
                     <c:when test="${not empty subSet.sourceExperiment.description}">
-                        <div style="white-space: pre-wrap;">${fn:escapeXml(fn:trim(subSet.sourceExperiment.description))}&nbsp;<b>(inherited)</b></div>
+                        <div style="white-space: pre-wrap;">${fn:escapeXml(fn:trim(subSet.sourceExperiment.description))}&nbsp;<b>(inherited)</b>
+                        </div>
                     </c:when>
                     <c:otherwise>
                         <i>No description available</i>
@@ -110,58 +110,81 @@
                 </td>
             </tr>
         </c:if>
+        <c:if test="${heatmap != null}">
+        </c:if>
+        <c:if test="${not empty bioAssays}">
+            <td class="label">Assays:</td>
+            <td>
+                <c:choose>
+                    <c:when test="${heatmap != null}">
+                        <Gemma:expressionDataHeatmap heatmap="${heatmap}"
+                                alt="Heatmap of the expression data of ${subSet.name}. The rows correspond to assays and columns to genes."
+                                maxWidth="800" />
+                    </c:when>
+                    <c:otherwise>
+                        <table class="mb-3">
+                            <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Sample</th>
+                                <th>Description</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <c:forEach items="${bioAssays}" var="ba">
+                                <tr>
+                                    <td>
+                                        <Gemma:entityLink entity="${ba}"
+                                                dimension="${dimension}">${fn:escapeXml(ba.name)}</Gemma:entityLink>
+                                    </td>
+                                    <td>
+                                        <Gemma:entityLink entity="${ba.sampleUsed}"
+                                                dimension="${dimension}">${fn:escapeXml(ba.sampleUsed.name)}</Gemma:entityLink>
+                                    </td>
+                                    <td>
+                                        <c:choose>
+                                            <c:when test="${not empty ba.description}">
+                                                ${fn:escapeXml(ba.description)}
+                                            </c:when>
+                                            <c:otherwise><i>No description available</i></c:otherwise>
+                                        </c:choose>
+                                    </td>
+                                </tr>
+                            </c:forEach>
+                            </tbody>
+                        </table>
+                    </c:otherwise>
+                </c:choose>
+            </td>
+            </tr>
+        </c:if>
+        <c:if test="${(not empty subSet.characteristics) or (not empty subSet.sourceExperiment.characteristics)}">
+            <tr>
+                <td class="label">Annotations:</td>
+                <td>
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Value</th>
+                        </tr>
+                        </thead>
+                        <c:forEach items="${subSet.characteristics}" var="characteristic">
+                            <tr>
+                                <td><Gemma:characteristic characteristic="${characteristic}" category="true" /></td>
+                                <td><Gemma:characteristic characteristic="${characteristic}" /></td>
+                            </tr>
+                        </c:forEach>
+                        <c:forEach items="${subSet.sourceExperiment.characteristics}" var="characteristic">
+                            <tr>
+                                <td><Gemma:characteristic characteristic="${characteristic}" category="true" /></td>
+                                <td><Gemma:characteristic characteristic="${characteristic}" />&nbsp;<b>(inherited)</b>
+                                </td>
+                            </tr>
+                        </c:forEach>
+                    </table>
+                </td>
+            </tr>
+        </c:if>
     </table>
-    <c:if test="${not empty bioAssays}">
-        <hr class="normal">
-        <h3>Assays</h3>
-        <table class="mb-3">
-            <thead>
-            <tr>
-                <th>Name</th>
-                <th>Description</th>
-            </tr>
-            </thead>
-            <tbody>
-            <c:forEach items="${bioAssays}" var="ba">
-                <tr>
-                    <td>
-                        <a href="${pageContext.request.contextPath}/bioAssay/showBioAssay.html?id=${ba.id}&dimension=${dimension.id}">${ba.name}</a>
-                    </td>
-                    <td>
-                        <c:choose>
-                            <c:when test="${not empty ba.description}">
-                                ${fn:escapeXml(ba.description)}
-                            </c:when>
-                            <c:otherwise><i>No description available</i></c:otherwise>
-                        </c:choose>
-                    </td>
-                </tr>
-            </c:forEach>
-            </tbody>
-        </table>
-    </c:if>
-    <c:if test="${(not empty subSet.characteristics) or (not empty subSet.sourceExperiment.characteristics)}">
-        <hr class="normal">
-        <h3>Annotations</h3>
-        <table>
-            <thead>
-            <tr>
-                <th>Category</th>
-                <th>Value</th>
-            </tr>
-            </thead>
-            <c:forEach items="${subSet.characteristics}" var="characteristic">
-                <tr>
-                    <td><Gemma:characteristic characteristic="${characteristic}" category="true" /></td>
-                    <td><Gemma:characteristic characteristic="${characteristic}" /></td>
-                </tr>
-            </c:forEach>
-            <c:forEach items="${subSet.sourceExperiment.characteristics}" var="characteristic">
-                <tr>
-                    <td><Gemma:characteristic characteristic="${characteristic}" category="true" /></td>
-                    <td><Gemma:characteristic characteristic="${characteristic}" />&nbsp;<b>(inherited)</b></td>
-                </tr>
-            </c:forEach>
-        </table>
-    </c:if>
 </div>

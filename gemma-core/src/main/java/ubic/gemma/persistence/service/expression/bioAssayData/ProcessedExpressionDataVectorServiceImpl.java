@@ -11,6 +11,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObje
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -25,6 +26,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.util.IdentifiableUtils;
+import ubic.gemma.persistence.util.Slice;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -240,6 +242,18 @@ public class ProcessedExpressionDataVectorServiceImpl
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors(
             ExpressionExperiment expressionExperiment ) {
         return this.processedExpressionDataVectorDao.getProcessedVectors( expressionExperiment );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Slice<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, int offset, int limit ) {
+        return new Slice<>( this.processedExpressionDataVectorDao.getProcessedVectors( expressionExperiment, dimension, offset, limit ), null, offset, limit, null );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Slice<CompositeSequence> getProcessedDataVectorsDesignElements( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, int offset, int limit ) {
+        return new Slice<>( this.processedExpressionDataVectorDao.getProcessedVectorsDesignElements( expressionExperiment, dimension, offset, limit ), null, offset, limit, null );
     }
 
     @Override

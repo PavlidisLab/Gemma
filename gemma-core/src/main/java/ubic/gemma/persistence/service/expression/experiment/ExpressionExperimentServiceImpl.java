@@ -845,6 +845,12 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public Map<BioAssay, Long> getNumberOfDesignElementsPerSample( ExpressionExperiment expressionExperiment ) {
+        return expressionExperimentDao.getNumberOfDesignElementsPerSample( expressionExperiment );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ExpressionExperiment loadWithCharacteristics( Long id ) {
         ExpressionExperiment ee = expressionExperimentDao.load( id );
         if ( ee != null ) {
@@ -1200,6 +1206,30 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt, Class<? extends BulkExpressionDataVector> dataVectorType ) {
+        return expressionExperimentDao.getBioAssayDimension( ee, qt, dataVectorType );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BioAssayDimension getBioAssayDimensionById( ExpressionExperiment ee, Long dimensionId, Class<? extends BulkExpressionDataVector> dataVectorType ) {
+        return expressionExperimentDao.getBioAssayDimensionById( ee, dimensionId, dataVectorType );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BioAssayDimension getBioAssayDimensionById( ExpressionExperiment ee, Long dimensionId ) {
+        for ( Class<? extends BulkExpressionDataVector> vectorType : quantitationTypeService.getMappedDataVectorType( BulkExpressionDataVector.class ) ) {
+            BioAssayDimension bad = expressionExperimentDao.getBioAssayDimensionById( ee, dimensionId, vectorType );
+            if ( bad != null ) {
+                return bad;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public long getBioMaterialCount( final ExpressionExperiment expressionExperiment ) {
         return this.expressionExperimentDao.getBioMaterialCount( expressionExperiment );
     }
@@ -1272,6 +1302,12 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public QuantitationType getProcessedQuantitationType( final ExpressionExperiment ee ) {
+        return this.expressionExperimentDao.getProcessedQuantitationType( ee );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public boolean hasProcessedExpressionData( ExpressionExperiment ee ) {
         return expressionExperimentDao.hasProcessedExpressionData( ee );
     }
@@ -1325,7 +1361,50 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> getSubSetsByDimension( ExpressionExperiment expressionExperiment ) {
-        return expressionExperimentDao.getSubSetsByDimension( expressionExperiment );
+        Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> result = expressionExperimentDao.getSubSetsByDimension( expressionExperiment );
+        for ( Set<ExpressionExperimentSubSet> subSets : result.values() ) {
+            for ( ExpressionExperimentSubSet s : subSets ) {
+                for ( BioAssay ba : s.getBioAssays() ) {
+                    Hibernate.initialize( ba.getSampleUsed() );
+                    Hibernate.initialize( ba.getSampleUsed().getSourceBioMaterial() );
+                }
+            }
+        }
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment, BioAssayDimension dimension ) {
+        Collection<ExpressionExperimentSubSet> subSets = expressionExperimentDao.getSubSets( expressionExperiment, dimension );
+        for ( ExpressionExperimentSubSet s : subSets ) {
+            for ( BioAssay ba : s.getBioAssays() ) {
+                Hibernate.initialize( ba.getSampleUsed() );
+                Hibernate.initialize( ba.getSampleUsed().getSourceBioMaterial() );
+            }
+        }
+        return subSets;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<ExperimentalFactor, Map<FactorValue, ExpressionExperimentSubSet>> getSubSetsByFactorValue( ExpressionExperiment expressionExperiment, BioAssayDimension dimension ) {
+        Map<ExperimentalFactor, Map<FactorValue, Set<ExpressionExperimentSubSet>>> result = new HashMap<>();
+        Collection<ExpressionExperimentSubSet> subSets = getSubSets( expressionExperiment, dimension );
+        for ( ExpressionExperimentSubSet subSet : subSets ) {
+            for ( BioAssay ba : subSet.getBioAssays() ) {
+                for ( FactorValue fv : ba.getSampleUsed().getAllFactorValues() ) {
+                    result.computeIfAbsent( fv.getExperimentalFactor(), k -> new HashMap<>() )
+                            .computeIfAbsent( fv, k -> new HashSet<>() )
+                            .add( subSet );
+                }
+            }
+        }
+        return result.entrySet().stream()
+                // only retain FVs that fully separates subsets
+                // if there are as many FVs than subsets, we know there is exactly one subset per FV
+                .filter( e -> e.getValue().size() == subSets.size() )
+                .collect( Collectors.toMap( Map.Entry::getKey, e -> e.getValue().entrySet().stream().collect( Collectors.toMap( Map.Entry::getKey, e2 -> e2.getValue().iterator().next() ) ) ) );
     }
 
     @Override
@@ -1626,6 +1705,36 @@ public class ExpressionExperimentServiceImpl
         //        cannot use contains
         Assert.isTrue( ee.getQuantitationTypes().stream().anyMatch( qt::equals ),
                 "The quantitation type does not belong to " + ee + "." );
+        if ( qt.getIsSingleCellPreferred() ) {
+            // set all other QTs to non-preferred
+            for ( QuantitationType otherQt : ee.getQuantitationTypes() ) {
+                if ( otherQt.getIsSingleCellPreferred() && !otherQt.equals( qt ) ) {
+                    log.info( "Marking " + otherQt + " as non-preferred for single-cell data." );
+                    otherQt.setIsSingleCellPreferred( false );
+                    quantitationTypeService.update( otherQt );
+                }
+            }
+        }
+        if ( qt.getIsPreferred() ) {
+            // set all other QTs to non-preferred
+            for ( QuantitationType otherQt : ee.getQuantitationTypes() ) {
+                if ( otherQt.getIsPreferred() && !otherQt.equals( qt ) ) {
+                    log.info( "Marking " + otherQt + " as non-preferred for raw data." );
+                    otherQt.setIsPreferred( false );
+                    quantitationTypeService.update( otherQt );
+                }
+            }
+        }
+        if ( qt.getIsMaskedPreferred() ) {
+            // set all other QTs to non-preferred
+            for ( QuantitationType otherQt : ee.getQuantitationTypes() ) {
+                if ( otherQt.getIsMaskedPreferred() && !otherQt.equals( qt ) ) {
+                    log.info( "Marking " + otherQt + " as non-preferred for processed data." );
+                    otherQt.setIsMaskedPreferred( false );
+                    quantitationTypeService.update( otherQt );
+                }
+            }
+        }
         quantitationTypeService.update( qt );
     }
 

@@ -386,12 +386,14 @@ Gemma.ExpressionExperimentPage = Ext.extend( Ext.TabPanel, {
 } );
 
 /**
- * Used to make the correlation heatmap clickable. See ExperimentQCTag.java
+ * Used to make the correlation heatmap clickable.
  *
- * @param {Object}
- *           bigImageUrl
+ * See ExperimentQCTag.java
+ * @param url    an URL to the image
+ * @param width  the width of the image to generate, in pixels
+ * @param height the height of the image to generate, in pixels
  */
-var popupImage = function( url, width, height ) {
+Gemma.ExpressionExperimentPage.popupImage = function( url, width, height ) {
    url = url + "&nocache=" + Math.floor( Math.random() * 1000 );
    var b = new Ext.Window( {
       modal : true,
