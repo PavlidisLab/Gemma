@@ -336,7 +336,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
              * @return String text with numbers
              */
             getExpressionNumbers: function (resultSet, nodeId, showThreshold) {
-                /* Show how many probes are differentially expressed; */
+                /* Show how many elements are differentially expressed; */
 
                 var numbers = resultSet.numberOfDiffExpressedProbes + ' of ' + this.totalProbes
                     + ' elements were differentially expressed<br>';

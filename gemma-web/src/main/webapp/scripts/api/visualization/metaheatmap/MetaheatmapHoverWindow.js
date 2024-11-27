@@ -52,7 +52,7 @@ Gemma.Metaheatmap.HoverWindow = Ext
                   '<b>Experiment</b>: {datasetShortName}, {datasetName}<br>',
                   '<b>Condition</b>: {contrastFactorValue} vs {baselineFactorValue} ({factorCategory})<br>',
                   '<b>Baseline</b>: {baselineFactorValue} <br>',
-                  '<b>Number of probes</b>: {numberOfProbesDiffExpressed} / {numberOfProbes} <br>',
+                  '<b>Number of elements</b>: {numberOfProbesDiffExpressed} / {numberOfProbes} <br>',
                   '<b>q-value</b>: {correctedPValue:sciNotation}<br>', '<b>p-value</b>: {pvalue:sciNotation}<br>',
                   '<b>log fold change</b>: {foldChange:logRatioNotation}', '</tpl>', '</tpl></span>' );
             } else {
@@ -63,10 +63,10 @@ Gemma.Metaheatmap.HoverWindow = Ext
                   '<b>Experiment</b>: {datasetShortName}, {datasetName}<br>',
                   '<b>Condition</b>: {contrastFactorValue} vs {baselineFactorValue} ({factorCategory})<br> ',
                   '<b>Baseline</b>: {baselineFactorValue} <br> ',
-                  '<b>Enrichment</b>: {numDiffExpressed} out of {numInSet} probes are differentially expressed with p-value {ora:sciNotation} <br> ',
-                  '<b>Specificity</b>: {specificityPercent}% of probes were differentially expressed under this condition ({totalDiffExpressed} out of {totalOnArray})<br><br> ',
+                  '<b>Enrichment</b>: {numDiffExpressed} out of {numInSet} elements are differentially expressed with p-value {ora:sciNotation} <br> ',
+                  '<b>Specificity</b>: {specificityPercent}% of elements were differentially expressed under this condition ({totalDiffExpressed} out of {totalOnArray})<br><br> ',
                   '</tpl>', '<tpl if="type==\'minipie\'">', // minipie
-                  '{percentDiffExpressed} of probes are differentially expressed.<br>',
+                  '{percentDiffExpressed} of elements are differentially expressed.<br>',
                   '({totalDiffExpressed} of {totalOnArray}) Click for details.', '</tpl>', '<tpl if="type==\'gene\'">', // gene
                   '<b>Gene</b>: {geneSymbol} {geneFullName}<br>',
                   '<b>Meta P value</b>: {geneMetaPvalue:sciNotation} based on {metaPvalueCount} p-values.<br>',
@@ -75,7 +75,7 @@ Gemma.Metaheatmap.HoverWindow = Ext
                   '<b>Experiment</b>: {datasetShortName}, {datasetName}<br>',
                   '<b>Condition</b>: {contrastFactorValue} vs {baselineFactorValue} ({factorCategory})<br>',
                   '<b>Baseline</b>: {baselineFactorValue} <br>',
-                  '<b>Number of probes</b>: {numberOfProbesDiffExpressed} / {numberOfProbes} <br>',
+                  '<b>Number of elements</b>: {numberOfProbesDiffExpressed} / {numberOfProbes} <br>',
                   '<b>q-value</b>: {correctedPValue:sciNotation}<br>', '<b>p-value</b>: {pvalue:sciNotation}<br>',
                   '<b>log fold change</b>: {foldChange}', '</tpl>', '</tpl></span>' );
             }
