@@ -427,22 +427,22 @@ public class GeoBrowser {
 
         if ( countNode == null ) {
             log.warn( "Got no valid MiniML from: " + searchUrl );
+        } else {
+            Node countEl = countNode.item( 0 );
+            String textValue = XMLUtils.getTextValue( ( Element ) countEl );
+
+            if ( textValue == null ) {
+                log.warn( "Got no valid record count element from: " + searchUrl );
+            } else {
+                try {
+                    count = Long.parseLong( textValue );
+                } catch ( NumberFormatException e ) {
+                    log.warn( "Got no valid record count from: " + searchUrl + "(" + e.getMessage() + ")" );
+                }
+            }
         }
 
-        Node countEl = countNode.item( 0 );
-        String textValue = XMLUtils.getTextValue( ( Element ) countEl );
-
-        if ( textValue == null ) {
-            log.warn( "Got no valid record count element from: " + searchUrl );
-        }
-
-        try {
-            count = Long.parseLong( textValue );
-        } catch ( NumberFormatException e ) {
-            log.warn( "Got no valid record count from: " + searchUrl + "(" + e.getMessage() + ")" );
-        }
-
-        if (count == 0) {
+        if ( count == null || count == 0 ) {
             return new Slice<>( Collections.emptyList(), Sort.by( null, "releaseDate", Sort.Direction.DESC, Sort.NullMode.DEFAULT ), 0, pageSize, count );
         }
 
