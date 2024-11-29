@@ -414,11 +414,11 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                     return -1;
                 }
                 if ( startFrom != null && startFrom.equals( geoRecord.getGeoAccession() ) ) {
-                    log.info( "Located requested starting point of " + startFrom + ", resuming detailed queries at " + i + "." );
-                    return i;
+                    log.info( "Located requested starting point of " + startFrom + ", resuming detailed queries at " + ( start + i ) + "." );
+                    return start + i;
                 } else if ( startDate != null && beforeOrEquals( geoRecord.getReleaseDate(), startDate ) ) {
-                    log.info( "Located requested starting date of " + startDate + ", resuming detailed queries at " + i + "." );
-                    return i;
+                    log.info( "Located requested starting date of " + startDate + ", resuming detailed queries at " + ( start + i ) + "." );
+                    return start + i;
                 }
             }
         }
