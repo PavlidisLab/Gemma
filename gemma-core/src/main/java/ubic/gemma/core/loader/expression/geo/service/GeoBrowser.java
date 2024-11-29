@@ -420,13 +420,29 @@ public class GeoBrowser {
             searchUrl += "&api_key=" + ncbiApiKey;
         }
 
+        log.debug( "Searching GEO with: " + searchUrl );
         Document searchDocument = parseMiniMLDocument( new URL( searchUrl ) );
         NodeList countNode = searchDocument.getElementsByTagName( "Count" );
-        Node countEl = countNode.item( 0 );
+        Long count = null;
 
-        long count = Long.parseLong( XMLUtils.getTextValue( ( Element ) countEl ) );
-        if ( count == 0 ) {
-            log.warn( "Got no records from: " + searchUrl );
+        if ( countNode == null ) {
+            log.warn( "Got no valid MiniML from: " + searchUrl );
+        }
+
+        Node countEl = countNode.item( 0 );
+        String textValue = XMLUtils.getTextValue( ( Element ) countEl );
+
+        if ( textValue == null ) {
+            log.warn( "Got no valid record count element from: " + searchUrl );
+        }
+
+        try {
+            count = Long.parseLong( textValue );
+        } catch ( NumberFormatException e ) {
+            log.warn( "Got no valid record count from: " + searchUrl + "(" + e.getMessage() + ")" );
+        }
+
+        if (count == 0) {
             return new Slice<>( Collections.emptyList(), Sort.by( null, "releaseDate", Sort.Direction.DESC, Sort.NullMode.DEFAULT ), 0, pageSize, count );
         }
 
