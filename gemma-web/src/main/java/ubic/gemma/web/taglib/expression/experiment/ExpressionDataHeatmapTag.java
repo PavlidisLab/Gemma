@@ -13,6 +13,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
 import javax.servlet.jsp.JspException;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Setter
@@ -99,17 +100,27 @@ public class ExpressionDataHeatmapTag extends AbstractHeatmapTag<ExpressionDataH
             entityUrlBuilder = getRequestContext().getWebApplicationContext().getBean( WebEntityUrlBuilder.class );
         }
         if ( heatmap.getGenes() != null ) {
-            boolean first = true;
-            for ( Gene gene : heatmap.getGenes() ) {
-                if ( !first ) {
+            List<Gene> genes = heatmap.getGenes();
+            for ( int i = 0; i < genes.size(); i++ ) {
+                Gene gene = genes.get( i );
+                if ( i > 0 ) {
                     writer.startTag( "br" );
                     writer.endTag(); // </br>
                 }
-                first = false;
-                writer.startTag( "a" );
-                writer.writeAttribute( "href", entityUrlBuilder.fromContextPath().entity( gene ).toUriString() );
-                writer.appendValue( gene.getOfficialSymbol() );
-                writer.endTag(); // </a>
+                if ( gene != null ) {
+                    writer.startTag( "a" );
+                    writer.writeAttribute( "href", entityUrlBuilder.fromContextPath().entity( gene ).toUriString() );
+                    writer.appendValue( gene.getOfficialSymbol() );
+                    writer.endTag(); // </a>
+                } else {
+                    writer.startTag( "i" );
+                    writer.appendValue( "Unmapped: " );
+                    if ( heatmap.getDesignElements() != null ) {
+                        CompositeSequence cs = heatmap.getDesignElements().get( i );
+                        writer.appendValue( htmlEscape( cs.getName() ) );
+                    }
+                    writer.endTag();
+                }
             }
         } else if ( heatmap.getDesignElements() != null ) {
             boolean first = true;
