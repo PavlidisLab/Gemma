@@ -20,11 +20,11 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
-import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
+import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.*;
@@ -35,8 +35,10 @@ import java.util.HashSet;
 /**
  * A differential expression analysis tool that executes the appropriate analysis based on the number of experimental
  * factors and factor values, as well as the block design.
+ * <p>
  * Implementations of the selected analyses; t-test, one way anova, and two way anova with and without interactions are
  * based on the details of the paper written by P. Pavlidis, Methods 31 (2003) 282-289.
+ * <p>
  * See http://www.bioinformatics.ubc.ca/pavlidis/lab/docs/reprints/anova-methods.pdf.
  *
  * @author keshav
@@ -46,10 +48,10 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
 
     private static final Log log = LogFactory.getLog( AnalysisSelectionAndExecutionServiceImpl.class );
 
-    /*
-     * We are context-aware so we can get prototype beans.
-     */
-    private ApplicationContext applicationContext;
+    @Autowired
+    private DiffExAnalyzer diffExAnalyzer;
+    @Autowired
+    private ExpressionDataMatrixService expressionDataMatrixService;
 
     @Override
     public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
@@ -60,7 +62,10 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
         }
 
-        return this.applicationContext.getBean( DiffExAnalyzer.class ).run( expressionExperiment, config );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
+                .getProcessedExpressionDataMatrix( expressionExperiment );
+
+        return diffExAnalyzer.run( expressionExperiment, dmatrix, config );
     }
 
     /**
@@ -252,7 +257,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
 
                         return null;
                     }
-                    if ( BatchInfoPopulationServiceImpl.isBatchFactor( f ) ) {
+                    if ( ExperimentalDesignUtils.isBatchFactor( f ) ) {
                         AnalysisSelectionAndExecutionServiceImpl.log
                                 .info( "One of the two factors is 'batch', not using it for an interaction" );
                         okForInteraction = false;
@@ -274,11 +279,6 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
     }
 
     @Override
-    public DiffExAnalyzer getAnalyzer() {
-        return this.applicationContext.getBean( DiffExAnalyzer.class );
-    }
-
-    @Override
     public DifferentialExpressionAnalysis analyze( ExpressionExperimentSubSet subset,
             DifferentialExpressionAnalysisConfig config ) {
         AnalysisType analyzer = this.determineAnalysis( subset, config );
@@ -287,12 +287,10 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
         }
 
-        return this.applicationContext.getBean( DiffExAnalyzer.class ).run( subset, config );
-    }
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
+                .getProcessedExpressionDataMatrix( subset.getSourceExperiment() );
 
-    @Override
-    public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
-        this.applicationContext = applicationContext;
+        return diffExAnalyzer.run( subset, dmatrix, config );
     }
 
     private Collection<ExperimentalFactor> getFactorsToUse( BioAssaySet bioAssaySet,

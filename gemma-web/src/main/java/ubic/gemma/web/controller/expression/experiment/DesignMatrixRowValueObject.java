@@ -20,7 +20,6 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.dataStructure.CountingMap;
-import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
@@ -156,7 +155,7 @@ public class DesignMatrixRowValueObject implements Serializable {
 
             for ( Iterator<ExperimentalFactor> iterator = factors.iterator(); iterator.hasNext(); ) {
                 ExperimentalFactor experimentalFactor = iterator.next();
-                if ( removeBatchFactor && BatchInfoPopulationServiceImpl.isBatchFactor( experimentalFactor ) ) {
+                if ( removeBatchFactor && ExperimentalDesignUtils.isBatchFactor( experimentalFactor ) ) {
                     iterator.remove();
                 } else if ( removeContinuous && experimentalFactor.getType().equals( FactorType.CONTINUOUS ) ) {
                     iterator.remove();

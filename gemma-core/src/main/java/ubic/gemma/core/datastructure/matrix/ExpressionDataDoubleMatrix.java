@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -212,19 +213,11 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
                 throw new UnsupportedOperationException(
                         "Can't make new data from matrix that has multiple bioassays per biomaterial" );
             }
-
             BioAssay bioAssay = bioAssaysUsedIn.iterator().next();
-
-            if ( !ee.getBioAssays().contains( bioAssay ) ) {
+            if ( !CollectionUtils.containsAny( ee.getBioAssays(), bioAssay.getSampleUsed().getAllBioAssaysUsedIn() ) ) {
                 throw new IllegalArgumentException( "Bioassays in the matrix must match those in the experiment" );
             }
-
             bioassays.add( bioAssay );
-
-        }
-
-        if ( bioassays.size() != ee.getBioAssays().size() ) {
-            throw new IllegalArgumentException( "All bioassays in the experiment must be used in the matrix" );
         }
 
         dim.setBioAssays( bioassays );

@@ -26,7 +26,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
-import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
@@ -109,7 +108,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             throw new IllegalArgumentException( "Cannot split experiments that are on more than one platform" );
         }
 
-        if ( BatchInfoPopulationServiceImpl.isBatchFactor( splitOn ) ) {
+        if ( ExperimentalDesignUtils.isBatchFactor( splitOn ) ) {
             throw new IllegalArgumentException( "Do not split experiments on 'batch'" );
         }
 

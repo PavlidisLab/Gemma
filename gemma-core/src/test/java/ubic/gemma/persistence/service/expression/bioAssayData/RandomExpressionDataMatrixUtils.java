@@ -1,15 +1,18 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.math3.distribution.*;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.*;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import java.util.ArrayList;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -79,23 +82,71 @@ public class RandomExpressionDataMatrixUtils {
         return randomExpressionMatrix( ee, qt, new TruncatedNormalDistribution( 6.25, 1.46, 0, Double.POSITIVE_INFINITY ) );
     }
 
-    public static ExpressionDataDoubleMatrix randomExpressionMatrix( ExpressionExperiment ee, QuantitationType qt, RealDistribution distribution ) {
-        int numSamples = ee.getBioAssays().size();
-        if ( numSamples == 0 ) {
-            throw new IllegalArgumentException( "ExpressionExperiment must have at least one bioassay." );
+    /**
+     * Create a random matrix with a specific sample structure.
+     */
+    public static ExpressionDataDoubleMatrix randomLog2Matrix( ExpressionExperiment ee, BioAssayDimension dimension ) {
+        QuantitationType qt = new QuantitationType();
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.AMOUNT );
+        qt.setScale( ScaleType.LOG2 );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        Set<ArrayDesign> ads = new HashSet<>();
+        List<BioMaterial> samples = new ArrayList<>( dimension.getBioAssays().size() );
+        for ( BioAssay assay : dimension.getBioAssays() ) {
+            if ( !ee.getBioAssays().contains( assay ) && !CollectionUtils.containsAny( assay.getSampleUsed().getAllBioAssaysUsedIn(), ee.getBioAssays() ) ) {
+                throw new IllegalStateException( assay + " does not belong to " + ee + "." );
+            }
+            samples.add( assay.getSampleUsed() );
+            ads.add( assay.getArrayDesignUsed() );
         }
-        int numVectors = ee.getBioAssays().iterator().next().getArrayDesignUsed().getCompositeSequences().size();
+        if ( ads.size() != 1 ) {
+            throw new IllegalStateException( "Assays must use exactly one platform." );
+        }
+        List<CompositeSequence> designElements = ads.iterator().next().getCompositeSequences().stream().sorted( Comparator.comparing( CompositeSequence::getName ) ).collect( Collectors.toList() );
+        return randomExpressionMatrix( ee, qt, designElements, samples, new TruncatedNormalDistribution( 6.25, 1.46, 0, Double.POSITIVE_INFINITY ) );
+    }
+
+    public static ExpressionDataDoubleMatrix randomExpressionMatrix( ExpressionExperiment ee, QuantitationType qt, RealDistribution distribution ) {
+        List<BioMaterial> samples = ee.getBioAssays().stream()
+                .map( BioAssay::getSampleUsed )
+                .sorted()
+                .collect( Collectors.toList() );
+        Set<ArrayDesign> ads = ee.getBioAssays().stream().map( BioAssay::getArrayDesignUsed ).collect( Collectors.toSet() );
+        if ( ads.size() != 1 ) {
+            throw new IllegalArgumentException( "ExpressionExperiment must use exactly one platform." );
+        }
+        List<CompositeSequence> designElements = ads.iterator().next().getCompositeSequences().stream()
+                .sorted()
+                .collect( Collectors.toList() );
+        return randomExpressionMatrix( ee, qt, designElements, samples, distribution );
+    }
+
+    public static ExpressionDataDoubleMatrix randomExpressionMatrix( ExpressionExperiment ee, QuantitationType qt, List<CompositeSequence> designElements, List<BioMaterial> samples, RealDistribution distribution ) {
+        int numSamples = samples.size();
+        if ( numSamples == 0 ) {
+            throw new IllegalArgumentException( "ExpressionExperiment must have at least one sample." );
+        }
+        int numVectors = designElements.size();
         if ( numVectors == 0 ) {
-            throw new IllegalArgumentException( "ExpressionExperiment must have at least one probe." );
+            throw new IllegalArgumentException( "ExpressionExperiment must have at least one design element." );
         }
         DenseDoubleMatrix<CompositeSequence, BioMaterial> matrix = new DenseDoubleMatrix<>( randomExpressionMatrix( numVectors, numSamples, distribution ) );
-        matrix.setRowNames( new ArrayList<>( ee.getBioAssays().iterator().next().getArrayDesignUsed().getCompositeSequences() ) );
-        matrix.setColumnNames( ee.getBioAssays().stream().map( BioAssay::getSampleUsed ).collect( Collectors.toList() ) );
+        matrix.setRowNames( designElements );
+        matrix.setColumnNames( samples );
         return new ExpressionDataDoubleMatrix( ee, qt, matrix );
     }
 
     private static ExpressionDataDoubleMatrix randomExpressionMatrix( ExpressionExperiment ee, QuantitationType qt, IntegerDistribution distribution ) {
-        int numSamples = ee.getBioAssays().size();
+        List<BioMaterial> samples = ee.getBioAssays().stream()
+                .map( BioAssay::getSampleUsed )
+                .sorted()
+                .collect( Collectors.toList() );
+        return randomExpressionMatrix( ee, qt, samples, distribution );
+    }
+
+    private static ExpressionDataDoubleMatrix randomExpressionMatrix( ExpressionExperiment ee, QuantitationType qt, List<BioMaterial> samples, IntegerDistribution distribution ) {
+        int numSamples = samples.size();
         if ( numSamples == 0 ) {
             throw new IllegalArgumentException( "ExpressionExperiment must have at least one bioassay." );
         }
@@ -105,7 +156,7 @@ public class RandomExpressionDataMatrixUtils {
         }
         DenseDoubleMatrix<CompositeSequence, BioMaterial> matrix = new DenseDoubleMatrix<>( randomExpressionMatrix( numVectors, numSamples, distribution ) );
         matrix.setRowNames( new ArrayList<>( ee.getBioAssays().iterator().next().getArrayDesignUsed().getCompositeSequences() ) );
-        matrix.setColumnNames( ee.getBioAssays().stream().map( BioAssay::getSampleUsed ).collect( Collectors.toList() ) );
+        matrix.setColumnNames( samples );
         return new ExpressionDataDoubleMatrix( ee, qt, matrix );
     }
 

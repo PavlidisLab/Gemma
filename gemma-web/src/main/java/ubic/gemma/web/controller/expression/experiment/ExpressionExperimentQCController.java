@@ -71,6 +71,7 @@ import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.util.DateUtil;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
+import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationHelperServiceImpl;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
@@ -613,8 +614,8 @@ public class ExpressionExperimentQCController extends BaseController {
                 value = fv + "--??";
             }
 
-            if ( value.startsWith( ExperimentalDesignUtils.BATCH_FACTOR_NAME_PREFIX ) ) {
-                value = value.replaceFirst( ExperimentalDesignUtils.BATCH_FACTOR_NAME_PREFIX, "" );
+            if ( value.startsWith( BatchInfoPopulationHelperServiceImpl.BATCH_FACTOR_NAME_PREFIX ) ) {
+                value = value.replaceFirst( BatchInfoPopulationHelperServiceImpl.BATCH_FACTOR_NAME_PREFIX, "" );
             } else {
                 value = StringUtils.abbreviate( value, maxCategoryLabelLength );
             }
@@ -843,7 +844,7 @@ public class ExpressionExperimentQCController extends BaseController {
                 .getIdMap( ee.getExperimentalDesign().getExperimentalFactors() );
         Collection<Long> continuousFactors = new HashSet<>();
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            boolean isContinous = ExperimentalDesignUtils.isContinuous( ef );
+            boolean isContinous = ef.getType().equals( FactorType.CONTINUOUS );
             if ( isContinous ) {
                 continuousFactors.add( ef.getId() );
             }

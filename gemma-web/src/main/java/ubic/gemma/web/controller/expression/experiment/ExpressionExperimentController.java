@@ -409,7 +409,7 @@ public class ExpressionExperimentController {
 
         descriptive.append( "</br>&nbsp;<b>Factors:</b>&nbsp;" );
         for ( ExperimentalFactor ef : efs ) {
-            if ( !ExperimentalDesignUtils.isBatch( ef ) ) {
+            if ( !ExperimentalDesignUtils.isBatchFactor( ef ) ) {
                 descriptive.append( ef.getName() ).append( " (" ).append( ef.getDescription() ).append( "), " );
             }
         }

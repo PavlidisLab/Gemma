@@ -333,7 +333,7 @@ public class DifferentialExpressionSearchTaskImpl
                         continue;
                     Collection<ExperimentalFactorValueObject> facts = rs.getExperimentalFactors();
                     for ( ExperimentalFactorValueObject f : facts ) {
-                        if ( ExperimentalDesignUtils.isBatch( f ) )
+                        if ( ExperimentalDesignUtils.isBatchFactor( f ) )
                             continue;
                         factorsUsed.add( f );
                     }
@@ -513,7 +513,7 @@ public class DifferentialExpressionSearchTaskImpl
 
     private boolean isBatch( DiffExResultSetSummaryValueObject resultSet ) {
         for ( ExperimentalFactorValueObject factor : resultSet.getExperimentalFactors() ) {
-            if ( ExperimentalDesignUtils.isBatch( factor ) ) {
+            if ( ExperimentalDesignUtils.isBatchFactor( factor ) ) {
                 return true;
             }
         }

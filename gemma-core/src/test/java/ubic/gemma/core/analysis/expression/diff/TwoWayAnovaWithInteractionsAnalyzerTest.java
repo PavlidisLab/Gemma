@@ -29,8 +29,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import java.util.Collection;
 import java.util.HashSet;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -41,26 +40,23 @@ import static org.junit.Assume.assumeTrue;
 public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired
-    DiffExAnalyzer analyzer = null;
+    private DiffExAnalyzer analyzer = null;
 
     @Test
     public void testTwoWayAnova() {
-
         log.debug( "Testing TwoWayAnova method in " + DiffExAnalyzer.class.getName() );
 
         assumeTrue( "Could not establish R connection.  Skipping test ...", connected );
-
-        this.configureMocks();
 
         Collection<ExperimentalFactor> factors = new HashSet<>();
         factors.add( experimentalFactorA_Area );
         factors.add( experimentalFactorB );
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFactorsToInclude( factors );
+        config.addFactorsToInclude( factors );
         config.addInteractionToInclude( factors );
         config.setModerateStatistics( false );
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, dmatrix, config );
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
 
@@ -69,14 +65,6 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
         for ( ExpressionAnalysisResultSet resultSet : resultSets ) {
             this.checkResults( resultSet );
         }
-    }
-
-    private void configureMocks() {
-
-        this.configureMockAnalysisServiceHelper();
-
-        analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
-
     }
 
     /**
@@ -125,7 +113,7 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
                 }
 
             } else {
-                assertEquals( null, resultSet.getBaselineGroup() );
+                assertNull( resultSet.getBaselineGroup() );
                 switch ( probe.getName() ) {
                     case "probe_98":
                         assertEquals( 0.7893, pvalue, 0.001 );

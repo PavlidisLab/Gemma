@@ -19,16 +19,15 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
-import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
@@ -37,10 +36,8 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * A command line interface to the {@link DifferentialExpressionAnalysis}.
@@ -57,6 +54,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     private ExpressionDataFileService expressionDataFileService;
     @Autowired
     private ExperimentalFactorService efs;
+    @Autowired
+    private MessageSource messageSource;
 
     private final List<Long> factorIds = new ArrayList<>();
     private final List<String> factorNames = new ArrayList<>();
@@ -99,42 +98,33 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         addAutoOption( options, DifferentialExpressionAnalysisEvent.class );
         addForceOption( options );
 
-        Option factors = Option.builder( "factors" ).hasArg().desc(
-                        "ID numbers, categories or names of the factor(s) to use, comma-delimited, with spaces replaced by underscores" )
-                .build();
+        options.addOption( "factors", true, "ID numbers, categories or names of the factor(s) to use, comma-delimited, with spaces replaced by underscores" );
 
-        options.addOption( factors );
+        options.addOption( "subset", true,
+                "ID number, category or name of the factor to use for subsetting the analysis; must also use with -factors. "
+                        + "If the experiment already has subsets for the factor, those will be reused." );
 
-        Option subsetFactor = Option.builder( "subset" ).hasArg().desc(
-                        "ID number, category or name of the factor to use for subsetting the analysis; must also use with -factors" )
-                .build();
-        options.addOption( subsetFactor );
+        options.addOption( "type", true,
+                "Type of analysis to perform. If omitted, the system will try to guess based on the experimental design. "
+                        + "Choices are : "
+                        + Arrays.stream( AnalysisType.values() )
+                        .map( e -> messageSource.getMessage( "AnalysisType." + e.name() + ".shortDesc", new Object[] { e }, e.name(), Locale.getDefault() ) )
+                        .collect( Collectors.joining( ", " ) )
+                        + "; default: auto-detect" );
 
-        Option analysisType = Option.builder( "type" ).hasArg().desc(
-                        "Type of analysis to perform. If omitted, the system will try to guess based on the experimental design. "
-                                + "Choices are : TWO_WAY_ANOVA_WITH_INTERACTION, "
-                                + "TWO_WAY_ANOVA_NO_INTERACTION , OWA (one-way ANOVA), TTEST, OSTTEST (one-sample t-test),"
-                                + " GENERICLM (generic LM, no interactions); default: auto-detect" )
-                .build();
-
-        options.addOption( analysisType );
-
-        Option ignoreBatchOption = Option.builder( "usebatch" ).desc(
-                        "If a 'batch' factor is available, use it. Otherwise, batch information can/will be ignored in the analysis." )
-                .build();
-
-        options.addOption( ignoreBatchOption );
+        options.addOption( "usebatch", "If a 'batch' factor is available, use it. Otherwise, batch information can/will be ignored in the analysis." );
 
         options.addOption( "nodb", "Output files only to your gemma.appdata.home (unless you also set -nofiles) instead of persisting to the database" );
 
-        options.addOption( "redo", "If using automatic analysis "
-                + "try to base analysis on previous analysis's choice of statistical model. Will re-run all analyses for the experiment" );
+        options.addOption( "redo",
+                "If using automatic analysis try to base analysis on previous analysis's choice of statistical model. "
+                        + "Will re-run all analyses for the experiment" );
 
         options.addOption( "delete", "Instead of running the analysis on the given experiments, remove the old analyses. Use with care!" );
 
-        options.addOption( "nobayes", "Do not apply empirical-Bayes moderated statistics. Default is to use eBayes" );
+        options.addOption( "nobayes", "Do not apply empirical-Bayes moderated statistics. Default is to use eBayes." );
 
-        options.addOption( "nofiles", "Don't create archive files after analysis. Default is to make them" );
+        options.addOption( "nofiles", "Don't create archive files after analysis. Default is to make them." );
 
     }
 
@@ -276,7 +266,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             }
 
             config.setAnalysisType( this.type );
-            config.setFactorsToInclude( factors );
+            config.addFactorsToInclude( factors );
             config.setSubsetFactor( subsetFactor );
 
 
@@ -284,7 +274,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
              * Interactions included by default. It's actually only complicated if there is a subset factor.
              */
             if ( type == null && factors.size() == 2 ) {
-                config.getInteractionsToInclude().add( factors );
+                config.addInteractionToInclude( factors );
             }
 
             results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, config );
@@ -302,7 +292,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
             if ( this.ignoreBatch ) {
                 for ( ExperimentalFactor ef : experimentalFactors ) {
-                    if ( !ExperimentalDesignUtils.isBatch( ef ) ) {
+                    if ( !ExperimentalDesignUtils.isBatchFactor( ef ) ) {
                         factorsToUse.add( ef );
                     }
                 }
@@ -325,7 +315,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
             } else {
 
-                config.setFactorsToInclude( factorsToUse );
+                config.addFactorsToInclude( factorsToUse );
 
                 if ( factorsToUse.size() == 2 ) {
                     // include interactions by default
@@ -370,7 +360,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 // has already implemented way of figuring out human-friendly name of factor value.
                 ExperimentalFactorValueObject fvo = new ExperimentalFactorValueObject( experimentalFactor );
 
-                if ( ignoreBatch && BatchInfoPopulationServiceImpl.isBatchFactor( experimentalFactor ) ) {
+                if ( ignoreBatch && ExperimentalDesignUtils.isBatchFactor( experimentalFactor ) ) {
                     log.info( "Ignoring batch factor:" + experimentalFactor );
                     continue;
                 }
@@ -416,7 +406,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 // has already implemented way of figuring out human-friendly name of factor value.
                 ExperimentalFactorValueObject fvo = new ExperimentalFactorValueObject( experimentalFactor );
 
-                if ( ignoreBatch && BatchInfoPopulationServiceImpl.isBatchFactor( experimentalFactor ) ) {
+                if ( ignoreBatch && ExperimentalDesignUtils.isBatchFactor( experimentalFactor ) ) {
                     log.info( "Ignoring batch factor:" + experimentalFactor );
                     continue;
                 }
@@ -447,7 +437,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                     throw new IllegalArgumentException( "Factor with id=" + factorId + " does not belong to " + ee );
                 }
 
-                if ( ignoreBatch && BatchInfoPopulationServiceImpl.isBatchFactor( factor ) ) {
+                if ( ignoreBatch && ExperimentalDesignUtils.isBatchFactor( factor ) ) {
                     log.warn( "Selected factor looks like a batch, and 'ignoreBatch' is true, skipping:"
                             + factor );
                     continue;

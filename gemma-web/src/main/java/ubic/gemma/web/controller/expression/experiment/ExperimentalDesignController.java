@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
+import ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -713,7 +713,7 @@ public class ExperimentalDesignController extends BaseController {
                  * Check for unused factorValues
                  */
                 Collection<FactorValue> usedFactorValues = new HashSet<>();
-                LinearModelAnalyzer.populateFactorValuesFromBASet( ee, ef, usedFactorValues );
+                DiffExAnalyzerUtils.populateFactorValuesFromBASet( ee, ef, usedFactorValues );
 
                 Collection<FactorValue> toDelete = new HashSet<>();
                 for ( FactorValue fv : ef.getFactorValues() ) {

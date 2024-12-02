@@ -20,6 +20,7 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -57,12 +58,11 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         super.configureTestDataForOneWayAnova();
 
-        this.configureMocks();
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = expressionExperiment.getExperimentalDesign().getExperimentalFactors();
-        config.setFactorsToInclude( factors );
+        config.addFactorsToInclude( factors );
         config.setModerateStatistics( false );
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, dmatrix, config );
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
         ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
@@ -88,7 +88,6 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         super.configureTestDataForOneWayAnova();
 
-        this.configureMocks();
         /*
          * Add a factor with three levels
          */
@@ -120,9 +119,9 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
         Collection<ExperimentalFactor> factors = new HashSet<>();
         factors.add( experimentalFactorC );
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFactorsToInclude( factors );
+        config.addFactorsToInclude( factors );
         config.setModerateStatistics( false );
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, dmatrix, config );
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
         ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
@@ -161,14 +160,5 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
             }
 
         }
-
     }
-
-    private void configureMocks() {
-
-        this.configureMockAnalysisServiceHelper();
-        analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
-
-    }
-
 }

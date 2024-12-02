@@ -29,6 +29,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 import javax.annotation.Nullable;
@@ -47,152 +48,6 @@ public class ExpressionDataMatrixColumnSort {
 
     private static final Log log = LogFactory.getLog( ExpressionDataMatrixColumnSort.class.getName() );
 
-    /**
-     * Identify the FactorValue that should be treated as 'Baseline' for each of the given factors. This is done
-     * heuristically, and if all else fails we choose arbitrarily.
-     *
-     * @param factors factors
-     * @return map
-     */
-    public static Map<ExperimentalFactor, FactorValue> getBaselineLevels( Collection<ExperimentalFactor> factors ) {
-        return ExpressionDataMatrixColumnSort.getBaselineLevels( null, factors );
-    }
-
-    /**
-     * Identify the FactorValue that should be treated as 'Baseline' for each of the given factors. This is done
-     * heuristically, and if all else fails we choose arbitrarily. For continuous factors, the minimum value is treated
-     * as baseline.
-     *
-     * @param samplesUsed These are used to make sure we don't bother using factor values as baselines if they are not
-     *                    used by any of the samples. This is important for subsets. If null, this is ignored.
-     * @param factors     factors
-     * @return map of factors to the baseline factorvalue for that factor.
-     */
-    public static Map<ExperimentalFactor, FactorValue> getBaselineLevels( @Nullable List<BioMaterial> samplesUsed,
-            Collection<ExperimentalFactor> factors ) {
-
-        Map<ExperimentalFactor, FactorValue> result = new HashMap<>();
-
-        for ( ExperimentalFactor factor : factors ) {
-
-            if ( factor.getFactorValues().isEmpty() ) {
-                throw new IllegalStateException( "Factor has no factor values: " + factor );
-            }
-
-            if ( ExperimentalDesignUtils.isContinuous( factor ) ) {
-                // then there is no baseline, but we'll take the minimum value.
-                TreeMap<Double, FactorValue> sortedVals = new TreeMap<>();
-                for ( FactorValue fv : factor.getFactorValues() ) {
-
-                    /*
-                     * Check that this factor value is used by at least one of the given samples. Only matters if this
-                     * is a subset of the full data set.
-                     */
-                    if ( samplesUsed != null && !ExpressionDataMatrixColumnSort.used( fv, samplesUsed ) ) {
-                        // this factorValue cannot be a candidate baseline for this subset.
-                        continue;
-                    }
-
-                    if ( fv.getMeasurement() == null || fv.getMeasurement().getValue() == null ) {
-                        // throw new IllegalStateException( "Continuous factors should have Measurements as values" );
-                        // This can happen if a value is missing, as nothing would be added to the BioMaterial.
-                        log.warn( "No value for continuous factor " + factor + " for a sample, will treat as NaN" );
-                        sortedVals.put( Double.NaN, fv );
-                        continue;
-                    }
-
-                    if ( fv.getMeasurement().getValue().isEmpty() ) {
-                        log.warn( "No value for continuous factor " + factor + " for a sample, will treat as NaN" );
-                        sortedVals.put( Double.NaN, fv );
-                        continue;
-                    }
-
-                    Double v = Double.parseDouble( fv.getMeasurement().getValue() );
-                    sortedVals.put( v, fv );
-                }
-
-                if ( sortedVals.isEmpty() ) {
-                    log.warn( "No values for continuous factor " + factor );
-                    continue;
-                }
-                result.put( factor, sortedVals.firstEntry().getValue() );
-
-            } else {
-
-                for ( FactorValue fv : factor.getFactorValues() ) {
-
-                    /*
-                     * Check that this factor value is used by at least one of the given samples. Only matters if this
-                     * is a subset of the full data set.
-                     */
-                    if ( samplesUsed != null && !ExpressionDataMatrixColumnSort.used( fv, samplesUsed ) ) {
-                        // this factorValue cannot be a candidate baseline for this subset.
-                        continue;
-                    }
-
-                    if ( BaselineSelection.isForcedBaseline( fv ) ) {
-                        ExpressionDataMatrixColumnSort.log.debug( "Baseline chosen: " + fv );
-                        result.put( factor, fv );
-                        break;
-                    }
-
-                    if ( BaselineSelection.isBaselineCondition( fv ) ) {
-                        if ( result.containsKey( factor ) ) {
-                            ExpressionDataMatrixColumnSort.log
-                                    .warn( "A second potential baseline was found for " + factor + ": " + fv );
-                            continue;
-                        }
-                        ExpressionDataMatrixColumnSort.log.debug( "Baseline chosen: " + fv );
-                        result.put( factor, fv );
-                    }
-                }
-
-                if ( !result.containsKey( factor ) ) { // fallback
-                    FactorValue arbitraryBaselineFV = null;
-
-                    if ( samplesUsed != null ) {
-                        // make sure we choose a fv that is actually used (see above for non-arbitrary case)
-                        for ( FactorValue fv : factor.getFactorValues() ) {
-                            for ( BioMaterial bm : samplesUsed ) {
-                                for ( FactorValue bfv : bm.getAllFactorValues() ) {
-                                    if ( fv.equals( bfv ) ) {
-                                        arbitraryBaselineFV = fv;
-                                        break;
-                                    }
-                                }
-                                if ( arbitraryBaselineFV != null )
-                                    break;
-                            }
-                            if ( arbitraryBaselineFV != null )
-                                break;
-                        }
-
-                        if ( arbitraryBaselineFV == null ) {
-                            // If we get here, we had passed in the samples in consideration but none had a value assigned.
-                            throw new IllegalStateException(
-                                    "None of the samplesUsed have a value for factor:  " + factor + " (" + factor
-                                            .getFactorValues().size() + " factor values) - ensure samples are assigned this factor" );
-                        }
-
-                    } else {
-                        // I'm not sure the use case of this line but it would only be used if we didn't pass in any samples to consider.
-                        arbitraryBaselineFV = factor.getFactorValues().iterator().next();
-                    }
-
-                    // There's no need to log this for batch factors, they are inherently arbitrary and only used
-                    // during batch correction.
-                    if ( !ExperimentalDesignUtils.isBatch( factor ) ) {
-                        ExpressionDataMatrixColumnSort.log
-                                .info( "Falling back on choosing baseline arbitrarily: " + arbitraryBaselineFV );
-                    }
-                    result.put( factor, arbitraryBaselineFV );
-                }
-            }
-        }
-
-        return result;
-
-    }
 
     public static <R> DoubleMatrix<R, BioAssay> orderByExperimentalDesign( DoubleMatrix<R, BioAssay> mat ) {
         return ExpressionDataMatrixColumnSort.orderByExperimentalDesign( mat, null );
@@ -208,9 +63,9 @@ public class ExpressionDataMatrixColumnSort {
             start.add( bioAssay.getSampleUsed() );
             bm2ba.put( bioAssay.getSampleUsed(), bioAssay );
         }
-        List<BioMaterial> bm = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( start, null, primaryFactor );
+        ExpressionDataMatrixColumnSort.orderByExperimentalDesign( start, null, primaryFactor );
         List<BioAssay> newBioAssayOrder = new ArrayList<>();
-        for ( BioMaterial bioMaterial : bm ) {
+        for ( BioMaterial bioMaterial : start ) {
             assert bm2ba.containsKey( bioMaterial );
             newBioAssayOrder.add( bm2ba.get( bioMaterial ) );
         }
@@ -219,7 +74,7 @@ public class ExpressionDataMatrixColumnSort {
 
 
     public static List<BioMaterial> orderByExperimentalDesign( BulkExpressionDataMatrix<?> mat ) {
-        return ExpressionDataMatrixColumnSort.orderByExperimentalDesign( mat, null );
+        return ExpressionDataMatrixColumnSort.orderByExperimentalDesign( mat, ( ExperimentalFactor ) null );
     }
 
     /**
@@ -228,22 +83,21 @@ public class ExpressionDataMatrixColumnSort {
      */
     public static List<BioMaterial> orderByExperimentalDesign( BulkExpressionDataMatrix<?> mat, @Nullable ExperimentalFactor primaryFactor ) {
         List<BioMaterial> start = ExpressionDataMatrixColumnSort.getBms( mat );
+        ExpressionDataMatrixColumnSort.orderByExperimentalDesign( start, null, primaryFactor );
+        return start;
+    }
 
-        List<BioMaterial> ordered = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( start, null, primaryFactor );
-
-        assert ordered.size() == start.size() : "Expected " + start.size() + ", got " + ordered.size();
-
-        return ordered;
-
+    public static List<BioMaterial> orderByExperimentalDesign( BulkExpressionDataMatrix<?> dmatrix, Collection<ExperimentalFactor> factors ) {
+        List<BioMaterial> bms = getBms( dmatrix );
+        orderByExperimentalDesign( bms, factors, null );
+        return bms;
     }
 
     /**
      * @param start BioMaterials to sort
-     * @return bio materials
      */
-    public static List<BioMaterial> orderByExperimentalDesign( List<BioMaterial> start,
-            Collection<ExperimentalFactor> factors ) {
-        return ExpressionDataMatrixColumnSort.orderByExperimentalDesign( start, factors, null );
+    public static void orderByExperimentalDesign( List<BioMaterial> start, Collection<ExperimentalFactor> factors ) {
+        orderByExperimentalDesign( start, factors, null );
     }
 
     /**
@@ -251,12 +105,10 @@ public class ExpressionDataMatrixColumnSort {
      * @param start    BioMaterials to sort
      * @param factors, can be null
      * @param primaryFactor to start with, can be null
-     * @return bio materials
      */
-    public static List<BioMaterial> orderByExperimentalDesign( List<BioMaterial> start,
-            @Nullable Collection<ExperimentalFactor> factors, @Nullable ExperimentalFactor primaryFactor ) {
+    public static void orderByExperimentalDesign( List<BioMaterial> start, @Nullable Collection<ExperimentalFactor> factors, @Nullable ExperimentalFactor primaryFactor ) {
         if ( start.size() == 1 ) {
-            return start;
+            return;
         }
 
         Collection<ExperimentalFactor> unsortedFactors;
@@ -268,14 +120,14 @@ public class ExpressionDataMatrixColumnSort {
         if ( unsortedFactors.isEmpty() ) {
             ExpressionDataMatrixColumnSort.log.debug( "No experimental design, sorting by sample name" );
             ExpressionDataMatrixColumnSort.orderByName( start );
-            return start;
+            return;
         }
 
         // sort factors: which one do we want to sort by first
         List<ExperimentalFactor> sortedFactors = ExpressionDataMatrixColumnSort
                 .orderFactorsByExperimentalDesign( start, unsortedFactors, primaryFactor );
         // sort biomaterials using sorted factors
-        return orderBiomaterialsBySortedFactors( start, sortedFactors );
+        orderBiomaterialsBySortedFactors( start, sortedFactors );
     }
 
     private static void orderByName( List<BioMaterial> start ) {
@@ -401,7 +253,7 @@ public class ExpressionDataMatrixColumnSort {
             /*
              * Always push 'batch' down the list
              */
-            if ( factors.size() > 1 && ExperimentalDesignUtils.isBatch( ef ) ) {
+            if ( factors.size() > 1 && ExperimentalDesignUtils.isBatchFactor( ef ) ) {
                 continue;
             }
 
@@ -563,7 +415,7 @@ public class ExpressionDataMatrixColumnSort {
             return bms;
         }
 
-        if ( !ExperimentalDesignUtils.isContinuous( ef ) ) {
+        if ( !ef.getType().equals( FactorType.CONTINUOUS ) ) {
             ExpressionDataMatrixColumnSort.sortByControl( factorValues );
         } else {
             ExpressionDataMatrixColumnSort.sortIfMeasurement( factorValues );
@@ -784,20 +636,4 @@ public class ExpressionDataMatrixColumnSort {
                             }
                         } ) ) ) ) );
     }
-
-    /**
-     * @return true if the factorvalue is used by at least one of the samples.
-     */
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted") // Better semantics
-    private static boolean used( FactorValue fv, List<BioMaterial> samplesUsed ) {
-        for ( BioMaterial bm : samplesUsed ) {
-            for ( FactorValue bfv : bm.getAllFactorValues() ) {
-                if ( fv.equals( bfv ) ) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
 }

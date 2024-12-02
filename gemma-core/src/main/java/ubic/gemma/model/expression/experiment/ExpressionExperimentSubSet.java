@@ -78,8 +78,11 @@ public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredCh
 
     public static final class Factory {
 
-        public static ExpressionExperimentSubSet newInstance() {
-            return new ExpressionExperimentSubSet();
+        public static ExpressionExperimentSubSet newInstance( String name, ExpressionExperiment sourceExperiment ) {
+            ExpressionExperimentSubSet subset = new ExpressionExperimentSubSet();
+            subset.setName( name );
+            subset.setSourceExperiment( sourceExperiment );
+            return subset;
         }
 
     }

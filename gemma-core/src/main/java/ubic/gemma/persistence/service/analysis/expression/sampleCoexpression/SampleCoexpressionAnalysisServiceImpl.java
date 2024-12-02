@@ -28,8 +28,8 @@ import ubic.basecode.math.MatrixRowStats;
 import ubic.basecode.math.MatrixStats;
 import ubic.basecode.math.linearmodels.DesignMatrix;
 import ubic.basecode.math.linearmodels.LeastSquaresFit;
+import ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
-import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
@@ -47,13 +47,17 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
+import static ubic.gemma.model.expression.experiment.ExperimentalDesignUtils.buildRDesignMatrix;
+import static ubic.gemma.model.expression.experiment.ExperimentalDesignUtils.getBaselineConditions;
 import static ubic.gemma.persistence.util.ByteArrayUtils.bytesToDoubleMatrix;
 import static ubic.gemma.persistence.util.ByteArrayUtils.doubleMatrixToBytes;
 
@@ -329,7 +333,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         if ( !importantFactors.isEmpty() ) {
             SampleCoexpressionAnalysisServiceImpl.log.info( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_REGRESSING );
             DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-            config.setFactorsToInclude( importantFactors );
+            config.addFactorsToInclude( importantFactors );
             mat = this.regressionResiduals( mat, config );
         }
         return mat;
@@ -368,7 +372,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
             return null;
         }
 
-        List<ExperimentalFactor> factors = config.getFactorsToInclude();
+        List<ExperimentalFactor> factors = ExperimentalDesignUtils.getOrderedFactors( config.getFactorsToInclude() );
 
         /*
          * Using ordered samples isn't necessary, it doesn't matter so long as the design matrix is in the same order.
@@ -383,16 +387,13 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         }
 
         // set up design matrix
-        Map<ExperimentalFactor, FactorValue> baselineConditions = ExperimentalDesignUtils
-                .getBaselineConditions( samplesUsed, factors );
 
         ObjectMatrix<String, String, Object> designMatrix;
         try {
             /*
              * A failure here can mean that the design matrix could not be built because of missing values; see #664
              */
-            designMatrix = ExperimentalDesignUtils
-                    .buildDesignMatrix( factors, samplesUsed, baselineConditions );
+            designMatrix = buildRDesignMatrix( factors, samplesUsed, getBaselineConditions( samplesUsed, factors ), false );
         } catch ( Exception e ) {
             return null;
         }
@@ -400,7 +401,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
         ExpressionDataDoubleMatrix dmatrix = new ExpressionDataDoubleMatrix( matrix, samplesUsed, bad );
         DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.getMatrix();
-        DoubleMatrix<String, String> sNamedMatrix = LinearModelAnalyzer.makeDataMatrix( designMatrix, namedMatrix );
+        DoubleMatrix<String, String> sNamedMatrix = DiffExAnalyzerUtils.makeDataMatrix( designMatrix, namedMatrix );
 
         LeastSquaresFit fit = new LeastSquaresFit( properDesignMatrix, sNamedMatrix );
 

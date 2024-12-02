@@ -30,7 +30,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
-import ubic.gemma.core.datastructure.matrix.*;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataBooleanMatrix;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixBuilder;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -45,6 +48,8 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import javax.annotation.Nullable;
 import java.util.*;
+
+import static ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort.orderByExperimentalDesign;
 
 /**
  * Transactional methods.
@@ -97,8 +102,8 @@ class ProcessedExpressionDataVectorHelperServiceImpl
         /*
          * Get the ordering we want.
          */
-        List<BioMaterial> orderedSamples = ExpressionDataMatrixColumnSort
-                .orderByExperimentalDesign( originalSamples, ee.getExperimentalDesign().getExperimentalFactors() );
+        List<BioMaterial> orderedSamples = new ArrayList<>( originalSamples );
+        orderByExperimentalDesign( originalSamples, ee.getExperimentalDesign().getExperimentalFactors() );
 
         if ( originalSamples.equals( orderedSamples ) ) {
             log.info( ee + " already has correct ordering; no need to reorder processed vectors." );

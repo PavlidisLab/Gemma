@@ -34,6 +34,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -136,7 +137,7 @@ public class DiffExWithInvalidInteractionTest extends AbstractGeoServiceTest {
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.getFactorsToInclude().add( timepoint );
         config.getFactorsToInclude().add( treatment );
-        config.addInteractionToInclude( treatment, timepoint );
+        config.addInteractionToInclude( Arrays.asList( treatment, timepoint ) );
 
         Collection<DifferentialExpressionAnalysis> result = analyzer.analyze( ee, config );
         assertEquals( 1, result.size() );

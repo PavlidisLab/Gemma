@@ -21,10 +21,10 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SingletonBatchInvalidEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.UninformativeFASTQHeadersForBatchingEvent;
+import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
@@ -41,6 +41,11 @@ import java.util.*;
  */
 @Service
 public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulationHelperService {
+
+    /**
+     * Prefix to use when generating batch factor names.
+     */
+    public static final String BATCH_FACTOR_NAME_PREFIX = "Batch_";
 
     /**
      * For RNA-seq, the minimum number of samples per batch, if possible
@@ -896,9 +901,9 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                 fv.setValue( batchId );
                 Set<Statement> chars = new HashSet<>();
                 Statement c = Statement.Factory.newInstance();
-                c.setCategory( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME );
+                c.setCategory( Categories.BLOCK.getCategory() );
+                c.setCategoryUri( Categories.BLOCK.getCategoryUri() );
                 c.setSubject( batchId );
-                c.setCategoryUri( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_URI );
                 c.setEvidenceCode( GOEvidenceCode.IIA );
 
                 chars.add( c );
@@ -944,9 +949,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     }
 
     private String formatBatchName( int batchNum, DateFormat df, Date d ) {
-        String batchDateString;
-        batchDateString = ExperimentalDesignUtils.BATCH_FACTOR_NAME_PREFIX + StringUtils.leftPad( Integer.toString( batchNum ), 2, "0" ) + "_" + df.format( DateUtils.truncate( d, Calendar.HOUR ) );
-        return batchDateString;
+        return BATCH_FACTOR_NAME_PREFIX + StringUtils.leftPad( Integer.toString( batchNum ), 2, "0" ) + "_" + df.format( DateUtils.truncate( d, Calendar.HOUR ) );
     }
 
     /**
@@ -961,11 +964,10 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     }
 
     private Characteristic getBatchFactorCategory() {
-        Characteristic c = Characteristic.Factory.newInstance();
-        c.setCategory( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME );
-        c.setValue( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME );
-        c.setValueUri( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_URI );
-        c.setCategoryUri( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_URI );
+        Characteristic c = Characteristic.Factory.newInstance( Categories.BLOCK );
+        // FIXME: this is not necessary, the category is enough
+        c.setValue( Categories.BLOCK.getCategory() );
+        c.setValueUri( Categories.BLOCK.getCategoryUri() );
         c.setEvidenceCode( GOEvidenceCode.IIA );
         return c;
     }

@@ -27,6 +27,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.DataUpdater;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
@@ -82,6 +84,9 @@ public class DiffExTest extends AbstractGeoServiceTest {
 
     @Autowired
     private DataUpdater dataUpdater;
+
+    @Autowired
+    private ExpressionDataMatrixService expressionDataMatrixService;
 
     /* fixtures */
     private ExpressionExperiment ee;
@@ -160,6 +165,10 @@ public class DiffExTest extends AbstractGeoServiceTest {
             assertEquals( 4, v.getBioAssays().size() );
         }
 
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
+        assertEquals( 199, dmatrix.rows() );
+        assertEquals( 4, dmatrix.columns() );
+
         // I confirmed that log2cpm is working same as voom here; not bothering to test directly.
 
         TestUtils.assertBAs( ee, targetArrayDesign, "GSM718709", 320383 );
@@ -168,8 +177,8 @@ public class DiffExTest extends AbstractGeoServiceTest {
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.setUseWeights( false );
         config.setModerateStatistics( false );
-        config.setFactorsToInclude( ee.getExperimentalDesign().getExperimentalFactors() );
-        Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( ee, config );
+        config.addFactorsToInclude( ee.getExperimentalDesign().getExperimentalFactors() );
+        Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( ee, dmatrix, config );
         assertNotNull( analyses );
         assertEquals( 1, analyses.size() );
         DifferentialExpressionAnalysis results = analyses.iterator().next();
@@ -192,9 +201,9 @@ public class DiffExTest extends AbstractGeoServiceTest {
         // With weights
         config = new DifferentialExpressionAnalysisConfig();
         config.setUseWeights( true ); // <----
-        config.setFactorsToInclude( ee.getExperimentalDesign().getExperimentalFactors() );
+        config.addFactorsToInclude( ee.getExperimentalDesign().getExperimentalFactors() );
         config.setModerateStatistics( false );
-        analyses = analyzer.run( ee, config );
+        analyses = analyzer.run( ee, dmatrix, config );
         results = analyses.iterator().next();
         resultSet = results.getResultSets().iterator().next();
         for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
@@ -259,9 +268,10 @@ public class DiffExTest extends AbstractGeoServiceTest {
         }
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFactorsToInclude( ee.getExperimentalDesign().getExperimentalFactors() );
+        config.addFactorsToInclude( ee.getExperimentalDesign().getExperimentalFactors() );
         config.setModerateStatistics( false );
-        Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( ee, config );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
+        Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( ee, dmatrix, config );
         assertNotNull( analyses );
         assertEquals( 1, analyses.size() );
 

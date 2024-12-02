@@ -25,7 +25,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.preprocess.SplitExperimentService;
-import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -112,7 +112,7 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
                 ExperimentalFactorValueObject fvo = new ExperimentalFactorValueObject( experimentalFactor );
 
                 // do not attempt to switch on 'batch'
-                if ( BatchInfoPopulationServiceImpl.isBatchFactor( experimentalFactor ) ) {
+                if ( ExperimentalDesignUtils.isBatchFactor( experimentalFactor ) ) {
                     continue;
                 }
 
@@ -137,7 +137,7 @@ public class SplitExperimentCli extends ExpressionExperimentManipulatingCLI {
             throw new IllegalArgumentException( "Factor with id=" + factorId + " does not belong to " + ee );
         }
 
-        if ( BatchInfoPopulationServiceImpl.isBatchFactor( factor ) ) {
+        if ( ExperimentalDesignUtils.isBatchFactor( factor ) ) {
             throw new IllegalArgumentException( "Selected factor looks like batch, split not allowed, choose another factor instead" );
         }
 

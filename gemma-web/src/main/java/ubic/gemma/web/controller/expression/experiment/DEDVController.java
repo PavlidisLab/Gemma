@@ -134,7 +134,7 @@ public class DEDVController {
                 factorColoursMap.put( factor, new LinkedList<String>() );
             }
 
-            if ( ExperimentalDesignUtils.isContinuous( factor ) ) {
+            if ( factor.getType().equals( FactorType.CONTINUOUS ) ) {
 
                 int numValues = factor.getFactorValues().size();
 
@@ -1381,13 +1381,13 @@ public class DEDVController {
 
     private String getFacValsStr( Map<Long, FactorValue> fvs, ExperimentalFactor factor, Double valueOrId ) {
         String facValsStr;
-        if ( ExperimentalDesignUtils.isContinuous( factor ) ) {
+        if ( factor.getType().equals( FactorType.CONTINUOUS ) ) {
             /*
              * FIXME continuous factors need a different color scheme.
              */
             log.debug( "Experiment has continuous factor." );
             facValsStr = valueOrId.toString();
-        } else if ( ExperimentalDesignUtils.isBatch( factor ) ) {
+        } else if ( ExperimentalDesignUtils.isBatchFactor( factor ) ) {
             /*
              * FIXME for batch, also treat like they are continuous. There can be many so we tend to run out of
              * colors.

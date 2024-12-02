@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -23,10 +23,10 @@ import ubic.gemma.core.analysis.expression.diff.AnalysisSelectionAndExecutionSer
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl;
-import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
-import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.AbstractTask;
+import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -113,14 +113,14 @@ public class DifferentialExpressionAnalysisTaskImpl
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         boolean rnaSeq = expressionExperimentService.isRNASeq( ee );
         config.setUseWeights( rnaSeq );
-        config.setFactorsToInclude( factors );
+        config.addFactorsToInclude( factors );
         config.setSubsetFactor( taskCommand.getSubsetFactor() );
         if ( taskCommand.isIncludeInteractions() && factors.size() == 2 ) {
             /*
              * We should not include 'batch' in an interaction. But I don't want to enforce that here.
              */
             for ( ExperimentalFactor ef : factors ) {
-                if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
+                if ( ExperimentalDesignUtils.isBatchFactor( ef ) ) {
                     log.warn( "Batch is included in the interaction!" );
                 }
             }

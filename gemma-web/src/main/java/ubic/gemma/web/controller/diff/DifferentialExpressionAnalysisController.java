@@ -24,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import ubic.gemma.core.analysis.expression.diff.AnalysisSelectionAndExecutionService;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
-import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.core.job.TaskRunningService;
@@ -40,6 +39,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.stream.Collectors;
 
 /**
  * A controller to run differential expression analysis either locally or in a space.
@@ -71,8 +71,9 @@ public class DifferentialExpressionAnalysisController {
         ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id,
                 EntityNotFoundException::new, "Cannot access experiment with id=" + id );
 
-        Collection<ExperimentalFactor> factorsWithoutBatch = ExperimentalDesignUtils
-                .factorsWithoutBatch( ee.getExperimentalDesign().getExperimentalFactors() );
+        Collection<ExperimentalFactor> factorsWithoutBatch = ee.getExperimentalDesign().getExperimentalFactors().stream()
+                .filter( f -> !ExperimentalDesignUtils.isBatchFactor( f ) )
+                .collect( Collectors.toSet() );
 
         AnalysisType analyzer = this.analysisSelectionAndExecutionService
                 .determineAnalysis( ee, factorsWithoutBatch, null /* subset */, true /* include interactions */ );
@@ -157,7 +158,9 @@ public class DifferentialExpressionAnalysisController {
         boolean rnaSeq = expressionExperimentService.isRNASeq( ee );
         cmd.setUseWeights( rnaSeq );
         cmd.setFactors(
-                ExperimentalDesignUtils.factorsWithoutBatch( ee.getExperimentalDesign().getExperimentalFactors() ) );
+                ee.getExperimentalDesign().getExperimentalFactors().stream()
+                        .filter( f -> !ExperimentalDesignUtils.isBatchFactor( f ) )
+                        .collect( Collectors.toSet() ) );
         cmd.setIncludeInteractions( true ); // if possible, might get dropped.
 
         return taskRunningService.submitTaskCommand( cmd );
@@ -219,7 +222,7 @@ public class DifferentialExpressionAnalysisController {
         cmd.setSubsetFactor( subsetFactor );
 
         for ( ExperimentalFactor ef : factors ) {
-            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
+            if ( ExperimentalDesignUtils.isBatchFactor( ef ) ) {
                 /*
                  * This is a policy and I am pretty sure it makes sense!
                  */

@@ -122,7 +122,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
-        config.setFactorsToInclude( factors );
+        config.addFactorsToInclude( factors );
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, config );
         assertFalse( analyses.isEmpty() );
@@ -152,7 +152,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         ExperimentalFactor subsetFactor = factors[1];
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFactorsToInclude( factorsToUse );
+        config.addFactorsToInclude( factorsToUse );
         config.setSubsetFactor( subsetFactor );
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, config );
@@ -170,7 +170,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assertNotNull( ee.getId() );
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
-        config.setFactorsToInclude( factors );
+        config.addFactorsToInclude( factors );
         config.addInteractionToInclude( factors );
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, config );
@@ -276,12 +276,10 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
 
-        config.setFactorsToInclude( factors );
+        config.addFactorsToInclude( factors );
         config.setSubsetFactor( subsetFactor );
 
-        HashSet<Collection<ExperimentalFactor>> ifacts = new HashSet<>();
-        ifacts.add( factors );
-        config.setInteractionsToInclude( ifacts );
+        config.addInteractionToInclude( factors );
 
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, config );
@@ -326,7 +324,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         prepareGSE1611();
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
-        config.setFactorsToInclude( factors );
+        config.addFactorsToInclude( factors );
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, config );
         for ( DifferentialExpressionAnalysis analysis : analyses ) {
@@ -382,7 +380,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         // analyze
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
-        config.setFactorsToInclude( factors );
+        config.addFactorsToInclude( factors );
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, config );
         assertFalse( analyses.isEmpty() );

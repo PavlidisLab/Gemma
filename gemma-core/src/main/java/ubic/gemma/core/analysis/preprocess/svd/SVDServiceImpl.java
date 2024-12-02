@@ -468,7 +468,7 @@ public class SVDServiceImpl implements SVDService {
                 continue;
             }
 
-            if ( ExperimentalDesignUtils.isContinuous( ef ) ) {
+            if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
                 double factorCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( fvs ) );
                 svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
                 svo.setPCFactorCorrelationPval( componentNumber, ef,

@@ -23,12 +23,9 @@ import org.apache.commons.math3.stat.inference.ChiSquareTest;
 import org.springframework.stereotype.Service;
 import ubic.basecode.math.KruskalWallis;
 import ubic.gemma.core.analysis.preprocess.svd.SVDServiceImpl;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.FactorValue;
 
 import java.util.*;
 
@@ -82,7 +79,7 @@ public class BatchConfoundUtils {
         Map<Long, Integer> batchIndexes = new HashMap<>();
         Collection<Long> usedBatches = new HashSet<>(); // track batches these samples actually occupy
         for ( ExperimentalFactor ef : bioMaterialFactorMap.keySet() ) {
-            if ( ExperimentalDesignUtils.isBatch( ef ) ) {
+            if ( ExperimentalDesignUtils.isBatchFactor( ef ) ) {
                 batchFactor = ef;
 
                 Map<Long, Double> bmToFv = bioMaterialFactorMap.get( batchFactor );
@@ -137,7 +134,7 @@ public class BatchConfoundUtils {
             int df = 0;
 
             int numBatches = batchFactor.getFactorValues().size();
-            if ( ExperimentalDesignUtils.isContinuous( ef ) ) {
+            if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
 
                 DoubleArrayList factorValues = new DoubleArrayList( numBioMaterials );
                 factorValues.setSize( numBioMaterials );

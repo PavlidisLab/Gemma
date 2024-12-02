@@ -27,8 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired
-    AnalysisSelectionAndExecutionService analysis = null;
-    @Autowired
     private DiffExAnalyzer analyzer;
 
     /*
@@ -40,7 +38,7 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
      */
     @Test
     public void testDetermineAnalysisA() {
-        this.configureMocks();
+        // TODO
     }
 
     /*
@@ -53,11 +51,6 @@ public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfiguratio
     @Test
     public void testDetermineAnalysisB() throws Exception {
         super.configureTestDataForTwoWayAnovaWithoutInteractions();
-        this.configureMocks();
+        // TODO
     }
-
-    private void configureMocks() {
-        this.configureMockAnalysisServiceHelper();
-    }
-
 }

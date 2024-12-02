@@ -17,6 +17,7 @@ import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
+import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
@@ -87,8 +88,7 @@ public class ExpressionExperimentBatchInformationServiceTest extends AbstractJUn
         when( svdResult.getVariances() ).thenReturn( new double[] { 0.99 } );
         ExperimentalFactor batchFactor = new ExperimentalFactor();
         batchFactor.setName( ExperimentalDesignUtils.BATCH_FACTOR_NAME );
-        Characteristic c = Characteristic.Factory.newInstance();
-        c.setCategory( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME );
+        Characteristic c = Characteristic.Factory.newInstance( Categories.BLOCK );
         batchFactor.setCategory( c );
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );
@@ -109,8 +109,7 @@ public class ExpressionExperimentBatchInformationServiceTest extends AbstractJUn
     public void testGetBatchConfounds() {
         ExperimentalFactor batchFactor = new ExperimentalFactor();
         batchFactor.setName( ExperimentalDesignUtils.BATCH_FACTOR_NAME );
-        Characteristic c = Characteristic.Factory.newInstance();
-        c.setCategory( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME );
+        Characteristic c = Characteristic.Factory.newInstance( Categories.BLOCK );
         batchFactor.setCategory( c );
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );

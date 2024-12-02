@@ -28,7 +28,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchi
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationMissingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SingleBatchDeterminationEvent;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -73,20 +72,6 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      */
     private static final String GEMMA_FASTQ_HEADERS_DIR_CONFIG = "gemma.fastq.headers.dir";
     private static final Log log = LogFactory.getLog( BatchInfoPopulationServiceImpl.class );
-
-    /**
-     * @param  ef ef
-     * @return true if the factor seems to be a 'batch' factor.
-     */
-    public static boolean isBatchFactor( ExperimentalFactor ef ) {
-        Characteristic c = ef.getCategory();
-
-        if ( c == null )
-            return false;
-
-        return ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME.equals( c.getCategory() )
-                || ExperimentalDesignUtils.BATCH_FACTOR_NAME.equals( ef.getName() );
-    }
 
     @Autowired
     private AuditEventService auditEventService;
@@ -412,7 +397,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
         for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
 
-            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
+            if ( ExperimentalDesignUtils.isBatchFactor( ef ) ) {
                 toRemove = ef;
                 break;
                 /*

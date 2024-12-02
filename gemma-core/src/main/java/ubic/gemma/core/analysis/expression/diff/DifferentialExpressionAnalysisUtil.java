@@ -169,35 +169,6 @@ public class DifferentialExpressionAnalysisUtil {
         return replicatesok;
     }
 
-    /**
-     * Returns a List of all the different types of biomaterials across all bioassays in the experiment.
-     *
-     * @param matrix matrix
-     * @return list of biomaterials
-     */
-    public static List<BioMaterial> getBioMaterialsForBioAssays( BulkExpressionDataMatrix<?> matrix ) {
-
-        List<BioMaterial> biomaterials = new ArrayList<>();
-
-        Collection<BioAssay> assays = new ArrayList<>();
-        for ( int i = 0; i < matrix.columns(); i++ ) {
-            Collection<BioAssay> bioassays = matrix.getBioAssaysForColumn( i );
-            /*
-             * Note: we could use addAll here. The mapping of bioassays to biomaterials is many-to-one (e.g., when the
-             * HGU133A and B arrays were both used on the same set of samples).
-             */
-            assays.add( bioassays.iterator().next() );
-        }
-
-        for ( BioAssay assay : assays ) {
-            BioMaterial material = assay.getSampleUsed();
-
-            biomaterials.add( material );
-
-        }
-
-        return biomaterials;
-    }
 
     /**
      * Returns true if all of the following conditions hold true: each biomaterial has more than 2 factor values, each

@@ -25,8 +25,9 @@ import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
 import ubic.basecode.math.MatrixStats;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
+import ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -43,6 +44,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectType;
+import static ubic.gemma.model.expression.experiment.ExperimentalDesignUtils.buildDesignMatrix;
 
 /**
  * Methods for correcting batch effects.
@@ -248,7 +250,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
 
         ExpressionDataDoubleMatrix finalMatrix = originalDataMatrix;
         if ( columnsToKeep.size() < originalDataMatrix.columns() ) {
-            finalMatrix = new ExpressionDataDoubleMatrix( originalDataMatrix, columnsToKeep, LinearModelAnalyzer.createBADMap( columnsToKeep ) );
+            finalMatrix = new ExpressionDataDoubleMatrix( originalDataMatrix, columnsToKeep, DiffExAnalyzerUtils.createBADMap( columnsToKeep ) );
         }
         return finalMatrix;
     }
@@ -258,7 +260,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
 
         ExperimentalFactor batch = null;
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            if ( ExperimentalDesignUtils.isBatch( ef ) ) {
+            if ( ExperimentalDesignUtils.isBatchFactor( ef ) ) {
                 batch = ef;
                 break;
             }
@@ -295,7 +297,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
 
     @Nullable
     private ExpressionDataDoubleMatrix doComBat( ExpressionExperiment ee, ExpressionDataDoubleMatrix
-            originalDataMatrix,
+                    originalDataMatrix,
             ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design ) {
         ObjectMatrix<BioMaterial, String, Object> designU = this.convertFactorValuesToStrings( design );
         DoubleMatrix<CompositeSequence, BioMaterial> matrix = originalDataMatrix.getMatrix();
@@ -384,10 +386,13 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
             // we're using this in a mode where we don't care about the order.
             orderedSamples = ee.getBioAssays().stream().map( BioAssay::getSampleUsed ).collect( Collectors.toList() );
         } else {
-            orderedSamples = ExperimentalDesignUtils.getOrderedSamples( mat, retainedFactors );
+            List<BioMaterial> biomaterials = new ArrayList<>();
+            for ( int i = 0; i < mat.columns(); i++ ) {
+                biomaterials.add( mat.getBioMaterialForColumn( i ) );
+            }
+            orderedSamples = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( ( ExpressionDataDoubleMatrix ) biomaterials, retainedFactors );
         }
-        return ExperimentalDesignUtils.sampleInfoMatrix( retainedFactors, orderedSamples,
-                ExperimentalDesignUtils.getBaselineConditions( orderedSamples, retainedFactors ) );
+        return buildDesignMatrix( retainedFactors, orderedSamples, true );
     }
 
     /**

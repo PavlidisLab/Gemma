@@ -174,7 +174,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = analysisSelectionAndExecutionService
                     .analyze( expressionExperiment, config );
 
-            if ( config.getPersist() ) {
+            if ( config.isPersist() ) {
                 diffExpressionAnalyses = this.persistAnalyses( expressionExperiment, diffExpressionAnalyses, config );
             } else {
                 DifferentialExpressionAnalyzerServiceImpl.log.info( "Will not persist results" );
@@ -227,7 +227,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         log.info( "Done persisting, creating archive file" );
 
         // we do this here because now we have IDs for everything.
-        if ( config.getMakeArchiveFile() ) {
+        if ( config.isMakeArchiveFile() ) {
             try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeDiffExAnalysisArchiveFile( analysis, config ) ) {
                 log.info( "Create archive file at " + lockedPath.getPath() );
             } catch ( IOException e ) {
@@ -297,7 +297,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     private boolean configsAreEqual( ExpressionAnalysisResultSet temprs, ExpressionAnalysisResultSet oldrs ) {
-        return temprs.getBaselineGroup().equals( oldrs.getBaselineGroup() )
+        return Objects.equals( temprs.getBaselineGroup(), oldrs.getBaselineGroup() )
                 && temprs.getExperimentalFactors().size() == oldrs.getExperimentalFactors().size() && temprs
                 .getExperimentalFactors().containsAll( oldrs.getExperimentalFactors() );
     }
@@ -320,7 +320,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
              */
             if ( oldfactors.size() == 2 ) {
                 DifferentialExpressionAnalyzerServiceImpl.log.info( "Including interaction term" );
-                config.getInteractionsToInclude().add( oldfactors );
+                config.addInteractionToInclude( oldfactors );
             }
 
         }

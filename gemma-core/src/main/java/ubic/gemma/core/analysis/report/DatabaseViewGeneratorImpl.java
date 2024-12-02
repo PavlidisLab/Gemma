@@ -280,7 +280,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
                             continue;
                         }
 
-                        if ( ExperimentalDesignUtils.isBatch( baselineGroup.getExperimentalFactor() ) ) {
+                        if ( ExperimentalDesignUtils.isBatchFactor( baselineGroup.getExperimentalFactor() ) ) {
                             continue;
                         }
 

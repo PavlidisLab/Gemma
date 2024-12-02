@@ -1289,13 +1289,14 @@ public class ExpressionExperimentDaoImpl
 
         String queryString = "select e.id,count(distinct ef.id) from ExpressionExperiment e inner join e.bioAssays ba"
                 + " inner join ba.sampleUsed bm inner join bm.factorValues fv inner join fv.experimentalFactor ef "
-                + " inner join ef.category cat where e.id in (:ids) and cat.category != (:category) and ef.name != (:name) group by e.id";
+                + " inner join ef.category cat where e.id in (:ids) and cat.category != (:category) and cat.categoryUri != (:categoryUri) and ef.name != (:name) group by e.id";
 
         //noinspection unchecked
         List<Object[]> res = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameterList( "ids", optimizeParameterList( ids ) ) // Set ids
-                .setParameter( "category", ExperimentalFactorService.BATCH_FACTOR_CATEGORY_NAME ) // Set batch category
-                .setParameter( "name", ExperimentalFactorService.BATCH_FACTOR_NAME ) // set batch name
+                .setParameter( "category", Categories.BLOCK.getCategory() ) // Set batch category
+                .setParameter( "categoryUri", Categories.BLOCK.getCategoryUri() ) // Set batch category
+                .setParameter( "name", ExperimentalDesignUtils.BATCH_FACTOR_NAME ) // set batch name
                 .list();
 
         for ( Object[] ro : res ) {

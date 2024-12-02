@@ -95,6 +95,18 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild {
         this.bioAssaysUsedIn = bioAssaysUsedIn;
     }
 
+    /**
+     * Obtain all the assays used in the hierarchy of biomaterials via {@link #getSourceBioMaterial()}.
+     * @see BioMaterial#getBioAssaysUsedIn()
+     */
+    public Set<BioAssay> getAllBioAssaysUsedIn() {
+        Set<BioAssay> assays = new HashSet<>();
+        visitBioMaterials( this, bm -> {
+            assays.addAll( bm.getBioAssaysUsedIn() );
+        } );
+        return unmodifiableSet( assays );
+    }
+
     @IndexedEmbedded
     public Set<Characteristic> getCharacteristics() {
         return this.characteristics;
@@ -107,6 +119,7 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild {
     /**
      * Obtain all the {@link Characteristic} associated to this biomaterial, including those inherited from its ancestors
      * via {@link #getSourceBioMaterial()}.
+     * @see #getCharacteristics()
      */
     @Transient
     public Set<Characteristic> getAllCharacteristics() {
