@@ -43,7 +43,7 @@ public interface ExpressionExperimentSubSetService extends BaseService<Expressio
     @Secured({ "GROUP_USER" })
     ExpressionExperimentSubSet findOrCreate( ExpressionExperimentSubSet entity );
 
-    @Secured({ "GROUP_USER" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperimentSubSet> findByBioAssayIn( Collection<BioAssay> bioAssays );
 
     @Override
