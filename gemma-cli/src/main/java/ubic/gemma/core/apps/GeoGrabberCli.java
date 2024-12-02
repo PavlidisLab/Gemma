@@ -70,7 +70,15 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
      */
     private static final SimpleRetry<IOException> retryTemplate = new SimpleRetry<>( 5, 500, 1.5, IOException.class, GeoGrabberCli.class.getName() );
 
-    private static final int NCBI_CHUNK_SIZE = 100;
+    /**
+     * Default chunk size to use when querying GEO records.
+     */
+    private static final int DEFAULT_CHUNK_SIZE = 100;
+    /**
+     * Chunk size to use when rewiding.
+     */
+    private static final int REWIND_CHUNK_SIZE = 10 * DEFAULT_CHUNK_SIZE;
+
     private static final DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd", Locale.ENGLISH );
 
     private static final String[] SERIES_TYPES = new String[] {
@@ -104,7 +112,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
     private String startFrom = null;
     @Nullable
     private Date startDate = null;
-    private int chunkSize = NCBI_CHUNK_SIZE;
+    private int chunkSize = DEFAULT_CHUNK_SIZE;
 
     @Autowired
     private ExpressionExperimentService ees;
@@ -140,33 +148,35 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
 
     @Override
     protected void buildOptions( Options options ) {
-        options.addOption( Option.builder( "output" ).desc( "File path for output (defaults to standard output)" ).argName( "path" ).hasArg().type( Path.class ).build() );
+        options.addOption( Option.builder( "output" )
+                .longOpt( "output" )
+                .hasArg().type( Path.class )
+                .desc( "File path for output (defaults to standard output)" )
+                .build() );
 
         // for retrieving platforms
-        options.addOption( Option.builder( PLATFORMS_OPTION ).desc( "Fetch a list of all platforms instead of experiments (-startdate, -date, -startat and -gselimit are ignored)" ).build() );
+        options.addOption( PLATFORMS_OPTION, false, "Fetch a list of all platforms instead of experiments (-startdate, -date, -startat and -gselimit are ignored)" );
 
         // for retrieving datasets
-        options.addOption( Option.builder( ACCESSION_OPTION ).longOpt( "acc" ).hasArg().desc( "A comma-delimited list of accessions to retrieve from GEO" ).build() );
-        options.addOption( Option.builder( ACCESSION_FILE_OPTION ).longOpt( "file" ).hasArg().desc( "A file containing accessions to retrieve from GEO" ).type( Path.class ).build() );
+        options.addOption( ACCESSION_OPTION, "acc", true, "A comma-delimited list of accessions to retrieve from GEO" );
+        options.addOption( Option.builder( ACCESSION_FILE_OPTION )
+                .longOpt( "file" )
+                .hasArg().type( Path.class )
+                .desc( "A file containing accessions to retrieve from GEO" )
+                .build() );
 
         // for browsing datasets
-        options.addOption(
-                Option.builder( "date" ).longOpt( null ).desc( "A release date to stop the search in format yyyy-MM-dd or yyyy.MM.dd (e.g. 2010.01.12)" )
-                        .argName( "date limit" ).hasArg().build() );
-        options.addOption(
-                Option.builder( "gselimit" ).longOpt( null ).desc( "A GSE at which to stop the search" ).argName( "GSE identifier" ).hasArg()
-                        .build() );
-        options.addOption( Option.builder( "platformLimit" ).longOpt( null ).desc( "Limit to selected platforms" )
-                .argName( "comma-delimited list of GPLs" ).hasArg().build() );
+        options.addOption( "platformLimit", true, "Limit to selected platforms" );
+        options.addOption( "startdate", true, "Attempt to 'fast-rewind' to the given date in format yyyy-MM-dd or yyyy.MM.dd and continue retrieving from there" );
+        options.addOption( "date", true, "A release date to stop the search in format yyyy-MM-dd or yyyy.MM.dd (e.g. 2010.01.12). Records on that date will not be processed." );
+        options.addOption( "startat", true, "Attempt to 'fast-rewind' to the given GSE ID and continue retrieving from there " );
+        options.addOption( "gselimit", true, "A GSE at which to stop the search. Record with the GSE ID will not be processed." );
 
-        options.addOption(
-                Option.builder( "startat" ).hasArg().argName( "GSE ID" ).desc( "Attempt to 'fast-rewind' to the given GSE ID and continue retrieving from there " ).build() );
-
-        options.addOption(
-                Option.builder( "startdate" ).hasArg().argName( "date" ).desc( "Attempt to 'fast-rewind' to the given date in format yyyy-MM-dd or yyyy.MM.dd " +
-                        "and continue retrieving from there " ).build() );
-
-        options.addOption( Option.builder( "chunkSize" ).hasArg().type( Number.class ).desc( "Chunk size to use when retrieving GEO records (defaults to " + NCBI_CHUNK_SIZE + ")" ).build() );
+        options.addOption( Option.builder( "chunkSize" )
+                .longOpt( "chunk-size" )
+                .hasArg().type( Number.class )
+                .desc( "Chunk size to use when retrieving GEO records (defaults to " + DEFAULT_CHUNK_SIZE + ")" )
+                .build() );
     }
 
     @Override
@@ -191,7 +201,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                 // this is a user input, so we have to respect its locale
                 this.dateLimit = DateUtils.parseDate( commandLine.getOptionValue( "date" ), "yyyy-MM-dd", "yyyy.MM.dd" );
             } catch ( ParseException e ) {
-                throw new IllegalArgumentException( "Could not parse date " + commandLine.getOptionValue( "date" ) + ", use the yyyy-MM-dd or yyyy.MM.dd format." );
+                throw new IllegalArgumentException( "Could not parse -date: " + commandLine.getOptionValue( "date" ) + ", use the yyyy-MM-dd or yyyy.MM.dd format." );
             }
         }
         if ( commandLine.hasOption( "gselimit" ) ) {
@@ -214,11 +224,11 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                 // this is a user input, so we have to respect its locale
                 this.startDate = DateUtils.parseDate( commandLine.getOptionValue( "startdate" ), "yyyy-MM-dd", "yyyy.MM.dd" );
             } catch ( ParseException e ) {
-                throw new IllegalArgumentException( "Could not parse date " + commandLine.getOptionValue( "startdate" ) + ", use the yyyy-MM-dd or yyyy.MM.dd format." );
+                throw new IllegalArgumentException( "Could not parse start date: " + commandLine.getOptionValue( "startdate" ) + ", use the yyyy-MM-dd or yyyy.MM.dd format." );
             }
             if ( dateLimit != null ) {
-                if ( dateLimit.after( startDate ) ) {
-                    throw new IllegalArgumentException( "startdate has to be later than the -date option" );
+                if ( !beforeOrEquals( dateLimit, startDate ) ) {
+                    throw new IllegalArgumentException( "The -date option: " + dateLimit + " has to be earlier than -startdate: " + startDate + "." );
                 }
             }
         }
@@ -388,16 +398,15 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         if ( startFrom == null && startDate == null ) {
             return 0;
         } else if ( startFrom != null ) {
-            log.info( "Seeking rewind point from " + startFrom );
+            log.info( "Seeking rewind point from " + startFrom + " with chunks of " + REWIND_CHUNK_SIZE + " records..." );
         } else {
-            log.info( "Seeking rewind point from " + startDate );
+            log.info( "Seeking rewind point from " + startDate + " with chunks of " + REWIND_CHUNK_SIZE + " records..." );
         }
         // we're not fetching details, so we can handle larger chunks
-        int rewindChunkSize = 10 * NCBI_CHUNK_SIZE;
-        for ( int start = 0; ; start += rewindChunkSize ) {
-            List<GeoRecord> records = getGeoRecords( start, rewindChunkSize, allowedTaxa, false, limitPlatform, seriesTypes );
+        for ( int start = 0; ; start += REWIND_CHUNK_SIZE ) {
+            List<GeoRecord> records = getGeoRecords( start, REWIND_CHUNK_SIZE, allowedTaxa, false, limitPlatform, seriesTypes );
             if ( records.isEmpty() ) {
-                log.info( "Reached end of records while seeking." );
+                log.info( "Reached end of records while seeking rewind point." );
                 return -1;
             }
             GeoRecord firstRecord = records.iterator().next();
