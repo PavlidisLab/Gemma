@@ -200,7 +200,7 @@ public class GeoBrowser {
 
         NodeList countNode = searchDocument.getElementsByTagName( "Count" );
 
-        int count = Integer.parseInt( getTextValue( getUniqueItem( countNode ) ) );
+        int count = Integer.parseInt( getTextValue( getItem( countNode, 0 ) ) );
         if ( count == 0 ) {
             log.warn( "Got no records from: " + searchUrl );
             return;
@@ -219,7 +219,6 @@ public class GeoBrowser {
         t.start();
 
         Document summaryDocument = parseMiniMLDocument( new URL( fetchUrl ) );
-        int numRecords = summaryDocument.getDocumentElement().getChildNodes().getLength();
 
         NodeList accNodes = evaluate( xaccession, summaryDocument );
         NodeList titleNodes = evaluate( xtitle, summaryDocument );
@@ -232,13 +231,13 @@ public class GeoBrowser {
         NodeList pubmedNodes = evaluate( xpubmed, summaryDocument );
 
         // Create GeoRecords using information parsed from XML file
-        log.debug( "Got " + numRecords + " XML records" );
+        log.debug( "Got " + accNodes.getLength() + " XML records" );
 
-        if ( accNodes.getLength() != numRecords ) {
-            throw new IOException( "Unexpected number of GEO records: " + accNodes.getLength() + ", expected: " + numRecords );
+        if ( accNodes.getLength() != count ) {
+            throw new IOException( "Unexpected number of GEO records: " + accNodes.getLength() + ", expected: " + count );
         }
 
-        for ( int i = 0; i < numRecords; i++ ) {
+        for ( int i = 0; i < count; i++ ) {
 
             GeoRecord record = new GeoRecord();
             record.setGeoAccession( "GSE" + getItem( accNodes, i ).getTextContent() );
@@ -327,7 +326,6 @@ public class GeoBrowser {
         t.start();
 
         Document summaryDocument = parseMiniMLDocument( new URL( fetchUrl ) );
-        int numRecords = summaryDocument.getDocumentElement().getChildNodes().getLength();
         NodeList accNodes = evaluate( xPlataccession, summaryDocument );
         NodeList titleNodes = evaluate( xtitle, summaryDocument );
         NodeList summaryNodes = evaluate( xsummary, summaryDocument );
@@ -337,14 +335,14 @@ public class GeoBrowser {
 
         // consider n_samples (number of elements) and the number of GSEs, but not every record has them, so it would be trickier.
 
-        log.debug( "Got " + numRecords + " XML records" );
+        log.debug( "Got " + accNodes.getLength() + " XML records" );
 
-        if ( accNodes.getLength() != numRecords ) {
-            throw new IOException( "Unexpected number of GEO records: " + accNodes.getLength() + ", expected: " + numRecords );
+        if ( accNodes.getLength() != count ) {
+            throw new IOException( "Unexpected number of GEO records: " + accNodes.getLength() + ", expected: " + count );
         }
 
-        List<GeoRecord> records = new ArrayList<>( numRecords );
-        for ( int i = 0; i < numRecords; i++ ) {
+        List<GeoRecord> records = new ArrayList<>( count );
+        for ( int i = 0; i < count; i++ ) {
             GeoRecord record = new GeoRecord();
             record.setGeoAccession( "GPL" + getItem( accNodes, i ).getTextContent() );
             try {
@@ -513,10 +511,10 @@ public class GeoBrowser {
 
         if ( records.isEmpty() ) {
             // When there are raw records, all that happened is we filtered them all out.
-            GeoBrowser.log.warn( "No records retained from query - all filtered out; number of raw records was " + accNodes.getLength() );
+            GeoBrowser.log.warn( "No records retained from query - all filtered out; number of raw records was " + expectedRecords );
         }
 
-        GeoBrowser.log.debug( "Parsed " + accNodes.getLength() + " records, " + records.size() + " retained at this stage" );
+        GeoBrowser.log.debug( "Parsed " + expectedRecords + " records, " + records.size() + " retained at this stage" );
 
         return new Slice<>( records, Sort.by( null, "releaseDate", Sort.Direction.DESC, Sort.NullMode.DEFAULT ), start, pageSize, ( long ) count );
     }
