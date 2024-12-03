@@ -40,7 +40,6 @@ import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.core.util.SimpleRetryCallable;
-import ubic.gemma.core.util.XMLUtils;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
 import ubic.gemma.persistence.util.Slice;
@@ -50,7 +49,6 @@ import javax.annotation.Nullable;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.*;
 import java.io.*;
-import java.lang.reflect.Array;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -62,7 +60,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
-import static ubic.gemma.core.util.XMLUtils.createDocumentBuilder;
+import static java.util.Objects.requireNonNull;
+import static ubic.gemma.core.util.XMLUtils.*;
 
 /**
  * Gets records from GEO and compares them to Gemma. This is used to identify data sets that are new in GEO and not in
@@ -200,23 +199,15 @@ public class GeoBrowser {
         Document searchDocument = parseMiniMLDocument( new URL( searchUrl ) );
 
         NodeList countNode = searchDocument.getElementsByTagName( "Count" );
-        Node countEl = countNode.item( 0 );
 
-        int count = Integer.parseInt( XMLUtils.getTextValue( ( Element ) countEl ) );
+        int count = Integer.parseInt( getTextValue( getUniqueItem( countNode ) ) );
         if ( count == 0 ) {
             log.warn( "Got no records from: " + searchUrl );
             return;
         }
 
-        NodeList qnode = searchDocument.getElementsByTagName( "QueryKey" );
-
-        Element queryIdEl = ( Element ) qnode.item( 0 );
-
-        NodeList cknode = searchDocument.getElementsByTagName( "WebEnv" );
-        Element cookieEl = ( Element ) cknode.item( 0 );
-
-        String queryId = XMLUtils.getTextValue( queryIdEl );
-        String cookie = XMLUtils.getTextValue( cookieEl );
+        String queryId = getTextValue( getUniqueItem( searchDocument.getElementsByTagName( "QueryKey" ) ) );
+        String cookie = getTextValue( getUniqueItem( searchDocument.getElementsByTagName( "WebEnv" ) ) );
 
         String fetchUrl = GeoBrowser.ESUMMARY
                 + "&mode=mode.text"
@@ -228,6 +219,8 @@ public class GeoBrowser {
         t.start();
 
         Document summaryDocument = parseMiniMLDocument( new URL( fetchUrl ) );
+        int numRecords = summaryDocument.getDocumentElement().getChildNodes().getLength();
+
         NodeList accNodes = evaluate( xaccession, summaryDocument );
         NodeList titleNodes = evaluate( xtitle, summaryDocument );
         NodeList sampleNodes = evaluate( xnumSamples, summaryDocument );
@@ -239,42 +232,39 @@ public class GeoBrowser {
         NodeList pubmedNodes = evaluate( xpubmed, summaryDocument );
 
         // Create GeoRecords using information parsed from XML file
-        log.debug( "Got " + accNodes.getLength() + " XML records" );
+        log.debug( "Got " + numRecords + " XML records" );
 
-        for ( int i = 0; i < accNodes.getLength(); i++ ) {
+        if ( accNodes.getLength() != numRecords ) {
+            throw new IOException( "Unexpected number of GEO records: " + accNodes.getLength() + ", expected: " + numRecords );
+        }
+
+        for ( int i = 0; i < numRecords; i++ ) {
 
             GeoRecord record = new GeoRecord();
-            record.setGeoAccession( "GSE" + accNodes.item( i ).getTextContent() );
+            record.setGeoAccession( "GSE" + getItem( accNodes, i ).getTextContent() );
 
-            record.setSeriesType( typeNodes.item( i ).getTextContent() );
+            record.setSeriesType( getItem( typeNodes, i ).getTextContent() );
             if ( !record.getSeriesType().contains( "Expression profiling" ) ) {
                 continue;
             }
 
-            fillOrganisms( record, orgnNodes.item( i ) );
+            fillOrganisms( record, getItem( orgnNodes, i ) );
 
-            record.setTitle( titleNodes.item( i ).getTextContent() );
+            record.setTitle( getItem( titleNodes, i ).getTextContent() );
 
-            record.setNumSamples( Integer.parseInt( sampleNodes.item( i ).getTextContent() ) );
+            record.setNumSamples( Integer.parseInt( requireNonNull( getItem( sampleNodes, i ).getTextContent() ) ) );
 
             try {
-                Date date = DateUtil.convertStringToDate( "yyyy/MM/dd", dateNodes.item( i ).getTextContent() );
+                Date date = DateUtil.convertStringToDate( "yyyy/MM/dd", getItem( dateNodes, i ).getTextContent() );
                 record.setReleaseDate( date );
             } catch ( ParseException e ) {
                 log.error( String.format( "Failed to parse date for %s", record.getGeoAccession() ), e );
             }
 
-            // there can be more than one, delimited by ';'
-            String[] platformlist = StringUtils.split( platformNodes.item( i ).getTextContent(), ";" );
-            List<String> finalPlatformIds = new ArrayList<>();
-            for ( String p : platformlist ) {
-                finalPlatformIds.add( "GPL" + p );
-            }
+            fillPlatforms( record, getItem( platformNodes, i ) );
 
-            String platformS = StringUtils.join( finalPlatformIds, ";" );
-            record.setPlatform( platformS );
-            record.setSummary( StringUtils.strip( summaryNodes.item( i ).getTextContent() ) );
-            fillPubMedIds( record, pubmedNodes.item( i ) );
+            record.setSummary( StringUtils.strip( getItem( summaryNodes, i ).getTextContent() ) );
+            fillPubMedIds( record, getItem( pubmedNodes, i ) );
             record.setSuperSeries( record.getTitle().contains( "SuperSeries" ) || record.getSummary().contains( "SuperSeries" ) );
             records.add( record );
         }
@@ -311,9 +301,8 @@ public class GeoBrowser {
         Document searchDocument = parseMiniMLDocument( new URL( searchUrl ) );
 
         NodeList countNode = searchDocument.getElementsByTagName( "Count" );
-        Node countEl = countNode.item( 0 );
 
-        int count = Integer.parseInt( XMLUtils.getTextValue( ( Element ) countEl ) );
+        int count = Integer.parseInt( getTextValue( getUniqueItem( countNode ) ) );
         if ( count == 0 )
             throw new RuntimeException( "Got no records from: " + searchUrl );
 
@@ -324,8 +313,8 @@ public class GeoBrowser {
         NodeList cknode = searchDocument.getElementsByTagName( "WebEnv" );
         Element cookieEl = ( Element ) cknode.item( 0 );
 
-        String queryId = XMLUtils.getTextValue( queryIdEl );
-        String cookie = XMLUtils.getTextValue( cookieEl );
+        String queryId = getTextValue( queryIdEl );
+        String cookie = getTextValue( cookieEl );
 
         String fetchUrl = GeoBrowser.ESUMMARY
                 + "&mode=mode.text"
@@ -338,6 +327,7 @@ public class GeoBrowser {
         t.start();
 
         Document summaryDocument = parseMiniMLDocument( new URL( fetchUrl ) );
+        int numRecords = summaryDocument.getDocumentElement().getChildNodes().getLength();
         NodeList accNodes = evaluate( xPlataccession, summaryDocument );
         NodeList titleNodes = evaluate( xtitle, summaryDocument );
         NodeList summaryNodes = evaluate( xsummary, summaryDocument );
@@ -347,23 +337,27 @@ public class GeoBrowser {
 
         // consider n_samples (number of elements) and the number of GSEs, but not every record has them, so it would be trickier.
 
-        log.debug( "Got " + accNodes.getLength() + " XML records" );
+        log.debug( "Got " + numRecords + " XML records" );
 
-        List<GeoRecord> records = new ArrayList<>( accNodes.getLength() );
-        for ( int i = 0; i < accNodes.getLength(); i++ ) {
+        if ( accNodes.getLength() != numRecords ) {
+            throw new IOException( "Unexpected number of GEO records: " + accNodes.getLength() + ", expected: " + numRecords );
+        }
+
+        List<GeoRecord> records = new ArrayList<>( numRecords );
+        for ( int i = 0; i < numRecords; i++ ) {
             GeoRecord record = new GeoRecord();
-            record.setGeoAccession( "GPL" + accNodes.item( i ).getTextContent() );
+            record.setGeoAccession( "GPL" + getItem( accNodes, i ).getTextContent() );
             try {
-                Date date = DateUtil.convertStringToDate( "yyyy/MM/dd", dateNodes.item( i ).getTextContent() );
+                Date date = DateUtil.convertStringToDate( "yyyy/MM/dd", getItem( dateNodes, i ).getTextContent() );
                 record.setReleaseDate( date );
             } catch ( ParseException e ) {
                 log.error( String.format( "Failed to parse release date for %s", record.getGeoAccession() ), e );
             }
-            record.setTitle( titleNodes.item( i ).getTextContent() );
+            record.setTitle( getItem( titleNodes, i ).getTextContent() );
             record.setOrganisms( null );
-            record.setSummary( StringUtils.strip( summaryNodes.item( i ).getTextContent() ) );
-            record.setSeriesType( techNodes.item( i ).getTextContent() ); // slight abuse
-            fillOrganisms( record, orgnNodes.item( i ) );
+            record.setSummary( StringUtils.strip( getItem( summaryNodes, i ).getTextContent() ) );
+            record.setSeriesType( getItem( techNodes, i ).getTextContent() ); // slight abuse
+            fillOrganisms( record, getItem( orgnNodes, i ) );
             records.add( record );
         }
 
@@ -423,38 +417,27 @@ public class GeoBrowser {
         log.debug( "Searching GEO with: " + searchUrl );
         Document searchDocument = parseMiniMLDocument( new URL( searchUrl ) );
         NodeList countNode = searchDocument.getElementsByTagName( "Count" );
-        Long count = null;
 
-        if ( countNode == null ) {
-            log.warn( "Got no valid MiniML from: " + searchUrl );
+        int count;
+        String textValue = getTextValue( countNode.item( 0 ) );
+        if ( textValue == null ) {
+            throw new IOException( "Got no valid record count element from: " + searchUrl );
         } else {
-            Node countEl = countNode.item( 0 );
-            String textValue = XMLUtils.getTextValue( ( Element ) countEl );
-
-            if ( textValue == null ) {
-                log.warn( "Got no valid record count element from: " + searchUrl );
-            } else {
-                try {
-                    count = Long.parseLong( textValue );
-                } catch ( NumberFormatException e ) {
-                    log.warn( "Got no valid record count from: " + searchUrl + "(" + e.getMessage() + ")" );
-                }
+            try {
+                count = Integer.parseInt( textValue );
+            } catch ( NumberFormatException e ) {
+                throw new IOException( "Got no valid record count from: " + searchUrl + "(" + e.getMessage() + ")" );
             }
         }
 
-        if ( count == null || count == 0 ) {
-            return new Slice<>( Collections.emptyList(), Sort.by( null, "releaseDate", Sort.Direction.DESC, Sort.NullMode.DEFAULT ), 0, pageSize, count );
+        if ( count == 0 ) {
+            return new Slice<>( Collections.emptyList(), Sort.by( null, "releaseDate", Sort.Direction.DESC, Sort.NullMode.DEFAULT ), 0, pageSize, ( long ) count );
         }
 
-        NodeList qnode = searchDocument.getElementsByTagName( "QueryKey" );
+        int expectedRecords = Math.min( pageSize, count - start );
 
-        Element queryIdEl = ( Element ) qnode.item( 0 );
-
-        NodeList cknode = searchDocument.getElementsByTagName( "WebEnv" );
-        Element cookieEl = ( Element ) cknode.item( 0 );
-
-        String queryId = XMLUtils.getTextValue( queryIdEl );
-        String cookie = XMLUtils.getTextValue( cookieEl );
+        String queryId = getTextValue( searchDocument.getElementsByTagName( "QueryKey" ).item( 0 ) );
+        String cookie = getTextValue( searchDocument.getElementsByTagName( "WebEnv" ).item( 0 ) );
 
         String fetchUrl = GeoBrowser.ESUMMARY
                 + "&mode=mode.text"
@@ -470,6 +453,7 @@ public class GeoBrowser {
         t.start();
 
         Document summaryDocument = parseMiniMLDocument( new URL( fetchUrl ) );
+
         NodeList accNodes = evaluate( xaccession, summaryDocument );
         NodeList titleNodes = evaluate( xtitle, summaryDocument );
         NodeList sampleNodes = evaluate( xnumSamples, summaryDocument );
@@ -484,38 +468,35 @@ public class GeoBrowser {
         // Create GeoRecords using information parsed from XML file
         log.debug( String.format( "Got %d XML records in %d ms", accNodes.getLength(), t.getTime( TimeUnit.MILLISECONDS ) ) );
 
+        if ( accNodes.getLength() != expectedRecords ) {
+            throw new IOException( String.format( "Unexpected number of GEO records: %d, page should contain: %d.",
+                    accNodes.getLength(), expectedRecords ) );
+        }
+
         List<GeoRecord> records = new ArrayList<>();
-        for ( int i = 0; i < accNodes.getLength(); i++ ) {
+        for ( int i = 0; i < expectedRecords; i++ ) {
             t.reset();
             t.start();
 
             GeoRecord record = new GeoRecord();
-            record.setGeoAccession( "GSE" + accNodes.item( i ).getTextContent() );
-            record.setSeriesType( typeNodes.item( i ).getTextContent() );
-            fillOrganisms( record, orgnNodes.item( i ) );
-            record.setTitle( titleNodes.item( i ).getTextContent() );
-            record.setNumSamples( Integer.parseInt( sampleNodes.item( i ).getTextContent() ) );
+            record.setGeoAccession( "GSE" + getItem( accNodes, i ).getTextContent() );
+            record.setSeriesType( getItem( typeNodes, i ).getTextContent() );
+            fillOrganisms( record, getItem( orgnNodes, i ) );
+            record.setTitle( getItem( titleNodes, i ).getTextContent() );
+            record.setNumSamples( Integer.parseInt( requireNonNull( getItem( sampleNodes, i ).getTextContent() ) ) );
 
             try {
-                Date date = DateUtil.convertStringToDate( "yyyy/MM/dd", dateNodes.item( i ).getTextContent() );
+                Date date = DateUtil.convertStringToDate( "yyyy/MM/dd", getItem( dateNodes, i ).getTextContent() );
                 record.setReleaseDate( date );
             } catch ( ParseException e ) {
                 log.error( String.format( "Failed to parse date for %s", record.getGeoAccession() ) );
             }
 
             // there can be more than one, delimited by ';'
-            String[] platformlist = StringUtils.split( platformNodes.item( i ).getTextContent(), ";" );
-            List<String> finalPlatformIds = new ArrayList<>();
-            for ( String p : platformlist ) {
-                finalPlatformIds.add( "GPL" + p );
-            }
+            fillPlatforms( record, getItem( platformNodes, i ) );
 
-            String platformS = StringUtils.join( finalPlatformIds, ";" );
-
-            record.setPlatform( platformS );
-
-            record.setSummary( StringUtils.strip( summaryNodes.item( i ).getTextContent() ) );
-            fillPubMedIds( record, pubmedNodes.item( i ) );
+            record.setSummary( StringUtils.strip( getItem( summaryNodes, i ).getTextContent() ) );
+            fillPubMedIds( record, getItem( pubmedNodes, i ) );
             record.setSuperSeries( record.getTitle().contains( "SuperSeries" ) || record.getSummary().contains( "SuperSeries" ) );
 
             if ( detailed ) {
@@ -536,7 +517,16 @@ public class GeoBrowser {
 
         GeoBrowser.log.debug( "Parsed " + accNodes.getLength() + " records, " + records.size() + " retained at this stage" );
 
-        return new Slice<>( records, Sort.by( null, "releaseDate", Sort.Direction.DESC, Sort.NullMode.DEFAULT ), start, pageSize, count );
+        return new Slice<>( records, Sort.by( null, "releaseDate", Sort.Direction.DESC, Sort.NullMode.DEFAULT ), start, pageSize, ( long ) count );
+    }
+
+    private void fillPlatforms( GeoRecord record, Node item ) {
+        String[] platformlist = requireNonNull( StringUtils.split( item.getTextContent(), ";" ) );
+        List<String> finalPlatformIds = new ArrayList<>();
+        for ( String p : platformlist ) {
+            finalPlatformIds.add( "GPL" + p.trim() );
+        }
+        record.setPlatform( StringUtils.join( finalPlatformIds, ";" ) );
     }
 
     /**
@@ -595,12 +585,15 @@ public class GeoBrowser {
                 geoRecord.setContactName(
                         fields[columnNameToIndex.get( "Contact" )].replaceAll( GeoBrowser.FLANKING_QUOTES_REGEX, "" ) );
 
-                String[] taxons = fields[columnNameToIndex.get( "Taxonomy" )]
-                        .replaceAll( GeoBrowser.FLANKING_QUOTES_REGEX, "" ).split( ";" );
+                List<String> taxons = Arrays.stream( fields[columnNameToIndex.get( "Taxonomy" )]
+                                .replaceAll( GeoBrowser.FLANKING_QUOTES_REGEX, "" )
+                                .split( ";" ) )
+                        .map( String::trim )
+                        .collect( Collectors.toList() );
                 if ( geoRecord.getOrganisms() == null ) {
-                    geoRecord.setOrganisms( Arrays.asList( taxons ) );
+                    geoRecord.setOrganisms( taxons );
                 } else {
-                    geoRecord.getOrganisms().addAll( Arrays.asList( taxons ) );
+                    geoRecord.getOrganisms().addAll( taxons );
                 }
 
                 try {
@@ -660,9 +653,9 @@ public class GeoBrowser {
         record.setOverallDesign( StringUtils.strip( result ) );
         NodeList relTypeNodes = evaluate( xRelationType, detailsDocument );
         for ( int i = 0; i < relTypeNodes.getLength(); i++ ) {
-            String relType = relTypeNodes.item( i ).getAttributes().getNamedItem( "type" ).getTextContent();
-            String relTo = relTypeNodes.item( i ).getAttributes().getNamedItem( "target" ).getTextContent();
-            if ( relType.startsWith( "SubSeries" ) ) {
+            String relType = requireNonNull( relTypeNodes.item( i ) ).getAttributes().getNamedItem( "type" ).getTextContent();
+            String relTo = requireNonNull( relTypeNodes.item( i ) ).getAttributes().getNamedItem( "target" ).getTextContent();
+            if ( relType != null && relType.startsWith( "SubSeries" ) ) {
                 record.setSubSeries( true );
                 record.setSubSeriesOf( relTo );
             }
@@ -681,7 +674,7 @@ public class GeoBrowser {
             Node item = channelNodes.item( i );
             NodeList sources = evaluate( source, item );
             for ( int k = 0; k < sources.getLength(); k++ ) {
-                String s = sources.item( k ).getTextContent();
+                String s = requireNonNull( sources.item( k ) ).getTextContent();
                 String v = StringUtils.strip( s );
                 try {
                     Double.parseDouble( v );
@@ -692,8 +685,7 @@ public class GeoBrowser {
             }
             NodeList chars = evaluate( characteristics, item );
             for ( int k = 0; k < chars.getLength(); k++ ) {
-                String s = chars.item( k ).getTextContent();
-                String v = StringUtils.strip( s );
+                String v = StringUtils.strip( requireNonNull( chars.item( k ) ).getTextContent() );
                 try {
                     Double.parseDouble( v );
                 } catch ( NumberFormatException e ) {
@@ -705,7 +697,7 @@ public class GeoBrowser {
         NodeList ls = evaluate( xLibraryStrategy, detailsDocument );
         Set<String> libraryStrategies = new HashSet<>();
         for ( int i = 0; i < ls.getLength(); i++ ) {
-            libraryStrategies.add( ls.item( i ).getTextContent() );
+            libraryStrategies.add( requireNonNull( ls.item( i ) ).getTextContent() );
         }
 
         if ( !libraryStrategies.isEmpty() ) {
@@ -765,18 +757,15 @@ public class GeoBrowser {
     }
 
     private void fillOrganisms( GeoRecord record, Node item ) {
-        String input = item.getTextContent();
+        String input = requireNonNull( item.getTextContent() );
         input = input.replace( "; ", ";" );
         String[] taxonArray = input.split( ";" );
-        Collection<String> taxa = new ArrayList<>();
-        for ( int i = 0; i < Array.getLength( taxonArray ); i++ ) {
-            taxa.add( taxonArray[i].trim() );
-        }
+        Collection<String> taxa = Arrays.stream( taxonArray ).map( String::trim ).collect( Collectors.toList() );
         record.setOrganisms( taxa );
     }
 
     private void fillPubMedIds( GeoRecord record, Node item ) {
-        List<String> pubmedIds = Arrays.stream( item.getTextContent().split( "\\n" ) )
+        List<String> pubmedIds = Arrays.stream( requireNonNull( item.getTextContent() ).split( "\\n" ) )
                 .map( StringUtils::stripToNull )
                 .filter( Objects::nonNull )
                 .collect( Collectors.toList() );
