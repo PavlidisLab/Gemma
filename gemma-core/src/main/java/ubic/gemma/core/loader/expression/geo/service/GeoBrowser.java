@@ -434,7 +434,8 @@ public class GeoBrowser {
             return new Slice<>( Collections.emptyList(), Sort.by( null, "releaseDate", Sort.Direction.DESC, Sort.NullMode.DEFAULT ), 0, pageSize, ( long ) count );
         }
 
-        int expectedRecords = Math.min( pageSize, count - start );
+        // if start > count, it should be empty
+        int expectedRecords = Math.min( pageSize, Math.max( count - start, 0 ) );
 
         String queryId = getTextValue( searchDocument.getElementsByTagName( "QueryKey" ).item( 0 ) );
         String cookie = getTextValue( searchDocument.getElementsByTagName( "WebEnv" ).item( 0 ) );
