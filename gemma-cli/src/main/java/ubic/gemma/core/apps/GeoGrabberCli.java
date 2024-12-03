@@ -46,6 +46,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Scans GEO for experiments that are not in Gemma, subject to some filtering criteria, outputs to a file for further
  * screening. See <a href="https://github.com/PavlidisLab/Gemma/issues/169">#160</a>
@@ -324,15 +326,12 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         try ( CSVPrinter os = tsvFormat.print( getOutputWriter() ) ) {
             int numProcessed = 0;
             int numUsed = 0;
-            for ( ; ; start += chunkSize ) {
+            int totalRecords = Integer.MAX_VALUE;
+            for ( ; start < totalRecords; start += chunkSize ) {
                 log.debug( "Searching from " + start + ", seeking " + chunkSize + " records" );
 
-                List<GeoRecord> recs = getGeoRecords( start, chunkSize, allowedTaxa, true, limitPlatform, seriesTypes );
-
-                if ( recs.isEmpty() ) {
-                    log.info( "Seem to have hit end of records, bailing" );
-                    break;
-                }
+                Slice<GeoRecord> recs = getGeoRecords( start, chunkSize, allowedTaxa, true, limitPlatform, seriesTypes );
+                totalRecords = requireNonNull( recs.getTotalElements() ).intValue();
 
                 log.debug( "Retrieved " + recs.size() + " GEO records." ); // we skip ones that are not using taxa of interest
 
@@ -398,19 +397,22 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         if ( startFrom == null && startDate == null ) {
             return 0;
         } else if ( startFrom != null ) {
-            log.info( "Seeking rewind point from " + startFrom + " with chunks of " + REWIND_CHUNK_SIZE + " records..." );
+            return seekRewindPointByAccession( startFrom, gseLimit, dateLimit, limitPlatform, allowedTaxa, seriesTypes );
         } else {
-            log.info( "Seeking rewind point from " + startDate + " with chunks of " + REWIND_CHUNK_SIZE + " records..." );
+            return seekRewindPointByDate( startDate, dateLimit, limitPlatform, allowedTaxa, seriesTypes );
         }
+    }
+
+    private int seekRewindPointByAccession( String startFrom, @Nullable String gseLimit, @Nullable Date dateLimit, @Nullable Collection<String> limitPlatform, Collection<String> allowedTaxa, Collection<String> seriesTypes ) throws IOException {
+        log.info( "Seeking rewind point from " + startFrom + " with chunks of " + REWIND_CHUNK_SIZE + " records..." );
         // we're not fetching details, so we can handle larger chunks
-        for ( int start = 0; ; start += REWIND_CHUNK_SIZE ) {
-            List<GeoRecord> records = getGeoRecords( start, REWIND_CHUNK_SIZE, allowedTaxa, false, limitPlatform, seriesTypes );
-            if ( records.isEmpty() ) {
-                log.info( "Reached end of records while seeking rewind point." );
-                return -1;
-            }
+        int totalRecords = Integer.MAX_VALUE;
+        for ( int start = 0; start < totalRecords; start += REWIND_CHUNK_SIZE ) {
+            Slice<GeoRecord> records = getGeoRecords( start, REWIND_CHUNK_SIZE, allowedTaxa, false, limitPlatform, seriesTypes );
+            totalRecords = requireNonNull( records.getTotalElements() ).intValue();
             GeoRecord firstRecord = records.iterator().next();
-            log.info( "Currently at " + firstRecord.getGeoAccession() + " released on " + firstRecord.getReleaseDate() );
+            log.info( String.format( "Currently at %s (%d/%d) released on %s", firstRecord.getGeoAccession(),
+                    start, totalRecords, firstRecord.getReleaseDate() ) );
             for ( int i = 0; i < records.size(); i++ ) {
                 GeoRecord geoRecord = records.get( i );
                 // check ending conditions, especially if we are fast-rewinding
@@ -425,9 +427,39 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                 if ( startFrom != null && startFrom.equals( geoRecord.getGeoAccession() ) ) {
                     log.info( "Located requested starting point of " + startFrom + ", resuming detailed queries at " + ( start + i ) + "." );
                     return start + i;
-                } else if ( startDate != null && beforeOrEquals( geoRecord.getReleaseDate(), startDate ) ) {
-                    log.info( "Located requested starting date of " + startDate + ", resuming detailed queries at " + ( start + i ) + "." );
-                    return start + i;
+                }
+            }
+        }
+        log.info( "Reached end of records while seeking rewind point." );
+        return -1;
+    }
+
+    private int seekRewindPointByDate( Date startDate, @Nullable Date dateLimit, @Nullable Collection<String> limitPlatform, Collection<String> allowedTaxa, Collection<String> seriesTypes ) throws IOException {
+        log.info( "Seeking rewind point from " + startDate + " using a binary search..." );
+        // we're not fetching details, so we can handle larger chunks
+        int start = 0;
+        int end = requireNonNull( getGeoRecords( start, 1, allowedTaxa, false, limitPlatform, seriesTypes ).getTotalElements() ).intValue();
+        while ( true ) {
+            int pos = start + ( ( end - start ) / 2 );
+            Slice<GeoRecord> records = getGeoRecords( pos, 1, allowedTaxa, false, limitPlatform, seriesTypes );
+            GeoRecord record = records.iterator().next();
+
+            log.info( "Currently at " + record.getGeoAccession() + " (" + pos + "/" + start + ".." + end + ") released on " + record.getReleaseDate() );
+
+            if ( beforeOrEquals( record.getReleaseDate(), startDate ) ) {
+                end = pos;
+            } else {
+                start = pos + 1;
+            }
+
+            if ( start == end ) {
+                // check ending conditions, especially if we are fast-rewinding
+                if ( dateLimit != null && beforeOrEquals( record.getReleaseDate(), dateLimit ) ) {
+                    log.info( "Stopped rewinding as reached date limit." );
+                    return -1;
+                } else {
+                    log.info( "Located requested starting date of " + startDate + ", resuming detailed queries at " + pos + "." );
+                    return start; // done, I guess?
                 }
             }
         }
