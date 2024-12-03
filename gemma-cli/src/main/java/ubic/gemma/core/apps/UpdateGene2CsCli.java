@@ -5,6 +5,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
+import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 
 import javax.annotation.Nullable;
@@ -15,6 +16,9 @@ public class UpdateGene2CsCli extends AbstractAuthenticatedCLI {
 
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
+
+    @Autowired
+    private GemmaRestApiClient gemmaRestApiClient;
 
     private boolean force;
 
@@ -50,10 +54,10 @@ public class UpdateGene2CsCli extends AbstractAuthenticatedCLI {
         int updated = tableMaintenanceUtil.updateGene2CsEntries( force );
         if ( updated > 0 ) {
             try {
-                getGemmaRestApiClient().perform( "/genes/probes/refresh" );
-                log.info( "Refreshed GENE2CS associations from " + getGemmaRestApiClient().getHostUrl() );
+                gemmaRestApiClient.perform( "/genes/probes/refresh" );
+                log.info( "Refreshed GENE2CS associations from " + gemmaRestApiClient.getHostUrl() );
             } catch ( Exception e ) {
-                log.warn( "Failed to update GENE2CS from " + getGemmaRestApiClient().getHostUrl(), e );
+                log.warn( "Failed to update GENE2CS from " + gemmaRestApiClient.getHostUrl(), e );
             }
         }
     }

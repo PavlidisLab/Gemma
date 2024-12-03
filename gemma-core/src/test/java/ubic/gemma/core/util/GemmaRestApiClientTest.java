@@ -3,9 +3,12 @@ package ubic.gemma.core.util;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import ubic.gemma.core.util.test.category.IntegrationTest;
 
 import java.io.IOException;
+import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.list;
@@ -53,7 +56,8 @@ public class GemmaRestApiClientTest {
     @Test
     public void testEndpointWithIncorrectCredentials() throws IOException {
         try {
-            client.setAuthentication( "foo", "1234" );
+            Authentication auth = new UsernamePasswordAuthenticationToken( "foo", "1234", Collections.emptyList() );
+            client.setAuthentication( auth );
             assertThat( client.perform( "/" ) )
                     .asInstanceOf( type( GemmaRestApiClient.ErrorResponse.class ) )
                     .satisfies( r -> {

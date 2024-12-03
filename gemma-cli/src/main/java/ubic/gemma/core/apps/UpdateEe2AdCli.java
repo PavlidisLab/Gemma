@@ -5,6 +5,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
+import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 
 import javax.annotation.Nullable;
@@ -20,6 +21,9 @@ public class UpdateEe2AdCli extends AbstractAuthenticatedCLI {
 
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
+
+    @Autowired
+    private GemmaRestApiClient gemmaRestApiClient;
 
     @Nullable
     @Override
@@ -57,10 +61,10 @@ public class UpdateEe2AdCli extends AbstractAuthenticatedCLI {
         int updated = tableMaintenanceUtil.updateExpressionExperiment2ArrayDesignEntries( sinceLastUpdate );
         if ( updated > 0 ) {
             try {
-                getGemmaRestApiClient().perform( "/datasets/platforms/refresh" );
-                log.info( "Refreshed EE2AD associations from " + getGemmaRestApiClient().getHostUrl() );
+                gemmaRestApiClient.perform( "/datasets/platforms/refresh" );
+                log.info( "Refreshed EE2AD associations from " + gemmaRestApiClient.getHostUrl() );
             } catch ( Exception e ) {
-                log.warn( "Failed to refresh EE2AD from " + getGemmaRestApiClient().getHostUrl(), e );
+                log.warn( "Failed to refresh EE2AD from " + gemmaRestApiClient.getHostUrl(), e );
             }
         }
     }

@@ -95,6 +95,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     protected EntityLocator entityLocator;
     @Autowired
     protected EntityUrlBuilder entityUrlBuilder;
+    @Autowired
+    private GemmaRestApiClient gemmaRestApiClient;
 
     /**
      * Single-experiment mode.
@@ -526,7 +528,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     protected void refreshExpressionExperimentFromGemmaWeb( ExpressionExperiment ee, boolean refreshVectors, boolean refreshReports ) throws Exception {
         StopWatch timer = StopWatch.createStarted();
         // using IDs here to prevent proxy initialization
-        GemmaRestApiClient.Response response = getGemmaRestApiClient()
+        GemmaRestApiClient.Response response = gemmaRestApiClient
                 .perform( "/datasets/" + ee.getId() + "/refresh",
                         "refreshVectors", refreshVectors,
                         "refreshReports", refreshReports );

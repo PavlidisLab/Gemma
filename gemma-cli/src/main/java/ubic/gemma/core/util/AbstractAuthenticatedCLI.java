@@ -24,14 +24,17 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.concurrent.DelegatingSecurityContextExecutorService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import ubic.gemma.core.security.authentication.CliAuthenticationAware;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -66,8 +69,11 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
     @Autowired
     private ManualAuthenticationService manAuthentication;
 
+    /**
+     * List of components that should receive the authentication token.
+     */
     @Autowired
-    private GemmaRestApiClient gemmaRestApiClient;
+    private List<CliAuthenticationAware> cliAuthenticationAwareComponents;
 
     @Autowired
     private Environment env;
@@ -129,15 +135,23 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
 
             boolean success = manAuthentication.validateRequest( username, password );
             if ( success ) {
-                gemmaRestApiClient.setAuthentication( username, password );
+                for ( CliAuthenticationAware comp : cliAuthenticationAwareComponents ) {
+                    comp.setAuthentication( new UsernamePasswordAuthenticationToken( username, password ) );
+                }
                 log.info( "Logged in as " + username );
             } else {
+                for ( CliAuthenticationAware comp : cliAuthenticationAwareComponents ) {
+                    comp.setAuthentication( null );
+                }
                 throw new IllegalStateException( "Not authenticated. Make sure you entered a valid username (got '" + username
                         + "') and/or password" );
             }
         } else {
             log.info( "Logging in as anonymous guest with limited privileges" );
             manAuthentication.authenticateAnonymously();
+            for ( CliAuthenticationAware comp : cliAuthenticationAwareComponents ) {
+                comp.setAuthentication( SecurityContextHolder.getContext().getAuthentication() );
+            }
         }
     }
 
@@ -187,14 +201,5 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
     @Override
     protected ExecutorService createBatchTaskExecutorService() {
         return new DelegatingSecurityContextExecutorService( super.createBatchTaskExecutorService() );
-    }
-
-    /**
-     * Obtain a REST API client for Gemma.
-     * <p>
-     * This client is authenticated with the same credentials that the CLI is using.
-     */
-    protected GemmaRestApiClient getGemmaRestApiClient() {
-        return gemmaRestApiClient;
     }
 }
