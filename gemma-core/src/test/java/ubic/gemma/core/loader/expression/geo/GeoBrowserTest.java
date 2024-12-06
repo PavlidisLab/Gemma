@@ -26,6 +26,7 @@ import org.junit.experimental.categories.Category;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
+import ubic.gemma.core.loader.expression.geo.service.GeoBrowserImpl;
 import ubic.gemma.core.loader.expression.geo.service.GeoSearchField;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -48,7 +49,7 @@ public class GeoBrowserTest {
 
     private static final String ncbiApiKey = Settings.getString( "entrez.efetch.apikey" );
 
-    GeoBrowser b = new GeoBrowser( ncbiApiKey );
+    private final GeoBrowser b = new GeoBrowserImpl( ncbiApiKey );
 
     @BeforeClass
     public static void checkThatGeoIsAvailable() throws Exception {
@@ -58,7 +59,7 @@ public class GeoBrowserTest {
     @Test
     public void testGetRecentGeoRecords() throws Exception {
         assumeThatResourceIsAvailable( "https://www.ncbi.nlm.nih.gov/geo/browse/" );
-        GeoBrowser b = new GeoBrowser( ncbiApiKey );
+        GeoBrowser b = new GeoBrowserImpl( ncbiApiKey );
         Collection<GeoRecord> res = b.getRecentGeoRecords( 10, 10 );
         assertThat( res )
                 .isNotEmpty()
@@ -67,11 +68,14 @@ public class GeoBrowserTest {
 
     @Test
     public void testSearchGeoRecords() throws IOException {
-        Collection<GeoRecord> res = b.searchGeoRecords( "Homo sapiens", GeoSearchField.ORGANISM, null, null, null, 10, 10, false );
+        GeoBrowser.GeoQuery query = b.searchGeoRecords( "Homo sapiens", GeoSearchField.ORGANISM, null, null, null );
+        assertThat( query.getQueryId() ).isNotNull();
+        assertThat( query.getCookie() ).isNotNull();
+        assertThat( query.getTotalRecords() ).isGreaterThan( 100000 );
+        Collection<GeoRecord> res = b.retrieveGeoRecords( query, 10, 10 );
         // Check that the search has returned at least one record
         assertThat( res )
-                .isNotEmpty()
-                .hasSizeLessThanOrEqualTo( 10 )
+                .hasSize( 10 )
                 .allSatisfy( record -> {
                     // Print out accession numbers etc.; check that the records returned match the search term
                     log.info( "Accession: " + record.getGeoAccession() );
@@ -81,6 +85,10 @@ public class GeoBrowserTest {
                     log.info( "Platform: " + record.getPlatform() );
                     assertThat( record.getOrganisms() ).contains( "Homo sapiens" );
                 } );
+        assertThat( b.retrieveGeoRecords( query, 0, 10 ) )
+                .hasSize( 10 );
+        assertThat( b.retrieveGeoRecords( query, 1000000000, 10 ) )
+                .isEmpty();
     }
 
 
@@ -90,10 +98,10 @@ public class GeoBrowserTest {
      */
     @Test
     @Category(SlowTest.class)
-    public void testGetGeoRecords() throws IOException {
-        Collection<GeoRecord> res = b.searchGeoRecords( null, null, null, null, null, 10, 10, true );
+    public void testRetrieveDetailedGeoRecords() throws IOException {
+        GeoBrowser.GeoQuery query = b.searchGeoRecords( null, null, null, null, null );
         // Check that the search has returned at least one record
-        assertThat( res )
+        assertThat( b.retrieveGeoRecords( query, 0, 10, GeoBrowser.GeoRetrieveConfig.DETAILED ) )
                 .isNotEmpty()
                 .hasSizeLessThanOrEqualTo( 10 )
                 .allSatisfy( record -> {
@@ -109,15 +117,14 @@ public class GeoBrowserTest {
 
     @Test
     public void testGetGeoRecordsB() throws IOException {
-        assertThat( b.getGeoRecords( Arrays.asList( "GSE1", "GSE2", "GSE3" ), false ) ).hasSize( 3 );
+        assertThat( b.getGeoRecords( Arrays.asList( "GSE1", "GSE2", "GSE3" ) ) ).hasSize( 3 );
     }
 
     @Test
     public void testGetGeoRecordGSE93825() throws IOException {
-        Collection<GeoRecord> res = b.searchGeoRecords( "GSE93825", GeoSearchField.ACCESSION, null, null, null, 0, 10, false );
         // Check that the search has returned at least one record
-        assertThat( res ).isNotEmpty()
-                .allSatisfy( record -> {
+        assertThat( b.getGeoRecord( "GSE93825" ) ).isNotNull()
+                .satisfies( record -> {
                     // Print out accession numbers etc.; check that the records returned match the search term
                     log.info( "Accession: " + record.getGeoAccession() );
                     log.info( "Title : " + record.getTitle() );
@@ -130,12 +137,25 @@ public class GeoBrowserTest {
     }
 
     /**
+     * This GEO record has ~1000 samples with hundreds of characteristics each.
+     */
+    @Test
+    @Category(SlowTest.class)
+    public void testGSE97948() throws IOException {
+        assertThat( b.getGeoRecord( "GSE97948", GeoBrowser.GeoRetrieveConfig.builder()
+                .subSeriesStatus( true )
+                .libraryStrategy( true )
+                .build() ) )
+                .isNotNull();
+    }
+
+    /**
      * GEO returns an empty document when retrieving the samples for this document.
      */
     @Test
     public void testGeoEmptyMINiML() throws IOException {
-        GeoBrowser b = new GeoBrowser( ncbiApiKey );
-        b.searchGeoRecords( "GSE127242", null, null, null, null, 0, 10, true );
+        GeoBrowser b = new GeoBrowserImpl( ncbiApiKey );
+        b.searchAndRetrieveGeoRecords( "GSE127242", null, null, null, null, 0, 10, true );
     }
 
     /**
@@ -144,8 +164,8 @@ public class GeoBrowserTest {
     @Test
     @Category(SlowTest.class)
     public void testGetGeoRecordWithMeshHeadings() throws IOException {
-        GeoBrowser b = new GeoBrowser( ncbiApiKey );
-        assertThat( b.getGeoRecord( "GSE171541", true ) )
+        GeoBrowser b = new GeoBrowserImpl( ncbiApiKey );
+        assertThat( b.getGeoRecord( "GSE171541", GeoBrowser.GeoRetrieveConfig.DETAILED ) )
                 .satisfies( record -> {
                     assertThat( record.getPubMedIds() ).containsExactly( "36539833" );
                     assertThat( record.getNumSamples() ).isEqualTo( 9 );
@@ -155,8 +175,8 @@ public class GeoBrowserTest {
 
     @Test
     public void testSearchGeoRecordWithMeshHeadings() throws IOException {
-        GeoBrowser b = new GeoBrowser( ncbiApiKey );
-        assertThat( b.searchGeoRecords( "GSE171541", GeoSearchField.ACCESSION, null, null, null, 0, 10, true ) )
+        GeoBrowser b = new GeoBrowserImpl( ncbiApiKey );
+        assertThat( b.searchAndRetrieveGeoRecords( "GSE171541", GeoSearchField.GEO_ACCESSION, null, null, null, 0, 10, true ) )
                 .singleElement()
                 .satisfies( record -> {
                     assertThat( record.getPubMedIds() ).containsExactly( "36539833" );

@@ -28,6 +28,7 @@ import org.springframework.util.Assert;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
+import ubic.gemma.core.loader.expression.geo.service.GeoBrowserImpl;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -93,6 +94,26 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
             "Expression profiling by high throughput sequencing"
     };
 
+    /**
+     * Header used when browsing or obtaining datasets.
+     */
+    private static final String[] DATASET_HEADER = { "Acc", "ReleaseDate", "Taxa", "Platforms", "AllPlatformsInGemma",
+            "Affy", "NumSamples", "Type", "SuperSeries", "SubSeriesOf", "PubMed", "Title", "Summary", "MeSH",
+            "SampleTerms", "LibraryStrategy", "OverallDesign" };
+
+    /**
+     * Detailed preset for this CLI used when fetching GEO records.
+     * @see ubic.gemma.core.loader.expression.geo.service.GeoBrowser.GeoRetrieveConfig#DETAILED
+     */
+    private static final GeoBrowser.GeoRetrieveConfig DETAILED = GeoBrowser.GeoRetrieveConfig.builder()
+            .subSeriesStatus( true )
+            .meshHeadings( true )
+            .libraryStrategy( true )
+            // ignore sources and characteristics, those are very expensive
+            .sampleSources( false )
+            .sampleCharacteristics( false )
+            .build();
+
     // operating mode
     private Mode mode;
 
@@ -130,7 +151,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
 
     @Override
     public void afterPropertiesSet() {
-        gbs = new GeoBrowser( ncbiApiKey );
+        gbs = new GeoBrowserImpl( ncbiApiKey );
     }
 
     @Override
@@ -271,20 +292,17 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         CSVFormat tsvFormat = CSVFormat.TDF.builder()
                 .setHeader( "Acc", "ReleaseDate", "Taxa", "Title", "Summary", "TechType" )
                 .build();
-        Collection<GeoRecord> allGEOPlatforms = gbs.getAllGEOPlatforms( getAllowedTaxa() );
+        Collection<GeoRecord> allGEOPlatforms = gbs.getAllGeoPlatforms( getAllowedTaxa() );
         log.info( "Fetched " + allGEOPlatforms.size() + " records" );
         try ( CSVPrinter os = tsvFormat.print( getOutputWriter() ) ) {
             for ( GeoRecord geoRecord : allGEOPlatforms ) {
                 os.printRecord( geoRecord.getGeoAccession(), dateFormat.format( geoRecord.getReleaseDate() ),
                         StringUtils.join( geoRecord.getOrganisms(), "," ), geoRecord.getTitle(),
                         geoRecord.getSummary(), geoRecord.getSeriesType() );
+                os.flush();
             }
         }
     }
-
-    private static final String[] DATASET_HEADER = { "Acc", "ReleaseDate", "Taxa", "Platforms", "AllPlatformsInGemma",
-            "Affy", "NumSamples", "Type", "SuperSeries", "SubSeriesOf", "PubMed", "Title", "Summary", "MeSH",
-            "SampleTerms", "LibraryStrategy", "OverallDesign" };
 
     private void getDatasets( Collection<String> accessions ) throws IOException {
         if ( accessions.isEmpty() ) {
@@ -295,7 +313,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                 .setHeader( DATASET_HEADER )
                 .build();
         try ( CSVPrinter os = tsvFormat.print( getOutputWriter() ) ) {
-            for ( GeoRecord record : gbs.getGeoRecords( accessions, true ) ) {
+            for ( GeoRecord record : gbs.getGeoRecords( accessions, DETAILED ) ) {
                 writeDataset( record, areAllPlatformsInGemma( record, seenPlatforms ), isAffymetrix( record, seenPlatforms ), os );
             }
         }
@@ -314,7 +332,9 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         searchMessage += "\n\tSeries Types: " + String.join( ", ", seriesTypes );
         log.info( searchMessage );
 
-        int start = seekRewindPoint( startFrom, gseLimit, startDate, dateLimit, limitPlatform, allowedTaxa, seriesTypes );
+        GeoBrowser.GeoQuery query = searchGeoRecords( allowedTaxa, limitPlatform, seriesTypes );
+
+        int start = seekRewindPoint( query, startFrom, gseLimit, startDate, dateLimit );
         if ( start == -1 ) {
             log.info( "Could not find the rewind point." );
             return;
@@ -330,7 +350,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
             for ( ; start < totalRecords; start += chunkSize ) {
                 log.debug( "Searching from " + start + ", seeking " + chunkSize + " records" );
 
-                Slice<GeoRecord> recs = getGeoRecords( start, chunkSize, allowedTaxa, true, limitPlatform, seriesTypes );
+                Slice<GeoRecord> recs = getGeoRecords( query, start, chunkSize, true );
                 totalRecords = requireNonNull( recs.getTotalElements() ).intValue();
 
                 log.debug( "Retrieved " + recs.size() + " GEO records." ); // we skip ones that are not using taxa of interest
@@ -359,14 +379,17 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                     }
 
                     if ( ees.isBlackListed( geoRecord.getGeoAccession() ) ) {
+                        log.warn( geoRecord + ": skipping, blacklisted." );
                         continue;
                     }
 
                     if ( ees.findByShortName( geoRecord.getGeoAccession() ) != null ) {
+                        log.debug( geoRecord + ": skipping, already in Gemma (by short name)." );
                         continue;
                     }
 
                     if ( !ees.findByAccession( geoRecord.getGeoAccession() ).isEmpty() ) {
+                        log.debug( geoRecord + ": skipping, already in Gemma (by accession)." );
                         continue;
                     }
 
@@ -393,22 +416,22 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
      * TODO: use a binary search for date-based rewinding
      * @return the rewind point if found, otherwise -1
      */
-    private int seekRewindPoint( @Nullable String startFrom, @Nullable String gseLimit, @Nullable Date startDate, @Nullable Date dateLimit, @Nullable Collection<String> limitPlatform, Collection<String> allowedTaxa, Collection<String> seriesTypes ) throws IOException {
+    private int seekRewindPoint( GeoBrowser.GeoQuery query, @Nullable String startFrom, @Nullable String gseLimit, @Nullable Date startDate, @Nullable Date dateLimit ) throws IOException {
         if ( startFrom == null && startDate == null ) {
             return 0;
         } else if ( startFrom != null ) {
-            return seekRewindPointByAccession( startFrom, gseLimit, dateLimit, limitPlatform, allowedTaxa, seriesTypes );
+            return seekRewindPointByAccession( query, startFrom, gseLimit, dateLimit );
         } else {
-            return seekRewindPointByDate( startDate, dateLimit, limitPlatform, allowedTaxa, seriesTypes );
+            return seekRewindPointByDate( query, startDate, dateLimit );
         }
     }
 
-    private int seekRewindPointByAccession( String startFrom, @Nullable String gseLimit, @Nullable Date dateLimit, @Nullable Collection<String> limitPlatform, Collection<String> allowedTaxa, Collection<String> seriesTypes ) throws IOException {
+    private int seekRewindPointByAccession( GeoBrowser.GeoQuery query, String startFrom, @Nullable String gseLimit, @Nullable Date dateLimit ) throws IOException {
         log.info( "Seeking rewind point from " + startFrom + " with chunks of " + REWIND_CHUNK_SIZE + " records..." );
         // we're not fetching details, so we can handle larger chunks
         int totalRecords = Integer.MAX_VALUE;
         for ( int start = 0; start < totalRecords; start += REWIND_CHUNK_SIZE ) {
-            Slice<GeoRecord> records = getGeoRecords( start, REWIND_CHUNK_SIZE, allowedTaxa, false, limitPlatform, seriesTypes );
+            Slice<GeoRecord> records = getGeoRecords( query, start, REWIND_CHUNK_SIZE, false );
             totalRecords = requireNonNull( records.getTotalElements() ).intValue();
             GeoRecord firstRecord = records.iterator().next();
             log.info( String.format( "Currently at %s (%d/%d) released on %s", firstRecord.getGeoAccession(),
@@ -434,14 +457,14 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         return -1;
     }
 
-    private int seekRewindPointByDate( Date startDate, @Nullable Date dateLimit, @Nullable Collection<String> limitPlatform, Collection<String> allowedTaxa, Collection<String> seriesTypes ) throws IOException {
+    private int seekRewindPointByDate( GeoBrowser.GeoQuery query, Date startDate, @Nullable Date dateLimit ) throws IOException {
         log.info( "Seeking rewind point from " + startDate + " using a binary search..." );
         // we're not fetching details, so we can handle larger chunks
         int start = 0;
-        int end = requireNonNull( getGeoRecords( start, 1, allowedTaxa, false, limitPlatform, seriesTypes ).getTotalElements() ).intValue();
+        int end = query.getTotalRecords();
         while ( true ) {
             int pos = start + ( ( end - start ) / 2 );
-            Slice<GeoRecord> records = getGeoRecords( pos, 1, allowedTaxa, false, limitPlatform, seriesTypes );
+            Slice<GeoRecord> records = getGeoRecords( query, pos, 1, false );
             GeoRecord record = records.iterator().next();
 
             log.info( "Currently at " + record.getGeoAccession() + " (" + pos + "/" + start + ".." + end + ") released on " + record.getReleaseDate() );
@@ -481,8 +504,13 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         return a != null && ( a.equals( b ) || a.before( b ) );
     }
 
-    private Slice<GeoRecord> getGeoRecords( int start, int chunkSize, Collection<String> allowedTaxa, boolean fetchDetails, @Nullable Collection<String> limitPlatform, Collection<String> seriesTypes ) throws IOException {
-        return retryTemplate.execute( ( attempt, lastAttempt ) -> gbs.searchGeoRecords( null, null, allowedTaxa, limitPlatform, seriesTypes, start, chunkSize, fetchDetails ), "fetching GEO records" );
+
+    private GeoBrowser.GeoQuery searchGeoRecords( Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatform, Collection<String> seriesTypes ) throws IOException {
+        return retryTemplate.execute( ( attempt, lastAttempt ) -> gbs.searchGeoRecords( null, null, allowedTaxa, limitPlatform, seriesTypes ), "searching GEO records" );
+    }
+
+    private Slice<GeoRecord> getGeoRecords( GeoBrowser.GeoQuery query, int start, int chunkSize, boolean fetchDetails ) throws IOException {
+        return retryTemplate.execute( ( attempt, lastAttempt ) -> gbs.retrieveGeoRecords( query, start, chunkSize, fetchDetails ? DETAILED : null ), "fetching GEO records" );
     }
 
     private Appendable getOutputWriter() throws IOException {
@@ -543,5 +571,6 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                 geoRecord.getSubSeriesOf(), StringUtils.join( geoRecord.getPubMedIds(), "," ), geoRecord.getTitle(), geoRecord.getSummary(),
                 StringUtils.join( geoRecord.getMeshHeadings(), "," ), geoRecord.getSampleDetails(), geoRecord.getLibraryStrategy(),
                 StringUtils.replace( geoRecord.getOverallDesign(), "\n", "\\n" ) );
+        os.flush();
     }
 }

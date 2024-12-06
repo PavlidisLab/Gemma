@@ -31,6 +31,9 @@ import ubic.gemma.core.loader.util.NcbiEntityResolver;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -171,5 +174,16 @@ public class XMLUtils {
             }
         }
         return value.toString();
+    }
+
+    /**
+     * Evaluate an XPath expression that produces a {@link NodeList}.
+     */
+    public static NodeList evaluate( XPathExpression xpath, Node item ) {
+        try {
+            return ( NodeList ) xpath.evaluate( item, XPathConstants.NODESET );
+        } catch ( XPathExpressionException e ) {
+            throw new RuntimeException( e );
+        }
     }
 }

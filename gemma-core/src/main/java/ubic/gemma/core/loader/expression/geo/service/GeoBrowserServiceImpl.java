@@ -115,7 +115,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
 
     @Override
     public void afterPropertiesSet() {
-        browser = new GeoBrowser( ncbiApiKey );
+        browser = new GeoBrowserImpl( ncbiApiKey );
         try {
             es.submit( this::initializeLocalInfo );
         } finally {
@@ -162,7 +162,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
 
     @Override
     public List<GeoRecord> searchGeoRecords( String searchString, int start, int count, boolean detailed ) throws IOException {
-        return this.filterGeoRecords( browser.searchGeoRecords( searchString, null, null, null, null, start, count, detailed ) );
+        return this.filterGeoRecords( browser.searchAndRetrieveGeoRecords( searchString, null, null, null, null, start, count, detailed ) );
     }
 
     @Override

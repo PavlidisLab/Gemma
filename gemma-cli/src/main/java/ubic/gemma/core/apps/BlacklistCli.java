@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
+import ubic.gemma.core.loader.expression.geo.service.GeoBrowserImpl;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.AbstractCLI;
 import ubic.gemma.model.blacklist.BlacklistedEntity;
@@ -251,7 +252,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
      *
      */
     private void proactivelyBlacklistExperiments( ExternalDatabase geo ) throws Exception {
-        GeoBrowser gbs = new GeoBrowser( ncbiApiKey );
+        GeoBrowser gbs = new GeoBrowserImpl( ncbiApiKey );
         BlacklistedEntityService blacklistedEntityDao = this.getBean( BlacklistedEntityService.class );
 
         Collection<String> candidates = new ArrayList<>();
@@ -299,7 +300,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
             List<GeoRecord> recs = null;
 
             try {
-                recs = gbs.searchGeoRecords( null, null, null, candidates, null, start, 100, false /* details */ );
+                recs = gbs.searchAndRetrieveGeoRecords( null, null, null, candidates, null, start, 100, false /* details */ );
                 retries = 0;
             } catch ( IOException e ) {
                 // this definitely can happen, occasional 500s from NCBI
