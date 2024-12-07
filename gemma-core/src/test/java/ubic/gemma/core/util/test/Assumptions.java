@@ -38,7 +38,7 @@ public class Assumptions {
                                 url, httpCon.getResponseCode(), httpCon.getResponseMessage() ),
                         httpCon.getResponseCode() < 400 );
             }
-        } catch ( UnknownHostException | ConnectException e ) {
+        } catch ( UnknownHostException | ConnectException | SocketTimeoutException e ) {
             assumeNoException( String.format( "The resource at %s is not available.", url ), e );
         } catch ( SSLException e ) {
             assumeNoException( String.format( "SSL issue attempting to connect to %s.", url ), e );
