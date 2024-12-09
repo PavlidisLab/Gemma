@@ -784,9 +784,11 @@ public class GeoBrowserImpl implements GeoBrowser {
                 }
             } catch ( ParserConfigurationException | SAXException e ) {
                 if ( isCausedByAnEmptyXmlDocument( e ) ) {
-                    throw new IOException( e );
+                    throw new IOException( "Document at " + documentUrl + " appears to be empty or truncated", e );
                 } else if ( isCausedByAnHtmlDocument( e ) ) {
-                    throw new IOException( "Detected what was likely an HTML document.", e );
+                    throw new IOException( "Document at " + documentUrl + " appears to be an HTML document.", e );
+                } else if ( isCausedByInvalidUtf8Encoding( e ) ) {
+                    throw new NonRetryableIOException( new IOException( "Document at " + documentUrl + " appears to have invalid UTF-8 characters." ) );
                 } else {
                     throw new RuntimeException( e );
                 }
@@ -847,6 +849,10 @@ public class GeoBrowserImpl implements GeoBrowser {
      */
     private boolean isCausedByAnHtmlDocument( Exception e ) {
         return e instanceof SAXParseException && e.getMessage().contains( "White spaces are required between publicId and systemId." );
+    }
+
+    private boolean isCausedByInvalidUtf8Encoding( Exception e ) {
+        return e instanceof SAXParseException && e.getMessage().contains( "Invalid byte 1 of 1-byte UTF-8 sequence." );
     }
 
     /**

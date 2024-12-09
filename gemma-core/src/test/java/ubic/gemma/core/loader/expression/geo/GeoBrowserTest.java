@@ -183,6 +183,15 @@ public class GeoBrowserTest {
                 } );
     }
 
+    /**
+     * This dataset has incorrect UTF-8 characters in its MINiML file.
+     */
+    @Test
+    public void testGSE2569() throws IOException {
+        GeoBrowser b = new GeoBrowserImpl( ncbiApiKey );
+        b.getGeoRecord( GeoRecordType.SERIES, "GSE2569", GeoRetrieveConfig.DETAILED );
+    }
+
     /* Make the method public to run this test */
     //    @Test
     //    public void testGetTaxonCollection() throws Exception {
