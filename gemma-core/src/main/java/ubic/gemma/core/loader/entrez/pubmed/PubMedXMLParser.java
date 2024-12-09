@@ -37,7 +37,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.*;
 
-import static ubic.gemma.core.util.XMLUtils.createDocumentBuilder;
+import static ubic.gemma.core.loader.entrez.NcbiXmlUtils.createDocumentBuilder;
 
 /**
  * Simple class to parse XML in the format defined by

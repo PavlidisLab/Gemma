@@ -25,8 +25,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-import ubic.gemma.core.loader.util.NcbiEntityResolver;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -34,8 +32,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -53,18 +49,22 @@ public class XMLUtils {
 
     private static final Log log = LogFactory.getLog( XMLUtils.class );
 
+    /**
+     * Create a new DocumentBuilder with some good presets for Gemma.
+     * <p>
+     * For security reasons (and also performance), the returned DocumentBuilder is not capable of resolving entities.
+     * If you need to resolve DTDs or XSD schemas, you must implement an {@link org.xml.sax.EntityResolver}.
+     */
     public static DocumentBuilder createDocumentBuilder() throws ParserConfigurationException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setIgnoringComments( true );
         factory.setValidating( false );
         DocumentBuilder builder = factory.newDocumentBuilder();
-        builder.setEntityResolver( new NcbiEntityResolver() );
+        // the default behavior is to retrieve DTDs from the web, which is extremely dangerous (and slow)
+        builder.setEntityResolver( ( systemId, publicId ) -> {
+            throw new RuntimeException( "No entity resolver has been set." );
+        } );
         return builder;
-    }
-
-    public static Document openAndParse( InputStream is )
-            throws IOException, ParserConfigurationException, SAXException {
-        return createDocumentBuilder().parse( is );
     }
 
     public static List<String> extractMultipleChildren( Node parent, String elementName ) {

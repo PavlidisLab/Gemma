@@ -36,6 +36,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.StringUtil;
+import ubic.gemma.core.loader.entrez.NcbiXmlUtils;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.util.SimpleRetry;
@@ -778,7 +779,7 @@ public class GeoBrowserImpl implements GeoBrowser {
                 while ( ( entry = tis.getNextEntry() ) != null ) {
                     if ( entry.getName().equals( geoAccession + "_family.xml" ) ) {
                         log.debug( "Parsing MINiML for " + geoAccession + " from " + documentUrl + "!" + entry.getName() + "..." );
-                        return createDocumentBuilder().parse( tis );
+                        return NcbiXmlUtils.createDocumentBuilder().parse( tis );
                     }
                 }
             } catch ( ParserConfigurationException | SAXException e ) {
@@ -806,7 +807,7 @@ public class GeoBrowserImpl implements GeoBrowser {
     Document parseMiniMLDocument( URL url ) throws IOException {
         return execute( ( retries, lastAttempt ) -> {
             try ( InputStream is = openUrlWithMaxSize( url, MAX_MINIML_RECORD_SIZE ) ) {
-                return createDocumentBuilder().parse( is );
+                return NcbiXmlUtils.createDocumentBuilder().parse( is );
             } catch ( ParserConfigurationException | SAXException e ) {
                 if ( isCausedByAnEmptyXmlDocument( e ) ) {
                     throw new IOException( "Got an empty document for " + url + ".", e );

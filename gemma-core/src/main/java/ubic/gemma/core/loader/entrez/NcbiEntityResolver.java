@@ -1,4 +1,4 @@
-package ubic.gemma.core.loader.util;
+package ubic.gemma.core.loader.entrez;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.xml.sax.EntityResolver;

@@ -20,14 +20,16 @@ package ubic.gemma.core.image.aba;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
 import ubic.gemma.core.util.XMLUtils;
 import ubic.gemma.model.genome.Gene;
 
+import java.nio.file.Path;
 import java.util.*;
 
 /**
@@ -44,15 +46,16 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
     private static final Log log = LogFactory.getLog( AllenBrainAtlasServiceImpl.class.getName() );
     private final AbaLoader loader;
 
-    public AllenBrainAtlasServiceImpl() {
-        this.loader = new AbaLoader();
+    @Autowired
+    public AllenBrainAtlasServiceImpl( @Qualifier("gemma.appdata.home") Path appDataHome ) {
+        this.loader = new AbaLoader( appDataHome.resolve( "abaCache" ), 1200 * 1000 );
     }
 
     /**
      * Given a gene too look for for will return the corresponding abaGene (useful for finding images)
      *
      * @param  gene                     the gene to look for in ABA.
-     * @return                          ABA gene
+     * @return ABA gene
      * @throws IllegalArgumentException when the given gene does not have an NCBI ID.
      */
     @Override
@@ -123,7 +126,7 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
 
     /**
      * Scans the given series and returns new series only containing the image of the middle section.
-     * 
+     *
      * @param imageSeries the series to strip.
      */
     private Collection<ImageSeries> stripImageSeries( Collection<ImageSeries> imageSeries ) {
