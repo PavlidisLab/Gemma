@@ -101,6 +101,11 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
             "SampleTerms", "LibraryStrategy", "OverallDesign" };
 
     /**
+     * Preset when seeking records.
+     */
+    public static final GeoRetrieveConfig MINIMAL = GeoRetrieveConfig.builder().build();
+
+    /**
      * Detailed preset for this CLI used when fetching GEO records.
      * @see GeoRetrieveConfig#DETAILED
      */
@@ -508,7 +513,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
     }
 
     private Slice<GeoRecord> getGeoRecords( GeoQuery query, int start, int chunkSize, boolean fetchDetails ) throws IOException {
-        return retryTemplate.execute( ( attempt, lastAttempt ) -> gbs.retrieveGeoRecords( query, start, chunkSize, fetchDetails ? DETAILED : null ), "fetching GEO records" );
+        return retryTemplate.execute( ( attempt, lastAttempt ) -> gbs.retrieveGeoRecords( query, start, chunkSize, fetchDetails ? DETAILED : MINIMAL ), "fetching GEO records" );
     }
 
     private Appendable getOutputWriter() throws IOException {
