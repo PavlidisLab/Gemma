@@ -22,15 +22,15 @@ public interface GeoBrowser {
      * Retrieve a single GEO series using the default preset.
      */
     @Nullable
-    default GeoRecord getGeoRecords( GeoRecordType recordType, String accession ) throws IOException {
-        return getGeoRecords( recordType, accession, GeoRetrieveConfig.DEFAULT );
+    default GeoRecord getGeoRecord( GeoRecordType recordType, String accession ) throws IOException {
+        return getGeoRecord( recordType, accession, GeoRetrieveConfig.DEFAULT );
     }
 
     /**
      * Retrieve a single GEO record.
      */
     @Nullable
-    GeoRecord getGeoRecords( GeoRecordType recordType, String accession, GeoRetrieveConfig config ) throws IOException;
+    GeoRecord getGeoRecord( GeoRecordType recordType, String accession, GeoRetrieveConfig config ) throws IOException;
 
     default Collection<GeoRecord> getGeoRecords( GeoRecordType recordType, Collection<String> accessions ) throws IOException {
         return getGeoRecords( recordType, accessions, GeoRetrieveConfig.DEFAULT );

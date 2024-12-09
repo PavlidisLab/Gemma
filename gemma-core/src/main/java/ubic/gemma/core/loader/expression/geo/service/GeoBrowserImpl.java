@@ -144,7 +144,7 @@ public class GeoBrowserImpl implements GeoBrowser {
 
     @Nullable
     @Override
-    public GeoRecord getGeoRecords( GeoRecordType recordType, String accession, GeoRetrieveConfig config ) throws IOException {
+    public GeoRecord getGeoRecord( GeoRecordType recordType, String accession, GeoRetrieveConfig config ) throws IOException {
         List<GeoRecord> records = new ArrayList<>();
         String searchUrl = ESEARCH
                 + "&term=" + urlEncode( entryTypeFromRecordType( recordType ) + "[" + GeoSearchField.ENTRY_TYPE + "] AND " + quoteTerm( accession ) + "[" + GeoSearchField.GEO_ACCESSION + "]" )

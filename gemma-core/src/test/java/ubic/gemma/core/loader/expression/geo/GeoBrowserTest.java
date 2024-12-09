@@ -114,14 +114,14 @@ public class GeoBrowserTest {
 
 
     @Test
-    public void testGetGeoRecordsB() throws IOException {
+    public void testGetGeoRecordB() throws IOException {
         assertThat( b.getGeoRecords( GeoRecordType.SERIES, Arrays.asList( "GSE1", "GSE2", "GSE3" ) ) ).hasSize( 3 );
     }
 
     @Test
-    public void testGetGeoRecordsGSE93825() throws IOException {
+    public void testGetGeoRecordGSE93825() throws IOException {
         // Check that the search has returned at least one record
-        assertThat( b.getGeoRecords( GeoRecordType.SERIES, "GSE93825" ) ).isNotNull()
+        assertThat( b.getGeoRecord( GeoRecordType.SERIES, "GSE93825" ) ).isNotNull()
                 .satisfies( record -> {
                     // Print out accession numbers etc.; check that the records returned match the search term
                     log.info( "Accession: " + record.getGeoAccession() );
@@ -140,7 +140,7 @@ public class GeoBrowserTest {
     @Test
     @Category(SlowTest.class)
     public void testGSE97948() throws IOException {
-        assertThat( b.getGeoRecords( GeoRecordType.SERIES, "GSE97948", GeoRetrieveConfig.builder()
+        assertThat( b.getGeoRecord( GeoRecordType.SERIES, "GSE97948", GeoRetrieveConfig.builder()
                 .subSeriesStatus( true )
                 .libraryStrategy( true )
                 .build() ) )
@@ -161,9 +161,9 @@ public class GeoBrowserTest {
      */
     @Test
     @Category(SlowTest.class)
-    public void testGetGeoRecordsWithMeshHeadings() throws IOException {
+    public void testGetGeoRecordWithMeshHeadings() throws IOException {
         GeoBrowser b = new GeoBrowserImpl( ncbiApiKey );
-        assertThat( b.getGeoRecords( GeoRecordType.SERIES, "GSE171541", GeoRetrieveConfig.DETAILED ) )
+        assertThat( b.getGeoRecord( GeoRecordType.SERIES, "GSE171541", GeoRetrieveConfig.DETAILED ) )
                 .satisfies( record -> {
                     assertThat( record.getPubMedIds() ).containsExactly( "36539833" );
                     assertThat( record.getNumSamples() ).isEqualTo( 9 );
