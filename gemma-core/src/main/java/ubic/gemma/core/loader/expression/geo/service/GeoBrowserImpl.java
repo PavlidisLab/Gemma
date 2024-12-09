@@ -143,12 +143,12 @@ public class GeoBrowserImpl implements GeoBrowser {
 
     @Nullable
     @Override
-    public GeoRecord getGeoRecord( String accession, GeoRetrieveConfig config ) throws IOException {
+    public GeoRecord getGeoRecords( GeoRecordType recordType, String accession, GeoRetrieveConfig config ) throws IOException {
         List<GeoRecord> records = new ArrayList<>();
         String searchUrl = ESEARCH
-                + "&term=" + urlEncode( "gse[" + GeoSearchField.ENTRY_TYPE + "] AND " + quoteTerm( accession ) + "[" + GeoSearchField.GEO_ACCESSION + "]" )
+                + "&term=" + urlEncode( entryTypeFromRecordType( recordType ) + "[" + GeoSearchField.ENTRY_TYPE + "] AND " + quoteTerm( accession ) + "[" + GeoSearchField.GEO_ACCESSION + "]" )
                 + "&usehistory=y";
-        getGeoBasicRecords( searchUrl, records );
+        getGeoBasicRecords( recordType, searchUrl, records );
         records.forEach( record -> fillDetails( record, config ) );
         if ( records.size() > 1 ) {
             throw new IllegalStateException( "More than one record found for " + accession );
@@ -162,17 +162,17 @@ public class GeoBrowserImpl implements GeoBrowser {
      * @return collection of records
      */
     @Override
-    public Collection<GeoRecord> getGeoRecords( Collection<String> accessions, GeoRetrieveConfig config ) throws IOException {
+    public Collection<GeoRecord> getGeoRecords( GeoRecordType recordType, Collection<String> accessions, GeoRetrieveConfig config ) throws IOException {
         List<GeoRecord> records = new ArrayList<>( accessions.size() );
 
         for ( List<String> chunk : ListUtils.partition( new ArrayList<>( accessions ), 10 ) ) {
             String searchUrl = ESEARCH
-                    + "&term=" + urlEncode( "gse[" + GeoSearchField.ENTRY_TYPE + "] AND (" + chunk.stream().map( c -> quoteTerm( c ) + "[" + GeoSearchField.GEO_ACCESSION + "]" ).collect( Collectors.joining( " OR " ) ) + ")" )
+                    + "&term=" + urlEncode( entryTypeFromRecordType( recordType ) + "[" + GeoSearchField.ENTRY_TYPE + "] AND (" + chunk.stream().map( c -> quoteTerm( c ) + "[" + GeoSearchField.GEO_ACCESSION + "]" ).collect( Collectors.joining( " OR " ) ) + ")" )
                     + "&usehistory=y";
             if ( StringUtils.isNotBlank( ncbiApiKey ) ) {
                 searchUrl = searchUrl + "&api_key=" + urlEncode( ncbiApiKey );
             }
-            getGeoBasicRecords( searchUrl, records );
+            getGeoBasicRecords( recordType, searchUrl, records );
         }
 
         records.forEach( record -> fillDetails( record, config ) );
@@ -180,7 +180,8 @@ public class GeoBrowserImpl implements GeoBrowser {
         return records;
     }
 
-    private void getGeoBasicRecords( String searchUrl, List<GeoRecord> records ) throws IOException {
+    private void getGeoBasicRecords( GeoRecordType recordType, String searchUrl, List<GeoRecord> records ) throws IOException {
+        Assert.isTrue( recordType == GeoRecordType.SERIES, "Only series are supported" );
         Document searchDocument = parseMiniMLDocument( new URL( searchUrl ) );
 
         NodeList countNode = searchDocument.getElementsByTagName( "Count" );
@@ -261,7 +262,8 @@ public class GeoBrowserImpl implements GeoBrowser {
     }
 
     @Override
-    public Slice<GeoRecord> getRecentGeoRecords( int start, int pageSize ) throws IOException {
+    public Slice<GeoRecord> getRecentGeoRecords( GeoRecordType recordType, int start, int pageSize ) throws IOException {
+        Assert.isTrue( recordType == GeoRecordType.SERIES, "Only series are supported" );
         Assert.isTrue( start >= 0, "The starting must be zero or greater." );
         Assert.isTrue( pageSize > 0, "The page size must be one or greater." );
 
@@ -342,8 +344,8 @@ public class GeoBrowserImpl implements GeoBrowser {
     }
 
     @Override
-    public GeoQuery searchGeoRecords( @Nullable String searchTerms, @Nullable GeoSearchField field, @Nullable Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatforms, @Nullable Collection<String> seriesTypes ) throws IOException {
-        String term = "gse" + "[" + GeoSearchField.ENTRY_TYPE + "]";
+    public GeoQuery searchGeoRecords( GeoRecordType recordType, @Nullable String searchTerms, @Nullable GeoSearchField field, @Nullable Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatforms, @Nullable Collection<String> seriesTypes ) throws IOException {
+        String term = entryTypeFromRecordType( recordType ) + "[" + GeoSearchField.ENTRY_TYPE + "]";
 
         if ( StringUtils.isNotBlank( searchTerms ) ) {
             term += " AND " + quoteTerm( searchTerms );
@@ -385,23 +387,7 @@ public class GeoBrowserImpl implements GeoBrowser {
         String queryId = getTextValue( getUniqueItem( searchDocument.getElementsByTagName( "QueryKey" ) ) );
         String cookie = getTextValue( getUniqueItem( searchDocument.getElementsByTagName( "WebEnv" ) ) );
 
-        return new GeoQuery() {
-
-            @Override
-            public String getQueryId() {
-                return queryId;
-            }
-
-            @Override
-            public String getCookie() {
-                return cookie;
-            }
-
-            @Override
-            public int getTotalRecords() {
-                return count;
-            }
-        };
+        return new GeoQuery( recordType, queryId, cookie, count );
     }
 
     @Override
@@ -499,8 +485,9 @@ public class GeoBrowserImpl implements GeoBrowser {
     }
 
     @Override
-    public Collection<GeoRecord> getAllGeoPlatforms( @Nullable Collection<String> allowedTaxa ) throws IOException {
-        String term = "gpl[" + GeoSearchField.ENTRY_TYPE + "]";
+    public Collection<GeoRecord> getAllGeoRecords( GeoRecordType recordType, @Nullable Collection<String> allowedTaxa ) throws IOException {
+        Assert.isTrue( recordType == GeoRecordType.PLATFORM, "Only platforms are supported" );
+        String term = entryTypeFromRecordType( recordType ) + "[" + GeoSearchField.ENTRY_TYPE + "]";
         if ( allowedTaxa != null && !allowedTaxa.isEmpty() ) {
             term += " AND (" + allowedTaxa.stream().map( t -> quoteTerm( t ) + "[" + GeoSearchField.ORGANISM + "]" ).collect( Collectors.joining( " OR " ) ) + ")";
         }
@@ -759,6 +746,17 @@ public class GeoBrowserImpl implements GeoBrowser {
             }
         }
         record.setMeshHeadings( meshheadings );
+    }
+
+    private String entryTypeFromRecordType( GeoRecordType recordType ) {
+        switch ( recordType ) {
+            case SERIES:
+                return "gse";
+            case PLATFORM:
+                return "gpl";
+            default:
+                throw new UnsupportedOperationException( "Unsupported record type: " + recordType );
+        }
     }
 
     private String urlEncode( String s ) {

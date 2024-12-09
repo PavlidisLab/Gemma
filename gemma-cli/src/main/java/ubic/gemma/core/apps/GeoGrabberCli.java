@@ -27,8 +27,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
-import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
-import ubic.gemma.core.loader.expression.geo.service.GeoBrowserImpl;
+import ubic.gemma.core.loader.expression.geo.service.*;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -103,9 +102,9 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
 
     /**
      * Detailed preset for this CLI used when fetching GEO records.
-     * @see ubic.gemma.core.loader.expression.geo.service.GeoBrowser.GeoRetrieveConfig#DETAILED
+     * @see GeoRetrieveConfig#DETAILED
      */
-    private static final GeoBrowser.GeoRetrieveConfig DETAILED = GeoBrowser.GeoRetrieveConfig.builder()
+    private static final GeoRetrieveConfig DETAILED = GeoRetrieveConfig.builder()
             .subSeriesStatus( true )
             .meshHeadings( true )
             .libraryStrategy( true )
@@ -292,7 +291,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         CSVFormat tsvFormat = CSVFormat.TDF.builder()
                 .setHeader( "Acc", "ReleaseDate", "Taxa", "Title", "Summary", "TechType" )
                 .build();
-        Collection<GeoRecord> allGEOPlatforms = gbs.getAllGeoPlatforms( getAllowedTaxa() );
+        Collection<GeoRecord> allGEOPlatforms = gbs.getAllGeoRecords( GeoRecordType.PLATFORM, getAllowedTaxa() );
         log.info( "Fetched " + allGEOPlatforms.size() + " records" );
         try ( CSVPrinter os = tsvFormat.print( getOutputWriter() ) ) {
             for ( GeoRecord geoRecord : allGEOPlatforms ) {
@@ -313,7 +312,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                 .setHeader( DATASET_HEADER )
                 .build();
         try ( CSVPrinter os = tsvFormat.print( getOutputWriter() ) ) {
-            for ( GeoRecord record : gbs.getGeoRecords( accessions, DETAILED ) ) {
+            for ( GeoRecord record : gbs.getGeoRecords( GeoRecordType.SERIES, accessions, DETAILED ) ) {
                 writeDataset( record, areAllPlatformsInGemma( record, seenPlatforms ), isAffymetrix( record, seenPlatforms ), os );
             }
         }
@@ -332,7 +331,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         searchMessage += "\n\tSeries Types: " + String.join( ", ", seriesTypes );
         log.info( searchMessage );
 
-        GeoBrowser.GeoQuery query = searchGeoRecords( allowedTaxa, limitPlatform, seriesTypes );
+        GeoQuery query = searchGeoSeries( allowedTaxa, limitPlatform, seriesTypes );
 
         int start = seekRewindPoint( query, startFrom, gseLimit, startDate, dateLimit );
         if ( start == -1 ) {
@@ -416,7 +415,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
      * TODO: use a binary search for date-based rewinding
      * @return the rewind point if found, otherwise -1
      */
-    private int seekRewindPoint( GeoBrowser.GeoQuery query, @Nullable String startFrom, @Nullable String gseLimit, @Nullable Date startDate, @Nullable Date dateLimit ) throws IOException {
+    private int seekRewindPoint( GeoQuery query, @Nullable String startFrom, @Nullable String gseLimit, @Nullable Date startDate, @Nullable Date dateLimit ) throws IOException {
         if ( startFrom == null && startDate == null ) {
             return 0;
         } else if ( startFrom != null ) {
@@ -426,7 +425,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         }
     }
 
-    private int seekRewindPointByAccession( GeoBrowser.GeoQuery query, String startFrom, @Nullable String gseLimit, @Nullable Date dateLimit ) throws IOException {
+    private int seekRewindPointByAccession( GeoQuery query, String startFrom, @Nullable String gseLimit, @Nullable Date dateLimit ) throws IOException {
         log.info( "Seeking rewind point from " + startFrom + " with chunks of " + REWIND_CHUNK_SIZE + " records..." );
         // we're not fetching details, so we can handle larger chunks
         int totalRecords = Integer.MAX_VALUE;
@@ -457,7 +456,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         return -1;
     }
 
-    private int seekRewindPointByDate( GeoBrowser.GeoQuery query, Date startDate, @Nullable Date dateLimit ) throws IOException {
+    private int seekRewindPointByDate( GeoQuery query, Date startDate, @Nullable Date dateLimit ) throws IOException {
         log.info( "Seeking rewind point from " + startDate + " using a binary search..." );
         // we're not fetching details, so we can handle larger chunks
         int start = 0;
@@ -504,12 +503,11 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         return a != null && ( a.equals( b ) || a.before( b ) );
     }
 
-
-    private GeoBrowser.GeoQuery searchGeoRecords( Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatform, Collection<String> seriesTypes ) throws IOException {
-        return retryTemplate.execute( ( attempt, lastAttempt ) -> gbs.searchGeoRecords( null, null, allowedTaxa, limitPlatform, seriesTypes ), "searching GEO records" );
+    private GeoQuery searchGeoSeries( Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatform, Collection<String> seriesTypes ) throws IOException {
+        return retryTemplate.execute( ( attempt, lastAttempt ) -> gbs.searchGeoRecords( GeoRecordType.SERIES, null, null, allowedTaxa, limitPlatform, seriesTypes ), "searching GEO records" );
     }
 
-    private Slice<GeoRecord> getGeoRecords( GeoBrowser.GeoQuery query, int start, int chunkSize, boolean fetchDetails ) throws IOException {
+    private Slice<GeoRecord> getGeoRecords( GeoQuery query, int start, int chunkSize, boolean fetchDetails ) throws IOException {
         return retryTemplate.execute( ( attempt, lastAttempt ) -> gbs.retrieveGeoRecords( query, start, chunkSize, fetchDetails ? DETAILED : null ), "fetching GEO records" );
     }
 

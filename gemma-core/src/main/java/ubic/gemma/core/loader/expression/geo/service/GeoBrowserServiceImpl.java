@@ -157,12 +157,12 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
 
     @Override
     public List<GeoRecord> getRecentGeoRecords( int start, int count ) throws IOException {
-        return this.filterGeoRecords( browser.getRecentGeoRecords( start, count ) );
+        return this.filterGeoRecords( browser.getRecentGeoRecords( GeoRecordType.SERIES, start, count ) );
     }
 
     @Override
     public List<GeoRecord> searchGeoRecords( String searchString, int start, int count, boolean detailed ) throws IOException {
-        return this.filterGeoRecords( browser.searchAndRetrieveGeoRecords( searchString, null, null, null, null, start, count, detailed ) );
+        return this.filterGeoRecords( browser.searchAndRetrieveGeoRecords( GeoRecordType.SERIES, searchString, null, null, null, null, start, count, detailed ) );
     }
 
     @Override
