@@ -21,7 +21,7 @@ package ubic.gemma.core.image.aba;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -47,7 +47,7 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
     private final AbaLoader loader;
 
     @Autowired
-    public AllenBrainAtlasServiceImpl( @Qualifier("gemma.appdata.home") Path appDataHome ) {
+    public AllenBrainAtlasServiceImpl( @Value("gemma.appdata.home") Path appDataHome ) {
         this.loader = new AbaLoader( appDataHome.resolve( "abaCache" ), 1200 * 1000 );
     }
 
