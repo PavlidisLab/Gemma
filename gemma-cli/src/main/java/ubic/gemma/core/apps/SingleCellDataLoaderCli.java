@@ -2,7 +2,6 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
 import ubic.gemma.core.loader.expression.singleCell.AnnDataSingleCellDataLoaderConfig;
@@ -25,7 +24,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-@Component
 public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI {
 
     private static final String

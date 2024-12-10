@@ -5,7 +5,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import ubic.gemma.core.loader.expression.singleCell.*;
 import ubic.gemma.core.util.AbstractCLI;
 
@@ -20,7 +19,6 @@ import java.util.stream.Collectors;
  * Transform various single-cell formats.
  * @author poirigui
  */
-@Component
 public class SingleCellDataTransformCli extends AbstractCLI {
 
     private static final String PYTHON_OPTION = "python";

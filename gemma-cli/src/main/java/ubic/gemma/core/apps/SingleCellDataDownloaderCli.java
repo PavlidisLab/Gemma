@@ -18,7 +18,6 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import ubic.gemma.core.loader.expression.geo.GeoFamilyParser;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
@@ -51,7 +50,6 @@ import java.util.zip.GZIPInputStream;
 
 import static java.util.Objects.requireNonNull;
 
-@Component
 public class SingleCellDataDownloaderCli extends AbstractCLI {
 
     private static final String

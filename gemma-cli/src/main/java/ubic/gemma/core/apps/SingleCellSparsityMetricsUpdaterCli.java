@@ -1,13 +1,11 @@
 package ubic.gemma.core.apps;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
 import javax.annotation.Nullable;
 
-@Component
 public class SingleCellSparsityMetricsUpdaterCli extends ExpressionExperimentManipulatingCLI {
 
     @Autowired
