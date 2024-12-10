@@ -598,8 +598,12 @@ public class GeoBrowserImpl implements GeoBrowser {
         try {
             document = fetchDetailedGeoSeriesDocument( record.getGeoAccession() );
         } catch ( IOException e ) {
-            log.error( "Error while processing MINiML for " + record.getGeoAccession() + ", sample details will not be obtained", e );
-            return;
+            if ( config.isIgnoreErrors() ) {
+                log.error( "Error while processing MINiML for " + record.getGeoAccession() + ", sample details will not be obtained.", e );
+                return;
+            } else {
+                throw new RuntimeException( "Error while processing MINiML for " + record.getGeoAccession() + ".", e );
+            }
         }
 
         if ( !record.isSuperSeries() && config.isSubSeriesStatus() ) {
@@ -617,7 +621,12 @@ public class GeoBrowserImpl implements GeoBrowser {
             try {
                 fillMeshHeadings( record );
             } catch ( IOException e ) {
-                log.error( "Could not get MeSH headings for " + record.getGeoAccession() + ".", e );
+                String message = "Could not get MeSH headings for " + record.getGeoAccession() + ".";
+                if ( config.isIgnoreErrors() ) {
+                    log.error( message, e );
+                } else {
+                    throw new RuntimeException( message, e );
+                }
             }
         }
 
@@ -772,7 +781,7 @@ public class GeoBrowserImpl implements GeoBrowser {
      * Fetch a detailed GEO series MINiML document.
      */
     private Document fetchDetailedGeoSeriesDocument( String geoAccession ) throws IOException {
-        URL documentUrl = new URL( GEO_FTP + geoAccession.substring( 0, geoAccession.length() - 3 ) + "nnn/" + geoAccession + "/miniml/" + geoAccession + "_family.xml.tgz" );
+        URL documentUrl = new URL( GEO_FTP + geoAccession.substring( 0, Math.max( geoAccession.length() - 3, 3 ) ) + "nnn/" + geoAccession + "/miniml/" + geoAccession + "_family.xml.tgz" );
         return execute( ( attempt, lastAttempt ) -> {
             try ( TarInputStream tis = new TarInputStream( new GZIPInputStream( documentUrl.openStream() ) ) ) {
                 TarEntry entry;
@@ -788,7 +797,7 @@ public class GeoBrowserImpl implements GeoBrowser {
                 } else if ( isCausedByAnHtmlDocument( e ) ) {
                     throw new IOException( "Document at " + documentUrl + " appears to be an HTML document.", e );
                 } else if ( isCausedByInvalidUtf8Encoding( e ) ) {
-                    throw new NonRetryableIOException( new IOException( "Document at " + documentUrl + " appears to have invalid UTF-8 characters." ) );
+                    throw new RuntimeException( new IOException( "Document at " + documentUrl + " appears to have invalid UTF-8 characters.", e ) );
                 } else {
                     throw new RuntimeException( e );
                 }

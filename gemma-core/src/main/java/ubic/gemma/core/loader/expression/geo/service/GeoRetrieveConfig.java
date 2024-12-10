@@ -53,4 +53,10 @@ class GeoRetrieveConfig {
      * This requires a detailed sample query.
      */
     boolean sampleCharacteristics;
+    /**
+     * Ignore errors when retrieving additional information.
+     * <p>
+     * If set to true, any errors while retrieving additional information will be logged instead of thrown.
+     */
+    boolean ignoreErrors;
 }

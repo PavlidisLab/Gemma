@@ -23,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.xml.sax.SAXParseException;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.*;
@@ -34,6 +35,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 
@@ -62,6 +64,15 @@ public class GeoBrowserTest {
         assertThat( res )
                 .isNotEmpty()
                 .hasSizeLessThanOrEqualTo( 10 );
+    }
+
+    @Test
+    @Category(SlowTest.class)
+    public void testGetDetailedGeoRecord() throws IOException {
+        GeoBrowser b = new GeoBrowserImpl( ncbiApiKey );
+        b.getGeoRecord( GeoRecordType.SERIES, "GSE1", GeoRetrieveConfig.DETAILED );
+        b.getGeoRecord( GeoRecordType.SERIES, "GSE999", GeoRetrieveConfig.DETAILED );
+        b.getGeoRecord( GeoRecordType.SERIES, "GSE1000", GeoRetrieveConfig.DETAILED );
     }
 
     @Test
@@ -187,9 +198,14 @@ public class GeoBrowserTest {
      * This dataset has incorrect UTF-8 characters in its MINiML file.
      */
     @Test
-    public void testGSE2569() throws IOException {
+    public void testGSE2569() {
         GeoBrowser b = new GeoBrowserImpl( ncbiApiKey );
-        b.getGeoRecord( GeoRecordType.SERIES, "GSE2569", GeoRetrieveConfig.DETAILED );
+        assertThatThrownBy( () -> b.getGeoRecord( GeoRecordType.SERIES, "GSE2569", GeoRetrieveConfig.DETAILED ) )
+                .cause()
+                .isInstanceOf( IOException.class )
+                .cause()
+                .isInstanceOf( SAXParseException.class )
+                .hasMessage( "Invalid byte 1 of 1-byte UTF-8 sequence." );
     }
 
     /* Make the method public to run this test */

@@ -116,6 +116,8 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
             // ignore sources and characteristics, those are very expensive
             .sampleSources( false )
             .sampleCharacteristics( false )
+            // ignore errors when fetching additional information
+            .ignoreErrors( true )
             .build();
 
     // operating mode

@@ -21,6 +21,7 @@ package ubic.gemma.core.util;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.util.xml.SimpleSaxErrorHandler;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -60,6 +61,7 @@ public class XMLUtils {
         factory.setIgnoringComments( true );
         factory.setValidating( false );
         DocumentBuilder builder = factory.newDocumentBuilder();
+        builder.setErrorHandler( new SimpleSaxErrorHandler( log ) );
         // the default behavior is to retrieve DTDs from the web, which is extremely dangerous (and slow)
         builder.setEntityResolver( ( systemId, publicId ) -> {
             throw new RuntimeException( "No entity resolver has been set." );
