@@ -77,7 +77,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
      */
     private static final int DEFAULT_CHUNK_SIZE = 100;
     /**
-     * Chunk size to use when rewiding.
+     * Chunk size to use when rewinding.
      */
     private static final int REWIND_CHUNK_SIZE = 10 * DEFAULT_CHUNK_SIZE;
 
@@ -142,6 +142,9 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
     @Nullable
     private Date startDate = null;
     private int chunkSize = DEFAULT_CHUNK_SIZE;
+    private boolean ignoreBlacklisted = true;
+    private boolean ignoreAlreadyInGemma = true;
+    private boolean ignoreNoPlatform = true;
 
     @Autowired
     private ExpressionExperimentService ees;
@@ -200,6 +203,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         options.addOption( "date", true, "A release date to stop the search in format yyyy-MM-dd or yyyy.MM.dd (e.g. 2010.01.12). Records on that date will not be processed." );
         options.addOption( "startat", true, "Attempt to 'fast-rewind' to the given GSE ID and continue retrieving from there " );
         options.addOption( "gselimit", true, "A GSE at which to stop the search. Record with the GSE ID will not be processed." );
+        options.addOption( "raw", false, "Display raw, unfiltered results from GEO. Datasets that are blacklisted or already in Gemma will be included in the output." );
 
         options.addOption( Option.builder( "chunkSize" )
                 .longOpt( "chunk-size" )
@@ -260,6 +264,13 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                     throw new IllegalArgumentException( "The -date option: " + dateLimit + " has to be earlier than -startdate: " + startDate + "." );
                 }
             }
+        }
+
+        if ( commandLine.hasOption( "raw" ) ) {
+            log.warn( "The -raw option is specified, no filtering will be applied on GEO records. This option is not suitable for a GEO scrape." );
+            ignoreBlacklisted = false;
+            ignoreAlreadyInGemma = false;
+            ignoreNoPlatform = false;
         }
 
         if ( commandLine.hasOption( "chunkSize" ) ) {
@@ -384,28 +395,28 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                         continue;
                     }
 
-                    if ( ees.isBlackListed( geoRecord.getGeoAccession() ) ) {
+                    if ( ignoreBlacklisted && ees.isBlackListed( geoRecord.getGeoAccession() ) ) {
                         log.warn( geoRecord + ": skipping, blacklisted." );
                         continue;
                     }
 
-                    if ( ees.findByShortName( geoRecord.getGeoAccession() ) != null ) {
+                    if ( ignoreAlreadyInGemma && ees.findByShortName( geoRecord.getGeoAccession() ) != null ) {
                         log.debug( geoRecord + ": skipping, already in Gemma (by short name)." );
                         continue;
                     }
 
-                    if ( !ees.findByAccession( geoRecord.getGeoAccession() ).isEmpty() ) {
+                    if ( ignoreAlreadyInGemma && !ees.findByAccession( geoRecord.getGeoAccession() ).isEmpty() ) {
                         log.debug( geoRecord + ": skipping, already in Gemma (by accession)." );
                         continue;
                     }
 
-                    if ( StringUtils.isBlank( geoRecord.getPlatform() ) ) {
+                    if ( ignoreNoPlatform && StringUtils.isBlank( geoRecord.getPlatform() ) ) {
                         log.warn( geoRecord.getGeoAccession() + ": skipping, does not have any platform." );
                         continue;
                     }
 
                     // we skip if all the platforms for the GSE are blacklisted
-                    if ( areAllPlatformsBlacklisted( geoRecord ) ) {
+                    if ( ignoreBlacklisted && areAllPlatformsBlacklisted( geoRecord ) ) {
                         log.warn( geoRecord.getGeoAccession() + ": skipping, all platforms are blacklisted." );
                         continue;
                     }
