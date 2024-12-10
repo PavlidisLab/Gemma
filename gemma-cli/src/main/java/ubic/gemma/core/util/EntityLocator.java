@@ -24,9 +24,9 @@ public interface EntityLocator {
 
     Protocol locateProtocol( String protocolName );
 
-    QuantitationType locateQuantitationType( ExpressionExperiment ee, String qt, Class<? extends DataVector> vectorType );
+    <T extends DataVector> QuantitationType locateQuantitationType( ExpressionExperiment ee, String qt, Class<? extends T> vectorType );
 
-    QuantitationType locateQuantitationType( ExpressionExperiment ee, String qt, Collection<Class<? extends DataVector>> vectorType );
+    <T extends DataVector> QuantitationType locateQuantitationType( ExpressionExperiment ee, String qt, Collection<Class<? extends T>> vectorType );
 
     CellTypeAssignment locateCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, String cta );
 }

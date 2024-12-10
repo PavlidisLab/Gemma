@@ -154,7 +154,7 @@ public class EntityLocatorImpl implements EntityLocator {
     }
 
     @Override
-    public QuantitationType locateQuantitationType( ExpressionExperiment ee, String qt, Class<? extends DataVector> vectorType ) {
+    public <T extends DataVector> QuantitationType locateQuantitationType( ExpressionExperiment ee, String qt, Class<? extends T> vectorType ) {
         QuantitationType result;
         try {
             if ( ( result = quantitationTypeService.loadByIdAndVectorType( Long.parseLong( qt ), ee, vectorType ) ) != null ) {
@@ -177,9 +177,9 @@ public class EntityLocatorImpl implements EntityLocator {
     }
 
     @Override
-    public QuantitationType locateQuantitationType( ExpressionExperiment ee, String qt, Collection<Class<? extends DataVector>> vectorTypes ) {
+    public <T extends DataVector> QuantitationType locateQuantitationType( ExpressionExperiment ee, String qt, Collection<Class<? extends T>> vectorTypes ) {
         QuantitationType result;
-        for ( Class<? extends DataVector> vectorType : vectorTypes ) {
+        for ( Class<? extends T> vectorType : vectorTypes ) {
             try {
                 if ( ( result = quantitationTypeService.loadByIdAndVectorType( Long.parseLong( qt ), ee, vectorType ) ) != null ) {
                     return result;

@@ -55,13 +55,13 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee, Class<? extends DataVector> dataVectorType ) {
+    public <T extends DataVector> Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee, Class<? extends T> dataVectorType ) {
         return quantitationTypeDao.findByExpressionExperiment( ee, dataVectorType );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee, Collection<Class<? extends DataVector>> vectorTypes ) {
+    public <T extends DataVector> Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee, Collection<Class<? extends T>> vectorTypes ) {
         Collection<QuantitationType> results = new HashSet<>();
         for ( Class<? extends DataVector> vectorType : vectorTypes ) {
             results.addAll( findByExpressionExperiment( ee, vectorType ) );

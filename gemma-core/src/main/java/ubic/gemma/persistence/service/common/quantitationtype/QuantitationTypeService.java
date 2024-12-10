@@ -77,9 +77,9 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
     /**
      * Find all the QT associated to the given experiment and data vector type.
      */
-    Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee, Class<? extends DataVector> dataVectorType );
+    <T extends DataVector> Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee, Class<? extends T> dataVectorType );
 
-    Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee, Collection<Class<? extends DataVector>> vectorTypes );
+    <T extends DataVector> Collection<QuantitationType> findByExpressionExperiment( ExpressionExperiment ee, Collection<Class<? extends T>> vectorTypes );
 
     /**
      * @see QuantitationTypeDao#findByExpressionExperimentAndDimension(ExpressionExperiment, BioAssayDimension)
