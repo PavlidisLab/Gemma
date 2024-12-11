@@ -148,6 +148,26 @@ public class GeoBrowserImpl implements GeoBrowser {
     }
 
     @Override
+    public Collection<GeoRecord> getAllGeoRecords( GeoRecordType recordType, @Nullable Collection<String> allowedTaxa, int limit ) throws IOException {
+        Assert.isTrue( recordType == GeoRecordType.PLATFORM, "Only platforms are supported" );
+
+        String term = entryTypeFromRecordType( recordType ) + "[" + GeoSearchField.ENTRY_TYPE + "]";
+        if ( allowedTaxa != null && !allowedTaxa.isEmpty() ) {
+            term += " AND (" + allowedTaxa.stream().map( t -> quoteTerm( t ) + "[" + GeoSearchField.ORGANISM + "]" ).collect( Collectors.joining( " OR " ) ) + ")";
+        }
+
+        GeoQuery query = searchGeoRecords( recordType, term );
+
+        // cap to 10000
+        if ( limit > 0 && query.getTotalRecords() > limit ) {
+            log.warn( "More than " + limit + " records found: " + query.getTotalRecords() + ", only the first " + limit + " will be retrieved." );
+            query = new GeoQuery( query.getRecordType(), query.getQueryId(), query.getCookie(), limit );
+        }
+
+        return retrieveAllGeoRecords( query, GeoRetrieveConfig.DEFAULT );
+    }
+
+    @Override
     public Slice<GeoRecord> getRecentGeoRecords( GeoRecordType recordType, int start, int pageSize ) throws IOException {
         Assert.isTrue( recordType == GeoRecordType.SERIES, "Only series are supported" );
         Assert.isTrue( start >= 0, "The starting must be zero or greater." );
@@ -339,41 +359,7 @@ public class GeoBrowserImpl implements GeoBrowser {
     }
 
     @Override
-    public Collection<GeoRecord> getAllGeoRecords( GeoRecordType recordType, @Nullable Collection<String> allowedTaxa, int limit ) throws IOException {
-        Assert.isTrue( recordType == GeoRecordType.PLATFORM, "Only platforms are supported" );
-        String term = entryTypeFromRecordType( recordType ) + "[" + GeoSearchField.ENTRY_TYPE + "]";
-        if ( allowedTaxa != null && !allowedTaxa.isEmpty() ) {
-            term += " AND (" + allowedTaxa.stream().map( t -> quoteTerm( t ) + "[" + GeoSearchField.ORGANISM + "]" ).collect( Collectors.joining( " OR " ) ) + ")";
-        }
-
-        String searchUrl = ESEARCH
-                + "&term=" + urlEncode( term )
-                + "&usehistory=y"; //10k is the limit.
-
-        if ( StringUtils.isNotBlank( ncbiApiKey ) ) {
-            searchUrl += "&api_key=" + urlEncode( ncbiApiKey );
-        }
-
-        Document searchDocument = parseMiniMLDocument( new URL( searchUrl ) );
-
-        int count = Integer.parseInt( getTextValue( getItem( searchDocument.getElementsByTagName( "Count" ), 0 ) ) );
-        if ( count == 0 ) {
-            throw new RuntimeException( "Got no records from: " + searchUrl );
-        }
-
-        String queryId = getTextValue( getUniqueItem( searchDocument.getElementsByTagName( "QueryKey" ) ) );
-        String cookie = getTextValue( getUniqueItem( searchDocument.getElementsByTagName( "WebEnv" ) ) );
-
-        // cap to 10000
-        if ( limit > 0 && count > limit ) {
-            log.warn( "More than " + limit + " records found: " + count + ", only the first " + limit + " will be retrieved." );
-            count = limit;
-        }
-
-        return retrieveAllGeoRecords( new GeoQuery( recordType, queryId, cookie, count ), GeoRetrieveConfig.DEFAULT );
-    }
-
-    private Collection<GeoRecord> retrieveAllGeoRecords( GeoQuery query, GeoRetrieveConfig config ) throws IOException {
+    public Collection<GeoRecord> retrieveAllGeoRecords( GeoQuery query, GeoRetrieveConfig config ) throws IOException {
         if ( query.getTotalRecords() == 0 ) {
             return Collections.emptyList();
         }
