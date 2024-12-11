@@ -160,7 +160,7 @@ public class DatasetCombiner {
         Collection<String> associatedDatasetAccessions = new HashSet<>();
         try {
             String details = new EutilFetch( ncbiApiKey ).fetch( "gds", seriesAccession, 100 );
-            if ( details.equalsIgnoreCase( "no results" ) ) {
+            if ( details == null ) {
                 return associatedDatasetAccessions;
             }
             XPathFactory xf = XPathFactory.newInstance();
