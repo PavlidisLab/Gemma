@@ -21,8 +21,7 @@ class GeoRetrieveConfig {
     public static GeoRetrieveConfig DETAILED = GeoRetrieveConfig.builder()
             .subSeriesStatus( true )
             .libraryStrategy( true )
-            .sampleSources( true )
-            .sampleCharacteristics( true )
+            .sampleDetails( true )
             .meshHeadings( true )
             .build();
     /**
@@ -42,17 +41,11 @@ class GeoRetrieveConfig {
      */
     boolean libraryStrategy;
     /**
-     * Fill sample sources.
+     * Fill sample details. This includes sample sources and characteristics.
      * <p>
      * This requires a detailed sample query.
      */
-    boolean sampleSources;
-    /**
-     * Fill sample characteristics.
-     * <p>
-     * This requires a detailed sample query.
-     */
-    boolean sampleCharacteristics;
+    boolean sampleDetails;
     /**
      * Ignore errors when retrieving additional information.
      * <p>

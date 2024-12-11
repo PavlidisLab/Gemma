@@ -113,9 +113,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
             .subSeriesStatus( true )
             .meshHeadings( true )
             .libraryStrategy( true )
-            // ignore sources and characteristics, those are very expensive
-            .sampleSources( false )
-            .sampleCharacteristics( false )
+            .sampleDetails( true )
             // ignore errors when fetching additional information
             .ignoreErrors( true )
             .build();
@@ -309,7 +307,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         CSVFormat tsvFormat = CSVFormat.TDF.builder()
                 .setHeader( "Acc", "ReleaseDate", "Taxa", "Title", "Summary", "TechType" )
                 .build();
-        Collection<GeoRecord> allGEOPlatforms = gbs.getAllGeoRecords( GeoRecordType.PLATFORM, getAllowedTaxa() );
+        Collection<GeoRecord> allGEOPlatforms = gbs.getAllGeoRecords( GeoRecordType.PLATFORM, getAllowedTaxa(), 10000 );
         log.info( "Fetched " + allGEOPlatforms.size() + " records" );
         try ( CSVPrinter os = tsvFormat.print( getOutputWriter() ) ) {
             for ( GeoRecord geoRecord : allGEOPlatforms ) {

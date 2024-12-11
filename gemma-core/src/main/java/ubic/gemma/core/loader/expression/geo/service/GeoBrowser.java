@@ -69,6 +69,7 @@ public interface GeoBrowser {
      * <p>
      * Note that the search is reversed in time. You get the most recent records first.
      *
+     * @param recordType     the type of record to search for
      * @param searchTerms    search term, ignored if null or blank
      * @param field          a field to search in or null to search everywhere
      * @param allowedTaxa    restrict search to the given taxa if not null
@@ -78,6 +79,11 @@ public interface GeoBrowser {
      * @throws IOException if there is a problem obtaining or manipulating the file (some exceptions are not thrown and just logged)
      */
     GeoQuery searchGeoRecords( GeoRecordType recordType, @Nullable String searchTerms, @Nullable GeoSearchField field, @Nullable Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatforms, @Nullable Collection<String> seriesTypes ) throws IOException;
+
+    /**
+     * Search GEO records.
+     */
+    GeoQuery searchGeoRecords( GeoRecordType recordType, String term ) throws IOException;
 
     default Slice<GeoRecord> retrieveGeoRecords( GeoQuery query, int start, int pageSize ) throws IOException {
         return retrieveGeoRecords( query, start, pageSize, GeoRetrieveConfig.DEFAULT );
@@ -100,5 +106,5 @@ public interface GeoBrowser {
      * @param allowedTaxa a collection of allowed taxa, ignored if null or empty
      * @return all relevant platforms up to single-query limit of NCBI
      */
-    Collection<GeoRecord> getAllGeoRecords( GeoRecordType recordType, @Nullable Collection<String> allowedTaxa ) throws IOException;
+    Collection<GeoRecord> getAllGeoRecords( GeoRecordType recordType, @Nullable Collection<String> allowedTaxa, int maxRecords ) throws IOException;
 }
