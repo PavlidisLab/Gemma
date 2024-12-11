@@ -371,6 +371,11 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                 log.debug( "Retrieved " + recs.size() + " GEO records." ); // we skip ones that are not using taxa of interest
 
                 for ( GeoRecord geoRecord : recs ) {
+                    if (numProcessed > 0 && numProcessed % 50 == 0 ) {
+                        log.info( "Processed " + numProcessed + " GEO records, retained " + numUsed + " so far" );
+                    }
+                    numProcessed++;
+
                     // check ending conditions, especially if we are fast-rewinding
                     if ( dateLimit != null && beforeOrEquals( geoRecord.getReleaseDate(), dateLimit ) ) {
                         log.info( "Stopping as reached date limit" );
@@ -382,11 +387,6 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                     }
 
                     log.debug( "Processing " + geoRecord.getGeoAccession() + " released on " + geoRecord.getReleaseDate() + "..." );
-
-                    numProcessed++;
-                    if ( numProcessed % 50 == 0 ) {
-                        log.info( "Processed " + numProcessed + " GEO records, retained " + numUsed + " so far" );
-                    }
 
                     if ( !seen.add( geoRecord.getGeoAccession() ) ) {
                         log.warn( geoRecord + ": skipping, this dataset was already seen." ); // this would be a bug IMO, want to avoid!

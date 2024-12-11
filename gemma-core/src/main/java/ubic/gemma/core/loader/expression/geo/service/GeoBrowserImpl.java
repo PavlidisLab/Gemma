@@ -86,24 +86,26 @@ public class GeoBrowserImpl implements GeoBrowser {
     private static final String FLANKING_QUOTES_REGEX = "^\"|\"$";
 
     // Get relevant data from the XML file
-    private static final XPathExpression xaccession = compile( "//Item[@Name='GSE']" );
+    private static final XPathExpression xaccession = compile( "Item[@Name='GSE']" );
+    private static final XPathExpression xgpl = compile( "Item[@Name='GPL']" );
+    private static final XPathExpression xnumSamples = compile( "Item[@Name='n_samples']" );
+    private static final XPathExpression xorganisms = compile( "Item[@Name='taxon']" );
+    private static final XPathExpression xPlataccession = compile( "Item[@Name='GPL']" );
+    private static final XPathExpression xPlatformTech = compile( "Item[@Name='ptechType']" );
+    // list; also in miniml
+    private static final XPathExpression xpubmed = compile( "Item[@Name='PubMedIds']" );
+    private static final XPathExpression xreleaseDate = compile( "Item[@Name='PDAT']" );
+    private static final XPathExpression xsummary = compile( "Item[@Name='summary']" );
+    private static final XPathExpression xtitle = compile( "Item[@Name='title']" );
+    private static final XPathExpression xtype = compile( "Item[@Name='gdsType']" );
+    // private static final XPathExpression xsampleaccs = xpath.compile( "Item[@Name='Sample']/Item[@Name='Accession']" );
+
+    // for the detailed MINiML
+    private static final XPathExpression xRelationType = compile( "//MINiML/Series/Relation" );
+    private static final XPathExpression xOverallDesign = compile( "//MINiML/Series/Overall-Design" );
     private static final XPathExpression xChannel = compile( "//MINiML/Sample/Channel" );
     private static final XPathExpression xLibraryStrategy = compile( "//MINiML/Sample/Library-Strategy" );
     private static final XPathExpression xLibrarySource = compile( "//MINiML/Sample/Library-Source" );
-    private static final XPathExpression xgpl = compile( "//Item[@Name='GPL']" );
-    private static final XPathExpression xnumSamples = compile( "//Item[@Name='n_samples']" );
-    private static final XPathExpression xorganisms = compile( "//Item[@Name='taxon']" );
-    private static final XPathExpression xPlataccession = compile( "//Item[@Name='GPL']" );
-    private static final XPathExpression xPlatformTech = compile( "//Item[@Name='ptechType']" );
-    // list; also in miniml
-    private static final XPathExpression xpubmed = compile( "//Item[@Name='PubMedIds']" );
-    private static final XPathExpression xRelationType = compile( "//MINiML/Series/Relation" );
-    private static final XPathExpression xOverallDesign = compile( "//MINiML/Series/Overall-Design" );
-    private static final XPathExpression xreleaseDate = compile( "//Item[@Name='PDAT']" );
-    private static final XPathExpression xsummary = compile( "//Item[@Name='summary']" );
-    private static final XPathExpression xtitle = compile( "//Item[@Name='title']" );
-    private static final XPathExpression xtype = compile( "//Item[@Name='gdsType']" );
-    // private static final XPathExpression xsampleaccs = xpath.compile( "//Item[@Name='Sample']/Item[@Name='Accession']" );
 
     /* locale */
     private static final Locale GEO_LOCALE = Locale.ENGLISH;
