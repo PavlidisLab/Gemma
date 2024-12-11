@@ -41,6 +41,7 @@ public class GeoRecord extends GeoData {
     private Collection<String> organisms;
     private String platform = ""; // can be more than one here, for mixed data type series
     private String libraryStrategy = "";
+    private String librarySource = "";
     /*
      * How many times a curator has already looked at the details. this helps us track data sets we've already examined
      * for usefulness.
@@ -75,6 +76,14 @@ public class GeoRecord extends GeoData {
 
     public void setLibraryStrategy( String libraryStrategy ) {
         this.libraryStrategy = libraryStrategy;
+    }
+
+    public String getLibrarySource() {
+        return librarySource;
+    }
+
+    public void setLibrarySource( String librarySource ) {
+        this.librarySource = librarySource;
     }
 
     public String getContactName() {

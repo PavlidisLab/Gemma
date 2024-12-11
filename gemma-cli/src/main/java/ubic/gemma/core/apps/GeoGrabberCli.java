@@ -98,7 +98,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
      */
     private static final String[] DATASET_HEADER = { "Acc", "ReleaseDate", "Taxa", "Platforms", "AllPlatformsInGemma",
             "Affy", "NumSamples", "Type", "SuperSeries", "SubSeriesOf", "PubMed", "Title", "Summary", "MeSH",
-            "SampleTerms", "LibraryStrategy", "OverallDesign" };
+            "SampleTerms", "LibraryStrategy", "LibrarySource", "OverallDesign" };
 
     /**
      * Preset when seeking records.
@@ -583,7 +583,8 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                 StringUtils.join( geoRecord.getOrganisms(), "," ), geoRecord.getPlatform(), allPlatformsInGemma,
                 isAffymetrix, geoRecord.getNumSamples(), geoRecord.getSeriesType(), geoRecord.isSuperSeries(),
                 geoRecord.getSubSeriesOf(), StringUtils.join( geoRecord.getPubMedIds(), "," ), geoRecord.getTitle(), geoRecord.getSummary(),
-                StringUtils.join( geoRecord.getMeshHeadings(), "," ), geoRecord.getSampleDetails(), geoRecord.getLibraryStrategy(),
+                StringUtils.join( geoRecord.getMeshHeadings(), "," ), geoRecord.getSampleDetails(),
+                geoRecord.getLibraryStrategy(), geoRecord.getLibrarySource(),
                 StringUtils.replace( geoRecord.getOverallDesign(), "\n", "\\n" ) );
         os.flush();
     }

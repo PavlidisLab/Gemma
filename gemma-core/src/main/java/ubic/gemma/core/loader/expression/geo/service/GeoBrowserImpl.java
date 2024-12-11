@@ -89,6 +89,7 @@ public class GeoBrowserImpl implements GeoBrowser {
     private static final XPathExpression xaccession = compile( "//Item[@Name='GSE']" );
     private static final XPathExpression xChannel = compile( "//MINiML/Sample/Channel" );
     private static final XPathExpression xLibraryStrategy = compile( "//MINiML/Sample/Library-Strategy" );
+    private static final XPathExpression xLibrarySource = compile( "//MINiML/Sample/Library-Source" );
     private static final XPathExpression xgpl = compile( "//Item[@Name='GPL']" );
     private static final XPathExpression xnumSamples = compile( "//Item[@Name='n_samples']" );
     private static final XPathExpression xorganisms = compile( "//Item[@Name='taxon']" );
@@ -483,7 +484,7 @@ public class GeoBrowserImpl implements GeoBrowser {
      * details might not be filled.
      */
     private void fillDetails( GeoRecord record, GeoRetrieveConfig config ) {
-        if ( !config.isSubSeriesStatus() && !config.isMeshHeadings() && !config.isSampleDetails() ) {
+        if ( !config.isSubSeriesStatus() && !config.isMeshHeadings() && !config.isLibraryStrategy() && !config.isSampleDetails() ) {
             log.debug( "No need to fill details for " + record + "." );
             return;
         }
@@ -529,6 +530,7 @@ public class GeoBrowserImpl implements GeoBrowser {
 
         if ( config.isLibraryStrategy() ) {
             fillLibraryStrategy( record, document );
+            fillLibrarySource( record, document );
         }
 
         if ( config.isSampleDetails() ) {
@@ -601,6 +603,17 @@ public class GeoBrowserImpl implements GeoBrowser {
         }
         if ( !libraryStrategies.isEmpty() ) {
             record.setLibraryStrategy( StringUtils.join( libraryStrategies, ";" ) );
+        }
+    }
+
+    void fillLibrarySource( GeoRecord record, Document document ) {
+        NodeList ls = evaluate( xLibrarySource, document );
+        Set<String> librarySources = new HashSet<>();
+        for ( int i = 0; i < ls.getLength(); i++ ) {
+            librarySources.add( requireNonNull( ls.item( i ) ).getTextContent() );
+        }
+        if ( !librarySources.isEmpty() ) {
+            record.setLibrarySource( StringUtils.join( librarySources, ";" ) );
         }
     }
 
