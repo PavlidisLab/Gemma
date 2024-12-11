@@ -114,8 +114,8 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
             .meshHeadings( true )
             .libraryStrategy( true )
             // ignore sources and characteristics, those are very expensive
-            .sampleSources( false )
-            .sampleCharacteristics( false )
+            .sampleSources( true )
+            .sampleCharacteristics( true )
             // ignore errors when fetching additional information
             .ignoreErrors( true )
             .build();

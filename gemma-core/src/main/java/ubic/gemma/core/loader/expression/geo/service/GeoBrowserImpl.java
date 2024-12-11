@@ -84,8 +84,6 @@ public class GeoBrowserImpl implements GeoBrowser {
     private static final String FLANKING_QUOTES_REGEX = "^\"|\"$";
     private static final Log log = LogFactory.getLog( GeoBrowserImpl.class.getName() );
 
-    private static final XPathExpression characteristics;
-    private static final XPathExpression source;
     private static final XPathExpression xaccession;
     private static final XPathExpression xChannel;
     private static final XPathExpression xLibraryStrategy;
@@ -122,8 +120,6 @@ public class GeoBrowserImpl implements GeoBrowser {
             xpubmed = xpath.compile( "//DocSum/Item[@Name='PubMedIds']" ); // list; also in miniml
             xChannel = xpath.compile( "//MINiML/Sample/Channel" );
             xLibraryStrategy = xpath.compile( "//MINiML/Sample/Library-Strategy" );
-            source = xpath.compile( "//Source" );
-            characteristics = xpath.compile( "//Characteristics" );
             xRelationType = xpath.compile( "//MINiML/Series/Relation" );
             xOverallDesign = xpath.compile( "//MINiML/Series/Overall-Design" );
             xPlataccession = xpath.compile( "//DocSum/Item[@Name='GPL']" );
@@ -589,7 +585,7 @@ public class GeoBrowserImpl implements GeoBrowser {
      * details might not be filled.
      */
     private void fillDetails( GeoRecord record, GeoRetrieveConfig config ) {
-        if ( !config.isSubSeriesStatus() && !config.isMeshHeadings() && !config.isSampleSources() && !config.isSampleCharacteristics() ) {
+        if ( !config.isSubSeriesStatus() && !config.isMeshHeadings() && !config.isSampleDetails() ) {
             log.debug( "No need to fill details for " + record + "." );
             return;
         }
@@ -634,9 +630,11 @@ public class GeoBrowserImpl implements GeoBrowser {
             fillLibraryStrategy( record, document );
         }
 
-        // get sample information
-        log.debug( String.format( "Obtaining sample details for %s...", record ) );
-        fillSampleDetails( record, document, config );
+        if ( config.isSampleDetails() ) {
+            // get sample information
+            log.debug( String.format( "Obtaining sample details for %s...", record ) );
+            fillSampleDetails( record, document );
+        }
     }
 
     private void fillPlatforms( GeoRecord record, Node item ) {
@@ -674,34 +672,20 @@ public class GeoBrowserImpl implements GeoBrowser {
     /**
      * exposed for testing
      */
-    void fillSampleDetails( GeoRecord record, Document detailsDocument, GeoRetrieveConfig config ) {
-        // Source, Characteristics
+    void fillSampleDetails( GeoRecord record, Document detailsDocument ) {
         NodeList channelNodes = evaluate( xChannel, detailsDocument );
         Set<String> props = new HashSet<>(); // expect duplicate terms
         for ( int i = 0; i < channelNodes.getLength(); i++ ) {
             Node item = channelNodes.item( i );
-            if ( config.isSampleSources() ) {
-                NodeList sources = evaluate( source, item );
-                for ( int k = 0; k < sources.getLength(); k++ ) {
-                    String s = requireNonNull( sources.item( k ) ).getTextContent();
-                    String v = StringUtils.strip( s );
-                    try {
-                        Double.parseDouble( v );
-                        // skip unadorned numbers
-                    } catch ( NumberFormatException e ) {
-                        props.add( v );
+            // this section used to use XPath, but traversing NodeList objects is very inefficient
+            for ( Node node = item.getFirstChild(); node != null; node = node.getNextSibling() ) {
+                if ( node.getNodeName().equals( "Source" ) || node.getNodeName().equals( "Characteristics" ) ) {
+                    String s = node.getTextContent();
+                    // skip unadorned numbers
+                    if ( StringUtils.isBlank( s ) || StringUtils.isNumericSpace( s ) ) {
+                        continue;
                     }
-                }
-            }
-            if ( config.isSampleCharacteristics() ) {
-                NodeList chars = evaluate( characteristics, item );
-                for ( int k = 0; k < chars.getLength(); k++ ) {
-                    String v = StringUtils.strip( requireNonNull( chars.item( k ) ).getTextContent() );
-                    try {
-                        Double.parseDouble( v );
-                    } catch ( NumberFormatException e ) {
-                        props.add( v );
-                    }
+                    props.add( StringUtils.strip( s ) );
                 }
             }
         }

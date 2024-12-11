@@ -154,6 +154,7 @@ public class GeoBrowserTest {
         assertThat( b.getGeoRecord( GeoRecordType.SERIES, "GSE97948", GeoRetrieveConfig.builder()
                 .subSeriesStatus( true )
                 .libraryStrategy( true )
+                .sampleCharacteristics( true )
                 .build() ) )
                 .isNotNull();
     }
