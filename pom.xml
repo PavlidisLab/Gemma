@@ -36,7 +36,7 @@
 	</issueManagement>
 	<ciManagement>
 		<system>Jenkins</system>
-		<url>https://jenkins.pavlab.msl.ubc.ca</url>
+		<url>https://jenkins.pavlab.msl.ubc.ca/job/Gemma</url>
 	</ciManagement>
 	<licenses>
 		<license>
