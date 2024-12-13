@@ -31,7 +31,7 @@ import static ubic.gemma.core.loader.expression.geo.singleCell.MexDetector.*;
  * @author poirigui
  */
 @CommonsLog
-public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSingleCellDetector, AutoCloseable {
+public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSingleCellDetector, SeriesAwareSingleCellDetector, AutoCloseable {
 
 
     /**
@@ -217,6 +217,25 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         return false;
     }
 
+    @Override
+    public boolean hasSingleCellData( GeoSeries series, GeoSample sample ) {
+        boolean hasSingleCellDataInSeries = hasSingleCellDataInSeries( series );
+        if ( !isSingleCell( sample, hasSingleCellDataInSeries ) )
+            return false; // don't bother checking
+        for ( SingleCellDetector detector : detectors ) {
+            if ( detector instanceof SeriesAwareSingleCellDetector ) {
+                if ( ( ( SeriesAwareSingleCellDetector ) detector ).hasSingleCellData( series, sample ) ) {
+                    return true;
+                }
+            } else {
+                if ( detector.hasSingleCellData( sample ) ) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     /**
      * Determine the type of single-cell data a GEO series contains.
      */
@@ -348,6 +367,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
      * <p>
      * This is only applicable to MEX and Loom.
      */
+    @Override
     public Path downloadSingleCellData( GeoSeries series, GeoSample sample ) throws NoSingleCellDataFoundException, IOException {
         if ( mexDetector.hasSingleCellData( series, sample ) ) {
             return downloadSingleCellData( series, sample, SingleCellDataType.MEX );
@@ -543,15 +563,16 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
                 .collect( Collectors.toList() );
     }
 
+    @Override
     public List<String> getAdditionalSupplementaryFiles( GeoSeries series, GeoSample sample ) {
         if ( !isSingleCell( sample, hasSingleCellDataInSeries( series ) ) ) {
             log.warn( sample.getGeoAccession() + " is not a single-cell sample, ignoring its supplementary materials." );
             return Collections.emptyList();
         }
         for ( SingleCellDetector detector : detectors ) {
-            if ( detector instanceof MexDetector ) {
-                if ( ( ( MexDetector ) detector ).hasSingleCellData( series, sample ) ) {
-                    return detector.getAdditionalSupplementaryFiles( sample );
+            if ( detector instanceof SeriesAwareSingleCellDetector ) {
+                if ( ( ( SeriesAwareSingleCellDetector ) detector ).hasSingleCellData( series, sample ) ) {
+                    return ( ( SeriesAwareSingleCellDetector ) detector ).getAdditionalSupplementaryFiles( series, sample );
                 }
             } else if ( detector.hasSingleCellData( sample ) ) {
                 return detector.getAdditionalSupplementaryFiles( sample );

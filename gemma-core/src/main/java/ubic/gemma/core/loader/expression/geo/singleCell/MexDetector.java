@@ -40,7 +40,7 @@ import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
  * @author poirigui
  */
 @Setter
-public class MexDetector extends AbstractSingleCellDetector implements ArchiveBasedSingleCellDetector {
+public class MexDetector extends AbstractSingleCellDetector implements ArchiveBasedSingleCellDetector, SeriesAwareSingleCellDetector {
 
     public static final String
             DEFAULT_BARCODES_FILE_SUFFIX = "barcodes.tsv",
@@ -521,6 +521,12 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
     public List<String> getAdditionalSupplementaryFiles( GeoSample sample ) {
         Assert.notNull( sample.getGeoAccession() );
         return getAdditionalSupplementaryFiles( sample.getGeoAccession(), sample.getSupplementaryFiles().stream() );
+    }
+
+    @Override
+    public List<String> getAdditionalSupplementaryFiles( GeoSeries series, GeoSample sample ) {
+        Assert.notNull( sample.getGeoAccession() );
+        return getAdditionalSupplementaryFiles( sample.getGeoAccession(), mergeSupplementaryFiles( series, sample ).stream() );
     }
 
     private List<String> getAdditionalSupplementaryFiles( String geoAccession, Stream<String> supplementaryFiles ) {
