@@ -47,9 +47,7 @@ import ubic.gemma.persistence.util.Sort;
 
 import javax.annotation.Nullable;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
 import java.io.*;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -98,12 +96,14 @@ public class GeoBrowserImpl implements GeoBrowser {
     private static final XPathExpression xsummary = compile( "Item[@Name='summary']" );
     private static final XPathExpression xtitle = compile( "Item[@Name='title']" );
     private static final XPathExpression xtype = compile( "Item[@Name='gdsType']" );
-    // private static final XPathExpression xsampleaccs = xpath.compile( "Item[@Name='Sample']/Item[@Name='Accession']" );
 
     // for the detailed MINiML
     private static final XPathExpression xRelationType = compile( "//MINiML/Series/Relation" );
     private static final XPathExpression xOverallDesign = compile( "//MINiML/Series/Overall-Design" );
+    private static final XPathExpression xSampleGeoAccession = compile( "//MINiML/Sample/Accession[@database='GEO']" );
     private static final XPathExpression xChannel = compile( "//MINiML/Sample/Channel" );
+    private static final XPathExpression xSampleDescription = compile( "//MINiML/Sample/Description" );
+    private static final XPathExpression xDataProcessing = compile( "//MINiML/Sample/Data-Processing" );
     private static final XPathExpression xLibraryStrategy = compile( "//MINiML/Sample/Library-Strategy" );
     private static final XPathExpression xLibrarySource = compile( "//MINiML/Sample/Library-Source" );
 
@@ -524,7 +524,10 @@ public class GeoBrowserImpl implements GeoBrowser {
         if ( config.isSampleDetails() ) {
             // get sample information
             log.debug( String.format( "Obtaining sample details for %s...", record ) );
-            fillSampleDetails( record, document );
+            fillSampleGeoAccessions( record, document );
+            fillSampleChannelDetails( record, document );
+            fillSampleDescription( record, document );
+            fillDataProcessing( record, document );
         }
     }
 
@@ -542,12 +545,7 @@ public class GeoBrowserImpl implements GeoBrowser {
      */
     void fillSubSeriesStatus( GeoRecord record, Document detailsDocument ) {
         // e.g. https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE180363&targ=gse&form=xml&view=full
-        String result;
-        try {
-            result = ( String ) xOverallDesign.evaluate( detailsDocument, XPathConstants.STRING );
-        } catch ( XPathExpressionException e ) {
-            throw new RuntimeException( e );
-        }
+        String result = evaluateToString( xOverallDesign, detailsDocument );
         record.setOverallDesign( StringUtils.strip( result ) );
         NodeList relTypeNodes = evaluate( xRelationType, detailsDocument );
         for ( int i = 0; i < relTypeNodes.getLength(); i++ ) {
@@ -563,9 +561,13 @@ public class GeoBrowserImpl implements GeoBrowser {
     /**
      * exposed for testing
      */
-    void fillSampleDetails( GeoRecord record, Document detailsDocument ) {
+    void fillSampleChannelDetails( GeoRecord record, Document detailsDocument ) {
         NodeList channelNodes = evaluate( xChannel, detailsDocument );
         Set<String> props = new HashSet<>(); // expect duplicate terms
+        Set<String> sampleMolecules = new HashSet<>();
+        List<String> sampleExtractProtocols = new ArrayList<>();
+        Set<String> sampleLabels = new HashSet<>();
+        List<String> sampleLabelProtocols = new ArrayList<>();
         for ( int i = 0; i < channelNodes.getLength(); i++ ) {
             Node item = channelNodes.item( i );
             // this section used to use XPath, but traversing NodeList objects is very inefficient
@@ -578,31 +580,70 @@ public class GeoBrowserImpl implements GeoBrowser {
                     }
                     props.add( StringUtils.strip( s ) );
                 }
+                if ( node.getNodeName().equals( "Molecule" ) ) {
+                    sampleMolecules.add( getTextValue( node ) );
+                }
+                if ( node.getNodeName().equals( "Extract-Protocol" ) ) {
+                    sampleExtractProtocols.add( getTextValue( node ) );
+                }
+                if ( node.getNodeName().equals( "Label" ) ) {
+                    sampleLabels.add( getTextValue( node ) );
+                }
+                if ( node.getNodeName().equals( "Label-Protocol" ) ) {
+                    sampleLabelProtocols.add( getTextValue( node ) );
+                }
             }
         }
         record.setSampleDetails( StringUtils.join( props, ";" ) );
+        record.setSampleMolecules( StringUtils.join( sampleMolecules, ";" ) );
+        record.setSampleExtractProtocols( StringUtils.join( sampleExtractProtocols, "\n" ) );
+        record.setSampleLabels( StringUtils.join( sampleLabels, ";" ) );
+        record.setSampleLabelProtocols( StringUtils.join( sampleLabelProtocols, "\n" ) );
+    }
+
+    void fillSampleGeoAccessions( GeoRecord record, Document document ) {
+        NodeList ls = evaluate( xSampleGeoAccession, document );
+        List<String> dp = new ArrayList<>();
+        for ( int i = 0; i < ls.getLength(); i++ ) {
+            dp.add( getTextValue( getItem( ls, i ) ) );
+        }
+        record.setSampleGEOAccessions( dp );
+    }
+
+    void fillSampleDescription( GeoRecord record, Document document ) {
+        NodeList ls = evaluate( xSampleDescription, document );
+        List<String> dp = new ArrayList<>();
+        for ( int i = 0; i < ls.getLength(); i++ ) {
+            dp.add( getTextValue( getItem( ls, i ) ) );
+        }
+        record.setSampleDescriptions( String.join( "\n", dp ) );
+    }
+
+    void fillDataProcessing( GeoRecord record, Document document ) {
+        NodeList ls = evaluate( xDataProcessing, document );
+        List<String> dp = new ArrayList<>();
+        for ( int i = 0; i < ls.getLength(); i++ ) {
+            dp.add( getTextValue( getItem( ls, i ) ) );
+        }
+        record.setSampleDataProcessing( String.join( "\n", dp ) );
     }
 
     void fillLibraryStrategy( GeoRecord record, Document document ) {
         NodeList ls = evaluate( xLibraryStrategy, document );
         Set<String> libraryStrategies = new HashSet<>();
         for ( int i = 0; i < ls.getLength(); i++ ) {
-            libraryStrategies.add( requireNonNull( ls.item( i ) ).getTextContent() );
+            libraryStrategies.add( getTextValue( getItem( ls, i ) ) );
         }
-        if ( !libraryStrategies.isEmpty() ) {
-            record.setLibraryStrategy( StringUtils.join( libraryStrategies, ";" ) );
-        }
+        record.setLibraryStrategy( StringUtils.join( libraryStrategies, ";" ) );
     }
 
-    void fillLibrarySource( GeoRecord record, Document document ) {
+    private void fillLibrarySource( GeoRecord record, Document document ) {
         NodeList ls = evaluate( xLibrarySource, document );
         Set<String> librarySources = new HashSet<>();
         for ( int i = 0; i < ls.getLength(); i++ ) {
-            librarySources.add( requireNonNull( ls.item( i ) ).getTextContent() );
+            librarySources.add( getTextValue( getItem( ls, i ) ) );
         }
-        if ( !librarySources.isEmpty() ) {
-            record.setLibrarySource( StringUtils.join( librarySources, ";" ) );
-        }
+        record.setLibrarySource( StringUtils.join( librarySources, ";" ) );
     }
 
     private void fillOrganisms( GeoRecord record, String item ) {
