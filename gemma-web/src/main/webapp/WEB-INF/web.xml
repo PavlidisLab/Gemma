@@ -35,6 +35,11 @@
         <param-value>classpath*:ubic/gemma/applicationContext-*.xml</param-value>
     </context-param>
 
+    <context-param>
+        <param-name>contextInitializerClasses</param-name>
+        <param-value>ubic.gemma.web.context.InitializeContext</param-value>
+    </context-param>
+
     <!-- Make HTML escaping the default in Spring JSP/JSTL tags -->
     <!-- See https://github.com/spring-projects/spring-framework/issues/7891 for more details -->
     <context-param>
