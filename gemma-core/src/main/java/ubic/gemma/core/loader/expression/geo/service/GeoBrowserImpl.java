@@ -723,7 +723,8 @@ public class GeoBrowserImpl implements GeoBrowser {
                 return document;
             }
         } catch ( SAXParseException e ) {
-            log.warn( "Failed to parse detailed GEO series MINiML from FTP for " + geoAccession + ", will attempt to retrieve it from GEO query...", e );
+            // the stacktrace is not very useful, and if the error is reproducible, it will also happen on the GEO Query side
+            log.warn( "Failed to parse detailed GEO series MINiML from FTP for " + geoAccession + ", will attempt to retrieve it from GEO query..." );
         }
         if ( ( document = fetchDetailedGeoSeriesFamilyFromGeoQuery( geoAccession ) ) != null ) {
             return document;
