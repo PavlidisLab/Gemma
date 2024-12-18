@@ -36,7 +36,6 @@ import java.util.Collection;
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 
@@ -190,17 +189,13 @@ public class GeoBrowserTest {
     }
 
     /**
-     * This dataset has incorrect UTF-8 characters in its MINiML file.
+     * This dataset has incorrect UTF-8 characters in its MINiML file on GEO FTP server. The document is instead
+     * retrieved from GEO Query.
      */
     @Test
     @Category(SlowTest.class)
-    public void testGSE2569() {
-        assertThatThrownBy( () -> b.getGeoRecord( GeoRecordType.SERIES, "GSE2569", GeoRetrieveConfig.DETAILED ) )
-                .cause()
-                .isInstanceOf( IOException.class )
-                .cause()
-                .isInstanceOf( SAXParseException.class )
-                .hasMessage( "Invalid byte 1 of 1-byte UTF-8 sequence." );
+    public void testGSE2569() throws IOException {
+        b.getGeoRecord( GeoRecordType.SERIES, "GSE2569", GeoRetrieveConfig.DETAILED );
     }
 
     /**
@@ -208,7 +203,7 @@ public class GeoBrowserTest {
      */
     @Test
     @Category(SlowTest.class)
-    public void testFetchDetailedGeoSeries() throws IOException {
+    public void testFetchDetailedGeoSeries() throws IOException, SAXParseException {
         GeoBrowserImpl b = new GeoBrowserImpl( ncbiApiKey );
         Document rec1 = b.fetchDetailedGeoSeriesFamilyFromGeoFtp( "GSE93825" );
         assertThat( rec1 ).isNotNull();

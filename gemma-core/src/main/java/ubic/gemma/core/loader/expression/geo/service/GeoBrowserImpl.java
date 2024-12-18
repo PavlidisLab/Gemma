@@ -60,6 +60,7 @@ import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.core.loader.expression.geo.service.GeoUtils.getUrlForSeriesFamily;
 import static ubic.gemma.core.util.XMLUtils.*;
 
 @CommonsLog
@@ -78,9 +79,7 @@ public class GeoBrowserImpl implements GeoBrowser {
 
     private static final String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds";
     private static final String ESUMMARY = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=gds";
-    private static final String GEO_QUERY = "https://www.ncbi.nlm.nih.gov/geo/query/";
     private static final String GEO_BROWSE = "https://www.ncbi.nlm.nih.gov/geo/browse/";
-    private static final String GEO_SERIES_FTP = "https://ftp.ncbi.nlm.nih.gov/geo/series/";
     private static final String FLANKING_QUOTES_REGEX = "^\"|\"$";
 
     // Get relevant data from the XML file
@@ -288,7 +287,12 @@ public class GeoBrowserImpl implements GeoBrowser {
         }
 
         log.debug( "Searching GEO with: " + searchUrl );
-        Document searchDocument = parseMiniMLDocument( new URL( searchUrl ) );
+        Document searchDocument;
+        try {
+            searchDocument = parseMiniMLDocument( new URL( searchUrl ) );
+        } catch ( SAXParseException e ) {
+            throw new RuntimeException( "Failed to parse MINiML document at " + searchUrl, e );
+        }
 
         int count;
         try {
@@ -331,7 +335,12 @@ public class GeoBrowserImpl implements GeoBrowser {
 
         t.start();
 
-        Document summaryDocument = parseMiniMLDocument( new URL( fetchUrl ) );
+        Document summaryDocument;
+        try {
+            summaryDocument = parseMiniMLDocument( new URL( fetchUrl ) );
+        } catch ( SAXParseException e ) {
+            throw new RuntimeException( "Failed to parse MINiML document at " + fetchUrl, e );
+        }
 
         List<GeoRecord> records = new ArrayList<>();
         for ( Node node = summaryDocument.getDocumentElement().getFirstChild(); node != null; node = node.getNextSibling() ) {
@@ -376,7 +385,12 @@ public class GeoBrowserImpl implements GeoBrowser {
         StopWatch t = new StopWatch();
         t.start();
 
-        Document summaryDocument = parseMiniMLDocument( new URL( fetchUrl ) );
+        Document summaryDocument;
+        try {
+            summaryDocument = parseMiniMLDocument( new URL( fetchUrl ) );
+        } catch ( SAXParseException e ) {
+            throw new RuntimeException( "Failed to parse MINiML document at " + fetchUrl, e );
+        }
 
         // consider n_samples (number of elements) and the number of GSEs, but not every record has them, so it would be trickier.
         List<GeoRecord> records = new ArrayList<>( query.getTotalRecords() );
@@ -483,7 +497,7 @@ public class GeoBrowserImpl implements GeoBrowser {
         Document document;
         try {
             document = fetchDetailedGeoSeriesFamilyFromGeo( record.getGeoAccession() );
-        } catch ( IOException e ) {
+        } catch ( IOException | SAXParseException e ) {
             if ( config.isIgnoreErrors() ) {
                 log.error( "Error while processing MINiML for " + record.getGeoAccession() + ", sample details will not be obtained.", e );
                 return;
@@ -702,10 +716,14 @@ public class GeoBrowserImpl implements GeoBrowser {
         }
     }
 
-    private Document fetchDetailedGeoSeriesFamilyFromGeo( String geoAccession ) throws IOException {
+    private Document fetchDetailedGeoSeriesFamilyFromGeo( String geoAccession ) throws IOException, SAXParseException {
         Document document;
-        if ( ( document = fetchDetailedGeoSeriesFamilyFromGeoFtp( geoAccession ) ) != null ) {
-            return document;
+        try {
+            if ( ( document = fetchDetailedGeoSeriesFamilyFromGeoFtp( geoAccession ) ) != null ) {
+                return document;
+            }
+        } catch ( SAXParseException e ) {
+            log.warn( "Failed to parse detailed GEO series MINiML from FTP for " + geoAccession + ", will attempt to retrieve it from GEO query...", e );
         }
         if ( ( document = fetchDetailedGeoSeriesFamilyFromGeoQuery( geoAccession ) ) != null ) {
             return document;
@@ -717,8 +735,8 @@ public class GeoBrowserImpl implements GeoBrowser {
      * Fetch a detailed GEO series MINiML document.
      */
     @Nullable
-    Document fetchDetailedGeoSeriesFamilyFromGeoFtp( String geoAccession ) throws IOException {
-        URL documentUrl = new URL( GEO_SERIES_FTP + geoAccession.substring( 0, Math.max( geoAccession.length() - 3, 3 ) ) + "nnn/" + geoAccession + "/miniml/" + geoAccession + "_family.xml.tgz" );
+    Document fetchDetailedGeoSeriesFamilyFromGeoFtp( String geoAccession ) throws IOException, SAXParseException {
+        URL documentUrl = getUrlForSeriesFamily( geoAccession, GeoSource.FTP_VIA_HTTPS, GeoFormat.MINIML );
         return execute( ( attempt, lastAttempt ) -> {
             try ( TarInputStream tis = new TarInputStream( new GZIPInputStream( documentUrl.openStream() ) ) ) {
                 TarEntry entry;
@@ -741,8 +759,8 @@ public class GeoBrowserImpl implements GeoBrowser {
      * Retrieve a detailed GEO series document directly from GEO.
      */
     @Nullable
-    Document fetchDetailedGeoSeriesFamilyFromGeoQuery( String geoAccession ) throws IOException {
-        URL documentUrl = new URL( GEO_QUERY + "acc.cgi?acc=" + urlEncode( geoAccession ) + "&targ=all&form=xml&view=brief" );
+    Document fetchDetailedGeoSeriesFamilyFromGeoQuery( String geoAccession ) throws IOException, SAXParseException {
+        URL documentUrl = getUrlForSeriesFamily( geoAccession, GeoSource.QUERY, GeoFormat.MINIML );
         return execute( ( attempt, lastAttempt ) -> {
             try ( InputStream tis = documentUrl.openStream() ) {
                 return parseDetailedGeoSeriesDocument( geoAccession, documentUrl.toString(), tis );
@@ -756,16 +774,10 @@ public class GeoBrowserImpl implements GeoBrowser {
         try {
             log.debug( "Parsing MINiML for " + geoAccession + " from " + documentUrl + "..." );
             return NcbiXmlUtils.createDocumentBuilder().parse( is );
+        } catch ( SAXParseException e ) {
+            throw new WrappedSAXParseException( e );
         } catch ( ParserConfigurationException | SAXException e ) {
-            if ( isCausedByAnEmptyXmlDocument( e ) ) {
-                throw new IOException( "Document at " + documentUrl + " appears to be empty or truncated", e );
-            } else if ( isCausedByAnHtmlDocument( e ) ) {
-                throw new IOException( "Document at " + documentUrl + " appears to be an HTML document.", e );
-            } else if ( isCausedByInvalidUtf8Encoding( e ) ) {
-                throw new NonRetryableIOException( new IOException( "Document at " + documentUrl + " appears to have invalid UTF-8 characters.", e ) );
-            } else {
-                throw new RuntimeException( e );
-            }
+            throw new RuntimeException( "Failed to parse detailed GEO series metadata for " + geoAccession + ".", e );
         }
     }
 
@@ -776,18 +788,14 @@ public class GeoBrowserImpl implements GeoBrowser {
      * @throws IOException if there is a problem while manipulating the file or if the number of records in the document
      * exceeds {@link #MAX_MINIML_RECORD_SIZE}
      */
-    Document parseMiniMLDocument( URL url ) throws IOException {
+    Document parseMiniMLDocument( URL url ) throws IOException, SAXParseException {
         return execute( ( retries, lastAttempt ) -> {
             try ( InputStream is = openUrlWithMaxSize( url, MAX_MINIML_RECORD_SIZE ) ) {
                 return NcbiXmlUtils.createDocumentBuilder().parse( is );
+            } catch ( SAXParseException e ) {
+                throw new WrappedSAXParseException( e );
             } catch ( ParserConfigurationException | SAXException e ) {
-                if ( isCausedByAnEmptyXmlDocument( e ) ) {
-                    throw new IOException( "Got an empty document for " + url + ".", e );
-                } else if ( isCausedByAnHtmlDocument( e ) ) {
-                    throw new IOException( "Detected what was likely an HTML document.", e );
-                } else {
-                    throw new RuntimeException( e );
-                }
+                throw new RuntimeException( e );
             } catch ( IOException ioe ) {
                 if ( isEligibleForRetry( ioe ) ) {
                     throw ioe;
@@ -805,24 +813,6 @@ public class GeoBrowserImpl implements GeoBrowser {
      */
     private boolean isEligibleForRetry( IOException e ) {
         return !ExceptionUtils.hasCause( e, InputTooLargeException.class );
-    }
-
-    /**
-     * Check if an exception is caused by an empty MINiML document.
-     */
-    private boolean isCausedByAnEmptyXmlDocument( Exception e ) {
-        return e instanceof SAXParseException && e.getMessage().contains( "Premature end of file." );
-    }
-
-    /**
-     * Check if an exception is caused by an HTML document being served instead of an XML document.
-     */
-    private boolean isCausedByAnHtmlDocument( Exception e ) {
-        return e instanceof SAXParseException && e.getMessage().contains( "White spaces are required between publicId and systemId." );
-    }
-
-    private boolean isCausedByInvalidUtf8Encoding( Exception e ) {
-        return e instanceof SAXParseException && e.getMessage().contains( "Invalid byte 1 of 1-byte UTF-8 sequence." );
     }
 
     /**
@@ -847,11 +837,13 @@ public class GeoBrowserImpl implements GeoBrowser {
         }
     }
 
-    private <T> T execute( SimpleRetryCallable<T, IOException> callable, Object what ) throws IOException {
+    private <T> T execute( SimpleRetryCallable<T, IOException> callable, Object what ) throws IOException, SAXParseException {
         try {
             return retryTemplate.execute( callable, what );
-        } catch ( NonRetryableIOException w ) {
-            throw w.getCause();
+        } catch ( NonRetryableIOException e ) {
+            throw e.getCause();
+        } catch ( WrappedSAXParseException e ) {
+            throw e.getCause();
         }
     }
 
@@ -860,15 +852,28 @@ public class GeoBrowserImpl implements GeoBrowser {
      */
     private static class NonRetryableIOException extends RuntimeException {
 
-        private final IOException cause;
-
         private NonRetryableIOException( IOException cause ) {
-            this.cause = cause;
+            super( cause );
         }
 
         @Override
         public IOException getCause() {
-            return cause;
+            return ( IOException ) super.getCause();
+        }
+    }
+
+    /**
+     * Allows for raising a {@link SAXParseException} through the retry mechanism.
+     */
+    private static class WrappedSAXParseException extends RuntimeException {
+
+        private WrappedSAXParseException( SAXParseException cause ) {
+            super( cause );
+        }
+
+        @Override
+        public SAXParseException getCause() {
+            return ( SAXParseException ) super.getCause();
         }
     }
 }

@@ -380,11 +380,11 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                     // check ending conditions, especially if we are fast-rewinding
                     if ( dateLimit != null && beforeOrEquals( geoRecord.getReleaseDate(), dateLimit ) ) {
                         log.info( "Stopping as reached date limit" );
-                        break;
+                        return;
                     }
                     if ( gseLimit != null && gseLimit.equals( geoRecord.getGeoAccession() ) ) {
                         log.info( "Stopping as have reached " + gseLimit );
-                        break;
+                        return;
                     }
 
                     log.debug( "Processing " + geoRecord.getGeoAccession() + " released on " + geoRecord.getReleaseDate() + "..." );
