@@ -19,7 +19,6 @@
 package ubic.gemma.core.loader.expression.geo.fetcher;
 
 import ubic.gemma.core.config.Settings;
-import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.core.loader.expression.geo.service.GeoUtils;
 
 /**
@@ -31,7 +30,7 @@ public class DatasetFetcher extends GeoFetcher {
 
     @Override
     protected String formRemoteFilePath( String identifier ) {
-        return remoteBaseDir + GeoUtils.formFtpDir( GeoRecordType.DATASET, identifier ) + "/soft/" + identifier + SOFT_GZ;
+        return remoteBaseDir + "/" + GeoUtils.formShortenedFtpDirName( identifier ) + "/" + identifier + "/soft/" + identifier + SOFT_GZ;
     }
 
     @Override

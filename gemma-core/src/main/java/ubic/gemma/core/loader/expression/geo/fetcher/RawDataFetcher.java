@@ -23,7 +23,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.ftp.FTP;
 import ubic.basecode.util.NetUtils;
 import ubic.gemma.core.config.Settings;
-import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.core.loader.expression.geo.service.GeoUtils;
 import ubic.gemma.core.loader.expression.geo.util.GeoUtil;
 import ubic.gemma.core.loader.util.fetcher.AbstractFetcher;
@@ -128,7 +127,7 @@ public class RawDataFetcher extends FtpArchiveFetcher {
 
     @Override
     protected String formRemoteFilePath( String identifier ) {
-        return remoteBaseDir + GeoUtils.formFtpDir( GeoRecordType.SERIES, identifier ) + "/suppl/" + identifier + "_RAW.tar";
+        return remoteBaseDir + "/" + GeoUtils.formShortenedFtpDirName( identifier ) + "/" + identifier + "/suppl/" + identifier + "_RAW.tar";
     }
 
     @Override

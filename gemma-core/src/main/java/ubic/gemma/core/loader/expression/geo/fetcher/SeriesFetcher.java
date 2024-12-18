@@ -19,14 +19,13 @@
 package ubic.gemma.core.loader.expression.geo.fetcher;
 
 import ubic.gemma.core.config.Settings;
-import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.core.loader.expression.geo.service.GeoUtils;
 
 public class SeriesFetcher extends GeoFetcher {
 
     @Override
     protected String formRemoteFilePath( String identifier ) {
-        return remoteBaseDir + GeoUtils.formFtpDir( GeoRecordType.SERIES, identifier ) + "/soft/" + identifier + "_family.soft.gz";
+        return remoteBaseDir + "/" + GeoUtils.formShortenedFtpDirName( identifier ) + "/" + identifier + "/soft/" + identifier + "_family.soft.gz";
     }
 
     @Override

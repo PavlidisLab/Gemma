@@ -1,10 +1,7 @@
 package ubic.gemma.core.loader.expression.geo.service;
 
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
 public class GeoUtils {
 
@@ -26,7 +23,7 @@ public class GeoUtils {
                 throw new UnsupportedOperationException( "" );
             }
             try {
-                return new URL( GEO_QUERY_URL + "/acc.cgi?acc=" + urlEncode( geoAccession ) + "&targ=all&form=" + form + "&view=brief" );
+                return new URL( GEO_QUERY_URL + "/acc.cgi?acc=" + geoAccession + "&targ=all&form=" + form + "&view=brief" );
             } catch ( MalformedURLException e ) {
                 throw new RuntimeException( e );
             }
@@ -37,18 +34,18 @@ public class GeoUtils {
             } else {
                 baseUrl = GEO_FTP_VIA_HTTPS_BASE_URL;
             }
-            String dir, ext;
+            String formatDir, ext;
             if ( format == GeoFormat.SOFT ) {
-                dir = "soft";
+                formatDir = "soft";
                 ext = ".soft.gz";
             } else if ( format == GeoFormat.MINIML ) {
-                dir = "miniml";
+                formatDir = "miniml";
                 ext = ".xml.tgz";
             } else {
                 throw new UnsupportedOperationException( "Unsupported GEO format: " + format + "." );
             }
             try {
-                return new URL( baseUrl + formFtpDir( GeoRecordType.SERIES, geoAccession ) + "/" + dir + "/" + geoAccession + "_family" + ext );
+                return new URL( baseUrl + "/series/" + formShortenedFtpDirName( geoAccession ) + "/" + geoAccession + "/" + formatDir + "/" + geoAccession + "_family" + ext );
             } catch ( MalformedURLException e ) {
                 throw new RuntimeException( e );
             }
@@ -58,31 +55,9 @@ public class GeoUtils {
     }
 
     /**
-     * Form the FTP directory name for a given GEO accession.
-     * <p>
-     * The path is relative to the GEO base FTP URL (i.e. <a href="https://ftp.ncbi.nlm.nih.gov/geo">https://ftp.ncbi.nlm.nih.gov/geo</a>).
+     * Form the shortened FTP directory name for a given GEO accession.
      */
-    public static String formFtpDir( GeoRecordType recordType, String geoAccession ) {
-        String dir;
-        if ( recordType == GeoRecordType.SERIES ) {
-            dir = "/series";
-        } else if ( recordType == GeoRecordType.PLATFORM ) {
-            dir = "/platforms";
-        } else if ( recordType == GeoRecordType.SAMPLE ) {
-            dir = "/samples";
-        } else if ( recordType == GeoRecordType.DATASET ) {
-            dir = "/datasets";
-        } else {
-            throw new UnsupportedOperationException( "Unsupported record type for GEO data: " + recordType + "." );
-        }
-        return dir + "/" + geoAccession.substring( 0, Math.max( geoAccession.length() - 3, 3 ) ) + "nnn/" + urlEncode( geoAccession );
-    }
-
-    private static String urlEncode( String s ) {
-        try {
-            return URLEncoder.encode( s, StandardCharsets.UTF_8.name() );
-        } catch ( UnsupportedEncodingException e ) {
-            throw new RuntimeException( e );
-        }
+    public static String formShortenedFtpDirName( String geoAccession ) {
+        return geoAccession.substring( 0, Math.max( geoAccession.length() - 3, 3 ) ) + "nnn";
     }
 }
