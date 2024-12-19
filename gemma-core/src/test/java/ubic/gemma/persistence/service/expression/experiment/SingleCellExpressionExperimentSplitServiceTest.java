@@ -111,9 +111,86 @@ public class SingleCellExpressionExperimentSplitServiceTest extends AbstractJUni
                 .thenReturn( Optional.of( cf ) );
         when( expressionExperimentSubSetService.create( any( ExpressionExperimentSubSet.class ) ) )
                 .thenAnswer( a -> a.getArgument( 0 ) );
-        List<ExpressionExperimentSubSet> subsets = service.splitByCellType( ee );
+        List<ExpressionExperimentSubSet> subsets = service.splitByCellType( ee, cta, false );
         assertThat( subsets )
                 .hasSize( 10 )
+                .allSatisfy( subset -> {
+                    Characteristic cellType = subset.getCharacteristics().iterator().next();
+                    String cellTypeName = cellType.getValue();
+                    assertThat( subset.getSourceExperiment() ).isEqualTo( ee );
+                    assertThat( subset.getName() ).isEqualTo( ee.getName() + " - " + cellTypeName );
+                    assertThat( subset.getCharacteristics() )
+                            .hasSize( 1 )
+                            .first()
+                            .satisfies( c -> {
+                                assertThat( c.getCategory() ).isEqualTo( Categories.CELL_TYPE.getCategory() );
+                                assertThat( c.getCategoryUri() ).isEqualTo( Categories.CELL_TYPE.getCategoryUri() );
+                                assertThat( c.getValue() ).isEqualTo( cellTypeName );
+                            } );
+                    assertThat( subset.getBioAssays() )
+                            .hasSize( 4 )
+                            .allSatisfy( ba -> {
+                                assertThat( ba.getName() )
+                                        .matches( "ba\\d+ - " + cellTypeName );
+                                assertThat( ba.getArrayDesignUsed() )
+                                        .isEqualTo( ad );
+                                assertThat( ba.getSampleUsed() )
+                                        .isNotNull()
+                                        .satisfies( bm -> {
+                                            assertThat( bm.getName() )
+                                                    .matches( "bm\\d+ - " + cellTypeName );
+                                            assertThat( bm.getBioAssaysUsedIn() )
+                                                    .contains( ba );
+                                            assertThat( bm.getCharacteristics() )
+                                                    .hasSize( 1 )
+                                                    .first()
+                                                    .satisfies( c -> {
+                                                        assertThat( c.getCategory() ).isEqualTo( Categories.CELL_TYPE.getCategory() );
+                                                        assertThat( c.getCategoryUri() ).isEqualTo( Categories.CELL_TYPE.getCategoryUri() );
+                                                        assertThat( c.getValue() ).isEqualTo( cellTypeName );
+                                                    } );
+                                        } );
+                            } );
+                } );
+    }
+
+    @Test
+    public void testSplitWhenMissingFactorValue() {
+        CellTypeAssignment cta = new CellTypeAssignment();
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ExperimentalFactor cf = new ExperimentalFactor();
+        cf.setType( FactorType.CATEGORICAL );
+        ArrayDesign ad = new ArrayDesign();
+        // create 4 samples
+        for ( int i = 0; i < 4; i++ ) {
+            BioAssay ba = new BioAssay();
+            ba.setArrayDesignUsed( ad );
+            ba.setName( "ba" + i );
+            BioMaterial bm = new BioMaterial();
+            bm.setName( "bm" + i );
+            ba.setSampleUsed( bm );
+            bm.getBioAssaysUsedIn().add( ba );
+            ee.getBioAssays().add( ba );
+        }
+        // create 10 cell types
+        for ( int i = 0; i < 10; i++ ) {
+            Characteristic ct = Characteristic.Factory.newInstance( Categories.CELL_TYPE, "ct" + i, null );
+            cta.getCellTypes().add( ct );
+            if ( i % 2 == 0 ) {
+                cf.getFactorValues().add( FactorValue.Factory.newInstance( cf, ct ) );
+            }
+        }
+        when( bioMaterialService.create( any( BioMaterial.class ) ) ).thenAnswer( a -> a.getArgument( 0 ) );
+        when( bioAssayService.create( any( BioAssay.class ) ) ).thenAnswer( a -> a.getArgument( 0 ) );
+        when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee ) )
+                .thenReturn( Optional.of( cta ) );
+        when( singleCellExpressionExperimentService.getCellTypeFactor( ee ) )
+                .thenReturn( Optional.of( cf ) );
+        when( expressionExperimentSubSetService.create( any( ExpressionExperimentSubSet.class ) ) )
+                .thenAnswer( a -> a.getArgument( 0 ) );
+        List<ExpressionExperimentSubSet> subsets = service.splitByCellType( ee, cta, true );
+        assertThat( subsets )
+                .hasSize( 5 )
                 .allSatisfy( subset -> {
                     Characteristic cellType = subset.getCharacteristics().iterator().next();
                     String cellTypeName = cellType.getValue();

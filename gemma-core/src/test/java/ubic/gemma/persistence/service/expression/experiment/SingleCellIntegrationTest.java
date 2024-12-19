@@ -11,6 +11,7 @@ import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -81,11 +82,11 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
         for ( int i = 0; i < 8000; i++ ) {
             labels.add( String.valueOf( "ABCD".charAt( RandomUtils.nextInt( 4 ) ) ) );
         }
-        singleCellExpressionExperimentService.relabelCellTypes( ee, scd, labels, null, null );
+        CellTypeAssignment cta = singleCellExpressionExperimentService.relabelCellTypes( ee, scd, labels, null, null );
         assertThat( singleCellExpressionExperimentService.getCellTypeFactor( ee ) )
                 .isNotNull();
 
-        List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSplitService.splitByCellType( ee );
+        List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSplitService.splitByCellType( ee, cta, false );
 
         // one for each cell type and subject
         assertThat( subsets )

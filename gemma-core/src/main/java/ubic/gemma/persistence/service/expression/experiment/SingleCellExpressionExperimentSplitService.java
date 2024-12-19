@@ -16,13 +16,6 @@ import java.util.List;
 public interface SingleCellExpressionExperimentSplitService {
 
     /**
-     * Split single-cell vectors by the preferred cell type assignment.
-     * @see #splitByCellType(ExpressionExperiment, CellTypeAssignment)
-     */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    List<ExpressionExperimentSubSet> splitByCellType( ExpressionExperiment ee );
-
-    /**
      * Split biomaterials and bioassays by the given cell type assignment.
      * <p>
      * This method will:
@@ -34,5 +27,5 @@ public interface SingleCellExpressionExperimentSplitService {
      * @return a list of subsets representing subpopulations of cells
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    List<ExpressionExperimentSubSet> splitByCellType( ExpressionExperiment ee, CellTypeAssignment cta );
+    List<ExpressionExperimentSubSet> splitByCellType( ExpressionExperiment ee, CellTypeAssignment cta, boolean allowUnmappedFactorValues );
 }

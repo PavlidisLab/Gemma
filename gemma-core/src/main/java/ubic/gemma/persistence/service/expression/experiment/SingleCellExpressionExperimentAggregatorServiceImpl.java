@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.getSampleEnd;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.getSampleStart;
-import static ubic.gemma.persistence.service.expression.experiment.SingleCellUtils.mapCellTypeAssignmentToCellTypeFactor;
+import static ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentSplitServiceImpl.mapCellTypeAssignmentToCellTypeFactor;
 
 /**
  * Aggregates single-cell expression data.
@@ -70,10 +70,8 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
                 .orElseThrow( () -> new IllegalStateException( finalEe + " does not have a preferred cell type assignment." ) );
         ExperimentalFactor cellTypeFactor = singleCellExpressionExperimentService.getCellTypeFactor( ee )
                 .orElseThrow( () -> new IllegalStateException( finalEe + " does not have a cell type factor." ) );
-        return aggregateVectorsInternal( ee, cellBAs, makePreferred, vectors.iterator().next().getSingleCellDimension(), vectors.iterator().next().getQuantitationType(), vectors, cta, cellTypeFactor );
-    }
-
-    private QuantitationType aggregateVectorsInternal( ExpressionExperiment ee, List<BioAssay> cellBAs, boolean makePreferred, SingleCellDimension scd, QuantitationType qt, Collection<SingleCellExpressionDataVector> vectors, CellTypeAssignment cellTypeAssignment, ExperimentalFactor cellTypeFactor ) {
+        SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
+        QuantitationType qt = vectors.iterator().next().getQuantitationType();
         // check the QT and determine how to aggregate its data
         // TODO: support other types and representations for aggregation
         Assert.isTrue( qt.getGeneralType().equals( GeneralType.QUANTITATIVE ), "Only quantitative data can be aggregated." );
@@ -103,39 +101,12 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
         log.info( "Aggregating single-cell data with scale " + qt.getScale() + " using " + method + "." );
 
         // map subpopulation bioassay to their sample
-        Map<BioAssay, BioAssay> sourceBioAssayMap = new HashMap<>();
-        for ( BioAssay ba : cellBAs ) {
-            Assert.notNull( ba.getSampleUsed().getSourceBioMaterial(),
-                    ba + "'s sample does not have a source biomaterial." );
-            Set<BioAssay> sourceBAs = ee.getBioAssays().stream()
-                    .filter( ba.getSampleUsed().getSourceBioMaterial().getBioAssaysUsedIn()::contains )
-                    .collect( Collectors.toSet() );
-            if ( sourceBAs.isEmpty() ) {
-                throw new IllegalStateException( ba + " does not have a source BioAssay in " + ee );
-            } else if ( sourceBAs.size() > 1 ) {
-                throw new IllegalStateException( ba + " has more than one source BioAssay in " + ee );
-            }
-            sourceBioAssayMap.put( ba, sourceBAs.iterator().next() );
-        }
+        Map<BioAssay, BioAssay> sourceBioAssayMap = createSourceBioAssayMap( ee, cellBAs );
 
-        Map<Characteristic, FactorValue> cellType2Factor = mapCellTypeAssignmentToCellTypeFactor( cellTypeAssignment, cellTypeFactor );
+        Map<Characteristic, FactorValue> cellType2Factor = mapCellTypeAssignmentToCellTypeFactor( cta, cellTypeFactor );
 
         // assigne sample to cell types
-        Map<BioAssay, Characteristic> cellTypes = new HashMap<>();
-        for ( BioAssay ba : cellBAs ) {
-            boolean found = false;
-            for ( Characteristic ct : cellTypeAssignment.getCellTypes() ) {
-                FactorValue fv = cellType2Factor.get( ct );
-                if ( ba.getSampleUsed().getAllFactorValues().contains( fv ) ) {
-                    cellTypes.put( ba, ct );
-                    found = true;
-                    break;
-                }
-            }
-            if ( !found ) {
-                throw new IllegalStateException( ba + " does not have an assigned cell type, make sure that its counterpart " + ba.getSampleUsed() + " has a cell type factor assigned." );
-            }
-        }
+        Map<BioAssay, Characteristic> cellTypes = assignSampleToCellType( cellBAs, cta, cellType2Factor );
 
         String cellTypeFactorName;
         if ( cellTypeFactor.getName() != null ) {
@@ -181,7 +152,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
             // TODO: compute normalization factors from data
             normalizationFactor = new double[cellBAs.size()];
             Arrays.fill( normalizationFactor, 1.0 );
-            librarySize = computeLibrarySize( vectors, newBad, cellTypeAssignment, sourceBioAssayMap, sourceSampleToIndex, cellTypes, method );
+            librarySize = computeLibrarySize( vectors, newBad, cta, sourceBioAssayMap, sourceSampleToIndex, cellTypes, method );
             for ( int i = 0; i < librarySize.length; i++ ) {
                 if ( librarySize[i] == 0 ) {
                     log.warn( "Library size for " + cellBAs.get( i ) + " is zero, this will cause NaN values in the log2cpm transformation." );
@@ -213,7 +184,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
             rawVector.setQuantitationType( newQt );
             rawVector.setBioAssayDimension( newBad );
             rawVector.setDesignElement( v.getDesignElement() );
-            rawVector.setDataAsDoubles( aggregateData( v, newBad, cellTypeAssignment, sourceBioAssayMap, sourceSampleToIndex, cellTypes, method, cellsByBioAssay, designElementsByBioAssay, cellByDesignElementByBioAssay, canLog2cpm, normalizationFactor, librarySize ) );
+            rawVector.setDataAsDoubles( aggregateData( v, newBad, cta, sourceBioAssayMap, sourceSampleToIndex, cellTypes, method, cellsByBioAssay, designElementsByBioAssay, cellByDesignElementByBioAssay, canLog2cpm, normalizationFactor, librarySize ) );
             rawVectors.add( rawVector );
         }
 
@@ -264,6 +235,43 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
         auditTrailService.addUpdateEvent( ee, DataAddedEvent.class, note, details.toString() );
 
         return newQt;
+    }
+
+    private Map<BioAssay, BioAssay> createSourceBioAssayMap( ExpressionExperiment ee, Collection<BioAssay> cellBAs ) {
+        Map<BioAssay, BioAssay> sourceBioAssayMap = new HashMap<>();
+        for ( BioAssay ba : cellBAs ) {
+            Assert.notNull( ba.getSampleUsed().getSourceBioMaterial(),
+                    ba + "'s sample does not have a source biomaterial." );
+            Set<BioAssay> sourceBAs = ee.getBioAssays().stream()
+                    .filter( ba.getSampleUsed().getSourceBioMaterial().getBioAssaysUsedIn()::contains )
+                    .collect( Collectors.toSet() );
+            if ( sourceBAs.isEmpty() ) {
+                throw new IllegalStateException( ba + " does not have a source BioAssay in " + ee );
+            } else if ( sourceBAs.size() > 1 ) {
+                throw new IllegalStateException( ba + " has more than one source BioAssay in " + ee );
+            }
+            sourceBioAssayMap.put( ba, sourceBAs.iterator().next() );
+        }
+        return sourceBioAssayMap;
+    }
+
+    private Map<BioAssay, Characteristic> assignSampleToCellType( Collection<BioAssay> cellBAs, CellTypeAssignment cta, Map<Characteristic, FactorValue> cellType2Factor ) {
+        Map<BioAssay, Characteristic> cellTypes = new HashMap<>();
+        for ( BioAssay ba : cellBAs ) {
+            boolean found = false;
+            for ( Characteristic ct : cta.getCellTypes() ) {
+                FactorValue fv = cellType2Factor.get( ct );
+                if ( fv != null && ba.getSampleUsed().getAllFactorValues().contains( fv ) ) {
+                    cellTypes.put( ba, ct );
+                    found = true;
+                    break;
+                }
+            }
+            if ( !found ) {
+                throw new IllegalStateException( ba + " does not have an assigned cell type, make sure that its counterpart " + ba.getSampleUsed() + " has a cell type factor assigned." );
+            }
+        }
+        return cellTypes;
     }
 
     /**
