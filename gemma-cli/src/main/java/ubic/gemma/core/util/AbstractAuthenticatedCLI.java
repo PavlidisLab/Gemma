@@ -72,7 +72,7 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
     /**
      * List of components that should receive the authentication token.
      */
-    @Autowired
+    @Autowired(required = false)
     private List<CliAuthenticationAware> cliAuthenticationAwareComponents;
 
     @Autowired
