@@ -15,6 +15,7 @@
 package ubic.gemma.core.ontology.providers;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
@@ -26,6 +27,7 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl.GOAspect;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
@@ -46,6 +48,7 @@ import static org.mockito.Mockito.mock;
  *
  * @author Paul
  */
+@Category(SlowTest.class)
 @ContextConfiguration
 public class GeneOntologyService2Test extends AbstractJUnit4SpringContextTests implements InitializingBean {
 

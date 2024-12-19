@@ -443,6 +443,7 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
      * This series contains large TAR attachment that should be skipped when inspecting for MEX.
      */
     @Test
+    @Category(SlowTest.class)
     public void testGSE235314() throws IOException {
         GeoSeries series = readSeriesFromGeo( "GSE235314" );
         assertThat( detector.hasSingleCellData( series ) ).isFalse();

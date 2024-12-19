@@ -1,7 +1,9 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import ubic.gemma.core.loader.expression.MapBasedDesignElementMapper;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -24,6 +26,7 @@ import static ubic.gemma.core.loader.expression.singleCell.MexTestUtils.createLo
 public class MexSingleCellDataLoaderTest {
 
     @Test
+    @Category(SlowTest.class)
     public void test() throws IOException {
         // consider the first file for mapping to elements
         Map<String, CompositeSequence> elementsMapping = createElementsMappingFromResourceFile( "data/loader/expression/singleCell/GSE224438/GSM7022367_1_features.tsv.gz" );
