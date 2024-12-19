@@ -164,6 +164,8 @@ public class ExpressionExperimentQCController extends BaseController {
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     @Autowired
     private ExpressionExperimentSubSetService expressionExperimentSubSetService;
+    @Autowired
+    private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
 
     @Value("${gemma.analysis.dir}")
     private Path analysisStoragePath;
@@ -471,9 +473,6 @@ public class ExpressionExperimentQCController extends BaseController {
         return new ModelAndView( tv )
                 .addObject( TextView.TEXT_PARAM, s.toString() );
     }
-
-    @Autowired
-    private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
 
     @RequestMapping(value = "/expressionExperiment/visualizeSingleCellSparsityHeatmap.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void visualizeSingleCellSparsityHeatmap( @RequestParam("id") Long id, @RequestParam("type") String type,
