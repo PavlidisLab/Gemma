@@ -24,14 +24,14 @@ import java.util.List;
  * Only one assignment is held in a file.
  * @author poirigui
  */
-public class CellTypeAssignmentMetadataParser extends AbstractCellLevelCharacteristicsMetadataParser<CellTypeAssignment> {
+class CellTypeAssignmentMetadataParser extends AbstractCellLevelCharacteristicsMetadataParser<CellTypeAssignment> {
 
     private final String cellTypeAssignmentName;
     @Nullable
     private final Protocol cellTypeAssignmentProtocol;
 
-    public CellTypeAssignmentMetadataParser( SingleCellDimension singleCellDimension, BioAssayToSampleNameMatcher bioAssayToSampleNameMatcher, String cellTypeAssignmentName, @Nullable Protocol cellTypeAssignmentProtocol ) {
-        super( singleCellDimension, bioAssayToSampleNameMatcher );
+    public CellTypeAssignmentMetadataParser( SingleCellDimension singleCellDimension, BioAssayToSampleNameMatcher bioAssayToSampleNameMatcher, String cellTypeAssignmentName, @Nullable Protocol cellTypeAssignmentProtocol, boolean useCellIdsIfSampleNameIsMissing ) {
+        super( singleCellDimension, bioAssayToSampleNameMatcher, useCellIdsIfSampleNameIsMissing );
         this.cellTypeAssignmentName = cellTypeAssignmentName;
         this.cellTypeAssignmentProtocol = cellTypeAssignmentProtocol;
     }

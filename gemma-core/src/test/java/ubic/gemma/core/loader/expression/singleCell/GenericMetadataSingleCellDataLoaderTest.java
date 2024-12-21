@@ -63,4 +63,32 @@ public class GenericMetadataSingleCellDataLoaderTest {
                             .containsExactly( -1, -1, -1, -1, 0, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1 );
                 } );
     }
+
+    @Test
+    public void testWithMissingSampleId() throws URISyntaxException, IOException {
+        SingleCellDimension dim = new SingleCellDimension();
+        dim.setBioAssays( Arrays.asList( BioAssay.Factory.newInstance( "A" ), BioAssay.Factory.newInstance( "B" ) ) );
+        dim.setBioAssaysOffset( new int[] { 0, 10 } );
+        dim.setCellIds( IntStream.rangeClosed( 1, 20 ).mapToObj( c -> "c" + c ).collect( Collectors.toList() ) );
+        dim.setNumberOfCells( 20 );
+        SingleCellDataLoader delegate = mock();
+        GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
+                Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata-without-sample-id.tsv" ) ).toURI() ),
+                null );
+        loader.setBioAssayToSampleNameMatcher( ( bioAssays, sampleNameFromData ) -> bioAssays.stream().filter( ba -> ba.getName().equals( sampleNameFromData ) ).collect( Collectors.toSet() ) );
+        loader.setUseCellIdsIfSampleNameIsMissing( true );
+        assertThat( loader.getCellTypeAssignments( dim ) )
+                .singleElement()
+                .satisfies( cta -> {
+                    assertThat( cta.getCellTypes() ).extracting( Characteristic::getValue )
+                            .containsExactlyInAnyOrder( "C", "D" );
+                    assertThat( cta.getNumberOfCellTypes() )
+                            .isEqualTo( 2 );
+                    assertThat( cta.getCellTypeIndices() )
+                            .hasSize( 20 )
+                            .containsExactly( 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1 );
+                    assertThat( cta.isPreferred() ).isFalse();
+                    assertThat( cta.getProtocol() ).isNull();
+                } );
+    }
 }

@@ -72,7 +72,7 @@ public class SingleCellDataLoaderConfig {
      * cell types. For example, {@link AnnDataSingleCellDataLoader} can import cell types using a factor name.
      */
     @Nullable
-    private Path cellTypeAssignmentPath;
+    private Path cellTypeAssignmentFile;
 
     /**
      * A name to use for the cell type assignment.
@@ -95,6 +95,13 @@ public class SingleCellDataLoaderConfig {
      */
     @Nullable
     private Path otherCellLevelCharacteristicsFile;
+
+    /**
+     * When parsing {@link #cellTypeAssignmentFile} and {@link #otherCellLevelCharacteristicsFile}, allow for a missing
+     * {@code sample_id} column, in which case barcodes are used to infer the sample a cell belongs to. This strategy
+     * will not work in the case of a barcode collision.
+     */
+    private boolean useCellIdsIfSampleNameIsMissing;
 
     /**
      * If only one CTA is present, mark it as preferred.
