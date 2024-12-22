@@ -25,10 +25,10 @@ import java.util.List;
  * Characteristics are grouped by category ID which falls back to category URI or category if missing.
  * @author poirigui
  */
-public class GenericCellLevelCharacteristicsMetadataParser extends AbstractCellLevelCharacteristicsMetadataParser<CellLevelCharacteristics> {
+class GenericCellLevelCharacteristicsMetadataParser extends AbstractCellLevelCharacteristicsMetadataParser<CellLevelCharacteristics> {
 
-    public GenericCellLevelCharacteristicsMetadataParser( SingleCellDimension singleCellDimension, BioAssayToSampleNameMatcher bioAssayToSampleNameMatcher ) {
-        super( singleCellDimension, bioAssayToSampleNameMatcher );
+    public GenericCellLevelCharacteristicsMetadataParser( SingleCellDimension singleCellDimension, BioAssayToSampleNameMatcher bioAssayToSampleNameMatcher, boolean useCellIdsIfSampleNameIsMissing ) {
+        super( singleCellDimension, bioAssayToSampleNameMatcher, useCellIdsIfSampleNameIsMissing );
     }
 
     protected Category getCategory( CSVRecord record ) {

@@ -475,7 +475,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
 
     private SingleCellDataLoader configureLoader( SingleCellDataLoader loader, ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
         // wrap with a generic loader to load additional metadata
-        Path cellTypeAssignmentPath = config.getCellTypeAssignmentPath();
+        Path cellTypeAssignmentPath = config.getCellTypeAssignmentFile();
         Path otherCellCharacteristicsPath = config.getOtherCellLevelCharacteristicsFile();
         if ( cellTypeAssignmentPath != null || otherCellCharacteristicsPath != null ) {
             if ( cellTypeAssignmentPath != null ) {
@@ -492,6 +492,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
                     if ( config.getCellTypeAssignmentProtocol() != null ) {
                         setCellTypeAssignmentProtocol( config.getCellTypeAssignmentProtocol() );
                     }
+                    setUseCellIdsIfSampleNameIsMissing( config.isUseCellIdsIfSampleNameIsMissing() );
                 }
             };
         }

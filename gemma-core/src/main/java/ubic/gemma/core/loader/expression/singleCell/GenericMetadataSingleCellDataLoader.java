@@ -21,7 +21,7 @@ import java.util.Set;
  * corresponding path is unset.
  * @author poirigui
  * @see CellTypeAssignmentMetadataParser
- * @see CellLevelCharacteristicsMetadataParser
+ * @see GenericCellLevelCharacteristicsMetadataParser
  */
 @Setter
 @CommonsLog
@@ -39,6 +39,8 @@ public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingl
     private final Path otherCellCharacteristicsMetadataFile;
 
     private BioAssayToSampleNameMatcher bioAssayToSampleNameMatcher;
+
+    private boolean useCellIdsIfSampleNameIsMissing;
 
     protected GenericMetadataSingleCellDataLoader( SingleCellDataLoader delegate, @Nullable Path cellTypeMetadataFile, @Nullable Path otherCellCharacteristicsMetadataFile ) {
         super( delegate );
@@ -71,7 +73,7 @@ public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingl
             return super.getCellTypeAssignments( singleCellDimension );
         }
         Assert.notNull( bioAssayToSampleNameMatcher, "A bioAssayToSampleNameMatcher must be set" );
-        return new CellTypeAssignmentMetadataParser( singleCellDimension, bioAssayToSampleNameMatcher, cellTypeAssignmentName, cellTypeAssignmentProtocol )
+        return new CellTypeAssignmentMetadataParser( singleCellDimension, bioAssayToSampleNameMatcher, cellTypeAssignmentName, cellTypeAssignmentProtocol, useCellIdsIfSampleNameIsMissing )
                 .parse( cellTypeMetadataFile );
     }
 
@@ -81,7 +83,7 @@ public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingl
             return super.getOtherCellLevelCharacteristics( dimension );
         }
         Assert.notNull( bioAssayToSampleNameMatcher, "A bioAssayToSampleNameMatcher must be set" );
-        return new GenericCellLevelCharacteristicsMetadataParser( dimension, bioAssayToSampleNameMatcher )
+        return new GenericCellLevelCharacteristicsMetadataParser( dimension, bioAssayToSampleNameMatcher, useCellIdsIfSampleNameIsMissing )
                 .parse( otherCellCharacteristicsMetadataFile );
     }
 }

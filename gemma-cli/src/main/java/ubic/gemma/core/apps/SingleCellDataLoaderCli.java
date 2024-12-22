@@ -318,7 +318,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         configBuilder.markQuantitationTypeAsPreferred( preferredQt );
         if ( cellTypeAssignmentFile != null ) {
             configBuilder
-                    .cellTypeAssignmentPath( cellTypeAssignmentFile )
+                    .cellTypeAssignmentFile( cellTypeAssignmentFile )
                     .markSingleCellTypeAssignmentAsPreferred( preferredCellTypeAssignment );
             if ( cellTypeAssignmentName != null ) {
                 configBuilder
@@ -332,6 +332,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         if ( otherCellLevelCharacteristicsFile != null ) {
             configBuilder.otherCellLevelCharacteristicsFile( otherCellLevelCharacteristicsFile );
         }
+        // always allow for using barcodes to infer the sample names from the CLI
+        configBuilder.useCellIdsIfSampleNameIsMissing( true );
         return configBuilder.build();
     }
 }
