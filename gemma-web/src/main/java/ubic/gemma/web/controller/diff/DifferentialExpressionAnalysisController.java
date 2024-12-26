@@ -22,14 +22,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import ubic.gemma.core.analysis.expression.diff.AnalysisSelectionAndExecutionService;
-import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
+import ubic.gemma.core.analysis.expression.diff.AnalysisType;
+import ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisRemoveTaskCommand;
 import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -53,8 +53,6 @@ public class DifferentialExpressionAnalysisController {
     @Autowired
     private TaskRunningService taskRunningService;
     @Autowired
-    private AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService;
-    @Autowired
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
@@ -75,8 +73,7 @@ public class DifferentialExpressionAnalysisController {
                 .filter( f -> !ExperimentalDesignUtils.isBatchFactor( f ) )
                 .collect( Collectors.toSet() );
 
-        AnalysisType analyzer = this.analysisSelectionAndExecutionService
-                .determineAnalysis( ee, factorsWithoutBatch, null /* subset */, true /* include interactions */ );
+        AnalysisType analyzer = DiffExAnalyzerUtils.determineAnalysisType( ee, factorsWithoutBatch, null /* subset */, true /* include interactions */ );
 
         DifferentialExpressionAnalyzerInfo result = new DifferentialExpressionAnalyzerInfo();
 

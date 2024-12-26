@@ -694,6 +694,14 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
             ExpressionExperiment expressionExperiment, BioAssayDimension dimension );
 
     /**
+     * Reconstitute the FV to subset mapping for a given experiment and factor.
+     */
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Map<FactorValue, ExpressionExperimentSubSet> getSubSetsByFactorValue(
+            ExpressionExperiment expressionExperiment, ExperimentalFactor experimentalFactor, BioAssayDimension dimension );
+
+    /**
      * Return the taxon for each of the given experiments (or subsets).
      */
     <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets );

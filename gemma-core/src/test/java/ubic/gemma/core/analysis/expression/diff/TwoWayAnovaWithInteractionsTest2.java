@@ -20,7 +20,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
@@ -42,6 +41,7 @@ import java.util.HashSet;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.determineAnalysisType;
 
 public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
 
@@ -84,8 +84,7 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
             assertEquals( 2, ba.getSampleUsed().getFactorValues().size() );
         }
 
-        AnalysisType aa = analysisService
-                .determineAnalysis( ee, ee.getExperimentalDesign().getExperimentalFactors(), null, true );
+        AnalysisType aa = determineAnalysisType( ee, ee.getExperimentalDesign().getExperimentalFactors(), null, true );
 
         assertEquals( AnalysisType.TWO_WAY_ANOVA_WITH_INTERACTION, aa );
 

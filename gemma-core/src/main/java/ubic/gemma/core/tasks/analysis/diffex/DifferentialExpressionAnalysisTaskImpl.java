@@ -19,10 +19,10 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.analysis.expression.diff.AnalysisSelectionAndExecutionService;
+import ubic.gemma.core.analysis.expression.diff.AnalysisType;
+import ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
-import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl;
 import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -34,6 +34,8 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.util.Collection;
 import java.util.HashSet;
+
+import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.determineAnalysisType;
 
 /**
  * A differential expression analysis spaces task
@@ -52,8 +54,6 @@ public class DifferentialExpressionAnalysisTaskImpl
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
-    @Autowired
-    private AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService;
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
@@ -127,8 +127,7 @@ public class DifferentialExpressionAnalysisTaskImpl
             config.addInteractionToInclude( factors ); // might get dropped.
         }
 
-        DifferentialExpressionAnalyzerServiceImpl.AnalysisType analyzer = analysisSelectionAndExecutionService
-                .determineAnalysis( ee, config );
+        AnalysisType analyzer = DiffExAnalyzerUtils.determineAnalysisType( ee, config );
 
         if ( analyzer == null ) {
             throw new IllegalStateException( "Data set cannot be analyzed" );

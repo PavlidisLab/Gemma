@@ -1389,8 +1389,20 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public Map<ExperimentalFactor, Map<FactorValue, ExpressionExperimentSubSet>> getSubSetsByFactorValue( ExpressionExperiment expressionExperiment, BioAssayDimension dimension ) {
+        return getSubSetsByFactorValueInternal( expressionExperiment, dimension, getSubSets( expressionExperiment, dimension ) );
+    }
+
+    @Nullable
+    @Override
+    @Transactional(readOnly = true)
+    public Map<FactorValue, ExpressionExperimentSubSet> getSubSetsByFactorValue( ExpressionExperiment expressionExperiment, ExperimentalFactor experimentalFactor, BioAssayDimension dimension ) {
+        // TODO: could this be made more efficient for a single factor?
+        return getSubSetsByFactorValueInternal( expressionExperiment, dimension, getSubSets( expressionExperiment, dimension ) )
+                .get( experimentalFactor );
+    }
+
+    private Map<ExperimentalFactor, Map<FactorValue, ExpressionExperimentSubSet>> getSubSetsByFactorValueInternal( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, Collection<ExpressionExperimentSubSet> subSets ) {
         Map<ExperimentalFactor, Map<FactorValue, Set<ExpressionExperimentSubSet>>> result = new HashMap<>();
-        Collection<ExpressionExperimentSubSet> subSets = getSubSets( expressionExperiment, dimension );
         for ( ExpressionExperimentSubSet subSet : subSets ) {
             for ( BioAssay ba : subSet.getBioAssays() ) {
                 for ( FactorValue fv : ba.getSampleUsed().getAllFactorValues() ) {

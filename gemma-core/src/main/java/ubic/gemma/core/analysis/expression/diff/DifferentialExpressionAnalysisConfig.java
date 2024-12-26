@@ -19,16 +19,18 @@
 package ubic.gemma.core.analysis.expression.diff;
 
 import lombok.Data;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
-import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.*;
+
+import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.writeConfig;
 
 /**
  * Holds the settings used for differential expression analysis, and defines some defaults.
@@ -130,36 +132,11 @@ public class DifferentialExpressionAnalysisConfig {
 
     @Override
     public String toString() {
-
-        StringBuilder buf = new StringBuilder();
-
-        buf.append( "# AnalysisType: " ).append( this.analysisType == null ? "Unknown" : this.analysisType ).append( "\n" );
-
-        buf.append( "# Factors: " ).append( StringUtils.join( this.factorsToInclude, " " ) );
-
-        buf.append( "\n" );
-
-        if ( this.subsetFactor != null ) {
-            buf.append( "# SubsetFactor: " ).append( this.subsetFactor ).append( "\n" );
-        } else if ( this.subsetFactorValue != null ) {
-            buf.append( "# Subset analysis for " ).append( this.subsetFactorValue ).append( "\n" );
+        try ( StringWriter buf = new StringWriter() ) {
+            writeConfig( this, buf );
+            return buf.toString();
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
         }
-        if ( !interactionsToInclude.isEmpty() ) {
-            buf.append( "# Interactions:  " ).append( StringUtils.join( interactionsToInclude, ":" ) ).append( "\n" );
-        }
-
-        if ( !baselineFactorValues.isEmpty() ) {
-            buf.append( "# Baselines:\n" );
-            for ( ExperimentalFactor ef : baselineFactorValues.keySet() ) {
-                buf.append( "# " ).append( ef.getName() ).append( ": Baseline = " )
-                        .append( baselineFactorValues.get( ef ) ).append( "\n" );
-            }
-        }
-
-        if ( this.moderateStatistics ) {
-            buf.append( "# Empirical Bayes moderated statistics used\n" );
-        }
-
-        return buf.toString();
     }
 }
