@@ -10,7 +10,6 @@ TAGS
 .make.state
 .nse_depinfo
 *~
-**/.DS_Store
 .DS_Store
 #*
 .#*
@@ -32,11 +31,8 @@ _$*
 *.Z
 *.elc
 *.ln
-.envrc
-.ipynb_checkpoints/
 
 # Project ignores (converted from .cvsignore files)
-gemma-web/.settings/org.eclipse.m2e.core.prefs
 gemma-web/surefire*
 gemma-web/surefire-classloader.properties
 gemma-web/cobertura.ser
@@ -50,10 +46,7 @@ gemma-web/src/main/main.iml
 gemma-web/src/main/webapp/*.jsp_preview_.html
 gemma-web/src/main/webapp/images/icons/Thumbs.db
 gemma-web/src/test/test.iml
-.project
 .externalToolBuilders
-.settings
-target
 test-build
 .myeclipse
 .clover
@@ -69,7 +62,6 @@ velocity.log.*
 TempFatjarBuildDir_erase_me
 release.properties
 .deployment
-.Rhistory
 bin-groovy
 null
 EcclesMy.cnf
@@ -89,7 +81,6 @@ terracotta
 tc-config.xml
 ontology.index.dir
 cobertura
-gemma-core/.settings/com.google.gwt.eclipse.core.prefs
 gemma-core/cobertura.ser
 gemma-core/logs
 gemma-core/null
@@ -99,11 +90,8 @@ gemma-core/*.hprof
 gemma-core/$HOME
 gemma-core/src/main/native/.deps
 gemma-core/src/main/native/.libs
-gemma-core/src/main/native/.Rhistory
 gemma-core/src/main/native/Blat.lo
 gemma-core/src/main/native/libBlat.la
-gemma-core/src/test/resources/data/loader/expression/geo/meta-analysis/.Rhistory
-gemma-core/src/test/resources/data/loader/expression/geo/meta-analysis/.RData
 gemma-core/src/test/resources/data/search/io/file/index
 gemma-core/*.log
 gemma-core/andromda*.exc
@@ -111,6 +99,17 @@ gemma-core/spring*.exc
 gemma-core/hibernate*.exc
 gemma-core/src/main/uml/*.uml
 gemma-core/src/main/uml/*.bak
+
+# R
+.RData
+.Rhistory
+
+# Environment files
+.env
+.envrc
+
+# Jupyter
+.ipynb_checkpoints/
 
 ## File-based project format:
 *.iws
@@ -126,6 +125,16 @@ gemma-core/src/main/uml/*.bak
 
 # Eclipse
 .classpath
+.project
+.settings/
+
+# Maven
+target/
+
+# Maven wrapper
+/.mvn/
+mvnw
+mvnw.cmd
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/
@@ -138,4 +147,3 @@ atlassian-ide-plugin.xml
 /Gemma.properties
 /gemma-data
 /gemma-logs
-
