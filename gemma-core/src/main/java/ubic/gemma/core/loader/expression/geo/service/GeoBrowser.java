@@ -42,6 +42,17 @@ public interface GeoBrowser {
     Collection<GeoRecord> getGeoRecords( GeoRecordType recordType, Collection<String> accessions, GeoRetrieveConfig config ) throws IOException;
 
     /**
+     * Retrieve all GEO records of a given type.
+     * <p>
+     * A bit hacky, can be improved. Limited to human, mouse, rat, is not guaranteed to get everything, though as of
+     * 7/2021, this is sufficient (~8000 platforms)
+     *
+     * @param allowedTaxa a collection of allowed taxa, ignored if null or empty
+     * @return all relevant platforms up to single-query limit of NCBI
+     */
+    Collection<GeoRecord> getAllGeoRecords( GeoRecordType recordType, @Nullable Collection<String> allowedTaxa, int maxRecords ) throws IOException;
+
+    /**
      * Retrieve recent GEO records from <a href="https://www.ncbi.nlm.nih.gov/geo/browse/">GEO browser</a>.
      * <p>
      * The retrieved information is pretty minimal. Use {@link #searchGeoRecords(GeoRecordType, String, GeoSearchField, Collection, Collection, Collection)}
@@ -69,6 +80,7 @@ public interface GeoBrowser {
      * <p>
      * Note that the search is reversed in time. You get the most recent records first.
      *
+     * @param recordType     the type of record to search for
      * @param searchTerms    search term, ignored if null or blank
      * @param field          a field to search in or null to search everywhere
      * @param allowedTaxa    restrict search to the given taxa if not null
@@ -78,6 +90,11 @@ public interface GeoBrowser {
      * @throws IOException if there is a problem obtaining or manipulating the file (some exceptions are not thrown and just logged)
      */
     GeoQuery searchGeoRecords( GeoRecordType recordType, @Nullable String searchTerms, @Nullable GeoSearchField field, @Nullable Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatforms, @Nullable Collection<String> seriesTypes ) throws IOException;
+
+    /**
+     * Search GEO records.
+     */
+    GeoQuery searchGeoRecords( GeoRecordType recordType, String term ) throws IOException;
 
     default Slice<GeoRecord> retrieveGeoRecords( GeoQuery query, int start, int pageSize ) throws IOException {
         return retrieveGeoRecords( query, start, pageSize, GeoRetrieveConfig.DEFAULT );
@@ -91,14 +108,5 @@ public interface GeoBrowser {
      */
     Slice<GeoRecord> retrieveGeoRecords( GeoQuery query, int start, int pageSize, GeoRetrieveConfig config ) throws IOException;
 
-    /**
-     * Retrieve all GEO records of a given type.
-     * <p>
-     * A bit hacky, can be improved. Limited to human, mouse, rat, is not guaranteed to get everything, though as of
-     * 7/2021, this is sufficient (~8000 platforms)
-     *
-     * @param allowedTaxa a collection of allowed taxa, ignored if null or empty
-     * @return all relevant platforms up to single-query limit of NCBI
-     */
-    Collection<GeoRecord> getAllGeoRecords( GeoRecordType recordType, @Nullable Collection<String> allowedTaxa ) throws IOException;
+    Collection<GeoRecord> retrieveAllGeoRecords( GeoQuery query, GeoRetrieveConfig config ) throws IOException;
 }

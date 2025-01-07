@@ -31,6 +31,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeNotNull;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * Alan brain Atlas service test.
@@ -53,6 +54,7 @@ public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
 
     @Before
     public void SetUp() {
+        assumeThatResourceIsAvailable( "https://api.brain-map.org/api/v2/" );
         gene = Gene.Factory.newInstance();
         gene.setName( "glutamate receptor, ionotropic, NMDA1 (zeta 1)" );
         gene.setOfficialSymbol( "grin1" );

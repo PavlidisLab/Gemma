@@ -26,6 +26,9 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
 
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
+import static org.springframework.web.bind.annotation.RequestMethod.HEAD;
+
 /**
  * Handles loading of Expression data into the system when the source is GEO or ArrayExpress, via Spring MVC or AJAX.
  *
@@ -55,8 +58,8 @@ public class ExpressionExperimentLoadController {
         return taskRunningService.submitTaskCommand( command );
     }
 
-    @RequestMapping("/admin/loadExpressionExperiment.html")
+    @RequestMapping(value = "/admin/loadExpressionExperiment.html", method = { GET, HEAD })
     public ModelAndView show() {
-        return new ModelAndView( "/admin/loadExpressionExperimentForm" );
+        return new ModelAndView( "admin/loadExpressionExperimentForm" );
     }
 }

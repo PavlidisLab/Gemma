@@ -18,21 +18,30 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity.recaptcha;
 
+import org.apache.commons.io.IOUtils;
+import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.util.Assert;
 
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
 
 public class ReCaptcha {
 
-    public static final String HOST = "https://www.google.com";
-    public static final String PATH = "/recaptcha/api/siteverify";
-    public static final String URL = HOST + PATH;
+    public static final String URL = "https://www.google.com/recaptcha/api/siteverify";
 
+    private static final String RESPONSE_REQUEST_PARAMETER = "g-recaptcha-response";
     private static final String POST_PARAM_SECRET = "secret";
     private static final String POST_PARAM_RESPONSE = "response";
     private static final String POST_PARAM_IP = "remoteip";
 
-    private String privateKey;
+    private final String privateKey;
 
     public ReCaptcha( String privateKey ) {
         this.privateKey = privateKey;
@@ -42,22 +51,49 @@ public class ReCaptcha {
         return this.privateKey != null && !this.privateKey.isEmpty();
     }
 
-    public ReCaptchaResponse validateRequest( HttpServletRequest request ) {
-        String response = SimpleHttp.get( URL, createUrlParameters( request.getParameter( "g-recaptcha-response" ), request.getRemoteAddr() ) );
-
-        JSONObject responseJSON = new JSONObject( response );
-
-        if ( responseJSON.getBoolean( "success" ) ) {
-            return new ReCaptchaResponse( true, "" );
-        } else {
-            return new ReCaptchaResponse( false, "unknown error." );
+    public ReCaptchaResponse validateRequest( HttpServletRequest request ) throws ReCaptchaException {
+        Assert.state( isPrivateKeySet(), "No private key is set, cannot validate reCaptcha." );
+        try {
+            String response = IOUtils.toString( new URL( URL + "?" + createUrlParameters( request ) ), StandardCharsets.UTF_8 );
+            JSONObject responseJSON = new JSONObject( response );
+            return new ReCaptchaResponse( isValid( responseJSON ), formatErrorCodes( responseJSON ) );
+        } catch ( IOException e ) {
+            throw new ReCaptchaException( "I/O error receiving the response.", e );
+        } catch ( JSONException e ) {
+            throw new ReCaptchaException( "Error parsing the response.", e );
         }
     }
 
-    private String createUrlParameters( String response, String remoteAddr ) {
-        return POST_PARAM_SECRET + "=" + privateKey + "&" +
-                POST_PARAM_RESPONSE + "=" + response + "&" +
-                POST_PARAM_IP + "=" + remoteAddr;
+    private boolean isValid( JSONObject responseJSON ) {
+        return responseJSON.getBoolean( "success" );
     }
 
+    @Nullable
+    private String formatErrorCodes( JSONObject responseJSON ) {
+        if ( !responseJSON.has( "error-codes" ) ) {
+            return null;
+        }
+        return responseJSON.getJSONArray( "error-codes" )
+                .toList()
+                .stream()
+                .map( Object::toString )
+                .collect( Collectors.joining( ", " ) );
+    }
+
+    private String createUrlParameters( HttpServletRequest request ) {
+        if ( request.getParameter( RESPONSE_REQUEST_PARAMETER ) == null ) {
+            throw new ReCaptchaException( "Missing reCaptcha response parameter." );
+        }
+        return POST_PARAM_SECRET + "=" + urlEncode( privateKey )
+                + "&" + POST_PARAM_RESPONSE + "=" + urlEncode( request.getParameter( RESPONSE_REQUEST_PARAMETER ) )
+                + "&" + POST_PARAM_IP + "=" + urlEncode( request.getRemoteAddr() );
+    }
+
+    private String urlEncode( String s ) {
+        try {
+            return URLEncoder.encode( s, StandardCharsets.UTF_8.name() );
+        } catch ( UnsupportedEncodingException e ) {
+            throw new RuntimeException( e );
+        }
+    }
 }

@@ -31,8 +31,8 @@ public abstract class GeoData implements Serializable {
 
     private final List<String> columnNames = new ArrayList<>();
     private final List<String> columnDescriptions = new ArrayList<>();
-    GeoContact contact = new GeoContact();
-    String geoAccession;
+    protected GeoContact contact = new GeoContact();
+    protected String geoAccession;
     private String title = "";
 
     public void addColumnName( String columnName ) {

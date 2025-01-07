@@ -30,9 +30,7 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -49,6 +47,9 @@ import static java.util.Objects.requireNonNull;
 public class XMLUtils {
 
     private static final Log log = LogFactory.getLog( XMLUtils.class );
+
+    private static final XPathFactory xFactory = XPathFactory.newInstance();
+    private static final XPath xpath = xFactory.newXPath();
 
     /**
      * Create a new DocumentBuilder with some good presets for Gemma.
@@ -179,11 +180,33 @@ public class XMLUtils {
     }
 
     /**
+     * Compile an XPath expression.
+     */
+    public static XPathExpression compile( String expr ) {
+        try {
+            return xpath.compile( expr );
+        } catch ( XPathExpressionException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
      * Evaluate an XPath expression that produces a {@link NodeList}.
      */
     public static NodeList evaluate( XPathExpression xpath, Node item ) {
         try {
             return ( NodeList ) xpath.evaluate( item, XPathConstants.NODESET );
+        } catch ( XPathExpressionException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * Evaluate an XPath expression that produces a {@link NodeList}.
+     */
+    public static String evaluateToString( XPathExpression xpath, Node item ) {
+        try {
+            return ( String ) xpath.evaluate( item, XPathConstants.STRING );
         } catch ( XPathExpressionException e ) {
             throw new RuntimeException( e );
         }

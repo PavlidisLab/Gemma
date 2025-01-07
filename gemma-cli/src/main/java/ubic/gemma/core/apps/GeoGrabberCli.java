@@ -45,6 +45,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
@@ -98,7 +99,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
      */
     private static final String[] DATASET_HEADER = { "Acc", "ReleaseDate", "Taxa", "Platforms", "AllPlatformsInGemma",
             "Affy", "NumSamples", "Type", "SuperSeries", "SubSeriesOf", "PubMed", "Title", "Summary", "MeSH",
-            "SampleTerms", "LibraryStrategy", "OverallDesign" };
+            "SampleTerms", "LibraryStrategy", "LibrarySource", "OverallDesign", "Keywords" };
 
     /**
      * Preset when seeking records.
@@ -113,9 +114,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
             .subSeriesStatus( true )
             .meshHeadings( true )
             .libraryStrategy( true )
-            // ignore sources and characteristics, those are very expensive
-            .sampleSources( true )
-            .sampleCharacteristics( true )
+            .sampleDetails( true )
             // ignore errors when fetching additional information
             .ignoreErrors( true )
             .build();
@@ -309,7 +308,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         CSVFormat tsvFormat = CSVFormat.TDF.builder()
                 .setHeader( "Acc", "ReleaseDate", "Taxa", "Title", "Summary", "TechType" )
                 .build();
-        Collection<GeoRecord> allGEOPlatforms = gbs.getAllGeoRecords( GeoRecordType.PLATFORM, getAllowedTaxa() );
+        Collection<GeoRecord> allGEOPlatforms = gbs.getAllGeoRecords( GeoRecordType.PLATFORM, getAllowedTaxa(), 10000 );
         log.info( "Fetched " + allGEOPlatforms.size() + " records" );
         try ( CSVPrinter os = tsvFormat.print( getOutputWriter() ) ) {
             for ( GeoRecord geoRecord : allGEOPlatforms ) {
@@ -373,22 +372,22 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                 log.debug( "Retrieved " + recs.size() + " GEO records." ); // we skip ones that are not using taxa of interest
 
                 for ( GeoRecord geoRecord : recs ) {
+                    if ( numProcessed > 0 && numProcessed % 50 == 0 ) {
+                        log.info( "Processed " + numProcessed + " GEO records, retained " + numUsed + " so far" );
+                    }
+                    numProcessed++;
+
                     // check ending conditions, especially if we are fast-rewinding
                     if ( dateLimit != null && beforeOrEquals( geoRecord.getReleaseDate(), dateLimit ) ) {
                         log.info( "Stopping as reached date limit" );
-                        break;
+                        return;
                     }
                     if ( gseLimit != null && gseLimit.equals( geoRecord.getGeoAccession() ) ) {
                         log.info( "Stopping as have reached " + gseLimit );
-                        break;
+                        return;
                     }
 
                     log.debug( "Processing " + geoRecord.getGeoAccession() + " released on " + geoRecord.getReleaseDate() + "..." );
-
-                    numProcessed++;
-                    if ( numProcessed % 50 == 0 ) {
-                        log.info( "Processed " + numProcessed + " GEO records, retained " + numUsed + " so far" );
-                    }
 
                     if ( !seen.add( geoRecord.getGeoAccession() ) ) {
                         log.warn( geoRecord + ": skipping, this dataset was already seen." ); // this would be a bug IMO, want to avoid!
@@ -580,13 +579,41 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         return false;
     }
 
+    /**
+     * Stop words to exclude when extracting keywords from GEO records.
+     */
+    private static final Set<String> stopWords = new HashSet<>( Arrays.asList(
+            "a", "an", "and", "are", "as", "at", "be", "but", "by", "for", "if", "in", "into", "is", "it", "no", "not",
+            "of", "on", "or", "such", "that", "the", "their", "then", "there", "these", "they", "this", "to", "was",
+            "will", "with" ) );
+
+    /**
+     * Extract keywords from a GEO record.
+     */
+    Set<String> extractKeywords( GeoRecord geoRecord ) {
+        String allText = geoRecord.getTitle() + "\n"
+                + geoRecord.getSummary() + "\n"
+                + geoRecord.getOverallDesign() + "\n"
+                + geoRecord.getSampleDescriptions() + "\n"
+                + geoRecord.getSampleExtractProtocols() + "\n"
+                + geoRecord.getSampleLabelProtocols() + "\n"
+                + geoRecord.getSampleDataProcessing();
+        HashSet<String> keywords = new HashSet<>( Arrays.asList( StringUtils.split( allText.toLowerCase()
+                // this will split on any punctuation except hyphens
+                .replaceAll( "[^\\P{Punct}-]", " " ) ) ) );
+        keywords.removeAll( stopWords );
+        return keywords;
+    }
+
     private void writeDataset( GeoRecord geoRecord, boolean allPlatformsInGemma, boolean isAffymetrix, CSVPrinter os ) throws IOException {
         os.printRecord( geoRecord.getGeoAccession(), dateFormat.format( geoRecord.getReleaseDate() ),
                 StringUtils.join( geoRecord.getOrganisms(), "," ), geoRecord.getPlatform(), allPlatformsInGemma,
                 isAffymetrix, geoRecord.getNumSamples(), geoRecord.getSeriesType(), geoRecord.isSuperSeries(),
                 geoRecord.getSubSeriesOf(), StringUtils.join( geoRecord.getPubMedIds(), "," ), geoRecord.getTitle(), geoRecord.getSummary(),
-                StringUtils.join( geoRecord.getMeshHeadings(), "," ), geoRecord.getSampleDetails(), geoRecord.getLibraryStrategy(),
-                StringUtils.replace( geoRecord.getOverallDesign(), "\n", "\\n" ) );
+                StringUtils.join( geoRecord.getMeshHeadings(), "," ), geoRecord.getSampleDetails(),
+                geoRecord.getLibraryStrategy(), geoRecord.getLibrarySource(),
+                StringUtils.replace( geoRecord.getOverallDesign(), "\n", "\\n" ),
+                extractKeywords( geoRecord ).stream().sorted().collect( Collectors.joining( ";" ) ) );
         os.flush();
     }
 }

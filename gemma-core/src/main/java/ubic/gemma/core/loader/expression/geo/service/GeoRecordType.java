@@ -7,5 +7,7 @@ package ubic.gemma.core.loader.expression.geo.service;
  */
 public enum GeoRecordType {
     SERIES,
-    PLATFORM
+    PLATFORM,
+    SAMPLE,
+    DATASET
 }

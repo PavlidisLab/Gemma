@@ -63,18 +63,18 @@ import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 @Service("expressionExperimentReportService")
 public class ExpressionExperimentReportServiceImpl implements ExpressionExperimentReportService, InitializingBean {
 
+    private static final Log log = LogFactory.getLog( ExpressionExperimentReportServiceImpl.class );
+
     private static final String NOTE_UPDATED_CONFOUND = "Updated batch confound";
     private static final String NOTE_UPDATED_EFFECT = "Updated batch effect";
     private static final String EESTATS_CACHE_NAME = "ExpressionExperimentReportsCache";
-    private final Log log = LogFactory.getLog( this.getClass() );
     /**
      * Batch of classes we can get events for all at once.
      */
-    @SuppressWarnings("unchecked")
-    private final Class<? extends AuditEventType>[] eventTypes = new Class[] { LinkAnalysisEvent.class,
-            MissingValueAnalysisEvent.class, ProcessedVectorComputationEvent.class,
+    private static final List<Class<? extends AuditEventType>> eventTypes = Arrays.asList(
+            LinkAnalysisEvent.class, MissingValueAnalysisEvent.class, ProcessedVectorComputationEvent.class,
             DifferentialExpressionAnalysisEvent.class, BatchInformationFetchingEvent.class,
-            PCAAnalysisEvent.class, BatchInformationMissingEvent.class };
+            PCAAnalysisEvent.class, BatchInformationMissingEvent.class );
 
     @Autowired
     private AuditTrailService auditTrailService;
@@ -190,15 +190,14 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         // do this ahead to avoid round trips - this also filters...
         Collection<ExpressionExperiment> ees = expressionExperimentService.load( ids );
 
-        if ( ees.size() == 0 ) {
+        if ( ees.isEmpty() ) {
             return;
         }
 
         Map<Long, ExpressionExperiment> eeMap = EntityUtils.getIdMap( ees );
         Map<Long, Date> lastArrayDesignUpdates = expressionExperimentService.getLastArrayDesignUpdate( ees );
-        Collection<Class<? extends AuditEventType>> typesToGet = Arrays.asList( eventTypes );
 
-        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> events = this.getEvents( ees, typesToGet );
+        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> events = this.getEvents( ees );
 
         Map<Auditable, AuditEvent> linkAnalysisEvents = events.get( LinkAnalysisEvent.class );
         Map<Auditable, AuditEvent> missingValueAnalysisEvents = events.get( MissingValueAnalysisEvent.class );
@@ -445,10 +444,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     }
 
     private Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getEvents(
-            Collection<ExpressionExperiment> ees, Collection<Class<? extends AuditEventType>> types ) {
-
-        return auditEventService.getLastEvents( ees, types );
-
+            Collection<ExpressionExperiment> ees ) {
+        return auditEventService.getLastEvents( ees, ExpressionExperimentReportServiceImpl.eventTypes );
     }
 
     private Map<Long, Collection<AuditEvent>> getSampleRemovalEvents( Collection<ExpressionExperiment> ees ) {

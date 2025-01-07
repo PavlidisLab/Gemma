@@ -160,7 +160,7 @@ public class GeoBrowserServiceParseTest extends AbstractJUnit4SpringContextTests
         GeoBrowserImpl serv = new GeoBrowserImpl( Settings.getString( "entrez.efetch.apikey" ) );
         GeoRecord rec = new GeoRecord();
         serv.fillLibraryStrategy( rec, serv.parseMiniMLDocument( resource.getURL() ) );
-        serv.fillSampleDetails( rec, serv.parseMiniMLDocument( resource.getURL() ), GeoRetrieveConfig.DETAILED );
+        serv.fillSampleChannelDetails( rec, serv.parseMiniMLDocument( resource.getURL() ) );
         assertTrue( rec.getSampleDetails().contains( "colorectal cancer" ) );
         assertTrue( rec.getSampleDetails().contains( "Large intestine" ) );
         assertEquals( "RNA-Seq", rec.getLibraryStrategy() );
