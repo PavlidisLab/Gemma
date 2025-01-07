@@ -19,7 +19,6 @@
 package ubic.gemma.core.analysis.service;
 
 import org.apache.commons.io.file.PathUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -260,7 +259,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type, boolean exclusive ) throws IOException {
-        try ( LockedPathImpl lock = acquirePathLock( metadataDir.resolve( this.getEEFolderName( ee ) ).resolve( type.getFileName( ee ) ), exclusive ) ) {
+        try ( LockedPathImpl lock = acquirePathLock( metadataDir.resolve( getEEFolderName( ee ) ).resolve( type.getFileName( ee ) ), exclusive ) ) {
             if ( type.isDirectory() ) {
                 if ( !Files.exists( lock.getPath() ) ) {
                     return Optional.empty();
@@ -292,6 +291,23 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         Assert.isTrue( !type.isDirectory(), "Copy metadata file to a directory is not supported." );
         Assert.isTrue( Files.isReadable( existingFile ), existingFile + " must be readable." );
         Path destinationFile = metadataDir.resolve( getEEFolderName( ee ) ).resolve( type.getFileName( ee ) );
+        return copyMetadataFileInternal( existingFile, destinationFile, forceWrite );
+    }
+
+    @Override
+    public Path copyMetadataFile( ExpressionExperiment ee, Path existingFile, String filename, boolean forceWrite ) throws IOException {
+        Assert.isTrue( Files.isReadable( existingFile ), existingFile + " must be readable." );
+        Set<String> reservedMetadataFilenames = new HashSet<>();
+        reservedMetadataFilenames.add( "CHANGELOG.md" );
+        for ( ExpressionExperimentMetaFileType type : ExpressionExperimentMetaFileType.values() ) {
+            reservedMetadataFilenames.add( type.getFileName( ee ) );
+        }
+        Assert.isTrue( !reservedMetadataFilenames.contains( filename ), filename + " is reserved for metadata files, use a different filename." );
+        Path destinationFile = metadataDir.resolve( getEEFolderName( ee ) ).resolve( filename );
+        return copyMetadataFileInternal( existingFile, destinationFile, forceWrite );
+    }
+
+    private Path copyMetadataFileInternal( Path existingFile, Path destinationFile, boolean forceWrite ) throws IOException {
         if ( !forceWrite && Files.exists( destinationFile ) ) {
             throw new RuntimeException( "Metadata file already exists, use forceWrite is not override." );
         }
@@ -317,22 +333,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             }
             return false;
         }
-    }
-
-    /**
-     * Forms a folder name where the given experiments metadata will be located (within the {@link #metadataDir} directory).
-     *
-     * @param ee the experiment to get the folder name for.
-     * @return folder name based on the given experiments properties. Usually this will be the experiments short name,
-     * without any splitting suffixes (e.g. for GSE123.1 the folder name would be GSE123). If the short name is empty for
-     * any reason, the experiments ID will be used.
-     */
-    private String getEEFolderName( ExpressionExperiment ee ) {
-        String sName = ee.getShortName();
-        if ( StringUtils.isBlank( sName ) ) {
-            return ee.getId().toString();
-        }
-        return sName.replaceAll( "\\.\\d+$", "" );
     }
 
     @Override

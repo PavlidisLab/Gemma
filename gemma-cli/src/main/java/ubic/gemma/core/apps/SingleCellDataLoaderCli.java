@@ -44,6 +44,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             PREFERRED_CELL_TYPE_ASSIGNMENT = "preferredCta",
             OTHER_CELL_LEVEL_CHARACTERISTICS_FILE = "clcFile";
 
+    private static final String IGNORE_UNMATCHED_CELL_IDS_OPTION = "ignoreUnmatchedCellIds";
+
     private static final String ANNDATA_OPTION_PREFIX = "annData";
     private static final String
             ANNDATA_SAMPLE_FACTOR_NAME_OPTION = ANNDATA_OPTION_PREFIX + "SampleFactorName",
@@ -89,6 +91,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private boolean preferredCellTypeAssignment;
     @Nullable
     private Path otherCellLevelCharacteristicsFile;
+    private boolean ignoreUnmatchedCellIds;
 
     // AnnData
     private String annDataSampleFactorName;
@@ -138,6 +141,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .hasArg().type( Path.class )
                 .desc( "Path to a file containing additional cell-level characteristics to import." )
                 .build() );
+        options.addOption( IGNORE_UNMATCHED_CELL_IDS_OPTION, "ignore-unmatched-cell-ids", false, "Ignore unmatched cell IDs when loading cell type assignments and other cell-level characteristics." );
         // for AnnData
         options.addOption( ANNDATA_SAMPLE_FACTOR_NAME_OPTION, "anndata-sample-factor-name", true, "Name of the factor used for the sample name." );
         options.addOption( ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION, "anndata-cell-type-factor-name", true, "Name of the factor used for the cell type, incompatible with -" + CELL_TYPE_ASSIGNMENT_FILE_OPTION + "." );
@@ -199,6 +203,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         cellTypeAssignmentProtocolName = commandLine.getOptionValue( CELL_TYPE_ASSIGNMENT_PROTOCOL_NAME_OPTION );
         otherCellLevelCharacteristicsFile = commandLine.getParsedOptionValue( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE );
         preferredCellTypeAssignment = commandLine.hasOption( PREFERRED_CELL_TYPE_ASSIGNMENT );
+        ignoreUnmatchedCellIds = commandLine.hasOption( IGNORE_UNMATCHED_CELL_IDS_OPTION );
         if ( dataType == SingleCellDataType.ANNDATA ) {
             annDataSampleFactorName = commandLine.getOptionValue( ANNDATA_SAMPLE_FACTOR_NAME_OPTION );
             annDataCellTypeFactorName = commandLine.getOptionValue( ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION );
@@ -334,6 +339,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         }
         // always allow for using barcodes to infer the sample names from the CLI
         configBuilder.useCellIdsIfSampleNameIsMissing( true );
+        configBuilder.ignoreUnmatchedCellIds( ignoreUnmatchedCellIds );
         return configBuilder.build();
     }
 }
