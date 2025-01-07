@@ -21,7 +21,7 @@ public class AnnData implements AutoCloseable {
 
     private final H5File h5File;
 
-    private AnnData( H5File h5File ) {
+    private AnnData( H5File h5File ) throws IOException {
         String encodingType = h5File.getStringAttribute( "encoding-type" );
         if ( !Objects.equals( encodingType, "anndata" ) ) {
             h5File.close();
@@ -97,7 +97,7 @@ public class AnnData implements AutoCloseable {
     }
 
     @Override
-    public void close() {
+    public void close() throws IOException {
         h5File.close();
     }
 
