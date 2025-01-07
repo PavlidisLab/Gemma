@@ -42,6 +42,8 @@ public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingl
 
     private boolean useCellIdsIfSampleNameIsMissing;
 
+    private boolean ignoreUnmatchedCellIds;
+
     protected GenericMetadataSingleCellDataLoader( SingleCellDataLoader delegate, @Nullable Path cellTypeMetadataFile, @Nullable Path otherCellCharacteristicsMetadataFile ) {
         super( delegate );
         this.cellTypeMetadataFile = cellTypeMetadataFile;
@@ -73,7 +75,7 @@ public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingl
             return super.getCellTypeAssignments( singleCellDimension );
         }
         Assert.notNull( bioAssayToSampleNameMatcher, "A bioAssayToSampleNameMatcher must be set" );
-        return new CellTypeAssignmentMetadataParser( singleCellDimension, bioAssayToSampleNameMatcher, cellTypeAssignmentName, cellTypeAssignmentProtocol, useCellIdsIfSampleNameIsMissing )
+        return new CellTypeAssignmentMetadataParser( singleCellDimension, bioAssayToSampleNameMatcher, cellTypeAssignmentName, cellTypeAssignmentProtocol, useCellIdsIfSampleNameIsMissing, ignoreUnmatchedCellIds )
                 .parse( cellTypeMetadataFile );
     }
 
@@ -83,7 +85,7 @@ public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingl
             return super.getOtherCellLevelCharacteristics( dimension );
         }
         Assert.notNull( bioAssayToSampleNameMatcher, "A bioAssayToSampleNameMatcher must be set" );
-        return new GenericCellLevelCharacteristicsMetadataParser( dimension, bioAssayToSampleNameMatcher, useCellIdsIfSampleNameIsMissing )
+        return new GenericCellLevelCharacteristicsMetadataParser( dimension, bioAssayToSampleNameMatcher, useCellIdsIfSampleNameIsMissing, ignoreUnmatchedCellIds )
                 .parse( otherCellCharacteristicsMetadataFile );
     }
 }

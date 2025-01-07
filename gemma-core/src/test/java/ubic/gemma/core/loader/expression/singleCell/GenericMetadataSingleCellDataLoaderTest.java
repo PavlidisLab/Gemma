@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 public class GenericMetadataSingleCellDataLoaderTest {
@@ -42,6 +43,7 @@ public class GenericMetadataSingleCellDataLoaderTest {
                             .containsExactly( 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1 );
                     assertThat( cta.isPreferred() ).isFalse();
                     assertThat( cta.getProtocol() ).isNull();
+                    assertThat( cta.getDescription() ).isEmpty();
                 } );
         assertThat( loader.getOtherCellLevelCharacteristics( dim ) )
                 .hasSize( 2 )
@@ -87,6 +89,82 @@ public class GenericMetadataSingleCellDataLoaderTest {
                     assertThat( cta.getCellTypeIndices() )
                             .hasSize( 20 )
                             .containsExactly( 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1 );
+                    assertThat( cta.isPreferred() ).isFalse();
+                    assertThat( cta.getProtocol() ).isNull();
+                    assertThat( cta.getDescription() ).isEmpty();
+                } );
+    }
+
+    @Test
+    public void testWithDuplicateCellId() throws URISyntaxException, IOException {
+        SingleCellDimension dim = new SingleCellDimension();
+        dim.setBioAssays( Arrays.asList( BioAssay.Factory.newInstance( "A" ), BioAssay.Factory.newInstance( "B" ) ) );
+        dim.setBioAssaysOffset( new int[] { 0, 10 } );
+        dim.setCellIds( IntStream.rangeClosed( 1, 20 ).mapToObj( c -> "c" + c ).collect( Collectors.toList() ) );
+        dim.setNumberOfCells( 20 );
+        SingleCellDataLoader delegate = mock();
+        GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
+                Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata-with-duplicate-cell-ids.tsv" ) ).toURI() ),
+                null );
+        loader.setBioAssayToSampleNameMatcher( ( bioAssays, sampleNameFromData ) -> bioAssays.stream().filter( ba -> ba.getName().equals( sampleNameFromData ) ).collect( Collectors.toSet() ) );
+        loader.setUseCellIdsIfSampleNameIsMissing( true );
+        assertThat( loader.getCellTypeAssignments( dim ) )
+                .singleElement()
+                .satisfies( cta -> {
+                    assertThat( cta.getCellTypes() ).extracting( Characteristic::getValue )
+                            .containsExactlyInAnyOrder( "C" );
+                    assertThat( cta.getNumberOfCellTypes() )
+                            .isEqualTo( 1 );
+                    assertThat( cta.getCellTypeIndices() )
+                            .hasSize( 20 )
+                            .containsExactly( 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 );
+                    assertThat( cta.isPreferred() ).isFalse();
+                    assertThat( cta.getProtocol() ).isNull();
+                    assertThat( cta.getDescription() ).isEqualTo( "The following assays did not have any cells assigned:\n\tB" );
+                } );
+    }
+
+    @Test
+    public void testWithDuplicateCellIdButDifferentValues() throws URISyntaxException, IOException {
+        SingleCellDimension dim = new SingleCellDimension();
+        dim.setBioAssays( Arrays.asList( BioAssay.Factory.newInstance( "A" ), BioAssay.Factory.newInstance( "B" ) ) );
+        dim.setBioAssaysOffset( new int[] { 0, 10 } );
+        dim.setCellIds( IntStream.rangeClosed( 1, 20 ).mapToObj( c -> "c" + c ).collect( Collectors.toList() ) );
+        dim.setNumberOfCells( 20 );
+        SingleCellDataLoader delegate = mock();
+        GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
+                Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata-with-duplicate-cell-ids-but-different-values.tsv" ) ).toURI() ),
+                null );
+        loader.setBioAssayToSampleNameMatcher( ( bioAssays, sampleNameFromData ) -> bioAssays.stream().filter( ba -> ba.getName().equals( sampleNameFromData ) ).collect( Collectors.toSet() ) );
+        loader.setUseCellIdsIfSampleNameIsMissing( true );
+        assertThatThrownBy( () -> loader.getCellTypeAssignments( dim ) )
+                .isInstanceOf( IllegalStateException.class );
+    }
+
+    @Test
+    public void testWithBarcodeCollisions() throws IOException, URISyntaxException {
+        SingleCellDimension dim = new SingleCellDimension();
+        dim.setBioAssays( Arrays.asList( BioAssay.Factory.newInstance( "A" ), BioAssay.Factory.newInstance( "B" ) ) );
+        dim.setBioAssaysOffset( new int[] { 0, 10 } );
+        // make c1 and c11 collide
+        dim.setCellIds( IntStream.rangeClosed( 1, 20 ).mapToObj( c -> "c" + ( c == 11 ? 1 : c ) ).collect( Collectors.toList() ) );
+        dim.setNumberOfCells( 20 );
+        SingleCellDataLoader delegate = mock();
+        GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
+                Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata-with-barcode-collisions.tsv" ) ).toURI() ),
+                null );
+        loader.setBioAssayToSampleNameMatcher( ( bioAssays, sampleNameFromData ) -> bioAssays.stream().filter( ba -> ba.getName().equals( sampleNameFromData ) ).collect( Collectors.toSet() ) );
+        loader.setUseCellIdsIfSampleNameIsMissing( true );
+        assertThat( loader.getCellTypeAssignments( dim ) )
+                .singleElement()
+                .satisfies( cta -> {
+                    assertThat( cta.getCellTypes() ).extracting( Characteristic::getValue )
+                            .containsExactlyInAnyOrder( "C", "D" );
+                    assertThat( cta.getNumberOfCellTypes() )
+                            .isEqualTo( 2 );
+                    assertThat( cta.getCellTypeIndices() )
+                            .hasSize( 20 )
+                            .containsExactly( -1, 0, 1, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, -1, -1, -1, -1 );
                     assertThat( cta.isPreferred() ).isFalse();
                     assertThat( cta.getProtocol() ).isNull();
                 } );

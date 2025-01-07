@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
@@ -30,8 +31,8 @@ class CellTypeAssignmentMetadataParser extends AbstractCellLevelCharacteristicsM
     @Nullable
     private final Protocol cellTypeAssignmentProtocol;
 
-    public CellTypeAssignmentMetadataParser( SingleCellDimension singleCellDimension, BioAssayToSampleNameMatcher bioAssayToSampleNameMatcher, String cellTypeAssignmentName, @Nullable Protocol cellTypeAssignmentProtocol, boolean useCellIdsIfSampleNameIsMissing ) {
-        super( singleCellDimension, bioAssayToSampleNameMatcher, useCellIdsIfSampleNameIsMissing );
+    public CellTypeAssignmentMetadataParser( SingleCellDimension singleCellDimension, BioAssayToSampleNameMatcher bioAssayToSampleNameMatcher, String cellTypeAssignmentName, @Nullable Protocol cellTypeAssignmentProtocol, boolean useCellIdsIfSampleNameIsMissing, boolean ignoreUnmatchedCellIds ) {
+        super( singleCellDimension, bioAssayToSampleNameMatcher, useCellIdsIfSampleNameIsMissing, ignoreUnmatchedCellIds );
         this.cellTypeAssignmentName = cellTypeAssignmentName;
         this.cellTypeAssignmentProtocol = cellTypeAssignmentProtocol;
     }
@@ -48,12 +49,16 @@ class CellTypeAssignmentMetadataParser extends AbstractCellLevelCharacteristicsM
 
     @Override
     protected String getValue( CSVRecord record ) {
-        return record.get( "cell_type" );
+        return StringUtils.stripToNull( record.get( "cell_type" ) );
     }
 
     @Override
     protected String getValueUri( CSVRecord record ) {
-        return record.get( "cell_type_uri" );
+        if ( record.isMapped( "cell_type_uri" ) ) {
+            return StringUtils.stripToNull( record.get( "cell_type_uri" ) );
+        } else {
+            return null;
+        }
     }
 
     @Override

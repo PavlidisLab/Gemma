@@ -8,5 +8,6 @@ public enum SingleCellDataType {
     ANNDATA,
     SEURAT_DISK,
     LOOM,
-    MEX
+    MEX,
+    NULL
 }

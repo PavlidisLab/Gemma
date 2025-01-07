@@ -444,7 +444,8 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         } else if ( Files.exists( getLoomFile( ee ) ) ) {
             dataType = SingleCellDataType.LOOM;
         } else {
-            throw new IllegalArgumentException( "No single-cell data found for " + ee + " in " + singleCellDataBasePath + "." );
+            dataType = SingleCellDataType.NULL;
+            log.warn( "No single-cell data found for " + ee + " in " + singleCellDataBasePath + ", using the null loader." );
         }
         return getLoader( ee, dataType, config );
     }
@@ -466,6 +467,9 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
                 break;
             case LOOM:
                 loader = getLoomLoader();
+                break;
+            case NULL:
+                loader = getNullLoader();
                 break;
             default:
                 throw new IllegalArgumentException( "Unknown single-cell data type " + dataType + "." );
@@ -493,6 +497,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
                         setCellTypeAssignmentProtocol( config.getCellTypeAssignmentProtocol() );
                     }
                     setUseCellIdsIfSampleNameIsMissing( config.isUseCellIdsIfSampleNameIsMissing() );
+                    setIgnoreUnmatchedCellIds( config.isIgnoreUnmatchedCellIds() );
                 }
             };
         }
@@ -547,6 +552,10 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
 
     private SingleCellDataLoader getLoomLoader() {
         throw new UnsupportedOperationException( "Loom is not supported yet." );
+    }
+
+    private SingleCellDataLoader getNullLoader() {
+        return new NullSingleCellDataLoader();
     }
 
     private Path getAnnDataFile( ExpressionExperiment ee ) {

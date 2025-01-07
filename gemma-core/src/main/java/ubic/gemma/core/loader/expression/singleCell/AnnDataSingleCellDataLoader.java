@@ -621,7 +621,13 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             String matrixEncodingType = layer.getType();
             if ( ( matrixEncodingType.equals( "csr_matrix" ) && !transpose ) || ( matrixEncodingType.equals( "csc_matrix" ) && transpose ) ) {
                 return loadVectorsFromSparseMatrix( layer.getSparseMatrix(), samples, genes, quantitationType, dimension, elementsMapping )
-                        .onClose( h5File::close );
+                        .onClose( () -> {
+                            try {
+                                h5File.close();
+                            } catch ( IOException e ) {
+                                throw new RuntimeException( e );
+                            }
+                        } );
             } else if ( matrixEncodingType.equals( "csr_matrix" ) ) {
                 throw new UnsupportedOperationException( "The matrix at '" + layer.getPath() + "' is stored as CSR and transposition is enabled; it must be converted to CSC for being loaded." );
             } else if ( matrixEncodingType.equals( "csc_matrix" ) ) {

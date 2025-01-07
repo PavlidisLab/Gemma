@@ -27,27 +27,26 @@ import java.util.List;
  */
 class GenericCellLevelCharacteristicsMetadataParser extends AbstractCellLevelCharacteristicsMetadataParser<CellLevelCharacteristics> {
 
-    public GenericCellLevelCharacteristicsMetadataParser( SingleCellDimension singleCellDimension, BioAssayToSampleNameMatcher bioAssayToSampleNameMatcher, boolean useCellIdsIfSampleNameIsMissing ) {
-        super( singleCellDimension, bioAssayToSampleNameMatcher, useCellIdsIfSampleNameIsMissing );
+    public GenericCellLevelCharacteristicsMetadataParser( SingleCellDimension singleCellDimension, BioAssayToSampleNameMatcher bioAssayToSampleNameMatcher, boolean useCellIdsIfSampleNameIsMissing, boolean ignoreUnmatchedCellIds ) {
+        super( singleCellDimension, bioAssayToSampleNameMatcher, useCellIdsIfSampleNameIsMissing, ignoreUnmatchedCellIds );
     }
 
     protected Category getCategory( CSVRecord record ) {
         String category = StringUtils.stripToNull( record.get( "category" ) );
-        String categoryUri = StringUtils.stripToNull( record.get( "category_uri" ) );
+        String categoryUri = record.isMapped( "category_uri" ) ? StringUtils.stripToNull( record.get( "category_uri" ) ) : null;
         return new Category( category, categoryUri );
     }
 
     protected String getCategoryId( CSVRecord record ) {
         String category = StringUtils.stripToNull( record.get( "category" ) );
-        String categoryUri = StringUtils.stripToNull( record.get( "category_uri" ) );
+        String categoryUri = record.isMapped( "category_uri" ) ? StringUtils.stripToNull( record.get( "category_uri" ) ) : null;
         String categoryId;
-        try {
+        if ( record.isMapped( "category_id" ) ) {
             categoryId = StringUtils.stripToNull( record.get( "category_id" ) );
-        } catch ( IllegalArgumentException e ) {
-            categoryId = null;
-        }
-        if ( categoryId == null ) {
-            categoryId = categoryUri != null ? categoryUri : category;
+        } else if ( categoryUri != null ) {
+            categoryId = categoryUri;
+        } else {
+            categoryId = category;
         }
         return categoryId;
     }
@@ -59,7 +58,11 @@ class GenericCellLevelCharacteristicsMetadataParser extends AbstractCellLevelCha
 
     @Override
     protected String getValueUri( CSVRecord record ) {
-        return StringUtils.stripToNull( record.get( "value_uri" ) );
+        if ( record.isMapped( "value_uri" ) ) {
+            return StringUtils.stripToNull( record.get( "value_uri" ) );
+        } else {
+            return null;
+        }
     }
 
     @Override

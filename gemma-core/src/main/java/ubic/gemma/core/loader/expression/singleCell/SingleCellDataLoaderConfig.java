@@ -104,6 +104,12 @@ public class SingleCellDataLoaderConfig {
     private boolean useCellIdsIfSampleNameIsMissing;
 
     /**
+     * When parsing {@link #cellTypeAssignmentFile} and {@link #otherCellLevelCharacteristicsFile}, ignore cell IDs that
+     * cannot be matched to a sample.
+     */
+    private boolean ignoreUnmatchedCellIds;
+
+    /**
      * If only one CTA is present, mark it as preferred.
      */
     private boolean markSingleCellTypeAssignmentAsPreferred;
