@@ -193,7 +193,7 @@ public interface ExpressionDataFileService {
      * <p>
      * This can only be used for metadata files that are not listed in {@link ExpressionExperimentMetaFileType}; using
      * any of these reserved filenames will result in an exception. In addition, {@code CHANGELOG.md} is also reserved,
-     * use {@link ExpressionChangelogFileService} to manipulate it.
+     * use {@link ExpressionMetadataChangelogFileService} to manipulate it.
      */
     Path copyMetadataFile( ExpressionExperiment ee, Path existingFile, String filename, boolean forceWrite ) throws IOException;
 

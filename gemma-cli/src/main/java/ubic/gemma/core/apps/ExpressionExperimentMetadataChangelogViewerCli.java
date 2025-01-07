@@ -1,19 +1,20 @@
 package ubic.gemma.core.apps;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.analysis.service.ExpressionChangelogFileService;
+import ubic.gemma.core.analysis.service.ExpressionMetadataChangelogFileService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 
 /**
+ * CLI tool for viewing the changelog file of an experiment.
  * @author poirigui
  */
-public class ExpressionExperimentChangelogViewerCli extends ExpressionExperimentManipulatingCLI {
+public class ExpressionExperimentMetadataChangelogViewerCli extends ExpressionExperimentManipulatingCLI {
 
     @Autowired
-    private ExpressionChangelogFileService expressionChangelogFileService;
+    private ExpressionMetadataChangelogFileService expressionMetadataChangelogFileService;
 
     @Nullable
     @Override
@@ -30,7 +31,7 @@ public class ExpressionExperimentChangelogViewerCli extends ExpressionExperiment
     @Override
     protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
         try {
-            System.out.print( expressionChangelogFileService.readChangelog( expressionExperiment ) );
+            System.out.print( expressionMetadataChangelogFileService.readChangelog( expressionExperiment ) );
         } catch ( IOException e ) {
             addErrorObject( expressionExperiment, e );
         }

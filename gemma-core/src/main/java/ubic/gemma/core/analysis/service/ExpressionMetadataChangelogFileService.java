@@ -12,7 +12,7 @@ import java.util.Date;
  * audit trail of an experiment. Instead, a changelog file is maintained under {@code ${gemma.appdata.home}/metadata/GSEnnnnn/CHANGELOG.md}.
  * @author poirigui
  */
-public interface ExpressionChangelogFileService {
+public interface ExpressionMetadataChangelogFileService {
 
     String readChangelog( ExpressionExperiment expressionExperiment ) throws IOException;
 

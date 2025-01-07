@@ -4,26 +4,27 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.analysis.service.ExpressionChangelogFileService;
+import ubic.gemma.core.analysis.service.ExpressionMetadataChangelogFileService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 
 /**
+ * CLI tool for adding manual entries to the changelog file.
  * @author poirigui
  */
-public class ExpressionExperimentChangelogEntryAdderCli extends ExpressionExperimentManipulatingCLI {
+public class ExpressionExperimentMetadataChangelogEntryAdderCli extends ExpressionExperimentManipulatingCLI {
 
     private static final String CHANGELOG_ENTRY_OPTION = "ce";
 
     @Autowired
-    private ExpressionChangelogFileService expressionChangelogFileService;
+    private ExpressionMetadataChangelogFileService expressionMetadataChangelogFileService;
 
     @Nullable
     private String changelogEntry;
 
-    public ExpressionExperimentChangelogEntryAdderCli() {
+    public ExpressionExperimentMetadataChangelogEntryAdderCli() {
         setRequireLogin();
         setSingleExperimentMode();
     }
@@ -59,7 +60,7 @@ public class ExpressionExperimentChangelogEntryAdderCli extends ExpressionExperi
             } else {
                 buf = readChangelogEntryFromConsole( expressionExperiment );
             }
-            expressionChangelogFileService.appendToChangelog( expressionExperiment, buf );
+            expressionMetadataChangelogFileService.appendToChangelog( expressionExperiment, buf );
         } catch ( IOException e ) {
             addErrorObject( expressionExperiment, e );
         } catch ( InterruptedException e ) {

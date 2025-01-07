@@ -4,7 +4,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.analysis.service.ExpressionChangelogFileService;
+import ubic.gemma.core.analysis.service.ExpressionMetadataChangelogFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -14,7 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * Add a metadata file to an experiment.
+ * Add a metadata file to an experiment and record an entry in the changelog file.
  * @author poirigui
  */
 public class ExpressionExperimentMetadataFileAdderCli extends ExpressionExperimentManipulatingCLI {
@@ -25,7 +25,7 @@ public class ExpressionExperimentMetadataFileAdderCli extends ExpressionExperime
     private ExpressionDataFileService expressionDataFileService;
 
     @Autowired
-    private ExpressionChangelogFileService expressionChangelogFileService;
+    private ExpressionMetadataChangelogFileService expressionMetadataChangelogFileService;
 
     private Path filename;
     @Nullable
@@ -71,7 +71,7 @@ public class ExpressionExperimentMetadataFileAdderCli extends ExpressionExperime
                 buf = readChangelogEntryFromConsole( expressionExperiment );
             }
             expressionDataFileService.copyMetadataFile( expressionExperiment, filename, filename.getFileName().toString(), isForce() );
-            expressionChangelogFileService.appendToChangelog( expressionExperiment, buf );
+            expressionMetadataChangelogFileService.appendToChangelog( expressionExperiment, buf );
         } catch ( IOException | InterruptedException e ) {
             throw new RuntimeException( e );
         }
