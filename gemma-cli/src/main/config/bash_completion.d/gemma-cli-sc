@@ -1205,4 +1205,4 @@ function __gemma_cli_complete() {
         mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--force --help -f -h" -- "$2")
     fi
 }
-complete -o filenames -o bashdefault -F __gemma_cli_complete gemma-cli-staging
+complete -o filenames -o bashdefault -F __gemma_cli_complete gemma-cli-sc

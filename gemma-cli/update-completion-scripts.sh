@@ -5,6 +5,9 @@ set -e
 project_dir=$(dirname "$0")
 gemma_cli_bin="$project_dir"/target/appassembler/bin/gemma-cli
 
+# TODO: remove gemma-cli-sc once merged in development
+gemma_cli_aliases="gemma-cli gemma-cli-staging gemma-cli-sc"
+
 if [ ! -f "$gemma_cli_bin"  ]; then
   echo "The $gemma_cli_bin executable does not exist. Building..."
   mvn package -f "$project_dir/../pom.xml" -am -pl gemma-cli -DskipTests
@@ -20,9 +23,10 @@ if [ "$actual_hash" != "$expected_hash" ]; then
 fi
 
 echo "Generating completion scripts for $gemma_cli_version..."
-"$gemma_cli_bin" --verbosity warn --completion --completion-executable=gemma-cli --completion-shell=bash > "$project_dir"/src/main/config/bash_completion.d/gemma-cli &
-"$gemma_cli_bin" --verbosity warn --completion --completion-executable=gemma-cli --completion-shell=fish > "$project_dir"/src/main/config/fish/completions/gemma-cli.fish &
-"$gemma_cli_bin" --verbosity warn --completion --completion-executable=gemma-cli-staging --completion-shell=bash > "$project_dir"/src/main/config/bash_completion.d/gemma-cli-staging &
-"$gemma_cli_bin" --verbosity warn --completion --completion-executable=gemma-cli-staging --completion-shell=fish > "$project_dir"/src/main/config/fish/completions/gemma-cli-staging.fish &
+
+for a in $gemma_cli_aliases; do
+  "$gemma_cli_bin" --verbosity warn --completion --completion-executable=$a --completion-shell=bash > "$project_dir"/src/main/config/bash_completion.d/$a &
+  "$gemma_cli_bin" --verbosity warn --completion --completion-executable=$a --completion-shell=fish > "$project_dir"/src/main/config/fish/completions/$a.fish &
+done
 
 wait
