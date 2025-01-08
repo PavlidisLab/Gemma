@@ -4,7 +4,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.Date;
 
 /**
  * Service for reading and appending to changelog files.
