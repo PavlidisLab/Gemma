@@ -4,14 +4,15 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.analysis.service.ExpressionMetadataChangelogFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.analysis.service.ExpressionMetadataChangelogFileService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 /**
  * Add a metadata file to an experiment and record an entry in the changelog file.
@@ -50,6 +51,7 @@ public class ExpressionExperimentMetadataFileAdderCli extends ExpressionExperime
     @Override
     protected void buildExperimentOptions( Options options ) {
         options.addOption( CHANGELOG_ENTRY_OPTION, "changelog-entry", true, "Changelog entry to be add. If not supplied, a text editor will be prompted." );
+        addForceOption( options );
     }
 
     @Override
@@ -68,7 +70,18 @@ public class ExpressionExperimentMetadataFileAdderCli extends ExpressionExperime
             if ( changelogEntry != null ) {
                 buf = changelogEntry;
             } else {
-                buf = readChangelogEntryFromConsole( expressionExperiment );
+                String defaultText;
+                Optional<ExpressionDataFileService.LockedPath> mf = expressionDataFileService.getMetadataFile( expressionExperiment, filename.getFileName().toString(), false );
+                if ( mf.isPresent() ) {
+                    defaultText = "Replace an existing metadata file " + filename.getFileName().toString() + ".";
+                    mf.get().close();
+                    if ( !isForce() ) {
+                        throw new IllegalStateException( "Metadata file already exist and the -force option is not set." );
+                    }
+                } else {
+                    defaultText = "Add a new metadata file " + filename.getFileName().toString() + ".";
+                }
+                buf = readChangelogEntryFromConsole( expressionExperiment, defaultText );
             }
             expressionDataFileService.copyMetadataFile( expressionExperiment, filename, filename.getFileName().toString(), isForce() );
             expressionMetadataChangelogFileService.appendToChangelog( expressionExperiment, buf );

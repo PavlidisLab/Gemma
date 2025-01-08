@@ -287,6 +287,14 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
+    public Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, String filename, boolean exclusive ) throws IOException {
+        try ( LockedPathImpl lock = acquirePathLock( metadataDir.resolve( getEEFolderName( ee ) ).resolve( filename ), exclusive ) ) {
+            // lock will be managed by the LockedFile
+            return Optional.of( lock.steal() );
+        }
+    }
+
+    @Override
     public Path copyMetadataFile( ExpressionExperiment ee, Path existingFile, ExpressionExperimentMetaFileType type, boolean forceWrite ) throws IOException {
         Assert.isTrue( !type.isDirectory(), "Copy metadata file to a directory is not supported." );
         Assert.isTrue( Files.isReadable( existingFile ), existingFile + " must be readable." );

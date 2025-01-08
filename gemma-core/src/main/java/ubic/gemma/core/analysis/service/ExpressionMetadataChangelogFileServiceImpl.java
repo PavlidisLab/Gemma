@@ -16,17 +16,16 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import static ubic.gemma.core.analysis.service.ExpressionDataFileUtils.getEEFolderName;
 
 @Service
 @CommonsLog
-public class ExpressionChangelogFileServiceImpl implements ExpressionChangelogFileService {
+public class ExpressionMetadataChangelogFileServiceImpl implements ExpressionMetadataChangelogFileService {
 
-    private static final DateFormat CHANGELOG_DATE_FORMAT = new SimpleDateFormat( "yyyy-MM-dd" );
+    private static final DateTimeFormatter CHANGELOG_DATE_FORMAT = DateTimeFormatter.ofPattern( "yyyy-MM-dd" );
 
     @Autowired
     private UserManager userManager;
@@ -46,11 +45,11 @@ public class ExpressionChangelogFileServiceImpl implements ExpressionChangelogFi
 
     @Override
     public void appendToChangelog( ExpressionExperiment expressionExperiment, String text ) throws IOException {
-        appendToChangelog( expressionExperiment, text );
+        appendToChangelog( expressionExperiment, text, LocalDate.now() );
     }
 
     @Override
-    public void appendToChangelog( ExpressionExperiment expressionExperiment, String text, Date date ) throws IOException {
+    public void appendToChangelog( ExpressionExperiment expressionExperiment, String text, LocalDate date ) throws IOException {
         User author = userManager.getCurrentUser();
         Path changelogFile = getChangelogFile( expressionExperiment );
         PathUtils.createParentDirectories( changelogFile );

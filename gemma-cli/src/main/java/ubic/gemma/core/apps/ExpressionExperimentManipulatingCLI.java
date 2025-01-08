@@ -632,18 +632,18 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
 
     /**
      * Read a changelog entry from the console.
-     * @param expressionExperiment
-     * @return
-     * @throws IOException
-     * @throws InterruptedException
+     * @param defaultText a default text to be shown in the editor, or null to keep the file empty
      */
-    protected String readChangelogEntryFromConsole( ExpressionExperiment expressionExperiment ) throws IOException, InterruptedException {
+    protected String readChangelogEntryFromConsole( ExpressionExperiment expressionExperiment, @Nullable String defaultText ) throws IOException, InterruptedException {
         Assert.notNull( System.console(), "An interactive console is required to read the changelog entry." );
         String editorBin = System.getenv( "EDITOR" );
         if ( editorBin == null ) {
             editorBin = "nano";
         }
         Path tempFile = Files.createTempFile( expressionExperiment.getShortName() + "-changelog-entry.md", null );
+        if ( defaultText != null ) {
+            PathUtils.writeString( tempFile, defaultText, StandardCharsets.UTF_8 );
+        }
         int status = new ProcessBuilder( editorBin, tempFile.toString() )
                 .inheritIO()
                 .start()

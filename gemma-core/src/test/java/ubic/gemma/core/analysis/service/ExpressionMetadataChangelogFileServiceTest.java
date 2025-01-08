@@ -18,15 +18,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Calendar;
-import java.util.Date;
+import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ContextConfiguration
-public class ExpressionChangelogFileServiceTest extends BaseTest {
+public class ExpressionMetadataChangelogFileServiceTest extends BaseTest {
 
     @Configuration
     @TestComponent
@@ -46,8 +45,8 @@ public class ExpressionChangelogFileServiceTest extends BaseTest {
         }
 
         @Bean
-        public ExpressionChangelogFileService expressionChangelogFileService() {
-            return new ExpressionChangelogFileServiceImpl();
+        public ExpressionMetadataChangelogFileService expressionChangelogFileService() {
+            return new ExpressionMetadataChangelogFileServiceImpl();
         }
 
         @Bean
@@ -57,7 +56,7 @@ public class ExpressionChangelogFileServiceTest extends BaseTest {
     }
 
     @Autowired
-    private ExpressionChangelogFileService expressionChangelogFileService;
+    private ExpressionMetadataChangelogFileService expressionMetadataChangelogFileService;
 
     @Autowired
     private UserManager userManager;
@@ -66,18 +65,18 @@ public class ExpressionChangelogFileServiceTest extends BaseTest {
     public void test() throws IOException {
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setShortName( "GSE1" );
-        assertThat( expressionChangelogFileService.readChangelog( ee ) ).isEmpty();
+        assertThat( expressionMetadataChangelogFileService.readChangelog( ee ) ).isEmpty();
 
         User author = new User();
         author.setName( "Admin" );
         author.setEmail( "admin@gemma.msl.ubc.ca" );
         when( userManager.getCurrentUser() ).thenReturn( author );
 
-        expressionChangelogFileService.appendToChangelog( ee, "test\ntest2", new Date( 2025 - 1900, Calendar.JANUARY, 6 ) );
+        expressionMetadataChangelogFileService.appendToChangelog( ee, "test\ntest2", LocalDate.of( 2025, 1, 6 ) );
 
-        expressionChangelogFileService.appendToChangelog( ee, "test2\ntest3", new Date( 2025 - 1900, Calendar.JANUARY, 6 ) );
+        expressionMetadataChangelogFileService.appendToChangelog( ee, "test2\ntest3", LocalDate.of( 2025, 1, 6 ) );
 
-        assertThat( expressionChangelogFileService.readChangelog( ee ) )
+        assertThat( expressionMetadataChangelogFileService.readChangelog( ee ) )
                 .isEqualTo( "2025-01-06  Admin  <admin@gemma.msl.ubc.ca>\n\n\ttest\n\ttest2\n\n2025-01-06  Admin  <admin@gemma.msl.ubc.ca>\n\n\ttest2\n\ttest3\n" );
     }
 }

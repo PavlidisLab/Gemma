@@ -3,6 +3,7 @@ package ubic.gemma.core.analysis.service;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.Date;
 
 /**
@@ -18,5 +19,5 @@ public interface ExpressionMetadataChangelogFileService {
 
     void appendToChangelog( ExpressionExperiment expressionExperiment, String text ) throws IOException;
 
-    void appendToChangelog( ExpressionExperiment expressionExperiment, String text, Date date ) throws IOException;
+    void appendToChangelog( ExpressionExperiment expressionExperiment, String text, LocalDate date ) throws IOException;
 }

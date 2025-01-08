@@ -176,6 +176,8 @@ public interface ExpressionDataFileService {
      */
     Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type, boolean exclusive ) throws IOException;
 
+    Optional<LockedPath> getMetadataFile(ExpressionExperiment ee, String filename, boolean exclusive) throws IOException;
+
     /**
      * Copy a metadata file to the location of a given metadata type.
      * <p>

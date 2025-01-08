@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 
 /**
- * CLI tool for adding manual entries to the changelog file.
+ * CLI tool for adding manual entries to the changelog file of an experiment.
  * @author poirigui
  */
 public class ExpressionExperimentMetadataChangelogEntryAdderCli extends ExpressionExperimentManipulatingCLI {
@@ -58,7 +58,7 @@ public class ExpressionExperimentMetadataChangelogEntryAdderCli extends Expressi
             if ( changelogEntry != null ) {
                 buf = changelogEntry;
             } else {
-                buf = readChangelogEntryFromConsole( expressionExperiment );
+                buf = readChangelogEntryFromConsole( expressionExperiment, null );
             }
             expressionMetadataChangelogFileService.appendToChangelog( expressionExperiment, buf );
         } catch ( IOException e ) {
