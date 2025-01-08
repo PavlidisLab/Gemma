@@ -122,7 +122,6 @@ public class GemmaCLI {
         if ( commandLine.hasOption( VERSION_OPTION ) ) {
             BuildInfo buildInfo = BuildInfo.fromClasspath();
             System.out.printf( "Gemma %s%n", buildInfo );
-            System.out.printf( "HDF5 %s%n", buildInfo.getHDF5Version() );
             System.exit( 0 );
             return;
         }
