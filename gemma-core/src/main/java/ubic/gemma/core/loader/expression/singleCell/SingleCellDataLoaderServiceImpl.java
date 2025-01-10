@@ -1,6 +1,12 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.file.PathUtils;
+import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -9,7 +15,12 @@ import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.DesignElementMapper;
 import ubic.gemma.core.loader.expression.EnsemblIdDesignElementMapper;
 import ubic.gemma.core.loader.expression.MapBasedDesignElementMapper;
+import ubic.gemma.core.loader.expression.geo.GeoFamilyParser;
+import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoBioAssayToSampleNameMatcher;
+import ubic.gemma.core.loader.expression.geo.singleCell.GeoCellTypeAssignmentLoader;
+import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
+import ubic.gemma.core.util.ProgressInputStream;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.ExternalDatabases;
@@ -30,12 +41,18 @@ import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
+import javax.annotation.Nullable;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 
 import static java.util.Objects.requireNonNull;
 
@@ -58,8 +75,14 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Autowired
     private QuantitationTypeService quantitationTypeService;
 
+    @Autowired
+    private FTPClientFactory ftpClientFactory;
+
     @Value("${gemma.download.path}/singleCellData")
     private Path singleCellDataBasePath;
+
+    @Value("${geo.local.datafile.basepath}")
+    private File geoSeriesDownloadPath;
 
     @Override
     @Transactional
@@ -503,6 +526,17 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         }
         // apply GEO strategy for matching
         if ( ee.getAccession() != null && ee.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
+            try {
+                // include CTAs from the series
+                GeoSeries series = readSeriesFromGeo( ee.getAccession().getAccession() );
+                if ( series != null ) {
+                    loader = new GeoCellTypeAssignmentLoader( series, loader );
+                } else {
+                    log.warn( "No series file were found for " + ee + ", will not be able to load cell type assignments." );
+                }
+            } catch ( IOException e ) {
+                log.warn( "Failed to read series file for " + ee + ", will not be able to load cell type assignments." );
+            }
             loader.setBioAssayToSampleNameMatcher( new GeoBioAssayToSampleNameMatcher() );
         } else {
             log.info( String.format( "%s does not have a GEO accession, using %s for matching sample names to BioAssays.",
@@ -600,5 +634,53 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         return singleCellDataBasePath
                 .resolve( ee.getAccession().getExternalDatabase().getName() )
                 .resolve( ee.getAccession().getAccession() + ".loom" );
+    }
+
+    @Nullable
+    private GeoSeries readSeriesFromGeo( String accession ) throws IOException {
+        String remoteFile = String.format( "geo/series/%snnn/%s/soft/%s_family.soft.gz",
+                accession.substring( 0, accession.length() - 3 ), accession, accession );
+        URL softFileUrl = new URL( "ftp://ftp.ncbi.nlm.nih.gov/" + remoteFile );
+        Path dest = geoSeriesDownloadPath.toPath().resolve( accession ).resolve( accession + ".soft.gz" );
+        boolean download = true;
+        if ( Files.exists( dest ) ) {
+            FTPClient client = ftpClientFactory.getFtpClient( softFileUrl );
+            try {
+                FTPFile res = client.mlistFile( remoteFile );
+                long expectedLength = res != null ? res.getSize() : -1;
+                if ( expectedLength != -1 && dest.toFile().length() == expectedLength ) {
+                    log.info( accession + ": Using existing SOFT file " + dest + "." );
+                    download = false;
+                }
+                ftpClientFactory.recycleClient( softFileUrl, client );
+            } catch ( Exception e ) {
+                ftpClientFactory.destroyClient( softFileUrl, client );
+                throw e;
+            }
+        }
+        if ( download ) {
+            log.info( accession + ": Downloading SOFT file to " + dest + "..." );
+            PathUtils.createParentDirectories( dest );
+            StopWatch timer = StopWatch.createStarted();
+            try ( InputStream in = new ProgressInputStream( ftpClientFactory.openStream( softFileUrl ), accession + ".soft.gz", SingleCellDataLoaderService.class.getName() ); OutputStream out = Files.newOutputStream( dest ) ) {
+                int downloadedBytes = IOUtils.copy( in, out );
+                if ( downloadedBytes > 0 ) {
+                    log.info( String.format( "%s: Done downloading SOFT file (%s in %s @ %.3f MB/s).", accession,
+                            FileUtils.byteCountToDisplaySize( downloadedBytes ), timer,
+                            ( 1000.0 / ( 1000.0 * 1000.0 ) ) * ( ( double ) downloadedBytes / ( double ) timer.getTime() ) ) );
+                }
+            } catch ( IOException e ) {
+                if ( Files.exists( dest ) ) {
+                    log.warn( accession + ": An I/O error occurred while downloading the SOFT file, removing " + dest + "...", e );
+                    PathUtils.deleteDirectory( dest.getParent() );
+                }
+                throw e;
+            }
+        }
+        try ( InputStream is = new GZIPInputStream( Files.newInputStream( dest ) ) ) {
+            GeoFamilyParser parser = new GeoFamilyParser();
+            parser.parse( is );
+            return requireNonNull( parser.getUniqueResult() ).getSeriesMap().get( accession );
+        }
     }
 }

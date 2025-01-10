@@ -129,8 +129,14 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
 
     public static class Factory {
 
+        public static CellTypeAssignment newInstance( String name ) {
+            CellTypeAssignment cta = newInstance( name );
+            cta.setName( name );
+            return cta;
+        }
+
         public static CellTypeAssignment newInstance( String name, List<Characteristic> characteristics, int[] indices ) {
-            CellTypeAssignment cta = new CellTypeAssignment();
+            CellTypeAssignment cta = newInstance( name );
             cta.setName( name );
             cta.setCellTypes( characteristics );
             cta.setCellTypeIndices( indices );

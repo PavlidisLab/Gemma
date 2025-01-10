@@ -488,7 +488,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                 if ( downloadedBytes > 0 ) {
                     log.info( String.format( "%s: Done downloading SOFT file (%s in %s @ %.3f MB/s).", accession,
                             FileUtils.byteCountToDisplaySize( downloadedBytes ), timer,
-                            ( 1000.0 / ( 1000.0 * 1000.0 ) ) * ( downloadedBytes / timer.getTime() ) ) );
+                            ( 1000.0 / ( 1000.0 * 1000.0 ) ) * ( ( double ) downloadedBytes / ( double ) timer.getTime() ) ) );
                 }
             } catch ( IOException e ) {
                 if ( Files.exists( dest ) ) {
