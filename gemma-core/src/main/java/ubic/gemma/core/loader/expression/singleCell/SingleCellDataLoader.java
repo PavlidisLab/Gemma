@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
-import ubic.gemma.core.loader.expression.DesignElementMapper;
+import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
+import ubic.gemma.core.loader.util.mapper.DesignElementMapper;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -28,9 +29,9 @@ import java.util.stream.Stream;
 public interface SingleCellDataLoader {
 
     /**
-     * Set the strategy used for comparing {@link BioAssay} to sample names from the data.
+     * Set the strategy used for mapping {@link BioAssay} to sample names from the data.
      */
-    void setBioAssayToSampleNameMatcher( BioAssayToSampleNameMatcher sampleNameComparator );
+    void setBioAssayToSampleNameMapper( BioAssayMapper bioAssayToSampleNameMatcher );
 
     /**
      * Ignore unmatched samples from the data when creating the {@link SingleCellDimension} in {@link #getSingleCellDimension(Collection)}.
@@ -40,7 +41,12 @@ public interface SingleCellDataLoader {
     void setIgnoreUnmatchedSamples( boolean ignoreUnmatchedSamples );
 
     /**
-     * Ignore unmatched design elements from the data when creating vectors in {@link #loadVectors(Map, SingleCellDimension, QuantitationType)}.
+     * Set the strategy used for mapping {@link CompositeSequence} to gene identifiers from the data.
+     */
+    void setDesignElementToGeneMapper( DesignElementMapper designElementToGeneMapper );
+
+    /**
+     * Ignore unmatched design elements from the data when creating vectors in {@link #loadVectors(Collection, SingleCellDimension, QuantitationType)}.
      * <p>
      * This defaults to true.
      * <p>
@@ -106,7 +112,7 @@ public interface SingleCellDataLoader {
     /**
      * Produces a stream of single-cell expression data vectors for the given {@link QuantitationType}.
      *
-     * @param elementsMapping  a mapping of element names used in the dataset to {@link CompositeSequence}
+     * @param designElements   a collection of design elements for mapping of element names used in the dataset to {@link CompositeSequence}
      * @param dimension        a dimension to use for creating vectors, may be loaded from the single-cell data with
      *                         {@link #getSingleCellDimension(Collection)}
      * @param quantitationType a quantitation type to extract from the data for, may be loaded from the single-cell data
@@ -117,5 +123,5 @@ public interface SingleCellDataLoader {
      * @return a stream of single-cell expression data vectors that must be closed when done, preferably using a
      * try-with-resource block.
      */
-    Stream<SingleCellExpressionDataVector> loadVectors( DesignElementMapper elementsMapping, SingleCellDimension dimension, QuantitationType quantitationType ) throws IOException, IllegalArgumentException;
+    Stream<SingleCellExpressionDataVector> loadVectors( Collection<CompositeSequence> designElements, SingleCellDimension dimension, QuantitationType quantitationType ) throws IOException, IllegalArgumentException;
 }

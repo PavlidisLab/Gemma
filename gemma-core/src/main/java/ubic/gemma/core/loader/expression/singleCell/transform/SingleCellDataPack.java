@@ -1,4 +1,4 @@
-package ubic.gemma.core.loader.expression.singleCell;
+package ubic.gemma.core.loader.expression.singleCell.transform;
 
 /**
  * Pack an AnnData object by removing unnecessary zeroes.

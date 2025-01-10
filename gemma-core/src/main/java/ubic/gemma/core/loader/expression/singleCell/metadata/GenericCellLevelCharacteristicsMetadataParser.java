@@ -1,7 +1,8 @@
-package ubic.gemma.core.loader.expression.singleCell;
+package ubic.gemma.core.loader.expression.singleCell.metadata;
 
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
@@ -27,8 +28,8 @@ import java.util.List;
  */
 class GenericCellLevelCharacteristicsMetadataParser extends AbstractCellLevelCharacteristicsMetadataParser<CellLevelCharacteristics> {
 
-    public GenericCellLevelCharacteristicsMetadataParser( SingleCellDimension singleCellDimension, BioAssayToSampleNameMatcher bioAssayToSampleNameMatcher, boolean useCellIdsIfSampleNameIsMissing, boolean ignoreUnmatchedCellIds ) {
-        super( singleCellDimension, bioAssayToSampleNameMatcher, useCellIdsIfSampleNameIsMissing, ignoreUnmatchedCellIds );
+    public GenericCellLevelCharacteristicsMetadataParser( SingleCellDimension singleCellDimension, BioAssayMapper bioAssayMapper ) {
+        super( singleCellDimension, bioAssayMapper );
     }
 
     protected Category getCategory( CSVRecord record ) {

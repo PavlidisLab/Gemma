@@ -4,10 +4,12 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import ubic.gemma.core.loader.expression.MapBasedDesignElementMapper;
+import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
+import ubic.gemma.core.loader.util.mapper.SimpleBioAssayMapper;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.singleCell.AnnDataDetector;
 import ubic.gemma.core.loader.expression.geo.singleCell.NoSingleCellDataFoundException;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTranspose;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.util.test.BaseIntegrationTest;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -48,7 +50,7 @@ public class AnnDataSingleCellDataLoaderIntegrationTest extends BaseIntegrationT
         Path p = downloadAndTransposeGSE225158();
         AnnDataSingleCellDataLoader loader = new AnnDataSingleCellDataLoader( p );
         loader.setSampleFactorName( "ID" );
-        loader.setBioAssayToSampleNameMatcher( ( bms, s ) -> bms.stream().filter( bm -> s.equals( bm.getName() ) ).collect( Collectors.toSet() ) );
+        loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
         List<BioAssay> samples = new ArrayList<>();
         for ( String sampleName : loader.getSampleNames() ) {
             samples.add( BioAssay.Factory.newInstance( sampleName ) );
@@ -88,7 +90,8 @@ public class AnnDataSingleCellDataLoaderIntegrationTest extends BaseIntegrationT
                             .containsExactlyInAnyOrder( "Astrocytes", "D1-Matrix", "D1-Striosome", "D1/D2-Hybrid", "D2-Matrix", "D2-Striosome", "Endothelial", "Int-CCK", "Int-PTHLH", "Int-SST", "Int-TH", "Microglia", "Mural", "Oligos", "Oligos_Pre" );
                 } );
 
-        assertThat( loader.loadVectors( new MapBasedDesignElementMapper( "test", elementMapping ), dimension, qt ).count() )
+        loader.setDesignElementMapper( new MapBasedDesignElementMapper( "test", elementMapping ) );
+        assertThat( loader.loadVectors( elementMapping.values(), dimension, qt ).count() )
                 .isEqualTo( 31393 );
     }
 

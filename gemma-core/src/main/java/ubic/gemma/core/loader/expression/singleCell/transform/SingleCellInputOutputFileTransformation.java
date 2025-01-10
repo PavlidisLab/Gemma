@@ -1,4 +1,6 @@
-package ubic.gemma.core.loader.expression.singleCell;
+package ubic.gemma.core.loader.expression.singleCell.transform;
+
+import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 
 import java.nio.file.Path;
 

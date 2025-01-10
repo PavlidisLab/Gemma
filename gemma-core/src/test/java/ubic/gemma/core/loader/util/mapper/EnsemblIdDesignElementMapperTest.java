@@ -1,8 +1,6 @@
-package ubic.gemma.core.loader.expression.singleCell;
+package ubic.gemma.core.loader.util.mapper;
 
 import org.junit.Test;
-import ubic.gemma.core.loader.expression.DesignElementMapper;
-import ubic.gemma.core.loader.expression.EnsemblIdDesignElementMapper;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
@@ -22,7 +20,8 @@ public class EnsemblIdDesignElementMapperTest {
         Map<CompositeSequence, Set<Gene>> cs2g = new HashMap<>();
         platform.getCompositeSequences().add( cs );
         cs2g.put( cs, Collections.singleton( g ) );
-        EnsemblIdDesignElementMapper mapper = new EnsemblIdDesignElementMapper( platform, cs2g );
+        EntityMapper.StatefulEntityMapper<CompositeSequence> mapper = new EnsemblIdDesignElementMapper( cs2g )
+                .forCandidates( platform );
         assertTrue( mapper.contains( "ENSG00000139618.13" ) );
         assertTrue( mapper.contains( "ENSG00000139618" ) );
         assertFalse( mapper.contains( "ENSG00000139619" ) );

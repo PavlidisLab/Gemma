@@ -398,7 +398,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
     @Transactional
     public int removeAggregatedVectors( ExpressionExperiment ee, QuantitationType qt ) {
         // this is needed because the raw vectors must be loaded
-        ee = expressionExperimentService.loadOrFail( ee.getId() );
+        ee = expressionExperimentService.reload( ee );
         Collection<BioAssayDimension> dimensions = expressionExperimentService.getBioAssayDimensions( ee, qt, RawExpressionDataVector.class );
         for ( BioAssayDimension dimension : dimensions ) {
             Collection<QuantitationType> otherUsers = new HashSet<>( expressionExperimentService.getQuantitationTypes( ee, dimension ) );

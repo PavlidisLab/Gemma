@@ -1,5 +1,7 @@
-package ubic.gemma.core.loader.expression.singleCell;
+package ubic.gemma.core.loader.expression.singleCell.metadata;
 
+import lombok.Setter;
+import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -7,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
+import ubic.gemma.core.loader.util.mapper.*;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.Category;
@@ -31,6 +34,7 @@ import static ubic.gemma.model.expression.bioAssayData.SingleCellDimensionUtils.
  * Base class for cell-level characteristics parser.
  * @author poirigui
  */
+@Setter
 abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLevelCharacteristics> {
 
     private static final int MAXIMUM_COLLISION_TO_REPORT = 5;
@@ -38,40 +42,47 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
     protected final Log log = LogFactory.getLog( getClass() );
 
     private final SingleCellDimension singleCellDimension;
-    private final BioAssayToSampleNameMatcher bioAssayToSampleNameMatcher;
-    private final boolean useCellIdsIfSampleNameIsMissing;
-    private final boolean ignoreUnmatchedCellIds;
+    private final BioAssayMapper bioAssayMapper;
+
+    /**
+     * If the sample name is missing, use the cell ID to infer it. If the cell ID is ambiguous (i.e. a barcode
+     * collision), the characteristic will be considered missing and a warning will be logged. If this is not enabled,
+     * {@link #getSampleName(CSVRecord)} must always return a non-null value.
+     */
+    private boolean useCellIdsIfSampleNameIsMissing;
+    /**
+     * If the sample name is provided, but does not directly match any bioassay, the parser will attempt to infer
+     * {@link BioAssay} correspondence using cell IDs overlap.
+     * <p>
+     * If the mapping fails, the matching will be delegated to the supplied {@link BioAssayMapper} from the constructor.
+     */
+    private boolean inferSamplesFromCellIdsOverlap;
+    /**
+     * If true, samples that do not match any assays will be ignored.
+     */
+    private boolean ignoreUnmatchedSamples;
+    /**
+     * If true, cell IDs that do not match any cell in the dimension will be ignored.
+     */
+    private boolean ignoreUnmatchedCellIds;
 
     private final List<String> cellIds;
     private final Map<BioAssay, Integer> bioAssayToIndex;
     private final Map<String, Set<BioAssay>> reverseIndex;
 
     /**
-     *
      * @param singleCellDimension             dimension to use to populate the cell-level characteristics
-     * @param bioAssayToSampleNameMatcher     strategy to use to match sample name from the file to bioassays
-     * @param useCellIdsIfSampleNameIsMissing if the sample name is missing, use the cell ID to infer it. If the cell ID
-     *                                        is ambiguous (i.e. a barcode collision), the characteristic will be
-     *                                        considered missing and a warning will be logged. If this is not enabled,
-     *                                        {@link #getSampleName(CSVRecord)} must always return a non-null value.
-     * @param ignoreUnmatchedCellIds          if true, cell IDs that do not match any cell in the dimension will be
-     *                                        ignored
+     * @param bioAssayMapper                  strategy to use to match sample name from the file to bioassays
      */
-    protected AbstractCellLevelCharacteristicsMetadataParser( SingleCellDimension singleCellDimension, BioAssayToSampleNameMatcher bioAssayToSampleNameMatcher, boolean useCellIdsIfSampleNameIsMissing, boolean ignoreUnmatchedCellIds ) {
+    protected AbstractCellLevelCharacteristicsMetadataParser( SingleCellDimension singleCellDimension, BioAssayMapper bioAssayMapper ) {
         Assert.notNull( singleCellDimension.getCellIds() );
         this.singleCellDimension = singleCellDimension;
-        this.bioAssayToSampleNameMatcher = bioAssayToSampleNameMatcher;
-        this.useCellIdsIfSampleNameIsMissing = useCellIdsIfSampleNameIsMissing;
-        this.ignoreUnmatchedCellIds = ignoreUnmatchedCellIds;
+        this.bioAssayMapper = bioAssayMapper;
         this.cellIds = singleCellDimension.getCellIds();
         this.bioAssayToIndex = ListUtils.indexOfElements( singleCellDimension.getBioAssays() );
-        if ( useCellIdsIfSampleNameIsMissing ) {
-            // we don't need the position in the bioassay
-            reverseIndex = createReverseIndex( singleCellDimension ).entrySet()
-                    .stream().collect( Collectors.toMap( Map.Entry::getKey, e -> e.getValue().keySet() ) );
-        } else {
-            reverseIndex = null;
-        }
+        // we don't need the position in the bioassay
+        reverseIndex = createReverseIndex( singleCellDimension ).entrySet()
+                .stream().collect( Collectors.toMap( Map.Entry::getKey, e -> e.getValue().keySet() ) );
     }
 
     public Set<T> parse( Path metadataFile ) throws IOException {
@@ -85,11 +96,19 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
         Map<String, Map<Characteristic, Integer>> cellTypesToIdByCategoryId = new HashMap<>();
         Map<String, int[]> indicesByCategoryId = new HashMap<>();
 
+        EntityMapper<BioAssay> bioAssayMapper;
+        if ( inferSamplesFromCellIdsOverlap ) {
+            log.info( "Inferring sample correspondence from cell IDs overlap..." );
+            bioAssayMapper = new ChainedEntityMapper<>( this.bioAssayMapper, createBioAssayMapperFromCellIdOverlap( metadataFile ) );
+        } else {
+            bioAssayMapper = this.bioAssayMapper;
+        }
+
         int collisions = 0;
 
         try ( CSVParser reader = openMetadataFile( metadataFile ) ) {
             for ( CSVRecord record : reader ) {
-                String sample = getSampleName( record );
+                String sampleName = getSampleName( record );
                 String cellId = getCellId( record );
                 Category category = getCategory( record );
                 String categoryId = getCategoryId( record );
@@ -100,16 +119,28 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
                 }
 
                 BioAssay ba;
-                if ( sample != null ) {
-                    ba = bioAssayByName.computeIfAbsent( sample, ignored -> {
-                        Set<BioAssay> bas = bioAssayToSampleNameMatcher.match( singleCellDimension.getBioAssays(), sample );
+                if ( sampleName != null ) {
+                    ba = bioAssayByName.computeIfAbsent( sampleName, ignored -> {
+                        String sampleNameCandidates = EntityMapperUtils.getPossibleIdentifiers( singleCellDimension.getBioAssays(), bioAssayMapper );
+                        Set<BioAssay> bas = bioAssayMapper.matchAll( singleCellDimension.getBioAssays(), sampleName );
                         if ( bas.isEmpty() ) {
-                            throw new IllegalArgumentException( "No BioAssay found for " + sample );
+                            String m = String.format( "No assay found for %s. Possible values are:\n\t%s",
+                                    sampleName, sampleNameCandidates );
+                            if ( ignoreUnmatchedSamples ) {
+                                log.warn( m );
+                                return null;
+                            } else {
+                                throw new IllegalArgumentException( m );
+                            }
                         } else if ( bas.size() > 1 ) {
-                            throw new IllegalArgumentException( "More than one BioAssay match " + sample + "." );
+                            throw new IllegalArgumentException( String.format( "More than one assay match %s. There might be a better identifier to use, possible values are: \n\t%s",
+                                    sampleName, sampleNameCandidates ) );
                         }
                         return bas.iterator().next();
                     } );
+                    if ( ba == null ) {
+                        continue;
+                    }
                 } else if ( useCellIdsIfSampleNameIsMissing ) {
                     Set<BioAssay> bioAssays = requireNonNull( reverseIndex ).get( cellId );
                     if ( bioAssays == null ) {
@@ -179,7 +210,7 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
                     assignedBioAssays.add( ba );
                 } else {
                     // indicate a missing cell type
-                    log.warn( sample + "[" + cellId + "]: Both the value and value URI columns are blank, will be treated as unassigned." );
+                    log.warn( sampleName + "[" + cellId + "]: Both the value and value URI columns are blank, will be treated as unassigned." );
                     k = -1;
                 }
 
@@ -267,7 +298,7 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
             if ( StringUtils.isBlank( d.getDescription() ) ) {
                 d.setDescription( description );
             } else {
-                d.setDescription( StringUtils.trim( d.getDescription() ) + "\n\n" + description );
+                d.setDescription( StringUtils.strip( d.getDescription() ) + "\n\n" + description );
             }
         }
         return r;
@@ -277,6 +308,33 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
      * Create a cell-level characteristics object from the parsed data.
      */
     protected abstract T createCellLevelCharacteristics( List<Characteristic> characteristics, int[] indices );
+
+    /**
+     * Create a mapper to match sample names from the metadata file to bioassays using cell IDs correspondence.
+     */
+    private BioAssayMapper createBioAssayMapperFromCellIdOverlap( Path annotationFile ) throws IOException {
+        Map<BioAssay, Set<String>> bioAssayToCellIds = new HashMap<>();
+        Map<String, Set<String>> sampleNameToCellIds = new HashMap<>();
+
+        List<BioAssay> bioAssays = singleCellDimension.getBioAssays();
+        for ( int i = 0; i < bioAssays.size(); i++ ) {
+            BioAssay ba = bioAssays.get( i );
+            bioAssayToCellIds.put( ba, new HashSet<>( singleCellDimension.getCellIdsBySample( i ) ) );
+        }
+
+        try ( CSVParser parser = openMetadataFile( annotationFile ) ) {
+            for ( CSVRecord record : parser ) {
+                String sampleName = getSampleName( record );
+                if ( sampleName == null ) {
+                    continue;
+                }
+                String cellId = getCellId( record );
+                sampleNameToCellIds.computeIfAbsent( sampleName, k -> new HashSet<>() ).add( cellId );
+            }
+        }
+
+        return new CellIdOverlapBioAssayMapper( bioAssayToCellIds, sampleNameToCellIds );
+    }
 
     private CSVParser openMetadataFile( Path metadataFile ) throws IOException {
         if ( metadataFile.toString().endsWith( ".gz" ) ) {

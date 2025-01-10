@@ -11,6 +11,8 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentAggregatorService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
+import static java.util.Objects.requireNonNull;
+
 @Service
 @Transactional(propagation = Propagation.NEVER)
 public class DataDeleterServiceImpl implements DataDeleterService {

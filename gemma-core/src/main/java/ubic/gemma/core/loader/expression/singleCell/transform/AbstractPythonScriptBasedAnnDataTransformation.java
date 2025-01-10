@@ -1,4 +1,4 @@
-package ubic.gemma.core.loader.expression.singleCell;
+package ubic.gemma.core.loader.expression.singleCell.transform;
 
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
@@ -6,6 +6,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
+import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 
 import java.io.BufferedReader;
 import java.io.IOException;

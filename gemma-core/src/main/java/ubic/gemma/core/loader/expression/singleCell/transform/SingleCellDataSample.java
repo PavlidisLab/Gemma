@@ -1,4 +1,4 @@
-package ubic.gemma.core.loader.expression.singleCell;
+package ubic.gemma.core.loader.expression.singleCell.transform;
 
 import lombok.Setter;
 import org.apache.commons.lang3.ArrayUtils;

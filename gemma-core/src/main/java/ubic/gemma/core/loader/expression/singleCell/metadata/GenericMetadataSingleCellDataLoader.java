@@ -1,9 +1,12 @@
-package ubic.gemma.core.loader.expression.singleCell;
+package ubic.gemma.core.loader.expression.singleCell.metadata;
 
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
+import ubic.gemma.core.loader.expression.singleCell.AbstractDelegatingSingleCellDataLoader;
+import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
+import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
@@ -38,16 +41,31 @@ public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingl
     @Nullable
     private final Path otherCellCharacteristicsMetadataFile;
 
-    private BioAssayToSampleNameMatcher bioAssayToSampleNameMatcher;
+    private BioAssayMapper bioAssayToSampleNameMapper;
+
+    private boolean inferSamplesFromCellIdsOverlap;
 
     private boolean useCellIdsIfSampleNameIsMissing;
 
+    // needs to be consistent with the default for loaders in general
+    private boolean ignoreUnmatchedSamples = true;
     private boolean ignoreUnmatchedCellIds;
 
-    protected GenericMetadataSingleCellDataLoader( SingleCellDataLoader delegate, @Nullable Path cellTypeMetadataFile, @Nullable Path otherCellCharacteristicsMetadataFile ) {
+    public GenericMetadataSingleCellDataLoader( SingleCellDataLoader delegate, @Nullable Path cellTypeMetadataFile, @Nullable Path otherCellCharacteristicsMetadataFile ) {
         super( delegate );
         this.cellTypeMetadataFile = cellTypeMetadataFile;
         this.otherCellCharacteristicsMetadataFile = otherCellCharacteristicsMetadataFile;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * In addition, unmatched samples when parsing cell type assignment and other cell-level characteristics files will
+     * be ignored.
+     */
+    public void setIgnoreUnmatchedSamples( boolean ignoreUnmatchedSamples ) {
+        this.ignoreUnmatchedSamples = ignoreUnmatchedSamples;
+        super.setIgnoreUnmatchedSamples( ignoreUnmatchedSamples );
     }
 
     public void setCellTypeAssignmentName( String cellTypeAssignmentName ) {
@@ -64,9 +82,9 @@ public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingl
     }
 
     @Override
-    public void setBioAssayToSampleNameMatcher( BioAssayToSampleNameMatcher sampleNameComparator ) {
-        this.bioAssayToSampleNameMatcher = sampleNameComparator;
-        super.setBioAssayToSampleNameMatcher( sampleNameComparator );
+    public void setBioAssayToSampleNameMapper( BioAssayMapper bioAssayToSampleNameMapper ) {
+        this.bioAssayToSampleNameMapper = bioAssayToSampleNameMapper;
+        super.setBioAssayToSampleNameMapper( bioAssayToSampleNameMapper );
     }
 
     @Override
@@ -74,9 +92,11 @@ public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingl
         if ( cellTypeMetadataFile == null ) {
             return super.getCellTypeAssignments( singleCellDimension );
         }
-        Assert.notNull( bioAssayToSampleNameMatcher, "A bioAssayToSampleNameMatcher must be set" );
-        return new CellTypeAssignmentMetadataParser( singleCellDimension, bioAssayToSampleNameMatcher, cellTypeAssignmentName, cellTypeAssignmentProtocol, useCellIdsIfSampleNameIsMissing, ignoreUnmatchedCellIds )
-                .parse( cellTypeMetadataFile );
+        Assert.notNull( bioAssayToSampleNameMapper, "A bioAssayToSampleNameMatcher must be set" );
+        Assert.notNull( cellTypeAssignmentName, "A cell type assignment name must be set" );
+        CellTypeAssignmentMetadataParser parser = new CellTypeAssignmentMetadataParser( singleCellDimension, bioAssayToSampleNameMapper, cellTypeAssignmentName, cellTypeAssignmentProtocol );
+        configureParser( parser );
+        return parser.parse( cellTypeMetadataFile );
     }
 
     @Override
@@ -84,8 +104,16 @@ public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingl
         if ( otherCellCharacteristicsMetadataFile == null ) {
             return super.getOtherCellLevelCharacteristics( dimension );
         }
-        Assert.notNull( bioAssayToSampleNameMatcher, "A bioAssayToSampleNameMatcher must be set" );
-        return new GenericCellLevelCharacteristicsMetadataParser( dimension, bioAssayToSampleNameMatcher, useCellIdsIfSampleNameIsMissing, ignoreUnmatchedCellIds )
-                .parse( otherCellCharacteristicsMetadataFile );
+        Assert.notNull( bioAssayToSampleNameMapper, "A bioAssayToSampleNameMatcher must be set" );
+        GenericCellLevelCharacteristicsMetadataParser parser = new GenericCellLevelCharacteristicsMetadataParser( dimension, bioAssayToSampleNameMapper );
+        configureParser( parser );
+        return parser.parse( otherCellCharacteristicsMetadataFile );
+    }
+
+    private void configureParser( AbstractCellLevelCharacteristicsMetadataParser<?> parser ) {
+        parser.setUseCellIdsIfSampleNameIsMissing( useCellIdsIfSampleNameIsMissing );
+        parser.setInferSamplesFromCellIdsOverlap( inferSamplesFromCellIdsOverlap );
+        parser.setIgnoreUnmatchedSamples( ignoreUnmatchedSamples );
+        parser.setIgnoreUnmatchedCellIds( ignoreUnmatchedCellIds );
     }
 }

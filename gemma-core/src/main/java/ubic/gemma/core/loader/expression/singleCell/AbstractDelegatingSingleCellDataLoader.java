@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
-import ubic.gemma.core.loader.expression.DesignElementMapper;
+import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
+import ubic.gemma.core.loader.util.mapper.DesignElementMapper;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -9,6 +10,7 @@ import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
@@ -28,8 +30,13 @@ public abstract class AbstractDelegatingSingleCellDataLoader implements SingleCe
     }
 
     @Override
-    public void setBioAssayToSampleNameMatcher( BioAssayToSampleNameMatcher sampleNameComparator ) {
-        delegate.setBioAssayToSampleNameMatcher( sampleNameComparator );
+    public void setBioAssayToSampleNameMapper( BioAssayMapper bioAssayToSampleNameMatcher ) {
+        delegate.setBioAssayToSampleNameMapper( bioAssayToSampleNameMatcher );
+    }
+
+    @Override
+    public void setDesignElementToGeneMapper( DesignElementMapper designElementToGeneMapper ) {
+        delegate.setDesignElementToGeneMapper( designElementToGeneMapper );
     }
 
     @Override
@@ -84,7 +91,7 @@ public abstract class AbstractDelegatingSingleCellDataLoader implements SingleCe
     }
 
     @Override
-    public Stream<SingleCellExpressionDataVector> loadVectors( DesignElementMapper elementsMapping, SingleCellDimension dimension, QuantitationType quantitationType ) throws IOException, IllegalArgumentException {
-        return delegate.loadVectors( elementsMapping, dimension, quantitationType );
+    public Stream<SingleCellExpressionDataVector> loadVectors( Collection<CompositeSequence> designElements, SingleCellDimension dimension, QuantitationType quantitationType ) throws IOException, IllegalArgumentException {
+        return delegate.loadVectors( designElements, dimension, quantitationType );
     }
 }

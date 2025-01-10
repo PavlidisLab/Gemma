@@ -1,7 +1,8 @@
-package ubic.gemma.core.loader.expression.singleCell;
+package ubic.gemma.core.loader.expression.singleCell.metadata;
 
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
@@ -31,8 +32,8 @@ class CellTypeAssignmentMetadataParser extends AbstractCellLevelCharacteristicsM
     @Nullable
     private final Protocol cellTypeAssignmentProtocol;
 
-    public CellTypeAssignmentMetadataParser( SingleCellDimension singleCellDimension, BioAssayToSampleNameMatcher bioAssayToSampleNameMatcher, String cellTypeAssignmentName, @Nullable Protocol cellTypeAssignmentProtocol, boolean useCellIdsIfSampleNameIsMissing, boolean ignoreUnmatchedCellIds ) {
-        super( singleCellDimension, bioAssayToSampleNameMatcher, useCellIdsIfSampleNameIsMissing, ignoreUnmatchedCellIds );
+    public CellTypeAssignmentMetadataParser( SingleCellDimension singleCellDimension, BioAssayMapper bioAssayMapper, String cellTypeAssignmentName, @Nullable Protocol cellTypeAssignmentProtocol ) {
+        super( singleCellDimension, bioAssayMapper );
         this.cellTypeAssignmentName = cellTypeAssignmentName;
         this.cellTypeAssignmentProtocol = cellTypeAssignmentProtocol;
     }

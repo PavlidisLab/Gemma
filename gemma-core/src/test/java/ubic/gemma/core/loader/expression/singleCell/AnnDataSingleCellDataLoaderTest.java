@@ -2,7 +2,8 @@ package ubic.gemma.core.loader.expression.singleCell;
 
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
-import ubic.gemma.core.loader.expression.MapBasedDesignElementMapper;
+import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
+import ubic.gemma.core.loader.util.mapper.SimpleBioAssayMapper;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -142,9 +143,10 @@ public class AnnDataSingleCellDataLoaderTest {
 
         Map<String, CompositeSequence> elementsMapping = new HashMap<>();
         elementsMapping.put( "SLCO3A1", CompositeSequence.Factory.newInstance( "SLCO3A1" ) );
+        loader.setDesignElementMapper( new MapBasedDesignElementMapper( "test", elementsMapping ) );
 
         QuantitationType qt = qts.iterator().next();
-        try ( Stream<SingleCellExpressionDataVector> vectors = loader.loadVectors( new MapBasedDesignElementMapper( "test", elementsMapping ), dimension, qt ) ) {
+        try ( Stream<SingleCellExpressionDataVector> vectors = loader.loadVectors( elementsMapping.values(), dimension, qt ) ) {
             List<SingleCellExpressionDataVector> v = vectors.collect( Collectors.toList() );
             assertThat( v )
                     .hasSize( 1 )
@@ -211,7 +213,8 @@ public class AnnDataSingleCellDataLoaderTest {
 
         Map<String, CompositeSequence> elementsMapping = new HashMap<>();
         elementsMapping.put( "SLCO3A1", CompositeSequence.Factory.newInstance( "SLCO3A1" ) );
-        assertThat( loader.loadVectors( new MapBasedDesignElementMapper( "test", elementsMapping ), dim, qt ) )
+        loader.setDesignElementMapper( new MapBasedDesignElementMapper( "test", elementsMapping ) );
+        assertThat( loader.loadVectors( elementsMapping.values(), dim, qt ) )
                 .first().satisfies( v -> {
                     assertThat( v.getDesignElement().getName() ).isEqualTo( "SLCO3A1" );
                     assertThat( v.getDataAsDoubles() )
@@ -253,9 +256,11 @@ public class AnnDataSingleCellDataLoaderTest {
 
         Map<String, CompositeSequence> elementsMapping = new HashMap<>();
         elementsMapping.put( "SLCO3A1", CompositeSequence.Factory.newInstance( "SLCO3A1" ) );
+        loader.setDesignElementMapper( new MapBasedDesignElementMapper( "test", elementsMapping ) );
+
 
         QuantitationType qt = qts.iterator().next();
-        try ( Stream<SingleCellExpressionDataVector> vectors = loader.loadVectors( new MapBasedDesignElementMapper( "test", elementsMapping ), dimension, qt ) ) {
+        try ( Stream<SingleCellExpressionDataVector> vectors = loader.loadVectors( elementsMapping.values(), dimension, qt ) ) {
             List<SingleCellExpressionDataVector> v = vectors.collect( Collectors.toList() );
             assertThat( v )
                     .hasSize( 1 )
@@ -285,7 +290,7 @@ public class AnnDataSingleCellDataLoaderTest {
         loader.setCellTypeFactorName( "celltype1" );
         loader.setUnknownCellTypeIndicator( "UNK_ALL" );
         loader.setIgnoreUnmatchedSamples( true );
-        loader.setBioAssayToSampleNameMatcher( ( bms, s ) -> bms.stream().filter( bm -> s.equals( bm.getName() ) ).collect( Collectors.toSet() ) );
+        loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
         return loader;
     }
 }

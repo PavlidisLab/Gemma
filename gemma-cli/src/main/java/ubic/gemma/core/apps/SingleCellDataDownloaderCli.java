@@ -394,7 +394,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                         }
                     } catch ( Exception e ) {
                         addErrorObject( geoAccession, e );
-                        comment = StringUtils.trim( ExceptionUtils.getRootCauseMessage( e ) );
+                        comment = StringUtils.strip( ExceptionUtils.getRootCauseMessage( e ) );
                         if ( !detectedDataType.equals( UNKNOWN_INDICATOR ) ) {
                             comment += " (detected data type: " + detectedDataType + ")";
                         }
