@@ -60,7 +60,7 @@ public class ExpressionExperimentMetadataChangelogEntryAdderCli extends Expressi
             } else {
                 buf = readChangelogEntryFromConsole( expressionExperiment, null );
             }
-            expressionMetadataChangelogFileService.appendToChangelog( expressionExperiment, buf );
+            expressionMetadataChangelogFileService.addChangelogEntry( expressionExperiment, buf );
         } catch ( IOException e ) {
             addErrorObject( expressionExperiment, e );
         } catch ( InterruptedException e ) {

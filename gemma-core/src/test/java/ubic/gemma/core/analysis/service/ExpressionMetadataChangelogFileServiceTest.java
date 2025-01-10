@@ -72,9 +72,9 @@ public class ExpressionMetadataChangelogFileServiceTest extends BaseTest {
         author.setEmail( "admin@gemma.msl.ubc.ca" );
         when( userManager.getCurrentUser() ).thenReturn( author );
 
-        expressionMetadataChangelogFileService.appendToChangelog( ee, "test\ntest2", LocalDate.of( 2025, 1, 6 ) );
+        expressionMetadataChangelogFileService.addChangelogEntry( ee, "test\ntest2", LocalDate.of( 2025, 1, 6 ) );
 
-        expressionMetadataChangelogFileService.appendToChangelog( ee, "test2\ntest3", LocalDate.of( 2025, 1, 6 ) );
+        expressionMetadataChangelogFileService.addChangelogEntry( ee, "test2\ntest3", LocalDate.of( 2025, 1, 6 ) );
 
         assertThat( expressionMetadataChangelogFileService.readChangelog( ee ) )
                 .isEqualTo( "2025-01-06  Admin  <admin@gemma.msl.ubc.ca>\n\n\ttest\n\ttest2\n\n2025-01-06  Admin  <admin@gemma.msl.ubc.ca>\n\n\ttest2\n\ttest3\n" );

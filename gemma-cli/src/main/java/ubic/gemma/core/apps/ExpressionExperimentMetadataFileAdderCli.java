@@ -84,7 +84,7 @@ public class ExpressionExperimentMetadataFileAdderCli extends ExpressionExperime
                 buf = readChangelogEntryFromConsole( expressionExperiment, defaultText );
             }
             expressionDataFileService.copyMetadataFile( expressionExperiment, filename, filename.getFileName().toString(), isForce() );
-            expressionMetadataChangelogFileService.appendToChangelog( expressionExperiment, buf );
+            expressionMetadataChangelogFileService.addChangelogEntry( expressionExperiment, buf );
         } catch ( IOException | InterruptedException e ) {
             throw new RuntimeException( e );
         }

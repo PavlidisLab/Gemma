@@ -44,12 +44,12 @@ public class ExpressionMetadataChangelogFileServiceImpl implements ExpressionMet
     }
 
     @Override
-    public void appendToChangelog( ExpressionExperiment expressionExperiment, String text ) throws IOException {
-        appendToChangelog( expressionExperiment, text, LocalDate.now() );
+    public void addChangelogEntry( ExpressionExperiment expressionExperiment, String changelogEntry ) throws IOException {
+        addChangelogEntry( expressionExperiment, changelogEntry, LocalDate.now() );
     }
 
     @Override
-    public void appendToChangelog( ExpressionExperiment expressionExperiment, String text, LocalDate date ) throws IOException {
+    public void addChangelogEntry( ExpressionExperiment expressionExperiment, String changelogEntry, LocalDate date ) throws IOException {
         User author = userManager.getCurrentUser();
         Path changelogFile = getChangelogFile( expressionExperiment );
         PathUtils.createParentDirectories( changelogFile );
@@ -67,7 +67,7 @@ public class ExpressionMetadataChangelogFileServiceImpl implements ExpressionMet
             writer
                     .append( CHANGELOG_DATE_FORMAT.format( date ) ).append( "  " ).append( authorName ).append( "  <" ).append( author.getEmail() ).append( ">" ).append( "\n" )
                     .append( "\n" )
-                    .append( "\t" ).append( StringUtils.strip( text.replaceAll( "\n", "\n\t" ) ) )
+                    .append( "\t" ).append( StringUtils.strip( changelogEntry.replaceAll( "\n", "\n\t" ) ) )
                     .append( "\n" );
             log.info( "Added an entry to the changelog for " + expressionExperiment.getShortName() + "." );
         }
