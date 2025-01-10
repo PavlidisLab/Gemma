@@ -58,7 +58,8 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             SUMMARY_OUTPUT_FILE_OPTION = "s",
             RESUME_OPTION = "r",
             RETRY_OPTION = "retry",
-            FETCH_THREADS_OPTION = "fetchThreads";
+            FETCH_THREADS_OPTION = "fetchThreads",
+            SKIP_DOWNLOAD_OPTION = "skipDownload";
 
     private static final String
             SAMPLE_ACCESSIONS_OPTION = "sampleAccessions",
@@ -96,6 +97,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
     private String[] retry;
     @Nullable
     private Number fetchThreads;
+    private boolean skipDownload;
 
     // single-accession options
     @Nullable
@@ -138,6 +140,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         options.addOption( Option.builder( SUMMARY_OUTPUT_FILE_OPTION ).longOpt( "summary-output-file" ).type( File.class ).hasArg().desc( "File to write the summary output to. This is used to keep track of progress and resume download with -r/--resume." ).build() );
         options.addOption( Option.builder( RESUME_OPTION ).longOpt( "resume" ).desc( "Resume download from a previous invocation of this command. Requires -s/--summary-output-file to be set and refer to an existing file." ).build() );
         options.addOption( Option.builder( RETRY_OPTION ).longOpt( "retry" ).hasArg().desc( "Retry problematic datasets. Possible values are: '" + UNSUPPORTED_INDICATOR + "', '" + UNKNOWN_INDICATOR + "' or '" + FAILED_INDICATOR + "', or any combination delimited by ','. Requires -r/--resume option to be set." ).build() );
+        options.addOption( SKIP_DOWNLOAD_OPTION, "skip-download", false, "Skip download of single-cell data." );
         options.addOption( Option.builder( FETCH_THREADS_OPTION ).longOpt( "fetch-threads" ).hasArg().type( Number.class ).desc( "Number of threads to use for downloading files. Default is " + GeoSingleCellDetector.DEFAULT_NUMBER_OF_FETCH_THREADS + ". Use -threads/--threads for processing series in parallel." ).build() );
         options.addOption( Option.builder( SAMPLE_ACCESSIONS_OPTION ).longOpt( "sample-accessions" ).hasArg().desc( "Comma-delimited list of sample accessions to download." ).build() );
         options.addOption( Option.builder( DATA_TYPE_OPTION ).longOpt( "data-type" ).hasArg().desc( "Data type. Possible values are: " + Arrays.stream( SingleCellDataType.values() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) + ". Only works if a single accession is passed to -e/--acc." ).build() );
@@ -246,6 +249,12 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         } else if ( retry != null ) {
             throw new IllegalArgumentException( "The -" + RETRY_OPTION + " option requires the -" + RESUME_OPTION + " option to be provided." );
         }
+        if ( commandLine.hasOption( SKIP_DOWNLOAD_OPTION ) ) {
+            log.info( "Download of single cell data will be skipped." );
+            skipDownload = true;
+        } else {
+            skipDownload = false;
+        }
         if ( commandLine.hasOption( FETCH_THREADS_OPTION ) ) {
             fetchThreads = commandLine.getParsedOptionValue( FETCH_THREADS_OPTION );
         }
@@ -351,26 +360,30 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                             for ( GeoSample sample : series.getSamples() ) {
                                 additionalSupplementaryFiles.addAll( detector.getAdditionalSupplementaryFiles( series, sample ) );
                             }
-                            if ( dataType != null && supplementaryFile != null ) {
-                                detector.downloadSingleCellData( series, dataType,
-                                        matchSupplementaryFile( series.getSupplementaryFiles(), supplementaryFile ) );
-                            } else if ( dataType != null ) {
-                                detector.downloadSingleCellData( series, dataType );
+                            if ( skipDownload ) {
+                                addSuccessObject( geoAccession, "Download was skipped." );
                             } else {
-                                detector.downloadSingleCellData( series );
+                                if ( dataType != null && supplementaryFile != null ) {
+                                    detector.downloadSingleCellData( series, dataType,
+                                            matchSupplementaryFile( series.getSupplementaryFiles(), supplementaryFile ) );
+                                } else if ( dataType != null ) {
+                                    detector.downloadSingleCellData( series, dataType );
+                                } else {
+                                    detector.downloadSingleCellData( series );
+                                }
+                                // create a dummy platform, we just need to retrieve basic metadata from the loader
+                                ArrayDesign platform = new ArrayDesign();
+                                List<BioAssay> bas = series.getSamples().stream()
+                                        .map( GeoSample::getGeoAccession )
+                                        .map( s -> BioAssay.Factory.newInstance( s, platform, BioMaterial.Factory.newInstance( s ) ) )
+                                        .collect( Collectors.toList() );
+                                SingleCellDataLoader loader = detector.getSingleCellDataLoader( series );
+                                numberOfSamples = loader.getSampleNames().size();
+                                SingleCellDimension scd = loader.getSingleCellDimension( bas );
+                                numberOfCells = scd.getNumberOfCells();
+                                numberOfGenes = loader.getGenes().size();
+                                addSuccessObject( geoAccession );
                             }
-                            // create a dummy platform, we just need to retrieve basic metadata from the loader
-                            ArrayDesign platform = new ArrayDesign();
-                            List<BioAssay> bas = series.getSamples().stream()
-                                    .map( GeoSample::getGeoAccession )
-                                    .map( s -> BioAssay.Factory.newInstance( s, platform, BioMaterial.Factory.newInstance( s ) ) )
-                                    .collect( Collectors.toList() );
-                            SingleCellDataLoader loader = detector.getSingleCellDataLoader( series );
-                            numberOfSamples = loader.getSampleNames().size();
-                            SingleCellDimension scd = loader.getSingleCellDimension( bas );
-                            numberOfCells = scd.getNumberOfCells();
-                            numberOfGenes = loader.getGenes().size();
-                            addSuccessObject( geoAccession );
                         } else {
                             detectedDataType = UNSUPPORTED_INDICATOR;
                             // consider all supplementary materials as additional

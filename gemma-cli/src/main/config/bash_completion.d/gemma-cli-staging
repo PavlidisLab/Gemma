@@ -1108,7 +1108,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.SingleCellDataDownloaderCli ' ]]; then
         if ! [[ "$current_option" =~ (--acc|--data-type|--fetch-threads|--file|--mex-barcodes-file|--mex-features-file|--mex-matrix-file|--retry|--sample-accessions|--summary-output-file|--supplementary-file|--threads|-batchFormat|-batchOutputFile|-dataType|-e|-f|-fetchThreads|-mexBarcodesFile|-mexFeaturesFile|-mexMatrixFile|-retry|-s|-sampleAccessions|-supplementaryFile|-threads) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--acc --data-type --fetch-threads --file --help --mex-barcodes-file --mex-features-file --mex-matrix-file --resume --retry --sample-accessions --summary-output-file --supplementary-file --threads -batchFormat -batchOutputFile -dataType -e -f -fetchThreads -h -mexBarcodesFile -mexFeaturesFile -mexMatrixFile -r -retry -s -sampleAccessions -supplementaryFile -threads" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--acc --data-type --fetch-threads --file --help --mex-barcodes-file --mex-features-file --mex-matrix-file --resume --retry --sample-accessions --skip-download --summary-output-file --supplementary-file --threads -batchFormat -batchOutputFile -dataType -e -f -fetchThreads -h -mexBarcodesFile -mexFeaturesFile -mexMatrixFile -r -retry -s -sampleAccessions -skipDownload -supplementaryFile -threads" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|--mex-barcodes-file|--mex-features-file|--mex-matrix-file|--summary-output-file|--supplementary-file|-batchOutputFile|-f|-mexBarcodesFile|-mexFeaturesFile|-mexMatrixFile|-s|-supplementaryFile) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -1116,7 +1116,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' downloadSingleCellData ' ]]; then
         if ! [[ "$current_option" =~ (--acc|--data-type|--fetch-threads|--file|--mex-barcodes-file|--mex-features-file|--mex-matrix-file|--retry|--sample-accessions|--summary-output-file|--supplementary-file|--threads|-batchFormat|-batchOutputFile|-dataType|-e|-f|-fetchThreads|-mexBarcodesFile|-mexFeaturesFile|-mexMatrixFile|-retry|-s|-sampleAccessions|-supplementaryFile|-threads) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--acc --data-type --fetch-threads --file --help --mex-barcodes-file --mex-features-file --mex-matrix-file --resume --retry --sample-accessions --summary-output-file --supplementary-file --threads -batchFormat -batchOutputFile -dataType -e -f -fetchThreads -h -mexBarcodesFile -mexFeaturesFile -mexMatrixFile -r -retry -s -sampleAccessions -supplementaryFile -threads" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--acc --data-type --fetch-threads --file --help --mex-barcodes-file --mex-features-file --mex-matrix-file --resume --retry --sample-accessions --skip-download --summary-output-file --supplementary-file --threads -batchFormat -batchOutputFile -dataType -e -f -fetchThreads -h -mexBarcodesFile -mexFeaturesFile -mexMatrixFile -r -retry -s -sampleAccessions -skipDownload -supplementaryFile -threads" -- "$2")
         fi
         if [[ "$current_option" =~ (--file|--mex-barcodes-file|--mex-features-file|--mex-matrix-file|--summary-output-file|--supplementary-file|-batchOutputFile|-f|-mexBarcodesFile|-mexFeaturesFile|-mexMatrixFile|-s|-supplementaryFile) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
