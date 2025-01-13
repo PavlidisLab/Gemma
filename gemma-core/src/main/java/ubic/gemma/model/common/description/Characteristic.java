@@ -312,6 +312,8 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
             Characteristic entity = new Characteristic();
             entity.setCategory( category );
             entity.setCategoryUri( stripToNull( categoryUri ) );
+            entity.setValue( category );
+            entity.setValueUri( stripToNull( categoryUri ) );
             return entity;
         }
 
