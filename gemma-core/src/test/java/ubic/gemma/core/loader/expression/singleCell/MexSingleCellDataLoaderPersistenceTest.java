@@ -85,7 +85,7 @@ public class MexSingleCellDataLoaderPersistenceTest extends BaseDatabaseTest {
     @Test
     @Category(SlowTest.class)
     public void test() throws IOException {
-        MexSingleCellDataLoader loader = createLoaderForResourceDir( "/data/loader/expression/singleCell/GSE224438", true );
+        MexSingleCellDataLoader loader = createLoaderForResourceDir( "/data/loader/expression/singleCell/GSE224438" );
         loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
 
         Taxon taxon = new Taxon();

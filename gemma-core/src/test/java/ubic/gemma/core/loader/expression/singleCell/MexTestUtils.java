@@ -28,33 +28,19 @@ public class MexTestUtils {
     }
 
     /**
-     *
      * @param resourceDir
-     * @param flatLayout in the flat layout, all files are in the same directory and use an '_' character to delimit the
-     *                   sample name from the rest. Otherwise, files are organized by sample name using subdirectories.
      * @return
      * @throws IOException
      */
-    public static MexSingleCellDataLoader createLoaderForResourceDir( String resourceDir, boolean flatLayout ) throws IOException {
+    public static MexSingleCellDataLoader createLoaderForResourceDir( String resourceDir ) throws IOException {
         List<String> sampleNames = new ArrayList<>();
         List<Path> barcodeFiles = new ArrayList<>();
         List<Path> geneFiles = new ArrayList<>();
         List<Path> matrixFiles = new ArrayList<>();
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         Map<String, List<Resource>> f;
-        if ( flatLayout ) {
-            f = Arrays.stream( resolver.getResources( resourceDir + "/*" ) )
-                    .collect( Collectors.groupingBy( r -> r.getFilename().split( "_", 2 )[0], Collectors.toList() ) );
-        } else {
-            f = Arrays.stream( resolver.getResources( resourceDir + "/*/*" ) )
-                    .collect( Collectors.groupingBy( r -> {
-                        try {
-                            return r.getFile().toPath().getParent().getFileName().toString();
-                        } catch ( IOException e ) {
-                            throw new RuntimeException( e );
-                        }
-                    }, Collectors.toList() ) );
-        }
+        f = Arrays.stream( resolver.getResources( resourceDir + "/*" ) )
+                .collect( Collectors.groupingBy( r -> r.getFilename().split( "_", 2 )[0], Collectors.toList() ) );
         f = new TreeMap<>( f );
         for ( Map.Entry<String, List<Resource>> entry : f.entrySet() ) {
             String sampleName = entry.getKey();

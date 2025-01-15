@@ -9,11 +9,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.config.SettingsConfig;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.loader.util.mapper.RenamingBioAssayMapper;
-import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.singleCell.ArchiveBasedSingleCellDetector;
@@ -26,6 +23,9 @@ import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPConfig;
+import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
+import ubic.gemma.core.loader.util.mapper.RenamingBioAssayMapper;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -51,7 +51,7 @@ import static org.assertj.core.api.InstanceOfAssertFactories.type;
  */
 @Category(GeoTest.class)
 @ContextConfiguration
-public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests {
+public class GeoSingleCellDetectorTest extends BaseTest {
 
     @Configuration
     @TestComponent
