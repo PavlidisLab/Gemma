@@ -2,6 +2,7 @@ package ubic.gemma.core.loader.expression.singleCell;
 
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
+import ubic.gemma.core.loader.expression.singleCell.metadata.GenericMetadataSingleCellDataLoader;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -72,7 +73,7 @@ public class SingleCellDataLoaderConfig {
      * cell types. For example, {@link AnnDataSingleCellDataLoader} can import cell types using a factor name.
      */
     @Nullable
-    private Path cellTypeAssignmentPath;
+    private Path cellTypeAssignmentFile;
 
     /**
      * A name to use for the cell type assignment.
@@ -95,6 +96,29 @@ public class SingleCellDataLoaderConfig {
      */
     @Nullable
     private Path otherCellLevelCharacteristicsFile;
+
+    /**
+     * When parsing {@link #cellTypeAssignmentFile} and {@link #otherCellLevelCharacteristicsFile}, use the overlap
+     * between the cell IDs from the file and those from the {@link ubic.gemma.model.expression.bioAssayData.SingleCellDimension}
+     * to infer sample associations.
+     * <p>
+     * When this option is set, the sample ID column must be supplied for this strategy to
+     * be applied.
+     */
+    private boolean inferSamplesFromCellIdsOverlap;
+
+    /**
+     * When parsing {@link #cellTypeAssignmentFile} and {@link #otherCellLevelCharacteristicsFile}, allow for a missing
+     * {@code sample_id} column, in which case barcodes are used to infer the sample a cell belongs to. This strategy
+     * will not work in the case of a barcode collision.
+     */
+    private boolean useCellIdsIfSampleNameIsMissing;
+
+    /**
+     * When parsing {@link #cellTypeAssignmentFile} and {@link #otherCellLevelCharacteristicsFile}, ignore cell IDs that
+     * cannot be matched to a sample.
+     */
+    private boolean ignoreUnmatchedCellIds;
 
     /**
      * If only one CTA is present, mark it as preferred.

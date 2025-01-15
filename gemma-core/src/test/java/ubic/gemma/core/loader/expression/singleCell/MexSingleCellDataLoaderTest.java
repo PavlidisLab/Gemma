@@ -1,7 +1,11 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
 import org.junit.Test;
-import ubic.gemma.core.loader.expression.MapBasedDesignElementMapper;
+import org.junit.experimental.categories.Category;
+import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
+import ubic.gemma.core.loader.util.mapper.SimpleBioAssayMapper;
+import ubic.gemma.core.loader.util.mapper.SimpleDesignElementMapper;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -10,9 +14,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,13 +26,14 @@ import static ubic.gemma.core.loader.expression.singleCell.MexTestUtils.createLo
 public class MexSingleCellDataLoaderTest {
 
     @Test
+    @Category(SlowTest.class)
     public void test() throws IOException {
         // consider the first file for mapping to elements
         Map<String, CompositeSequence> elementsMapping = createElementsMappingFromResourceFile( "data/loader/expression/singleCell/GSE224438/GSM7022367_1_features.tsv.gz" );
 
-        MexSingleCellDataLoader loader = createLoaderForResourceDir( "data/loader/expression/singleCell/GSE224438" );
+        MexSingleCellDataLoader loader = createLoaderForResourceDir( "data/loader/expression/singleCell/GSE224438", true );
         loader.setIgnoreUnmatchedSamples( false );
-        loader.setBioAssayToSampleNameMatcher( ( bms, s ) -> bms.stream().filter( bm -> s.equals( bm.getName() ) ).collect( Collectors.toSet() ) );
+        loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
         ArrayList<BioAssay> bas = new ArrayList<>();
         for ( String sampleName : loader.getSampleNames() ) {
             bas.add( BioAssay.Factory.newInstance( sampleName, null, BioMaterial.Factory.newInstance( sampleName ) ) );
@@ -51,7 +54,8 @@ public class MexSingleCellDataLoaderTest {
         assertThat( dimension.getNumberOfCellsBySample( 9 ) ).isEqualTo( 1000 );
         assertThat( dimension.getBioAssaysOffset() )
                 .containsExactly( 0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000 );
-        List<SingleCellExpressionDataVector> vectors = loader.loadVectors( new MapBasedDesignElementMapper( "test", elementsMapping ), dimension, qt ).collect( Collectors.toList() );
+        loader.setDesignElementToGeneMapper( new MapBasedDesignElementMapper( "test", elementsMapping ) );
+        List<SingleCellExpressionDataVector> vectors = loader.loadVectors( elementsMapping.values(), dimension, qt ).collect( Collectors.toList() );
         assertThat( vectors )
                 .hasSize( 1000 )
                 .allSatisfy( v -> {
@@ -89,8 +93,8 @@ public class MexSingleCellDataLoaderTest {
         // consider the first file for mapping to elements
         Map<String, CompositeSequence> elementsMapping = createElementsMappingFromResourceFile( "data/loader/expression/singleCell/GSE224438/GSM7022370_2-3_features.tsv.gz" );
 
-        MexSingleCellDataLoader loader = createLoaderForResourceDir( "data/loader/expression/singleCell/GSE224438" );
-        loader.setBioAssayToSampleNameMatcher( ( bms, s ) -> bms.stream().filter( bm -> s.equals( bm.getName() ) ).collect( Collectors.toSet() ) );
+        MexSingleCellDataLoader loader = createLoaderForResourceDir( "data/loader/expression/singleCell/GSE224438", true );
+        loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
         ArrayList<BioAssay> bas = new ArrayList<>();
         bas.add( BioAssay.Factory.newInstance( "GSM7022370", null, BioMaterial.Factory.newInstance( "GSM7022370" ) ) );
         bas.add( BioAssay.Factory.newInstance( "GSM7022375", null, BioMaterial.Factory.newInstance( "GSM7022375" ) ) );
@@ -106,7 +110,8 @@ public class MexSingleCellDataLoaderTest {
                 .containsExactly( "GSM7022370", "GSM7022375" );
         assertThat( dimension.getBioAssaysOffset() )
                 .containsExactly( 0, 1000 );
-        List<SingleCellExpressionDataVector> vectors = loader.loadVectors( new MapBasedDesignElementMapper( "", elementsMapping ), dimension, qt ).collect( Collectors.toList() );
+        loader.setDesignElementToGeneMapper( new MapBasedDesignElementMapper( "", elementsMapping ) );
+        List<SingleCellExpressionDataVector> vectors = loader.loadVectors( elementsMapping.values(), dimension, qt ).collect( Collectors.toList() );
         assertThat( vectors )
                 .hasSize( 1000 )
                 .allSatisfy( v -> {
@@ -160,8 +165,8 @@ public class MexSingleCellDataLoaderTest {
         // consider the first file for mapping to elements
         Map<String, CompositeSequence> elementsMapping = createElementsMappingFromResourceFile( "data/loader/expression/singleCell/GSE224438/GSM7022370_2-3_features.tsv.gz" );
 
-        MexSingleCellDataLoader loader = createLoaderForResourceDir( "data/loader/expression/singleCell/GSE224438" );
-        loader.setBioAssayToSampleNameMatcher( ( bms, s ) -> bms.stream().filter( bm -> s.equals( bm.getName() ) ).collect( Collectors.toSet() ) );
+        MexSingleCellDataLoader loader = createLoaderForResourceDir( "data/loader/expression/singleCell/GSE224438", true );
+        loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
         ArrayList<BioAssay> bas = new ArrayList<>();
         // this sample does note exist
         bas.add( BioAssay.Factory.newInstance( "GSM7022354", null, BioMaterial.Factory.newInstance( "GSM7022354" ) ) );
@@ -177,7 +182,8 @@ public class MexSingleCellDataLoaderTest {
                 .containsExactly( "GSM7022370" );
         assertThat( dimension.getBioAssaysOffset() )
                 .containsExactly( 0 );
-        List<SingleCellExpressionDataVector> vectors = loader.loadVectors( new MapBasedDesignElementMapper( "test", elementsMapping ), dimension, qt ).collect( Collectors.toList() );
+        loader.setDesignElementToGeneMapper( new MapBasedDesignElementMapper( "test", elementsMapping ) );
+        List<SingleCellExpressionDataVector> vectors = loader.loadVectors( elementsMapping.values(), dimension, qt ).collect( Collectors.toList() );
         assertThat( vectors )
                 .hasSize( 1000 )
                 .allSatisfy( v -> {
@@ -194,6 +200,41 @@ public class MexSingleCellDataLoaderTest {
                     assertThat( v.getDataIndices() )
                             .hasSize( 155 )
                             .startsWith( 0, 6, 8, 13 );
+                } );
+    }
+
+    /**
+     * This dataset does not filter empty droplets and thus many barcodes are simply unused and can be discarded.
+     */
+    @Test
+    public void testGSE141552() throws IOException {
+        MexSingleCellDataLoader loader = createLoaderForResourceDir( "data/loader/expression/singleCell/GSE141552", false );
+        loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
+        QuantitationType qt = loader.getQuantitationTypes().iterator().next();
+        Collection<CompositeSequence> de = Collections.singleton( CompositeSequence.Factory.newInstance( "ENSG00000223972.5" ) );
+        loader.setDesignElementToGeneMapper( new SimpleDesignElementMapper( de ) );
+
+        SingleCellDimension dim = loader.getSingleCellDimension( Collections.singleton( BioAssay.Factory.newInstance( "GSM4206900", null, BioMaterial.Factory.newInstance( "GSM4206900" ) ) ) );
+        assertThat( dim )
+                .satisfies( scd -> {
+                    assertThat( scd.getNumberOfCells() ).isEqualTo( 6794880 );
+                } );
+        assertThat( loader.loadVectors( de, dim, qt ) )
+                .singleElement()
+                .satisfies( vec -> {
+                    assertThat( vec.getDataIndices() ).isEmpty();
+                } );
+
+        loader.setDiscardEmptyCells( true );
+        dim = loader.getSingleCellDimension( Collections.singleton( BioAssay.Factory.newInstance( "GSM4206900", null, BioMaterial.Factory.newInstance( "GSM4206900" ) ) ) );
+        assertThat( dim )
+                .satisfies( scd -> {
+                    assertThat( scd.getNumberOfCells() ).isEqualTo( 561738 );
+                } );
+        assertThat( loader.loadVectors( de, dim, qt ) )
+                .singleElement()
+                .satisfies( vec -> {
+                    assertThat( vec.getDataIndices() ).isEmpty();
                 } );
     }
 }

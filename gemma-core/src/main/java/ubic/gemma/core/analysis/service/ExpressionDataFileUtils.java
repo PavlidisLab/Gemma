@@ -1,5 +1,6 @@
 package ubic.gemma.core.analysis.service;
 
+import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -73,5 +74,21 @@ public class ExpressionDataFileUtils {
 
     public static String getEigenGenesFilename( ExpressionExperiment ee ) {
         return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_eigengenes" + TABULAR_BULK_DATA_FILE_SUFFIX;
+    }
+
+    /**
+     * Forms a folder name where the given experiments metadata will be located (within the {@link #metadataDir} directory).
+     *
+     * @param ee the experiment to get the folder name for.
+     * @return folder name based on the given experiments properties. Usually this will be the experiments short name,
+     * without any splitting suffixes (e.g. for GSE123.1 the folder name would be GSE123). If the short name is empty for
+     * any reason, the experiments ID will be used.
+     */
+    public static String getEEFolderName( ExpressionExperiment ee ) {
+        String sName = ee.getShortName();
+        if ( StringUtils.isBlank( sName ) ) {
+            return ee.getId().toString();
+        }
+        return sName.replaceAll( "\\.\\d+$", "" );
     }
 }

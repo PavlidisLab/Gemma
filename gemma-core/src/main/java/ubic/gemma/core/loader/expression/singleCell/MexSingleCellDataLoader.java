@@ -3,13 +3,17 @@ package ubic.gemma.core.loader.expression.singleCell;
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import no.uib.cipr.matrix.io.MatrixInfo;
+import no.uib.cipr.matrix.io.MatrixSize;
 import no.uib.cipr.matrix.io.MatrixVectorReader;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.util.Assert;
-import ubic.gemma.core.loader.expression.DesignElementMapper;
+import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
+import ubic.gemma.core.loader.util.mapper.DesignElementMapper;
+import ubic.gemma.core.loader.util.mapper.EntityMapper;
+import ubic.gemma.core.loader.util.mapper.EntityMapperUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -48,11 +52,18 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
     private final List<Path> genesFiles;
     private final List<Path> matrixFiles;
 
-    private BioAssayToSampleNameMatcher sampleNameComparator;
+    private final int numberOfSamples;
+
+    private BioAssayMapper bioAssayToSampleNameMapper;
     private boolean ignoreUnmatchedSamples = true;
+
+    private DesignElementMapper designElementToGeneMapper;
     private boolean ignoreUnmatchedDesignElements = true;
 
-    private final int numberOfSamples;
+    /**
+     * Discard empty cells.
+     */
+    private boolean discardEmptyCells;
 
     /**
      * Allow mapping probe to gene symbols.
@@ -60,7 +71,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
      * This is used as fallback if the gene ID cannot be found in the supplied platform. If this is set to true, the
      * second column of the genes file will be looked up.
      */
-    private boolean allowMappingProbeNamesToGeneSymbols = false;
+    private boolean allowMappingDesignElementsToGeneSymbols = false;
 
     public MexSingleCellDataLoader( List<String> sampleNames, List<Path> barcodeFiles, List<Path> genesFiles, List<Path> matrixFiles ) {
         Assert.isTrue( sampleNames.size() == barcodeFiles.size()
@@ -79,24 +90,9 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     @Override
-    public void setBioAssayToSampleNameMatcher( BioAssayToSampleNameMatcher sampleNameComparator ) {
-        this.sampleNameComparator = sampleNameComparator;
-    }
-
-    @Override
-    public void setIgnoreUnmatchedSamples( boolean ignoreUnmatchedSamples ) {
-        this.ignoreUnmatchedSamples = ignoreUnmatchedSamples;
-    }
-
-    @Override
-    public void setIgnoreUnmatchedDesignElements( boolean ignoreUnmatchedDesignElements ) {
-        this.ignoreUnmatchedDesignElements = ignoreUnmatchedDesignElements;
-    }
-
-    @Override
     public SingleCellDimension getSingleCellDimension( Collection<BioAssay> bioAssays ) throws IOException {
-        Assert.isTrue( !bioAssays.isEmpty(), "At least one bioassay must be provided" );
-        Assert.notNull( sampleNameComparator, "A sample name comparator is necessary to match sample names with BioMaterials" );
+        Assert.isTrue( !bioAssays.isEmpty(), "At least one assay must be provided." );
+        Assert.notNull( bioAssayToSampleNameMapper, "No mapper is set to match sample names with assays." );
         SingleCellDimension scd = new SingleCellDimension();
         List<String> cellIds = new ArrayList<>();
         List<BioAssay> bas = new ArrayList<>();
@@ -104,12 +100,17 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
         Set<String> unmatchedSamples = new HashSet<>();
         for ( int i = 0; i < numberOfSamples; i++ ) {
             String sampleName = sampleNames.get( i );
-            Set<BioAssay> matchedBas = sampleNameComparator.match( bioAssays, sampleName );
+            Set<BioAssay> matchedBas = bioAssayToSampleNameMapper.matchAll( bioAssays, sampleName );
             if ( matchedBas.size() == 1 ) {
                 BioAssay ba = matchedBas.iterator().next();
                 bas.add( ba );
                 basO = ArrayUtils.add( basO, cellIds.size() );
-                List<String> sampleCellIds = readLinesFromPath( barcodeFiles.get( i ) );
+                List<String> sampleCellIds;
+                if ( discardEmptyCells ) {
+                    sampleCellIds = readLinesFromPath( barcodeFiles.get( i ), getNonEmptyCellColumns( matrixFiles.get( i ) ) );
+                } else {
+                    sampleCellIds = readLinesFromPath( barcodeFiles.get( i ) );
+                }
                 if ( sampleCellIds.stream().distinct().count() < sampleCellIds.size() ) {
                     throw new IllegalArgumentException( "Sample " + sampleName + " has duplicate cell IDs." );
                 }
@@ -121,9 +122,12 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             }
         }
         if ( bas.isEmpty() ) {
-            throw new IllegalArgumentException( "No samples were matched." );
+            throw new IllegalArgumentException( String.format( "No samples were matched. Possible identifiers are:\n\t%s",
+                    EntityMapperUtils.getPossibleIdentifiers( bioAssays, bioAssayToSampleNameMapper ) ) );
         } else if ( !unmatchedSamples.isEmpty() ) {
-            String message = "No matching samples found for: " + unmatchedSamples.stream().sorted().collect( Collectors.joining( ", " ) );
+            String message = String.format( "No matching samples found for: %s. Possible identifiers are:\n\t%s",
+                    unmatchedSamples.stream().sorted().collect( Collectors.joining( ", " ) ),
+                    EntityMapperUtils.getPossibleIdentifiers( bas, bioAssayToSampleNameMapper ) );
             if ( ignoreUnmatchedSamples ) {
                 log.warn( message );
             } else {
@@ -212,7 +216,9 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     @Override
-    public Stream<SingleCellExpressionDataVector> loadVectors( DesignElementMapper elementsMapping, SingleCellDimension scd, QuantitationType quantitationType ) throws IOException {
+    public Stream<SingleCellExpressionDataVector> loadVectors( Collection<CompositeSequence> designElements, SingleCellDimension scd, QuantitationType quantitationType ) throws IOException {
+        Assert.notNull( designElementToGeneMapper, "A design element mapper must be set to load vectors." );
+
         // location of a given element in individual matrices
         Map<CompositeSequence, int[]> elementsToSampleMatrixRow = new HashMap<>();
         Map<CompositeSequence, String[]> elementsToOriginalGeneIds = new HashMap<>();
@@ -220,7 +226,10 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
 
         List<BioAssay> bioAssays = scd.getBioAssays();
         Map<String, Set<BioAssay>> bioAssayBySampleName = sampleNames.stream()
-                .collect( Collectors.toMap( sn -> sn, sn -> sampleNameComparator.match( bioAssays, sn ) ) );
+                .collect( Collectors.toMap( sn -> sn, sn -> bioAssayToSampleNameMapper.matchAll( bioAssays, sn ) ) );
+
+        EntityMapper.StatefulEntityMapper<CompositeSequence> statefulGeneMapper = designElementToGeneMapper
+                .forCandidates( designElements );
 
         for ( int j = 0; j < bioAssays.size(); j++ ) {
             BioAssay ba = bioAssays.get( j );
@@ -245,10 +254,10 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             for ( String s : readLinesFromPath( genesFile ) ) {
                 String[] pieces = s.split( "\t", 3 );
                 String geneId = pieces[0];
-                CompositeSequence probe = elementsMapping.get( geneId );
-                if ( probe == null && pieces.length > 1 && allowMappingProbeNamesToGeneSymbols ) {
+                CompositeSequence probe = statefulGeneMapper.matchOne( geneId ).orElse( null );
+                if ( probe == null && pieces.length > 1 && allowMappingDesignElementsToGeneSymbols ) {
                     String geneSymbol = pieces[1];
-                    probe = elementsMapping.get( geneSymbol );
+                    probe = statefulGeneMapper.matchOne( geneSymbol ).orElse( null );
                 }
                 if ( probe == null ) {
                     missingElements.add( geneId );
@@ -295,10 +304,42 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             }
             log.info( String.format( "Loading %s took %d ms", matrixFile, timer.getTime() ) );
 
+            int[] nonEmptyCellIndices;
+            if ( discardEmptyCells ) {
+                nonEmptyCellIndices = getNonEmptyCellColumns( matrixFile );
+                int numEmptyCells = matrix.numColumns() - nonEmptyCellIndices.length;
+                if ( numEmptyCells > 0 ) {
+                    // rewrite the column indices to account for discarded empty cells
+                    int[][] nz = new int[matrix.numRows()][];
+                    double[][] nzData = new double[matrix.numRows()][];
+                    for ( int i = 0; i < matrix.numRows(); i++ ) {
+                        nz[i] = new int[matrix.getRowPointers()[i + 1] - matrix.getRowPointers()[i]];
+                        nzData[i] = new double[matrix.getRowPointers()[i + 1] - matrix.getRowPointers()[i]];
+                        for ( int w = 0; w < nz[i].length; w++ ) {
+                            int oldColumn = matrix.getColumnIndices()[matrix.getRowPointers()[i] + w];
+                            int newColumn = Arrays.binarySearch( nonEmptyCellIndices, oldColumn );
+                            assert newColumn >= 0;
+                            nz[i][w] = newColumn;
+                            nzData[i][w] = matrix.get( i, oldColumn );
+                        }
+                    }
+                    CompRowMatrix newMatrix = new CompRowMatrix( matrix.numRows(), nonEmptyCellIndices.length, nz );
+                    for ( int i = 0; i < nz.length; i++ ) {
+                        for ( int w = 0; w < nz[i].length; w++ ) {
+                            newMatrix.set( i, nz[i][w], nzData[i][w] );
+                        }
+                    }
+                    matrix = newMatrix;
+                    log.info( "Removed " + nonEmptyCellIndices.length + " empty cells from " + sampleName + "." );
+                }
+            }
+
             Assert.isTrue( matrix.numColumns() == scd.getNumberOfCellsBySample( j ),
-                    "Matrix file " + matrixFile + " does not have the expected number of columns: " + scd.getNumberOfCellsBySample( j ) + "." );
+                    String.format( "Matrix file %s does not have the expected number of columns: %d, found %d.",
+                            matrixFile, scd.getNumberOfCellsBySample( j ), matrix.numColumns() ) );
             Assert.isTrue( matrix.numRows() == elements.size(),
-                    "Matrix file " + matrixFile + " does not have the expected number of rows." );
+                    String.format( "Matrix file %s does not have the expected number of rows: %d, found %d.",
+                            matrixFile, elements.size(), matrix.numRows() ) );
 
             matrices.add( matrix );
         }
@@ -362,6 +403,13 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
         }
     }
 
+    private List<String> readLinesFromPath( Path path, int[] linesToKeep ) throws IOException {
+        List<String> lines = readLinesFromPath( path );
+        return Arrays.stream( linesToKeep )
+                .mapToObj( lines::get )
+                .collect( Collectors.toList() );
+    }
+
     private List<String> readLinesFromPath( Path path ) throws IOException {
         if ( path.toString().endsWith( ".gz" ) ) {
             try ( BufferedReader br = new BufferedReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( path ) ) ) ) ) {
@@ -369,6 +417,26 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             }
         } else {
             return Files.readAllLines( path );
+        }
+    }
+
+    /**
+     * Obtain the position of empty cells for a given matrix.
+     */
+    private int[] getNonEmptyCellColumns( Path path ) throws IOException {
+        try ( MatrixVectorReader reader = readMatrixMarketFromPath( path ) ) {
+            MatrixInfo matrixInfo = reader.readMatrixInfo();
+            MatrixSize size = reader.readMatrixSize( matrixInfo );
+            int[] rows = new int[size.numEntries()];
+            int[] columns = new int[size.numEntries()];
+            double[] data = new double[size.numEntries()];
+            reader.readCoordinate( rows, columns, data );
+            return Arrays.stream( columns )
+                    // mtx is 1-based
+                    .map( c -> c - 1 )
+                    .sorted()
+                    .distinct()
+                    .toArray();
         }
     }
 }

@@ -112,6 +112,9 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
     private ExpressionExperimentDao expressionExperimentDao;
 
     @Autowired
+    private QuantitationTypeService quantitationTypeService;
+
+    @Autowired
     private SessionFactory sessionFactory;
 
     private ArrayDesign ad;
@@ -315,6 +318,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
         SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
         QuantitationType qt = vectors.iterator().next().getQuantitationType();
+        when( quantitationTypeService.reload( qt ) ).thenReturn( qt );
         scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null );
         sessionFactory.getCurrentSession().flush();
         assertThat( ee.getSingleCellExpressionDataVectors() )
@@ -357,6 +361,8 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThat( ee.getQuantitationTypes() ).contains( qt2 );
         assertThat( ee.getSingleCellExpressionDataVectors() )
                 .hasSize( 20 );
+
+        when( quantitationTypeService.reload( qt ) ).thenReturn( qt );
 
         scExpressionExperimentService.removeSingleCellDataVectors( ee, qt );
         sessionFactory.getCurrentSession().flush();

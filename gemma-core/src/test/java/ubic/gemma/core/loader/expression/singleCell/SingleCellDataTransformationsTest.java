@@ -2,11 +2,16 @@ package ubic.gemma.core.loader.expression.singleCell;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.springframework.context.annotation.PropertySource;
+import org.junit.experimental.categories.Category;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataPack;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataSample;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataSortBySample;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTranspose;
 import ubic.gemma.core.loader.util.hdf5.H5Attribute;
 import ubic.gemma.core.loader.util.hdf5.H5File;
+import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assume.assumeTrue;
 
+@Category(SlowTest.class)
 public class SingleCellDataTransformationsTest {
 
     private static final String pythonExecutable = Settings.getString( "python.exe" );

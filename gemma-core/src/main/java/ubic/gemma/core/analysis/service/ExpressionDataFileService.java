@@ -176,6 +176,8 @@ public interface ExpressionDataFileService {
      */
     Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type, boolean exclusive ) throws IOException;
 
+    Optional<LockedPath> getMetadataFile(ExpressionExperiment ee, String filename, boolean exclusive) throws IOException;
+
     /**
      * Copy a metadata file to the location of a given metadata type.
      * <p>
@@ -187,6 +189,15 @@ public interface ExpressionDataFileService {
      * @return the resulting metadata file, which can also be retrieved with {@link #getMetadataFile(ExpressionExperiment, ExpressionExperimentMetaFileType, boolean)}
      */
     Path copyMetadataFile( ExpressionExperiment ee, Path existingFile, ExpressionExperimentMetaFileType type, boolean forceWrite ) throws IOException;
+
+    /**
+     * Copy a generic metadata file.
+     * <p>
+     * This can only be used for metadata files that are not listed in {@link ExpressionExperimentMetaFileType}; using
+     * any of these reserved filenames will result in an exception. In addition, {@code CHANGELOG.md} is also reserved,
+     * use {@link ExpressionMetadataChangelogFileService} to manipulate it.
+     */
+    Path copyMetadataFile( ExpressionExperiment ee, Path existingFile, String filename, boolean forceWrite ) throws IOException;
 
     /**
      * Delete a metadata file.

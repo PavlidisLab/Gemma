@@ -87,6 +87,11 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      */
     List<Long> loadTroubledIds();
 
+    /**
+     * @see ExpressionExperimentDao#reload(Object)
+     */
+    ExpressionExperiment reload( ExpressionExperiment ee );
+
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor );
 

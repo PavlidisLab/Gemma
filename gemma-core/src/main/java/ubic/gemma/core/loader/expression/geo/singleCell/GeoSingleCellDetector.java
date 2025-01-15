@@ -8,7 +8,7 @@ import ubic.gemma.core.loader.expression.geo.GeoLibrarySource;
 import ubic.gemma.core.loader.expression.geo.model.GeoLibraryStrategy;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
-import ubic.gemma.core.loader.expression.singleCell.BioAssayToSampleNameMatcher;
+import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
@@ -46,7 +46,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
 
     private static final String[] SINGLE_CELL_DATA_PROCESSING_KEYWORDS = { "cellranger" };
 
-    private static final BioAssayToSampleNameMatcher GEO_BIO_ASSAY_TO_SAMPLE_NAME_MATCHER = new GeoBioAssayToSampleNameMatcher();
+    private static final BioAssayMapper GEO_BIO_ASSAY_TO_SAMPLE_NAME_MATCHER = new GeoBioAssayMapper();
 
     private final AnnDataDetector annDataDetector = new AnnDataDetector();
     private final SeuratDiskDetector seuratDiskDetector = new SeuratDiskDetector();
@@ -528,7 +528,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         for ( SingleCellDetector detector : detectors ) {
             try {
                 SingleCellDataLoader loader = detector.getSingleCellDataLoader( series );
-                loader.setBioAssayToSampleNameMatcher( GEO_BIO_ASSAY_TO_SAMPLE_NAME_MATCHER );
+                loader.setBioAssayToSampleNameMapper( GEO_BIO_ASSAY_TO_SAMPLE_NAME_MATCHER );
                 return loader;
             } catch ( UnsupportedOperationException e ) {
                 if ( firstUnsupported == null ) {

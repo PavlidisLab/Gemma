@@ -22,6 +22,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
@@ -51,6 +52,8 @@ import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -625,5 +628,33 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         }
 
         return false;
+    }
+
+    /**
+     * Read a changelog entry from the console.
+     * @param defaultText a default text to be shown in the editor, or null to keep the file empty
+     */
+    protected String readChangelogEntryFromConsole( ExpressionExperiment expressionExperiment, @Nullable String defaultText ) throws IOException, InterruptedException {
+        Assert.notNull( System.console(), "An interactive console is required to read the changelog entry." );
+        String editorBin = System.getenv( "EDITOR" );
+        if ( editorBin == null ) {
+            editorBin = "nano";
+        }
+        Path tempFile = Files.createTempFile( expressionExperiment.getShortName() + "-changelog-entry.md", null );
+        if ( defaultText != null ) {
+            PathUtils.writeString( tempFile, defaultText, StandardCharsets.UTF_8 );
+        }
+        int status = new ProcessBuilder( editorBin, tempFile.toString() )
+                .inheritIO()
+                .start()
+                .waitFor();
+        if ( status != 0 ) {
+            throw new RuntimeException( "Editor returned non-zero exit code." );
+        }
+        String buf = PathUtils.readString( tempFile, StandardCharsets.UTF_8 );
+        if ( StringUtils.isBlank( buf ) ) {
+            throw new RuntimeException( "Changelog entry is empty for " + expressionExperiment + "." );
+        }
+        return buf;
     }
 }

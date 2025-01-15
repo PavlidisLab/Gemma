@@ -4,7 +4,9 @@ import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
-import ubic.gemma.core.loader.expression.DesignElementMapper;
+import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
+import ubic.gemma.core.loader.util.mapper.DesignElementMapper;
+import ubic.gemma.core.loader.util.mapper.EntityMapper;
 import ubic.gemma.core.loader.util.anndata.*;
 import ubic.gemma.core.loader.util.hdf5.H5Dataset;
 import ubic.gemma.core.loader.util.hdf5.H5FundamentalType;
@@ -19,6 +21,7 @@ import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -58,8 +61,10 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
      */
     private final Path file;
 
-    private BioAssayToSampleNameMatcher sampleNameComparator;
+    private BioAssayMapper sampleNameMapper;
     private boolean ignoreUnmatchedSamples = true;
+
+    private DesignElementMapper designElementMapper;
     private boolean ignoreUnmatchedDesignElements = true;
 
     /**
@@ -89,8 +94,13 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     @Override
-    public void setBioAssayToSampleNameMatcher( BioAssayToSampleNameMatcher bioAssayToSampleNameMatcher ) {
-        this.sampleNameComparator = bioAssayToSampleNameMatcher;
+    public void setBioAssayToSampleNameMapper( BioAssayMapper bioAssayToSampleNameMatcher ) {
+        this.sampleNameMapper = bioAssayToSampleNameMatcher;
+    }
+
+    @Override
+    public void setDesignElementToGeneMapper( DesignElementMapper designElementToGeneMapper ) {
+        this.designElementMapper = designElementToGeneMapper;
     }
 
     @Override
@@ -114,7 +124,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     @Override
     public SingleCellDimension getSingleCellDimension( Collection<BioAssay> bioAssays ) throws IOException {
         Assert.isTrue( !bioAssays.isEmpty(), "At least one bioassay must be provided" );
-        Assert.notNull( sampleNameComparator, "A sample name comparator is necessary to match samples to BioAssays." );
+        Assert.notNull( sampleNameMapper, "A sample name comparator is necessary to match samples to BioAssays." );
         Assert.notNull( sampleFactorName, "The sample factor name must be set." );
         SingleCellDimension singleCellDimension = new SingleCellDimension();
         try ( AnnData h5File = AnnData.open( file ) ) {
@@ -438,7 +448,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                                 Map<String, FactorValue> fvByValue = factor.getFactorValues().stream()
                                         .collect( Collectors.toMap( FactorValue::getValue, fv -> fv ) );
                                 sampleValues.forEach( ( sn, v ) -> {
-                                    for ( BioAssay sample : sampleNameComparator.match( samples, sn ) ) {
+                                    for ( BioAssay sample : sampleNameMapper.matchAll( samples, sn ) ) {
                                         factorValueAssignments
                                                 .computeIfAbsent( sample.getSampleUsed(), k -> new HashSet<>() )
                                                 .add( fvByValue.get( v ) );
@@ -449,7 +459,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                             // measurement, no need to create any FVs since those are unique to each sample
                             if ( factorValueAssignments != null ) {
                                 sampleValues.forEach( ( sn, v ) -> {
-                                    for ( BioAssay sample : sampleNameComparator.match( samples, sn ) ) {
+                                    for ( BioAssay sample : sampleNameMapper.matchAll( samples, sn ) ) {
                                         FactorValue fvO = FactorValue.Factory.newInstance( factor );
                                         Measurement measurement = new Measurement();
                                         measurement.setRepresentation( representation );
@@ -521,7 +531,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                         continue;
                     }
                     extractSingleValueBySampleName( sampleNames, values )
-                            .ifPresent( fvs -> fvs.forEach( ( sampleName, value ) -> sampleNameComparator.match( samples, sampleName )
+                            .ifPresent( fvs -> fvs.forEach( ( sampleName, value ) -> sampleNameMapper.matchAll( samples, sampleName )
                                     .forEach( ba -> result.computeIfAbsent( ba.getSampleUsed(), k -> new HashSet<>() )
                                             .add( Characteristic.Factory.newInstance( factorName, null, value, null ) ) ) ) );
                 }
@@ -561,14 +571,14 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     @Override
-    public Stream<SingleCellExpressionDataVector> loadVectors( DesignElementMapper elementsMapping, SingleCellDimension dimension, QuantitationType quantitationType ) throws IOException, IllegalArgumentException {
+    public Stream<SingleCellExpressionDataVector> loadVectors( Collection<CompositeSequence> designElements, SingleCellDimension dimension, QuantitationType quantitationType ) throws IOException, IllegalArgumentException {
         String layerName;
         if ( quantitationType.getName().startsWith( LAYERED_QT_NAME_PREFIX ) ) {
             layerName = quantitationType.getName().substring( LAYERED_QT_NAME_PREFIX.length() );
         } else {
             layerName = null;
         }
-        return loadVectors( elementsMapping, dimension, quantitationType, layerName );
+        return loadVectors( designElements, dimension, quantitationType, layerName );
     }
 
     /**
@@ -576,13 +586,15 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
      * @param layerName the name of the layer to load under {@code layers/}, or null to load the {@code X}
      */
     public Stream<SingleCellExpressionDataVector> loadVectors(
-            DesignElementMapper elementsMapping,
+            Collection<CompositeSequence> designElements,
             SingleCellDimension dimension,
             QuantitationType quantitationType,
             @Nullable String layerName ) throws IOException {
+        Assert.notNull( designElementMapper, "A design element mapper must be set to load vectors." );
         Assert.notNull( sampleFactorName, "A sample factor name must be set." );
         // we don't want to close it since it will be closed by the stream
         AnnData h5File = AnnData.open( file );
+        EntityMapper.StatefulEntityMapper<CompositeSequence> statefulDesignElementMapper = designElementMapper.forCandidates( designElements );
         try {
             // load genes
             Dataframe.Column<?, String> genes;
@@ -590,10 +602,10 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 genes = obs.getColumn( obs.getIndexColumn(), String.class );
             }
             Set<String> genesSet = genes.uniqueValues();
-            if ( !elementsMapping.containsAny( genesSet ) ) {
+            if ( !statefulDesignElementMapper.containsAny( genesSet ) ) {
                 throw new IllegalArgumentException( "None of the genes are present in the elements mapping." );
             }
-            Set<String> unknownGenes = genesSet.stream().filter( g -> !elementsMapping.contains( g ) ).collect( Collectors.toSet() );
+            Set<String> unknownGenes = genesSet.stream().filter( g -> !statefulDesignElementMapper.contains( g ) ).collect( Collectors.toSet() );
             if ( !unknownGenes.isEmpty() ) {
                 String msg;
                 if ( unknownGenes.size() > 10 ) {
@@ -620,8 +632,14 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             }
             String matrixEncodingType = layer.getType();
             if ( ( matrixEncodingType.equals( "csr_matrix" ) && !transpose ) || ( matrixEncodingType.equals( "csc_matrix" ) && transpose ) ) {
-                return loadVectorsFromSparseMatrix( layer.getSparseMatrix(), samples, genes, quantitationType, dimension, elementsMapping )
-                        .onClose( h5File::close );
+                return loadVectorsFromSparseMatrix( layer.getSparseMatrix(), samples, genes, quantitationType, dimension, designElements )
+                        .onClose( () -> {
+                            try {
+                                h5File.close();
+                            } catch ( IOException e ) {
+                                throw new RuntimeException( e );
+                            }
+                        } );
             } else if ( matrixEncodingType.equals( "csr_matrix" ) ) {
                 throw new UnsupportedOperationException( "The matrix at '" + layer.getPath() + "' is stored as CSR and transposition is enabled; it must be converted to CSC for being loaded." );
             } else if ( matrixEncodingType.equals( "csc_matrix" ) ) {
@@ -635,7 +653,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         }
     }
 
-    private Stream<SingleCellExpressionDataVector> loadVectorsFromSparseMatrix( SparseMatrix matrix, Dataframe.Column<?, String> samples, Dataframe.Column<?, String> genes, QuantitationType qt, SingleCellDimension scd, DesignElementMapper elementsMapping ) {
+    private Stream<SingleCellExpressionDataVector> loadVectorsFromSparseMatrix( SparseMatrix matrix, Dataframe.Column<?, String> samples, Dataframe.Column<?, String> genes, QuantitationType qt, SingleCellDimension scd, Collection<CompositeSequence> designElements ) {
         Assert.isTrue( genes.size() == matrix.getShape()[0],
                 "The number of supplied genes does not match the number of rows in the sparse matrix." );
         Assert.isTrue( samples.size() == matrix.getShape()[1],
@@ -679,14 +697,17 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                     + "\tIn single-cell dimension: " + scdNames );
         }
 
+        EntityMapper.StatefulEntityMapper<CompositeSequence> statefulDesignElementMapper = designElementMapper
+                .forCandidates( designElements );
+
         return IntStream.range( 0, matrix.getShape()[0] )
                 // ignore entries that are missing a gene mapping
-                .filter( i -> elementsMapping.contains( genes.get( i ) ) )
+                .filter( i -> statefulDesignElementMapper.contains( genes.get( i ) ) )
                 .mapToObj( i -> {
                     assert matrix.getIndptr()[i] < matrix.getIndptr()[i + 1];
                     SingleCellExpressionDataVector vector = new SingleCellExpressionDataVector();
                     vector.setOriginalDesignElement( genes.get( i ) );
-                    vector.setDesignElement( elementsMapping.get( genes.get( i ) ) );
+                    vector.setDesignElement( statefulDesignElementMapper.matchOne( genes.get( i ) ).get() );
                     vector.setSingleCellDimension( scd );
                     vector.setQuantitationType( qt );
                     int[] IX;
@@ -772,7 +793,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
     private Optional<BioAssay> getBioAssayBySampleName( Collection<BioAssay> bioAssays, String sampleName ) {
         // lookup the sample
-        Set<BioAssay> match = sampleNameComparator.match( bioAssays, sampleName );
+        Set<BioAssay> match = sampleNameMapper.matchAll( bioAssays, sampleName );
         if ( match.size() > 1 ) {
             throw new IllegalStateException( String.format( "There is more than one BioAssay matching %s.", sampleName ) );
         } else if ( match.size() == 1 ) {

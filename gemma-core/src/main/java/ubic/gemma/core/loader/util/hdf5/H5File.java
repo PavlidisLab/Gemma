@@ -1,8 +1,6 @@
 package ubic.gemma.core.loader.util.hdf5;
 
-import hdf.hdf5lib.HDF5Constants;
-import hdf.hdf5lib.exceptions.HDF5FileInterfaceException;
-import hdf.hdf5lib.exceptions.HDF5LibraryException;
+import hdf.hdf5lib.exceptions.HDF5Exception;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -12,6 +10,7 @@ import java.nio.file.Paths;
 import static hdf.hdf5lib.H5.*;
 import static hdf.hdf5lib.HDF5Constants.H5F_ACC_RDONLY;
 import static hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
+import static ubic.gemma.core.loader.util.hdf5.H5Utils.convertH5Exception;
 
 public class H5File extends H5Location implements AutoCloseable {
 
@@ -24,14 +23,8 @@ public class H5File extends H5Location implements AutoCloseable {
     public static H5File open( Path path ) throws IOException {
         try {
             return new H5File( H5Fopen( path.toString(), H5F_ACC_RDONLY, H5P_DEFAULT ) );
-        } catch ( HDF5FileInterfaceException e ) {
-            if ( e.getMinorErrorNumber() == HDF5Constants.H5E_CANTOPENFILE ) {
-                throw new FileNotFoundException( e.getMessage() );
-            } else if ( e.getMinorErrorNumber() == HDF5Constants.H5E_TRUNCATED ) {
-                throw new TruncatedH5FileException( e.getMessage() );
-            } else {
-                throw new IOException( e );
-            }
+        } catch ( HDF5Exception e ) {
+            throw convertH5Exception( e );
         }
     }
 
@@ -47,7 +40,11 @@ public class H5File extends H5Location implements AutoCloseable {
     }
 
     @Override
-    public void close() throws HDF5LibraryException {
-        H5Fclose( fileId );
+    public void close() throws IOException {
+        try {
+            H5Fclose( fileId );
+        } catch ( HDF5Exception e ) {
+            throw convertH5Exception( e );
+        }
     }
 }

@@ -5,7 +5,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.http.MediaType;
@@ -23,7 +22,10 @@ import ubic.gemma.persistence.service.analysis.expression.coexpression.Coexpress
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
+import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.web.util.BaseWebTest;
 
 import java.nio.file.Path;
@@ -90,6 +92,21 @@ public class ExpressionExperimentQCControllerTest extends BaseWebTest {
 
         @Bean
         public CoexpressionAnalysisService coexpressionAnalysisService() {
+            return mock();
+        }
+
+        @Bean
+        public ProcessedExpressionDataVectorService processedExpressionDataVectorService() {
+            return mock();
+        }
+
+        @Bean
+        public ExpressionExperimentSubSetService expressionExperimentSubSetService() {
+            return mock();
+        }
+
+        @Bean
+        public SingleCellExpressionExperimentService singleCellExpressionExperimentService() {
             return mock();
         }
 

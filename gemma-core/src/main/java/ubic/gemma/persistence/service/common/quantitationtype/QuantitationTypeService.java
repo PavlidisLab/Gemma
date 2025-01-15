@@ -48,6 +48,11 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
     QuantitationType loadByIdAndVectorType( Long id, ExpressionExperiment ee, Class<? extends DataVector> dataVectorType );
 
     /**
+     * @see QuantitationTypeDao#reload(Object)
+     */
+    QuantitationType reload( QuantitationType quantitationType );
+
+    /**
      * Locate a QT associated with the given ee matching the specification of the passed quantitationType, or null if
      * there isn't one.
      *

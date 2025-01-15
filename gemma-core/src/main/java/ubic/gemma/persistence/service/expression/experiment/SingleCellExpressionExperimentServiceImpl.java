@@ -411,10 +411,16 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     public int removeSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType ) {
         Assert.notNull( ee.getId(), "The dataset must be persistent." );
         Assert.notNull( quantitationType.getId(), "The quantitation type must be persistent." );
+        // make sure that the EE is in the session so that the vectors can be loaded
+        ee = expressionExperimentDao.reload( ee );
+        // this ensures that the same entity is used in ee.getQuantitationTypes()
+        quantitationType = quantitationTypeService.reload( quantitationType );
         Assert.isTrue( ee.getQuantitationTypes().contains( quantitationType ),
                 String.format( "%s does not have the quantitation type %s.", ee, quantitationType ) );
+        QuantitationType finalQuantitationType = quantitationType;
         Set<SingleCellExpressionDataVector> vectors = ee.getSingleCellExpressionDataVectors().stream()
-                .filter( v -> v.getQuantitationType().equals( quantitationType ) ).collect( Collectors.toSet() );
+                .filter( v -> v.getQuantitationType().equals( finalQuantitationType ) )
+                .collect( Collectors.toSet() );
         SingleCellDimension scd;
         int removedVectors;
         if ( !vectors.isEmpty() ) {

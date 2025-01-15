@@ -113,6 +113,12 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
 
     @Override
     @Transactional(readOnly = true)
+    public QuantitationType reload( QuantitationType quantitationType ) {
+        return quantitationTypeDao.reload( quantitationType );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType, Class<? extends DataVector> dataVectorTypes ) {
         return this.quantitationTypeDao.find( ee, quantitationType, Collections.singleton( dataVectorTypes ) );
     }

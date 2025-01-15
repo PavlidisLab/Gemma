@@ -6,10 +6,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import ubic.gemma.core.loader.expression.DesignElementMapper;
-import ubic.gemma.core.loader.expression.EnsemblIdDesignElementMapper;
-import ubic.gemma.core.loader.expression.MapBasedDesignElementMapper;
-import ubic.gemma.core.loader.expression.geo.singleCell.GeoBioAssayToSampleNameMatcher;
+import ubic.gemma.core.loader.expression.geo.singleCell.GeoBioAssayMapper;
+import ubic.gemma.core.loader.expression.singleCell.metadata.GenericMetadataSingleCellDataLoader;
+import ubic.gemma.core.loader.util.mapper.*;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.ExternalDatabases;
@@ -34,7 +33,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -322,12 +320,14 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         String mappingDetails;
         try {
             Set<String> genes = loader.getGenes();
+            platform = arrayDesignService.thawCompositeSequences( platform );
             mapper = createElementsMapping( platform, genes );
-            DesignElementMapper.MappingStatistics stats = mapper.getMappingStatistics( genes );
+            EntityMapper.MappingStatistics stats = mapper.forCandidates( platform ).getMappingStatistics( genes );
             mappingDetails = String.format( "Genes are mapped by %s. %.2f%% of genes are mapped and %.2f%% of the platform elements are covered.",
                     mapper.getName(), 100.0 * stats.getOverlap(), 100.0 * stats.getCoverage() );
             log.info( mappingDetails );
-            vectors = loader.loadVectors( mapper, dim, qt ).collect( Collectors.toSet() );
+            loader.setDesignElementToGeneMapper( mapper );
+            vectors = loader.loadVectors( platform.getCompositeSequences(), dim, qt ).collect( Collectors.toSet() );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -357,7 +357,6 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
      * @author poirigui
      */
     private DesignElementMapper createElementsMapping( ArrayDesign platform, Collection<String> geneIdentifiers ) {
-        platform = arrayDesignService.thawCompositeSequences( platform );
         // create mapping by precedence of ID type
         Map<CompositeSequence, Set<Gene>> cs2g = arrayDesignService.getGenesByCompositeSequence( platform );
         List<DesignElementMapper> mappers = new ArrayList<>();
@@ -368,17 +367,17 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         }
         mappers.add( new MapBasedDesignElementMapper( "Design Element Name", elementsMapping ) );
         // then look for gene, E
-        mappers.add( createElementMapping( "NCBI Gene ID", platform, cs2g, gene -> gene.getNcbiGeneId() != null ? String.valueOf( gene.getNcbiGeneId() ) : null ) );
-        mappers.add( new EnsemblIdDesignElementMapper( platform, cs2g ) );
-        mappers.add( createElementMapping( "Gene Official Symbol", platform, cs2g, Gene::getOfficialSymbol ) );
-        mappers.add( createElementMapping( "Gene Name", platform, cs2g, Gene::getName ) );
+        mappers.add( new NcbiIdDesignElementMapper( cs2g ) );
+        mappers.add( new EnsemblIdDesignElementMapper( cs2g ) );
+        mappers.add( new OfficialSymbolDesignElementMapper( cs2g ) );
+        mappers.add( new GeneNameDesignElementMapper( cs2g ) );
         DesignElementMapper bestMapper = null;
         long numGenes = 0;
         for ( DesignElementMapper mapper : mappers ) {
             if ( log.isDebugEnabled() ) {
-                log.debug( mapper.getName() + ": " + mapper.getMappingStatistics( geneIdentifiers ) );
+                log.debug( mapper.getName() + ": " + mapper.forCandidates( platform ).getMappingStatistics( geneIdentifiers ) );
             }
-            long g = geneIdentifiers.stream().filter( mapper::contains ).count();
+            long g = geneIdentifiers.stream().filter( mapper.forCandidates( platform )::contains ).count();
             if ( g > numGenes ) {
                 bestMapper = mapper;
                 numGenes = g;
@@ -388,22 +387,6 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
             throw new IllegalArgumentException( "None of the available gene identifier mapping strategy applies to the given gene identifiers." );
         }
         return bestMapper;
-    }
-
-    private DesignElementMapper createElementMapping( String name, ArrayDesign platform, Map<CompositeSequence, Set<Gene>> cs2g, Function<Gene, String> g2s ) {
-        Map<String, CompositeSequence> elementsMapping = new HashMap<>();
-        for ( CompositeSequence cs : platform.getCompositeSequences() ) {
-            if ( !cs2g.containsKey( cs ) ) {
-                continue;
-            }
-            for ( Gene g : cs2g.get( cs ) ) {
-                String k = g2s.apply( g );
-                if ( k != null ) {
-                    elementsMapping.putIfAbsent( k, cs );
-                }
-            }
-        }
-        return new MapBasedDesignElementMapper( name, elementsMapping );
     }
 
     /**
@@ -444,7 +427,8 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         } else if ( Files.exists( getLoomFile( ee ) ) ) {
             dataType = SingleCellDataType.LOOM;
         } else {
-            throw new IllegalArgumentException( "No single-cell data found for " + ee + " in " + singleCellDataBasePath + "." );
+            dataType = SingleCellDataType.NULL;
+            log.warn( "No single-cell data found for " + ee + " in " + singleCellDataBasePath + ", using the null loader." );
         }
         return getLoader( ee, dataType, config );
     }
@@ -456,7 +440,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         SingleCellDataLoader loader;
         switch ( dataType ) {
             case ANNDATA:
-                loader = getAnnDataLoader( ee, ( AnnDataSingleCellDataLoaderConfig ) config );
+                loader = getAnnDataLoader( ee, config );
                 break;
             case SEURAT_DISK:
                 loader = getSeuratDiskLoader();
@@ -467,6 +451,9 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
             case LOOM:
                 loader = getLoomLoader();
                 break;
+            case NULL:
+                loader = getNullLoader();
+                break;
             default:
                 throw new IllegalArgumentException( "Unknown single-cell data type " + dataType + "." );
         }
@@ -475,7 +462,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
 
     private SingleCellDataLoader configureLoader( SingleCellDataLoader loader, ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
         // wrap with a generic loader to load additional metadata
-        Path cellTypeAssignmentPath = config.getCellTypeAssignmentPath();
+        Path cellTypeAssignmentPath = config.getCellTypeAssignmentFile();
         Path otherCellCharacteristicsPath = config.getOtherCellLevelCharacteristicsFile();
         if ( cellTypeAssignmentPath != null || otherCellCharacteristicsPath != null ) {
             if ( cellTypeAssignmentPath != null ) {
@@ -484,33 +471,39 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
             if ( otherCellCharacteristicsPath != null ) {
                 log.info( "Loading additional cell-level characteristics from " + otherCellCharacteristicsPath );
             }
-            loader = new GenericMetadataSingleCellDataLoader( loader, cellTypeAssignmentPath, otherCellCharacteristicsPath ) {
-                {
-                    if ( config.getCellTypeAssignmentName() != null ) {
-                        setCellTypeAssignmentName( config.getCellTypeAssignmentName() );
-                    }
-                    if ( config.getCellTypeAssignmentProtocol() != null ) {
-                        setCellTypeAssignmentProtocol( config.getCellTypeAssignmentProtocol() );
-                    }
-                }
-            };
+            loader = configureGenericLoader( new GenericMetadataSingleCellDataLoader( loader, cellTypeAssignmentPath, otherCellCharacteristicsPath ), config );
         }
         // apply GEO strategy for matching
         if ( ee.getAccession() != null && ee.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
-            loader.setBioAssayToSampleNameMatcher( new GeoBioAssayToSampleNameMatcher() );
+            loader.setBioAssayToSampleNameMapper( new GeoBioAssayMapper() );
         } else {
             log.info( String.format( "%s does not have a GEO accession, using %s for matching sample names to BioAssays.",
-                    ee, SimpleBioAssayToSampleNameMatcher.class.getSimpleName() ) );
-            loader.setBioAssayToSampleNameMatcher( new SimpleBioAssayToSampleNameMatcher() );
+                    ee, SimpleBioAssayMapper.class.getSimpleName() ) );
+            loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
         }
         return loader;
     }
 
-    private SingleCellDataLoader getAnnDataLoader( ExpressionExperiment ee, AnnDataSingleCellDataLoaderConfig config ) {
+    private SingleCellDataLoader configureGenericLoader( GenericMetadataSingleCellDataLoader loader, SingleCellDataLoaderConfig config ) {
+        if ( config.getCellTypeAssignmentName() != null ) {
+            loader.setCellTypeAssignmentName( config.getCellTypeAssignmentName() );
+        }
+        if ( config.getCellTypeAssignmentProtocol() != null ) {
+            loader.setCellTypeAssignmentProtocol( config.getCellTypeAssignmentProtocol() );
+        }
+        loader.setInferSamplesFromCellIdsOverlap( config.isInferSamplesFromCellIdsOverlap() );
+        loader.setUseCellIdsIfSampleNameIsMissing( config.isUseCellIdsIfSampleNameIsMissing() );
+        loader.setIgnoreUnmatchedCellIds( config.isIgnoreUnmatchedCellIds() );
+        return loader;
+    }
+
+    private SingleCellDataLoader getAnnDataLoader( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
         AnnDataSingleCellDataLoader loader = new AnnDataSingleCellDataLoader( config.getDataPath() != null ? config.getDataPath() : getAnnDataFile( ee ) );
-        loader.setSampleFactorName( config.getSampleFactorName() );
-        loader.setCellTypeFactorName( config.getCellTypeFactorName() );
-        loader.setUnknownCellTypeIndicator( config.getUnknownCellTypeIndicator() );
+        if ( config instanceof AnnDataSingleCellDataLoaderConfig ) {
+            loader.setSampleFactorName( ( ( AnnDataSingleCellDataLoaderConfig ) config ).getSampleFactorName() );
+            loader.setCellTypeFactorName( ( ( AnnDataSingleCellDataLoaderConfig ) config ).getCellTypeFactorName() );
+            loader.setUnknownCellTypeIndicator( ( ( AnnDataSingleCellDataLoaderConfig ) config ).getUnknownCellTypeIndicator() );
+        }
         return loader;
     }
 
@@ -541,11 +534,20 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
             genesFiles.add( sampleDir.resolve( "features.tsv.gz" ) );
             matrixFiles.add( sampleDir.resolve( "matrix.mtx.gz" ) );
         }
-        return new MexSingleCellDataLoader( sampleNames, barcodeFiles, genesFiles, matrixFiles );
+        MexSingleCellDataLoader loader = new MexSingleCellDataLoader( sampleNames, barcodeFiles, genesFiles, matrixFiles );
+        if ( config instanceof MexSingleCellDataLoaderConfig ) {
+            loader.setDiscardEmptyCells( ( ( MexSingleCellDataLoaderConfig ) config ).isDiscardEmptyCells() );
+            loader.setAllowMappingDesignElementsToGeneSymbols( ( ( MexSingleCellDataLoaderConfig ) config ).isAllowMappingDesignElementsToGeneSymbols() );
+        }
+        return loader;
     }
 
     private SingleCellDataLoader getLoomLoader() {
         throw new UnsupportedOperationException( "Loom is not supported yet." );
+    }
+
+    private SingleCellDataLoader getNullLoader() {
+        return new NullSingleCellDataLoader();
     }
 
     private Path getAnnDataFile( ExpressionExperiment ee ) {

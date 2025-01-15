@@ -21,6 +21,7 @@ import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.core.analysis.service.ExpressionMetadataChangelogFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.loader.expression.DataUpdater;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -53,6 +54,8 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     private DataUpdater serv;
     @Autowired
     private ExpressionDataFileService expressionDataFileService;
+    @Autowired
+    private ExpressionMetadataChangelogFileService expressionMetadataChangelogFileService;
 
     private boolean allowMissingSamples = false;
     private String countFile = null;
@@ -207,6 +210,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
         if ( qualityControlReportFile != null ) {
             try {
                 Path dest = expressionDataFileService.copyMetadataFile( ee, qualityControlReportFile, ExpressionExperimentMetaFileType.MUTLQC_REPORT, true );
+                expressionMetadataChangelogFileService.addChangelogEntry( ee, "Added a QC report file." );
                 log.info( "Copied QC report file to " + dest + "." );
             } catch ( IOException e ) {
                 addErrorObject( ee, "Could not copy the MultiQC report.", e );

@@ -6,6 +6,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.loader.expression.singleCell.*;
+import ubic.gemma.core.loader.expression.singleCell.transform.*;
 import ubic.gemma.core.util.AbstractCLI;
 
 import javax.annotation.Nullable;

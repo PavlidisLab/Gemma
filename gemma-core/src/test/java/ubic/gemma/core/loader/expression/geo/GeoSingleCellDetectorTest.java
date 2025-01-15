@@ -12,14 +12,18 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.config.SettingsConfig;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.loader.expression.MapBasedDesignElementMapper;
+import ubic.gemma.core.loader.util.mapper.RenamingBioAssayMapper;
+import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.singleCell.ArchiveBasedSingleCellDetector;
-import ubic.gemma.core.loader.expression.geo.singleCell.GeoBioAssayToSampleNameMatcher;
+import ubic.gemma.core.loader.expression.geo.singleCell.GeoBioAssayMapper;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
 import ubic.gemma.core.loader.expression.geo.singleCell.NoSingleCellDataFoundException;
-import ubic.gemma.core.loader.expression.singleCell.*;
+import ubic.gemma.core.loader.expression.singleCell.AnnDataSingleCellDataLoader;
+import ubic.gemma.core.loader.expression.singleCell.MexSingleCellDataLoader;
+import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
+import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPConfig;
 import ubic.gemma.core.util.test.category.GeoTest;
@@ -107,8 +111,10 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
         Map<String, CompositeSequence> elementsMapping = new HashMap<>();
         elementsMapping.put( "SLCO3A1", CompositeSequence.Factory.newInstance( "SLCO3A1" ) );
 
+        loader.setDesignElementToGeneMapper( new MapBasedDesignElementMapper( "test", elementsMapping ) );
+
         // loading vectors will fail because the matrix is stored in transposed
-        assertThatThrownBy( () -> loader.loadVectors( new MapBasedDesignElementMapper( "test", elementsMapping), dim, qt ) )
+        assertThatThrownBy( () -> loader.loadVectors( elementsMapping.values(), dim, qt ) )
                 .isInstanceOf( UnsupportedOperationException.class )
                 .hasMessage( "The matrix at 'X' is stored as CSR and transposition is enabled; it must be converted to CSC for being loaded." );
     }
@@ -154,7 +160,7 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
                     loader.setSampleFactorName( "sample" );
                     assertThat( loader.getSampleNames() )
                             .containsExactlyInAnyOrder( "Pt. A", "Pt. B", "Pt. C", "Pt. D", "Pt. E", "Pt. F", "Pt. G", "Pt. H", "Pt. I", "Pt. J" );
-                    loader.setBioAssayToSampleNameMatcher( new MappingBioAssayToSampleNameMatcher( new GeoBioAssayToSampleNameMatcher(),
+                    loader.setBioAssayToSampleNameMapper( new RenamingBioAssayMapper( new GeoBioAssayMapper(),
                             new String[] { "Patient_F", "Patient_G", "Patient_H", "Patient_I", "Patient_J" },
                             new String[] { "Pt. F", "Pt. G", "Pt. H", "Pt. I", "Pt. J" } ) );
                     List<BioAssay> bas = Collections.singletonList( BioAssay.Factory.newInstance( "Patient_G", null, BioMaterial.Factory.newInstance( "Patient_G" ) ) );
@@ -443,6 +449,7 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
      * This series contains large TAR attachment that should be skipped when inspecting for MEX.
      */
     @Test
+    @Category(SlowTest.class)
     public void testGSE235314() throws IOException {
         GeoSeries series = readSeriesFromGeo( "GSE235314" );
         assertThat( detector.hasSingleCellData( series ) ).isFalse();
@@ -483,39 +490,39 @@ public class GeoSingleCellDetectorTest extends AbstractJUnit4SpringContextTests 
         // this archive is actually quite deep and the default 10 is not enough
         try {
             detector.setMaxNumberOfEntriesToSkip( -1 );
-        GeoSeries series = readSeriesFromGeo( "GSE155499" );
-        assertThat( detector.hasSingleCellData( series ) ).isTrue();
-        assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
-        GeoSample sample = getSample( series, "GSM4705328" );
-        assertThat( detector.getAdditionalSupplementaryFiles( series, sample ) )
-                .containsExactlyInAnyOrder(
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_6_clusters/clusters.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_2_clusters/clusters.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_8_clusters/clusters.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_4_clusters/clusters.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_7_clusters/clusters.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_3_clusters/clusters.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/graphclust/clusters.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_10_clusters/clusters.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_9_clusters/clusters.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_5_clusters/clusters.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/pca/10_components/components.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/pca/10_components/genes_selected.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/pca/10_components/dispersion.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/pca/10_components/variance.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/pca/10_components/projection.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/tsne/2_components/projection.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_6_clusters/differential_expression.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_2_clusters/differential_expression.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_8_clusters/differential_expression.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_4_clusters/differential_expression.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_7_clusters/differential_expression.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_3_clusters/differential_expression.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/graphclust/differential_expression.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_10_clusters/differential_expression.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_9_clusters/differential_expression.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_5_clusters/differential_expression.csv",
-                        "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/cloupe.cloupe" );
+            GeoSeries series = readSeriesFromGeo( "GSE155499" );
+            assertThat( detector.hasSingleCellData( series ) ).isTrue();
+            assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.MEX );
+            GeoSample sample = getSample( series, "GSM4705328" );
+            assertThat( detector.getAdditionalSupplementaryFiles( series, sample ) )
+                    .containsExactlyInAnyOrder(
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_6_clusters/clusters.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_2_clusters/clusters.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_8_clusters/clusters.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_4_clusters/clusters.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_7_clusters/clusters.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_3_clusters/clusters.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/graphclust/clusters.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_10_clusters/clusters.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_9_clusters/clusters.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/clustering/kmeans_5_clusters/clusters.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/pca/10_components/components.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/pca/10_components/genes_selected.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/pca/10_components/dispersion.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/pca/10_components/variance.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/pca/10_components/projection.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/tsne/2_components/projection.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_6_clusters/differential_expression.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_2_clusters/differential_expression.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_8_clusters/differential_expression.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_4_clusters/differential_expression.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_7_clusters/differential_expression.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_3_clusters/differential_expression.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/graphclust/differential_expression.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_10_clusters/differential_expression.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_9_clusters/differential_expression.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/analysis/diffexp/kmeans_5_clusters/differential_expression.csv",
+                            "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM4705nnn/GSM4705328/suppl/GSM4705328_B6CD.cellranger.tar.gz!/cloupe.cloupe" );
         } finally {
             detector.setMaxNumberOfEntriesToSkip( ArchiveBasedSingleCellDetector.DEFAULT_MAX_NUMBER_OF_ENTRIES_TO_SKIP );
         }

@@ -4,10 +4,7 @@ import org.apache.commons.cli.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
-import ubic.gemma.core.loader.expression.singleCell.AnnDataSingleCellDataLoaderConfig;
-import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
-import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderService;
-import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
+import ubic.gemma.core.loader.expression.singleCell.*;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -44,11 +41,20 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             PREFERRED_CELL_TYPE_ASSIGNMENT = "preferredCta",
             OTHER_CELL_LEVEL_CHARACTERISTICS_FILE = "clcFile";
 
+    private static final String
+            INFER_SAMPLES_FROM_CELL_IDS_OVERLAP_OPTION = "inferSamplesFromCellIdsOverlap",
+            IGNORE_UNMATCHED_CELL_IDS_OPTION = "ignoreUnmatchedCellIds";
+
     private static final String ANNDATA_OPTION_PREFIX = "annData";
     private static final String
             ANNDATA_SAMPLE_FACTOR_NAME_OPTION = ANNDATA_OPTION_PREFIX + "SampleFactorName",
             ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION = ANNDATA_OPTION_PREFIX + "CellTypeFactorName",
             ANNDATA_UNKNOWN_CELL_TYPE_INDICATOR_OPTION = ANNDATA_OPTION_PREFIX + "UnknownCellTypeIndicator";
+
+    private static final String MEX_OPTION_PREFIX = "mex";
+    private static final String
+            MEX_DISCARD_EMPTY_CELLS_OPTION = MEX_OPTION_PREFIX + "DiscardEmptyCells",
+            MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION = MEX_OPTION_PREFIX + "AllowMappingDesignElementsToGeneSymbols";
 
     @Autowired
     private SingleCellDataLoaderService singleCellDataLoaderService;
@@ -89,11 +95,17 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private boolean preferredCellTypeAssignment;
     @Nullable
     private Path otherCellLevelCharacteristicsFile;
+    private boolean inferSamplesFromCellIdsOverlap;
+    private boolean ignoreUnmatchedCellIds;
 
     // AnnData
     private String annDataSampleFactorName;
     private String annDataCellTypeFactorName;
     private String annDataUnknownCellTypeIndicator;
+
+    // MEX
+    private boolean mexDiscardEmptyCells;
+    private boolean mexAllowMappingDesignElementsToGeneSymbols;
 
     @Nullable
     @Override
@@ -125,6 +137,9 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         options.addOption( QT_NEW_SCALE_TYPE_OPTION, "quantitation-type-new-scale-type", true, "New scale type to use for the imported quantitation type (optional, defaults to the data)" );
         options.addOption( PREFERRED_QT_OPTION, "preferred-quantitation-type", false, "Make the quantitation type the preferred one." );
         options.addOption( REPLACE_OPTION, "replace", false, "Replace an existing quantitation type. The -" + QT_NAME_OPTION + "/--quantitation-type-name option must be set." );
+        // for the generic metadata loader
+
+        // for the generic metadata loader
         options.addOption( Option.builder( CELL_TYPE_ASSIGNMENT_FILE_OPTION )
                 .longOpt( "cell-type-assignment-file" )
                 .hasArg().type( Path.class )
@@ -138,10 +153,17 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .hasArg().type( Path.class )
                 .desc( "Path to a file containing additional cell-level characteristics to import." )
                 .build() );
+        options.addOption( INFER_SAMPLES_FROM_CELL_IDS_OVERLAP_OPTION, "infer-samples-from-cell-ids-overlap", false, "Infer sample names from cell IDs overlap." );
+        options.addOption( IGNORE_UNMATCHED_CELL_IDS_OPTION, "ignore-unmatched-cell-ids", false, "Ignore unmatched cell IDs when loading cell type assignments and other cell-level characteristics." );
+
         // for AnnData
         options.addOption( ANNDATA_SAMPLE_FACTOR_NAME_OPTION, "anndata-sample-factor-name", true, "Name of the factor used for the sample name." );
         options.addOption( ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION, "anndata-cell-type-factor-name", true, "Name of the factor used for the cell type, incompatible with -" + CELL_TYPE_ASSIGNMENT_FILE_OPTION + "." );
         options.addOption( ANNDATA_UNKNOWN_CELL_TYPE_INDICATOR_OPTION, "anndata-unknown-cell-type-indicator", true, "Indicator used for missing cell type. Defaults to using the standard -1 categorical code." );
+
+        // for MEX
+        options.addOption( MEX_DISCARD_EMPTY_CELLS_OPTION, "mex-discard-empty-cells", false, "Discard empty cells when loading MEX data." );
+        options.addOption( MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION, "mex-allow-mapping-design-elements-to-gene-symbols", false, "Allow mapping probe names to gene symbols when loading MEX data (i.e. the second column in features.tsv.gz)." );
     }
 
     @Override
@@ -152,12 +174,12 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         if ( commandLine.hasOption( LOAD_CELL_TYPE_ASSIGNMENT_OPTION ) ) {
             mode = Mode.LOAD_CELL_TYPE_ASSIGNMENTS;
             if ( commandLine.hasOption( PLATFORM_OPTION ) ) {
-                throw new IllegalArgumentException( "The -" + PLATFORM_OPTION + " cannot be used with -" + LOAD_CELL_TYPE_ASSIGNMENT_OPTION + "." );
+                throw new ParseException( "The -" + PLATFORM_OPTION + " cannot be used with -" + LOAD_CELL_TYPE_ASSIGNMENT_OPTION + "." );
             }
         } else if ( commandLine.hasOption( LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION ) ) {
             mode = Mode.LOAD_CELL_LEVEL_CHARACTERISTICS;
             if ( commandLine.hasOption( PLATFORM_OPTION ) ) {
-                throw new IllegalArgumentException( "The -" + PLATFORM_OPTION + " cannot be used with -" + LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION + "." );
+                throw new ParseException( "The -" + PLATFORM_OPTION + " cannot be used with -" + LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION + "." );
             }
         } else {
             mode = Mode.LOAD_EVERYTHING;
@@ -171,7 +193,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         }
         if ( commandLine.hasOption( DATA_PATH_OPTION ) ) {
             if ( dataType == null ) {
-                throw new IllegalArgumentException( "The -" + DATA_TYPE_OPTION + " option must be set of a data path is provided." );
+                throw new ParseException( "The -" + DATA_TYPE_OPTION + " option must be set if a data path is provided." );
             }
             dataPath = commandLine.getParsedOptionValue( DATA_PATH_OPTION );
         }
@@ -189,7 +211,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         }
         if ( commandLine.hasOption( REPLACE_OPTION ) ) {
             if ( qtName == null ) {
-                throw new IllegalArgumentException( "The -" + QT_NAME_OPTION + " option must be set in order to replace an existing set of vectors." );
+                throw new MissingOptionException( "The -" + QT_NAME_OPTION + " option must be set in order to replace an existing set of vectors. Use the listQuantitationTypes command to enumerate possible values." );
             }
             replaceQt = true;
         }
@@ -199,19 +221,34 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         cellTypeAssignmentProtocolName = commandLine.getOptionValue( CELL_TYPE_ASSIGNMENT_PROTOCOL_NAME_OPTION );
         otherCellLevelCharacteristicsFile = commandLine.getParsedOptionValue( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE );
         preferredCellTypeAssignment = commandLine.hasOption( PREFERRED_CELL_TYPE_ASSIGNMENT );
+        inferSamplesFromCellIdsOverlap = commandLine.hasOption( INFER_SAMPLES_FROM_CELL_IDS_OVERLAP_OPTION );
+        ignoreUnmatchedCellIds = commandLine.hasOption( IGNORE_UNMATCHED_CELL_IDS_OPTION );
+        rejectInvalidOptionsForDataType( commandLine, dataType );
         if ( dataType == SingleCellDataType.ANNDATA ) {
             annDataSampleFactorName = commandLine.getOptionValue( ANNDATA_SAMPLE_FACTOR_NAME_OPTION );
             annDataCellTypeFactorName = commandLine.getOptionValue( ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION );
             annDataUnknownCellTypeIndicator = commandLine.getOptionValue( ANNDATA_UNKNOWN_CELL_TYPE_INDICATOR_OPTION );
             if ( cellTypeAssignmentFile != null && annDataCellTypeFactorName != null ) {
-                throw new IllegalArgumentException( String.format( "The -%s option would override the value of -%s.",
+                throw new ParseException( String.format( "The -%s option would override the value of -%s.",
                         CELL_TYPE_ASSIGNMENT_FILE_OPTION, ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION ) );
             }
-        } else {
-            for ( Option o : commandLine.getOptions() ) {
-                if ( o.getOpt().startsWith( ANNDATA_OPTION_PREFIX ) ) {
-                    throw new IllegalArgumentException( String.format( "Options starting with -%s require -%s to be set to %s.",
-                            ANNDATA_OPTION_PREFIX, DATA_TYPE_OPTION, SingleCellDataType.ANNDATA ) );
+        } else if ( dataType == SingleCellDataType.MEX ) {
+            mexDiscardEmptyCells = commandLine.hasOption( MEX_DISCARD_EMPTY_CELLS_OPTION );
+            mexAllowMappingDesignElementsToGeneSymbols = commandLine.hasOption( MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION );
+        }
+    }
+
+    private void rejectInvalidOptionsForDataType( CommandLine commandLine, @Nullable SingleCellDataType dataType ) throws ParseException {
+        SingleCellDataType[] dt = new SingleCellDataType[] { SingleCellDataType.ANNDATA, SingleCellDataType.MEX };
+        String[] prefixes = new String[] { ANNDATA_OPTION_PREFIX, MEX_OPTION_PREFIX };
+        for ( int i = 0; i < dt.length; i++ ) {
+            if ( dt[i] != dataType ) {
+                String prefix = prefixes[i];
+                for ( Option o : commandLine.getOptions() ) {
+                    if ( o.getOpt().startsWith( prefix ) ) {
+                        throw new ParseException( String.format( "Options starting with -%s require -%s to be set to %s.",
+                                prefixes[i], DATA_TYPE_OPTION, dt[i] ) );
+                    }
                 }
             }
         }
@@ -301,6 +338,10 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                     .sampleFactorName( annDataSampleFactorName )
                     .cellTypeFactorName( annDataCellTypeFactorName )
                     .unknownCellTypeIndicator( annDataUnknownCellTypeIndicator );
+        } else if ( dataType == SingleCellDataType.MEX ) {
+            configBuilder = MexSingleCellDataLoaderConfig.builder()
+                    .discardEmptyCells( mexDiscardEmptyCells )
+                    .allowMappingDesignElementsToGeneSymbols( mexAllowMappingDesignElementsToGeneSymbols );
         } else {
             configBuilder = SingleCellDataLoaderConfig.builder();
         }
@@ -318,7 +359,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         configBuilder.markQuantitationTypeAsPreferred( preferredQt );
         if ( cellTypeAssignmentFile != null ) {
             configBuilder
-                    .cellTypeAssignmentPath( cellTypeAssignmentFile )
+                    .cellTypeAssignmentFile( cellTypeAssignmentFile )
                     .markSingleCellTypeAssignmentAsPreferred( preferredCellTypeAssignment );
             if ( cellTypeAssignmentName != null ) {
                 configBuilder
@@ -332,6 +373,12 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         if ( otherCellLevelCharacteristicsFile != null ) {
             configBuilder.otherCellLevelCharacteristicsFile( otherCellLevelCharacteristicsFile );
         }
+        // infer only on-demand
+        configBuilder.inferSamplesFromCellIdsOverlap( inferSamplesFromCellIdsOverlap );
+        // always allow for using barcodes to infer the sample names from the CLI
+        configBuilder.useCellIdsIfSampleNameIsMissing( true );
+        // ignore only on-demand
+        configBuilder.ignoreUnmatchedCellIds( ignoreUnmatchedCellIds );
         return configBuilder.build();
     }
 }
