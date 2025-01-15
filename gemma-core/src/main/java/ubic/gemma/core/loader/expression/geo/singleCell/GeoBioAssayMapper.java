@@ -63,7 +63,6 @@ public class GeoBioAssayMapper extends AbstractBioAssayMapper implements Hinting
         return results;
     }
 
-
     private boolean matchGeoAccession( @Nullable DatabaseEntry accession, String n ) {
         return accession != null && accession.getExternalDatabase().getName().equals( ExternalDatabases.GEO )
                 && accession.getAccession().equals( n );
