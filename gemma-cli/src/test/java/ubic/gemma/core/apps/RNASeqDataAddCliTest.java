@@ -15,6 +15,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.analysis.service.ExpressionMetadataChangelogFileService;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.expression.DataUpdater;
 import ubic.gemma.core.search.SearchService;
@@ -119,6 +120,11 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
         @Bean
         public EntityUrlBuilder entityUrlBuilder() {
             return new EntityUrlBuilder( "https://gemma.msl.ubc.ca" );
+        }
+
+        @Bean
+        public ExpressionMetadataChangelogFileService expressionMetadataChangelogFileService() {
+            return mock();
         }
     }
 
