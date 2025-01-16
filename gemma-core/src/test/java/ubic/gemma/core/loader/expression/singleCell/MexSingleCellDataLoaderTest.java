@@ -1,10 +1,26 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.config.SettingsConfig;
+import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.loader.expression.geo.GeoFamilyParser;
+import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
+import ubic.gemma.core.loader.expression.geo.singleCell.NoSingleCellDataFoundException;
+import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
+import ubic.gemma.core.loader.util.ftp.FTPConfig;
 import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
 import ubic.gemma.core.loader.util.mapper.SimpleBioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.SimpleDesignElementMapper;
+import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -14,16 +30,44 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static ubic.gemma.core.loader.expression.singleCell.MexTestUtils.createElementsMappingFromResourceFile;
 import static ubic.gemma.core.loader.expression.singleCell.MexTestUtils.createLoaderForResourceDir;
 
-public class MexSingleCellDataLoaderTest {
+@ContextConfiguration
+public class MexSingleCellDataLoaderTest extends BaseTest {
+
+    @Configuration
+    @TestComponent
+    @Import({ SettingsConfig.class, FTPConfig.class })
+    static class Config {
+
+    }
+
+    @Autowired
+    private FTPClientFactory ftpClientFactory;
+
+    @Value("${gemma.download.path}/singleCellData/GEO")
+    private Path downloadDir;
+
+    private GeoSingleCellDetector detector;
+
+    @Before
+    public void setUp() throws IOException {
+        detector = new GeoSingleCellDetector();
+        detector.setFTPClientFactory( ftpClientFactory );
+        detector.setDownloadDirectory( downloadDir );
+    }
 
     @Test
     @Category(SlowTest.class)
@@ -31,7 +75,7 @@ public class MexSingleCellDataLoaderTest {
         // consider the first file for mapping to elements
         Map<String, CompositeSequence> elementsMapping = createElementsMappingFromResourceFile( "data/loader/expression/singleCell/GSE224438/GSM7022367_1_features.tsv.gz" );
 
-        MexSingleCellDataLoader loader = createLoaderForResourceDir( "data/loader/expression/singleCell/GSE224438", true );
+        MexSingleCellDataLoader loader = createLoaderForResourceDir( "data/loader/expression/singleCell/GSE224438" );
         loader.setIgnoreUnmatchedSamples( false );
         loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
         ArrayList<BioAssay> bas = new ArrayList<>();
@@ -93,7 +137,7 @@ public class MexSingleCellDataLoaderTest {
         // consider the first file for mapping to elements
         Map<String, CompositeSequence> elementsMapping = createElementsMappingFromResourceFile( "data/loader/expression/singleCell/GSE224438/GSM7022370_2-3_features.tsv.gz" );
 
-        MexSingleCellDataLoader loader = createLoaderForResourceDir( "data/loader/expression/singleCell/GSE224438", true );
+        MexSingleCellDataLoader loader = createLoaderForResourceDir( "data/loader/expression/singleCell/GSE224438" );
         loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
         ArrayList<BioAssay> bas = new ArrayList<>();
         bas.add( BioAssay.Factory.newInstance( "GSM7022370", null, BioMaterial.Factory.newInstance( "GSM7022370" ) ) );
@@ -165,7 +209,7 @@ public class MexSingleCellDataLoaderTest {
         // consider the first file for mapping to elements
         Map<String, CompositeSequence> elementsMapping = createElementsMappingFromResourceFile( "data/loader/expression/singleCell/GSE224438/GSM7022370_2-3_features.tsv.gz" );
 
-        MexSingleCellDataLoader loader = createLoaderForResourceDir( "data/loader/expression/singleCell/GSE224438", true );
+        MexSingleCellDataLoader loader = createLoaderForResourceDir( "data/loader/expression/singleCell/GSE224438" );
         loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
         ArrayList<BioAssay> bas = new ArrayList<>();
         // this sample does note exist
@@ -207,9 +251,11 @@ public class MexSingleCellDataLoaderTest {
      * This dataset does not filter empty droplets and thus many barcodes are simply unused and can be discarded.
      */
     @Test
-    public void testGSE141552() throws IOException {
-        MexSingleCellDataLoader loader = createLoaderForResourceDir( "data/loader/expression/singleCell/GSE141552", false );
-        loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
+    @Category({ GeoTest.class, SlowTest.class })
+    public void testGSE141552() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE141552" );
+        detector.downloadSingleCellData( series );
+        MexSingleCellDataLoader loader = ( MexSingleCellDataLoader ) detector.getSingleCellDataLoader( series );
         QuantitationType qt = loader.getQuantitationTypes().iterator().next();
         Collection<CompositeSequence> de = Collections.singleton( CompositeSequence.Factory.newInstance( "ENSG00000223972.5" ) );
         loader.setDesignElementToGeneMapper( new SimpleDesignElementMapper( de ) );
@@ -236,5 +282,14 @@ public class MexSingleCellDataLoaderTest {
                 .satisfies( vec -> {
                     assertThat( vec.getDataIndices() ).isEmpty();
                 } );
+    }
+
+    private GeoSeries readSeriesFromGeo( String accession ) throws IOException {
+        URL url = new URL( "ftp://ftp.ncbi.nlm.nih.gov/geo/series/" + accession.substring( 0, 6 ) + "nnn/" + accession + "/soft/" + accession + "_family.soft.gz" );
+        try ( InputStream is = new GZIPInputStream( ftpClientFactory.openStream( url ) ) ) {
+            GeoFamilyParser parser = new GeoFamilyParser();
+            parser.parse( is );
+            return requireNonNull( requireNonNull( parser.getUniqueResult() ).getSeriesMap().get( accession ) );
+        }
     }
 }

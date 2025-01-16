@@ -52,6 +52,7 @@ import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.DifferentialExpressionAnalysisResultListFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
+import ubic.gemma.core.loader.expression.singleCell.metadata.CellLevelCharacteristicsWriter;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchResult;
@@ -66,10 +67,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
-import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.SingleCellDimensionValueObject;
-import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -1088,10 +1086,15 @@ public class DatasetsWebService {
      * Retrieve the single-cell dimension for a given quantitation type.
      */
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @Path("/{dataset}/singleCellDimension")
-    @Operation(summary = "Retrieve a single-cell dimension of a dataset")
-    public ResponseDataObject<SingleCellDimensionValueObject> getDatasetQuantitationTypeSingleCellDimension( @PathParam("dataset") DatasetArg<?> datasetArg, @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg ) {
+    @Operation(summary = "Retrieve a single-cell dimension of a single-cell dataset")
+    public Object getDatasetSingleCellDimension(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
+            @Parameter(description = "Use numerical BioAssay identifier", hidden = true) @QueryParam("useBioAssayId") @DefaultValue("false") Boolean useBioAssayId,
+            @Context HttpHeaders headers
+    ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         QuantitationType qt;
         if ( qtArg == null ) {
@@ -1100,7 +1103,64 @@ public class DatasetsWebService {
         } else {
             qt = quantitationTypeArgService.getEntity( qtArg, ee, SingleCellExpressionDataVector.class );
         }
-        return respond( new SingleCellDimensionValueObject( singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristics( ee, qt ) ) );
+        SingleCellDimension dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristics( ee, qt );
+        if ( dimension == null ) {
+            throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
+        }
+        MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+        if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
+            return ( StreamingOutput ) output -> {
+                CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
+                writer.setUseBioAssayId( useBioAssayId );
+                writer.write( dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
+            };
+        } else {
+            return respond( new SingleCellDimensionValueObject( dimension ) );
+        }
+    }
+
+    @GET
+    @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
+    @Path("/{dataset}/cellTypeAssignment")
+    @Operation(summary = "Retrieve a cell-type assignment of a single-cell dataset")
+    public Object getDatasetCellTypeAssignment(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
+            // TODO: implement CellTypeAssignmentArg
+            @QueryParam("cellTypeAssignment") String ctaName,
+            @Parameter(description = "Use numerical BioAssay identifier", hidden = true) @QueryParam("useBioAssayId") @DefaultValue("false") Boolean useBioAssayId,
+            @Context HttpHeaders headers
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        QuantitationType qt;
+        if ( qtArg == null ) {
+            qt = singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee )
+                    .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have a preferred single-cell quantitation type." ) );
+        } else {
+            qt = quantitationTypeArgService.getEntity( qtArg, ee, SingleCellExpressionDataVector.class );
+        }
+        SingleCellDimension dimension = singleCellExpressionExperimentService.getSingleCellDimension( ee, qt );
+        if ( dimension == null ) {
+            throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
+        }
+        CellTypeAssignment cta;
+        if ( ctaName != null ) {
+            cta = singleCellExpressionExperimentService.getCellTypeAssignment( ee, qt, ctaName )
+                    .orElseThrow( () -> new NotFoundException( "No cell type assignment with name " + ctaName + " found for " + ee.getShortName() + " and " + qt.getName() + "." ) );
+        } else {
+            cta = singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, qt )
+                    .orElseThrow( () -> new NotFoundException( "No preferred cell type assignment found for " + ee.getShortName() + " and " + qt.getName() + "." ) );
+        }
+        MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+        if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
+            return ( StreamingOutput ) output -> {
+                CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
+                writer.setUseBioAssayId( useBioAssayId );
+                writer.write( cta, dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
+            };
+        } else {
+            return respond( new SingleCellDimensionValueObject( dimension ) );
+        }
     }
 
     private static final String DATA_TSV_OUTPUT_DESCRIPTION = "The following columns are available: Probe, Sequence, GeneSymbol, GeneName, GemmaId, NCBIid followed by one column per sample. GeneSymbol, GeneName, GemmaId and NCBIid are optional.";

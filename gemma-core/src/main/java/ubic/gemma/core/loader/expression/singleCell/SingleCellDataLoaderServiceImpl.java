@@ -473,11 +473,13 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
             }
             loader = configureGenericLoader( new GenericMetadataSingleCellDataLoader( loader, cellTypeAssignmentPath, otherCellCharacteristicsPath ), config );
         }
-        // apply GEO strategy for matching
+        // select the best strategy for mapping sample names to assays
         if ( ee.getAccession() != null && ee.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
+            log.info( String.format( "%s has a GEO accession, using %s for matching samples names to assays.",
+                    ee, GeoBioAssayMapper.class.getSimpleName() ) );
             loader.setBioAssayToSampleNameMapper( new GeoBioAssayMapper() );
         } else {
-            log.info( String.format( "%s does not have a GEO accession, using %s for matching sample names to BioAssays.",
+            log.info( String.format( "%s does not have a GEO accession, using %s for matching sample names to assays.",
                     ee, SimpleBioAssayMapper.class.getSimpleName() ) );
             loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
         }
