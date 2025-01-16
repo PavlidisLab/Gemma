@@ -31,7 +31,7 @@ public class BashCompletionGenerator extends AbstractCompletionGenerator {
 
     @Override
     public void beforeCompletion( PrintWriter writer ) {
-        writer.println( "function " + mangle( "__gemma_cli_" + executableName + "_complete" ) + "() {" );
+        writer.println( "function " + mangle( "__" + executableName + "_complete" ) + "() {" );
         pushIndent();
         writer.append( indent ).println( "COMPREPLY=()" );
         writer.append( indent ).println( "words=\"${COMP_WORDS[*]}\"" );
@@ -126,7 +126,7 @@ public class BashCompletionGenerator extends AbstractCompletionGenerator {
     public void afterCompletion( PrintWriter writer ) {
         popIndent();
         writer.println( "}" );
-        writer.println( "complete -o filenames -o bashdefault -F " + mangle( "__gemma_cli_" + executableName + "_complete" ) + " " + quoteIfNecessary( executableName ) );
+        writer.println( "complete -o filenames -o bashdefault -F " + mangle( "__" + executableName + "_complete" ) + " " + quoteIfNecessary( executableName ) );
     }
 
     /**
