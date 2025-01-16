@@ -2,9 +2,9 @@ package ubic.gemma.core.loader.util.mapper;
 
 import lombok.Value;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -49,12 +49,29 @@ public interface EntityMapper<T extends Identifiable> {
     }
 
     /**
+     * Match each identifier to a single candidate.
+     */
+    default Map<String, T> matchOne( Collection<T> candidates, Collection<String> identifiers ) {
+        return forCandidates( candidates ).matchOne( identifiers );
+    }
+
+    /**
      * Match the identifier to all the candidates.
      */
     default Set<T> matchAll( Collection<T> candidates, String identifier ) {
         return forCandidates( candidates ).matchAll( identifier );
     }
 
+    /**
+     * Match each identifier to all the candidates.
+     */
+    default Map<String, Set<T>> matchAll( Collection<T> candidates, Collection<String> identifiers ) {
+        return forCandidates( candidates ).matchAll( identifiers );
+    }
+
+    /**
+     * Calculate mapping statistics for a set of gene identifiers and candidates.
+     */
     default MappingStatistics getMappingStatistics( Collection<T> candidates, Collection<String> identifiers ) {
         return forCandidates( candidates ).getMappingStatistics( identifiers );
     }
@@ -78,14 +95,24 @@ public interface EntityMapper<T extends Identifiable> {
         boolean containsAny( Collection<String> identifiers );
 
         /**
-         * Map the identifier to a candidate.
+         * Map the identifier to a matching candidate.
          */
         Optional<T> matchOne( String identifier );
 
         /**
-         * Match the identifier to all the candidates.
+         * Map each identifier to a matching candidate.
+         */
+        Map<String, T> matchOne( Collection<String> identifiers );
+
+        /**
+         * Match the identifier to all the matching candidates.
          */
         Set<T> matchAll( String identifier );
+
+        /**
+         * Map each identifier to all the matching candidate.
+         */
+        Map<String, Set<T>> matchAll( Collection<String> identifiers );
 
         /**
          * Calculate mapping statistics for a set of gene identifiers.
@@ -99,11 +126,11 @@ public interface EntityMapper<T extends Identifiable> {
     @Value
     class MappingStatistics {
         /**
-         * Proportion of the gene identifiers that were mapped to a {@link CompositeSequence}.
+         * Proportion of the identifiers that were mapped to a candidate.
          */
         double overlap;
         /**
-         * Proportion of the composite sequences that were mapped by a gene identifier.
+         * Proportion of the candidates that were mapped by an identifier.
          */
         double coverage;
     }

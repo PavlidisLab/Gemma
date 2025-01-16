@@ -16,7 +16,7 @@ public class SimpleBioAssayMapper extends AbstractBioAssayMapper implements Hint
     }
 
     @Override
-    public Set<BioAssay> matchAll( Collection<BioAssay> bas, String n ) {
+    public Set<BioAssay> matchAllInternal( Collection<BioAssay> bas, String n ) {
         Set<BioAssay> results = new HashSet<>( 1 ); // ideally, should only match 1 element
 
         // BioAssay ID

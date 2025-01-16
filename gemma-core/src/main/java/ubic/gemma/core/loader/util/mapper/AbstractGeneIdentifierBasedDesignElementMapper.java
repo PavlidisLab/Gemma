@@ -70,6 +70,18 @@ public abstract class AbstractGeneIdentifierBasedDesignElementMapper<K> implemen
         }
 
         @Override
+        public Map<String, CompositeSequence> matchOne( Collection<String> identifiers ) {
+            Map<String, CompositeSequence> map = new HashMap<>();
+            for ( String id : identifiers ) {
+                K k = processIdentifier( id );
+                if ( k != null && elementsMapping.containsKey( k ) ) {
+                    map.put( id, elementsMapping.get( k ) );
+                }
+            }
+            return map;
+        }
+
+        @Override
         public Set<CompositeSequence> matchAll( String geneIdentifier ) {
             K id = processIdentifier( geneIdentifier );
             if ( id == null ) {
@@ -77,6 +89,18 @@ public abstract class AbstractGeneIdentifierBasedDesignElementMapper<K> implemen
             }
             CompositeSequence result = elementsMapping.get( id );
             return result != null ? Collections.singleton( result ) : Collections.emptySet();
+        }
+
+        @Override
+        public Map<String, Set<CompositeSequence>> matchAll( Collection<String> identifiers ) {
+            Map<String, Set<CompositeSequence>> map = new HashMap<>();
+            for ( String id : identifiers ) {
+                K k = processIdentifier( id );
+                if ( k != null && elementsMapping.containsKey( k ) ) {
+                    map.computeIfAbsent( id, ignored -> new HashSet<>() ).add( elementsMapping.get( k ) );
+                }
+            }
+            return map;
         }
 
         @Override
@@ -95,6 +119,11 @@ public abstract class AbstractGeneIdentifierBasedDesignElementMapper<K> implemen
                     .count();
             return new MappingStatistics( ( double ) overlap / identifiers.size(), ( double ) coverage / elementsMapping.size() );
         }
+    }
+
+    @Override
+    public String toString() {
+        return getName();
     }
 
     /**
