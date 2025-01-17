@@ -13,9 +13,7 @@
     <option name="EXECUTE_SCRIPT_FILE" value="false" />
     <envs />
     <method v="2">
-      <option name="BuildArtifacts" enabled="true">
-        <artifact name="gemma-web:war" />
-      </option>
+      <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/pom.xml" goal="clean package -am -pl gemma-web -DskipTests" />
     </method>
   </configuration>
 </component>
