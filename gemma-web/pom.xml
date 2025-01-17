@@ -55,7 +55,7 @@
 								<argument>--prefix</argument>
 								<argument>${project.basedir}/src/main/webapp</argument>
 								<argument>run</argument>
-								<argument>build</argument>
+								<argument>${webpackBuildCommand}</argument>
 							</arguments>
 							<skip>${skipWebpack}</skip>
 						</configuration>
@@ -234,6 +234,16 @@
 
 	<properties>
 		<skipWebpack>false</skipWebpack>
+		<webpackBuildCommand>devbuild</webpackBuildCommand>
 	</properties>
+
+	<profiles>
+		<profile>
+			<id>release</id>
+			<properties>
+				<webpackBuildCommand>build</webpackBuildCommand>
+			</properties>
+		</profile>
+	</profiles>
 
 </project>
