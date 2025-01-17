@@ -421,6 +421,10 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
      * If we get here first (e.g., via bioAssay->bioMaterial) we have to override the cascade.
      */
     private FactorValue persistFactorValue( FactorValue factorValue, Caches caches ) {
+        if ( factorValue.getId() != null ) {
+            // already persistent
+            return factorValue;
+        }
         if ( factorValue.getExperimentalFactor().getId() == null ) {
             throw new IllegalArgumentException(
                     "You must fill in the experimental factor before persisting a factorvalue" );
