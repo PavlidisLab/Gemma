@@ -86,8 +86,7 @@ public class ExpressionExperimentBatchInformationServiceTest extends AbstractJUn
         SVDValueObject svdResult = mock();
         when( svdResult.getDatePvals() ).thenReturn( Collections.singletonMap( 0, 0.0000001 ) );
         when( svdResult.getVariances() ).thenReturn( new double[] { 0.99 } );
-        ExperimentalFactor batchFactor = new ExperimentalFactor();
-        batchFactor.setName( ExperimentalDesignUtils.BATCH_FACTOR_NAME );
+        ExperimentalFactor batchFactor = ExperimentalFactor.Factory.newInstance( ExperimentalDesignUtils.BATCH_FACTOR_NAME, FactorType.CATEGORICAL );
         Characteristic c = Characteristic.Factory.newInstance( Categories.BLOCK );
         batchFactor.setCategory( c );
         ExpressionExperiment ee = new ExpressionExperiment();
@@ -107,8 +106,7 @@ public class ExpressionExperimentBatchInformationServiceTest extends AbstractJUn
 
     @Test
     public void testGetBatchConfounds() {
-        ExperimentalFactor batchFactor = new ExperimentalFactor();
-        batchFactor.setName( ExperimentalDesignUtils.BATCH_FACTOR_NAME );
+        ExperimentalFactor batchFactor = ExperimentalFactor.Factory.newInstance( ExperimentalDesignUtils.BATCH_FACTOR_NAME, FactorType.CATEGORICAL );
         Characteristic c = Characteristic.Factory.newInstance( Categories.BLOCK );
         batchFactor.setCategory( c );
         ExpressionExperiment ee = new ExpressionExperiment();

@@ -110,14 +110,14 @@ public class RandomExpressionDataMatrixUtils {
     public static ExpressionDataDoubleMatrix randomExpressionMatrix( ExpressionExperiment ee, QuantitationType qt, RealDistribution distribution ) {
         List<BioMaterial> samples = ee.getBioAssays().stream()
                 .map( BioAssay::getSampleUsed )
-                .sorted()
+                .sorted( Comparator.comparing( BioMaterial::getName ) )
                 .collect( Collectors.toList() );
         Set<ArrayDesign> ads = ee.getBioAssays().stream().map( BioAssay::getArrayDesignUsed ).collect( Collectors.toSet() );
         if ( ads.size() != 1 ) {
             throw new IllegalArgumentException( "ExpressionExperiment must use exactly one platform." );
         }
         List<CompositeSequence> designElements = ads.iterator().next().getCompositeSequences().stream()
-                .sorted()
+                .sorted( Comparator.comparing( CompositeSequence::getName ) )
                 .collect( Collectors.toList() );
         return randomExpressionMatrix( ee, qt, designElements, samples, distribution );
     }
@@ -140,7 +140,7 @@ public class RandomExpressionDataMatrixUtils {
     private static ExpressionDataDoubleMatrix randomExpressionMatrix( ExpressionExperiment ee, QuantitationType qt, IntegerDistribution distribution ) {
         List<BioMaterial> samples = ee.getBioAssays().stream()
                 .map( BioAssay::getSampleUsed )
-                .sorted()
+                .sorted( Comparator.comparing( BioMaterial::getName ) )
                 .collect( Collectors.toList() );
         return randomExpressionMatrix( ee, qt, samples, distribution );
     }
