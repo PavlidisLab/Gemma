@@ -24,7 +24,7 @@ public class GeoBioAssayMapper extends AbstractBioAssayMapper implements Hinting
     }
 
     @Override
-    public Set<BioAssay> matchAll( Collection<BioAssay> bas, String sampleName ) {
+    protected Set<BioAssay> matchAllInternal( Collection<BioAssay> bas, String sampleName ) {
         Set<BioAssay> results = new HashSet<>( 1 ); // ideally, should only match 1 element
 
         // BioAssay GEO accession (canonical)

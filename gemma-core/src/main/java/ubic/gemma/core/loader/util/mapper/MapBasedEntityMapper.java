@@ -74,6 +74,15 @@ public class MapBasedEntityMapper<T extends Identifiable> implements EntityMappe
         }
 
         @Override
+        public Map<String, T> matchOne( Collection<String> identifiers ) {
+            return identifiers.stream()
+                    .map( MapBasedEntityMapper.this::processIdentifier )
+                    .filter( Objects::nonNull )
+                    .filter( elementsMapping::containsKey )
+                    .collect( Collectors.toMap( id -> id, elementsMapping::get ) );
+        }
+
+        @Override
         public Set<T> matchAll( String identifier ) {
             String id = processIdentifier( identifier );
             if ( id == null ) {
@@ -81,6 +90,15 @@ public class MapBasedEntityMapper<T extends Identifiable> implements EntityMappe
             }
             T result = elementsMapping.get( id );
             return result != null ? Collections.singleton( result ) : Collections.emptySet();
+        }
+
+        @Override
+        public Map<String, Set<T>> matchAll( Collection<String> identifiers ) {
+            return identifiers.stream()
+                    .map( MapBasedEntityMapper.this::processIdentifier )
+                    .filter( Objects::nonNull )
+                    .filter( elementsMapping::containsKey )
+                    .collect( Collectors.toMap( id -> id, id -> Collections.singleton( elementsMapping.get( id ) ) ) );
         }
 
         @Override
@@ -101,6 +119,11 @@ public class MapBasedEntityMapper<T extends Identifiable> implements EntityMappe
                     .count();
             return new MappingStatistics( ( double ) overlap / identifiers.size(),
                     ( double ) coverage / elementsMapping.size() );
+        }
+
+        @Override
+        public String toString() {
+            return getName();
         }
     }
 

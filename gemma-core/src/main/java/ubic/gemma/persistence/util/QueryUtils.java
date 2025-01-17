@@ -216,34 +216,31 @@ public class QueryUtils {
 
         @Override
         public boolean hasNext() {
-            if ( offset == 0 && results == null ) {
-                fetchResults();
-            }
+            fetchResultsIfNecessary();
             return ( offset % fetchSize ) < results.size();
         }
 
         @Override
         public T next() {
-            // either at the first record, or at the end of the current batch
-            if ( ( offset == 0 && results == null ) || ( offset > 0 && offset % fetchSize == 0 ) ) {
-                fetchResults();
-            }
-            if ( offset % fetchSize >= results.size() ) {
-                throw new NoSuchElementException();
-            }
+            fetchResultsIfNecessary();
             try {
                 return results.get( offset % fetchSize );
+            } catch ( IndexOutOfBoundsException e ) {
+                throw new NoSuchElementException();
             } finally {
                 offset++;
             }
         }
 
-        private void fetchResults() {
-            //noinspection unchecked
-            results = query
-                    .setFirstResult( offset )
-                    .setMaxResults( fetchSize )
-                    .list();
+        private void fetchResultsIfNecessary() {
+            // either at the first record, or at the end of the current batch
+            if ( ( offset == 0 && results == null ) || ( offset > 0 && offset % fetchSize == 0 ) ) {
+                //noinspection unchecked
+                results = query
+                        .setFirstResult( offset )
+                        .setMaxResults( fetchSize )
+                        .list();
+            }
         }
     }
 

@@ -89,7 +89,20 @@ public class ChainedEntityMapper<T extends Identifiable> implements EntityMapper
 
         @Override
         public Optional<T> matchOne( String identifier ) {
-            return Arrays.stream( chain ).map( e -> e.matchOne( identifier ) ).filter( Optional::isPresent ).map( Optional::get ).findFirst();
+            return Arrays.stream( chain )
+                    .map( e -> e.matchOne( identifier ) )
+                    .filter( Optional::isPresent )
+                    .map( Optional::get )
+                    .findFirst();
+        }
+
+        @Override
+        public Map<String, T> matchOne( Collection<String> identifiers ) {
+            return Arrays.stream( chain )
+                    .map( e -> e.matchOne( identifiers ) )
+                    .filter( m -> !m.isEmpty() )
+                    .findFirst()
+                    .orElse( Collections.emptyMap() );
         }
 
         @Override
@@ -102,12 +115,26 @@ public class ChainedEntityMapper<T extends Identifiable> implements EntityMapper
         }
 
         @Override
+        public Map<String, Set<T>> matchAll( Collection<String> identifiers ) {
+            return Arrays.stream( chain )
+                    .map( e -> e.matchAll( identifiers ) )
+                    .filter( m -> !m.isEmpty() )
+                    .findFirst()
+                    .orElse( Collections.emptyMap() );
+        }
+
+        @Override
         public MappingStatistics getMappingStatistics( Collection<String> identifiers ) {
             return Arrays.stream( chain )
                     .map( e -> e.getMappingStatistics( identifiers ) )
                     .filter( s -> s.getOverlap() > 0 )
                     .findFirst()
                     .orElse( new MappingStatistics( 0, 0 ) );
+        }
+
+        @Override
+        public String toString() {
+            return getName();
         }
     }
 }

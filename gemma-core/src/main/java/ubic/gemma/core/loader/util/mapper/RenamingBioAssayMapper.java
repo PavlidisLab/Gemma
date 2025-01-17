@@ -43,10 +43,7 @@ public class RenamingBioAssayMapper implements BioAssayMapper {
 
     @Override
     public boolean containsAny( Collection<BioAssay> bioAssays, Collection<String> sampleNames ) {
-        return delegate.containsAny( bioAssays, sampleNames.stream()
-                .map( sampleNameToBioAssayName::get )
-                .filter( Objects::nonNull )
-                .collect( Collectors.toSet() ) );
+        return delegate.containsAny( bioAssays, translate( sampleNames ) );
     }
 
     @Override
@@ -60,6 +57,11 @@ public class RenamingBioAssayMapper implements BioAssayMapper {
         return translate( sampleName )
                 .map( bioAssayName -> delegate.matchAll( bioAssays, bioAssayName ) )
                 .orElse( Collections.emptySet() );
+    }
+
+    @Override
+    public String toString() {
+        return getName();
     }
 
     @Override
@@ -89,16 +91,18 @@ public class RenamingBioAssayMapper implements BioAssayMapper {
 
         @Override
         public boolean containsAny( Collection<String> sampleNames ) {
-            return delegate.containsAny( sampleNames.stream()
-                    .map( sampleNameToBioAssayName::get )
-                    .filter( Objects::nonNull )
-                    .collect( Collectors.toSet() ) );
+            return delegate.containsAny( translate( sampleNames ) );
         }
 
         @Override
         public Optional<BioAssay> matchOne( String sampleName ) {
             return translate( sampleName )
                     .flatMap( delegate::matchOne );
+        }
+
+        @Override
+        public Map<String, BioAssay> matchOne( Collection<String> identifiers ) {
+            return delegate.matchOne( translate( identifiers ) );
         }
 
         @Override
@@ -109,15 +113,29 @@ public class RenamingBioAssayMapper implements BioAssayMapper {
         }
 
         @Override
+        public Map<String, Set<BioAssay>> matchAll( Collection<String> identifiers ) {
+            return delegate.matchAll( translate( identifiers ) );
+        }
+
+        @Override
         public MappingStatistics getMappingStatistics( Collection<String> identifiers ) {
-            return delegate.getMappingStatistics( identifiers.stream()
-                    .map( sampleNameToBioAssayName::get )
-                    .filter( Objects::nonNull )
-                    .collect( Collectors.toSet() ) );
+            return delegate.getMappingStatistics( translate( identifiers ) );
+        }
+
+        @Override
+        public String toString() {
+            return getName();
         }
     }
 
     private Optional<String> translate( String sampleName ) {
         return Optional.ofNullable( sampleNameToBioAssayName.get( sampleName ) );
+    }
+
+    private Collection<String> translate( Collection<String> sampleNames ) {
+        return sampleNames.stream()
+                .map( sampleNameToBioAssayName::get )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toSet() );
     }
 }
