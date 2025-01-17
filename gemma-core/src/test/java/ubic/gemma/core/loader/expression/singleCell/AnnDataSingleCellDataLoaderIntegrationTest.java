@@ -4,13 +4,13 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
-import ubic.gemma.core.loader.util.mapper.SimpleBioAssayMapper;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.singleCell.AnnDataDetector;
 import ubic.gemma.core.loader.expression.geo.singleCell.NoSingleCellDataFoundException;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTranspose;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
+import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
+import ubic.gemma.core.loader.util.mapper.SimpleBioAssayMapper;
 import ubic.gemma.core.util.test.BaseIntegrationTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.Characteristic;
@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatFreeMemoryIsGreaterOrEqualTo;
 
 public class AnnDataSingleCellDataLoaderIntegrationTest extends BaseIntegrationTest {
 
@@ -96,6 +97,7 @@ public class AnnDataSingleCellDataLoaderIntegrationTest extends BaseIntegrationT
     }
 
     private Path downloadAndTransposeGSE225158() throws IOException {
+        assumeThatFreeMemoryIsGreaterOrEqualTo( 64 * 1024 * 1024 * 1024L, false );
         Path p = Paths.get( downloadPath, "singleCellData/GEO/GSE225158_transposed.h5ad" );
         if ( Files.exists( p ) ) {
             return p;
