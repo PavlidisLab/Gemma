@@ -306,7 +306,8 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-text</artifactId>
-			<version>1.13.0</version>
+			<!-- 1.13.0 is not compatible with commons-configuration2 2.8.0 -->
+			<version>1.12.0</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-logging</groupId>
@@ -628,6 +629,7 @@
 							<ignoredVersions>.*-a.*,.*-b.*,.*-M.*</ignoredVersions>
 							<dependencyExcludes>
 								<dependencyExclude>org.apache.commons:commons-configuration2:*</dependencyExclude>
+								<dependencyExclude>org.apache.commons:commons-text:*</dependencyExclude>
 								<dependencyExclude>org.hibernate:hibernate-core:*</dependencyExclude>
 								<dependencyExclude>org.hibernate:hibernate-ehcache:*</dependencyExclude>
 								<dependencyExclude>net.sf.ehcache:ehcache-core:*</dependencyExclude>
