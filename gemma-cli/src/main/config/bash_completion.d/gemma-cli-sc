@@ -1,4 +1,4 @@
-function __gemma_cli_gemma_cli_sc_complete() {
+function __gemma_cli_sc_complete() {
     COMPREPLY=()
     words="${COMP_WORDS[*]}"
     current_option="${COMP_WORDS[$COMP_CWORD-1]}"
@@ -1205,4 +1205,4 @@ function __gemma_cli_gemma_cli_sc_complete() {
         mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--force --help -f -h" -- "$2")
     fi
 }
-complete -o filenames -o bashdefault -F __gemma_cli_gemma_cli_sc_complete gemma-cli-sc
+complete -o filenames -o bashdefault -F __gemma_cli_sc_complete gemma-cli-sc
