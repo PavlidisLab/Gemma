@@ -711,7 +711,7 @@
 		<jawr.version>3.9</jawr.version>
 		<lucene.version>3.6.2</lucene.version>
 		<slack.version>1.45.1</slack.version>
-		<micrometer.version>1.14.3</micrometer.version>
+		<micrometer.version>1.13.6</micrometer.version>
 		<dom4j.version>2.1.4</dom4j.version>
 		<log4j.version>2.24.3</log4j.version>
 		<mysql.version>8.4.0</mysql.version>
