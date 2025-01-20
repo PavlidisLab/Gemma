@@ -186,7 +186,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
             rawVector.setDesignElement( v.getDesignElement() );
             rawVector.setDataAsDoubles( aggregateData( v, newBad, cta, sourceBioAssayMap, sourceSampleToIndex, cellTypeIndices, method, cellsByBioAssay, designElementsByBioAssay, cellByDesignElementByBioAssay, canLog2cpm, normalizationFactor, librarySize ) );
             rawVectors.add( rawVector );
-            if ( rawVectors.size() % 100 == 0 ) {
+            if ( rawVectors.size() % 1000 == 0 ) {
                 log.info( String.format( "Aggregated %d/%d single-cell vectors.", rawVectors.size(), vectors.size() ) );
             }
         }
