@@ -1,5 +1,6 @@
 //file:noinspection GrUnresolvedAccess
 
+def buildHash
 def testdbUrl
 def gemmaVersion
 def baseCodeVersion
@@ -28,7 +29,7 @@ pipeline {
         string(name: 'STAGING_DATA_DIR', defaultValue: '/space/staginggemmaData', description: 'Directory where staging data is stored.')
         string(name: 'DEV_DATA_DIR', defaultValue: '/space/sandboxgemmaData', description: 'Directory where development data is stored.')
         string(name: 'MAVEN_SITES_DIR', defaultValue: '/space/web/maven-sites', description: 'Directory where Maven sites are deployed.')
-        string(name: 'CLI_DIR_PREFIX', defaultValue: '/space/grp/gemma-cli', description: 'Prefix for Gemma CLI deployment directory.')
+        string(name: 'CLI_DIR_PREFIX', defaultValue: '/space/opt/gemma-cli', description: 'Prefix for Gemma CLI deployment directory.')
         string(name: 'DEPLOY_DIR_PREFIX', defaultValue: '/var/local/tomcat/gemma', description: 'Prefix for Gemma Web deployment directories.')
         // either hotfix or release, we only have one staging server & CLI symlink
         choice(name: 'STAGING_BRANCH', choices: ['hotfix', 'release'], description: 'Branch deployed to the staging server and CLI symlink.')
@@ -46,6 +47,7 @@ pipeline {
                     testdbUrl = sh script: 'mvn help:evaluate -Dexpression=gemma.testdb.build.url -q -DforceStdout', returnStdout: true
                     gemmaVersion = sh script: 'mvn help:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true
                     baseCodeVersion = sh script: 'mvn help:evaluate -Dartifact=baseCode:baseCode -Dexpression=project.version -q -DforceStdout', returnStdout: true
+                    buildHash = env.GIT_COMMIT
                     if (env.BRANCH_NAME == "master" && gemmaVersion.endsWith("-SNAPSHOT")) {
                         error("A production build must not have a -SNAPSHOT suffix.")
                     }
@@ -68,12 +70,14 @@ pipeline {
                         }
                     }
                     if (env.BRANCH_NAME == 'master') {
-                        cliDir = params.CLI_DIR_PREFIX + '-' + gemmaVersion
-                        cliDirSymlink = params.CLI_DIR_PREFIX
+                        cliDir = params.CLI_DIR_PREFIX + '/builds/' + buildHash
+                        cliDirSymlink = params.CLI_DIR_PREFIX + '/refs/production'
                     } else {
-                        cliDir = params.CLI_DIR_PREFIX + '-' + gemmaVersion
+                        cliDir = params.CLI_DIR_PREFIX + '/builds/' + buildHash
                         if (env.BRANCH_NAME =~ '^' + params.STAGING_BRANCH + '-.*') {
-                            cliDirSymlink = params.CLI_DIR_PREFIX + '-staging'
+                            cliDirSymlink = params.CLI_DIR_PREFIX + '/refs/staging'
+                        } else {
+                            cliDirSymlink = params.CLI_DIR_PREFIX + "/refs/${gemmaVersion}"
                         }
                     }
                 }
@@ -275,18 +279,15 @@ pipeline {
                     when {
                         anyOf {
                             branch 'master'
-                            branch 'hotfix-*'
-                            branch 'release-*'
+                            branch params.STAGING_BRANCH + '-*'
                             // never deploy the development CLI, it's too risky
+                            // branch 'development'
+                            expression { params.FORCE_DEPLOY }
                         }
                     }
                     steps {
                         sh "rsync -av --delete gemma-cli/target/appassembler/ ${cliDir}/"
-                        script {
-                            if (cliDirSymlink != null) {
-                                sh "ln -Tsf ${cliDir} ${cliDirSymlink}"
-                            }
-                        }
+                        sh "ln -Tsf ${cliDir} ${cliDirSymlink}"
                     }
                 }
             }
