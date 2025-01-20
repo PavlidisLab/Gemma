@@ -88,23 +88,6 @@ public class SingleCellExpressionDataVectorUtils {
         return end;
     }
 
-    /**
-     * Check if a given cell has a given characteristic.
-     */
-    public static boolean hasCharacteristic( SingleCellExpressionDataVector vector, int cellIndex, Characteristic characteristic ) {
-        for ( CellLevelCharacteristics clc : vector.getSingleCellDimension().getCellTypeAssignments() ) {
-            if ( characteristic.equals( clc.getCharacteristic( cellIndex ) ) ) {
-                return true;
-            }
-        }
-        for ( CellLevelCharacteristics clc : vector.getSingleCellDimension().getCellLevelCharacteristics() ) {
-            if ( characteristic.equals( clc.getCharacteristic( cellIndex ) ) ) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public static Consumer<SingleCellExpressionDataVector> createStreamMonitor( String logCategory, long numVecs ) {
         Log log = LogFactory.getLog( logCategory );
         return new Consumer<SingleCellExpressionDataVector>() {
