@@ -25,9 +25,8 @@ import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.*;
-import ubic.gemma.persistence.util.Filter;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.persistence.service.BaseService;
+import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -102,11 +101,11 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
     Collection<Characteristic> findByValueLike( String search );
 
     /**
-     * @see CharacteristicDao#findCharacteristicsByValueUriOrValueLikeGroupedByNormalizedValue(String)
+     * @see CharacteristicDao#findCharacteristicsByValueUriOrValueLikeGroupedByNormalizedValue(String, String, Collection)
      */
-    Map<String, Characteristic> findCharacteristicsByValueUriOrValueLike( String search );
+    Map<String, Characteristic> findByValueUriOrValueLike( String search, @Nullable Collection<Class<?>> parentClasses );
 
-    Map<String, Long> countCharacteristicsByValueUri( Collection<String> uris );
+    Map<String, Long> countByValueUri( Collection<String> uris, @Nullable Collection<Class<?>> parentClasses );
 
     /**
      * @param characteristics characteristics

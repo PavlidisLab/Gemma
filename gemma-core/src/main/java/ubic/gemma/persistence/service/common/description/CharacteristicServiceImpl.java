@@ -108,14 +108,18 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Characteristic> findCharacteristicsByValueUriOrValueLike( String search ) {
-        return this.characteristicDao.findCharacteristicsByValueUriOrValueLikeGroupedByNormalizedValue( search + '%' );
+    public Map<String, Characteristic> findByValueUriOrValueLike( String search, @Nullable Collection<Class<?>> parentClasses ) {
+        Map<String, Characteristic> results = new HashMap<>();
+        results.putAll( this.characteristicDao.findByValueLikeGroupedByNormalizedValue( escapeLike( search ) + '%', parentClasses ) );
+        // will override term found by like with an exact URI match if they have the same normalized value
+        results.putAll( this.characteristicDao.findByValueUriGroupedByNormalizedValue( search, parentClasses ) );
+        return results;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Long> countCharacteristicsByValueUri( Collection<String> uris ) {
-        return this.characteristicDao.countCharacteristicsByValueUriGroupedByNormalizedValue( uris );
+    public Map<String, Long> countByValueUri( Collection<String> uris, @Nullable Collection<Class<?>> parentClasses ) {
+        return this.characteristicDao.countByValueUriGroupedByNormalizedValue( uris, parentClasses );
     }
 
     @Override
