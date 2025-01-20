@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import lombok.Value;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
@@ -109,28 +108,25 @@ public interface CharacteristicDao
     Characteristic findBestByUri( String uri );
 
     /**
-     * Represents a set of characteristics grouped by {@link Characteristic#getValueUri()} or {@link Characteristic#getValue()}.
+     * Find characteristics by URI.
+     * <p>
+     * The mapping key is the normalized value of the characteristics as per {@link #normalizeByValue(Characteristic)}.
      */
-    @Value
-    class CharacteristicUsageFrequency {
-        String valueUri;
-        String value;
-        Long count;
-    }
+    Map<String, Characteristic> findByValueUriGroupedByNormalizedValue( String valueUri, @Nullable Collection<Class<?>> parentClasses );
 
     /**
      * Find characteristics by value matching the provided LIKE pattern.
      * <p>
      * The mapping key is the normalized value of the characteristics as per {@link #normalizeByValue(Characteristic)}.
      */
-    Map<String, Characteristic> findCharacteristicsByValueUriOrValueLikeGroupedByNormalizedValue( String value );
+    Map<String, Characteristic> findByValueLikeGroupedByNormalizedValue( String valueLike, @Nullable Collection<Class<?>> parentClasses );
 
     /**
      * Count characteristics matching the provided value URIs.
      * <p>
      * The mapping key is the normalized value of the characteristics as per {@link #normalizeByValue(Characteristic)}.
      */
-    Map<String, Long> countCharacteristicsByValueUriGroupedByNormalizedValue( Collection<String> uris );
+    Map<String, Long> countByValueUriGroupedByNormalizedValue( Collection<String> uris, @Nullable Collection<Class<?>> parentClasses );
 
     /**
      * Normalize a characteristic by value.

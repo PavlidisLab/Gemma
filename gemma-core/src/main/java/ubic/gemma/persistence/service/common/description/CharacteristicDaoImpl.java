@@ -64,6 +64,10 @@ import static ubic.gemma.persistence.util.QueryUtils.*;
 public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Characteristic, CharacteristicValueObject>
         implements CharacteristicDao {
 
+    // TODO: populate these from Hibernate's class metadata
+    Class<?>[] OWNING_CLASS = { BioMaterial.class, ExpressionExperiment.class, ExperimentalDesign.class, FactorValue.class, GeneSet.class };
+    String[] FOREIGN_KEY = { "BIO_MATERIAL_FK", "INVESTIGATION_FK", "EXPERIMENTAL_DESIGN_FK", "FACTOR_VALUE_FK", "GENE_SET_FK" };
+
     @Autowired
     public CharacteristicDaoImpl( SessionFactory sessionFactory ) {
         super( Characteristic.class, sessionFactory );
@@ -280,28 +284,52 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
-    public Map<String, Long> countCharacteristicsByValueUriGroupedByNormalizedValue( Collection<String> uris ) {
-        if ( uris.isEmpty() )
-            return Collections.emptyMap();
-        Query q = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select lower(coalesce(char.valueUri, char.value)), count(char) from Characteristic char "
-                        + "where char.valueUri in :uris "
-                        + "group by coalesce(char.valueUri, char.value)" );
-        return streamByBatch( q, "uris", uris, 2048, Object[].class )
-                .collect( Collectors.groupingBy( row -> ( String ) row[0], Collectors.summingLong( row -> ( Long ) row[1] ) ) );
-    }
-
-    @Override
-    public Map<String, Characteristic> findCharacteristicsByValueUriOrValueLikeGroupedByNormalizedValue( String value ) {
+    public Map<String, Characteristic> findCharacteristicsByValueUriGroupedByNormalizedValue( String valueUri , @Nullable Collection<Class<?>> parentClasses ) {
         //noinspection unchecked
         return ( ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select lower(coalesce(char.valueUri, char.value)), max(char) from Characteristic char "
-                        + "where char.valueUri = :value or char.value like :value "
-                        + "group by coalesce(char.valueUri, char.value)" )
-                .setParameter( "value", value )
+                .createSQLQuery( "select lower(coalesce(VALUE_URI, `VALUE`)) as V, {C.*} from CHARACTERISTIC {C} "
+                        + "where VALUE_URI = :valueUri "
+                        + ( parentClasses != null ? "and " + createOwningClassConstraint( parentClasses, "C" ) + " " : "" )
+                        + "group by coalesce(VALUE_URI, `VALUE`)" )
+
+                .addScalar( "V", StandardBasicTypes.STRING )
+                .addEntity( "C", Characteristic.class )
+                .setParameter( "valueUri", valueUri )
                 .list() )
                 .stream()
                 .collect( Collectors.toMap( row -> ( String ) row[0], row -> ( Characteristic ) row[1] ) );
+    }
+
+    @Override
+    public Map<String, Characteristic> findCharacteristicsByValueLikeGroupedByNormalizedValue( String valueLike, @Nullable Collection<Class<?>> parentClasses ) {
+        //noinspection unchecked
+        return ( ( List<Object[]> ) this.getSessionFactory().getCurrentSession()
+                .createSQLQuery( "select lower(coalesce(VALUE_URI, `VALUE`)) as V, {C.*} from CHARACTERISTIC {C} "
+                        + "where `VALUE` like :valueLike "
+                        + ( parentClasses != null ? "and " + createOwningClassConstraint( parentClasses, "C" ) + " " : "" )
+                        + "group by coalesce(VALUE_URI, `VALUE`)" )
+
+                .addScalar( "V", StandardBasicTypes.STRING )
+                .addEntity( "C", Characteristic.class )
+                .setParameter( "valueLike", valueLike )
+                .list() )
+                .stream()
+                .collect( Collectors.toMap( row -> ( String ) row[0], row -> ( Characteristic ) row[1] ) );
+    }
+
+    @Override
+    public Map<String, Long> countCharacteristicsByValueUriGroupedByNormalizedValue( Collection<String> uris, @Nullable Collection<Class<?>> parentClasses ) {
+        if ( uris.isEmpty() )
+            return Collections.emptyMap();
+        Query q = this.getSessionFactory().getCurrentSession()
+                .createSQLQuery( "select lower(coalesce(VALUE_URI, `VALUE`)) as V, count(*) as COUNT from CHARACTERISTIC C "
+                        + "where VALUE_URI in :uris "
+                        + ( parentClasses != null ? "and " + createOwningClassConstraint( parentClasses, "C" ) + " " : "" )
+                        + "group by coalesce(VALUE_URI, `VALUE`)" )
+                .addScalar( "V", StandardBasicTypes.STRING )
+                .addScalar( "COUNT", StandardBasicTypes.LONG );
+        return streamByBatch( q, "uris", uris, 2048, Object[].class )
+                .collect( Collectors.groupingBy( row -> ( String ) row[0], Collectors.summingLong( row -> ( Long ) row[1] ) ) );
     }
 
     @Override
@@ -340,45 +368,17 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         }
 
         Set<Long> characteristicIds = characteristics.stream().map( Characteristic::getId ).collect( Collectors.toSet() );
-        Class<?>[] classes = { BioMaterial.class, ExpressionExperiment.class, ExperimentalDesign.class, FactorValue.class, GeneSet.class };
-        String[] foreignKeys = { "BIO_MATERIAL_FK", "INVESTIGATION_FK", "EXPERIMENTAL_DESIGN_FK", "FACTOR_VALUE_FK", "GENE_SET_FK" };
-
-        // ensure that at least one of the parentClass-associated column is non-null
-        Set<String> foreignKeyToRestrictOn = null;
-        if ( parentClasses != null ) {
-            foreignKeyToRestrictOn = new HashSet<>();
-            for ( int i = 0; i < classes.length; i++ ) {
-                final int j = i;
-                if ( parentClasses.stream().anyMatch( pc -> pc.isAssignableFrom( classes[j] ) ) ) {
-                    foreignKeyToRestrictOn.add( foreignKeys[i] );
-                }
-            }
-        }
 
         //  boolean gene2GoOk = parentClasses == null || parentClasses.stream().anyMatch( pc -> pc.isAssignableFrom( Gene2GOAssociation.class ) );
         boolean efOK = parentClasses == null || parentClasses.stream().anyMatch( pc -> pc.isAssignableFrom( ExperimentalFactor.class ) );
-
-        String extraClause;
-        if ( foreignKeyToRestrictOn != null ) {
-            if ( foreignKeyToRestrictOn.isEmpty() ) {
-                // ensure that all columns are NULL
-                //language=HQL
-                extraClause = " and (" + Arrays.stream( foreignKeys ).map( fk -> "C." + fk + " is NULL" ).collect( Collectors.joining( " and " ) ) + ")";
-            } else {
-                //language=HQL
-                extraClause = " and (" + foreignKeyToRestrictOn.stream().map( fk -> "C." + fk + " is not NULL" ).collect( Collectors.joining( " or " ) ) + ")";
-            }
-        } else {
-            extraClause = "";
-        }
 
         //noinspection unchecked
         List<Object[]> result = getSessionFactory().getCurrentSession()
                 .createSQLQuery( "select C.ID, C.BIO_MATERIAL_FK, C.INVESTIGATION_FK, C.EXPERIMENTAL_DESIGN_FK, C.FACTOR_VALUE_FK, C.GENE_SET_FK from CHARACTERISTIC C "
                         + "left join INVESTIGATION I on C.INVESTIGATION_FK = I.ID "
                         + "where C.ID in :ids "
-                        + "and (I.class is NULL or I.class = 'ExpressionExperiment') " // for investigations, only retrieve EEs
-                        + extraClause )
+                        + "and (I.class is NULL or I.class = 'ExpressionExperiment')" // for investigations, only retrieve EEs
+                        + ( parentClasses != null ? " and " + createOwningClassConstraint( parentClasses, "C" ) : "" ) )
                 .setParameterList( "ids", optimizeParameterList( characteristicIds ) )
                 .setMaxResults( maxResults )
                 .list();
@@ -392,9 +392,9 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                 continue;
             }
             boolean found = false;
-            for ( int i = 0; i < classes.length; i++ ) {
+            for ( int i = 0; i < OWNING_CLASS.length; i++ ) {
                 if ( row[i + 1] != null ) {
-                    Identifiable parentObject = ( Identifiable ) getSessionFactory().getCurrentSession().load( classes[i], ( ( BigInteger ) row[i + 1] ).longValue() );
+                    Identifiable parentObject = ( Identifiable ) getSessionFactory().getCurrentSession().load( OWNING_CLASS[i], ( ( BigInteger ) row[i + 1] ).longValue() );
                     charToParent.put( c, parentObject );
                     found = true;
                     break;
@@ -449,6 +449,34 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         }
 
         return charToParent;
+    }
+
+    /**
+     * Create a SQL constrait to ensure that the characteristic is owned by an entity of the given class.
+     */
+    private String createOwningClassConstraint( Collection<Class<?>> parentClasses, String tableAlias ) {
+        // ensure that at least one of the parentClass-associated column is non-null
+        Set<String> foreignKeyToRestrictOn = new HashSet<>();
+        for ( Class<?> parentClass : parentClasses ) {
+            boolean found = false;
+            for ( int i = 0; i < OWNING_CLASS.length; i++ ) {
+                if ( parentClass.isAssignableFrom( OWNING_CLASS[i] ) ) {
+                    foreignKeyToRestrictOn.add( FOREIGN_KEY[i] );
+                    found = true;
+                }
+            }
+            if ( !found ) {
+                throw new IllegalArgumentException( "No owning class of type " + parentClass + " is configured for Characteristic." );
+            }
+        }
+        if ( foreignKeyToRestrictOn.isEmpty() ) {
+            // ensure that all columns are NULL
+            //language=HQL
+            return "(" + Arrays.stream( FOREIGN_KEY ).map( fk -> tableAlias + "." + fk + " is NULL" ).collect( Collectors.joining( " and " ) ) + ")";
+        } else {
+            //language=HQL
+            return "(" + foreignKeyToRestrictOn.stream().map( fk -> tableAlias + "." + fk + " is not NULL" ).collect( Collectors.joining( " or " ) ) + ")";
+        }
     }
 
     @Override
