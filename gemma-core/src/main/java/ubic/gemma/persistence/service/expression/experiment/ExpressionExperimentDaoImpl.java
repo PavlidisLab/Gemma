@@ -30,12 +30,10 @@ import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
-import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.profiling.StopWatchUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -67,7 +65,6 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingLong;
-import static ubic.gemma.model.common.description.CharacteristicUtils.*;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.*;
 import static ubic.gemma.persistence.util.QueryUtils.*;
 
@@ -479,137 +476,81 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
-    public Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( Long eeId ) {
-        /*
-         * Note we're not using 'distinct' here but the 'equals' for AnnotationValueObject should aggregate these. More
-         * work to do.
-         */
-        List<Characteristic> raw = this.getSessionFactory().getCurrentSession().createQuery(
-                "select c from ExpressionExperiment e " + "join e.bioAssays ba join ba.sampleUsed bm "
-                        + "join bm.characteristics c where e.id= :eeid" ).setParameter( "eeid", eeId ).list();
-
-        Collection<AnnotationValueObject> results = new HashSet<>();
-        /*
-         * TODO we need to filter these better; some criteria could be included in the query
-         */
-        for ( Characteristic c : raw ) {
-
-            // filter. Could include this in the query if it isn't too complicated.
-            if ( isUncategorized( c ) || isFreeTextCategory( c ) ) {
-                continue;
-            }
-
-            if ( isFreeText( c ) ) {
-                continue;
-            }
-
-            if ( "MaterialType".equalsIgnoreCase( c.getCategory() )
-                    || "molecular entity".equalsIgnoreCase( c.getCategory() )
-                    || "LabelCompound".equalsIgnoreCase( c.getCategory() ) ) {
-                continue;
-            }
-
-            if ( BaselineSelection.isBaselineCondition( c ) ) {
-                continue;
-            }
-
-            AnnotationValueObject annotationValue = new AnnotationValueObject( c, BioMaterial.class );
-
-            results.add( annotationValue );
+    public Map<Class<? extends Identifiable>, List<Characteristic>> getAllAnnotations( ExpressionExperiment expressionExperiment, boolean useEe2c ) {
+        if ( useEe2c ) {
+            //noinspection unchecked
+            List<Object[]> result = getSessionFactory().getCurrentSession()
+                    .createSQLQuery( "select T.`VALUE` as `VALUE`, T.VALUE_URI as VALUE_URI, T.CATEGORY as CATEGORY, T.CATEGORY_URI as CATEGORY_URI, T.EVIDENCE_CODE as EVIDENCE_CODE, T.LEVEL as LEVEL from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
+                            + "where T.EXPRESSION_EXPERIMENT_FK = :eeId" )
+                    .addScalar( "VALUE", StandardBasicTypes.STRING )
+                    .addScalar( "VALUE_URI", StandardBasicTypes.STRING )
+                    .addScalar( "CATEGORY", StandardBasicTypes.STRING )
+                    .addScalar( "CATEGORY_URI", StandardBasicTypes.STRING )
+                    // FIXME: use an EnumType for converting
+                    .addScalar( "EVIDENCE_CODE", StandardBasicTypes.STRING )
+                    .addScalar( "LEVEL", StandardBasicTypes.CLASS )
+                    .setParameter( "eeId", expressionExperiment.getId() )
+                    .list();
+            //noinspection unchecked
+            return result.stream()
+                    .collect( Collectors.groupingBy( row -> ( Class<? extends Identifiable> ) row[5],
+                            Collectors.mapping( this::convertRowToCharacteristic, Collectors.toList() ) ) );
+        } else {
+            Map<Class<? extends Identifiable>, List<Characteristic>> result = new HashMap<>();
+            result.put( ExpressionExperiment.class, getExperimentAnnotations( expressionExperiment, false ) );
+            result.put( ExperimentalDesign.class, getExperimentalDesignAnnotations( expressionExperiment, false ) );
+            result.put( BioMaterial.class, getBioMaterialAnnotations( expressionExperiment, false ) );
+            return result;
         }
-
-        return results;
-
     }
 
     @Override
-    public Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId ) {
-        //noinspection unchecked
-        List<Statement> raw = this.getSessionFactory().getCurrentSession().createQuery( "select c from ExpressionExperiment e "
-                + "join e.experimentalDesign ed join ed.experimentalFactors ef join ef.factorValues fv "
-                + "join fv.characteristics c where e.id= :eeid " ).setParameter( "eeid", eeId ).list();
-
-        /*
-         * FIXME filtering here is going to have to be more elaborate for this to be useful.
-         *
-         * URIs checked for validity Aug 2024
-         */
-        Collection<AnnotationValueObject> results = new HashSet<>();
-        for ( Statement c : raw ) {
-            // ignore baseline conditions
-            if ( BaselineSelection.isBaselineCondition( c ) ) {
-                continue;
-            }
-
-            // ignore batch factors
-            if ( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME.equals( c.getCategory() )
-                    || ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_URI.equals( c.getCategoryUri() ) ) {
-                continue;
-            }
-
-            // ignore timepoints
-            if ( "http://www.ebi.ac.uk/efo/EFO_0000724".equals( c.getCategoryUri() ) ) {
-                continue;
-            }
-
-            // DE_include/exclude
-            if ( "http://gemma.msl.ubc.ca/ont/TGEMO_00013".equals( c.getSubjectUri() ) )
-                continue;
-            if ( "http://gemma.msl.ubc.ca/ont/TGEMO_00014".equals( c.getSubjectUri() ) )
-                continue;
-
-            // ignore free text values
-            if ( c.getSubjectUri() != null ) {
-                results.add( new AnnotationValueObject( c, FactorValue.class ) );
-            }
-
-            if ( c.getObject() != null && c.getObjectUri() != null ) {
-                results.add( new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getObjectUri(), c.getObject(), FactorValue.class ) );
-            }
-
-            if ( c.getSecondObject() != null && c.getSecondObjectUri() != null ) {
-                results.add( new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getSecondObjectUri(), c.getSecondObject(), FactorValue.class ) );
-            }
+    public List<Characteristic> getExperimentAnnotations( ExpressionExperiment expressionExperiment, boolean useEe2c ) {
+        if ( useEe2c ) {
+            return getAnnotationsByLevel( expressionExperiment, BioMaterial.class );
+        } else {
+            return new ArrayList<>( expressionExperiment.getCharacteristics() );
         }
-
-        return results;
-
     }
 
     @Override
-    public Map<Class<? extends Identifiable>, List<Characteristic>> getAllAnnotations( ExpressionExperiment expressionExperiment ) {
+    public List<Characteristic> getBioMaterialAnnotations( ExpressionExperiment expressionExperiment, boolean useEe2c ) {
+        if ( useEe2c ) {
+            return getAnnotationsByLevel( expressionExperiment, BioMaterial.class );
+        } else {
+            /*
+             * Note we're not using 'distinct' here but the 'equals' for AnnotationValueObject should aggregate these. More
+             * work to do.
+             */
+            return this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select c from ExpressionExperiment e "
+                            + "join e.bioAssays ba join ba.sampleUsed bm "
+                            + "join bm.characteristics c where e = :ee" )
+                    .setParameter( "ee", expressionExperiment )
+                    .setCacheable( true )
+                    .list();
+        }
+    }
+
+    @Override
+    public List<Characteristic> getExperimentalDesignAnnotations( ExpressionExperiment expressionExperiment, boolean useEe2c ) {
+        if ( useEe2c ) {
+            return getAnnotationsByLevel( expressionExperiment, ExperimentalDesign.class );
+        } else {
+            return new ArrayList<>( getFactorValueAnnotations( expressionExperiment ) );
+        }
+    }
+
+    @Override
+    public List<Statement> getFactorValueAnnotations( ExpressionExperiment ee ) {
         //noinspection unchecked
-        List<Object[]> result = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "select T.`VALUE` as `VALUE`, T.VALUE_URI as VALUE_URI, T.CATEGORY as CATEGORY, T.CATEGORY_URI as CATEGORY_URI, T.EVIDENCE_CODE as EVIDENCE_CODE, T.LEVEL as LEVEL from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
-                        + "where T.EXPRESSION_EXPERIMENT_FK = :eeId" )
-                .addScalar( "VALUE", StandardBasicTypes.STRING )
-                .addScalar( "VALUE_URI", StandardBasicTypes.STRING )
-                .addScalar( "CATEGORY", StandardBasicTypes.STRING )
-                .addScalar( "CATEGORY_URI", StandardBasicTypes.STRING )
-                // FIXME: use an EnumType for converting
-                .addScalar( "EVIDENCE_CODE", StandardBasicTypes.STRING )
-                .addScalar( "LEVEL", StandardBasicTypes.CLASS )
-                .setParameter( "eeId", expressionExperiment.getId() )
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select c from ExpressionExperiment e "
+                        + "join e.experimentalDesign ed join ed.experimentalFactors ef join ef.factorValues fv "
+                        + "join fv.characteristics c where e = :ee " )
+                .setParameter( "ee", ee )
+                .setCacheable( true )
                 .list();
-        //noinspection unchecked
-        return result.stream()
-                .collect( Collectors.groupingBy( row -> ( Class<? extends Identifiable> ) row[5],
-                        Collectors.mapping( this::convertRowToCharacteristic, Collectors.toList() ) ) );
-    }
-
-    @Override
-    public List<Characteristic> getExperimentAnnotations( ExpressionExperiment expressionExperiment ) {
-        return getAnnotationsByLevel( expressionExperiment, BioMaterial.class );
-    }
-
-    @Override
-    public List<Characteristic> getBioMaterialAnnotations( ExpressionExperiment expressionExperiment ) {
-        return getAnnotationsByLevel( expressionExperiment, BioMaterial.class );
-    }
-
-    @Override
-    public List<Characteristic> getExperimentalDesignAnnotations( ExpressionExperiment expressionExperiment ) {
-        return getAnnotationsByLevel( expressionExperiment, ExperimentalDesign.class );
     }
 
     private List<Characteristic> getAnnotationsByLevel( ExpressionExperiment expressionExperiment, Class<? extends Identifiable> level ) {
