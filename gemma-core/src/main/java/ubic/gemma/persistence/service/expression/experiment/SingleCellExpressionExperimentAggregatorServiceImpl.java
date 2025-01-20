@@ -405,6 +405,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
     public int removeAggregatedVectors( ExpressionExperiment ee, QuantitationType qt ) {
         // this is needed because the raw vectors must be loaded
         ee = expressionExperimentService.reload( ee );
+        int removedVectors = expressionExperimentService.removeRawDataVectors( ee, qt );
         Collection<BioAssayDimension> dimensions = expressionExperimentService.getBioAssayDimensions( ee, qt, RawExpressionDataVector.class );
         for ( BioAssayDimension dimension : dimensions ) {
             Collection<QuantitationType> otherUsers = new HashSet<>( expressionExperimentService.getQuantitationTypes( ee, dimension ) );
@@ -423,6 +424,6 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
                 bioAssayDimensionService.remove( dimension );
             }
         }
-        return expressionExperimentService.removeRawDataVectors( ee, qt );
+        return removedVectors;
     }
 }
