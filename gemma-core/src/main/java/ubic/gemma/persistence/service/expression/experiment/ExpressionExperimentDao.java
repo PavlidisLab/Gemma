@@ -4,10 +4,8 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.CacheMode;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -268,29 +266,36 @@ public interface ExpressionExperimentDao
 
     void thawForFrontEnd( ExpressionExperiment expressionExperiment );
 
-    Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( Long eeId );
-
-    Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId );
-
     /**
      * Obtain all annotations, grouped by applicable level.
+     * @param useEe2c use the {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} table to retrieve annotations
      */
-    Map<Class<? extends Identifiable>, List<Characteristic>> getAllAnnotations( ExpressionExperiment expressionExperiment );
+    Map<Class<? extends Identifiable>, List<Characteristic>> getAllAnnotations( ExpressionExperiment expressionExperiment, boolean useEe2c );
 
     /**
      * Obtain experiment-level annotations.
+     *
+     * @param useEe2c use the {@code EXPRESSION_EXPERIMENTE2CHARACTERISTIC} table, {@link ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil}
      */
-    List<Characteristic> getExperimentAnnotations( ExpressionExperiment expressionExperiment );
+    Collection<Characteristic> getExperimentAnnotations( ExpressionExperiment expressionExperiment, boolean useEe2c );
 
     /**
      * Obtain sample-level annotations.
      */
-    List<Characteristic> getBioMaterialAnnotations( ExpressionExperiment expressionExperiment );
+    List<Characteristic> getBioMaterialAnnotations( ExpressionExperiment expressionExperiment, boolean useEe2c );
 
     /**
      * Obtain experimental design-level annotations.
+     * <p>
+     * This is equivalent to the subject components of {@link #getFactorValueAnnotations(ExpressionExperiment)} for now,
+     * but other annotations from the experimental design might be included in the future.
      */
-    List<Characteristic> getExperimentalDesignAnnotations( ExpressionExperiment expressionExperiment );
+    List<Characteristic> getExperimentalDesignAnnotations( ExpressionExperiment expressionExperiment, boolean useEe2c );
+
+    /**
+     * Obtain factor value-level annotations.
+     */
+    List<Statement> getFactorValueAnnotations( ExpressionExperiment ee );
 
     /**
      * Special indicator for free-text terms.

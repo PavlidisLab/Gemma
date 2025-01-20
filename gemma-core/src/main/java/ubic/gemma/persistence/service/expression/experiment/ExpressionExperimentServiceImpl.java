@@ -33,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
+import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
@@ -542,37 +543,114 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public Set<AnnotationValueObject> getAnnotationsById( Long eeId ) {
         ExpressionExperiment expressionExperiment = requireNonNull( this.load( eeId ) );
-        Set<AnnotationValueObject> annotations = new HashSet<>();
-        Collection<String> seenTerms = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
+        Set<AnnotationValueObject> annotations = new LinkedHashSet<>();
+        Set<String> seenTerms = new HashSet<>();
 
-        for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
-            AnnotationValueObject annotationValue = new AnnotationValueObject( c, ExpressionExperiment.class );
-            if ( seenTerms.add( annotationValue.getTermName() ) ) {
-                annotations.add( annotationValue );
-            }
-        }
+        expressionExperimentDao.getExperimentAnnotations( expressionExperiment, false ).stream()
+                .filter( this::filterBioMaterialAnnotation )
+                .map( c -> new AnnotationValueObject( c, ExpressionExperiment.class ) )
+                .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
 
-        /*
-         * TODO If can be done without much slowdown, add: certain characteristics from factor values? (non-baseline,
-         * non-batch, non-redundant with tags). This is tricky because they are so specific...
-         */
-        for ( AnnotationValueObject v : this.getAnnotationsByFactorValues( eeId ) ) {
-            if ( seenTerms.add( v.getTermName() ) ) {
-                annotations.add( v );
-            }
-        }
+        expressionExperimentDao.getFactorValueAnnotations( expressionExperiment ).stream()
+                .filter( this::filterFactorValueAnnotation )
+                .forEach( c -> {
+                    // ignore free text values
+                    if ( c.getSubject() != null ) {
+                        addIfNovel( annotations, new AnnotationValueObject( c, FactorValue.class ), seenTerms );
+                    }
 
-        /*
-         * TODO If can be done without much slowdown, add: certain selected (constant?) characteristics from
-         * biomaterials? (non-redundant with tags)
-         */
-        for ( AnnotationValueObject v : this.getAnnotationsByBioMaterials( eeId ) ) {
-            if ( seenTerms.add( v.getTermName() ) ) {
-                annotations.add( v );
-            }
-        }
+                    if ( c.getPredicate() != null && c.getObject() != null && filterStatementObject( c, true ) ) {
+                        addIfNovel( annotations, new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getObjectUri(), c.getObject(), FactorValue.class ), seenTerms );
+                    }
+
+                    if ( c.getSecondPredicate() != null && c.getSecondObject() != null && filterStatementObject( c, false ) ) {
+                        addIfNovel( annotations, new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getSecondObjectUri(), c.getSecondObject(), FactorValue.class ), seenTerms );
+                    }
+                } );
+
+        expressionExperimentDao.getBioMaterialAnnotations( expressionExperiment, false ).stream()
+                .filter( this::filterBioMaterialAnnotation )
+                .map( c -> new AnnotationValueObject( c, BioMaterial.class ) )
+                .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
 
         return annotations;
+    }
+
+    /**
+     * Check if a term is novel and add it to the set of seen terms.
+     */
+    private void addIfNovel( Collection<AnnotationValueObject> annotations, AnnotationValueObject term, Set<String> seenTerms ) {
+        if ( seenTerms.add( StringUtils.lowerCase( StringUtils.normalizeSpace( term.getTermName() ) ) ) ) {
+            annotations.add( term );
+        }
+    }
+
+    /**
+     * Filter factor value annotations to be included as experiment tags.
+     * <p>
+     * FIXME filtering here is going to have to be more elaborate for this to be useful.
+     * URIs checked for validity Aug 2024
+     */
+    private boolean filterFactorValueAnnotation( Statement c ) {
+        return filterAnnotation( c )
+                // ignore baseline conditions
+                && !BaselineSelection.isBaselineCondition( c )
+                // ignore batch factors
+                && !ExperimentalDesignUtils.isBatch( c )
+                // ignore timepoints
+                && !"http://www.ebi.ac.uk/efo/EFO_0000724".equals( c.getCategoryUri() )
+                // DE_include/exclude
+                && !"http://gemma.msl.ubc.ca/ont/TGEMO_00013".equals( c.getSubjectUri() )
+                && !"http://gemma.msl.ubc.ca/ont/TGEMO_00014".equals( c.getSubjectUri() );
+    }
+
+    /**
+     * Filter sample annotations to be included as experiment tags.
+     * <p>
+     * TODO If can be done without much slowdown, add: certain selected (constant?) characteristics from
+     * biomaterials? (non-redundant with tags)
+     */
+    private boolean filterBioMaterialAnnotation( Characteristic c ) {
+        return filterAnnotation( c )
+                && !"MaterialType".equalsIgnoreCase( c.getCategory() )
+                && !"molecular entity".equalsIgnoreCase( c.getCategory() )
+                && !"LabelCompound".equalsIgnoreCase( c.getCategory() )
+                && !BaselineSelection.isBaselineCondition( c );
+    }
+
+    private boolean filterAnnotation( Characteristic characteristic ) {
+        return filterAnnotation( characteristic.getCategoryUri(), characteristic.getCategory(), characteristic.getValueUri(), characteristic.getValue() );
+    }
+
+    /**
+     * Filter the object of a statement.
+     */
+    private boolean filterStatementObject( Statement statement, boolean first ) {
+        if ( first ) {
+            Assert.notNull( statement.getPredicate() );
+            Assert.notNull( statement.getObject() );
+            return filterStatementObject( statement.getCategoryUri(), statement.getCategory(), statement.getSubjectUri(), statement.getSubject(), statement.getPredicateUri(), statement.getPredicate(), statement.getObjectUri(), statement.getObject() );
+        } else {
+            Assert.notNull( statement.getSecondPredicate() );
+            Assert.notNull( statement.getSecondObject() );
+            return filterStatementObject( statement.getCategoryUri(), statement.getCategory(), statement.getSubjectUri(), statement.getSubject(), statement.getSecondPredicateUri(), statement.getSecondPredicate(), statement.getSecondObjectUri(), statement.getSecondObject() );
+        }
+    }
+
+    private boolean filterStatementObject( @Nullable String categoryUri, @Nullable String category, @Nullable String subjectUri, String subject, @Nullable String predicateUri, String predicate, @Nullable String objectUri, String object ) {
+        return filterAnnotation( categoryUri, category, objectUri, object );
+    }
+
+    /**
+     * Minimal requirements for an annotation to be included as an experiment tag.
+     */
+    private boolean filterAnnotation( @Nullable String categoryUri, @Nullable String category, @Nullable String valueUri, String value ) {
+        // ignore uncategorized terms
+        return category != null
+                // ignore free-text categories
+                && categoryUri != null // free-text categories
+                // ignore free-text terms
+                && valueUri != null;
     }
 
     /**
@@ -1361,15 +1439,6 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     public void remove( Collection<ExpressionExperiment> entities ) {
         entities.forEach( this::remove );
-    }
-
-    private Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( Long eeId ) {
-        return this.expressionExperimentDao.getAnnotationsByFactorValues( eeId );
-    }
-
-    private Collection<? extends AnnotationValueObject> getAnnotationsByBioMaterials( Long eeId ) {
-        return this.expressionExperimentDao.getAnnotationsByBioMaterials( eeId );
-
     }
 
     /**
