@@ -106,7 +106,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
         Map<Characteristic, FactorValue> cellType2Factor = mapCellTypeAssignmentToCellTypeFactor( cta, cellTypeFactor );
 
         // assigne sample to cell types
-        Map<BioAssay, Characteristic> cellTypes = assignSampleToCellType( cellBAs, cta, cellType2Factor );
+        Map<BioAssay, Integer> cellTypeIndices = assignSampleToCellTypeIndex( cellBAs, cta, cellType2Factor );
 
         String cellTypeFactorName;
         if ( cellTypeFactor.getName() != null ) {
@@ -152,7 +152,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
             // TODO: compute normalization factors from data
             normalizationFactor = new double[cellBAs.size()];
             Arrays.fill( normalizationFactor, 1.0 );
-            librarySize = computeLibrarySize( vectors, newBad, cta, sourceBioAssayMap, sourceSampleToIndex, cellTypes, method );
+            librarySize = computeLibrarySize( vectors, newBad, cta, sourceBioAssayMap, sourceSampleToIndex, cellTypeIndices, method );
             for ( int i = 0; i < librarySize.length; i++ ) {
                 if ( librarySize[i] == 0 ) {
                     log.warn( "Library size for " + cellBAs.get( i ) + " is zero, this will cause NaN values in the log2cpm transformation." );
@@ -184,7 +184,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
             rawVector.setQuantitationType( newQt );
             rawVector.setBioAssayDimension( newBad );
             rawVector.setDesignElement( v.getDesignElement() );
-            rawVector.setDataAsDoubles( aggregateData( v, newBad, cta, sourceBioAssayMap, sourceSampleToIndex, cellTypes, method, cellsByBioAssay, designElementsByBioAssay, cellByDesignElementByBioAssay, canLog2cpm, normalizationFactor, librarySize ) );
+            rawVector.setDataAsDoubles( aggregateData( v, newBad, cta, sourceBioAssayMap, sourceSampleToIndex, cellTypeIndices, method, cellsByBioAssay, designElementsByBioAssay, cellByDesignElementByBioAssay, canLog2cpm, normalizationFactor, librarySize ) );
             rawVectors.add( rawVector );
             if ( rawVectors.size() % 100 == 0 ) {
                 log.info( String.format( "Aggregated %d/%d single-cell vectors.", rawVectors.size(), vectors.size() ) );
@@ -258,14 +258,15 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
         return sourceBioAssayMap;
     }
 
-    private Map<BioAssay, Characteristic> assignSampleToCellType( Collection<BioAssay> cellBAs, CellTypeAssignment cta, Map<Characteristic, FactorValue> cellType2Factor ) {
-        Map<BioAssay, Characteristic> cellTypes = new HashMap<>();
+    private Map<BioAssay, Integer> assignSampleToCellTypeIndex( Collection<BioAssay> cellBAs, CellTypeAssignment cta, Map<Characteristic, FactorValue> cellType2Factor ) {
+        Map<BioAssay, Integer> cellTypes = new HashMap<>();
         for ( BioAssay ba : cellBAs ) {
             boolean found = false;
-            for ( Characteristic ct : cta.getCellTypes() ) {
-                FactorValue fv = cellType2Factor.get( ct );
+            List<Characteristic> types = cta.getCellTypes();
+            for ( int i = 0; i < types.size(); i++ ) {
+                FactorValue fv = cellType2Factor.get( types.get( i ) );
                 if ( fv != null && ba.getSampleUsed().getAllFactorValues().contains( fv ) ) {
-                    cellTypes.put( ba, ct );
+                    cellTypes.put( ba, i );
                     found = true;
                     break;
                 }
@@ -280,7 +281,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
     /**
      * Compute the library size for each sample.
      */
-    private double[] computeLibrarySize( Collection<SingleCellExpressionDataVector> vectors, BioAssayDimension bad, CellTypeAssignment cta, Map<BioAssay, BioAssay> sourceBioAssayMap, Map<BioAssay, Integer> sourceSampleToIndex, Map<BioAssay, Characteristic> cellTypes, SingleCellExpressionAggregationMethod method ) {
+    private double[] computeLibrarySize( Collection<SingleCellExpressionDataVector> vectors, BioAssayDimension bad, CellTypeAssignment cta, Map<BioAssay, BioAssay> sourceBioAssayMap, Map<BioAssay, Integer> sourceSampleToIndex, Map<BioAssay, Integer> cellTypeIndices, SingleCellExpressionAggregationMethod method ) {
         List<BioAssay> samples = bad.getBioAssays();
         int numSamples = samples.size();
         double[] librarySize = new double[numSamples];
@@ -289,13 +290,14 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
             for ( int i = 0; i < numSamples; i++ ) {
                 BioAssay sample = samples.get( i );
                 BioAssay sourceSample = sourceBioAssayMap.get( sample );
-                Characteristic cellType = cellTypes.get( sample );
+                // comparing index is *much* faster than checking for equality
+                int cellTypeIndex = cellTypeIndices.get( sample );
                 int sourceSampleIndex = requireNonNull( sourceSampleToIndex.get( sourceSample ),
                         () -> "Could not locate the source sample of " + sample + " (" + sourceSample + ") in " + scv.getSingleCellDimension() + "." );
                 int start = getSampleStart( scv, sourceSampleIndex, 0 );
                 int end = getSampleEnd( scv, sourceSampleIndex, start );
                 for ( int k = start; k < end; k++ ) {
-                    if ( cellType.equals( cta.getCellType( k ) ) ) {
+                    if ( cellTypeIndex == cta.getCellTypeIndices()[k] ) {
                         if ( method == SingleCellExpressionAggregationMethod.SUM ) {
                             librarySize[i] += scrv.get( k );
                         } else if ( method == SingleCellExpressionAggregationMethod.LOG_SUM ) {
@@ -324,7 +326,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
             CellTypeAssignment cta,
             Map<BioAssay, BioAssay> sourceBioAssayMap,
             Map<BioAssay, Integer> sourceSampleToIndex,
-            Map<BioAssay, Characteristic> cellTypes,
+            Map<BioAssay, Integer> cellTypeIndices,
             SingleCellExpressionAggregationMethod method,
             @Nullable Map<BioAssay, boolean[]> cellsByBioAssay,
             @Nullable Map<BioAssay, Integer> designElementsByBioAssay,
@@ -343,13 +345,14 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
             BioAssay sourceSample = sourceBioAssayMap.get( sample );
             int sourceSampleIndex = requireNonNull( sourceSampleToIndex.get( sourceSample ),
                     () -> "Could not locate the source sample of " + sample + " (" + sourceSample + ") in " + scv.getSingleCellDimension() + "." );
-            Characteristic cellType = cellTypes.get( sample );
+            Integer cellTypeIndex = cellTypeIndices.get( sample );
+            Characteristic cellType = cta.getCellTypes().get( cellTypeIndex );
             // samples are not necessarily ordered, so we cannot use the start=end trick
             int start = getSampleStart( scv, sourceSampleIndex, 0 );
             int end = getSampleEnd( scv, sourceSampleIndex, start );
             rv[i] = 0;
             for ( int k = start; k < end; k++ ) {
-                if ( cellType.equals( cta.getCellType( k ) ) ) {
+                if ( cellTypeIndex == cta.getCellTypeIndices()[k] ) {
                     if ( method == SingleCellExpressionAggregationMethod.SUM ) {
                         rv[i] += scrv.get( k );
                     } else if ( method == SingleCellExpressionAggregationMethod.LOG_SUM ) {
