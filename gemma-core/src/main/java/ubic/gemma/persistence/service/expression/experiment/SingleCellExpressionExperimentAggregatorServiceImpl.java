@@ -346,7 +346,6 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
             int sourceSampleIndex = requireNonNull( sourceSampleToIndex.get( sourceSample ),
                     () -> "Could not locate the source sample of " + sample + " (" + sourceSample + ") in " + scv.getSingleCellDimension() + "." );
             Integer cellTypeIndex = cellTypeIndices.get( sample );
-            Characteristic cellType = cta.getCellTypes().get( cellTypeIndex );
             // samples are not necessarily ordered, so we cannot use the start=end trick
             int start = getSampleStart( scv, sourceSampleIndex, 0 );
             int end = getSampleEnd( scv, sourceSampleIndex, start );
@@ -385,15 +384,15 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
                     if ( v == null ) {
                         v = new boolean[scv.getSingleCellDimension().getNumberOfCells()];
                     }
-                    metrics.addExpressedCells( scv, sourceSampleIndex, cellType, v );
+                    metrics.addExpressedCells( scv, sourceSampleIndex, cta, cellTypeIndex, v );
                     return v;
                 } );
             }
             if ( designElementsByBioAssay != null ) {
-                designElementsByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + metrics.getNumberOfDesignElements( Collections.singleton( scv ), sourceSampleIndex, cellType ) );
+                designElementsByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + metrics.getNumberOfDesignElements( Collections.singleton( scv ), sourceSampleIndex, cta, cellTypeIndex ) );
             }
             if ( cellByDesignElementByBioAssay != null ) {
-                cellByDesignElementByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + metrics.getNumberOfCellsByDesignElements( Collections.singleton( scv ), sourceSampleIndex, cellType ) );
+                cellByDesignElementByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + metrics.getNumberOfCellsByDesignElements( Collections.singleton( scv ), sourceSampleIndex, cta, cellTypeIndex ) );
             }
         }
 
