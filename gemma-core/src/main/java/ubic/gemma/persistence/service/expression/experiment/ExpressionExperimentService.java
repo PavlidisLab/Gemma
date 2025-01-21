@@ -328,6 +328,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Map<Long, Long> getAnnotationCountsByIds( Collection<Long> ids );
 
     /**
+     * Obtain experiment annotations.
      * @param eeId experiment id.
      * @return the terms associated this expression experiment.
      */
