@@ -110,7 +110,7 @@ public class OntologyController {
             s.append( String.format( "<li>%s %s %s</li>", renderOntologyResource( st.getSubject() ), renderOntologyResource( st.getPredicate() ), renderOntologyResource( st.getObject() ) ) );
         }
         s.append( "</ul>" );
-        s.append( "<p>Retrieve this in RDF/XML:</p>" );
+        s.append( "<p style=\"margin-bottom: 0em;\">Retrieve this in RDF/XML:</p>" );
         s.append( String.format( "<pre>curl -H Accept:application/rdf+xml %s/ont/TGFVO/%d</pre>", hostUrl, factorValueId ) );
         s.append( "</div>" );
         return s.toString();
