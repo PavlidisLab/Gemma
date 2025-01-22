@@ -98,7 +98,7 @@ public class OntologyController {
         StringBuilder s = new StringBuilder();
         s.append( String.format( "<title>FactorValue #%d: %s</title>", factorValueId, escapeHtml4( oi.getLabel() ) ) );
         s.append( "<div class=\"padded\">" );
-        s.append( String.format( "<h2>FactorValue #%d: %s</h2>", factorValueId, renderOntologyResource( oi ) ) );
+        s.append( String.format( "<h2 style=\"padding-bottom:0.5em\">FactorValue #%d: %s</h2>", factorValueId, renderOntologyResource( oi ) ) );
         s.append( "<ul>" );
         if ( oi.getInstanceOf() != null ) {
             s.append( "<li>instance of " ).append( renderOntologyResource( oi.getInstanceOf() ) ).append( "</li>" );
