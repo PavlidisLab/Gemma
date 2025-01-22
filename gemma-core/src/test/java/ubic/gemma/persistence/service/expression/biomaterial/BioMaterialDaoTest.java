@@ -16,6 +16,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.util.Thaws;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -86,7 +87,7 @@ public class BioMaterialDaoTest extends BaseDatabaseTest {
         assertThat( bm.getFactorValues() )
                 .extracting( FactorValue::getExperimentalFactor )
                 .noneMatch( Hibernate::isInitialized );
-        bioMaterialDao.thaw( bm );
+        Thaws.thawBioMaterial( bm );
         assertThat( bm.getTreatments() )
                 .matches( Hibernate::isInitialized )
                 .hasSize( 1 );

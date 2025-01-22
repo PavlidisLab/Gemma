@@ -34,8 +34,4 @@ public interface BioAssayDimensionDao extends BaseVoEnabledDao<BioAssayDimension
      * Find all the dimensions that contains all the given assays.
      */
     Collection<BioAssayDimension> findByBioAssayContainsAll( Collection<BioAssay> bioAssays );
-
-    void thawLite( BioAssayDimension bioAssayDimension );
-
-    void thaw( BioAssayDimension bioAssayDimension );
 }

@@ -1583,14 +1583,6 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionExperiment thawBioAssays( final ExpressionExperiment expressionExperiment ) {
-        ExpressionExperiment result = ensureInSession( expressionExperiment );
-        this.expressionExperimentDao.thawBioAssays( result );
-        return result;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public ExpressionExperiment thawLite( final ExpressionExperiment expressionExperiment ) {
         ExpressionExperiment result = ensureInSession( expressionExperiment );
         this.expressionExperimentDao.thawLite( result );

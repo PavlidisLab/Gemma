@@ -19,7 +19,6 @@
 package ubic.gemma.persistence.service.expression.biomaterial;
 
 import org.hibernate.Criteria;
-import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -174,17 +173,6 @@ public class BioMaterialDaoImpl extends AbstractVoEnabledDao<BioMaterial, BioMat
                 .list();
         return results.stream().collect( Collectors.groupingBy( row -> ( BioMaterial ) row[0],
                 Collectors.toMap( row -> ( BioAssay ) row[1], row -> ( ExpressionExperiment ) row[2] ) ) );
-    }
-
-    @Override
-    public void thaw( final BioMaterial bioMaterial ) {
-        visitBioMaterials( bioMaterial, bm -> {
-            Hibernate.initialize( bioMaterial.getSourceTaxon() );
-            Hibernate.initialize( bioMaterial.getTreatments() );
-            for ( FactorValue fv : bioMaterial.getFactorValues() ) {
-                Hibernate.initialize( fv.getExperimentalFactor() );
-            }
-        } );
     }
 
     @Override

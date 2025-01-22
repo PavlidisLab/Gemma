@@ -25,7 +25,6 @@ import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.measurement.MeasurementType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -37,8 +36,11 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorDao;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueDao;
+import ubic.gemma.persistence.util.Thaws;
 
 import java.util.*;
+
+import static ubic.gemma.persistence.util.Thaws.thawBioMaterial;
 
 /**
  * @author pavlidis
@@ -113,7 +115,7 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     @Transactional(readOnly = true)
     public BioMaterial thaw( BioMaterial bioMaterial ) {
         bioMaterial = ensureInSession( bioMaterial );
-        this.bioMaterialDao.thaw( bioMaterial );
+        thawBioMaterial( bioMaterial );
         return bioMaterial;
     }
 
@@ -121,7 +123,7 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     @Transactional(readOnly = true)
     public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials ) {
         bioMaterials = ensureInSession( bioMaterials );
-        bioMaterials.forEach( this.bioMaterialDao::thaw );
+        bioMaterials.forEach( Thaws::thawBioMaterial );
         return bioMaterials;
     }
 

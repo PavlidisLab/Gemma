@@ -61,14 +61,4 @@ public interface BioMaterialDao extends BaseVoEnabledDao<BioMaterial, BioMateria
      * This also includes experiments that are using this via one of their parent?
      */
     Map<BioMaterial, Map<BioAssay, ExpressionExperiment>> getExpressionExperiments( BioMaterial bm );
-
-    /**
-     * Thaw the given BioMaterial.
-     * <p>
-     * The following fields are initialized: sourceTaxon, treatments and factorValues.experimentalFactor.
-     * <p>
-     * If the bioMaterial has a sourceBioMaterial, it is thawed as well, recursively. Circular references are detected
-     * and will result in a {@link IllegalStateException}.
-     */
-    void thaw( BioMaterial bioMaterial );
 }

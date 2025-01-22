@@ -782,9 +782,6 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     void addCharacteristic( ExpressionExperiment ee, Characteristic vc );
 
     /**
-     * Fully thaw an experiment including biassays, raw and processed vectors.
-     * <p>
-     * Single-cell vectors are *not* thawed.
      * @see ExpressionExperimentDao#thaw(ExpressionExperiment)
      */
     @CheckReturnValue
@@ -792,28 +789,18 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
 
     /**
-     * Thaw the bioassays of a given experiment.
-     * @see ExpressionExperimentDao#thawBioAssays(ExpressionExperiment)
-     */
-    @CheckReturnValue
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
-
-    /**
-     * Partially thaw the expression experiment given - does not thaw the raw, processed and single-cell data.
-     * @see ExpressionExperimentDao#thawLite(ExpressionExperiment)
-     */
-    @CheckReturnValue
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    ExpressionExperiment thawLite( ExpressionExperiment expressionExperiment );
-
-    /**
-     * Lightly thaw an experiment.
      * @see ExpressionExperimentDao#thawLiter(ExpressionExperiment)
      */
     @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperiment thawLiter( ExpressionExperiment expressionExperiment );
+
+    /**
+     * @see ExpressionExperimentDao#thawLite(ExpressionExperiment)
+     */
+    @CheckReturnValue
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    ExpressionExperiment thawLite( ExpressionExperiment expressionExperiment );
 
     boolean isBlackListed( String geoAccession );
 

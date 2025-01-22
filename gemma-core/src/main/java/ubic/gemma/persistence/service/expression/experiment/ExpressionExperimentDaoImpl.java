@@ -68,9 +68,10 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingLong;
 import static org.hibernate.transform.Transformers.aliasToBean;
 import static ubic.gemma.core.util.ListUtils.validateSparseRangeArray;
-import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialUtils.visitBioMaterials;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.*;
 import static ubic.gemma.persistence.util.QueryUtils.*;
+import static ubic.gemma.persistence.util.Thaws.thawBibliographicReference;
+import static ubic.gemma.persistence.util.Thaws.thawDatabaseEntry;
 
 /**
  * @author pavlidis
@@ -1995,80 +1996,23 @@ public class ExpressionExperimentDaoImpl
         thawProcessedVectors( expressionExperiment );
     }
 
-    // "thawLite"
     @Override
     public void thawLite( final ExpressionExperiment ee ) {
         thawLiter( ee );
-
-        Hibernate.initialize( ee.getQuantitationTypes() );
-        Hibernate.initialize( ee.getCharacteristics() );
-
-        if ( ee.getAuditTrail() != null ) {
-            Hibernate.initialize( ee.getAuditTrail().getEvents() );
-        }
-
-        Hibernate.initialize( ee.getBioAssays() );
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            Hibernate.initialize( ba.getArrayDesignUsed() );
-            Hibernate.initialize( ba.getArrayDesignUsed().getDesignProvider() );
-            if ( ba.getOriginalPlatform() != null ) {
-                Hibernate.initialize( ba.getOriginalPlatform() );
-            }
-            visitBioMaterials( ba.getSampleUsed(), bm -> {
-                Hibernate.initialize( bm.getFactorValues() );
-                for ( FactorValue fv : bm.getFactorValues() ) {
-                    Hibernate.initialize( fv.getExperimentalFactor() );
-                }
-                Hibernate.initialize( bm.getTreatments() );
-            } );
-        }
-    }
-
-    @Override
-    public void thawBioAssays( ExpressionExperiment expressionExperiment ) {
-        thawLiter( expressionExperiment );
-
-        Hibernate.initialize( expressionExperiment.getBioAssays() );
-
-        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
-            Hibernate.initialize( ba.getArrayDesignUsed() );
-            Hibernate.initialize( ba.getOriginalPlatform() );
-            thawBioMaterial( ba.getSampleUsed() );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao#thaw(BioMaterial)
-     */
-    private void thawBioMaterial( BioMaterial bm2 ) {
-        visitBioMaterials( bm2, bm -> {
-            Hibernate.initialize( bm.getSourceTaxon() );
-            Hibernate.initialize( bm.getTreatments() );
-            for ( FactorValue fv : bm.getFactorValues() ) {
-                Hibernate.initialize( fv.getExperimentalFactor() );
-            }
-        } );
+        ee.getBioAssays().forEach( Thaws::thawBioAssay );
     }
 
     @Override
     public void thawLiter( final ExpressionExperiment expressionExperiment ) {
+        Hibernate.initialize( expressionExperiment.getQuantitationTypes() );
+        Hibernate.initialize( expressionExperiment.getCharacteristics() );
+
         if ( expressionExperiment.getAccession() != null ) {
-            Hibernate.initialize( expressionExperiment.getAccession() );
-            Hibernate.initialize( expressionExperiment.getAccession().getExternalDatabase() );
+            thawDatabaseEntry( expressionExperiment.getAccession() );
         }
 
         if ( expressionExperiment.getMeanVarianceRelation() != null ) {
             Hibernate.initialize( expressionExperiment.getMeanVarianceRelation() );
-            Hibernate.initialize( expressionExperiment.getMeanVarianceRelation().getMeans() );
-            Hibernate.initialize( expressionExperiment.getMeanVarianceRelation().getVariances() );
-        }
-
-        if ( expressionExperiment.getPrimaryPublication() != null ) {
-            Hibernate.initialize( expressionExperiment.getPrimaryPublication() );
-            if ( expressionExperiment.getPrimaryPublication().getPublication() != null ) {
-                Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPubAccession() );
-                Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPubAccession().getExternalDatabase() );
-            }
         }
 
         Hibernate.initialize( expressionExperiment.getAuditTrail() );
@@ -2078,32 +2022,21 @@ public class ExpressionExperimentDaoImpl
         Hibernate.initialize( expressionExperiment.getOtherParts() );
 
         if ( expressionExperiment.getExperimentalDesign() != null ) {
-            Hibernate.initialize( expressionExperiment.getExperimentalDesign() );
-            Hibernate.initialize( expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
             for ( ExperimentalFactor ef : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
                 Hibernate.initialize( ef );
-                for ( FactorValue fv : ef.getFactorValues() ) {
-                    Hibernate.initialize( fv.getExperimentalFactor() ); // is it even necessary?
-                }
+                ef.getFactorValues().forEach( Hibernate::initialize );
             }
             Hibernate.initialize( expressionExperiment.getExperimentalDesign().getTypes() );
         }
 
         if ( expressionExperiment.getPrimaryPublication() != null ) {
-            Hibernate.initialize( expressionExperiment.getPrimaryPublication().getMeshTerms() );
-            Hibernate.initialize( expressionExperiment.getPrimaryPublication().getKeywords() );
-            Hibernate.initialize( expressionExperiment.getPrimaryPublication().getChemicals() );
+            thawBibliographicReference( expressionExperiment.getPrimaryPublication() );
         }
 
-        for ( BibliographicReference br : expressionExperiment.getOtherRelevantPublications() ) {
-            Hibernate.initialize( br.getMeshTerms() );
-            Hibernate.initialize( br.getKeywords() );
-            Hibernate.initialize( br.getChemicals() );
-        }
+        expressionExperiment.getOtherRelevantPublications().forEach( Thaws::thawBibliographicReference );
     }
 
-    @Override
-    public void thawRawVectors( ExpressionExperiment ee ) {
+    private void thawRawVectors( ExpressionExperiment ee ) {
         StopWatch timer = StopWatch.createStarted();
         Hibernate.initialize( ee.getRawExpressionDataVectors() );
         if ( timer.getTime() > 1000 ) {
@@ -2111,8 +2044,7 @@ public class ExpressionExperimentDaoImpl
         }
     }
 
-    @Override
-    public void thawProcessedVectors( ExpressionExperiment ee ) {
+    private void thawProcessedVectors( ExpressionExperiment ee ) {
         StopWatch timer = StopWatch.createStarted();
         Hibernate.initialize( ee.getProcessedExpressionDataVectors() );
         if ( timer.getTime() > 1000 ) {
@@ -2399,7 +2331,7 @@ public class ExpressionExperimentDaoImpl
                         + "join scd.cellTypeAssignments cta "
                         + "join cta.cellTypes ct "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType.isSingleCellPreferred = true and cta.preferred = true "
-                        + "group by ct")
+                        + "group by ct" )
                 .setParameter( "ee", ee )
                 .list();
     }
@@ -2410,7 +2342,7 @@ public class ExpressionExperimentDaoImpl
         return getSessionFactory().getCurrentSession()
                 .createQuery( "select scedv.quantitationType from SingleCellExpressionDataVector scedv "
                         + "where scedv.expressionExperiment = :ee "
-                        + "group by scedv.quantitationType")
+                        + "group by scedv.quantitationType" )
                 .setParameter( "ee", ee )
                 .list();
     }

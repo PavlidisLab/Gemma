@@ -113,7 +113,7 @@ public class ExpressionExperimentBatchInformationServiceTest extends AbstractJUn
         ee.setId( 1L );
         ee.setExperimentalDesign( new ExperimentalDesign() );
         ee.getExperimentalDesign().getExperimentalFactors().add( batchFactor );
-        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+        when( expressionExperimentService.thawLite( ee ) ).thenReturn( ee );
         assertTrue( eeBatchService.getSignificantBatchConfounds( ee ).isEmpty() );
         assertTrue( eeBatchService.getSignificantBatchConfoundsForSubsets( ee ).isEmpty() );
     }

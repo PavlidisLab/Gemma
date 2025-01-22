@@ -23,8 +23,12 @@ import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.springframework.beans.BeanInstantiationException;
+import org.springframework.beans.BeanUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.EnvironmentAware;
+import org.springframework.context.MessageSourceAware;
 import ubic.gemma.core.completion.BashCompletionGenerator;
 import ubic.gemma.core.completion.CompletionGenerator;
 import ubic.gemma.core.completion.FishCompletionGenerator;
@@ -194,8 +198,15 @@ public class GemmaCLI {
             CLI cliInstance;
             Class<?> beanClass = ctx.getType( beanName );
             try {
-                cliInstance = ( CLI ) beanClass.newInstance();
-            } catch ( InstantiationException | IllegalAccessException e2 ) {
+                cliInstance = ( CLI ) BeanUtils.instantiate( beanClass );
+                // provide some useful context for the CLI that they can use for generating options
+                if ( cliInstance instanceof EnvironmentAware ) {
+                    ( ( EnvironmentAware ) cliInstance ).setEnvironment( ctx.getEnvironment() );
+                }
+                if ( cliInstance instanceof MessageSourceAware ) {
+                    ( ( MessageSourceAware ) cliInstance ).setMessageSource( ctx );
+                }
+            } catch ( BeanInstantiationException e2 ) {
                 System.err.printf( "Failed to create %s using reflection, will have to create a complete bean to extract its metadata.%n", beanClass.getName() );
                 e2.printStackTrace( System.err );
                 cliInstance = ctx.getBean( beanName, CLI.class );
@@ -359,6 +370,7 @@ public class GemmaCLI {
         String beanName;
         @Nullable
         String commandName;
+        @Nullable
         String shortDesc;
         Options options;
         boolean allowsPositionalArguments;

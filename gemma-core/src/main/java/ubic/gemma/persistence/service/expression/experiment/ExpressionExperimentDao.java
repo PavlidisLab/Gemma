@@ -304,17 +304,26 @@ public interface ExpressionExperimentDao
 
     Collection<ExpressionExperiment> loadLackingTags();
 
+    /**
+     * Thaw everything.
+     * <p>
+     * Includes {@link #thawLite(ExpressionExperiment)} and raw/processed vectors.
+     * <p>
+     * Does not include single-cell vectors.
+     */
     void thaw( ExpressionExperiment expressionExperiment );
 
-    void thawLite( ExpressionExperiment expressionExperiment );
-
+    /**
+     * Thaw experiment metadata.
+     */
     void thawLiter( ExpressionExperiment expressionExperiment );
 
-    void thawBioAssays( ExpressionExperiment expressionExperiment );
-
-    void thawRawVectors( ExpressionExperiment ee );
-
-    void thawProcessedVectors( ExpressionExperiment ee );
+    /**
+     * Thaw experiment metadata and bioassays.
+     * <p>
+     * Include {@link #thawLiter(ExpressionExperiment)} and bioassays.
+     */
+    void thawLite( ExpressionExperiment expressionExperiment );
 
     Collection<Characteristic> getAnnotationsBySubSets( ExpressionExperiment ee );
 

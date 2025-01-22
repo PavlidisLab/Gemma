@@ -76,7 +76,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
     @Override
     @Transactional(readOnly = true)
     public boolean hasSignificantBatchConfound( ExpressionExperiment ee ) {
-        ee = expressionExperimentService.thawBioAssays( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         if ( !this.checkHasUsableBatchInfo( ee ) ) {
             log.warn( ee + " has no usable batch information, cannot check for confound: " + ee );
@@ -105,7 +105,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
     @Override
     @Transactional(readOnly = true)
     public List<BatchConfound> getSignificantBatchConfounds( ExpressionExperiment ee ) {
-        ee = expressionExperimentService.thawBioAssays( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         if ( !this.checkHasUsableBatchInfo( ee ) ) {
             log.warn( ee + " has no usable batch information, cannot check for confounds." );
@@ -134,7 +134,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
     @Override
     @Transactional(readOnly = true)
     public Map<ExpressionExperimentSubSet, List<BatchConfound>> getSignificantBatchConfoundsForSubsets( ExpressionExperiment ee ) {
-        ee = expressionExperimentService.thawBioAssays( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         if ( !this.checkHasUsableBatchInfo( ee ) ) {
             log.info( ee + " has no usable batch information, cannot check for confounds for subsets." );

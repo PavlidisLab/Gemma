@@ -24,6 +24,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
 import ubic.gemma.persistence.service.BaseImmutableService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.util.Thaws;
 
 import java.util.Collection;
 
@@ -48,7 +49,17 @@ public interface BioAssayDimensionService
     @Secured({ "GROUP_USER" })
     void remove( BioAssayDimension bioAssayDimension );
 
+    /**
+     * Lightly thaw a dimension.
+     * <p>
+     * Only the collection of bioassays is thawed.
+     */
     BioAssayDimension thawLite( BioAssayDimension bioAssayDimension );
 
+    /**
+     * Fully thaw a dimension.
+     * <p>
+     * Each assay is thawed with {@link Thaws#thawBioAssay}.
+     */
     BioAssayDimension thaw( BioAssayDimension bioAssayDimension );
 }

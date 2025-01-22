@@ -185,7 +185,7 @@ public class SVDServiceImpl implements SVDService {
     @Transactional(readOnly = true)
     public Map<ProbeLoading, DoubleVectorValueObject> getTopLoadedVectors( ExpressionExperiment ee, int component,
             int count ) {
-        ee = expressionExperimentService.thawBioAssays( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         PrincipalComponentAnalysis pca = principalComponentAnalysisService.loadForExperiment( ee );
         Map<ProbeLoading, DoubleVectorValueObject> result = new HashMap<>();

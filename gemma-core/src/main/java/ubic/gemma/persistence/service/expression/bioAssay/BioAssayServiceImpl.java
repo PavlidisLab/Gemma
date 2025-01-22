@@ -14,6 +14,7 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssay;
 
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,9 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.persistence.util.Thaws.thawBioAssay;
+import static ubic.gemma.persistence.util.Thaws.thawBioMaterial;
 
 /**
  * @author pavlidis
@@ -117,18 +121,18 @@ public class BioAssayServiceImpl extends AbstractFilteringVoEnabledService<BioAs
 
     @Override
     @Transactional(readOnly = true)
-    public BioAssay thaw( BioAssay bioAssay ) {
-        bioAssay = ensureInSession( bioAssay );
-        this.bioMaterialDao.thaw( bioAssay.getSampleUsed() );
-        return bioAssay;
+    public BioAssay thaw( BioAssay ba ) {
+        ba = ensureInSession( ba );
+        thawBioAssay( ba );
+        return ba;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<BioAssay> thaw( Collection<BioAssay> bioAssays ) {
         bioAssays = ensureInSession( bioAssays );
-        for ( BioAssay bioAssay : bioAssays ) {
-            this.bioMaterialDao.thaw( bioAssay.getSampleUsed() );
+        for ( BioAssay ba : bioAssays ) {
+            thawBioAssay( ba );
         }
         return bioAssays;
     }

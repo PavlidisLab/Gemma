@@ -100,7 +100,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         ee.setProcessedExpressionDataVectors( Collections.singleton( new ProcessedExpressionDataVector() ) );
         ee.setNumberOfDataVectors( 1 );
         expressionExperimentDao.thaw( ee );
-        expressionExperimentDao.thawBioAssays( ee );
+        expressionExperimentDao.thawLite( ee );
         expressionExperimentDao.thawLite( ee );
         expressionExperimentDao.thawLiter( ee );
     }
@@ -115,11 +115,11 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     }
 
     @Test
-    public void testThawBioAssays() {
+    public void testThawLite() {
         ee = createExpressionExperiment();
         ee = reload( ee );
         assertFalse( Hibernate.isInitialized( ee.getExperimentalDesign() ) );
-        expressionExperimentDao.thawBioAssays( ee );
+        expressionExperimentDao.thawLite( ee );
         assertTrue( Hibernate.isInitialized( ee.getExperimentalDesign() ) );
         assertTrue( Hibernate.isInitialized( ee.getBioAssays() ) );
     }
@@ -130,15 +130,6 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         ee = reload( ee );
         assertFalse( Hibernate.isInitialized( ee.getExperimentalDesign() ) );
         expressionExperimentDao.thawLiter( ee );
-        assertTrue( Hibernate.isInitialized( ee.getExperimentalDesign() ) );
-    }
-
-    @Test
-    public void testThawLite() {
-        ee = createExpressionExperiment();
-        ee = reload( ee );
-        assertFalse( Hibernate.isInitialized( ee.getExperimentalDesign() ) );
-        expressionExperimentDao.thawLite( ee );
         assertTrue( Hibernate.isInitialized( ee.getExperimentalDesign() ) );
     }
 

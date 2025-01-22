@@ -173,7 +173,7 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
      * @return a collection of BioAssays that represent the experiments samples.
      */
     public List<BioAssayValueObject> getSamples( DatasetArg<?> arg ) {
-        ExpressionExperiment ee = service.thawBioAssays( this.getEntity( arg ) );
+        ExpressionExperiment ee = service.thawLite( this.getEntity( arg ) );
         List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( ee.getBioAssays(), true );
         Collection<OutlierDetails> outliers = outlierDetectionService.getOutlierDetails( ee );
         if ( outliers != null ) {

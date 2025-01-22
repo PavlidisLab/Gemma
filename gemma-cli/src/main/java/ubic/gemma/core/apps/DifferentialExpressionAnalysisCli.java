@@ -24,10 +24,11 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
+import org.springframework.context.MessageSourceAware;
 import org.springframework.util.Assert;
+import ubic.gemma.core.analysis.expression.diff.AnalysisType;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
-import ubic.gemma.core.analysis.expression.diff.AnalysisType;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
@@ -44,7 +45,7 @@ import java.util.stream.Collectors;
  *
  * @author keshav
  */
-public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManipulatingCLI {
+public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManipulatingCLI implements MessageSourceAware {
 
     @Autowired
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
@@ -54,8 +55,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     private ExpressionDataFileService expressionDataFileService;
     @Autowired
     private ExperimentalFactorService efs;
-    @Autowired
     private MessageSource messageSource;
+
+    public void setMessageSource( MessageSource messageSource ) {
+        this.messageSource = messageSource;
+    }
 
     private final List<Long> factorIds = new ArrayList<>();
     private final List<String> factorNames = new ArrayList<>();
@@ -396,54 +400,58 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         Assert.notNull( ee.getExperimentalDesign() );
         Collection<ExperimentalFactor> factors = new HashSet<>();
 
-        if ( !this.factorNames.isEmpty() ) {
-            if ( !this.factorIds.isEmpty() ) {
-                throw new IllegalArgumentException( "Please provide factor names or ids, not a mixture of each" );
+        Map<Long, ExperimentalFactor> factorsById = ee.getExperimentalDesign().getExperimentalFactors().stream()
+                .collect( Collectors.toMap( ExperimentalFactor::getId, ef -> ef ) );
+
+        Map<String, Set<ExperimentalFactor>> factorsByName = new HashMap<>();
+        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            factorsByName
+                    .computeIfAbsent( ef.getName().replace( " ", "_" ), k -> new HashSet<>() )
+                    .add( ef );
+            if ( ef.getCategory() != null && ef.getCategory().getCategory() != null ) {
+                factorsByName
+                        .computeIfAbsent( ef.getCategory().getCategory().replace( " ", "_" ), k -> new HashSet<>() )
+                        .add( ef );
             }
-            Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
-            for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
+        }
 
-                // has already implemented way of figuring out human-friendly name of factor value.
-                ExperimentalFactorValueObject fvo = new ExperimentalFactorValueObject( experimentalFactor );
-
-                if ( ignoreBatch && ExperimentalDesignUtils.isBatchFactor( experimentalFactor ) ) {
-                    log.info( "Ignoring batch factor:" + experimentalFactor );
-                    continue;
-                }
-
-                if ( factorNames.contains( experimentalFactor.getName().replaceAll( " ", "_" ) ) ) {
-                    factors.add( experimentalFactor );
-                } else if ( fvo.getCategory() != null && factorNames
-                        .contains( fvo.getCategory().replaceAll( " ", "_" ) ) ) {
-                    factors.add( experimentalFactor );
-                }
+        for ( Long factorId : factorIds ) {
+            ExperimentalFactor factor = factorsById.get( factorId );
+            if ( factor == null ) {
+                throw new IllegalArgumentException( String.format( "No factor for ID %d. Possible values are:\n\t%s",
+                        factorId, factorsById.entrySet().stream().map( e -> e.getKey() + ":\t" + e.getValue() ).collect( Collectors.joining( "\n\t" ) ) ) );
             }
-
-            if ( factors.size() != factorNames.size() ) {
-                throw new IllegalArgumentException( "Didn't find factors for all the provided factor names" );
+            if ( ignoreBatch && ExperimentalDesignUtils.isBatchFactor( factor ) ) {
+                log.warn( "Selected factor looks like a batch, and 'ignoreBatch' is true, skipping:"
+                        + factor );
+                continue;
             }
+            if ( !factors.add( factor ) ) {
+                log.warn( factor + " was already added by either a name or ID." );
+            }
+        }
 
-        } else if ( !this.factorIds.isEmpty() ) {
-            for ( Long factorId : factorIds ) {
-                if ( !this.factorNames.isEmpty() ) {
-                    throw new IllegalArgumentException( "Please provide factor names or ids, not a mixture of each" );
-                }
-                ExperimentalFactor factor = efs.loadOrFail( factorId );
-                factor = efs.thaw( factor );
-                if ( factor == null ) {
-                    throw new IllegalArgumentException( "No factor for id=" + factorId );
-                }
-                if ( !factor.getExperimentalDesign().equals( ee.getExperimentalDesign() ) ) {
-                    throw new IllegalArgumentException( "Factor with id=" + factorId + " does not belong to " + ee );
-                }
-
-                if ( ignoreBatch && ExperimentalDesignUtils.isBatchFactor( factor ) ) {
-                    log.warn( "Selected factor looks like a batch, and 'ignoreBatch' is true, skipping:"
-                            + factor );
-                    continue;
-                }
-
-                factors.add( factor );
+        for ( String factorName : factorNames ) {
+            Set<ExperimentalFactor> matchingFactors = factorsByName.get( factorName );
+            if ( matchingFactors == null ) {
+                throw new IllegalArgumentException( String.format( "No factor for name %s. Possible values are:\n\t%s",
+                        // only suggest unambiguous factors
+                        factorName, factorsByName.entrySet().stream()
+                                .filter( e -> e.getValue().size() == 1 )
+                                .map( e -> e.getKey() + ":\t" + e.getValue().iterator().next() )
+                                .collect( Collectors.joining( "\n\t" ) ) ) );
+            }
+            if ( matchingFactors.size() > 1 ) {
+                throw new IllegalArgumentException( "More than one factor match " + factorName + ", use a numerical ID instead. Possible values are:\n\t"
+                        + matchingFactors.stream().map( String::valueOf ).collect( Collectors.joining( "\n\t" ) ) );
+            }
+            ExperimentalFactor factor = matchingFactors.iterator().next();
+            if ( ignoreBatch && ExperimentalDesignUtils.isBatchFactor( factor ) ) {
+                log.info( "Ignoring batch factor:" + factorName );
+                continue;
+            }
+            if ( !factors.add( factor ) ) {
+                log.warn( factor + " was already added by either a name or ID." );
             }
         }
 
