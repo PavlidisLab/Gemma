@@ -14,8 +14,8 @@ public class Layer {
     private final String encodingType;
 
     public Layer( H5File h5File, String path ) {
-        Assert.isTrue( path.equals( "X" ) || path.startsWith( "layers/" ),
-                "A layer path must either be 'X' or start with 'layers/'." );
+        Assert.isTrue( path.equals( "X" ) || path.startsWith( "layers/" ) || path.equals( "raw/X" ),
+                "A layer path must either be 'X', 'raw.X' or start with 'layers/'." );
         Assert.isTrue( h5File.exists( path ), "No layer at " + path + "." );
         Assert.isTrue( h5File.hasAttribute( path, "encoding-type" ) );
         Assert.isTrue( h5File.hasAttribute( path, "encoding-version" ) );
@@ -87,5 +87,10 @@ public class Layer {
     public DenseMatrix getDenseMatrix() {
         Assert.isTrue( isDense(), "The layer is not dense." );
         return new DenseMatrix( h5File.getDataset( path ) );
+    }
+
+    @Override
+    public String toString() {
+        return path;
     }
 }

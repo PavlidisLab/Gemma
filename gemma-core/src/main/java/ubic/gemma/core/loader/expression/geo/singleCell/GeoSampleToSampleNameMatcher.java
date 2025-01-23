@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  * Strategy for matching {@link GeoSample} from a given sample name.
  */
 @CommonsLog
-public class GeoSampleToSampleNameMatcher {
+class GeoSampleToSampleNameMatcher {
 
     public Set<GeoSample> match( Collection<GeoSample> samples, String sampleName ) {
         Map<GeoSample, String> sampleNamesInGeo = samples.stream()

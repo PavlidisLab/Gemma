@@ -5,15 +5,15 @@ import org.springframework.util.Assert;
 import ubic.gemma.core.loader.util.hdf5.H5File;
 
 import javax.annotation.Nullable;
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 @CommonsLog
-public class AnnData implements AutoCloseable {
+public class AnnData implements Closeable {
 
     public static AnnData open( Path path ) throws IOException {
         return new AnnData( H5File.open( path ) );
@@ -82,6 +82,46 @@ public class AnnData implements AutoCloseable {
         Assert.isTrue( Objects.equals( h5File.getStringAttribute( "layers", "encoding-type" ), "dict" ) );
         Assert.isTrue( h5File.hasAttribute( "layers", "encoding-type" ) );
         return new Layer( h5File, "layers/" + layerName );
+    }
+
+    /**
+     * Obtain the raw {@code X} layer if this AnnData object has been filtered.
+     * <p>
+     * This, along {@link #getRawVar()} are not part of the <a href="https://anndata.readthedocs.io/en/latest/fileformat-prose.html">on-disk specification</a>,
+     * but will be included if the AnnData object has been sliced/filtered. Note that since this is filtered,
+     * {@link #getRawVar()} should be used to refer to the relevant column annotations.
+     */
+    @Nullable
+    public Layer getRawX() {
+        if ( h5File.exists( "raw" ) && h5File.exists( "raw/X" ) ) {
+            return new Layer( h5File, "raw/X" );
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Obtain the raw {@code var} dataframe if this AnnData object has been filtered.
+     */
+    @Nullable
+    public Dataframe<?> getRawVar() {
+        if ( h5File.exists( "raw" ) && h5File.exists( "raw/var" ) ) {
+            return new Dataframe<>( h5File.getGroup( "raw/var" ), null );
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Obtain the raw {@code var} dataframe if this AnnData object has been filtered.
+     */
+    @Nullable
+    public <K> Dataframe<K> getRawVar( Class<K> indexClass ) {
+        if ( h5File.exists( "raw" ) && h5File.exists( "raw/var" ) ) {
+            return new Dataframe<>( h5File.getGroup( "raw/var" ), indexClass );
+        } else {
+            return null;
+        }
     }
 
     /**

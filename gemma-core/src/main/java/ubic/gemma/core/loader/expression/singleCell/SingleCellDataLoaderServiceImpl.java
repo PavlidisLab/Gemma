@@ -437,30 +437,78 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
      * Obtain a loader for a specific data type.
      */
     private SingleCellDataLoader getLoader( ExpressionExperiment ee, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
-        SingleCellDataLoader loader;
         switch ( dataType ) {
             case ANNDATA:
-                loader = getAnnDataLoader( ee, config );
-                break;
+                return getAnnDataLoader( ee, config );
             case SEURAT_DISK:
-                loader = getSeuratDiskLoader();
-                break;
+                return getSeuratDiskLoader();
             case MEX:
-                loader = getMexLoader( ee, config );
-                break;
+                return getMexLoader( ee, config );
             case LOOM:
-                loader = getLoomLoader();
-                break;
+                return getLoomLoader();
             case NULL:
-                loader = getNullLoader();
-                break;
+                return getNullLoader();
             default:
                 throw new IllegalArgumentException( "Unknown single-cell data type " + dataType + "." );
         }
-        return configureLoader( loader, ee, config );
     }
 
-    private SingleCellDataLoader configureLoader( SingleCellDataLoader loader, ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
+    private SingleCellDataLoader getAnnDataLoader( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
+        BioAssayMapper bioAssayMapper = getBioAssayMapper( ee );
+        Path p = config.getDataPath() != null ? config.getDataPath() : getAnnDataFile( ee );
+        AnnDataSingleCellDataLoader loader = new AnnDataSingleCellDataLoaderConfigurer( p, ee.getBioAssays(), bioAssayMapper )
+                .configureLoader();
+        if ( config instanceof AnnDataSingleCellDataLoaderConfig ) {
+            loader.setSampleFactorName( ( ( AnnDataSingleCellDataLoaderConfig ) config ).getSampleFactorName() );
+            loader.setCellTypeFactorName( ( ( AnnDataSingleCellDataLoaderConfig ) config ).getCellTypeFactorName() );
+            loader.setUnknownCellTypeIndicator( ( ( AnnDataSingleCellDataLoaderConfig ) config ).getUnknownCellTypeIndicator() );
+        }
+        return configureLoader( loader, bioAssayMapper, config );
+    }
+
+    private SingleCellDataLoader getSeuratDiskLoader() {
+        throw new UnsupportedOperationException( "Seurat Disk is not directly supported, convert it to AnnData first." );
+    }
+
+    private SingleCellDataLoader getMexLoader( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
+        BioAssayMapper bioAssayMapper = getBioAssayMapper( ee );
+        Path dir;
+        if ( config.getDataPath() != null ) {
+            dir = config.getDataPath();
+        } else {
+            dir = getMexDir( ee );
+        }
+        MexSingleCellDataLoader loader = new MexSingleCellDataLoaderConfigurer( dir, ee.getBioAssays(), bioAssayMapper )
+                .configureLoader();
+        if ( config instanceof MexSingleCellDataLoaderConfig ) {
+            loader.setDiscardEmptyCells( ( ( MexSingleCellDataLoaderConfig ) config ).isDiscardEmptyCells() );
+            loader.setAllowMappingDesignElementsToGeneSymbols( ( ( MexSingleCellDataLoaderConfig ) config ).isAllowMappingDesignElementsToGeneSymbols() );
+        }
+        return configureLoader( loader, bioAssayMapper, config );
+    }
+
+    private SingleCellDataLoader getLoomLoader() {
+        throw new UnsupportedOperationException( "Loom is not supported yet." );
+    }
+
+    private SingleCellDataLoader getNullLoader() {
+        return new NullSingleCellDataLoader();
+    }
+
+    private BioAssayMapper getBioAssayMapper( ExpressionExperiment ee ) {
+        // select the best strategy for mapping sample names to assays
+        if ( ee.getAccession() != null && ee.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
+            log.info( String.format( "%s has a GEO accession, using %s for matching samples names to assays.",
+                    ee, GeoBioAssayMapper.class.getSimpleName() ) );
+            return new GeoBioAssayMapper();
+        } else {
+            log.info( String.format( "%s does not have a GEO accession, using %s for matching sample names to assays.",
+                    ee, SimpleBioAssayMapper.class.getSimpleName() ) );
+            return new SimpleBioAssayMapper();
+        }
+    }
+
+    private SingleCellDataLoader configureLoader( SingleCellDataLoader loader, BioAssayMapper bioAssayMapper, SingleCellDataLoaderConfig config ) {
         // wrap with a generic loader to load additional metadata
         Path cellTypeAssignmentPath = config.getCellTypeAssignmentFile();
         Path otherCellCharacteristicsPath = config.getOtherCellLevelCharacteristicsFile();
@@ -471,22 +519,14 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
             if ( otherCellCharacteristicsPath != null ) {
                 log.info( "Loading additional cell-level characteristics from " + otherCellCharacteristicsPath );
             }
-            loader = configureGenericLoader( new GenericMetadataSingleCellDataLoader( loader, cellTypeAssignmentPath, otherCellCharacteristicsPath ), config );
-        }
-        // select the best strategy for mapping sample names to assays
-        if ( ee.getAccession() != null && ee.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
-            log.info( String.format( "%s has a GEO accession, using %s for matching samples names to assays.",
-                    ee, GeoBioAssayMapper.class.getSimpleName() ) );
-            loader.setBioAssayToSampleNameMapper( new GeoBioAssayMapper() );
-        } else {
-            log.info( String.format( "%s does not have a GEO accession, using %s for matching sample names to assays.",
-                    ee, SimpleBioAssayMapper.class.getSimpleName() ) );
-            loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
+            loader = configureGenericLoader( new GenericMetadataSingleCellDataLoader( loader, cellTypeAssignmentPath, otherCellCharacteristicsPath ), bioAssayMapper, config );
         }
         return loader;
     }
 
-    private SingleCellDataLoader configureGenericLoader( GenericMetadataSingleCellDataLoader loader, SingleCellDataLoaderConfig config ) {
+    private SingleCellDataLoader configureGenericLoader( GenericMetadataSingleCellDataLoader loader, BioAssayMapper bioAssayMapper, SingleCellDataLoaderConfig config ) {
+        // this needs to be set so that the delegate can use it
+        loader.setBioAssayToSampleNameMapper( bioAssayMapper );
         if ( config.getCellTypeAssignmentName() != null ) {
             loader.setCellTypeAssignmentName( config.getCellTypeAssignmentName() );
         }
@@ -497,59 +537,6 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         loader.setUseCellIdsIfSampleNameIsMissing( config.isUseCellIdsIfSampleNameIsMissing() );
         loader.setIgnoreUnmatchedCellIds( config.isIgnoreUnmatchedCellIds() );
         return loader;
-    }
-
-    private SingleCellDataLoader getAnnDataLoader( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
-        AnnDataSingleCellDataLoader loader = new AnnDataSingleCellDataLoader( config.getDataPath() != null ? config.getDataPath() : getAnnDataFile( ee ) );
-        if ( config instanceof AnnDataSingleCellDataLoaderConfig ) {
-            loader.setSampleFactorName( ( ( AnnDataSingleCellDataLoaderConfig ) config ).getSampleFactorName() );
-            loader.setCellTypeFactorName( ( ( AnnDataSingleCellDataLoaderConfig ) config ).getCellTypeFactorName() );
-            loader.setUnknownCellTypeIndicator( ( ( AnnDataSingleCellDataLoaderConfig ) config ).getUnknownCellTypeIndicator() );
-        }
-        return loader;
-    }
-
-    private SingleCellDataLoader getSeuratDiskLoader() {
-        throw new UnsupportedOperationException( "Seurat Disk is not directly supported, convert it to AnnData first." );
-    }
-
-    private SingleCellDataLoader getMexLoader( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
-        List<String> sampleNames = new ArrayList<>();
-        List<Path> barcodeFiles = new ArrayList<>();
-        List<Path> genesFiles = new ArrayList<>();
-        List<Path> matrixFiles = new ArrayList<>();
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            Path dir;
-            if ( config.getDataPath() != null ) {
-                dir = config.getDataPath();
-            } else {
-                dir = getMexDir( ee );
-            }
-            Path sampleDir;
-            if ( ba.getAccession() != null ) {
-                sampleDir = dir.resolve( ba.getAccession().getAccession() );
-            } else {
-                sampleDir = dir.resolve( ba.getName() );
-            }
-            sampleNames.add( ba.getName() );
-            barcodeFiles.add( sampleDir.resolve( "barcodes.tsv.gz" ) );
-            genesFiles.add( sampleDir.resolve( "features.tsv.gz" ) );
-            matrixFiles.add( sampleDir.resolve( "matrix.mtx.gz" ) );
-        }
-        MexSingleCellDataLoader loader = new MexSingleCellDataLoader( sampleNames, barcodeFiles, genesFiles, matrixFiles );
-        if ( config instanceof MexSingleCellDataLoaderConfig ) {
-            loader.setDiscardEmptyCells( ( ( MexSingleCellDataLoaderConfig ) config ).isDiscardEmptyCells() );
-            loader.setAllowMappingDesignElementsToGeneSymbols( ( ( MexSingleCellDataLoaderConfig ) config ).isAllowMappingDesignElementsToGeneSymbols() );
-        }
-        return loader;
-    }
-
-    private SingleCellDataLoader getLoomLoader() {
-        throw new UnsupportedOperationException( "Loom is not supported yet." );
-    }
-
-    private SingleCellDataLoader getNullLoader() {
-        return new NullSingleCellDataLoader();
     }
 
     private Path getAnnDataFile( ExpressionExperiment ee ) {

@@ -2,6 +2,7 @@ package ubic.gemma.core.loader.util.hdf5;
 
 import hdf.hdf5lib.exceptions.HDF5Exception;
 
+import java.io.Closeable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -12,7 +13,7 @@ import static hdf.hdf5lib.HDF5Constants.H5F_ACC_RDONLY;
 import static hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ubic.gemma.core.loader.util.hdf5.H5Utils.convertH5Exception;
 
-public class H5File extends H5Location implements AutoCloseable {
+public class H5File extends H5Location implements Closeable {
 
     /**
      * Open an HDF5 file.

@@ -4,13 +4,13 @@ import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
-import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
-import ubic.gemma.core.loader.util.mapper.DesignElementMapper;
-import ubic.gemma.core.loader.util.mapper.EntityMapper;
 import ubic.gemma.core.loader.util.anndata.*;
 import ubic.gemma.core.loader.util.hdf5.H5Dataset;
 import ubic.gemma.core.loader.util.hdf5.H5FundamentalType;
 import ubic.gemma.core.loader.util.hdf5.H5Type;
+import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
+import ubic.gemma.core.loader.util.mapper.DesignElementMapper;
+import ubic.gemma.core.loader.util.mapper.EntityMapper;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
@@ -61,10 +61,10 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
      */
     private final Path file;
 
-    private BioAssayMapper sampleNameMapper;
+    private BioAssayMapper bioAssayToSampleNameMapper;
     private boolean ignoreUnmatchedSamples = true;
 
-    private DesignElementMapper designElementMapper;
+    private DesignElementMapper designElementToGeneMapper;
     private boolean ignoreUnmatchedDesignElements = true;
 
     /**
@@ -85,22 +85,18 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     private String unknownCellTypeIndicator;
 
     /**
+     * Use or not the {@code raw.X} layer.
+     */
+    @Nullable
+    private Boolean useRawX = null;
+
+    /**
      * Transpose obs/var dataframes.
      */
     private boolean transpose = false;
 
     public AnnDataSingleCellDataLoader( Path file ) {
         this.file = file;
-    }
-
-    @Override
-    public void setBioAssayToSampleNameMapper( BioAssayMapper bioAssayToSampleNameMatcher ) {
-        this.sampleNameMapper = bioAssayToSampleNameMatcher;
-    }
-
-    @Override
-    public void setDesignElementToGeneMapper( DesignElementMapper designElementToGeneMapper ) {
-        this.designElementMapper = designElementToGeneMapper;
     }
 
     @Override
@@ -124,8 +120,11 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     @Override
     public SingleCellDimension getSingleCellDimension( Collection<BioAssay> bioAssays ) throws IOException {
         Assert.isTrue( !bioAssays.isEmpty(), "At least one bioassay must be provided" );
-        Assert.notNull( sampleNameMapper, "A sample name comparator is necessary to match samples to BioAssays." );
-        Assert.notNull( sampleFactorName, "The sample factor name must be set." );
+        Assert.notNull( bioAssayToSampleNameMapper, "A sample name comparator is necessary to match samples to BioAssays." );
+        Assert.notNull( sampleFactorName, "The sample factor name must be set. Possible values are:\n\t"
+                + getPossibleSampleNameColumns().entrySet().stream()
+                .map( e -> e.getKey() + ":\t" + e.getValue().stream().limit( 10 ).collect( Collectors.joining( ", " ) ) + ", ..." )
+                .collect( Collectors.joining( "\n\t" ) ) );
         SingleCellDimension singleCellDimension = new SingleCellDimension();
         try ( AnnData h5File = AnnData.open( file ) ) {
             Dataframe.Column<?, String> cellIds;
@@ -180,8 +179,8 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 cellIdsL.add( cellIds.get( i ) );
                 j++;
             }
-            if ( bioAssays.isEmpty() ) {
-                throw new IllegalArgumentException( "No samples were matched." );
+            if ( bas.isEmpty() ) {
+                throw new IllegalArgumentException( "No samples were matched. Possible sample names: " + String.join( ", ", unmatchedSamples ) );
             }
             if ( !unmatchedSamples.isEmpty() ) {
                 String msg = "No BioAssays match the following samples: " + String.join( ", ", unmatchedSamples );
@@ -203,8 +202,8 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     public Set<QuantitationType> getQuantitationTypes() throws IOException {
         Set<QuantitationType> qts = new HashSet<>();
         try ( AnnData h5File = AnnData.open( file ) ) {
-            if ( h5File.getX() != null ) {
-                qts.add( createQt( h5File, h5File.getX(), null ) );
+            if ( getX( h5File ) != null ) {
+                qts.add( createQt( h5File, getX( h5File ), null ) );
             }
             for ( String layer : h5File.getLayers() ) {
                 qts.add( createQt( h5File, h5File.getLayer( layer ), layer ) );
@@ -217,7 +216,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         QuantitationType qt = new QuantitationType();
         // FIXME: rename this layer to include 'AnnData', but we need to layer name later on for loading vectors
         if ( layerName != null ) {
-            qt.setName( LAYERED_QT_NAME_PREFIX + " " + layerName );
+            qt.setName( LAYERED_QT_NAME_PREFIX + layerName );
         } else {
             qt.setName( QT_NAME_PREFIX );
         }
@@ -448,7 +447,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                                 Map<String, FactorValue> fvByValue = factor.getFactorValues().stream()
                                         .collect( Collectors.toMap( FactorValue::getValue, fv -> fv ) );
                                 sampleValues.forEach( ( sn, v ) -> {
-                                    for ( BioAssay sample : sampleNameMapper.matchAll( samples, sn ) ) {
+                                    for ( BioAssay sample : bioAssayToSampleNameMapper.matchAll( samples, sn ) ) {
                                         factorValueAssignments
                                                 .computeIfAbsent( sample.getSampleUsed(), k -> new HashSet<>() )
                                                 .add( fvByValue.get( v ) );
@@ -459,7 +458,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                             // measurement, no need to create any FVs since those are unique to each sample
                             if ( factorValueAssignments != null ) {
                                 sampleValues.forEach( ( sn, v ) -> {
-                                    for ( BioAssay sample : sampleNameMapper.matchAll( samples, sn ) ) {
+                                    for ( BioAssay sample : bioAssayToSampleNameMapper.matchAll( samples, sn ) ) {
                                         FactorValue fvO = FactorValue.Factory.newInstance( factor );
                                         Measurement measurement = new Measurement();
                                         measurement.setRepresentation( representation );
@@ -531,7 +530,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                         continue;
                     }
                     extractSingleValueBySampleName( sampleNames, values )
-                            .ifPresent( fvs -> fvs.forEach( ( sampleName, value ) -> sampleNameMapper.matchAll( samples, sampleName )
+                            .ifPresent( fvs -> fvs.forEach( ( sampleName, value ) -> bioAssayToSampleNameMapper.matchAll( samples, sampleName )
                                     .forEach( ba -> result.computeIfAbsent( ba.getSampleUsed(), k -> new HashSet<>() )
                                             .add( Characteristic.Factory.newInstance( factorName, null, value, null ) ) ) ) );
                 }
@@ -565,45 +564,60 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
     @Override
     public Set<String> getGenes() throws IOException {
-        try ( AnnData h5File = AnnData.open( file ); Dataframe<?> obs = getGenesDataframe( h5File ) ) {
+        try ( AnnData h5File = AnnData.open( file ); Dataframe<?> obs = getGenesDataframe( h5File, null ) ) {
+            return obs.getColumn( obs.getIndexColumn(), String.class ).uniqueValues();
+        }
+    }
+
+    /**
+     * Obtain the genes for a specific QT.
+     */
+    public Set<String> getGenes( QuantitationType qt ) throws IOException {
+        try ( AnnData h5File = AnnData.open( file ); Dataframe<?> obs = getGenesDataframe( h5File, getLayerName( qt ) ) ) {
             return obs.getColumn( obs.getIndexColumn(), String.class ).uniqueValues();
         }
     }
 
     @Override
     public Stream<SingleCellExpressionDataVector> loadVectors( Collection<CompositeSequence> designElements, SingleCellDimension dimension, QuantitationType quantitationType ) throws IOException, IllegalArgumentException {
-        String layerName;
+        return loadVectors( designElements, dimension, quantitationType, getLayerName( quantitationType ) );
+    }
+
+    @Nullable
+    private String getLayerName( QuantitationType quantitationType ) {
         if ( quantitationType.getName().startsWith( LAYERED_QT_NAME_PREFIX ) ) {
-            layerName = quantitationType.getName().substring( LAYERED_QT_NAME_PREFIX.length() );
+            return quantitationType.getName().substring( LAYERED_QT_NAME_PREFIX.length() );
         } else {
-            layerName = null;
+            return null;
         }
-        return loadVectors( designElements, dimension, quantitationType, layerName );
     }
 
     /**
      * Load single-cell vectors from a particular layer in the AnnData file.
      * @param layerName the name of the layer to load under {@code layers/}, or null to load the {@code X}
      */
-    public Stream<SingleCellExpressionDataVector> loadVectors(
+    private Stream<SingleCellExpressionDataVector> loadVectors(
             Collection<CompositeSequence> designElements,
             SingleCellDimension dimension,
             QuantitationType quantitationType,
             @Nullable String layerName ) throws IOException {
-        Assert.notNull( designElementMapper, "A design element mapper must be set to load vectors." );
+        Assert.notNull( designElementToGeneMapper, "A design element mapper must be set to load vectors." );
         Assert.notNull( sampleFactorName, "A sample factor name must be set." );
         // we don't want to close it since it will be closed by the stream
+        EntityMapper.StatefulEntityMapper<CompositeSequence> statefulDesignElementMapper = designElementToGeneMapper.forCandidates( designElements );
+        // indicate if closing the H5 file been delegated to the Stream
+        boolean closeDelegatedToStream = false;
         AnnData h5File = AnnData.open( file );
-        EntityMapper.StatefulEntityMapper<CompositeSequence> statefulDesignElementMapper = designElementMapper.forCandidates( designElements );
         try {
             // load genes
             Dataframe.Column<?, String> genes;
-            try ( Dataframe<?> obs = getGenesDataframe( h5File ) ) {
+            try ( Dataframe<?> obs = getGenesDataframe( h5File, layerName ) ) {
                 genes = obs.getColumn( obs.getIndexColumn(), String.class );
             }
             Set<String> genesSet = genes.uniqueValues();
             if ( !statefulDesignElementMapper.containsAny( genesSet ) ) {
-                throw new IllegalArgumentException( "None of the genes are present in the elements mapping." );
+                throw new IllegalArgumentException( String.format( "None of the genes are present in the elements mapping. Examples of gene identifiers: %s. You might have to transpose the dataset with the 'transpose' transformation first.",
+                        genesSet.stream().limit( 10 ).collect( Collectors.joining( ", " ) ) ) );
             }
             Set<String> unknownGenes = genesSet.stream().filter( g -> !statefulDesignElementMapper.contains( g ) ).collect( Collectors.toSet() );
             if ( !unknownGenes.isEmpty() ) {
@@ -628,10 +642,12 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             if ( layerName != null ) {
                 layer = h5File.getLayer( layerName );
             } else {
-                layer = requireNonNull( h5File.getX(), h5File + " does not have a layer for path 'X'." );
+                layer = requireNonNull( getX( h5File ), h5File + " does not have a layer for path 'X'." );
             }
             String matrixEncodingType = layer.getType();
+            log.info( "Loading data from " + layer + "..." );
             if ( ( matrixEncodingType.equals( "csr_matrix" ) && !transpose ) || ( matrixEncodingType.equals( "csc_matrix" ) && transpose ) ) {
+                closeDelegatedToStream = true;
                 return loadVectorsFromSparseMatrix( layer.getSparseMatrix(), samples, genes, quantitationType, dimension, designElements )
                         .onClose( () -> {
                             try {
@@ -647,9 +663,10 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             } else {
                 throw new UnsupportedOperationException( "Loading single-cell data from " + matrixEncodingType + " is not supported." );
             }
-        } catch ( Throwable e ) {
-            h5File.close();
-            throw e;
+        } finally {
+            if ( !closeDelegatedToStream ) {
+                h5File.close();
+            }
         }
     }
 
@@ -688,7 +705,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         boolean isSimpleCase = scd.getBioAssays().equals( samplesBioAssay );
 
         if ( !isSimpleCase ) {
-            // map BAs to the correponding sample name in data
+            // map BAs to the corresponding sample name in data
             String scdNames = scd.getBioAssays().stream()
                     .map( ba -> samplesName.get( samplesBioAssay.indexOf( ba ) ) )
                     .collect( Collectors.joining( ", " ) );
@@ -697,7 +714,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                     + "\tIn single-cell dimension: " + scdNames );
         }
 
-        EntityMapper.StatefulEntityMapper<CompositeSequence> statefulDesignElementMapper = designElementMapper
+        EntityMapper.StatefulEntityMapper<CompositeSequence> statefulDesignElementMapper = designElementToGeneMapper
                 .forCandidates( designElements );
 
         return IntStream.range( 0, matrix.getShape()[0] )
@@ -765,6 +782,9 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                             int start = sampleStarts[i1];
                             int end = sampleEnds[i1];
                             int sampleNnz = end - start;
+                            if ( sampleNnz == 0 ) {
+                                continue;
+                            }
                             try ( H5Dataset data = matrix.getData() ) {
                                 data.slice( start, end ).toByteVector( vectorData, sampleOffsetInVector, sampleOffsetInVector + sampleNnz, H5Type.IEEE_F64BE );
                             }
@@ -784,16 +804,47 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     private Dataframe<?> getCellsDataframe( AnnData h5File ) {
-        return transpose ? h5File.getObs() : h5File.getVar();
+        return transpose ? h5File.getObs() : getVar( h5File, false );
     }
 
-    private Dataframe<?> getGenesDataframe( AnnData h5File ) {
-        return transpose ? h5File.getVar() : h5File.getObs();
+    private Dataframe<?> getGenesDataframe( AnnData h5File, @Nullable String layerName ) {
+        return transpose ? getVar( h5File, layerName != null ) : h5File.getObs();
+    }
+
+    private Layer getX( AnnData h5File ) {
+        checkRawX( h5File );
+        if ( useRawX != null && useRawX ) {
+            return h5File.getRawX();
+        } else {
+            return h5File.getX();
+        }
+    }
+
+    /**
+     * @param ignoreRawVar do not consider {@link #useRawX} when retrieving the {@code var} dataframe. This is only
+     *                     useful for retrieving the variables corresponding to {@code X} or {@code layers/*}.
+     */
+    private Dataframe<?> getVar( AnnData h5File, boolean ignoreRawVar ) {
+        checkRawX( h5File );
+        // check if the AnnData file has been filtered
+        if ( ( useRawX != null && useRawX ) && !ignoreRawVar ) {
+            return h5File.getRawVar();
+        } else {
+            return h5File.getVar();
+        }
+    }
+
+    private void checkRawX( AnnData h5File ) {
+        if ( h5File.getRawX() != null ) {
+            Assert.notNull( useRawX, "The AnnData object at " + file + " has as 'raw.X' group. Explicitly set useRawX or converted first with the 'unraw' transformation." );
+        } else {
+            Assert.isTrue( useRawX == null || !useRawX, "THe AnnData object at " + file + " does not have a 'raw.X' group. Leave useRawX unset or false." );
+        }
     }
 
     private Optional<BioAssay> getBioAssayBySampleName( Collection<BioAssay> bioAssays, String sampleName ) {
         // lookup the sample
-        Set<BioAssay> match = sampleNameMapper.matchAll( bioAssays, sampleName );
+        Set<BioAssay> match = bioAssayToSampleNameMapper.matchAll( bioAssays, sampleName );
         if ( match.size() > 1 ) {
             throw new IllegalStateException( String.format( "There is more than one BioAssay matching %s.", sampleName ) );
         } else if ( match.size() == 1 ) {
@@ -801,5 +852,24 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         } else {
             return Optional.empty();
         }
+    }
+
+    /**
+     * Obtain a mapping of possible sample name columns with their unique values.
+     * <p>
+     * TODO: do some more filtering for the suggested columns.
+     */
+    private Map<String, Set<String>> getPossibleSampleNameColumns() throws IOException {
+        Map<String, Set<String>> candidates = new HashMap<>();
+        try ( AnnData f = AnnData.open( file ) ) {
+            try ( Dataframe<?> obs = getCellsDataframe( f ) ) {
+                for ( String column : obs.getColumns() ) {
+                    if ( String.class.isAssignableFrom( obs.getColumnType( column ) ) ) {
+                        candidates.put( column, obs.getColumn( column, String.class ).uniqueValues() );
+                    }
+                }
+            }
+        }
+        return candidates;
     }
 }

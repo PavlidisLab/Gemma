@@ -583,33 +583,11 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
     public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series ) throws NoSingleCellDataFoundException {
         Assert.notNull( series.getGeoAccession() );
         Assert.notNull( getDownloadDirectory(), "A download directory must be set." );
-
-        List<String> sampleNames = new ArrayList<>();
-        List<Path> barcodesFiles = new ArrayList<>(),
-                featuresFiles = new ArrayList<>(),
-                matricesFiles = new ArrayList<>();
-
-        for ( GeoSample sample : series.getSamples() ) {
-            Assert.notNull( sample.getGeoAccession() );
-            Path sampleDir = getDownloadDirectory().resolve( sample.getGeoAccession() );
-            if ( Files.exists( sampleDir ) ) {
-                sampleNames.add( sample.getGeoAccession() );
-                Path b = sampleDir.resolve( "barcodes.tsv.gz" ), f = sampleDir.resolve( "features.tsv.gz" ), m = sampleDir.resolve( "matrix.mtx.gz" );
-                if ( Files.exists( b ) && Files.exists( f ) && Files.exists( m ) ) {
-                    barcodesFiles.add( b );
-                    featuresFiles.add( f );
-                    matricesFiles.add( m );
-                } else {
-                    throw new IllegalStateException( String.format( "Expected MEX files are missing in %s", sampleDir ) );
-                }
-            }
+        MexSingleCellDataLoader loader = new GeoMexSingleCellDataLoaderConfigurer( getDownloadDirectory(), series ).configureLoader();
+        if ( loader.getSampleNames().isEmpty() ) {
+            throw new NoSingleCellDataFoundException( "No single-cell data was found for " + series.getGeoAccession() );
         }
-
-        if ( !sampleNames.isEmpty() ) {
-            return new MexSingleCellDataLoader( sampleNames, barcodesFiles, featuresFiles, matricesFiles );
-        }
-
-        throw new NoSingleCellDataFoundException( "No single-cell data was found for " + series.getGeoAccession() );
+        return loader;
     }
 
     private enum MexFileType {

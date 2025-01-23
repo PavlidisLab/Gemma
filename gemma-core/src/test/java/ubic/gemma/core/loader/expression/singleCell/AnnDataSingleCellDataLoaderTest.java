@@ -2,8 +2,14 @@ package ubic.gemma.core.loader.expression.singleCell;
 
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
+import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationPipeline;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTranspose;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataUnraw;
 import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
+import ubic.gemma.core.loader.util.mapper.RenamingBioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.SimpleBioAssayMapper;
+import ubic.gemma.core.loader.util.mapper.SimpleDesignElementMapper;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -18,14 +24,19 @@ import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class AnnDataSingleCellDataLoaderTest {
+
+    private static final Path pythonExecutable = Paths.get( Settings.getString( "python.exe" ) );
 
     @Test
     public void test() throws IOException {
@@ -143,7 +154,7 @@ public class AnnDataSingleCellDataLoaderTest {
 
         Map<String, CompositeSequence> elementsMapping = new HashMap<>();
         elementsMapping.put( "SLCO3A1", CompositeSequence.Factory.newInstance( "SLCO3A1" ) );
-        loader.setDesignElementMapper( new MapBasedDesignElementMapper( "test", elementsMapping ) );
+        loader.setDesignElementToGeneMapper( new MapBasedDesignElementMapper( "test", elementsMapping ) );
 
         QuantitationType qt = qts.iterator().next();
         try ( Stream<SingleCellExpressionDataVector> vectors = loader.loadVectors( elementsMapping.values(), dimension, qt ) ) {
@@ -213,7 +224,7 @@ public class AnnDataSingleCellDataLoaderTest {
 
         Map<String, CompositeSequence> elementsMapping = new HashMap<>();
         elementsMapping.put( "SLCO3A1", CompositeSequence.Factory.newInstance( "SLCO3A1" ) );
-        loader.setDesignElementMapper( new MapBasedDesignElementMapper( "test", elementsMapping ) );
+        loader.setDesignElementToGeneMapper( new MapBasedDesignElementMapper( "test", elementsMapping ) );
         assertThat( loader.loadVectors( elementsMapping.values(), dim, qt ) )
                 .first().satisfies( v -> {
                     assertThat( v.getDesignElement().getName() ).isEqualTo( "SLCO3A1" );
@@ -256,7 +267,7 @@ public class AnnDataSingleCellDataLoaderTest {
 
         Map<String, CompositeSequence> elementsMapping = new HashMap<>();
         elementsMapping.put( "SLCO3A1", CompositeSequence.Factory.newInstance( "SLCO3A1" ) );
-        loader.setDesignElementMapper( new MapBasedDesignElementMapper( "test", elementsMapping ) );
+        loader.setDesignElementToGeneMapper( new MapBasedDesignElementMapper( "test", elementsMapping ) );
 
 
         QuantitationType qt = qts.iterator().next();
@@ -278,9 +289,104 @@ public class AnnDataSingleCellDataLoaderTest {
         }
     }
 
+    /**
+     * AnnData on-disk format was formalized in the 0.8.x series. This file was generated with 0.7.x.
+     */
     @Test
-    public void testLayeredAnnDataFile() {
-        // TODO
+    public void testGSE216457() throws IOException {
+        SingleCellDataTransformationPipeline transformation = new SingleCellDataTransformationPipeline( Arrays.asList(
+                new SingleCellDataUnraw(),
+                new SingleCellDataTranspose()
+        ) );
+        Path dataPath = new ClassPathResource( "/data/loader/expression/singleCell/GSE216457.h5ad" ).getFile().toPath();
+        Path dataPath2 = Files.createTempFile( null, null );
+        transformation.setPythonExecutable( pythonExecutable );
+        transformation.setInputFile( dataPath, SingleCellDataType.ANNDATA );
+        transformation.setOutputFile( dataPath2, SingleCellDataType.ANNDATA );
+        transformation.perform();
+        AnnDataSingleCellDataLoader loader = new AnnDataSingleCellDataLoader( dataPath2 );
+        loader.setSampleFactorName( "batch" );
+        Set<CompositeSequence> designElements = Collections.singleton( CompositeSequence.Factory.newInstance( "CDH1" ) );
+        loader.setDesignElementToGeneMapper( new SimpleDesignElementMapper( designElements ) );
+        loader.setBioAssayToSampleNameMapper( new RenamingBioAssayMapper( new SimpleBioAssayMapper(), new String[] { "test" }, new String[] { "0" } ) );
+        Collection<BioAssay> bas = Arrays.asList( BioAssay.Factory.newInstance( "test", null, BioMaterial.Factory.newInstance( "test" ) ) );
+        SingleCellDimension dim = loader.getSingleCellDimension( bas );
+        QuantitationType qt = loader.getQuantitationTypes().iterator().next();
+        assertThat( loader.loadVectors( designElements, dim, qt ) ).singleElement()
+                .satisfies( vec -> {
+                    assertThat( vec.getDataAsDoubles() ).isEmpty();
+                } );
+    }
+
+    @Test
+    public void testRawDataset() throws IOException {
+        Path dataPath = new ClassPathResource( "/data/loader/expression/singleCell/GSE216457.h5ad" ).getFile().toPath();
+        AnnDataSingleCellDataLoader loader = new AnnDataSingleCellDataLoader( dataPath );
+        loader.setTranspose( true );
+        loader.setSampleFactorName( "batch" );
+        Set<CompositeSequence> designElements = Collections.singleton( CompositeSequence.Factory.newInstance( "SERPINE2" ) );
+        loader.setDesignElementToGeneMapper( new SimpleDesignElementMapper( designElements ) );
+        loader.setBioAssayToSampleNameMapper( new RenamingBioAssayMapper( new SimpleBioAssayMapper(), new String[] { "test" }, new String[] { "0" } ) );
+        Collection<BioAssay> bas = Arrays.asList( BioAssay.Factory.newInstance( "test", null, BioMaterial.Factory.newInstance( "test" ) ) );
+        SingleCellDimension dim = loader.getSingleCellDimension( bas );
+
+        // raw.X and raw.var are not accessible as to prevent unintentional loading of filtered values
+        assertThatThrownBy( loader::getQuantitationTypes ).isInstanceOf( IllegalArgumentException.class );
+        assertThatThrownBy( loader::getGenes ).isInstanceOf( IllegalArgumentException.class );
+
+        loader.setUseRawX( false );
+        assertThat( loader.getGenes() ).hasSize( 100 );
+        QuantitationType qt = loader.getQuantitationTypes().iterator().next();
+        assertThat( qt.getName() ).isEqualTo( "AnnData" );
+        assertThat( qt.getDescription() ).isEqualTo( "Data from a layer located at 'X' originally encoded as an array of floats." );
+        // we could load data in principle, but in transpose mode the matrix would have to be encoded in CSC
+        assertThatThrownBy( () -> loader.loadVectors( designElements, dim, qt ) )
+                .isInstanceOf( UnsupportedOperationException.class );
+
+        loader.setUseRawX( true );
+        assertThat( loader.getGenes() ).hasSize( 21978 );
+        QuantitationType qt2 = loader.getQuantitationTypes().iterator().next();
+        assertThat( qt2.getName() ).isEqualTo( "AnnData" );
+        assertThat( qt2.getDescription() ).isEqualTo( "Data from a layer located at 'raw/X' originally encoded as an csr_matrix of floats." );
+        // we could load data in principle, but in transpose mode the matrix would have to be encoded in CSC
+        assertThatThrownBy( () -> loader.loadVectors( designElements, dim, qt2 ) )
+                .isInstanceOf( UnsupportedOperationException.class );
+    }
+
+    @Test
+    public void testRachelH5ad() throws IOException {
+        Path dataPath = Paths.get( "/home/guillaume/Projets/Gemma/gemma-data/download/singleCellData/local/lim_Cingulate_transposed.h5ad" );
+        AnnDataSingleCellDataLoader loader = new AnnDataSingleCellDataLoader( dataPath );
+        loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
+        loader.setSampleFactorName( "case_num" );
+        Collection<BioAssay> bas = Arrays.asList( BioAssay.Factory.newInstance( "C5382Cin", null, BioMaterial.Factory.newInstance( "C5382Cin" ) ) );
+        loader.getSingleCellDimension( bas );
+        QuantitationType qt = loader.getQuantitationTypes().iterator().next();
+    }
+
+    @Test
+    public void testLayeredAnnDataFile() throws IOException {
+        Path dataPath = new ClassPathResource( "/data/loader/expression/singleCell/GSE221593.h5ad" ).getFile().toPath();
+        AnnDataSingleCellDataLoader loader = new AnnDataSingleCellDataLoader( dataPath );
+        loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
+        Collection<CompositeSequence> designElements = Collections.singleton( CompositeSequence.Factory.newInstance( "PGLYRP4" ) );
+        loader.setDesignElementToGeneMapper( new SimpleDesignElementMapper( designElements ) );
+        loader.setSampleFactorName( "nbatch" );
+        Collection<BioAssay> bas = Arrays.asList( BioAssay.Factory.newInstance( "1 naive Egfp", null, BioMaterial.Factory.newInstance( "1 naive Egfp" ) ) );
+
+        SingleCellDimension dim = loader.getSingleCellDimension( bas );
+        assertThat( dim.getCellIds() ).hasSize( 192 );
+        assertThat( loader.getGenes() ).hasSize( 1000 );
+
+
+        assertThat( loader.getQuantitationTypes() )
+                .hasSize( 3 )
+                .allSatisfy( qt -> {
+                    assertThat( loader.loadVectors( designElements, dim, qt ) )
+                            .singleElement().satisfies( vec -> {
+                                assertThat( vec.getDesignElement() ).isEqualTo( designElements.iterator().next() );
+                            } );
+                } );
     }
 
     private AnnDataSingleCellDataLoader createLoader() throws IOException {

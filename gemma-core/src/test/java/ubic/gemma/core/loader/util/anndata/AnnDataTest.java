@@ -111,4 +111,24 @@ public class AnnDataTest {
                     .containsExactlyInAnyOrder( "TRUE", "FALSE" );
         }
     }
+
+    @Test
+    public void testRawX() throws IOException {
+        Path dataPath = new ClassPathResource( "/data/loader/expression/singleCell/GSE216457.h5ad" ).getFile().toPath();
+        try ( AnnData ad = AnnData.open( dataPath ) ) {
+            assertThat( ad.getVar().getColumns() ).hasSize( 8 );
+            assertThat( ad.getRawX() ).isNotNull();
+            assertThat( ad.getRawVar() ).isNotNull();
+            assertThat( ad.getRawVar( String.class ) ).isNotNull();
+            assertThat( ad.getRawX().getMatrix().getShape() ).isEqualTo( new int[] { 100, 21978 } );
+            assertThat( ad.getRawVar().getColumns() ).hasSize( 4 );
+        }
+
+        // this dataset does not have a raw.X
+        dataPath = new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath();
+        try ( AnnData ad = AnnData.open( dataPath ) ) {
+            assertThat( ad.getRawX() ).isNull();
+            assertThat( ad.getRawVar() ).isNull();
+        }
+    }
 }

@@ -132,12 +132,30 @@ public class GeoSingleCellDetectorTest extends BaseTest {
                 .satisfies( loader -> {
                     assertThatThrownBy( loader::getSampleNames )
                             .isInstanceOf( IllegalArgumentException.class );
+                    assertThat( loader.getGenes() ).hasSize( 19035 )
+                            .contains( "SCT", "IGHV3-1", "VSTM4" );
+                    assertThat( loader.getQuantitationTypes() )
+                            .hasSize( 3 )
+                            .extracting( QuantitationType::getName )
+                            .containsExactlyInAnyOrder( "AnnData", "AnnData from layer counts", "AnnData from layer scvi_normalized" );
+                    assertThat( loader.getQuantitationTypes() )
+                            .hasSize( 3 )
+                            .extracting( QuantitationType::getDescription )
+                            .containsExactlyInAnyOrder(
+                                    "Data from a layer located at 'layers/scvi_normalized' originally encoded as an array of floats.",
+                                    "Data from a layer located at 'layers/counts' originally encoded as an array of floats.",
+                                    "Data from a layer located at 'raw/X' originally encoded as an array of floats." );
+
+                    // raw.X and raw.var were detected in the original data
+                    ( ( AnnDataSingleCellDataLoader ) loader ).setUseRawX( false );
+                    assertThatThrownBy( loader::getSampleNames )
+                            .isInstanceOf( IllegalArgumentException.class );
                     assertThat( loader.getGenes() ).hasSize( 4000 )
                             .contains( "SCT", "IGHV3-1", "VSTM4" );
                     assertThat( loader.getQuantitationTypes() )
                             .hasSize( 3 )
                             .extracting( QuantitationType::getName )
-                            .containsExactlyInAnyOrder( "X", "layers/counts", "layers/scvi_normalized" );
+                            .containsExactlyInAnyOrder( "AnnData", "AnnData from layer counts", "AnnData from layer scvi_normalized" );
                     assertThat( loader.getQuantitationTypes() )
                             .hasSize( 3 )
                             .extracting( QuantitationType::getDescription )
@@ -536,7 +554,8 @@ public class GeoSingleCellDetectorTest extends BaseTest {
                 .containsExactly( "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE201nnn/GSE201032/suppl/GSE201032_Metadata.csv.gz" );
         assertThat( series.getSamples() )
                 .hasSize( 8 )
-                .allSatisfy( sample -> assertThat( detector.getAdditionalSupplementaryFiles( series, sample ) ).isEmpty() );
+                .allSatisfy( sample -> assertThat( detector.getAdditionalSupplementaryFiles( series, sample ) )
+                        .containsExactly( "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE201nnn/GSE201032/suppl/GSE201032_Metadata.csv.gz" ) );
     }
 
     /**

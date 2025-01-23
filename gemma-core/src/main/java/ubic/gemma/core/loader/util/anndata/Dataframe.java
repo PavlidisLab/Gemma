@@ -292,8 +292,8 @@ public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoClose
             String possibleColumns = getColumns().stream()
                     .filter( c -> columnType == null || columnType.equals( getColumnEncodingType( c ) ) )
                     .collect( Collectors.joining( ", " ) );
-            throw new IllegalArgumentException( String.format( "There is no %s column named %s. Possible columns are: %s.",
-                    columnType, columnName, possibleColumns ) );
+            throw new IllegalArgumentException( String.format( "There is no %s named %s. Possible columns are: %s.",
+                    columnType != null ? columnType + " column" : "column", columnName, possibleColumns ) );
         }
     }
 
