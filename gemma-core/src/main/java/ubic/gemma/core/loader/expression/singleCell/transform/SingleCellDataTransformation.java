@@ -9,6 +9,11 @@ import java.io.IOException;
 public interface SingleCellDataTransformation {
 
     /**
+     * Obtain a short description of what the transformation does.
+     */
+    String getDescription();
+
+    /**
      * Perform the transformation.
      */
     void perform() throws IOException;

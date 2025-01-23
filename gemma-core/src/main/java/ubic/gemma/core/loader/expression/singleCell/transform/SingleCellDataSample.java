@@ -17,4 +17,9 @@ public class SingleCellDataSample extends AbstractPythonScriptBasedAnnDataTransf
     protected String[] createScriptArgs() {
         return ArrayUtils.addAll( super.createScriptArgs(), String.valueOf( numberOfCells ), String.valueOf( numberOfGenes ) );
     }
+
+    @Override
+    public String getDescription() {
+        return "Randomly sample cells and genes from an AnnData object";
+    }
 }

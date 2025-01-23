@@ -1,6 +1,5 @@
 package ubic.gemma.core.loader.expression.singleCell.transform;
 
-import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -14,21 +13,21 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static java.util.Objects.requireNonNull;
 
-@Setter
 @CommonsLog
-public class AbstractPythonScriptBasedAnnDataTransformation implements SingleCellInputOutputFileTransformation {
+public abstract class AbstractPythonScriptBasedAnnDataTransformation implements PythonBasedSingleCellDataTransformation, SingleCellInputOutputFileTransformation {
 
-    public static final String DEFAULT_PYTHON_EXECUTABLE = "python";
+    public static final Path DEFAULT_PYTHON_EXECUTABLE = Paths.get( "python" );
 
     private final String scriptName;
 
     /**
      * Location of the Python executable.
      */
-    private String pythonExecutable = DEFAULT_PYTHON_EXECUTABLE;
+    private Path pythonExecutable = DEFAULT_PYTHON_EXECUTABLE;
 
     // input/output for the transformation
     private Path inputFile, outputFile;
@@ -38,11 +37,28 @@ public class AbstractPythonScriptBasedAnnDataTransformation implements SingleCel
         this.scriptName = scriptName;
     }
 
+    @Override
+    public void setPythonExecutable( Path pythonExecutable ) {
+        this.pythonExecutable = pythonExecutable;
+    }
+
+    @Override
+    public void setInputFile( Path inputFile, SingleCellDataType singleCellDataType ) {
+        this.inputFile = inputFile;
+        this.inputDataType = singleCellDataType;
+    }
+
+    @Override
+    public void setOutputFile( Path outputFile, SingleCellDataType singleCellDataType ) {
+        this.outputFile = outputFile;
+        this.outputDataType = singleCellDataType;
+    }
+
     /**
      * Check if a Python package is installed.
      */
     public boolean isPackageInstalled( String packageName ) throws IOException {
-        Process process = Runtime.getRuntime().exec( new String[] { pythonExecutable, "-c", "import " + packageName } );
+        Process process = Runtime.getRuntime().exec( new String[] { pythonExecutable.toString(), "-c", "import " + packageName } );
         try {
             if ( process.waitFor() != 0 ) {
                 log.warn( "import " + packageName + " failed:\n" + IOUtils.toString( process.getErrorStream(), StandardCharsets.UTF_8 ) );
@@ -63,7 +79,7 @@ public class AbstractPythonScriptBasedAnnDataTransformation implements SingleCel
         Assert.isTrue( outputDataType == SingleCellDataType.ANNDATA, "Only AnnData is supported as output for this transformation." );
         log.info( "Using " + getPythonVersion() + " from " + pythonExecutable + "." );
         try ( InputStream in = requireNonNull( getClass().getResourceAsStream( "/ubic/gemma/core/loader/expression/singleCell/" + scriptName + "-anndata.py" ) ) ) {
-            Process process = Runtime.getRuntime().exec( ArrayUtils.addAll( new String[] { pythonExecutable, "-" }, createScriptArgs() ) );
+            Process process = Runtime.getRuntime().exec( ArrayUtils.addAll( new String[] { pythonExecutable.toString(), "-" }, createScriptArgs() ) );
             IOUtils.copy( in, process.getOutputStream() );
             process.getOutputStream().close();
             try ( BufferedReader reader = new BufferedReader( new InputStreamReader( process.getInputStream() ) ) ) {
@@ -83,7 +99,7 @@ public class AbstractPythonScriptBasedAnnDataTransformation implements SingleCel
     }
 
     private String getPythonVersion() throws IOException {
-        Process process = Runtime.getRuntime().exec( new String[] { pythonExecutable, "--version" } );
+        Process process = Runtime.getRuntime().exec( new String[] { pythonExecutable.toString(), "--version" } );
         try {
             if ( process.waitFor() == 0 ) {
                 return StringUtils.strip( IOUtils.toString( process.getInputStream(), StandardCharsets.UTF_8 ) );

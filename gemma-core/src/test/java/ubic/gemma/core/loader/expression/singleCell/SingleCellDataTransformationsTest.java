@@ -5,10 +5,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.config.Settings;
-import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataPack;
-import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataSample;
-import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataSortBySample;
-import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTranspose;
+import ubic.gemma.core.loader.expression.singleCell.transform.*;
 import ubic.gemma.core.loader.util.hdf5.H5Attribute;
 import ubic.gemma.core.loader.util.hdf5.H5File;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -16,6 +13,8 @@ import ubic.gemma.core.util.test.category.SlowTest;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -24,7 +23,7 @@ import static org.junit.Assume.assumeTrue;
 @Category(SlowTest.class)
 public class SingleCellDataTransformationsTest {
 
-    private static final String pythonExecutable = Settings.getString( "python.exe" );
+    private static final Path pythonExecutable = Paths.get( Settings.getString( "python.exe" ) );
 
     @BeforeClass
     public static void checkIfAnnDataAndScipyAreInstalled() throws IOException {
@@ -38,10 +37,8 @@ public class SingleCellDataTransformationsTest {
     public void testTranspose() throws IOException {
         SingleCellDataTranspose transpose = new SingleCellDataTranspose();
         transpose.setPythonExecutable( pythonExecutable );
-        transpose.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath() );
-        transpose.setInputDataType( SingleCellDataType.ANNDATA );
-        transpose.setOutputFile( Files.createTempFile( "test", null ) );
-        transpose.setOutputDataType( SingleCellDataType.ANNDATA );
+        transpose.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath(), SingleCellDataType.ANNDATA );
+        transpose.setOutputFile( Files.createTempFile( "test", null ), SingleCellDataType.ANNDATA );
         transpose.perform();
     }
 
@@ -49,10 +46,8 @@ public class SingleCellDataTransformationsTest {
     public void testPack() throws IOException {
         SingleCellDataPack pack = new SingleCellDataPack();
         pack.setPythonExecutable( pythonExecutable );
-        pack.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath() );
-        pack.setInputDataType( SingleCellDataType.ANNDATA );
-        pack.setOutputFile( Files.createTempFile( "test", null ) );
-        pack.setOutputDataType( SingleCellDataType.ANNDATA );
+        pack.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath(), SingleCellDataType.ANNDATA );
+        pack.setOutputFile( Files.createTempFile( "test", null ), SingleCellDataType.ANNDATA );
         pack.perform();
     }
 
@@ -60,10 +55,8 @@ public class SingleCellDataTransformationsTest {
     public void testSortBySample() throws IOException {
         SingleCellDataSortBySample pack = new SingleCellDataSortBySample();
         pack.setPythonExecutable( pythonExecutable );
-        pack.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath() );
-        pack.setInputDataType( SingleCellDataType.ANNDATA );
-        pack.setOutputFile( Files.createTempFile( "test", null ) );
-        pack.setOutputDataType( SingleCellDataType.ANNDATA );
+        pack.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath(), SingleCellDataType.ANNDATA );
+        pack.setOutputFile( Files.createTempFile( "test", null ), SingleCellDataType.ANNDATA );
         pack.setSampleColumnName( "ID" );
         pack.perform();
     }
@@ -73,10 +66,8 @@ public class SingleCellDataTransformationsTest {
         Path outputFile = Files.createTempFile( "test", null );
         SingleCellDataSample pack = new SingleCellDataSample();
         pack.setPythonExecutable( pythonExecutable );
-        pack.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath() );
-        pack.setInputDataType( SingleCellDataType.ANNDATA );
-        pack.setOutputFile( outputFile );
-        pack.setOutputDataType( SingleCellDataType.ANNDATA );
+        pack.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath(), SingleCellDataType.ANNDATA );
+        pack.setOutputFile( outputFile, SingleCellDataType.ANNDATA );
         pack.setNumberOfCells( 100 );
         pack.setNumberOfGenes( 50 );
         pack.perform();
@@ -88,5 +79,36 @@ public class SingleCellDataTransformationsTest {
             assertEquals( 50, shape[0] );
             assertEquals( 100, shape[1] );
         }
+    }
+
+    @Test
+    public void testRewrite() throws IOException {
+        SingleCellDataRewrite pack = new SingleCellDataRewrite();
+        pack.setPythonExecutable( pythonExecutable );
+        pack.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath(), SingleCellDataType.ANNDATA );
+        pack.setOutputFile( Files.createTempFile( "test", null ), SingleCellDataType.ANNDATA );
+        pack.perform();
+    }
+
+    @Test
+    public void testUnraw() throws IOException {
+        SingleCellDataUnraw pack = new SingleCellDataUnraw();
+        pack.setPythonExecutable( pythonExecutable );
+        pack.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath(), SingleCellDataType.ANNDATA );
+        pack.setOutputFile( Files.createTempFile( "test", null ), SingleCellDataType.ANNDATA );
+        pack.perform();
+    }
+
+    @Test
+    public void testPipeline() throws IOException {
+        SingleCellDataTransformationPipeline pipeline = new SingleCellDataTransformationPipeline( Arrays.asList(
+                new SingleCellDataRewrite(),
+                new SingleCellDataTranspose(),
+                new SingleCellDataPack()
+        ) );
+        pipeline.setPythonExecutable( pythonExecutable );
+        pipeline.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath(), SingleCellDataType.ANNDATA );
+        pipeline.setOutputFile( Files.createTempFile( "test", null ), SingleCellDataType.ANNDATA );
+        pipeline.perform();
     }
 }

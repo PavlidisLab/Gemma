@@ -1,19 +1,23 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
-import ubic.gemma.core.loader.expression.singleCell.*;
+import org.springframework.util.Assert;
+import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 import ubic.gemma.core.loader.expression.singleCell.transform.*;
 import ubic.gemma.core.util.AbstractCLI;
 
 import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -24,10 +28,25 @@ public class SingleCellDataTransformCli extends AbstractCLI {
 
     private static final String PYTHON_OPTION = "python";
 
-    @Value("${python.exe}")
-    private String pythonExecutable;
+    private static final Map<String, Class<? extends SingleCellDataTransformation>> transformationsByName = new LinkedHashMap<>();
 
-    private SingleCellInputOutputFileTransformation transformation;
+    static {
+        transformationsByName.put( "transpose", SingleCellDataTranspose.class );
+        transformationsByName.put( "pack", SingleCellDataPack.class );
+        transformationsByName.put( "sortBySample", SingleCellDataSortBySample.class );
+        transformationsByName.put( "sample", SingleCellDataSample.class );
+        transformationsByName.put( "rewrite", SingleCellDataRewrite.class );
+        transformationsByName.put( "unraw", SingleCellDataUnraw.class );
+        transformationsByName.put( "sparsify", SingleCellDataSparsify.class );
+    }
+
+    @Value("${python.exe}")
+    private Path pythonExecutable;
+
+    @Nullable
+    private String operation;
+    @Nullable
+    private SingleCellDataTransformation transformation;
 
     public SingleCellDataTransformCli() {
         setAllowPositionalArguments();
@@ -35,64 +54,66 @@ public class SingleCellDataTransformCli extends AbstractCLI {
 
     @Override
     protected void buildOptions( Options options ) {
-        options.addOption( PYTHON_OPTION, true, "Override the Python executable to use (defaults to " + pythonExecutable + ")" );
+        options.addOption( PYTHON_OPTION, "python", true, "Override the Python executable to use (defaults to " + pythonExecutable + ")" );
     }
 
     @Override
     protected void processOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( PYTHON_OPTION ) ) {
-            pythonExecutable = commandLine.getOptionValue( PYTHON_OPTION );
+            pythonExecutable = Paths.get( commandLine.getOptionValue( PYTHON_OPTION ) );
         }
         LinkedList<String> positionalArguments = new LinkedList<>( commandLine.getArgList() );
         if ( positionalArguments.isEmpty() ) {
-            throw new ParseException( "No operation specified. Possible values are: transpose, pack, sortBySample, sample." );
+            throw new ParseException( "No operation specified. Possible values are: " + String.join( ", ", transformationsByName.keySet() ) + "." );
         }
-        String operation = positionalArguments.removeFirst();
-        if ( positionalArguments.size() < 2 ) {
-            throw usageException( operation );
+        transformation = parseNextTransformation( positionalArguments );
+        if ( !positionalArguments.isEmpty() ) {
+            throw new ParseException( "Unused positional arguments: " + String.join( " ", positionalArguments ) );
         }
-        Path inputFile, outputFile;
-        inputFile = Paths.get( positionalArguments.removeFirst() );
-        outputFile = Paths.get( positionalArguments.removeFirst() );
-        switch ( operation ) {
-            case "transpose":
-                transformation = new SingleCellDataTranspose();
-                break;
-            case "pack":
-                transformation = new SingleCellDataPack();
-                break;
-            case "sortBySample":
-                if ( commandLine.getArgList().size() != 1 ) {
-                    throw usageException( operation, "sampleColumnName" );
-                }
-                transformation = new SingleCellDataSortBySample();
-                ( ( SingleCellDataSortBySample ) transformation )
-                        .setSampleColumnName( positionalArguments.removeFirst() );
-                break;
-            case "sample":
-                if ( commandLine.getArgList().size() != 2 ) {
-                    throw usageException( operation, "sampleColumnName" );
-                }
-                transformation = new SingleCellDataSample();
-                ( ( SingleCellDataSample ) transformation )
-                        .setNumberOfCells( Integer.parseInt( positionalArguments.removeFirst() ) );
-                ( ( SingleCellDataSample ) transformation )
-                        .setNumberOfGenes( Integer.parseInt( positionalArguments.removeFirst() ) );
-            default:
-                throw new ParseException( "Unknown operation: " + operation + ". Possible values are: transpose, pack, sortBySample, sample." );
+    }
+
+    private SingleCellDataTransformation parseNextTransformation( LinkedList<String> positionalArguments ) throws ParseException {
+        operation = positionalArguments.removeFirst();
+        Class<? extends SingleCellDataTransformation> transformationClass = transformationsByName.get( operation );
+        if ( transformationClass == null ) {
+            throw new ParseException( String.format( "Unknown operation: %s. Possible values are: %s", operation,
+                    String.join( ", ", transformationsByName.keySet() ) ) );
         }
-        if ( transformation instanceof AbstractPythonScriptBasedAnnDataTransformation ) {
-            ( ( AbstractPythonScriptBasedAnnDataTransformation ) transformation )
+        transformation = BeanUtils.instantiate( transformationClass );
+        if ( transformation instanceof PythonBasedSingleCellDataTransformation ) {
+            ( ( PythonBasedSingleCellDataTransformation ) transformation )
                     .setPythonExecutable( pythonExecutable );
         }
-        transformation.setInputFile( inputFile );
-        transformation.setInputDataType( SingleCellDataType.ANNDATA );
-        transformation.setOutputFile( outputFile );
-        transformation.setOutputDataType( SingleCellDataType.ANNDATA );
+        if ( transformation instanceof SingleCellInputOutputFileTransformation ) {
+            if ( positionalArguments.size() < 2 ) {
+                throw new ParseException( "Two arguments are expected for input and output files." );
+            }
+            Path inputFile = Paths.get( positionalArguments.removeFirst() );
+            ( ( SingleCellInputOutputFileTransformation ) transformation ).setInputFile( inputFile, detectDataType( inputFile ) );
+            Path outputFile = Paths.get( positionalArguments.removeFirst() );
+            ( ( SingleCellInputOutputFileTransformation ) transformation ).setOutputFile( outputFile, detectDataType( outputFile ) );
+        }
+        if ( transformation instanceof SingleCellDataSortBySample ) {
+            if ( positionalArguments.isEmpty() ) {
+                throw new ParseException( "One argument is expected for the sample column name." );
+            }
+            ( ( SingleCellDataSortBySample ) transformation )
+                    .setSampleColumnName( positionalArguments.removeFirst() );
+        } else if ( transformation instanceof SingleCellDataSample ) {
+            if ( positionalArguments.size() < 2 ) {
+                throw new ParseException( "Two arguments are expected for number of cells and genes." );
+            }
+            ( ( SingleCellDataSample ) transformation )
+                    .setNumberOfCells( Integer.parseInt( positionalArguments.removeFirst() ) );
+            ( ( SingleCellDataSample ) transformation )
+                    .setNumberOfGenes( Integer.parseInt( positionalArguments.removeFirst() ) );
+        }
+        return transformation;
     }
 
     @Override
     protected void doWork() throws Exception {
+        Assert.notNull( transformation );
         transformation.perform();
     }
 
@@ -113,21 +134,57 @@ public class SingleCellDataTransformCli extends AbstractCLI {
         return CommandGroup.EXPERIMENT;
     }
 
-    @Nullable
-    private String operation;
-    private String[] args = { "inputFile", "outputFile" };
-
+    /**
+     * Adjust usage to reflect the transformation-specific options.
+     */
     @Override
     protected String getUsage() {
-        return String.format( "gemma-cli [options] %s [commandOptions] %s %s",
-                getCommandName(),
-                operation != null ? operation : "<operation>",
-                Arrays.stream( args ).map( a -> "<" + a + ">" ).collect( Collectors.joining( " " ) ) );
+        StringBuilder usage = new StringBuilder();
+        usage.append( "gemma-cli [options] " )
+                .append( getCommandName() )
+                .append( " [commandOptions]" );
+        if ( operation != null ) {
+            usage.append( " " ).append( operation );
+        } else {
+            usage.append( " <operation>" );
+        }
+        if ( transformation != null ) {
+            if ( transformation instanceof SingleCellInputOutputFileTransformation ) {
+                usage.append( " <inputFile> <outputFile>" );
+            }
+            if ( transformation instanceof SingleCellDataSortBySample ) {
+                usage.append( " <sampleColumnName>" );
+            } else if ( transformation instanceof SingleCellDataSample ) {
+                usage.append( " <numberOfCells> <numberOfGenes>" );
+            }
+        } else {
+            usage.append( " [operationOptions]" );
+        }
+        return usage.toString();
     }
 
-    private ParseException usageException( String op, String... args ) {
-        this.operation = op;
-        this.args = ArrayUtils.addAll( this.args, args );
-        return new ParseException( "" );
+    @Nullable
+    @Override
+    protected String getHelpFooter() {
+        if ( transformation != null ) {
+            return transformation.getDescription();
+        } else {
+            int len = transformationsByName.keySet().stream().mapToInt( String::length ).max().orElse( 0 );
+            return "Operations:\n" + transformationsByName.entrySet().stream()
+                    .map( e -> String.format( "%s%s%s", StringUtils.rightPad( e.getKey(), len ), StringUtils.repeat( ' ', HelpFormatter.DEFAULT_DESC_PAD ), BeanUtils.instantiate( e.getValue() ).getDescription() ) )
+                    .collect( Collectors.joining( "\n" ) );
+        }
+    }
+
+    /**
+     * TODO: detect data types although we only support AnnData for now.
+     */
+    private SingleCellDataType detectDataType( Path outputFile ) {
+        Assert.notNull( transformation );
+        if ( transformation instanceof AbstractPythonScriptBasedAnnDataTransformation ) {
+            return SingleCellDataType.ANNDATA;
+        } else {
+            throw new UnsupportedOperationException( "Detecting data type for " + transformation.getClass().getName() + " is not supported." );
+        }
     }
 }

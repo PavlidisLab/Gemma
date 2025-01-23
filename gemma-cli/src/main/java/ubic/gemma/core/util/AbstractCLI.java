@@ -183,6 +183,10 @@ public abstract class AbstractCLI implements CLI {
         }
     }
 
+    private void printHelp( Options options, PrintWriter writer ) {
+        HelpUtils.printHelp( writer, getUsage(), options, getShortDesc(), getHelpFooter() );
+    }
+
     /**
      * Describe the intended usage for the command.
      * <p>
@@ -192,10 +196,14 @@ public abstract class AbstractCLI implements CLI {
         return "gemma-cli [options] " + this.getCommandName() + " [commandOptions]" + ( allowPositionalArguments ? " [files]" : "" );
     }
 
-    private void printHelp( Options options, PrintWriter writer ) {
-        HelpUtils.printHelp( writer, getUsage(), options, getShortDesc(), null );
+    /**
+     * Include a detailed help footer in the --help menu.
+     * @see HelpUtils#printHelp(PrintWriter, String, Options, String, String)
+     */
+    @Nullable
+    protected String getHelpFooter() {
+        return null;
     }
-
 
     /**
      * Add the {@code -threads} option.

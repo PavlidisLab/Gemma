@@ -10,12 +10,7 @@ import java.nio.file.Path;
  */
 public interface SingleCellInputOutputFileTransformation extends SingleCellDataTransformation {
 
-    void setInputFile( Path inputFile );
+    void setInputFile( Path inputFile, SingleCellDataType singleCellDataType );
 
-    void setInputDataType( SingleCellDataType singleCellDataType );
-
-    void setOutputFile( Path outputFile );
-
-    void setOutputDataType( SingleCellDataType singleCellDataType );
-
+    void setOutputFile( Path outputFile, SingleCellDataType singleCellDataType );
 }

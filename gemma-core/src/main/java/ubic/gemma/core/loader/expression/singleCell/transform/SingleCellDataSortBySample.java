@@ -16,4 +16,9 @@ public class SingleCellDataSortBySample extends AbstractPythonScriptBasedAnnData
     protected String[] createScriptArgs() {
         return ArrayUtils.add( super.createScriptArgs(), sampleColumnName );
     }
+
+    @Override
+    public String getDescription() {
+        return "Sort an AnnData object by sample";
+    }
 }

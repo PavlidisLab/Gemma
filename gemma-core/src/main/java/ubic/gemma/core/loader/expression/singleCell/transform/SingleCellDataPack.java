@@ -8,4 +8,9 @@ public class SingleCellDataPack extends AbstractPythonScriptBasedAnnDataTransfor
     public SingleCellDataPack() {
         super( "pack" );
     }
+
+    @Override
+    public String getDescription() {
+        return "Remove unnecessary zeroes from AnnData object";
+    }
 }

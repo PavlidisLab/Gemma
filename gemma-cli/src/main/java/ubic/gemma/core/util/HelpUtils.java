@@ -27,7 +27,7 @@ public class HelpUtils {
         if ( StringUtils.isBlank( footer ) ) {
             footer = "\n" + FOOTER;
         } else {
-            footer = footer + "\n\n" + FOOTER;
+            footer = "\n" + footer + "\n\n" + FOOTER;
         }
         formatter.printHelp( writer, 150, syntax, header, options, HelpFormatter.DEFAULT_LEFT_PAD, HelpFormatter.DEFAULT_DESC_PAD, footer );
     }

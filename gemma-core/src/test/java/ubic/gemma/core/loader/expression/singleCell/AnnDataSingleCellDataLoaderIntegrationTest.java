@@ -40,7 +40,7 @@ public class AnnDataSingleCellDataLoaderIntegrationTest extends BaseIntegrationT
     private String downloadPath;
 
     @Value("${python.exe}")
-    private String pythonExecutable;
+    private Path pythonExecutable;
 
     /**
      * This test requires a fairly large input file which must be located in the download directory.
@@ -91,7 +91,7 @@ public class AnnDataSingleCellDataLoaderIntegrationTest extends BaseIntegrationT
                             .containsExactlyInAnyOrder( "Astrocytes", "D1-Matrix", "D1-Striosome", "D1/D2-Hybrid", "D2-Matrix", "D2-Striosome", "Endothelial", "Int-CCK", "Int-PTHLH", "Int-SST", "Int-TH", "Microglia", "Mural", "Oligos", "Oligos_Pre" );
                 } );
 
-        loader.setDesignElementMapper( new MapBasedDesignElementMapper( "test", elementMapping ) );
+        loader.setDesignElementToGeneMapper( new MapBasedDesignElementMapper( "test", elementMapping ) );
         assertThat( loader.loadVectors( elementMapping.values(), dimension, qt ).count() )
                 .isEqualTo( 31393 );
     }
@@ -118,10 +118,8 @@ public class AnnDataSingleCellDataLoaderIntegrationTest extends BaseIntegrationT
         // this step requires a *lot* of memory
         SingleCellDataTranspose transpose = new SingleCellDataTranspose();
         transpose.setPythonExecutable( pythonExecutable );
-        transpose.setInputDataType( SingleCellDataType.ANNDATA );
-        transpose.setInputFile( d );
-        transpose.setOutputDataType( SingleCellDataType.ANNDATA );
-        transpose.setOutputFile( p );
+        transpose.setInputFile( d, SingleCellDataType.ANNDATA );
+        transpose.setOutputFile( p, SingleCellDataType.ANNDATA );
         transpose.perform();
         return p;
     }

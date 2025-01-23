@@ -12,4 +12,9 @@ public class SingleCellDataTranspose extends AbstractPythonScriptBasedAnnDataTra
     public SingleCellDataTranspose() {
         super( "transpose" );
     }
+
+    @Override
+    public String getDescription() {
+        return "Transpose an AnnData object and ensure it is stored in CSR format if sparse";
+    }
 }
