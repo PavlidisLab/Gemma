@@ -42,6 +42,8 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.curation.GenericCu
 import javax.annotation.Nullable;
 import java.util.Date;
 
+import static ubic.gemma.core.util.StringUtils.abbreviateInUTF8Bytes;
+
 /**
  * @author pavlidis
  * @see AuditTrailService
@@ -131,7 +133,10 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
 
     private AuditEvent createAuditEvent( @Nullable Class<? extends AuditEventType> auditEventType, @Nullable String note, @Nullable String detail, Date performedDate ) {
         Assert.isTrue( !performedDate.after( new Date() ), "Cannot create an audit event for something that has not yet occurred." );
-        return AuditEvent.Factory.newInstance( performedDate, AuditAction.UPDATE, note, detail, userManager.getCurrentUser(), auditEventType != null ? getAuditEventType( auditEventType ) : null );
+        return AuditEvent.Factory.newInstance( performedDate, AuditAction.UPDATE,
+                abbreviateInUTF8Bytes( note, "…", AuditEvent.MAX_NOTE_LENGTH ),
+                abbreviateInUTF8Bytes( detail, "…", AuditEvent.MAX_DETAIL_LENGTH ),
+                userManager.getCurrentUser(), auditEventType != null ? getAuditEventType( auditEventType ) : null );
     }
 
     private AuditEventType getAuditEventType( Class<? extends AuditEventType> type ) {

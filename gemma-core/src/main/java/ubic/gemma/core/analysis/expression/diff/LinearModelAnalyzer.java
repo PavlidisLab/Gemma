@@ -58,6 +58,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -69,6 +70,7 @@ import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.creat
 import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.makeDataMatrix;
 import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.filterAndLog2Transform;
 import static ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort.orderByExperimentalDesign;
+import static ubic.gemma.core.util.StringUtils.abbreviateInUTF8Bytes;
 
 /**
  * Handles fitting linear models with continuous or fixed-level covariates. Data are always log-transformed.
@@ -106,8 +108,6 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
     };
 
     private static final String EXCLUDE_WARNING = "Found Factor Value with DE_Exclude characteristic. Skipping current subset.";
-
-    private static final int MAX_SUBSET_NAME_LENGTH = 255;
 
     @Autowired
     private CompositeSequenceService compositeSequenceService;
@@ -362,9 +362,9 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
              * make a EESubSet
              */
             String subsetName = "Subset for " + FactorValueUtils.getSummaryString( subsetFactorValue );
-            if ( subsetName.length() > MAX_SUBSET_NAME_LENGTH ) {
-                log.warn( "Name for resulting subset of " + subsetFactorValue + " exceeds " + MAX_SUBSET_NAME_LENGTH + " characters, it will be abbreviated." );
-                subsetName = StringUtils.abbreviate( subsetName, MAX_SUBSET_NAME_LENGTH );
+            if ( subsetName.getBytes( StandardCharsets.UTF_8 ).length > ExpressionExperimentSubSet.MAX_NAME_LENGTH ) {
+                log.warn( "Name for resulting subset of " + subsetFactorValue + " exceeds " + ExpressionExperimentSubSet.MAX_NAME_LENGTH + " characters, it will be abbreviated." );
+                subsetName = abbreviateInUTF8Bytes( subsetName, "…", ExpressionExperimentSubSet.MAX_NAME_LENGTH );
             }
             ExpressionExperimentSubSet eeSubSet = ExpressionExperimentSubSet.Factory.newInstance( subsetName, expressionExperiment );
             Collection<BioAssay> bioAssays = new HashSet<>();

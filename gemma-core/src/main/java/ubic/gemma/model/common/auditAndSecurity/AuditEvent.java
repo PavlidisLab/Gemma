@@ -31,6 +31,10 @@ import java.util.Objects;
  */
 public class AuditEvent extends AbstractIdentifiable {
 
+    public static final int
+            MAX_NOTE_LENGTH = 65535,
+            MAX_DETAIL_LENGTH = 65535;
+
     private AuditAction action = null;
     private Date date = null;
     @Nullable

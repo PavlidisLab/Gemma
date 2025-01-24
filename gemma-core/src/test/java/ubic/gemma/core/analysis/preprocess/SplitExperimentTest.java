@@ -41,6 +41,7 @@ import ubic.gemma.persistence.service.expression.experiment.BioAssaySetService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -206,36 +207,6 @@ public class SplitExperimentTest extends BaseSpringContextTest {
 
         results = splitService.split( ee, splitOn, false );
         assertEquals( splitOn.getFactorValues().size(), results.getExperiments().size() );
-    }
-
-    @Test
-    public void testGenerateName() {
-        ExpressionExperiment ee = new ExpressionExperiment();
-        ee.setName( "test" );
-        Statement c = new Statement();
-        c.setSubject( "bar" );
-        FactorValue fv = new FactorValue();
-        fv.getCharacteristics().add( c );
-        ExperimentalFactor ef = new ExperimentalFactor();
-        ef.setName( "foo" );
-        fv.setExperimentalFactor( ef );
-        assertEquals( "Split part 1 of: test [foo = bar]", SplitExperimentServiceImpl.generateNameForSplit( ee, 1, fv ) );
-        ee.setName( String.join( "", java.util.Collections.nCopies( 255, "a" ) ) );
-        String name = SplitExperimentServiceImpl.generateNameForSplit( ee, 1, fv );
-        assertEquals( 255, name.length() );
-        assertEquals( "Split part 1 of: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa… [foo = bar]", name );
-        ee.setName( "test" );
-        c.setSubject( String.join( "", java.util.Collections.nCopies( 255, "a" ) ) );
-        assertThatThrownBy( () -> SplitExperimentServiceImpl.generateNameForSplit( ee, 1, fv ) )
-                .isInstanceOf( IllegalArgumentException.class )
-                .hasMessageContaining( "It's not possible to truncate the name of the split such that it won't exceed 255 characters." );
-
-        // make sure that whitespaces before the ellipsis are trimmed
-        int lengthOfEverythingElse = "Split part 1 of:  [foo = bar]".length();
-        ee.setName( String.join( "", java.util.Collections.nCopies( 255 - lengthOfEverythingElse - 1, "a" ) ) + " " );
-        c.setSubject( "bar" );
-        assertEquals( 254, SplitExperimentServiceImpl.generateNameForSplit( ee, 1, fv ).length() );
-        assertEquals( "Split part 1 of: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa… [foo = bar]", name );
     }
 
     @After

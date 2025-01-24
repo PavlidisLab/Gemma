@@ -48,7 +48,10 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+
+import static ubic.gemma.core.util.StringUtils.abbreviateInUTF8Bytes;
 
 /**
  *
@@ -62,8 +65,6 @@ import java.util.*;
 public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     private static final Log log = LogFactory.getLog( SplitExperimentServiceImpl.class );
-
-    private static final int MAX_SPLIT_NAME_LENGTH = 255;
 
     @Autowired
     private PreprocessorService preprocessor;
@@ -354,15 +355,16 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                         splitValue.getExperimentalFactor().getCategory().getValue() :
                         splitValue.getExperimentalFactor().getName() ),
                 factorValueString );
-        if ( newFullName.length() <= MAX_SPLIT_NAME_LENGTH )
+        if ( newFullName.getBytes( StandardCharsets.UTF_8 ).length <= ExpressionExperiment.MAX_NAME_LENGTH )
             return newFullName;
         // truncate the original name
-        int lengthOfEverythingElse = newFullName.length() - String.format( "%s", originalName ).length();
+        int lengthOfEverythingElse = newFullName.getBytes( StandardCharsets.UTF_8 ).length - String.format( "%s", originalName ).getBytes( StandardCharsets.UTF_8 ).length;
         //  we want at least 100 characters of the original name
-        if ( lengthOfEverythingElse > MAX_SPLIT_NAME_LENGTH - 100 ) {
-            throw new IllegalArgumentException( "It's not possible to truncate the name of the split such that it won't exceed 255 characters." );
+        if ( lengthOfEverythingElse > ExpressionExperiment.MAX_NAME_LENGTH - 100 ) {
+            throw new IllegalArgumentException( "It's not possible to truncate the name of the split such that it won't exceed " + ExpressionExperiment.MAX_NAME_LENGTH + " characters." );
         }
-        return String.format( template, splitNumber, StringUtils.abbreviate( originalName, "…", 255 - lengthOfEverythingElse )
+        return String.format( template, splitNumber, abbreviateInUTF8Bytes( originalName, "…", ExpressionExperiment.MAX_NAME_LENGTH - lengthOfEverythingElse )
+                        // remove trailing spaces
                         .replace( "\\s+…$", "…" ),
                 StringUtils.strip( splitValue.getExperimentalFactor().getCategory() != null ?
                         splitValue.getExperimentalFactor().getCategory().getValue() :
@@ -554,14 +556,13 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         //noinspection deprecation
         clone.setUri( de.getUri() );
         clone.setExternalDatabase( de.getExternalDatabase() );
-        ;
         return clone;
     }
 
     private BioMaterial cloneBioMaterial( BioMaterial bm ) {
         Assert.isNull( bm.getSourceBioMaterial(), "Cannot split an experiment with biomaterials that have a source biomaterial." );
         BioMaterial clone = BioMaterial.Factory.newInstance();
-        clone.setName( bm.getName() + " (Split)" ); // it is important we make a new name, so we don't confuse this with the previous one in findOrCreate();
+        clone.setName( abbreviateInUTF8Bytes( bm.getName(), "…", BioMaterial.MAX_NAME_LENGTH - " (Split)".length() ) + " (Split)" ); // it is important we make a new name, so we don't confuse this with the previous one in findOrCreate();
         clone.setDescription( bm.getDescription() );
         clone.setCharacteristics( this.cloneCharacteristics( bm.getCharacteristics() ) );
         clone.setExternalAccession( this.cloneAccession( bm.getExternalAccession() ) );

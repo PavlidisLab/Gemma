@@ -33,6 +33,9 @@ public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredCh
      */
     private static final long serialVersionUID = -1880425342951467283L;
 
+    public static final int MAX_NAME_LENGTH = 255;
+
+
     private ExpressionExperiment sourceExperiment;
 
     /**

@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.Assertions;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -38,6 +39,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
 import static org.junit.Assert.*;
@@ -329,5 +331,18 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
     public void testAddExceptionEventOnTransientEntity() {
         ArrayDesign ad = new ArrayDesign();
         assertThrows( IllegalArgumentException.class, () -> auditTrailService.addUpdateEvent( ad, SampleRemovalEvent.class, "test", new RuntimeException() ) );
+    }
+
+    /**
+     * Length audit event detail get abbreviated.
+     */
+    @Test
+    public void testLengthyDetail() {
+        AuditEvent event = auditTrailService.addUpdateEvent( auditable, SampleRemovalEvent.class, "test", StringUtils.repeat( 'a', 70000 ) );
+        Assertions.assertThat( event.getDetail() )
+                .hasSize( 65533 )
+                .endsWith( "…" )
+                .bytes( StandardCharsets.UTF_8 )
+                .hasSize( 65535 );
     }
 }

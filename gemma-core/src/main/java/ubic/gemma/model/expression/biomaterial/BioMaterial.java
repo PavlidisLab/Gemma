@@ -49,6 +49,8 @@ import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialU
 @Indexed
 public class BioMaterial extends AbstractDescribable implements SecuredChild {
 
+    public static final int MAX_NAME_LENGTH = 255;
+
     @Nullable
     private BioMaterial sourceBioMaterial;
     private Taxon sourceTaxon;

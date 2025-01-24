@@ -36,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.core.util.StringUtils;
 import ubic.gemma.model.common.auditAndSecurity.*;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.GenericCuratableDao;
@@ -43,6 +44,8 @@ import ubic.gemma.persistence.util.Pointcuts;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
+
+import static ubic.gemma.core.util.StringUtils.abbreviateInUTF8Bytes;
 
 /**
  * Manage audit trails on objects.
@@ -320,7 +323,7 @@ public class AuditAdvice {
                     AuditAction.CREATE, auditable ) );
             return;
         }
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance( date, auditAction, note, null, user, null );
+        AuditEvent auditEvent = AuditEvent.Factory.newInstance( date, auditAction, abbreviateInUTF8Bytes( note, "…", AuditEvent.MAX_NOTE_LENGTH ), null, user, null );
         auditable.getAuditTrail().getEvents().add( auditEvent );
         if ( auditable instanceof Curatable && auditAction == AuditAction.UPDATE ) {
             curatableDao.updateCurationDetailsFromAuditEvent( ( Curatable ) auditable, auditEvent );

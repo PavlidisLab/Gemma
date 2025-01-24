@@ -38,6 +38,8 @@ import java.util.Date;
 @Indexed
 public class BioAssay extends AbstractDescribable implements SecuredChild {
 
+    public static final int MAX_NAME_LENGTH = 255;
+
     /**
      * Platform used in this assay.
      */
