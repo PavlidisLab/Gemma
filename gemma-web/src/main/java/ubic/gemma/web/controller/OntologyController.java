@@ -55,7 +55,7 @@ public class OntologyController {
     @Autowired
     private ServletContext servletContext;
 
-    @RequestMapping(value = "/{tgemo:TGEMO|TGEMO.OWL}", method = { RequestMethod.GET, RequestMethod.HEAD })
+    @RequestMapping(value = {"/TGEMO","/TGEMO.OWL"}, method = { RequestMethod.GET, RequestMethod.HEAD })
     public RedirectView getOntology() {
         String gemmaOntologyUrl = gemmaOntologyService.getOntologyUrl();
         RedirectView redirectView = new RedirectView( gemmaOntologyUrl );
