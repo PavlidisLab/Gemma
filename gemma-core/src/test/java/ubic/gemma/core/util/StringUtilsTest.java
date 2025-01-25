@@ -23,5 +23,6 @@ public class StringUtilsTest {
     @Test
     public void testAbbreviateWithSuffix() {
         assertEquals( "tes… suffix", abbreviateWithSuffixInUTF8Bytes( "test12313", " suffix", "…", 13 ) );
+        assertThrows( IllegalArgumentException.class, () -> abbreviateWithSuffixInUTF8Bytes( "test12313", " suffix", "…", 5 ) );
     }
 }

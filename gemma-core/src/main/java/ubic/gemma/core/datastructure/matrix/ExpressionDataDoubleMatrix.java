@@ -20,7 +20,6 @@ package ubic.gemma.core.datastructure.matrix;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
@@ -39,6 +38,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import javax.annotation.Nullable;
 import java.text.NumberFormat;
 import java.util.*;
+
+import static ubic.gemma.core.util.StringUtils.abbreviateInUTF8Bytes;
 
 /**
  * A data structure that holds a reference to the data for a given expression experiment. The data can be queried by row
@@ -222,7 +223,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
         dim.setBioAssays( bioassays );
         dim.setDescription( "Built from matrix supplied to Constructor for " + ee + " from matrix" );
-        dim.setName( StringUtils.abbreviate( "For " + ee.getShortName() + " from matrix", 255 ) );
+        dim.setName( abbreviateInUTF8Bytes( "For " + ee.getShortName() + " from matrix", "…", BioAssayDimension.MAX_NAME_LENGTH ) );
 
         assert !matrix.getRowNames().isEmpty();
         int i = 0;

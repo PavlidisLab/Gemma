@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentVectorManipulatingService;
+import ubic.gemma.core.util.StringUtils;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEvent;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -44,6 +44,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.util.*;
 
+import static ubic.gemma.core.util.StringUtils.abbreviateInUTF8Bytes;
 import static ubic.gemma.persistence.util.ByteArrayUtils.toBytes;
 
 /**
@@ -324,7 +325,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
             newBioAd.setDescription( newBioAd.getDescription() + bioAd.getName() + " " );
         }
 
-        newBioAd.setName( StringUtils.abbreviate( newBioAd.getName(), 255 ) );
+        newBioAd.setName( abbreviateInUTF8Bytes( newBioAd.getName(), "…", BioAssay.MAX_NAME_LENGTH ) );
         newBioAd.setBioAssays( bioAssays );
 
         newBioAd = bioAssayDimensionService.create( newBioAd );

@@ -48,10 +48,9 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import static ubic.gemma.core.util.StringUtils.abbreviateInUTF8Bytes;
+import static ubic.gemma.core.util.StringUtils.abbreviateWithSuffixInUTF8Bytes;
 
 /**
  *
@@ -347,29 +346,16 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     }
 
     static String generateNameForSplit( ExpressionExperiment toSplit, int splitNumber, FactorValue splitValue ) {
-        String template = "Split part %d of: %s [%s = %s]";
-        String originalName = StringUtils.strip( toSplit.getName() );
+        String categoryString = StringUtils.strip( splitValue.getExperimentalFactor().getCategory() != null ?
+                splitValue.getExperimentalFactor().getCategory().getValue() :
+                splitValue.getExperimentalFactor().getName() );
         String factorValueString = FactorValueUtils.getSummaryString( splitValue );
-        String newFullName = String.format( template, splitNumber, originalName,
-                StringUtils.strip( splitValue.getExperimentalFactor().getCategory() != null ?
-                        splitValue.getExperimentalFactor().getCategory().getValue() :
-                        splitValue.getExperimentalFactor().getName() ),
-                factorValueString );
-        if ( newFullName.getBytes( StandardCharsets.UTF_8 ).length <= ExpressionExperiment.MAX_NAME_LENGTH )
-            return newFullName;
-        // truncate the original name
-        int lengthOfEverythingElse = newFullName.getBytes( StandardCharsets.UTF_8 ).length - String.format( "%s", originalName ).getBytes( StandardCharsets.UTF_8 ).length;
-        //  we want at least 100 characters of the original name
-        if ( lengthOfEverythingElse > ExpressionExperiment.MAX_NAME_LENGTH - 100 ) {
-            throw new IllegalArgumentException( "It's not possible to truncate the name of the split such that it won't exceed " + ExpressionExperiment.MAX_NAME_LENGTH + " characters." );
-        }
-        return String.format( template, splitNumber, abbreviateInUTF8Bytes( originalName, "…", ExpressionExperiment.MAX_NAME_LENGTH - lengthOfEverythingElse )
-                        // remove trailing spaces
-                        .replace( "\\s+…$", "…" ),
-                StringUtils.strip( splitValue.getExperimentalFactor().getCategory() != null ?
-                        splitValue.getExperimentalFactor().getCategory().getValue() :
-                        splitValue.getExperimentalFactor().getName() ),
-                factorValueString );
+        String suffix = String.format( " [%s = %s]", categoryString, factorValueString );
+        return abbreviateWithSuffixInUTF8Bytes(
+                String.format( "Split part %d of: %s", splitNumber, StringUtils.strip( toSplit.getName() ) ), suffix,
+                "…", ExpressionExperiment.MAX_NAME_LENGTH )
+                // remove trailing spaces before the abbreviation marker
+                .replace( "\\s+…", "…" );
     }
 
     private void enforceOtherParts( Collection<ExpressionExperiment> result ) {
@@ -562,7 +548,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     private BioMaterial cloneBioMaterial( BioMaterial bm ) {
         Assert.isNull( bm.getSourceBioMaterial(), "Cannot split an experiment with biomaterials that have a source biomaterial." );
         BioMaterial clone = BioMaterial.Factory.newInstance();
-        clone.setName( abbreviateInUTF8Bytes( bm.getName(), "…", BioMaterial.MAX_NAME_LENGTH - " (Split)".length() ) + " (Split)" ); // it is important we make a new name, so we don't confuse this with the previous one in findOrCreate();
+        clone.setName( abbreviateWithSuffixInUTF8Bytes( bm.getName(), " (Split)", "…", BioMaterial.MAX_NAME_LENGTH ) ); // it is important we make a new name, so we don't confuse this with the previous one in findOrCreate();
         clone.setDescription( bm.getDescription() );
         clone.setCharacteristics( this.cloneCharacteristics( bm.getCharacteristics() ) );
         clone.setExternalAccession( this.cloneAccession( bm.getExternalAccession() ) );

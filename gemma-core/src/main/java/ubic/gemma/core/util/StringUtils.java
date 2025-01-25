@@ -10,8 +10,6 @@ public class StringUtils {
 
     /**
      * Abbreviate the value of a field stored with UTF-8 if it exceeds a certain length in bytes.
-     * <p>
-     * This function takes care of the storage requirement of multi-byte characters.
      * @see org.apache.commons.lang3.StringUtils#abbreviate(String, int)
      */
     @Nullable
@@ -35,12 +33,18 @@ public class StringUtils {
         return value;
     }
 
+    /**
+     * Abbreviate a string with a suffix as per {@link #abbreviateInUTF8Bytes(String, String, int)}.
+     * <p>
+     * This produce strings of the form: {@code some text{abbrevMarker}suffix} such that the length of the string in
+     * bytes is at most the given maximum.
+     */
     public static String abbreviateWithSuffixInUTF8Bytes( @Nullable String value, String suffix, String abbrevMarker, int maxLengthInBytes ) {
         return abbreviateInUTF8Bytes( value, abbrevMarker, maxLengthInBytes - suffix.getBytes( StandardCharsets.UTF_8 ).length ) + suffix;
     }
 
     /**
-     * Borrowed from https://stackoverflow.com/questions/119328/how-do-i-truncate-a-java-string-to-fit-in-a-given-number-of-bytes-once-utf-8-en
+     * Borrowed from <a href="https://stackoverflow.com/questions/119328/how-do-i-truncate-a-java-string-to-fit-in-a-given-number-of-bytes-once-utf-8-en">How do I truncate a java string to fit in a given number of bytes, once UTF-8 encoded? on Stackoverflow</a>.
      */
     private static String truncateWhenUTF8( String s, int maxBytes ) {
         int b = 0;

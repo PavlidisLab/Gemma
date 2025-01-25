@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
+import static ubic.gemma.core.analysis.preprocess.SplitExperimentServiceImpl.generateNameForSplit;
 
 public class SplitExperimentNameGeneratorTest {
 
@@ -24,24 +25,23 @@ public class SplitExperimentNameGeneratorTest {
         ExperimentalFactor ef = new ExperimentalFactor();
         ef.setName( "foo" );
         fv.setExperimentalFactor( ef );
-        assertEquals( "Split part 1 of: test [foo = bar]", SplitExperimentServiceImpl.generateNameForSplit( ee, 1, fv ) );
+        assertEquals( "Split part 1 of: test [foo = bar]", generateNameForSplit( ee, 1, fv ) );
         ee.setName( String.join( "", java.util.Collections.nCopies( 255, "a" ) ) );
-        String name = SplitExperimentServiceImpl.generateNameForSplit( ee, 1, fv );
+        String name = generateNameForSplit( ee, 1, fv );
         assertEquals( 253, name.length() );
         assertEquals( 255, name.getBytes( StandardCharsets.UTF_8 ).length );
         assertEquals( "Split part 1 of: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa… [foo = bar]", name );
         ee.setName( "test" );
         c.setSubject( String.join( "", java.util.Collections.nCopies( 255, "a" ) ) );
-        assertThatThrownBy( () -> SplitExperimentServiceImpl.generateNameForSplit( ee, 1, fv ) )
-                .isInstanceOf( IllegalArgumentException.class )
-                .hasMessageContaining( "It's not possible to truncate the name of the split such that it won't exceed 255 characters." );
+        assertThatThrownBy( () -> generateNameForSplit( ee, 1, fv ) )
+                .isInstanceOf( IllegalArgumentException.class );
 
         // make sure that whitespaces before the ellipsis are trimmed
         int lengthOfEverythingElse = "Split part 1 of: [foo = bar]".length();
         ee.setName( String.join( "", java.util.Collections.nCopies( 255 - lengthOfEverythingElse, "a" ) ) + " " + "test" );
         assertEquals( "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa test", ee.getName() );
         c.setSubject( "bar" );
-        name = SplitExperimentServiceImpl.generateNameForSplit( ee, 1, fv );
+        name = generateNameForSplit( ee, 1, fv );
         assertEquals( 253, name.length() );
         assertEquals( 255, name.getBytes( StandardCharsets.UTF_8 ).length );
         assertEquals( "Split part 1 of: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa… [foo = bar]", name );

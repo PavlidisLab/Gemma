@@ -30,6 +30,8 @@ import java.util.Objects;
  */
 public class BioAssayDimension extends AbstractDescribable {
 
+    public static final int MAX_NAME_LENGTH = 255;
+   
     private List<BioAssay> bioAssays = new java.util.ArrayList<>();
 
     public List<BioAssay> getBioAssays() {
