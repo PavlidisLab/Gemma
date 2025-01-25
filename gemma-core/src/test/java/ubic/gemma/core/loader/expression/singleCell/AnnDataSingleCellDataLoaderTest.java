@@ -354,17 +354,6 @@ public class AnnDataSingleCellDataLoaderTest {
     }
 
     @Test
-    public void testRachelH5ad() throws IOException {
-        Path dataPath = Paths.get( "/home/guillaume/Projets/Gemma/gemma-data/download/singleCellData/local/lim_Cingulate_transposed.h5ad" );
-        AnnDataSingleCellDataLoader loader = new AnnDataSingleCellDataLoader( dataPath );
-        loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
-        loader.setSampleFactorName( "case_num" );
-        Collection<BioAssay> bas = Arrays.asList( BioAssay.Factory.newInstance( "C5382Cin", null, BioMaterial.Factory.newInstance( "C5382Cin" ) ) );
-        loader.getSingleCellDimension( bas );
-        QuantitationType qt = loader.getQuantitationTypes().iterator().next();
-    }
-
-    @Test
     public void testLayeredAnnDataFile() throws IOException {
         Path dataPath = new ClassPathResource( "/data/loader/expression/singleCell/GSE221593.h5ad" ).getFile().toPath();
         AnnDataSingleCellDataLoader loader = new AnnDataSingleCellDataLoader( dataPath );
