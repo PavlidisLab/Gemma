@@ -260,7 +260,12 @@ pipeline {
                         }
                     }
                     steps {
-                        sh "rsync -av --delete gemma-cli/target/appassembler/ ${cliDir}/"
+                        script {
+                            if (fileExists(cliDir)) {
+                                error("There is already a deployed build at ${cliDir}.")
+                            }
+                        }
+                        sh "rsync -av ./gemma-cli/target/appassembler/ ${cliDir}/"
                         sh "ln -Tsf ${cliDir} ${cliDirSymlink}"
                     }
                 }
