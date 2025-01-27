@@ -37,7 +37,7 @@ public interface DiffExAnalyzer {
      * @return analyses. There will be more than one if a subset factor is defined.
      */
     Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
-            ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config );
+            ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config ) throws AnalysisException;
 
     /**
      * Analyze a dataset with a pre-existing subset structure.
@@ -47,7 +47,7 @@ public interface DiffExAnalyzer {
     Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             Map<FactorValue, ExpressionExperimentSubSet> subsets,
             ExpressionDataDoubleMatrix dmatrix,
-            DifferentialExpressionAnalysisConfig config );
+            DifferentialExpressionAnalysisConfig config ) throws AnalysisException;
 
     /**
      * Analyze a subset.
@@ -60,5 +60,5 @@ public interface DiffExAnalyzer {
      * @return analysis
      */
     DifferentialExpressionAnalysis run( ExpressionExperimentSubSet subset, ExpressionDataDoubleMatrix dmatrix,
-            DifferentialExpressionAnalysisConfig config );
+            DifferentialExpressionAnalysisConfig config ) throws AnalysisException;
 }

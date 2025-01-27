@@ -185,14 +185,14 @@ public class QuantitationTypeDetectionUtils {
                 .flatMapToDouble( Arrays::stream )
                 .filter( Double::isFinite )
                 .max()
-                .orElseThrow( RuntimeException::new );
+                .orElse( Double.NaN );
     }
 
     private static double getMaximum( CompRowMatrix matrix ) {
         return Arrays.stream( matrix.getData() )
                 .filter( Double::isFinite )
                 .max()
-                .orElseThrow( RuntimeException::new );
+                .orElse( Double.NaN );
     }
 
     private static double getMinimum( Object matrix ) {
@@ -210,14 +210,14 @@ public class QuantitationTypeDetectionUtils {
                 .flatMapToDouble( Arrays::stream )
                 .filter( Double::isFinite )
                 .min()
-                .orElseThrow( RuntimeException::new );
+                .orElse( Double.NaN );
     }
 
     private static double getMinimum( CompRowMatrix matrix ) {
         return Arrays.stream( matrix.getData() )
                 .filter( Double::isFinite )
                 .min()
-                .orElseThrow( RuntimeException::new );
+                .orElse( Double.NaN );
     }
 
     private static Object logTransform( Object matrix ) {

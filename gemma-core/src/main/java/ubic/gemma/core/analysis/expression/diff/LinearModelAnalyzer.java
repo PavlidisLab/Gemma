@@ -37,6 +37,7 @@ import ubic.basecode.math.MultipleTestCorrection;
 import ubic.basecode.math.Rank;
 import ubic.basecode.math.linearmodels.*;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
 import ubic.gemma.core.util.BuildInfo;
@@ -68,7 +69,6 @@ import java.util.stream.Collectors;
 
 import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.createBADMap;
 import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.makeDataMatrix;
-import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.filterAndLog2Transform;
 import static ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort.orderByExperimentalDesign;
 import static ubic.gemma.core.util.StringUtils.abbreviateInBytes;
 
@@ -101,11 +101,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
     /**
      * Factors that are always excluded from analysis
      */
-    private static final List<String> EXCLUDE_CHARACTERISTICS_VALUES = new ArrayList<String>() {
-        {
-            this.add( "DE_Exclude" );
-        }
-    };
+    private static final String EXCLUDE_CHARACTERISTICS_VALUES = "DE_Exclude";
 
     private static final String EXCLUDE_WARNING = "Found Factor Value with DE_Exclude characteristic. Skipping current subset.";
 
@@ -246,7 +242,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         }
 
         if ( timer.getTime() > 1000 ) {
-            LinearModelAnalyzer.log.info( "Hitlist computation: " + timer.getTime() + "ms" );
+            LinearModelAnalyzer.log.info( "Hitlist computation: " + timer.getTime() + " ms" );
         }
         return hitListSizes;
     }
@@ -284,7 +280,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
      */
     @Override
     public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
-            ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config ) {
+            ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config ) throws AnalysisException {
 
         /*
          * Initialize our matrix and factor lists...
@@ -317,7 +313,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
     }
 
     @Override
-    public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment ee, Map<FactorValue, ExpressionExperimentSubSet> subsets, ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config ) {
+    public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment ee, Map<FactorValue, ExpressionExperimentSubSet> subsets, ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config ) throws AnalysisException {
         Assert.notNull( config.getSubsetFactor(), "Subset factor must be provided" );
         Assert.isTrue( !subsets.isEmpty(), "No subsets provided" );
         Assert.isTrue( config.getSubsetFactor().getFactorValues().containsAll( subsets.keySet() ), "Subsets must use factor values from " + config.getSubsetFactor() + "." );
@@ -334,7 +330,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
     /**
      * Perform an analysis by subset.
      */
-    private Collection<DifferentialExpressionAnalysis> doSubSetAnalysis( ExpressionExperiment expressionExperiment, List<BioMaterial> samplesUsed, List<ExperimentalFactor> factors, Map<ExperimentalFactor, FactorValue> baselineConditions, ExperimentalFactor subsetFactor, ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config ) {
+    private Collection<DifferentialExpressionAnalysis> doSubSetAnalysis( ExpressionExperiment expressionExperiment, List<BioMaterial> samplesUsed, List<ExperimentalFactor> factors, Map<ExperimentalFactor, FactorValue> baselineConditions, ExperimentalFactor subsetFactor, ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config ) throws AnalysisException {
         Assert.isTrue( !factors.contains( subsetFactor ),
                 "Subset factor cannot also be included in the analysis [ Factor was: " + subsetFactor + "]" );
 
@@ -381,11 +377,12 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         return doSubSetAnalysis( subsets, dmatrixBySubset, factors, baselineConditions, config );
     }
 
-    private Collection<DifferentialExpressionAnalysis> doSubSetAnalysis( Map<FactorValue, ExpressionExperimentSubSet> subsets, Map<FactorValue, ExpressionDataDoubleMatrix> dmatrix, List<ExperimentalFactor> factors, Map<ExperimentalFactor, FactorValue> baselineConditions, DifferentialExpressionAnalysisConfig config ) {
+    private Collection<DifferentialExpressionAnalysis> doSubSetAnalysis( Map<FactorValue, ExpressionExperimentSubSet> subsets, Map<FactorValue, ExpressionDataDoubleMatrix> dmatrix, List<ExperimentalFactor> factors, Map<ExperimentalFactor, FactorValue> baselineConditions, DifferentialExpressionAnalysisConfig config ) throws AnalysisException {
         /*
          * Now analyze each subset
          */
         Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
+        Collection<AnalysisException> subsetExceptions = new HashSet<>();
         for ( FactorValue subsetFactorValue : subsets.keySet() ) {
             if ( isExcluded( subsetFactorValue ) ) {
                 LinearModelAnalyzer.log.warn( LinearModelAnalyzer.EXCLUDE_WARNING );
@@ -411,8 +408,22 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             /*
              * Run analysis on the subset.
              */
-            results.add( doAnalysis( subsets.get( subsetFactorValue ), dmatrix.get( subsetFactorValue ), bioMaterials,
-                    subsetFactors, baselineConditions, subsetFactorValue, subsetConfig ) );
+            try {
+                results.add( doAnalysis( subsets.get( subsetFactorValue ), dmatrix.get( subsetFactorValue ), bioMaterials,
+                        subsetFactors, baselineConditions, subsetFactorValue, subsetConfig ) );
+            } catch ( AnalysisException e ) {
+                if ( config.isIgnoreFailingSubsets() ) {
+                    log.error( "Failed to analyze subset " + subsetFactorValue + ".", e );
+                    subsetExceptions.add( e );
+                } else {
+                    throw e;
+                }
+            }
+        }
+
+        if ( results.isEmpty() && !subsetExceptions.isEmpty() ) {
+            // all non-skipped analyses failed
+            throw new AllSubSetAnalysesFailedException( "All subset analyses failed for " + config.getSubsetFactor(), subsetExceptions, config );
         }
 
         return results;
@@ -432,7 +443,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
 
 
     @Override
-    public DifferentialExpressionAnalysis run( ExpressionExperimentSubSet subset, ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config ) {
+    public DifferentialExpressionAnalysis run( ExpressionExperimentSubSet subset, ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config ) throws AnalysisException {
         Assert.notNull( config.getSubsetFactor(), "A subset factor must be set to analyze a subset." );
 
         /*
@@ -466,7 +477,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         dropIncompleteFactors( samplesInSubset, factors );
 
         if ( factors.isEmpty() ) {
-            throw new IllegalStateException( "All factors were removed due to incomplete values" );
+            throw new NoFactorLeftForAnalysisException( "All factors were removed due to incomplete values", config );
         }
 
         if ( subsetFactors.isEmpty() ) {
@@ -475,10 +486,8 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             return null;
         }
 
-        DifferentialExpressionAnalysisConfig subsetConfig = fixConfigForSubset( subsetFactors, subsetFactorValue, config );
-
         return doAnalysis( subset, subsetMatrix, samplesInSubset, subsetFactors,
-                baselineConditions, subsetFactorValue, subsetConfig );
+                baselineConditions, subsetFactorValue, fixConfigForSubset( subsetFactors, subsetFactorValue, config ) );
     }
 
     /**
@@ -637,7 +646,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             List<ExperimentalFactor> factors,
             Map<ExperimentalFactor, FactorValue> baselineConditions,
             @Nullable FactorValue subsetFactorValue,
-            DifferentialExpressionAnalysisConfig config ) {
+            DifferentialExpressionAnalysisConfig config ) throws AnalysisException {
 
         if ( factors.isEmpty() ) {
             throw new IllegalArgumentException( "Must provide at least one factor" );
@@ -675,14 +684,8 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             this.buildModelFormula( config, label2Factors, interactionFactorLists );
         }
 
-        /*
-         * FIXME: remove columns that are marked as outliers, this will make some steps cleaner
-         */
-        try {
-            expressionData = filterAndLog2Transform( expressionData );
-        } catch ( QuantitationTypeConversionException e ) {
-            throw new RuntimeException( e );
-        }
+        expressionData = filterAndLog2Transform( expressionData, config );
+
         DoubleMatrix<CompositeSequence, BioMaterial> bareFilteredDataMatrix = expressionData.getMatrix();
 
         DoubleMatrix1D librarySizes = getLibrarySizes( config, expressionData );
@@ -694,14 +697,14 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
          * PREPARATION FOR 'NATIVE' FITTING
          */
         DoubleMatrix<String, String> finalDataMatrix = makeDataMatrix( designMatrix, bareFilteredDataMatrix );
-        DesignMatrix properDesignMatrix = this
-                .makeDesignMatrix( designMatrix, interactionFactorLists, baselineConditions );
+        DesignMatrix properDesignMatrix = makeDesignMatrix( designMatrix, interactionFactorLists, baselineConditions );
 
         /*
          * Run the analysis
          */
-        final Map<String, LinearModelSummary> rawResults = this
-                .runAnalysis( bareFilteredDataMatrix, finalDataMatrix, properDesignMatrix, librarySizes, config );
+        final Map<String, LinearModelSummary> rawResults = runAnalysisInBackground( finalDataMatrix, properDesignMatrix, librarySizes, config );
+
+        assert rawResults.size() == bareFilteredDataMatrix.rows() : "expected " + bareFilteredDataMatrix.rows() + " results, got " + rawResults.size();
 
         if ( rawResults.isEmpty() ) {
             throw new IllegalStateException( "Got no results from the analysis" );
@@ -849,6 +852,21 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         return expressionAnalysis;
     }
 
+    /**
+     * FIXME: remove columns that are marked as outliers, this will make some steps cleaner
+     */
+    private ExpressionDataDoubleMatrix filterAndLog2Transform( ExpressionDataDoubleMatrix expressionData, DifferentialExpressionAnalysisConfig config ) throws AnalysisException {
+        try {
+            expressionData = QuantitationTypeConversionUtils.filterAndLog2Transform( expressionData );
+        } catch ( QuantitationTypeConversionException e ) {
+            throw new InvalidQuantitationTypeConversionException( e, config );
+        }
+        if ( expressionData.rows() == 0 ) {
+            throw new NoSampleLeftForAnalysisException( "No sample were retained after filtering and log2 transformation.", config );
+        }
+        return expressionData;
+    }
+
     private void warnForElement( CompositeSequence el, String s, int warned ) {
         if ( warned < 5 ) {
             log.warn( el.getName() + ": " + s );
@@ -986,15 +1004,21 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
 
             }
 
+            int numberOfResults = resultLists.get( fName ).size();
+
             double[] ranks = computeRanks( ArrayUtils.toPrimitive( pvalArray ) );
+            if ( pvalArray.length != numberOfResults ) {
+                throw new AssertionError( "The number of P-values does not match the nmber of results for " + fName + "." );
+            }
 
-            if ( pvalArray.length != resultLists.get( fName ).size() )
-                throw new AssertionError( pvalArray.length + " != " + resultLists.get( fName ).size() );
-
-            if ( pvalArray.length != ranks.length ) throw new AssertionError();
+            if ( ranks.length != numberOfResults ) {
+                throw new IllegalStateException( "The number of ranks does not match the number of results for " + fName + "." );
+            }
 
             double[] qvalues = benjaminiHochberg( pvalArray );
-            assert qvalues == null || qvalues.length == resultLists.get( fName ).size();
+            if ( qvalues != null && qvalues.length != numberOfResults ) {
+                throw new IllegalStateException( "The number of Q-values does not match the number of results for " + fName + "." );
+            }
 
             int i = 0;
             for ( DifferentialExpressionAnalysisResult pr : resultLists.get( fName ) ) {
@@ -1295,96 +1319,13 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
     }
 
     /**
-     * Important bit. Run the analysis
-     *
-     * @return results
+     * Perform the analysis in a background thread, so that we can provide feedback and interrupt it if it takes too
+     * long.
      */
-    private Map<String, LinearModelSummary> runAnalysis( final DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix,
-            final DoubleMatrix<String, String> sNamedMatrix, DesignMatrix designMatrix,
-            final DoubleMatrix1D librarySize, final DifferentialExpressionAnalysisConfig config ) {
+    private Map<String, LinearModelSummary> runAnalysisInBackground( DoubleMatrix<String, String> sNamedMatrix,
+            DesignMatrix designMatrix, DoubleMatrix1D librarySize, DifferentialExpressionAnalysisConfig config ) {
 
-        // perform the analysis in a background thread, so that we can provide feedback and interrupt it if it takes
-        // too long
-        Future<Map<String, LinearModelSummary>> f = taskExecutor.submit( () -> {
-            StopWatch timer = new StopWatch();
-            timer.start();
-            LeastSquaresFit fit;
-            if ( config.isUseWeights() ) {
-                MeanVarianceEstimator mv = new MeanVarianceEstimator( designMatrix, sNamedMatrix, librarySize );
-                LinearModelAnalyzer.log.info( "Model weights from mean-variance model: " + timer.getTime() + "ms" );
-                timer.reset();
-                timer.start();
-                fit = new LeastSquaresFit( designMatrix, sNamedMatrix, mv.getWeights() );
-
-                // DEBUG CODE
-                //                    try {
-                // String dir = "/Users/pzoot";
-                //                        File file = File.createTempFile( "loess-fit-", ".txt", new File( dir ) );
-                //                        OutputStream os = new PrintStream( file );
-                //                        ubic.basecode.io.writer.MatrixWriter w = new ubic.basecode.io.writer.MatrixWriter( os );
-                //                        w.writeMatrix( mv.getLoess() );
-                //
-                //                        File f2 = File.createTempFile( "mv-", ".txt", new File( dir ) );
-                //                        OutputStream os2 = new PrintStream( f2 );
-                //                        ubic.basecode.io.writer.MatrixWriter w2 = new ubic.basecode.io.writer.MatrixWriter( os2 );
-                //                        w2.writeMatrix( mv.getMeanVariance() );
-                //
-                //                        File f3 = File.createTempFile( "prepared-data-", ".txt", new File( dir ) );
-                //                        OutputStream os3 = new PrintStream( f3 );
-                //                        ubic.basecode.io.writer.MatrixWriter w3 = new ubic.basecode.io.writer.MatrixWriter( os3 );
-                //                        w3.writeMatrix( new DenseDoubleMatrix2D( preparedData.asArray() ) );
-                //
-                //                        File f4 = File.createTempFile( "voom-weights-", ".txt", new File( dir ) );
-                //                        OutputStream os4 = new PrintStream( f4 );
-                //                        ubic.basecode.io.writer.MatrixWriter w4 = new ubic.basecode.io.writer.MatrixWriter( os4 );
-                //                        w4.writeMatrix( new DenseDoubleMatrix2D( preparedData.asArray() ) );
-                //
-                //                        File f5 = File.createTempFile( "designmatrix-", ".txt", new File( dir ) );
-                //                        OutputStream os5 = new PrintStream( f5 );
-                //                        ubic.basecode.io.writer.MatrixWriter w5 = new ubic.basecode.io.writer.MatrixWriter( os5 );
-                //                        w5.writeMatrix( designMatrix.getMatrix(), true );
-                //
-                //                        File f6 = File.createTempFile( "libsize-", ".txt", new File( dir ) );
-                //                        OutputStream os6 = new PrintStream( f6 );
-                //                        ubic.basecode.io.writer.MatrixWriter w6 = new ubic.basecode.io.writer.MatrixWriter( os6 );
-                //                        w6.writeMatrix( librarySize );
-                //                    } catch ( Exception e ) {
-                //                        ///
-                //                    }
-
-            } else {
-                fit = new LeastSquaresFit( designMatrix, sNamedMatrix );
-            }
-            LinearModelAnalyzer.log
-                    .info( "Model fit preparedData matrix " + sNamedMatrix.rows() + " x " + sNamedMatrix.columns() + ": " + timer.getTime()
-                            + "ms" );
-            timer.reset();
-            timer.start();
-            if ( config.isModerateStatistics() ) {
-                ModeratedTstat.ebayes( fit );
-
-                // just for printing to logs:
-                double rdof = 0.0;
-                if ( fit.isHasMissing() ) {
-                    List<Integer> dofs = fit.getResidualDofs();
-                    for ( Integer k : dofs ) {
-                        rdof += k;
-                    }
-                    rdof = rdof / ( double ) dofs.size();
-                } else {
-                    rdof = fit.getResidualDof();
-                }
-                LinearModelAnalyzer.log.info( "Moderate test statistics: " + timer.getTime() + "ms; Mean.residual.dof=" + rdof + " dfPrior=" + fit.getDfPrior() + " varPrior=" + fit.getVarPrior() );
-            }
-
-            timer.reset();
-
-            timer.start();
-            Map<String, LinearModelSummary> res = fit.summarizeByKeys( true );
-            LinearModelAnalyzer.log.info( "Model summarize/ANOVA: " + timer.getTime() + "ms" );
-            LinearModelAnalyzer.log.info( "Analysis phase done ..." );
-            return res;
-        } );
+        Future<Map<String, LinearModelSummary>> f = taskExecutor.submit( () -> runAnalysis( sNamedMatrix, designMatrix, librarySize, config ) );
 
         StopWatch timer = StopWatch.createStarted();
 
@@ -1404,13 +1345,16 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                     LinearModelAnalyzer.log.info( String.format( "Analysis finished in %.1f minutes.",
                             timer.getTime( TimeUnit.SECONDS ) / 60.00 ) );
                 }
-                assert rawResults.size() == namedMatrix.rows() : "expected " + namedMatrix.rows() + " results, got " + rawResults.size();
                 return rawResults;
             } catch ( InterruptedException e ) {
                 Thread.currentThread().interrupt();
                 throw new RuntimeException( "Analysis was interrupted!", e );
             } catch ( ExecutionException e ) {
-                throw new RuntimeException( e.getCause() );
+                if ( e.getCause() instanceof RuntimeException ) {
+                    throw ( RuntimeException ) e.getCause();
+                } else {
+                    throw new RuntimeException( e.getCause() );
+                }
             } catch ( TimeoutException e ) {
                 if ( maxAnalysisTimeMillis > 0 && timer.getTime() >= maxAnalysisTimeMillis ) {
                     LinearModelAnalyzer.log.error( "Analysis is taking too long, something bad must have happened; cancelling..." );
@@ -1425,6 +1369,95 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
     }
 
     /**
+     * Important bit. Run the analysis
+     *
+     * @return results
+     */
+    private Map<String, LinearModelSummary> runAnalysis( DoubleMatrix<String, String> sNamedMatrix,
+            DesignMatrix designMatrix, DoubleMatrix1D librarySize, DifferentialExpressionAnalysisConfig config ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
+        LeastSquaresFit fit;
+        if ( config.isUseWeights() ) {
+            MeanVarianceEstimator mv = new MeanVarianceEstimator( designMatrix, sNamedMatrix, librarySize );
+            LinearModelAnalyzer.log.info( "Model weights from mean-variance model: " + timer.getTime() + " ms" );
+            timer.reset();
+            timer.start();
+            fit = new LeastSquaresFit( designMatrix, sNamedMatrix, mv.getWeights() );
+
+            // DEBUG CODE
+            //                    try {
+            // String dir = "/Users/pzoot";
+            //                        File file = File.createTempFile( "loess-fit-", ".txt", new File( dir ) );
+            //                        OutputStream os = new PrintStream( file );
+            //                        ubic.basecode.io.writer.MatrixWriter w = new ubic.basecode.io.writer.MatrixWriter( os );
+            //                        w.writeMatrix( mv.getLoess() );
+            //
+            //                        File f2 = File.createTempFile( "mv-", ".txt", new File( dir ) );
+            //                        OutputStream os2 = new PrintStream( f2 );
+            //                        ubic.basecode.io.writer.MatrixWriter w2 = new ubic.basecode.io.writer.MatrixWriter( os2 );
+            //                        w2.writeMatrix( mv.getMeanVariance() );
+            //
+            //                        File f3 = File.createTempFile( "prepared-data-", ".txt", new File( dir ) );
+            //                        OutputStream os3 = new PrintStream( f3 );
+            //                        ubic.basecode.io.writer.MatrixWriter w3 = new ubic.basecode.io.writer.MatrixWriter( os3 );
+            //                        w3.writeMatrix( new DenseDoubleMatrix2D( preparedData.asArray() ) );
+            //
+            //                        File f4 = File.createTempFile( "voom-weights-", ".txt", new File( dir ) );
+            //                        OutputStream os4 = new PrintStream( f4 );
+            //                        ubic.basecode.io.writer.MatrixWriter w4 = new ubic.basecode.io.writer.MatrixWriter( os4 );
+            //                        w4.writeMatrix( new DenseDoubleMatrix2D( preparedData.asArray() ) );
+            //
+            //                        File f5 = File.createTempFile( "designmatrix-", ".txt", new File( dir ) );
+            //                        OutputStream os5 = new PrintStream( f5 );
+            //                        ubic.basecode.io.writer.MatrixWriter w5 = new ubic.basecode.io.writer.MatrixWriter( os5 );
+            //                        w5.writeMatrix( designMatrix.getMatrix(), true );
+            //
+            //                        File f6 = File.createTempFile( "libsize-", ".txt", new File( dir ) );
+            //                        OutputStream os6 = new PrintStream( f6 );
+            //                        ubic.basecode.io.writer.MatrixWriter w6 = new ubic.basecode.io.writer.MatrixWriter( os6 );
+            //                        w6.writeMatrix( librarySize );
+            //                    } catch ( Exception e ) {
+            //                        ///
+            //                    }
+
+        } else {
+            fit = new LeastSquaresFit( designMatrix, sNamedMatrix );
+        }
+        LinearModelAnalyzer.log.info( String.format( "Model fit preparedData matrix %d x %d: %d ms", sNamedMatrix.rows(), sNamedMatrix.columns(), timer.getTime() ) );
+        timer.reset();
+        timer.start();
+        if ( config.isModerateStatistics() ) {
+            try {
+                ModeratedTstat.ebayes( fit );
+            } catch ( Exception e ) {
+                throw new EbayesFailureException( e, config );
+            }
+
+            // just for printing to logs:
+            double rdof = 0.0;
+            if ( fit.isHasMissing() ) {
+                List<Integer> dofs = fit.getResidualDofs();
+                for ( Integer k : dofs ) {
+                    rdof += k;
+                }
+                rdof = rdof / ( double ) dofs.size();
+            } else {
+                rdof = fit.getResidualDof();
+            }
+            LinearModelAnalyzer.log.info( "Moderate test statistics: " + timer.getTime() + " ms; Mean.residual.dof=" + rdof + " dfPrior=" + fit.getDfPrior() + " varPrior=" + fit.getVarPrior() );
+        }
+
+        timer.reset();
+
+        timer.start();
+        Map<String, LinearModelSummary> res = fit.summarizeByKeys( true );
+        LinearModelAnalyzer.log.info( "Model summarize/ANOVA: " + timer.getTime() + " ms" );
+        LinearModelAnalyzer.log.info( "Analysis phase done ..." );
+        return res;
+    }
+
+    /**
      * @param pvalues pvalues
      * @return normalized ranks of the pvalues, or null if they were invalid/unusable.
      */
@@ -1432,7 +1465,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         Assert.isTrue( pvalues.length > 0, "P-values array cannot be empty." );
         DoubleArrayList ranks = Rank.rankTransform( new DoubleArrayList( pvalues ) );
         if ( ranks == null ) {
-            throw new RuntimeException( "Pvalue ranks could not be computed" );
+            throw new RuntimeException( "P-value ranks could not be computed" );
         }
         double[] normalizedRanks = new double[ranks.size()];
         for ( int i = 0; i < ranks.size(); i++ ) {

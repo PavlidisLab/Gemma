@@ -84,6 +84,14 @@ public class DifferentialExpressionAnalysisConfig {
     private FactorValue subsetFactorValue;
 
     /**
+     * Keep processing other subsets when encountering an {@link AnalysisException} on a subset.
+     * <p>
+     * If all subset fails, an {@link AllSubSetAnalysesFailedException} will be raised which will contain individual
+     * subset failures.
+     */
+    private boolean ignoreFailingSubsets = false;
+
+    /**
      * Set true for RNA-seq data sets
      */
     private boolean useWeights = false;

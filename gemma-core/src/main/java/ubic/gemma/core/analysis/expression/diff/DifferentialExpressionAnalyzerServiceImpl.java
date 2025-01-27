@@ -182,16 +182,14 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
             return diffExpressionAnalyses;
         } catch ( Exception e ) {
-            DifferentialExpressionAnalyzerServiceImpl.log
-                    .error( "Error during differential expression analysis: " + e.getMessage(), e );
             try {
                 auditTrailService.addUpdateEvent( expressionExperiment,
                         FailedDifferentialExpressionAnalysisEvent.class,
                         ExceptionUtils.getStackTrace( e ) );
             } catch ( Exception e2 ) {
-                DifferentialExpressionAnalyzerServiceImpl.log.error( "Could not attach failure audit event" );
+                DifferentialExpressionAnalyzerServiceImpl.log.error( "Could not attach failure audit event", e2 );
             }
-            throw new RuntimeException( e );
+            throw e;
         }
     }
 
