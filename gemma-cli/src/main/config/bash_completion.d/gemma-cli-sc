@@ -609,13 +609,13 @@ function __gemma_cli_sc_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.SingleCellDataTransformCli ' ]]; then
-        if ! [[ "$current_option" =~ (-python) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -h -python" -- "$2")
+        if ! [[ "$current_option" =~ (--python|-python) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --python -h -python" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' transformSingleCellData ' ]]; then
-        if ! [[ "$current_option" =~ (-python) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help -h -python" -- "$2")
+        if ! [[ "$current_option" =~ (--python|-python) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --python -h -python" -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.UpdateEe2AdCli ' ]]; then
