@@ -48,9 +48,10 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import static ubic.gemma.core.util.StringUtils.abbreviateWithSuffixInUTF8Bytes;
+import static ubic.gemma.core.util.StringUtils.abbreviateWithSuffix;
 
 /**
  *
@@ -351,9 +352,9 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 splitValue.getExperimentalFactor().getName() );
         String factorValueString = FactorValueUtils.getSummaryString( splitValue );
         String suffix = String.format( " [%s = %s]", categoryString, factorValueString );
-        return abbreviateWithSuffixInUTF8Bytes(
+        return abbreviateWithSuffix(
                 String.format( "Split part %d of: %s", splitNumber, StringUtils.strip( toSplit.getName() ) ), suffix,
-                "…", ExpressionExperiment.MAX_NAME_LENGTH )
+                "…", ExpressionExperiment.MAX_NAME_LENGTH, StandardCharsets.UTF_8 )
                 // remove trailing spaces before the abbreviation marker
                 .replace( "\\s+…", "…" );
     }
@@ -548,7 +549,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     private BioMaterial cloneBioMaterial( BioMaterial bm ) {
         Assert.isNull( bm.getSourceBioMaterial(), "Cannot split an experiment with biomaterials that have a source biomaterial." );
         BioMaterial clone = BioMaterial.Factory.newInstance();
-        clone.setName( abbreviateWithSuffixInUTF8Bytes( bm.getName(), " (Split)", "…", BioMaterial.MAX_NAME_LENGTH ) ); // it is important we make a new name, so we don't confuse this with the previous one in findOrCreate();
+        clone.setName( abbreviateWithSuffix( bm.getName(), " (Split)", "…", BioMaterial.MAX_NAME_LENGTH, StandardCharsets.UTF_8 ) ); // it is important we make a new name, so we don't confuse this with the previous one in findOrCreate();
         clone.setDescription( bm.getDescription() );
         clone.setCharacteristics( this.cloneCharacteristics( bm.getCharacteristics() ) );
         clone.setExternalAccession( this.cloneAccession( bm.getExternalAccession() ) );

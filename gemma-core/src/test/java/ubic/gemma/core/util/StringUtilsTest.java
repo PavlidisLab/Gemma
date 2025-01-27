@@ -2,27 +2,34 @@ package ubic.gemma.core.util;
 
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
+
 import static org.junit.Assert.*;
-import static ubic.gemma.core.util.StringUtils.abbreviateInUTF8Bytes;
-import static ubic.gemma.core.util.StringUtils.abbreviateWithSuffixInUTF8Bytes;
+import static ubic.gemma.core.util.StringUtils.abbreviateInBytes;
+import static ubic.gemma.core.util.StringUtils.abbreviateWithSuffix;
 
 public class StringUtilsTest {
 
     @Test
-    public void test() {
-        assertNull( abbreviateInUTF8Bytes( null, "…", 4 ) );
-        assertEquals( "test", abbreviateInUTF8Bytes( "test", "…", 4 ) );
-        assertEquals( "t…", abbreviateInUTF8Bytes( "test 23", "…", 4 ) );
-        assertEquals( "µ…", abbreviateInUTF8Bytes( "µµµ", "…", 5 ) );
-        assertEquals( "µµ", abbreviateInUTF8Bytes( "µµµ", "", 5 ) );
-        assertThrows( IllegalArgumentException.class, () -> abbreviateInUTF8Bytes( "test", "…", -1 ) );
-        assertThrows( IllegalArgumentException.class, () -> abbreviateInUTF8Bytes( "test", "…", 2 ) );
-        assertThrows( IllegalArgumentException.class, () -> abbreviateInUTF8Bytes( "test", "…", 3 ) );
+    public void testAbbreviate() {
+        assertNull( abbreviateInBytes( null, "…", 4, StandardCharsets.UTF_8 ) );
+        assertEquals( "test", abbreviateInBytes( "test", "…", 4, StandardCharsets.UTF_8 ) );
+        assertEquals( "t…", abbreviateInBytes( "test 23", "…", 4, StandardCharsets.UTF_8 ) );
+        assertEquals( "µ…", abbreviateInBytes( "µµµ", "…", 5, StandardCharsets.UTF_8 ) );
+        assertEquals( "µµ", abbreviateInBytes( "µµµ", "", 5, StandardCharsets.UTF_8 ) );
+        assertThrows( IllegalArgumentException.class, () -> abbreviateInBytes( "test", "…", -1, StandardCharsets.UTF_8 ) );
+        assertThrows( IllegalArgumentException.class, () -> abbreviateInBytes( "test", "…", 2, StandardCharsets.UTF_8 ) );
+        assertThrows( IllegalArgumentException.class, () -> abbreviateInBytes( "test", "…", 3, StandardCharsets.UTF_8 ) );
+    }
+
+    @Test
+    public void testAbbreviateUtf16() {
+        assertEquals( "t…", abbreviateInBytes( "test", "…", 4, StandardCharsets.UTF_16 ) );
     }
 
     @Test
     public void testAbbreviateWithSuffix() {
-        assertEquals( "tes… suffix", abbreviateWithSuffixInUTF8Bytes( "test12313", " suffix", "…", 13 ) );
-        assertThrows( IllegalArgumentException.class, () -> abbreviateWithSuffixInUTF8Bytes( "test12313", " suffix", "…", 5 ) );
+        assertEquals( "tes… suffix", abbreviateWithSuffix( "test12313", " suffix", "…", 13, StandardCharsets.UTF_8 ) );
+        assertThrows( IllegalArgumentException.class, () -> abbreviateWithSuffix( "test12313", " suffix", "…", 5, StandardCharsets.UTF_8 ) );
     }
 }

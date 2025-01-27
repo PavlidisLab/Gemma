@@ -70,7 +70,7 @@ import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.creat
 import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.makeDataMatrix;
 import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.filterAndLog2Transform;
 import static ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort.orderByExperimentalDesign;
-import static ubic.gemma.core.util.StringUtils.abbreviateInUTF8Bytes;
+import static ubic.gemma.core.util.StringUtils.abbreviateInBytes;
 
 /**
  * Handles fitting linear models with continuous or fixed-level covariates. Data are always log-transformed.
@@ -364,7 +364,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             String subsetName = "Subset for " + FactorValueUtils.getSummaryString( subsetFactorValue );
             if ( subsetName.getBytes( StandardCharsets.UTF_8 ).length > ExpressionExperimentSubSet.MAX_NAME_LENGTH ) {
                 log.warn( "Name for resulting subset of " + subsetFactorValue + " exceeds " + ExpressionExperimentSubSet.MAX_NAME_LENGTH + " characters, it will be abbreviated." );
-                subsetName = abbreviateInUTF8Bytes( subsetName, "…", ExpressionExperimentSubSet.MAX_NAME_LENGTH );
+                subsetName = abbreviateInBytes( subsetName, "…", ExpressionExperimentSubSet.MAX_NAME_LENGTH, StandardCharsets.UTF_8 );
             }
             ExpressionExperimentSubSet eeSubSet = ExpressionExperimentSubSet.Factory.newInstance( subsetName, expressionExperiment );
             Collection<BioAssay> bioAssays = new HashSet<>();

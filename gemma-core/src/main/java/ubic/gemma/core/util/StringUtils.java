@@ -1,20 +1,24 @@
 package ubic.gemma.core.util;
 
 import javax.annotation.Nullable;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Various utilities for manipulating model classes.
+ * Various utilities for manipulating strings.
+ * <p>
+ * This is mean to extend missing functionality in {@link org.apache.commons.lang3.StringUtils}.
+ * @author poirigui
  */
 public class StringUtils {
 
     /**
-     * Abbreviate the value of a field stored with UTF-8 if it exceeds a certain length in bytes.
+     * Abbreviate the value of a field stored with the given charset if it exceeds a certain length in bytes.
      * @see org.apache.commons.lang3.StringUtils#abbreviate(String, int)
      */
     @Nullable
-    public static String abbreviateInUTF8Bytes( @Nullable String value, String abbrevMarker, int maxLengthInBytes ) {
-        int zl = abbrevMarker.getBytes( StandardCharsets.UTF_8 ).length;
+    public static String abbreviateInBytes( @Nullable String value, String abbrevMarker, int maxLengthInBytes, Charset charset ) {
+        int zl = sizeInBytes( abbrevMarker, charset );
         if ( maxLengthInBytes < zl + 1 ) {
             throw new IllegalArgumentException( "The maximum length must be at least one byte more than the length of the marker in bytes." );
         }
@@ -22,25 +26,40 @@ public class StringUtils {
             return value;
         }
         // worst case scenario: all characters are 4 bytes long
-        if ( value.length() * 4 <= maxLengthInBytes ) {
+        if ( largestSizeInBytes( value, charset ) <= maxLengthInBytes ) {
             return value;
         }
-        int byteLength = value.getBytes( StandardCharsets.UTF_8 ).length;
+        int byteLength = sizeInBytes( value, charset );
         if ( byteLength > maxLengthInBytes ) {
-            value = truncateWhenUTF8( value, maxLengthInBytes - zl );
+            value = truncateInBytes( value, maxLengthInBytes - zl, charset );
             return value + abbrevMarker;
         }
         return value;
     }
 
     /**
-     * Abbreviate a string with a suffix as per {@link #abbreviateInUTF8Bytes(String, String, int)}.
+     * Abbreviate a string with a suffix as per {@link #abbreviateInBytes(String, String, int, Charset)}.
      * <p>
      * This produce strings of the form: {@code some text{abbrevMarker}suffix} such that the length of the string in
      * bytes is at most the given maximum.
      */
-    public static String abbreviateWithSuffixInUTF8Bytes( @Nullable String value, String suffix, String abbrevMarker, int maxLengthInBytes ) {
-        return abbreviateInUTF8Bytes( value, abbrevMarker, maxLengthInBytes - suffix.getBytes( StandardCharsets.UTF_8 ).length ) + suffix;
+    public static String abbreviateWithSuffix( @Nullable String value, String suffix, String abbrevMarker, int maxLengthInBytes, Charset charset ) {
+        return abbreviateInBytes( value, abbrevMarker, maxLengthInBytes - sizeInBytes( suffix, charset ), charset ) + suffix;
+    }
+
+    /**
+     * @see org.apache.commons.lang3.StringUtils#truncate(String, int)
+     */
+    public static String truncateInBytes( String s, int maxBytes, Charset charset ) {
+        if ( charset.equals( StandardCharsets.UTF_8 ) ) {
+            return truncateWhenUTF8( s, maxBytes );
+        } else if ( charset.equals( StandardCharsets.US_ASCII ) || charset.equals( StandardCharsets.ISO_8859_1 ) ) {
+            return org.apache.commons.lang3.StringUtils.truncate( s, maxBytes );
+        } else if ( charset.equals( StandardCharsets.UTF_16 ) || charset.equals( StandardCharsets.UTF_16BE ) || charset.equals( StandardCharsets.UTF_16LE ) ) {
+            // all these encodings use 2 bytes per character
+            return org.apache.commons.lang3.StringUtils.truncate( s, maxBytes / 2 );
+        }
+        throw new UnsupportedOperationException( "Unsupported charset for truncation: " + charset );
     }
 
     /**
@@ -75,5 +94,29 @@ public class StringUtils {
             i += skip;
         }
         return s;
+    }
+
+    private static int sizeInBytes( String s, Charset charset ) {
+        if ( charset.equals( StandardCharsets.UTF_8 ) ) {
+            return s.getBytes( charset ).length;
+        } else if ( charset.equals( StandardCharsets.US_ASCII ) || charset.equals( StandardCharsets.ISO_8859_1 ) ) {
+            return s.length();
+        } else if ( charset.equals( StandardCharsets.UTF_16 ) || charset.equals( StandardCharsets.UTF_16BE ) || charset.equals( StandardCharsets.UTF_16LE ) ) {
+            return 2 * s.length();
+        } else {
+            throw new UnsupportedOperationException( "Unsupported charset for size calculation: " + charset );
+        }
+    }
+
+    private static int largestSizeInBytes( String s, Charset charset ) {
+        if ( charset.equals( StandardCharsets.UTF_8 ) ) {
+            return 4 * s.length();
+        } else if ( charset.equals( StandardCharsets.US_ASCII ) || charset.equals( StandardCharsets.ISO_8859_1 ) ) {
+            return s.length();
+        } else if ( charset.equals( StandardCharsets.UTF_16 ) || charset.equals( StandardCharsets.UTF_16BE ) || charset.equals( StandardCharsets.UTF_16LE ) ) {
+            return 2 * s.length();
+        } else {
+            throw new UnsupportedOperationException( "Unsupported charset for maximum size calculation: " + charset );
+        }
     }
 }

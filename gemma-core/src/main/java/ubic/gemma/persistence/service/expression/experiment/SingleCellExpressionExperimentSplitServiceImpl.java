@@ -15,10 +15,11 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.core.util.StringUtils.abbreviateWithSuffixInUTF8Bytes;
+import static ubic.gemma.core.util.StringUtils.abbreviateWithSuffix;
 
 @Service
 @CommonsLog
@@ -60,7 +61,7 @@ public class SingleCellExpressionExperimentSplitServiceImpl implements SingleCel
             }
             String cellTypeName = cellType.getValue();
             ExpressionExperimentSubSet subset = new ExpressionExperimentSubSet();
-            subset.setName( abbreviateWithSuffixInUTF8Bytes( ee.getName(), " - " + cellTypeName, "…", ExpressionExperiment.MAX_NAME_LENGTH ) );
+            subset.setName( abbreviateWithSuffix( ee.getName(), " - " + cellTypeName, "…", ExpressionExperiment.MAX_NAME_LENGTH, StandardCharsets.UTF_8 ) );
             subset.setSourceExperiment( ee );
             subset.getCharacteristics().add( Characteristic.Factory.newInstance( cellType ) );
             for ( BioAssay sample : ee.getBioAssays() ) {
@@ -131,7 +132,7 @@ public class SingleCellExpressionExperimentSplitServiceImpl implements SingleCel
 
     private BioAssay createBioAssayForCellPopulation( BioAssay sample, FactorValue cellTypeFactorValue, Characteristic cellType, String cellTypeName ) {
         BioAssay cellPopBa = new BioAssay();
-        cellPopBa.setName( abbreviateWithSuffixInUTF8Bytes( sample.getName(), " - " + cellTypeName, "…", BioAssay.MAX_NAME_LENGTH ) );
+        cellPopBa.setName( abbreviateWithSuffix( sample.getName(), " - " + cellTypeName, "…", BioAssay.MAX_NAME_LENGTH, StandardCharsets.UTF_8 ) );
         cellPopBa.setArrayDesignUsed( sample.getArrayDesignUsed() );
         BioMaterial cellPopBm = createBioMaterialForCellPopulation( sample.getSampleUsed(), cellTypeFactorValue, cellType, cellTypeName );
         cellPopBa.setSampleUsed( cellPopBm );
@@ -144,7 +145,7 @@ public class SingleCellExpressionExperimentSplitServiceImpl implements SingleCel
 
     private BioMaterial createBioMaterialForCellPopulation( BioMaterial sourceBioMaterial, FactorValue cellTypeFactor, Characteristic cellType, String cellTypeName ) {
         BioMaterial bm = new BioMaterial();
-        bm.setName( abbreviateWithSuffixInUTF8Bytes( sourceBioMaterial.getName(), " - " + cellTypeName, "…", BioMaterial.MAX_NAME_LENGTH ) );
+        bm.setName( abbreviateWithSuffix( sourceBioMaterial.getName(), " - " + cellTypeName, "…", BioMaterial.MAX_NAME_LENGTH, StandardCharsets.UTF_8 ) );
         bm.setSourceTaxon( sourceBioMaterial.getSourceTaxon() );
         bm.setSourceBioMaterial( sourceBioMaterial );
         bm.getCharacteristics().add( Characteristic.Factory.newInstance( cellType ) );
