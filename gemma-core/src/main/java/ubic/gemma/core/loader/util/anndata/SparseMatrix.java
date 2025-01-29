@@ -19,9 +19,16 @@ public class SparseMatrix implements Matrix {
     private final int[] indptr;
 
     public SparseMatrix( H5Group group ) {
-        Assert.isTrue( Objects.equals( group.getStringAttribute( "encoding-type" ), "csr_matrix" ),
-                "The H5 group does not have an 'encoding-type' attribute set to 'csr_matrix'." );
-        Assert.isTrue( group.hasAttribute( "encoding-version" ) );
+        if ( !group.hasAttribute( "encoding-type" ) ) {
+            throw new MissingEncodingAttributeException( "The H5 group does not have an 'encoding-type' attribute set." );
+        }
+        if ( !Objects.equals( group.getStringAttribute( "encoding-type" ), "csr_matrix" )
+                && !Objects.equals( group.getStringAttribute( "encoding-type" ), "csc_matrix" ) ) {
+            throw new InvalidEncodingAttributeException( "The H5 group does not have an 'encoding-type' attribute set to 'csr_matrix' or 'csc_matrix'." );
+        }
+        if ( !group.hasAttribute( "encoding-version" ) ) {
+            throw new MissingEncodingAttributeException( "The H5 group does not have an 'encoding-version' attribute set." );
+        }
         this.group = group;
         this.shape = group.getAttribute( "shape" )
                 .map( H5Attribute::toIntegerVector )
@@ -31,6 +38,20 @@ public class SparseMatrix implements Matrix {
         Assert.isTrue( indptr.length == shape[0] + 1, "The 'indptr' dataset must contain " + shape[0] + " elements." );
         Assert.isTrue( group.exists( "data" ) );
         Assert.isTrue( group.exists( "indices" ) );
+    }
+
+    /**
+     * Indicate if this matrix is stored in CSR.
+     */
+    public boolean isCsr() {
+        return Objects.equals( group.getStringAttribute( "encoding-type" ), "csr_matrix" );
+    }
+
+    /**
+     * Indicate if this matrix is stored in CSC.
+     */
+    public boolean isCsc() {
+        return Objects.equals( group.getStringAttribute( "encoding-type" ), "csc_matrix" );
     }
 
     @Override

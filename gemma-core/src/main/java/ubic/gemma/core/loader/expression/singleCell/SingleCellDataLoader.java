@@ -15,6 +15,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 import javax.annotation.Nullable;
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
@@ -26,7 +27,7 @@ import java.util.stream.Stream;
  *
  * @author poirigui
  */
-public interface SingleCellDataLoader {
+public interface SingleCellDataLoader extends Closeable {
 
     /**
      * Set the strategy used for mapping {@link BioAssay} to sample names from the data.
@@ -124,4 +125,10 @@ public interface SingleCellDataLoader {
      * try-with-resource block.
      */
     Stream<SingleCellExpressionDataVector> loadVectors( Collection<CompositeSequence> designElements, SingleCellDimension dimension, QuantitationType quantitationType ) throws IOException, IllegalArgumentException;
+
+    /**
+     * Free any resources that the loaded has setup.
+     */
+    @Override
+    void close() throws IOException;
 }

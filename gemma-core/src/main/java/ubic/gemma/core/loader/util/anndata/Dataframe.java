@@ -17,6 +17,7 @@ import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.core.loader.util.anndata.Utils.checkEncoding;
 
 /**
  * Represents an AnnData dataframe.
@@ -58,9 +59,7 @@ public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoClose
      *                   {@link Column#get(Object)}.
      */
     public Dataframe( H5Group group, @Nullable Class<K> indexClass ) {
-        Assert.isTrue( Objects.equals( group.getStringAttribute( "encoding-type" ), "dataframe" ),
-                "The H5 group must have an 'encoding-type' attribute set to 'dataframe'." );
-        Assert.isTrue( group.hasAttribute( "encoding-version" ), "A dataframe must have an 'encoding-version' attribute." );
+        checkEncoding( group, "dataframe" );
         Assert.isTrue( group.hasAttribute( "_index" ), "A dataframe must have a '_index' attribute." );
         Assert.isTrue( group.hasAttribute( "column-order" ), "A dataframe must have a 'column-order' attribute." );
         this.group = group;
@@ -334,6 +333,10 @@ public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoClose
 
     public interface Column<K, T> extends Iterable<T> {
 
+        String getName();
+
+        Class<?> getType();
+
         T get( int i ) throws IndexOutOfBoundsException;
 
         boolean getBool( int i ) throws IndexOutOfBoundsException;
@@ -363,6 +366,16 @@ public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoClose
 
         protected AbstractColumn( String name ) {
             this.name = name;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public Class<?> getType() {
+            return getColumnType( name );
         }
 
         @Override
@@ -706,6 +719,16 @@ public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoClose
             for ( int i = 0; i < column.size(); i++ ) {
                 index.putIfAbsent( column.get( i ), i );
             }
+        }
+
+        @Override
+        public String getName() {
+            return column.getName();
+        }
+
+        @Override
+        public Class<?> getType() {
+            return column.getType();
         }
 
         @Override

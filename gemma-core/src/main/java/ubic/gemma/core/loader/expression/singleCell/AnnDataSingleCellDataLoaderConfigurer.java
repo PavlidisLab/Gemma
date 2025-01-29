@@ -7,7 +7,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Set;
 
 @CommonsLog
 public class AnnDataSingleCellDataLoaderConfigurer extends AbstractAnnDataSingleCellDataLoaderConfigurer {
@@ -15,6 +14,12 @@ public class AnnDataSingleCellDataLoaderConfigurer extends AbstractAnnDataSingle
     private final Collection<BioAssay> bioAssays;
     private final BioAssayMapper bioAssayMapper;
 
+    /**
+     *
+     * @param annDataFile
+     * @param bioAssays      a collection of {@link BioAssay} that are used to detect the sample column
+     * @param bioAssayMapper a mapper for {@link BioAssay} to sample name to interpret identifier in the file
+     */
     public AnnDataSingleCellDataLoaderConfigurer( Path annDataFile, Collection<BioAssay> bioAssays, BioAssayMapper bioAssayMapper ) {
         super( annDataFile );
         this.bioAssays = bioAssays;
@@ -22,9 +27,9 @@ public class AnnDataSingleCellDataLoaderConfigurer extends AbstractAnnDataSingle
     }
 
     @Override
-    protected boolean isSampleNameColumn( Dataframe<?> df, String column, Set<String> vals ) {
+    protected boolean isSampleNameColumn( Dataframe.Column<?, String> column ) {
         // make sure that each BioAssay is represented in the data
-        return bioAssayMapper.matchOne( bioAssays, vals ).values().containsAll( bioAssays );
+        return bioAssayMapper.matchOne( bioAssays, column.uniqueValues() ).values().containsAll( bioAssays );
     }
 
     @Override

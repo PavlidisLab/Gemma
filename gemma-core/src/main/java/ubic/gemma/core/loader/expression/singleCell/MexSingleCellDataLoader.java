@@ -395,6 +395,11 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
         } );
     }
 
+    @Override
+    public void close() throws IOException {
+
+    }
+
     private MatrixVectorReader readMatrixMarketFromPath( Path path ) throws IOException {
         if ( path.toString().endsWith( ".gz" ) ) {
             return new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( path ) ) ) );

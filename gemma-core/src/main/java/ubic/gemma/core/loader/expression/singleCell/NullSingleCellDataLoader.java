@@ -94,4 +94,9 @@ public class NullSingleCellDataLoader implements SingleCellDataLoader {
     public Stream<SingleCellExpressionDataVector> loadVectors( Collection<CompositeSequence> designElements, SingleCellDimension dimension, QuantitationType quantitationType ) throws IOException, IllegalArgumentException {
         throw new UnsupportedOperationException( "The null loader does not support loading single-cell vectors." );
     }
+
+    @Override
+    public void close() throws IOException {
+
+    }
 }

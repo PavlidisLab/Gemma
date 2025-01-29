@@ -43,6 +43,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static ubic.gemma.core.loader.expression.singleCell.MexTestUtils.createElementsMappingFromResourceFile;
 import static ubic.gemma.core.loader.expression.singleCell.MexTestUtils.createLoaderForResourceDir;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatFreeMemoryIsGreaterOrEqualTo;
 
 @ContextConfiguration
 public class MexSingleCellDataLoaderTest extends BaseTest {
@@ -253,6 +254,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
     @Test
     @Category({ GeoTest.class, SlowTest.class })
     public void testGSE141552() throws IOException, NoSingleCellDataFoundException {
+        assumeThatFreeMemoryIsGreaterOrEqualTo( 2 * 1024 * 1024 * 1024L, true );
         GeoSeries series = readSeriesFromGeo( "GSE141552" );
         detector.downloadSingleCellData( series );
         MexSingleCellDataLoader loader = ( MexSingleCellDataLoader ) detector.getSingleCellDataLoader( series );

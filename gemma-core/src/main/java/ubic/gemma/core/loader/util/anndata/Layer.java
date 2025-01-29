@@ -17,8 +17,12 @@ public class Layer {
         Assert.isTrue( path.equals( "X" ) || path.startsWith( "layers/" ) || path.equals( "raw/X" ),
                 "A layer path must either be 'X', 'raw.X' or start with 'layers/'." );
         Assert.isTrue( h5File.exists( path ), "No layer at " + path + "." );
-        Assert.isTrue( h5File.hasAttribute( path, "encoding-type" ) );
-        Assert.isTrue( h5File.hasAttribute( path, "encoding-version" ) );
+        if ( !h5File.hasAttribute( path, "encoding-type" ) ) {
+            throw new MissingEncodingAttributeException( "The layer at " + path + " does not have an 'encoding-type' attribute set." );
+        }
+        if ( !h5File.hasAttribute( path, "encoding-version" ) ) {
+            throw new MissingEncodingAttributeException( "The layer at " + path + " does not have an 'encoding-version' attribute set." );
+        }
         this.h5File = h5File;
         this.path = path;
         this.encodingType = h5File.getStringAttribute( path, "encoding-type" );
@@ -77,7 +81,7 @@ public class Layer {
      * Obtain the sparse matrix encoded in this layer.
      */
     public SparseMatrix getSparseMatrix() {
-        Assert.isTrue( isSparse(), "The layer is not sparse." );
+        Assert.isTrue( isSparse(), "The layer at " + path + " is not sparse." );
         return new SparseMatrix( h5File.getGroup( path ) );
     }
 
@@ -85,7 +89,7 @@ public class Layer {
      * Obtain the dense matrix encoded in this layer.
      */
     public DenseMatrix getDenseMatrix() {
-        Assert.isTrue( isDense(), "The layer is not dense." );
+        Assert.isTrue( isDense(), "The layer at " + path + " is not dense." );
         return new DenseMatrix( h5File.getDataset( path ) );
     }
 

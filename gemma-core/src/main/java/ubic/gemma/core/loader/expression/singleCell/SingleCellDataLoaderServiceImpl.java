@@ -64,7 +64,11 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     public QuantitationType load( ExpressionExperiment ee, ArrayDesign platform, SingleCellDataLoaderConfig config ) {
         Assert.isNull( config.getDataPath(), "An explicit path cannot be provided when detecting the data type automatically." );
         ee = expressionExperimentService.loadOrFail( ee.getId() );
-        return load( ee, platform, getLoader( ee, config ), config );
+        try ( SingleCellDataLoader loader = getLoader( ee, config ) ) {
+            return load( ee, platform, loader, config );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     @Override
@@ -74,16 +78,20 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         if ( config.getDataPath() != null ) {
             log.info( "Loading single-cell data for " + ee + " from " + config.getDataPath() + "..." );
         }
-        return load( ee, platform, getLoader( ee, dataType, config ), config );
+        try ( SingleCellDataLoader loader = getLoader( ee, dataType, config ) ) {
+            return load( ee, platform, loader, config );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     @Override
     @Transactional
     public Collection<CellTypeAssignment> loadCellTypeAssignments( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
         ee = expressionExperimentService.loadOrFail( ee.getId() );
-        try {
+        try ( SingleCellDataLoader loader = getLoader( ee, config ) ) {
             SingleCellDimension dimension = getSingleCellDimension( ee, config );
-            Set<CellTypeAssignment> ctas = getLoader( ee, config ).getCellTypeAssignments( dimension );
+            Set<CellTypeAssignment> ctas = loader.getCellTypeAssignments( dimension );
             applyPreferredCellTypeAssignment( ctas, config );
             Set<CellTypeAssignment> set = new HashSet<>();
             for ( CellTypeAssignment cta : ctas ) {
@@ -100,9 +108,9 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Transactional
     public Collection<CellTypeAssignment> loadCellTypeAssignments( ExpressionExperiment ee, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
         ee = expressionExperimentService.loadOrFail( ee.getId() );
-        try {
+        try ( SingleCellDataLoader loader = getLoader( ee, dataType, config ) ) {
             SingleCellDimension dimension = getSingleCellDimension( ee, config );
-            Set<CellTypeAssignment> ctas = getLoader( ee, dataType, config ).getCellTypeAssignments( dimension );
+            Set<CellTypeAssignment> ctas = loader.getCellTypeAssignments( dimension );
             applyPreferredCellTypeAssignment( ctas, config );
             Set<CellTypeAssignment> set = new HashSet<>();
             for ( CellTypeAssignment cta : ctas ) {
@@ -119,10 +127,10 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Transactional
     public Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
         ee = expressionExperimentService.loadOrFail( ee.getId() );
-        try {
+        try ( SingleCellDataLoader loader = getLoader( ee, config ) ) {
             SingleCellDimension dimension = getSingleCellDimension( ee, config );
             Collection<CellLevelCharacteristics> created = new HashSet<>();
-            for ( CellLevelCharacteristics clc : getLoader( ee, config ).getOtherCellLevelCharacteristics( dimension ) ) {
+            for ( CellLevelCharacteristics clc : loader.getOtherCellLevelCharacteristics( dimension ) ) {
                 created.add( singleCellExpressionExperimentService.addCellLevelCharacteristics( ee, dimension, clc ) );
             }
             return created;
@@ -135,10 +143,10 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Transactional
     public Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
         ee = expressionExperimentService.loadOrFail( ee.getId() );
-        try {
+        try ( SingleCellDataLoader loader = getLoader( ee, dataType, config ) ) {
             SingleCellDimension dimension = getSingleCellDimension( ee, config );
             Collection<CellLevelCharacteristics> created = new HashSet<>();
-            for ( CellLevelCharacteristics clc : getLoader( ee, dataType, config ).getOtherCellLevelCharacteristics( dimension ) ) {
+            for ( CellLevelCharacteristics clc : loader.getOtherCellLevelCharacteristics( dimension ) ) {
                 created.add( singleCellExpressionExperimentService.addCellLevelCharacteristics( ee, dimension, clc ) );
             }
             return created;

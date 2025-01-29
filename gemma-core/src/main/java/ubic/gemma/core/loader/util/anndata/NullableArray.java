@@ -5,7 +5,8 @@ import ubic.gemma.core.loader.util.hdf5.H5Dataset;
 import ubic.gemma.core.loader.util.hdf5.H5Group;
 
 import javax.annotation.Nullable;
-import java.util.Objects;
+
+import static ubic.gemma.core.loader.util.anndata.Utils.checkEncoding;
 
 public abstract class NullableArray<T> implements Array<T>, AutoCloseable {
 
@@ -13,8 +14,7 @@ public abstract class NullableArray<T> implements Array<T>, AutoCloseable {
     protected final H5Dataset mask;
 
     public NullableArray( H5Group group, String encodingType ) {
-        Assert.isTrue( Objects.equals( group.getStringAttribute( "encoding-type" ), encodingType ) );
-        Assert.isTrue( group.hasAttribute( "encoding-version" ) );
+        checkEncoding( group, encodingType );
         this.values = group.getDataset( "values" );
         this.mask = group.getDataset( "mask" );
         Assert.isTrue( values.size() == mask.size(), "Values and mask must have the same size." );

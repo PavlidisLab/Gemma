@@ -583,6 +583,11 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         return loadVectors( designElements, dimension, quantitationType, getLayerName( quantitationType ) );
     }
 
+    @Override
+    public void close() throws IOException {
+
+    }
+
     @Nullable
     private String getLayerName( QuantitationType quantitationType ) {
         if ( quantitationType.getName().startsWith( LAYERED_QT_NAME_PREFIX ) ) {

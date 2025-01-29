@@ -377,12 +377,13 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                                         .map( GeoSample::getGeoAccession )
                                         .map( s -> BioAssay.Factory.newInstance( s, platform, BioMaterial.Factory.newInstance( s ) ) )
                                         .collect( Collectors.toList() );
-                                SingleCellDataLoader loader = detector.getSingleCellDataLoader( series );
-                                numberOfSamples = loader.getSampleNames().size();
-                                SingleCellDimension scd = loader.getSingleCellDimension( bas );
-                                numberOfCells = scd.getNumberOfCells();
-                                numberOfGenes = loader.getGenes().size();
-                                addSuccessObject( geoAccession );
+                                try ( SingleCellDataLoader loader = detector.getSingleCellDataLoader( series ) ) {
+                                    numberOfSamples = loader.getSampleNames().size();
+                                    SingleCellDimension scd = loader.getSingleCellDimension( bas );
+                                    numberOfCells = scd.getNumberOfCells();
+                                    numberOfGenes = loader.getGenes().size();
+                                    addSuccessObject( geoAccession );
+                                }
                             }
                         } else {
                             detectedDataType = UNSUPPORTED_INDICATOR;

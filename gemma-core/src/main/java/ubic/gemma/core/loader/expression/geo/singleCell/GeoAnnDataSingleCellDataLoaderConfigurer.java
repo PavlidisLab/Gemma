@@ -6,7 +6,6 @@ import ubic.gemma.core.loader.expression.singleCell.AbstractAnnDataSingleCellDat
 import ubic.gemma.core.loader.util.anndata.Dataframe;
 
 import java.nio.file.Path;
-import java.util.Set;
 
 @CommonsLog
 class GeoAnnDataSingleCellDataLoaderConfigurer extends AbstractAnnDataSingleCellDataLoaderConfigurer {
@@ -21,7 +20,7 @@ class GeoAnnDataSingleCellDataLoaderConfigurer extends AbstractAnnDataSingleCell
     }
 
     @Override
-    protected boolean isSampleNameColumn( Dataframe<?> ad, String col, Set<String> vals ) {
-        return vals.stream().allMatch( val -> matcher.match( series.getSamples(), val ).size() == 1 );
+    protected boolean isSampleNameColumn( Dataframe.Column<?, String> column ) {
+        return column.uniqueValues().stream().allMatch( val -> matcher.match( series.getSamples(), val ).size() == 1 );
     }
 }

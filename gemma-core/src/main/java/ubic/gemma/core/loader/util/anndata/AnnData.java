@@ -12,25 +12,25 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import static ubic.gemma.core.loader.util.anndata.Utils.checkEncoding;
+
 @CommonsLog
 public class AnnData implements Closeable {
 
     public static AnnData open( Path path ) throws IOException {
-        return new AnnData( H5File.open( path ) );
+        H5File h5File = H5File.open( path );
+        try {
+            return new AnnData( h5File );
+        } catch ( Exception e ) {
+            h5File.close();
+            throw e;
+        }
     }
 
     private final H5File h5File;
 
-    private AnnData( H5File h5File ) throws IOException {
-        String encodingType = h5File.getStringAttribute( "encoding-type" );
-        if ( !Objects.equals( encodingType, "anndata" ) ) {
-            h5File.close();
-            throw new IllegalArgumentException( "The HDF5 file does not have its 'encoding-type' set to 'anndata'." );
-        }
-        if ( !h5File.hasAttribute( "encoding-version" ) ) {
-            h5File.close();
-            throw new IllegalArgumentException( "The HDF5 file does not have an 'encoding-version' attribute set." );
-        }
+    private AnnData( H5File h5File ) {
+        checkEncoding( h5File, "anndata" );
         this.h5File = h5File;
     }
 

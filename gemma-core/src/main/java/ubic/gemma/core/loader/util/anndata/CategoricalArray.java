@@ -5,7 +5,8 @@ import ubic.gemma.core.loader.util.hdf5.H5Group;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
-import java.util.Objects;
+
+import static ubic.gemma.core.loader.util.anndata.Utils.checkEncoding;
 
 /**
  * Represents a categorical array.
@@ -19,9 +20,7 @@ public class CategoricalArray<T> implements Array<T> {
     private final boolean ordered;
 
     public CategoricalArray( H5Group group, Class<T> categoryType ) {
-        Assert.isTrue( Objects.equals( group.getStringAttribute( "encoding-type" ), "categorical" ),
-                "The H5 group does not have an 'encoding-type' attribute set to 'categorical'." );
-        Assert.isTrue( group.hasAttribute( "encoding-version" ) );
+        checkEncoding( group, "categorical" );
         Assert.isTrue( group.hasAttribute( "ordered" ) );
         this.group = group;
         if ( String.class.isAssignableFrom( categoryType ) ) {

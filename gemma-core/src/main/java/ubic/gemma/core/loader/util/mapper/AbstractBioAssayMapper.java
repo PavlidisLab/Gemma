@@ -4,10 +4,8 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.normalizeSpace;
 
@@ -40,8 +38,22 @@ public abstract class AbstractBioAssayMapper implements BioAssayMapper {
     }
 
     @Override
+    public Map<String, BioAssay> matchOne( Collection<BioAssay> candidates, Collection<String> identifiers ) {
+        Map<String, BioAssay> map = new HashMap<>();
+        for ( String i : identifiers ) {
+            matchOne( candidates, i ).ifPresent( bioAssay -> map.put( i, bioAssay ) );
+        }
+        return map;
+    }
+
+    @Override
     public Set<BioAssay> matchAll( Collection<BioAssay> candidates, String identifier ) {
         return matchAllInternal( candidates, identifier );
+    }
+
+    @Override
+    public Map<String, Set<BioAssay>> matchAll( Collection<BioAssay> candidates, Collection<String> identifiers ) {
+        return identifiers.stream().collect( Collectors.toMap( i -> i, i -> matchAllInternal( candidates, i ) ) );
     }
 
     @Override

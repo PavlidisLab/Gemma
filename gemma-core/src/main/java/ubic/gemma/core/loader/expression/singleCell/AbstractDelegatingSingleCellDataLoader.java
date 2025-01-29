@@ -94,4 +94,9 @@ public abstract class AbstractDelegatingSingleCellDataLoader implements SingleCe
     public Stream<SingleCellExpressionDataVector> loadVectors( Collection<CompositeSequence> designElements, SingleCellDimension dimension, QuantitationType quantitationType ) throws IOException, IllegalArgumentException {
         return delegate.loadVectors( designElements, dimension, quantitationType );
     }
+
+    @Override
+    public void close() throws IOException {
+        delegate.close();
+    }
 }
