@@ -265,7 +265,7 @@ pipeline {
                                 error("There is already a deployed build at ${cliDir}.")
                             }
                         }
-                        sh "rsync -av ./gemma-cli/target/appassembler/ ${cliDir}/"
+                        sh "rsync -av --link-dest ${cliDirSymlink} ./gemma-cli/target/appassembler/ ${cliDir}/"
                         sh "ln -Tsf ${cliDir} ${cliDirSymlink}"
                     }
                 }
