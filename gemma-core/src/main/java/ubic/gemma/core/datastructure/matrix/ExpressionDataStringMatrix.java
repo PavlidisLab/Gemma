@@ -87,6 +87,20 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
         throw new UnsupportedOperationException();
     }
 
+
+    @Override
+    public String[][] getRows( Collection<Integer> indices ) {
+        if ( indices == null || indices.isEmpty() ) {
+            return null;
+        }
+
+        return indices.stream()
+                .map( index -> getRow( index ) )
+                .toArray( String[][]::new );
+
+    }
+
+
     @Override
     public String[] getColumn( BioAssay bioAssay ) {
         int index = this.columnAssayMap.get( bioAssay );

@@ -106,8 +106,16 @@ public class ExpressionDataDoubleMatrixUtil {
             if ( dmatrix.rows() < r ) {
                 ExpressionDataDoubleMatrixUtil.log.info( ( r - dmatrix.rows() ) + " rows removed due to too many identical values" );
             }
-        }
 
+            /*
+             * As noted in https://github.com/PavlidisLab/GemmaCuration/issues/218, this filter can still do things
+             * that are counter-intuitive because we are using quantile-normalization. In some cases very highly expressed genes
+             * will be assigned multiple identical values, though they weren't identical in the raw data.
+             *
+             * Fixing this "once and for all" might mean making the filter less stringent at very high expression levels (like the top 1% of genes)
+             * or changing the approach.
+             */
+        }
         return dmatrix;
 
     }

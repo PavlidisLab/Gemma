@@ -367,6 +367,19 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         return ArrayUtils.toObject( rawRow );
     }
 
+
+    @Override
+    public Double[][] getRows( Collection<Integer> indices ) {
+        if ( indices == null || indices.isEmpty() ) {
+            return null;
+        }
+
+        return indices.stream()
+                .map( index -> getRow( index ) )
+                .toArray( Double[][]::new );
+
+    }
+
     @Override
     public Double[][] getRows( List<CompositeSequence> designElements ) {
         if ( designElements == null ) {
