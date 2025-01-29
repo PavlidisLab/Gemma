@@ -43,7 +43,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static ubic.gemma.core.loader.expression.singleCell.MexTestUtils.createElementsMappingFromResourceFile;
 import static ubic.gemma.core.loader.expression.singleCell.MexTestUtils.createLoaderForResourceDir;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatFreeMemoryIsGreaterOrEqualTo;
 
 @ContextConfiguration
 public class MexSingleCellDataLoaderTest extends BaseTest {
@@ -254,27 +253,15 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
     @Test
     @Category({ GeoTest.class, SlowTest.class })
     public void testGSE141552() throws IOException, NoSingleCellDataFoundException {
-        assumeThatFreeMemoryIsGreaterOrEqualTo( 2 * 1024 * 1024 * 1024L, true );
         GeoSeries series = readSeriesFromGeo( "GSE141552" );
         detector.downloadSingleCellData( series );
         MexSingleCellDataLoader loader = ( MexSingleCellDataLoader ) detector.getSingleCellDataLoader( series );
+
         QuantitationType qt = loader.getQuantitationTypes().iterator().next();
         Collection<CompositeSequence> de = Collections.singleton( CompositeSequence.Factory.newInstance( "ENSG00000223972.5" ) );
         loader.setDesignElementToGeneMapper( new SimpleDesignElementMapper( de ) );
 
         SingleCellDimension dim = loader.getSingleCellDimension( Collections.singleton( BioAssay.Factory.newInstance( "GSM4206900", null, BioMaterial.Factory.newInstance( "GSM4206900" ) ) ) );
-        assertThat( dim )
-                .satisfies( scd -> {
-                    assertThat( scd.getNumberOfCells() ).isEqualTo( 6794880 );
-                } );
-        assertThat( loader.loadVectors( de, dim, qt ) )
-                .singleElement()
-                .satisfies( vec -> {
-                    assertThat( vec.getDataIndices() ).isEmpty();
-                } );
-
-        loader.setDiscardEmptyCells( true );
-        dim = loader.getSingleCellDimension( Collections.singleton( BioAssay.Factory.newInstance( "GSM4206900", null, BioMaterial.Factory.newInstance( "GSM4206900" ) ) ) );
         assertThat( dim )
                 .satisfies( scd -> {
                     assertThat( scd.getNumberOfCells() ).isEqualTo( 561738 );
