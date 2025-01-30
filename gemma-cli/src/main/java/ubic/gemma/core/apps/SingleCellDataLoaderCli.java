@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
 import ubic.gemma.core.loader.expression.singleCell.*;
+import ubic.gemma.core.util.OptionsUtils;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -20,6 +21,8 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.core.util.OptionsUtils.getAutoOption;
 
 public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI {
 
@@ -51,12 +54,14 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION = ANNDATA_OPTION_PREFIX + "CellTypeFactorName",
             ANNDATA_UNKNOWN_CELL_TYPE_INDICATOR_OPTION = ANNDATA_OPTION_PREFIX + "UnknownCellTypeIndicator",
             ANNDATA_TRANSPOSE_OPTION = ANNDATA_OPTION_PREFIX + "Transpose",
+            ANNDATA_NO_TRANSPOSE_OPTION = ANNDATA_OPTION_PREFIX + "NoTranspose",
             ANNDATA_USE_X_OPTION = ANNDATA_OPTION_PREFIX + "UseX",
             ANNDATA_USE_RAW_X_OPTION = ANNDATA_OPTION_PREFIX + "UseRawX";
 
     private static final String MEX_OPTION_PREFIX = "mex";
     private static final String
             MEX_DISCARD_EMPTY_CELLS_OPTION = MEX_OPTION_PREFIX + "DiscardEmptyCells",
+            MEX_KEEP_EMPTY_CELLS_OPTION = MEX_OPTION_PREFIX + "KeepEmptyCells",
             MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION = MEX_OPTION_PREFIX + "AllowMappingDesignElementsToGeneSymbols";
 
     @Autowired
@@ -102,15 +107,20 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private boolean ignoreUnmatchedCellIds;
 
     // AnnData
+    @Nullable
     private String annDataSampleFactorName;
+    @Nullable
     private String annDataCellTypeFactorName;
+    @Nullable
     private String annDataUnknownCellTypeIndicator;
-    private boolean annDataTranspose;
+    @Nullable
+    private Boolean annDataTranspose;
     @Nullable
     private Boolean annDataUseRawX;
 
     // MEX
-    private boolean mexDiscardEmptyCells;
+    @Nullable
+    private Boolean mexDiscardEmptyCells;
     private boolean mexAllowMappingDesignElementsToGeneSymbols;
 
     @Nullable
@@ -166,12 +176,17 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         options.addOption( ANNDATA_SAMPLE_FACTOR_NAME_OPTION, "anndata-sample-factor-name", true, "Name of the factor used for the sample name." );
         options.addOption( ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION, "anndata-cell-type-factor-name", true, "Name of the factor used for the cell type, incompatible with -" + CELL_TYPE_ASSIGNMENT_FILE_OPTION + "." );
         options.addOption( ANNDATA_UNKNOWN_CELL_TYPE_INDICATOR_OPTION, "anndata-unknown-cell-type-indicator", true, "Indicator used for missing cell type. Defaults to using the standard -1 categorical code." );
-        options.addOption( ANNDATA_USE_X_OPTION, "anndata-use-x", true, "Use X. This option is incompatible with -" + ANNDATA_USE_RAW_X_OPTION + "." );
-        options.addOption( ANNDATA_USE_RAW_X_OPTION, "anndata-use-raw-x", true, "Use raw.X. This option is incompatible with -" + ANNDATA_USE_X_OPTION + "." );
-        options.addOption( ANNDATA_TRANSPOSE_OPTION, "anndata-transpose", false, "Transpose the data matrix." );
+        OptionsUtils.addAutoOption( options,
+                ANNDATA_USE_RAW_X_OPTION, "anndata-use-raw-x", "Use raw.X",
+                ANNDATA_USE_X_OPTION, "anndata-use-x", "Use X." );
+        OptionsUtils.addAutoOption( options,
+                ANNDATA_TRANSPOSE_OPTION, "anndata-transpose", "Transpose the data matrix.",
+                ANNDATA_NO_TRANSPOSE_OPTION, "anndata-no-transpose", "Do not transpose the data matrix." );
 
         // for MEX
-        options.addOption( MEX_DISCARD_EMPTY_CELLS_OPTION, "mex-discard-empty-cells", false, "Discard empty cells when loading MEX data." );
+        OptionsUtils.addAutoOption( options,
+                MEX_DISCARD_EMPTY_CELLS_OPTION, "mex-discard-empty-cells", "Discard empty cells when loading MEX data.",
+                MEX_KEEP_EMPTY_CELLS_OPTION, "mex-keep-empty-cells", "Keep empty cells when loading MEX data." );
         options.addOption( MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION, "mex-allow-mapping-design-elements-to-gene-symbols", false, "Allow mapping probe names to gene symbols when loading MEX data (i.e. the second column in features.tsv.gz)." );
     }
 
@@ -237,23 +252,14 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             annDataSampleFactorName = commandLine.getOptionValue( ANNDATA_SAMPLE_FACTOR_NAME_OPTION );
             annDataCellTypeFactorName = commandLine.getOptionValue( ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION );
             annDataUnknownCellTypeIndicator = commandLine.getOptionValue( ANNDATA_UNKNOWN_CELL_TYPE_INDICATOR_OPTION );
-            annDataTranspose = commandLine.hasOption( ANNDATA_TRANSPOSE_OPTION );
-            if ( commandLine.hasOption( ANNDATA_USE_X_OPTION ) && commandLine.hasOption( ANNDATA_USE_X_OPTION ) ) {
-                throw new ParseException( "Only one of -" + ANNDATA_USE_X_OPTION + " and -" + ANNDATA_USE_RAW_X_OPTION + " can be set." );
-            }
-            if ( commandLine.hasOption( ANNDATA_USE_RAW_X_OPTION ) ) {
-                annDataUseRawX = true;
-            } else if ( commandLine.hasOption( ANNDATA_USE_X_OPTION ) ) {
-                annDataUseRawX = false;
-            } else {
-                annDataUseRawX = null;
-            }
+            annDataTranspose = getAutoOption( commandLine, ANNDATA_TRANSPOSE_OPTION, ANNDATA_NO_TRANSPOSE_OPTION );
+            annDataUseRawX = getAutoOption( commandLine, ANNDATA_USE_RAW_X_OPTION, ANNDATA_USE_X_OPTION );
             if ( cellTypeAssignmentFile != null && annDataCellTypeFactorName != null ) {
                 throw new ParseException( String.format( "The -%s option would override the value of -%s.",
                         CELL_TYPE_ASSIGNMENT_FILE_OPTION, ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION ) );
             }
         } else if ( dataType == SingleCellDataType.MEX ) {
-            mexDiscardEmptyCells = commandLine.hasOption( MEX_DISCARD_EMPTY_CELLS_OPTION );
+            mexDiscardEmptyCells = OptionsUtils.getAutoOption( commandLine, MEX_DISCARD_EMPTY_CELLS_OPTION, MEX_KEEP_EMPTY_CELLS_OPTION );
             mexAllowMappingDesignElementsToGeneSymbols = commandLine.hasOption( MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION );
         }
     }

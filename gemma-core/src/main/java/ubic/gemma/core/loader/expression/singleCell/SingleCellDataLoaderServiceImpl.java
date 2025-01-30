@@ -59,6 +59,9 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Value("${gemma.download.path}/singleCellData")
     private Path singleCellDataBasePath;
 
+    @Value("${python.exe}")
+    private Path pythonExecutable;
+
     @Override
     @Transactional
     public QuantitationType load( ExpressionExperiment ee, ArrayDesign platform, SingleCellDataLoaderConfig config ) {
@@ -426,7 +429,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
      */
     private SingleCellDataLoader getLoader( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
         SingleCellDataType dataType;
-        if ( config instanceof AnnDataSingleCellDataLoaderConfig && Files.exists( getAnnDataFile( ee ) ) ) {
+        if ( Files.exists( getAnnDataFile( ee ) ) ) {
             dataType = SingleCellDataType.ANNDATA;
         } else if ( Files.exists( getSeuratDiskFile( ee ) ) ) {
             dataType = SingleCellDataType.SEURAT_DISK;
@@ -464,14 +467,25 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     private SingleCellDataLoader getAnnDataLoader( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
         BioAssayMapper bioAssayMapper = getBioAssayMapper( ee );
         Path p = config.getDataPath() != null ? config.getDataPath() : getAnnDataFile( ee );
-        AnnDataSingleCellDataLoader loader = new AnnDataSingleCellDataLoaderConfigurer( p, ee.getBioAssays(), bioAssayMapper )
+        AnnDataSingleCellDataLoader loader = new AnnDataSingleCellDataLoaderConfigurer( p, ee.getBioAssays(), bioAssayMapper, pythonExecutable )
                 .configureLoader();
         if ( config instanceof AnnDataSingleCellDataLoaderConfig ) {
-            loader.setSampleFactorName( ( ( AnnDataSingleCellDataLoaderConfig ) config ).getSampleFactorName() );
-            loader.setCellTypeFactorName( ( ( AnnDataSingleCellDataLoaderConfig ) config ).getCellTypeFactorName() );
-            loader.setUnknownCellTypeIndicator( ( ( AnnDataSingleCellDataLoaderConfig ) config ).getUnknownCellTypeIndicator() );
-            loader.setTranspose( ( ( AnnDataSingleCellDataLoaderConfig ) config ).isTranspose() );
-            loader.setUseRawX( (( AnnDataSingleCellDataLoaderConfig ) config ).getUseRawX());
+            AnnDataSingleCellDataLoaderConfig annDataConfig = ( AnnDataSingleCellDataLoaderConfig ) config;
+            if ( annDataConfig.getSampleFactorName() != null ) {
+                loader.setSampleFactorName( annDataConfig.getSampleFactorName() );
+            }
+            if ( annDataConfig.getCellTypeFactorName() != null ) {
+                loader.setCellTypeFactorName( annDataConfig.getCellTypeFactorName() );
+            }
+            if ( annDataConfig.getUnknownCellTypeIndicator() != null ) {
+                loader.setUnknownCellTypeIndicator( annDataConfig.getUnknownCellTypeIndicator() );
+            }
+            if ( annDataConfig.getTranspose() != null ) {
+                loader.setTranspose( annDataConfig.getTranspose() );
+            }
+            if ( annDataConfig.getUseRawX() != null ) {
+                loader.setUseRawX( annDataConfig.getUseRawX() );
+            }
         }
         return configureLoader( loader, bioAssayMapper, config );
     }
@@ -491,8 +505,11 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         MexSingleCellDataLoader loader = new MexSingleCellDataLoaderConfigurer( dir, ee.getBioAssays(), bioAssayMapper )
                 .configureLoader();
         if ( config instanceof MexSingleCellDataLoaderConfig ) {
-            loader.setDiscardEmptyCells( ( ( MexSingleCellDataLoaderConfig ) config ).isDiscardEmptyCells() );
-            loader.setAllowMappingDesignElementsToGeneSymbols( ( ( MexSingleCellDataLoaderConfig ) config ).isAllowMappingDesignElementsToGeneSymbols() );
+            MexSingleCellDataLoaderConfig mexConfig = ( MexSingleCellDataLoaderConfig ) config;
+            if ( mexConfig.getDiscardEmptyCells() != null ) {
+                loader.setDiscardEmptyCells( mexConfig.getDiscardEmptyCells() );
+            }
+            loader.setAllowMappingDesignElementsToGeneSymbols( mexConfig.isAllowMappingDesignElementsToGeneSymbols() );
         }
         return configureLoader( loader, bioAssayMapper, config );
     }

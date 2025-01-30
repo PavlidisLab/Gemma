@@ -13,11 +13,14 @@ import javax.annotation.Nullable;
 @SuperBuilder
 public class AnnDataSingleCellDataLoaderConfig extends SingleCellDataLoaderConfig {
 
+    @Nullable
     private String sampleFactorName;
+    @Nullable
     private String cellTypeFactorName;
     @Nullable
     private String unknownCellTypeIndicator;
-    private boolean transpose;
+    @Nullable
+    private Boolean transpose;
     @Nullable
     private Boolean useRawX;
 }

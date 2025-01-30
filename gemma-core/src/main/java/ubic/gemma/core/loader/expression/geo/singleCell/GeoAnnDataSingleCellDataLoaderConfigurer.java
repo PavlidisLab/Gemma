@@ -5,6 +5,7 @@ import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.singleCell.AbstractAnnDataSingleCellDataLoaderConfigurer;
 import ubic.gemma.core.loader.util.anndata.Dataframe;
 
+import javax.annotation.Nullable;
 import java.nio.file.Path;
 
 @CommonsLog
@@ -14,8 +15,8 @@ class GeoAnnDataSingleCellDataLoaderConfigurer extends AbstractAnnDataSingleCell
 
     private final GeoSeries series;
 
-    public GeoAnnDataSingleCellDataLoaderConfigurer( Path annDataFile, GeoSeries geoSeries ) {
-        super( annDataFile );
+    public GeoAnnDataSingleCellDataLoaderConfigurer( Path annDataFile, GeoSeries geoSeries, @Nullable Path pythonExecutable ) {
+        super( annDataFile, pythonExecutable );
         this.series = geoSeries;
     }
 

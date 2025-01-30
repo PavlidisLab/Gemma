@@ -1,5 +1,6 @@
 package ubic.gemma.core.util;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Converter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -96,6 +97,31 @@ public class OptionsUtils {
                 throw new ParseException( "More than one date is specified.", 0 );
             }
             return candidates.iterator().next();
+        }
+    }
+
+    /**
+     * Add an option with three possible values: {@code true}, {@code false}, or {@code null}.
+     * <p>
+     * Use {@link #getAutoOption(CommandLine, String, String)} to retrieve its value later on.
+     */
+    public static void addAutoOption( Options options, String optionName, String longOptionName, String description, String noOptionName, String longNoOptionName, String noDescription ) {
+        options.addOption( optionName, longOptionName, false, description + " This option is incompatible with -" + noOptionName + "/--" + longNoOptionName + ". Default is to auto-detect." );
+        options.addOption( noOptionName, longNoOptionName, false, noDescription + " This option is incompatible with -" + optionName + "/--" + longOptionName + ". Default is to auto-detect." );
+    }
+
+    @Nullable
+    public static Boolean getAutoOption( CommandLine commandLine, String optionName, String noOptionName ) throws org.apache.commons.cli.ParseException {
+        if ( commandLine.hasOption( optionName ) && commandLine.hasOption( noOptionName ) ) {
+            throw new org.apache.commons.cli.ParseException( String.format( "Cannot specify -%s and -%s at the same time.",
+                    optionName, noOptionName ) );
+        }
+        if ( commandLine.hasOption( optionName ) ) {
+            return true;
+        } else if ( commandLine.hasOption( noOptionName ) ) {
+            return true;
+        } else {
+            return null;
         }
     }
 }

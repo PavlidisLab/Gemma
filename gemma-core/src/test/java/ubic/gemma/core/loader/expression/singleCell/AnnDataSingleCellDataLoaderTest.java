@@ -392,8 +392,7 @@ public class AnnDataSingleCellDataLoaderTest {
                 BioAssay.Factory.newInstance( "2", null, BioMaterial.Factory.newInstance( "2" ) ),
                 BioAssay.Factory.newInstance( "3", null, BioMaterial.Factory.newInstance( "3" ) )
         );
-        AnnDataSingleCellDataLoaderConfigurer configurer = new AnnDataSingleCellDataLoaderConfigurer( dataPath, bioAssays, new SimpleBioAssayMapper() );
-        configurer.setPythonExecutable( pythonExecutable );
+        AnnDataSingleCellDataLoaderConfigurer configurer = new AnnDataSingleCellDataLoaderConfigurer( dataPath, bioAssays, new SimpleBioAssayMapper(), pythonExecutable );
         try ( AnnDataSingleCellDataLoader loader = configurer.configureLoader() ) {
             assertThat( loader.getGenes() )
                     .hasSize( 21978 )
