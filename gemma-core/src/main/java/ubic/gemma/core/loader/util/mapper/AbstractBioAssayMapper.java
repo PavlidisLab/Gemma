@@ -5,6 +5,8 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.normalizeSpace;
@@ -63,6 +65,12 @@ public abstract class AbstractBioAssayMapper implements BioAssayMapper {
 
     protected abstract Set<BioAssay> matchAllInternal( Collection<BioAssay> candidates, String identifier );
 
+    protected <T> boolean matchWithFunction( Collection<BioAssay> bas, Function<BioAssay, T> extractor, BiFunction<T, String, Boolean> func, String sampleName, Collection<BioAssay> results ) {
+        return results.addAll( bas.stream()
+                .filter( ba -> func.apply( extractor.apply( ba ), sampleName ) )
+                .collect( Collectors.toList() ) );
+    }
+
     protected boolean matchId( @Nullable Long a, String b ) {
         try {
             return a != null && a.equals( Long.parseLong( StringUtils.strip( b ) ) );
@@ -77,6 +85,10 @@ public abstract class AbstractBioAssayMapper implements BioAssayMapper {
 
     protected boolean matchNameIgnoreCase( String a, String b ) {
         return normalizeSpace( a ).equalsIgnoreCase( normalizeSpace( b ) );
+    }
+
+    protected boolean matchDescriptionIgnoreCase( String a, String b ) {
+        return StringUtils.containsIgnoreCase( a, b );
     }
 
     private class StatefulBioAssayMapper implements StatefulEntityMapper<BioAssay> {

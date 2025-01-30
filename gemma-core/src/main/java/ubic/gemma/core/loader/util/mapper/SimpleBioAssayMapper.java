@@ -1,5 +1,6 @@
 package ubic.gemma.core.loader.util.mapper;
 
+import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 import java.util.*;
@@ -8,6 +9,7 @@ import java.util.*;
  * A simple strategy for matching BioAssay to sample name.
  * @author poirigui
  */
+@CommonsLog
 public class SimpleBioAssayMapper extends AbstractBioAssayMapper implements HintingEntityMapper<BioAssay> {
 
     @Override
@@ -20,28 +22,50 @@ public class SimpleBioAssayMapper extends AbstractBioAssayMapper implements Hint
         Set<BioAssay> results = new HashSet<>( 1 ); // ideally, should only match 1 element
 
         // BioAssay ID
-        bas.stream().filter( ba -> matchId( ba.getId(), n ) ).forEach( results::add );
+        if ( matchWithFunction( bas, BioAssay::getId, this::matchId, n, results ) ) {
+            log.info( "Matched '" + n + "' by assay ID" );
+            return results;
+        }
 
         // BioAssay name
-        if ( results.isEmpty() ) {
-            bas.stream().filter( ba -> matchName( ba.getName(), n ) ).forEach( results::add );
+        if ( matchWithFunction( bas, BioAssay::getName, this::matchName, n, results ) ) {
+            log.info( "Matched '" + n + "' by assay name" );
+            return results;
         }
 
         // BioAssay name (case-insensitive)
-        if ( results.isEmpty() ) {
-            bas.stream().filter( ba -> matchNameIgnoreCase( ba.getName(), n ) ).forEach( results::add );
+        if ( matchWithFunction( bas, BioAssay::getName, this::matchNameIgnoreCase, n, results ) ) {
+            log.info( "Matched '" + n + "' by assay name (case-insensitive)" );
+            return results;
         }
 
         // BioMaterial name
-        if ( results.isEmpty() ) {
-            bas.stream().filter( ba -> matchName( ba.getSampleUsed().getName(), n ) ).forEach( results::add );
+        if ( matchWithFunction( bas, ba -> ba.getSampleUsed().getName(), this::matchName, n, results ) ) {
+            log.info( "Matched '" + n + "' by sample name" );
+            return results;
         }
 
         // BioMaterial name (case-insensitive)
-        if ( results.isEmpty() ) {
-            bas.stream().filter( ba -> matchNameIgnoreCase( ba.getSampleUsed().getName(), n ) ).forEach( results::add );
+        if ( matchWithFunction( bas, ba -> ba.getSampleUsed().getName(), this::matchNameIgnoreCase, n, results ) ) {
+            log.info( "Matched '" + n + "' by sample name (case-insensitive)" );
+            return results;
         }
 
+        // at this point, this is desperation
+
+        // BioAssay description
+        if ( matchWithFunction( bas, BioAssay::getDescription, this::matchDescriptionIgnoreCase, n, results ) ) {
+            log.warn( "Matched '" + n + "' by assay description" );
+            return results;
+        }
+
+        // BioMaterial description
+        if ( matchWithFunction( bas, ba -> ba.getSampleUsed().getDescription(), this::matchDescriptionIgnoreCase, n, results ) ) {
+            log.warn( "Matched '" + n + "' by sample description" );
+            return results;
+        }
+
+        log.warn( "No match found for '" + n + "'" );
         return results;
     }
 
