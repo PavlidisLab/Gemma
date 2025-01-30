@@ -17,4 +17,7 @@ public class AnnDataSingleCellDataLoaderConfig extends SingleCellDataLoaderConfi
     private String cellTypeFactorName;
     @Nullable
     private String unknownCellTypeIndicator;
+    private boolean transpose;
+    @Nullable
+    private Boolean useRawX;
 }

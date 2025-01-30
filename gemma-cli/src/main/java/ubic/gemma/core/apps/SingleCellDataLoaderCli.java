@@ -49,7 +49,10 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private static final String
             ANNDATA_SAMPLE_FACTOR_NAME_OPTION = ANNDATA_OPTION_PREFIX + "SampleFactorName",
             ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION = ANNDATA_OPTION_PREFIX + "CellTypeFactorName",
-            ANNDATA_UNKNOWN_CELL_TYPE_INDICATOR_OPTION = ANNDATA_OPTION_PREFIX + "UnknownCellTypeIndicator";
+            ANNDATA_UNKNOWN_CELL_TYPE_INDICATOR_OPTION = ANNDATA_OPTION_PREFIX + "UnknownCellTypeIndicator",
+            ANNDATA_TRANSPOSE_OPTION = ANNDATA_OPTION_PREFIX + "Transpose",
+            ANNDATA_USE_X_OPTION = ANNDATA_OPTION_PREFIX + "UseX",
+            ANNDATA_USE_RAW_X_OPTION = ANNDATA_OPTION_PREFIX + "UseRawX";
 
     private static final String MEX_OPTION_PREFIX = "mex";
     private static final String
@@ -102,6 +105,9 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private String annDataSampleFactorName;
     private String annDataCellTypeFactorName;
     private String annDataUnknownCellTypeIndicator;
+    private boolean annDataTranspose;
+    @Nullable
+    private Boolean annDataUseRawX;
 
     // MEX
     private boolean mexDiscardEmptyCells;
@@ -160,6 +166,9 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         options.addOption( ANNDATA_SAMPLE_FACTOR_NAME_OPTION, "anndata-sample-factor-name", true, "Name of the factor used for the sample name." );
         options.addOption( ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION, "anndata-cell-type-factor-name", true, "Name of the factor used for the cell type, incompatible with -" + CELL_TYPE_ASSIGNMENT_FILE_OPTION + "." );
         options.addOption( ANNDATA_UNKNOWN_CELL_TYPE_INDICATOR_OPTION, "anndata-unknown-cell-type-indicator", true, "Indicator used for missing cell type. Defaults to using the standard -1 categorical code." );
+        options.addOption( ANNDATA_USE_X_OPTION, "anndata-use-x", true, "Use X. This option is incompatible with -" + ANNDATA_USE_RAW_X_OPTION + "." );
+        options.addOption( ANNDATA_USE_RAW_X_OPTION, "anndata-use-raw-x", true, "Use raw.X. This option is incompatible with -" + ANNDATA_USE_X_OPTION + "." );
+        options.addOption( ANNDATA_TRANSPOSE_OPTION, "anndata-transpose", false, "Transpose the data matrix." );
 
         // for MEX
         options.addOption( MEX_DISCARD_EMPTY_CELLS_OPTION, "mex-discard-empty-cells", false, "Discard empty cells when loading MEX data." );
@@ -228,6 +237,17 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             annDataSampleFactorName = commandLine.getOptionValue( ANNDATA_SAMPLE_FACTOR_NAME_OPTION );
             annDataCellTypeFactorName = commandLine.getOptionValue( ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION );
             annDataUnknownCellTypeIndicator = commandLine.getOptionValue( ANNDATA_UNKNOWN_CELL_TYPE_INDICATOR_OPTION );
+            annDataTranspose = commandLine.hasOption( ANNDATA_TRANSPOSE_OPTION );
+            if ( commandLine.hasOption( ANNDATA_USE_X_OPTION ) && commandLine.hasOption( ANNDATA_USE_X_OPTION ) ) {
+                throw new ParseException( "Only one of -" + ANNDATA_USE_X_OPTION + " and -" + ANNDATA_USE_RAW_X_OPTION + " can be set." );
+            }
+            if ( commandLine.hasOption( ANNDATA_USE_RAW_X_OPTION ) ) {
+                annDataUseRawX = true;
+            } else if ( commandLine.hasOption( ANNDATA_USE_X_OPTION ) ) {
+                annDataUseRawX = false;
+            } else {
+                annDataUseRawX = null;
+            }
             if ( cellTypeAssignmentFile != null && annDataCellTypeFactorName != null ) {
                 throw new ParseException( String.format( "The -%s option would override the value of -%s.",
                         CELL_TYPE_ASSIGNMENT_FILE_OPTION, ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION ) );
@@ -337,7 +357,12 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             configBuilder = AnnDataSingleCellDataLoaderConfig.builder()
                     .sampleFactorName( annDataSampleFactorName )
                     .cellTypeFactorName( annDataCellTypeFactorName )
-                    .unknownCellTypeIndicator( annDataUnknownCellTypeIndicator );
+                    .unknownCellTypeIndicator( annDataUnknownCellTypeIndicator )
+                    .transpose( annDataTranspose );
+            if ( annDataUseRawX != null ) {
+                ( ( AnnDataSingleCellDataLoaderConfig.AnnDataSingleCellDataLoaderConfigBuilder<?, ?> ) configBuilder )
+                        .useRawX( annDataUseRawX );
+            }
         } else if ( dataType == SingleCellDataType.MEX ) {
             configBuilder = MexSingleCellDataLoaderConfig.builder()
                     .discardEmptyCells( mexDiscardEmptyCells )

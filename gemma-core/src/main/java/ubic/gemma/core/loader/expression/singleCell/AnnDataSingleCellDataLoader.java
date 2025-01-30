@@ -86,6 +86,9 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
     /**
      * Use or not the {@code raw.X} layer.
+     * <p>
+     * The default is to use {@code X} if {@code raw.X} is not present. If {@code raw.X} is present and no value is
+     * specified, an exception will be raised.
      */
     @Nullable
     private Boolean useRawX = null;

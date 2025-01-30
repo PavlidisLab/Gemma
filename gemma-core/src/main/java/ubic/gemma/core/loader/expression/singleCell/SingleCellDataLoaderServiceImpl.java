@@ -470,6 +470,8 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
             loader.setSampleFactorName( ( ( AnnDataSingleCellDataLoaderConfig ) config ).getSampleFactorName() );
             loader.setCellTypeFactorName( ( ( AnnDataSingleCellDataLoaderConfig ) config ).getCellTypeFactorName() );
             loader.setUnknownCellTypeIndicator( ( ( AnnDataSingleCellDataLoaderConfig ) config ).getUnknownCellTypeIndicator() );
+            loader.setTranspose( ( ( AnnDataSingleCellDataLoaderConfig ) config ).isTranspose() );
+            loader.setUseRawX( (( AnnDataSingleCellDataLoaderConfig ) config ).getUseRawX());
         }
         return configureLoader( loader, bioAssayMapper, config );
     }

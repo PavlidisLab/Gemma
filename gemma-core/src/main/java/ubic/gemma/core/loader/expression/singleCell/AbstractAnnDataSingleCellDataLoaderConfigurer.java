@@ -26,7 +26,15 @@ import java.util.Set;
 @CommonsLog
 public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements SingleCellDataLoaderConfigurer<AnnDataSingleCellDataLoader> {
 
+    /**
+     * TODO
+     */
     private static final String[] SAMPLE_NAME_COLUMN_NAME_KEYWORDS = {};
+
+    /**
+     * TODO
+     */
+    public static final String[] CELL_ID_COLUMN_NAME_KEYWORDS = {};
 
     /**
      * Keywords to look for in column names for detecting a cell type column.
@@ -38,6 +46,9 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
      */
     private static final String[] UNKNOWN_CELL_TYPE_INDICATORS = { "UNK", "NA" };
 
+    /**
+     * TODO
+     */
     private static final String[] GENE_COLUMN_NAME_KEYWORDS = {};
 
     private final Path annDataFile;
@@ -266,7 +277,7 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
      * Check if the given dataframe column contains cell identifiers.
      */
     protected boolean isCellIdColumn( Dataframe.Column<?, String> column ) {
-        return Arrays.stream( SAMPLE_NAME_COLUMN_NAME_KEYWORDS )
+        return Arrays.stream( CELL_ID_COLUMN_NAME_KEYWORDS )
                 .anyMatch( kwd -> StringUtils.containsIgnoreCase( column.getName(), kwd ) );
     }
 
