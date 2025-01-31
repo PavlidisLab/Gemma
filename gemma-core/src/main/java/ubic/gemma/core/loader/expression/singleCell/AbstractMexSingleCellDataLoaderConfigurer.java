@@ -19,7 +19,7 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
     protected final Log log = LogFactory.getLog( getClass() );
 
     @Override
-    public MexSingleCellDataLoader configureLoader() {
+    public MexSingleCellDataLoader configureLoader( SingleCellDataLoaderConfig config ) {
         List<String> sampleNames = getSampleNames();
         List<Path> barcodeFiles = new ArrayList<>();
         List<Path> genesFiles = new ArrayList<>();
@@ -41,7 +41,7 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
         }
         MexSingleCellDataLoader loader = new MexSingleCellDataLoader( sampleNames, barcodeFiles, genesFiles, matrixFiles );
         try {
-            configureDiscardEmptyCell( loader, matrixFiles );
+            configureDiscardEmptyCell( loader, matrixFiles, config );
         } catch ( Exception e ) {
             try {
                 loader.close();
@@ -54,13 +54,20 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
                 throw new RuntimeException( e );
             }
         }
+        if ( config instanceof MexSingleCellDataLoaderConfig ) {
+            loader.setAllowMappingDesignElementsToGeneSymbols( ( ( MexSingleCellDataLoaderConfig ) config ).isAllowMappingDesignElementsToGeneSymbols() );
+        }
         return loader;
     }
 
     /**
      * Check if the MEX files contain empty cells and configure the loader accordingly.
      */
-    private void configureDiscardEmptyCell( MexSingleCellDataLoader loader, List<Path> matrixFiles ) throws IOException {
+    private void configureDiscardEmptyCell( MexSingleCellDataLoader loader, List<Path> matrixFiles, SingleCellDataLoaderConfig config ) throws IOException {
+        if ( config instanceof MexSingleCellDataLoaderConfig && ( ( MexSingleCellDataLoaderConfig ) config ).getDiscardEmptyCells() != null ) {
+            loader.setDiscardEmptyCells( ( ( MexSingleCellDataLoaderConfig ) config ).getDiscardEmptyCells() );
+            return;
+        }
         for ( Path matrixFile : matrixFiles ) {
             try ( MatrixVectorReader reader = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( matrixFile ) ) ) ) ) {
                 MatrixInfo info = reader.readMatrixInfo();

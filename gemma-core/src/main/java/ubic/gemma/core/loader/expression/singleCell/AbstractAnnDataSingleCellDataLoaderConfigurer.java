@@ -69,12 +69,12 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
      * Automatically configure a loader for an AnnData file.
      */
     @Override
-    public AnnDataSingleCellDataLoader configureLoader() {
+    public AnnDataSingleCellDataLoader configureLoader( SingleCellDataLoaderConfig config ) {
         ArrayList<Path> tempFilesToRemove = new ArrayList<Path>();
         Path dataFileToUse;
         if ( pythonExecutable != null ) {
             try {
-                dataFileToUse = transformIfNecessary( tempFilesToRemove, pythonExecutable );
+                dataFileToUse = transformIfNecessary( tempFilesToRemove, pythonExecutable, config );
             } catch ( IOException e ) {
                 deleteTemporaryFilesQuietly( tempFilesToRemove );
                 throw new RuntimeException( "Error wile attempting to automatically transform " + annDataFile + ".", e );
@@ -94,21 +94,13 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
             }
         };
         try ( AnnData ad = AnnData.open( dataFileToUse ) ) {
-            // first, detect if transposing is necessary
-            if ( isTransposed( ad.getObs(), ad.getVar() ) ) {
-                // this is typically the case, so check it first
-                log.info( "AnnData loader settings were applied on the obs dataframe, the loader will be configured to use the transpose." );
-                loader.setTranspose( true );
-                applyLoaderSettings( ad.getObs(), loader );
+            boolean transpose = configureTranspose( loader, ad, config );
+            if ( transpose ) {
+                configureSampleAndCellTypeColumns( ad.getObs(), loader, config );
             } else {
-                // already has the right orientation, var contains cells/samples
-                loader.setTranspose( false );
-                applyLoaderSettings( ad.getVar(), loader );
+                configureSampleAndCellTypeColumns( ad.getVar(), loader, config );
             }
-            if ( ad.getRawX() != null && ad.getRawVar() != null ) {
-                log.warn( "AnnData contains a 'raw.X' and 'raw.var' groups, using those." );
-                loader.setUseRawX( true );
-            }
+            configureRawX( loader, ad, config );
         } catch ( Exception e ) {
             try {
                 loader.close();
@@ -124,6 +116,71 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
         return loader;
     }
 
+    private boolean configureTranspose( AnnDataSingleCellDataLoader loader, AnnData ad, SingleCellDataLoaderConfig config ) {
+        // then detect if transposing is necessary
+        if ( isTransposed( ad.getObs(), ad.getVar(), config ) ) {
+            // this is typically the case, so check it first
+            log.info( "AnnData loader settings were applied on the obs dataframe, the loader will be configured to use the transpose." );
+            loader.setTranspose( true );
+            return true;
+        } else {
+            // already has the right orientation, var contains cells/samples
+            loader.setTranspose( false );
+            return false;
+        }
+    }
+
+    private void configureSampleAndCellTypeColumns( Dataframe<?> var, AnnDataSingleCellDataLoader loader, SingleCellDataLoaderConfig config ) {
+        String sampleColumn = null;
+        String cellTypeColumn = null;
+        String unknownCellTypeIndicator = null;
+        if ( config instanceof AnnDataSingleCellDataLoaderConfig ) {
+            AnnDataSingleCellDataLoaderConfig annDataConfig = ( AnnDataSingleCellDataLoaderConfig ) config;
+            sampleColumn = annDataConfig.getSampleFactorName();
+            cellTypeColumn = annDataConfig.getCellTypeFactorName();
+            unknownCellTypeIndicator = annDataConfig.getUnknownCellTypeIndicator();
+        }
+        for ( Dataframe.Column<?, ?> col : var ) {
+            if ( !col.getType().equals( String.class ) ) {
+                continue;
+            }
+            if ( sampleColumn == null && isSampleNameColumn( ( Dataframe.Column<?, String> ) col ) ) {
+                log.info( "Detected that " + col + " is the sample name column." );
+                sampleColumn = col.getName();
+            }
+            if ( cellTypeColumn == null && isCellTypeColumn( ( Dataframe.Column<?, String> ) col ) ) {
+                log.info( "Detected that " + col + " is the cell type column." );
+                cellTypeColumn = col.getName();
+                if ( unknownCellTypeIndicator == null ) {
+                    unknownCellTypeIndicator = getUnknownCellTypeIndicator( ( Dataframe.Column<?, String> ) col );
+                    if ( unknownCellTypeIndicator != null ) {
+                        log.info( "Detected that " + col + " uses " + unknownCellTypeIndicator + " as an unknown cell type indicator." );
+                    }
+                }
+            }
+        }
+        if ( sampleColumn != null || cellTypeColumn != null ) {
+            if ( sampleColumn != null ) {
+                loader.setSampleFactorName( sampleColumn );
+            }
+            if ( cellTypeColumn != null ) {
+                loader.setCellTypeFactorName( cellTypeColumn );
+                loader.setUnknownCellTypeIndicator( unknownCellTypeIndicator );
+            }
+        } else {
+            log.warn( "Failed to detect AnnData loader settings, the loader will be left unconfigured." );
+        }
+    }
+
+    private void configureRawX( AnnDataSingleCellDataLoader loader, AnnData ad, SingleCellDataLoaderConfig config ) {
+        if ( config instanceof AnnDataSingleCellDataLoaderConfig && ( ( AnnDataSingleCellDataLoaderConfig ) config ).getUseRawX() != null ) {
+            loader.setUseRawX( ( ( AnnDataSingleCellDataLoaderConfig ) config ).getUseRawX() );
+        } else if ( ad.getRawX() != null && ad.getRawVar() != null ) {
+            log.warn( "AnnData contains a 'raw.X' and 'raw.var' groups, using those." );
+            loader.setUseRawX( true );
+        }
+    }
+
     private void deleteTemporaryFilesQuietly( ArrayList<Path> tempFilesToRemove ) {
         for ( Path path : tempFilesToRemove ) {
             try {
@@ -135,7 +192,7 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
         }
     }
 
-    private Path transformIfNecessary( Collection<Path> tempFilesToRemove, Path pythonExecutable ) throws IOException {
+    private Path transformIfNecessary( Collection<Path> tempFilesToRemove, Path pythonExecutable, SingleCellDataLoaderConfig config ) throws IOException {
         Path dataFileToUse = annDataFile;
 
         // check if rewriting is necessary
@@ -147,10 +204,8 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
         }
 
         // check for unraw
-        // we only need to unraw if the matrix is transposed, otherwise the loader can use raw.X and raw.var directly
         try ( AnnData ad = AnnData.open( dataFileToUse ) ) {
-            if ( ad.getRawX() != null && ad.getRawVar() != null && isTransposeNecessary( ad.getRawX(), ad.getObs(), ad.getRawVar() ) ) {
-                // unraw
+            if ( isUnrawXNecessary( ad, config ) ) {
                 log.info( "AnnData file" + annDataFile + " has raw.X and raw.var and needs to be transposed later on, extracting it as the main layer..." );
                 dataFileToUse = performTransformation( new SingleCellDataUnraw(), dataFileToUse, tempFilesToRemove, pythonExecutable );
             }
@@ -159,14 +214,50 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
         // check for transposing
         try ( AnnData ad = AnnData.open( dataFileToUse ) ) {
             // if raw.X is present, we have to rewrite first
-            if ( ad.getX() != null && isTransposeNecessary( ad.getX(), ad.getObs(), ad.getVar() ) ) {
-                // two scenarios:
+            if ( ad.getX() != null && isTransposeOnDiskNecessary( ad.getX(), ad.getObs(), ad.getVar(), config ) ) {
                 log.info( "AnnData file" + annDataFile + " needs to be transposed on-disk, performing..." );
                 dataFileToUse = performTransformation( new SingleCellDataTranspose(), dataFileToUse, tempFilesToRemove, pythonExecutable );
             }
         }
 
         return dataFileToUse;
+    }
+
+    /**
+     * Check if unraw is necessary.
+     */
+    private boolean isUnrawXNecessary( AnnData ad, SingleCellDataLoaderConfig config ) {
+        if ( config instanceof AnnDataSingleCellDataLoaderConfig
+                && ( ( AnnDataSingleCellDataLoaderConfig ) config ).getUseRawX() != null ) {
+            // if the user explicitly wants to use raw.X or X, we don't need to unraw
+            return false;
+        }
+        //  We only need to unraw if the matrix is transposed on-disk, otherwise the loader can use raw.X and raw.var directly
+        return ad.getRawX() != null && ad.getRawVar() != null && isTransposeOnDiskNecessary( ad.getRawX(), ad.getObs(), ad.getRawVar(), config );
+    }
+
+    /**
+     * Check if transposing on-disk is necessary.
+     * <p>
+     * This happens when the matrix layout does not allow retrieving gene vectors efficiently. Transposing on-disk is
+     * unnecessary for dense matrices.
+     */
+    private boolean isTransposeOnDiskNecessary( Layer X, Dataframe<?> obs, Dataframe<?> var, SingleCellDataLoaderConfig config ) {
+        if ( X.isSparse() ) {
+            // two scenarios:
+            // the matrix is in CSR and obs contain sample names or cell types (or var contain genes)
+            // the matrix is in CSC and var contain sample names or cell types (or obs contain genes)
+            if ( ( X.getSparseMatrix().isCsr() && isTransposed( obs, var, config ) )
+                    || ( X.getSparseMatrix().isCsc() && isTransposed( var, obs, config ) ) ) {
+                return true;
+            } else {
+                // matrix already has the right orientation or can be transposed via setTranspose()
+                return false;
+            }
+        } else {
+            // we don't support dense matrix for now, but if we did, transposing would not be necessary
+            return false;
+        }
     }
 
     private Path performTransformation( SingleCellInputOutputFileTransformation transformation, Path dataFileToUse, Collection<Path> tempFilesToRemove, Path pythonExecutable ) throws IOException {
@@ -183,31 +274,13 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
     }
 
     /**
-     * Check if transposing on-disk is necessary.
-     * @return
-     */
-    private boolean isTransposeNecessary( Layer X, Dataframe<?> obs, Dataframe<?> var ) {
-        if ( X.isSparse() ) {
-            // two scenarios:
-            // the matrix is in CSR and obs contain sample names or cell types (or var contain genes)
-            // the matrix is in CSC and var contain sample names or cell types (or obs contain genes)
-            if ( ( X.getSparseMatrix().isCsr() && isTransposed( obs, var ) )
-                    || ( X.getSparseMatrix().isCsc() && isTransposed( var, obs ) ) ) {
-                return true;
-            } else {
-                // matrix already has the right orientation or can be transposed via setTranspose()
-                return false;
-            }
-        } else {
-            // we don't support dense matrix for now, but if we did, transposing would not be necessary
-            return false;
-        }
-    }
-
-    /**
      * Check if a pair of obs/var is transposed as per what Gemma expects (i.e. obs for genes and var for cells).
      */
-    private boolean isTransposed( Dataframe<?> obs, Dataframe<?> var ) {
+    private boolean isTransposed( Dataframe<?> obs, Dataframe<?> var, SingleCellDataLoaderConfig config ) {
+        if ( config instanceof AnnDataSingleCellDataLoaderConfig && ( ( AnnDataSingleCellDataLoaderConfig ) config ).getTranspose() != null ) {
+            // if the config says so, we'll trust it
+            return ( ( AnnDataSingleCellDataLoaderConfig ) config ).getTranspose();
+        }
         return hasSampleNameColumn( obs ) || hasCellIdColumn( obs ) || hasCellTypeColumn( obs ) || hasGenes( var );
     }
 
@@ -245,40 +318,6 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
             }
         }
         return false;
-    }
-
-    private void applyLoaderSettings( Dataframe<?> var, AnnDataSingleCellDataLoader loader ) {
-        String sampleColumn = null;
-        String cellTypeColumn = null;
-        String unknownCellTypeIndicator = null;
-        for ( Dataframe.Column<?, ?> col : var ) {
-            if ( !col.getType().equals( String.class ) ) {
-                continue;
-            }
-            if ( sampleColumn == null && isSampleNameColumn( ( Dataframe.Column<?, String> ) col ) ) {
-                log.info( "Detected that " + col + " is the sample name column." );
-                sampleColumn = col.getName();
-            }
-            if ( cellTypeColumn == null && isCellTypeColumn( ( Dataframe.Column<?, String> ) col ) ) {
-                log.info( "Detected that " + col + " is the cell type column." );
-                cellTypeColumn = col.getName();
-                unknownCellTypeIndicator = getUnknownCellTypeIndicator( ( Dataframe.Column<?, String> ) col );
-                if ( unknownCellTypeIndicator != null ) {
-                    log.info( "Detected that " + col + " uses " + unknownCellTypeIndicator + " as an unknown cell type indicator." );
-                }
-            }
-        }
-        if ( sampleColumn != null || cellTypeColumn != null ) {
-            if ( sampleColumn != null ) {
-                loader.setSampleFactorName( sampleColumn );
-            }
-            if ( cellTypeColumn != null ) {
-                loader.setCellTypeFactorName( cellTypeColumn );
-                loader.setUnknownCellTypeIndicator( unknownCellTypeIndicator );
-            }
-        } else {
-            log.warn( "Failed to detect AnnData loader settings, the loader will be left unconfigured" );
-        }
     }
 
     /**

@@ -14,6 +14,7 @@ import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.singleCell.MexSingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
+import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
 import ubic.gemma.core.util.ProgressInputStream;
 
 import javax.annotation.Nullable;
@@ -583,7 +584,8 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
     public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series ) throws NoSingleCellDataFoundException {
         Assert.notNull( series.getGeoAccession() );
         Assert.notNull( getDownloadDirectory(), "A download directory must be set." );
-        MexSingleCellDataLoader loader = new GeoMexSingleCellDataLoaderConfigurer( getDownloadDirectory(), series ).configureLoader();
+        MexSingleCellDataLoader loader = new GeoMexSingleCellDataLoaderConfigurer( getDownloadDirectory(), series )
+                .configureLoader( SingleCellDataLoaderConfig.builder().build() );
         if ( loader.getSampleNames().isEmpty() ) {
             throw new NoSingleCellDataFoundException( "No single-cell data was found for " + series.getGeoAccession() );
         }

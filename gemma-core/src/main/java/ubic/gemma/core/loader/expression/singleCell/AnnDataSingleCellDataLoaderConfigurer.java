@@ -32,8 +32,8 @@ public class AnnDataSingleCellDataLoaderConfigurer extends AbstractAnnDataSingle
     }
 
     @Override
-    public AnnDataSingleCellDataLoader configureLoader() {
-        AnnDataSingleCellDataLoader loader = super.configureLoader();
+    public AnnDataSingleCellDataLoader configureLoader( SingleCellDataLoaderConfig config ) {
+        AnnDataSingleCellDataLoader loader = super.configureLoader( config );
         loader.setBioAssayToSampleNameMapper( bioAssayMapper );
         return loader;
     }

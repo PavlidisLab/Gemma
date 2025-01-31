@@ -3,6 +3,7 @@ package ubic.gemma.core.loader.expression.geo.singleCell;
 import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
+import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,7 +31,7 @@ public class AnnDataDetector extends AbstractSingleH5FileInSeriesSingleCellDetec
         Path annDataFile = getDest( series );
         if ( Files.exists( annDataFile ) ) {
             return new GeoAnnDataSingleCellDataLoaderConfigurer( annDataFile, series, null )
-                    .configureLoader();
+                    .configureLoader( SingleCellDataLoaderConfig.builder().build() );
         }
         throw new NoSingleCellDataFoundException( "Could not find " + annDataFile + " for " + series.getGeoAccession() );
     }

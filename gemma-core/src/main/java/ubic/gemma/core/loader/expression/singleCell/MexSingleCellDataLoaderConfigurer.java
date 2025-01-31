@@ -35,8 +35,8 @@ public class MexSingleCellDataLoaderConfigurer extends AbstractMexSingleCellData
     }
 
     @Override
-    public MexSingleCellDataLoader configureLoader() {
-        MexSingleCellDataLoader loader = super.configureLoader();
+    public MexSingleCellDataLoader configureLoader( SingleCellDataLoaderConfig config ) {
+        MexSingleCellDataLoader loader = super.configureLoader( config );
         loader.setBioAssayToSampleNameMapper( bioAssayMapper );
         return loader;
     }

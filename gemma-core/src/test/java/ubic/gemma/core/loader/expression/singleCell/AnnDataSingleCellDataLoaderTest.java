@@ -393,7 +393,7 @@ public class AnnDataSingleCellDataLoaderTest {
                 BioAssay.Factory.newInstance( "3", null, BioMaterial.Factory.newInstance( "3" ) )
         );
         AnnDataSingleCellDataLoaderConfigurer configurer = new AnnDataSingleCellDataLoaderConfigurer( dataPath, bioAssays, new SimpleBioAssayMapper(), pythonExecutable );
-        try ( AnnDataSingleCellDataLoader loader = configurer.configureLoader() ) {
+        try ( AnnDataSingleCellDataLoader loader = configurer.configureLoader( SingleCellDataLoaderConfig.builder().build() ) ) {
             assertThat( loader.getGenes() )
                     .hasSize( 21978 )
                     .contains( "SERPINE2" );
