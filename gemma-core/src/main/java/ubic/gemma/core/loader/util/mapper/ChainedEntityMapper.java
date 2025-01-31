@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 
 /**
  * Implementation of a chain of entity mappers.
- * @param <T>
  * @author poirigui
  */
 public class ChainedEntityMapper<T extends Identifiable> implements EntityMapper<T> {

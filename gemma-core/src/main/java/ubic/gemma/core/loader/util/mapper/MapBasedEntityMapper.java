@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 /**
  * A simple implementation of {@link EntityMapper} that uses a {@link Map} to store association between identifiers and
  * entities.
- * @param <T>
+ * @author poirigui
  */
 public class MapBasedEntityMapper<T extends Identifiable> implements EntityMapper<T> {
 

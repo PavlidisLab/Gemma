@@ -10,7 +10,7 @@ import java.util.Set;
 
 /**
  * Map external identifiers to Gemma entities.
- * @param <T>
+ * @param <T> the type of entity being mapped
  * @author poirigui
  */
 public interface EntityMapper<T extends Identifiable> {
@@ -78,7 +78,6 @@ public interface EntityMapper<T extends Identifiable> {
 
     /**
      * A stateful entity mapper keeps an internal state for a set of candidates to optimize the mapping process.
-     * @param <T>
      */
     interface StatefulEntityMapper<T extends Identifiable> {
 

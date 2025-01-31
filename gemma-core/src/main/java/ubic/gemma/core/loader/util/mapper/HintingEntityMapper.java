@@ -8,7 +8,6 @@ import java.util.List;
  * Interface for mappers that can provide hints of identifier candidates.
  * <p>
  * This is mainly used to provide feedback to the user.
- * @param <T>
  * @author poirigui
  */
 public interface HintingEntityMapper<T extends Identifiable> extends EntityMapper<T> {
