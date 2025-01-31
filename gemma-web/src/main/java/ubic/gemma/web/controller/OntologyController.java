@@ -18,6 +18,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.util.ServiceUnavailableException;
 import ubic.basecode.ontology.model.AnnotationProperty;
 
+import javax.servlet.ServletContext;
 import java.io.StringWriter;
 import java.util.List;
 import java.util.Optional;
