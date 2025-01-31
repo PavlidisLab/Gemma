@@ -382,11 +382,12 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         if ( qtName != null ) {
             configBuilder
                     .quantitationTypeName( qtName )
-                    .quantitationTypeNewName( newName )
-                    .quantitationTypeNewType( newType )
-                    .quantitationTypeNewScaleType( newScaleType )
                     .replaceExistingQuantitationType( replaceQt );
         }
+        configBuilder
+                .quantitationTypeNewName( newName )
+                .quantitationTypeNewType( newType )
+                .quantitationTypeNewScaleType( newScaleType );
         configBuilder.markQuantitationTypeAsPreferred( preferredQt );
         if ( cellTypeAssignmentFile != null ) {
             configBuilder
