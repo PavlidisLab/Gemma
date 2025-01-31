@@ -61,6 +61,9 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Value("${python.exe}")
     private Path pythonExecutable;
 
+    @Value("${gemma.scratch.dir}")
+    private Path scratchDir;
+
     @Override
     @Transactional
     public QuantitationType load( ExpressionExperiment ee, ArrayDesign platform, SingleCellDataLoaderConfig config ) {
@@ -260,7 +263,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
             if ( ee.getQuantitationTypes().contains( qt ) ) {
                 // this check is also done in SingleCellExpressionExperimentService.addSingleCellDataVectors(), but
                 // after loading the vectors from disk which is time-consuming
-                throw new IllegalArgumentException( ee + " already has a quantitation type matching " + qt + ". Set replaceExistingQuantitationType to replace existing vectors instead." );
+                throw new IllegalArgumentException( ee + " already has a quantitation type matching " + qt + ". Set replaceExistingQuantitationType to replace existing vectors instead or use a different name by setting quantitationTypeNewName." );
             }
             log.info( "Data will be added for " + qt + "..." );
 
@@ -466,7 +469,10 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     private SingleCellDataLoader getAnnDataLoader( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
         BioAssayMapper bioAssayMapper = getBioAssayMapper( ee );
         Path p = config.getDataPath() != null ? config.getDataPath() : getAnnDataFile( ee );
-        return configureGenericMetadataLoader( new AnnDataSingleCellDataLoaderConfigurer( p, ee.getBioAssays(), bioAssayMapper, pythonExecutable ), bioAssayMapper, config );
+        AnnDataSingleCellDataLoaderConfigurer annDataConfigurer = new AnnDataSingleCellDataLoaderConfigurer( p, ee.getBioAssays(), bioAssayMapper );
+        annDataConfigurer.setPythonExecutable( pythonExecutable );
+        annDataConfigurer.setScratchDir( scratchDir );
+        return configureGenericMetadataLoader( annDataConfigurer, bioAssayMapper, config );
     }
 
     private SingleCellDataLoader getSeuratDiskLoader() {

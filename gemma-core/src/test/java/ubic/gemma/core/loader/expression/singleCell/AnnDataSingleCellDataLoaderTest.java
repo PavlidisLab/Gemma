@@ -392,7 +392,9 @@ public class AnnDataSingleCellDataLoaderTest {
                 BioAssay.Factory.newInstance( "2", null, BioMaterial.Factory.newInstance( "2" ) ),
                 BioAssay.Factory.newInstance( "3", null, BioMaterial.Factory.newInstance( "3" ) )
         );
-        AnnDataSingleCellDataLoaderConfigurer configurer = new AnnDataSingleCellDataLoaderConfigurer( dataPath, bioAssays, new SimpleBioAssayMapper(), pythonExecutable );
+        AnnDataSingleCellDataLoaderConfigurer configurer = new AnnDataSingleCellDataLoaderConfigurer( dataPath, bioAssays, new SimpleBioAssayMapper() );
+        configurer.setPythonExecutable( pythonExecutable );
+        configurer.setScratchDir( Files.createTempDirectory( "gemma-scratch-" ) );
         try ( AnnDataSingleCellDataLoader loader = configurer.configureLoader( SingleCellDataLoaderConfig.builder().build() ) ) {
             assertThat( loader.getGenes() )
                     .hasSize( 21978 )

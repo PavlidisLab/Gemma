@@ -5,7 +5,6 @@ import ubic.gemma.core.loader.util.anndata.Dataframe;
 import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
-import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.Collection;
 
@@ -19,8 +18,8 @@ public class AnnDataSingleCellDataLoaderConfigurer extends AbstractAnnDataSingle
      * @param bioAssays      a collection of {@link BioAssay} that are used to detect the sample column
      * @param bioAssayMapper a mapper for {@link BioAssay} to sample name to interpret identifier in the file
      */
-    public AnnDataSingleCellDataLoaderConfigurer( Path annDataFile, Collection<BioAssay> bioAssays, BioAssayMapper bioAssayMapper, @Nullable Path pythonExecutable ) {
-        super( annDataFile, pythonExecutable );
+    public AnnDataSingleCellDataLoaderConfigurer( Path annDataFile, Collection<BioAssay> bioAssays, BioAssayMapper bioAssayMapper ) {
+        super( annDataFile );
         this.bioAssays = bioAssays;
         this.bioAssayMapper = bioAssayMapper;
     }

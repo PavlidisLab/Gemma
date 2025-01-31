@@ -2,6 +2,7 @@ package ubic.gemma.core.loader.expression.singleCell.transform;
 
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,6 +17,8 @@ public class SingleCellDataTransformationPipeline implements SingleCellDataTrans
     private SingleCellDataType inputDataType;
     private Path outputFile;
     private SingleCellDataType outputDataType;
+    @Nullable
+    private Path scratchDir;
 
     public SingleCellDataTransformationPipeline( List<SingleCellInputOutputFileTransformation> transformations ) {
         this.transformations = transformations;
@@ -28,6 +31,13 @@ public class SingleCellDataTransformationPipeline implements SingleCellDataTrans
                 ( ( PythonBasedSingleCellDataTransformation ) t ).setPythonExecutable( pythonExecutable );
             }
         } );
+    }
+
+    /**
+     * Set the scratch directory where temporary files will be created.
+     */
+    public void setScratchDir( Path scratchDir ) {
+        this.scratchDir = scratchDir;
     }
 
     @Override
@@ -57,8 +67,18 @@ public class SingleCellDataTransformationPipeline implements SingleCellDataTrans
 
     @Override
     public void perform() throws IOException {
-        Path tempInputFile = Files.createTempFile( "gemma-single-cell-data-transform-", "h5ad" );
-        Path tempOutputFile = Files.createTempFile( "gemma-single-cell-data-transform-", "h5ad" );
+        Path tempInputFile;
+        if ( scratchDir != null ) {
+            tempInputFile = Files.createTempFile( scratchDir, "gemma-single-cell-data-transform-", "h5ad" );
+        } else {
+            tempInputFile = Files.createTempFile( "gemma-single-cell-data-transform-", "h5ad" );
+        }
+        Path tempOutputFile;
+        if ( scratchDir != null ) {
+            tempOutputFile = Files.createTempFile( scratchDir, "gemma-single-cell-data-transform-", "h5ad" );
+        } else {
+            tempOutputFile = Files.createTempFile( "gemma-single-cell-data-transform-", "h5ad" );
+        }
         SingleCellDataType tempDataType = SingleCellDataType.ANNDATA;
         try {
             for ( int i = 0; i < transformations.size(); i++ ) {

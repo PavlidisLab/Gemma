@@ -15,8 +15,8 @@ class GeoAnnDataSingleCellDataLoaderConfigurer extends AbstractAnnDataSingleCell
 
     private final GeoSeries series;
 
-    public GeoAnnDataSingleCellDataLoaderConfigurer( Path annDataFile, GeoSeries geoSeries, @Nullable Path pythonExecutable ) {
-        super( annDataFile, pythonExecutable );
+    public GeoAnnDataSingleCellDataLoaderConfigurer( Path annDataFile, GeoSeries geoSeries ) {
+        super( annDataFile );
         this.series = geoSeries;
     }
 

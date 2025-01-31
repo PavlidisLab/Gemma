@@ -53,16 +53,29 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
 
     private final Path annDataFile;
 
+    // both are necessary to perform on-disk transformations
     @Nullable
-    private final Path pythonExecutable;
+    private Path pythonExecutable;
+    @Nullable
+    private Path scratchDir;
+
+    protected AbstractAnnDataSingleCellDataLoaderConfigurer( Path annDataFile ) {
+        this.annDataFile = annDataFile;
+    }
 
     /**
-     * @param pythonExecutable a path to a Python executable. If null, no transformation will be performed on the
-     *                         AnnData file.
+     * Set the path to a Python executable. If null, no transformation will be performed on the AnnData file.
      */
-    protected AbstractAnnDataSingleCellDataLoaderConfigurer( Path annDataFile, @Nullable Path pythonExecutable ) {
-        this.annDataFile = annDataFile;
+    public void setPythonExecutable( Path pythonExecutable ) {
         this.pythonExecutable = pythonExecutable;
+    }
+
+    /**
+     * Set the path to a scratch directory to use for on-disk transformations. If null, no transformation will be
+     * performed on the AnnData file.
+     */
+    public void setScratchDir( Path scratchDir ) {
+        this.scratchDir = scratchDir;
     }
 
     /**
@@ -72,15 +85,15 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
     public AnnDataSingleCellDataLoader configureLoader( SingleCellDataLoaderConfig config ) {
         ArrayList<Path> tempFilesToRemove = new ArrayList<Path>();
         Path dataFileToUse;
-        if ( pythonExecutable != null ) {
+        if ( pythonExecutable != null && scratchDir != null ) {
             try {
-                dataFileToUse = transformIfNecessary( tempFilesToRemove, pythonExecutable, config );
-            } catch ( IOException e ) {
+                dataFileToUse = transformIfNecessary( tempFilesToRemove, pythonExecutable, scratchDir, config );
+            } catch ( Exception e ) {
                 deleteTemporaryFilesQuietly( tempFilesToRemove );
                 throw new RuntimeException( "Error wile attempting to automatically transform " + annDataFile + ".", e );
             }
         } else {
-            log.warn( "No Python executable is set, will not perform any transformation on " + annDataFile + "." );
+            log.warn( "No Python executable or scratch directory is set, will not perform any transformation on " + annDataFile + "." );
             dataFileToUse = annDataFile;
         }
         AnnDataSingleCellDataLoader loader = new AnnDataSingleCellDataLoader( dataFileToUse ) {
@@ -192,7 +205,7 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
         }
     }
 
-    private Path transformIfNecessary( Collection<Path> tempFilesToRemove, Path pythonExecutable, SingleCellDataLoaderConfig config ) throws IOException {
+    private Path transformIfNecessary( Collection<Path> tempFilesToRemove, Path pythonExecutable, Path scratchDir, SingleCellDataLoaderConfig config ) throws IOException {
         Path dataFileToUse = annDataFile;
 
         // check if rewriting is necessary
@@ -200,14 +213,14 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
             // ignored
         } catch ( MissingEncodingAttributeException e ) {
             log.warn( "AnnData file " + annDataFile + " is lacking encoding attributes, will rewrite it.", e );
-            dataFileToUse = performTransformation( new SingleCellDataRewrite(), dataFileToUse, tempFilesToRemove, pythonExecutable );
+            dataFileToUse = performTransformation( new SingleCellDataRewrite(), dataFileToUse, tempFilesToRemove, pythonExecutable, scratchDir );
         }
 
         // check for unraw
         try ( AnnData ad = AnnData.open( dataFileToUse ) ) {
             if ( isUnrawXNecessary( ad, config ) ) {
                 log.info( "AnnData file" + annDataFile + " has raw.X and raw.var and needs to be transposed later on, extracting it as the main layer..." );
-                dataFileToUse = performTransformation( new SingleCellDataUnraw(), dataFileToUse, tempFilesToRemove, pythonExecutable );
+                dataFileToUse = performTransformation( new SingleCellDataUnraw(), dataFileToUse, tempFilesToRemove, pythonExecutable, scratchDir );
             }
         }
 
@@ -216,7 +229,7 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
             // if raw.X is present, we have to rewrite first
             if ( ad.getX() != null && isTransposeOnDiskNecessary( ad.getX(), ad.getObs(), ad.getVar(), config ) ) {
                 log.info( "AnnData file" + annDataFile + " needs to be transposed on-disk, performing..." );
-                dataFileToUse = performTransformation( new SingleCellDataTranspose(), dataFileToUse, tempFilesToRemove, pythonExecutable );
+                dataFileToUse = performTransformation( new SingleCellDataTranspose(), dataFileToUse, tempFilesToRemove, pythonExecutable, scratchDir );
             }
         }
 
@@ -260,8 +273,8 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
         }
     }
 
-    private Path performTransformation( SingleCellInputOutputFileTransformation transformation, Path dataFileToUse, Collection<Path> tempFilesToRemove, Path pythonExecutable ) throws IOException {
-        Path tempFile = Files.createTempFile( null, ".h5ad" );
+    private Path performTransformation( SingleCellInputOutputFileTransformation transformation, Path dataFileToUse, Collection<Path> tempFilesToRemove, Path pythonExecutable, Path scratchDir ) throws IOException {
+        Path tempFile = Files.createTempFile( scratchDir, null, ".h5ad" );
         tempFilesToRemove.add( tempFile );
         if ( transformation instanceof PythonBasedSingleCellDataTransformation ) {
             ( ( PythonBasedSingleCellDataTransformation ) transformation )
