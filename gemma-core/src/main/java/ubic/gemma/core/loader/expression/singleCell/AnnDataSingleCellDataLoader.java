@@ -358,16 +358,20 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 }
                 // conclusion, this is a cell-type factor
                 int[] indices = new int[values.length];
+                Map<String, Integer> valToIndex = new HashMap<>();
                 List<Characteristic> characteristics = new ArrayList<>();
                 for ( int i = 0; i < values.length; i++ ) {
                     String val = values[i];
                     if ( val != null ) {
-                        Characteristic c = Characteristic.Factory.newInstance( Categories.UNCATEGORIZED, val, null );
-                        c.setDescription( "Imported from column " + factorName + " in AnnData file " + h5File + "." );
-                        int j = characteristics.indexOf( c );
-                        if ( j == -1 ) {
+                        int j;
+                        if ( valToIndex.containsKey( val ) ) {
+                            j = valToIndex.get( val );
+                        } else {
+                            Characteristic c = Characteristic.Factory.newInstance( Categories.UNCATEGORIZED, val, null );
+                            c.setDescription( "Imported from column " + factorName + " in AnnData file " + h5File + "." );
+                            j = characteristics.size();
                             characteristics.add( c );
-                            j = characteristics.size() - 1;
+                            valToIndex.put( val, j );
                         }
                         indices[i] = j;
                     } else {
