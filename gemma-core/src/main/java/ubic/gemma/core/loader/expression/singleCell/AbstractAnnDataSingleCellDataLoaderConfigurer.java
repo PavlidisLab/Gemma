@@ -158,16 +158,16 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
                 continue;
             }
             if ( sampleColumn == null && isSampleNameColumn( ( Dataframe.Column<?, String> ) col ) ) {
-                log.info( "Detected that " + col + " is the sample name column." );
+                log.info( "Detected that '" + col.getName() + "' is the sample name column." );
                 sampleColumn = col.getName();
             }
             if ( cellTypeColumn == null && isCellTypeColumn( ( Dataframe.Column<?, String> ) col ) ) {
-                log.info( "Detected that " + col + " is the cell type column." );
+                log.info( "Detected that '" + col.getName() + "' is the cell type column." );
                 cellTypeColumn = col.getName();
                 if ( unknownCellTypeIndicator == null ) {
                     unknownCellTypeIndicator = getUnknownCellTypeIndicator( ( Dataframe.Column<?, String> ) col );
                     if ( unknownCellTypeIndicator != null ) {
-                        log.info( "Detected that " + col + " uses " + unknownCellTypeIndicator + " as an unknown cell type indicator." );
+                        log.info( "Detected that '" + col.getName() + "' uses '" + unknownCellTypeIndicator + "' as an unknown cell type indicator." );
                     }
                 }
             }

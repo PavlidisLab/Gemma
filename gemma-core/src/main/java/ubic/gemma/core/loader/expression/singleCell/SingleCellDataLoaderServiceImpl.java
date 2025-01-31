@@ -250,6 +250,14 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         if ( config.isReplaceExistingQuantitationType() ) {
             // find the persistent QT matching the data
             QuantitationType existingQt = quantitationTypeService.find( ee, qt, SingleCellExpressionDataVector.class );
+            if ( existingQt == null ) {
+                log.warn( "Could not find a QT matching " + qt + " in " + ee + ", will attempt to find one by name only." );
+                try {
+                    existingQt = quantitationTypeService.findByNameAndVectorType( ee, qt.getName(), SingleCellExpressionDataVector.class );
+                } catch ( NonUniqueQuantitationTypeByNameException e ) {
+                    throw new RuntimeException( e );
+                }
+            }
             if ( existingQt != null ) {
                 qt = existingQt;
                 log.info( "Data will be replaced for " + existingQt + "..." );

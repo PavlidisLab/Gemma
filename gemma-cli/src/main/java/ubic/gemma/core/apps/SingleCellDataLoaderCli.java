@@ -89,8 +89,11 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private SingleCellDataType dataType;
     @Nullable
     private String qtName;
+    @Nullable
     private String newName;
+    @Nullable
     private StandardQuantitationType newType;
+    @Nullable
     private ScaleType newScaleType;
     private boolean preferredQt;
     private boolean replaceQt;
@@ -152,7 +155,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         options.addOption( QT_NEW_TYPE_OPTION, "quantitation-type-new-type", true, "New type to use for the imported quantitation type (optional, defaults to the data)" );
         options.addOption( QT_NEW_SCALE_TYPE_OPTION, "quantitation-type-new-scale-type", true, "New scale type to use for the imported quantitation type (optional, defaults to the data)" );
         options.addOption( PREFERRED_QT_OPTION, "preferred-quantitation-type", false, "Make the quantitation type the preferred one." );
-        options.addOption( REPLACE_OPTION, "replace", false, "Replace an existing quantitation type. The -" + QT_NAME_OPTION + "/--quantitation-type-name option must be set." );
+        options.addOption( REPLACE_OPTION, "replace", false, "Replace an existing quantitation type." );
         // for the generic metadata loader
 
         // for the generic metadata loader
@@ -233,12 +236,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         } else {
             newScaleType = null;
         }
-        if ( commandLine.hasOption( REPLACE_OPTION ) ) {
-            if ( qtName == null ) {
-                throw new MissingOptionException( "The -" + QT_NAME_OPTION + " option must be set in order to replace an existing set of vectors. Use the listQuantitationTypes command to enumerate possible values." );
-            }
-            replaceQt = true;
-        }
+        replaceQt = commandLine.hasOption( REPLACE_OPTION );
         preferredQt = commandLine.hasOption( PREFERRED_QT_OPTION );
         cellTypeAssignmentFile = commandLine.getParsedOptionValue( CELL_TYPE_ASSIGNMENT_FILE_OPTION );
         cellTypeAssignmentName = commandLine.getOptionValue( CELL_TYPE_ASSIGNMENT_NAME_OPTION );
@@ -364,11 +362,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                     .sampleFactorName( annDataSampleFactorName )
                     .cellTypeFactorName( annDataCellTypeFactorName )
                     .unknownCellTypeIndicator( annDataUnknownCellTypeIndicator )
-                    .transpose( annDataTranspose );
-            if ( annDataUseRawX != null ) {
-                ( ( AnnDataSingleCellDataLoaderConfig.AnnDataSingleCellDataLoaderConfigBuilder<?, ?> ) configBuilder )
-                        .useRawX( annDataUseRawX );
-            }
+                    .transpose( annDataTranspose )
+                    .useRawX( annDataUseRawX );
         } else if ( dataType == SingleCellDataType.MEX ) {
             configBuilder = MexSingleCellDataLoaderConfig.builder()
                     .discardEmptyCells( mexDiscardEmptyCells )
@@ -381,10 +376,10 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         }
         if ( qtName != null ) {
             configBuilder
-                    .quantitationTypeName( qtName )
-                    .replaceExistingQuantitationType( replaceQt );
+                    .quantitationTypeName( qtName );
         }
         configBuilder
+                .replaceExistingQuantitationType( replaceQt )
                 .quantitationTypeNewName( newName )
                 .quantitationTypeNewType( newType )
                 .quantitationTypeNewScaleType( newScaleType );
