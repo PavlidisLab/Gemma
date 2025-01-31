@@ -84,31 +84,8 @@ public class RandomSingleCellDataUtils {
      * @param sparsity            sparsity of the vectors
      */
     public static List<SingleCellExpressionDataVector> randomSingleCellVectors( ExpressionExperiment ee, ArrayDesign ad, QuantitationType qt, int numCellsPerBioAssay, double sparsity ) {
-        Assert.isTrue( qt.getGeneralType() == GeneralType.QUANTITATIVE,
-                "Can only generate quantitative data." );
-        Assert.isTrue( qt.getType() == StandardQuantitationType.COUNT || qt.getType() == StandardQuantitationType.AMOUNT );
-        Assert.isTrue( qt.getScale() == ScaleType.COUNT || qt.getScale() == ScaleType.LINEAR
-                        || qt.getScale() == ScaleType.LOG2 || qt.getScale() == ScaleType.LOG1P
-                        || qt.getScale() == ScaleType.PERCENT || qt.getScale() == ScaleType.PERCENT1,
-                "Unsupported scale type for random data vectors: " + qt.getScale() );
-        Assert.isTrue( qt.getRepresentation() == PrimitiveType.DOUBLE,
-                "Can only generate double vectors." );
         Assert.isTrue( sparsity >= 0.0 && sparsity <= 1.0, "Sparsity must be between 0 and 1." );
-        List<BioAssay> samples = ee.getBioAssays().stream()
-                // for reproducibility
-                .sorted( Comparator.comparing( BioAssay::getName ) )
-                .collect( Collectors.toList() );
-        int numCells = numCellsPerBioAssay * ee.getBioAssays().size();
-        SingleCellDimension dimension = new SingleCellDimension();
-        dimension.setName( "Bunch of test cells" );
-        dimension.setCellIds( IntStream.rangeClosed( 1, numCells ).mapToObj( Integer::toString ).collect( Collectors.toList() ) );
-        dimension.setNumberOfCells( numCells );
-        dimension.setBioAssays( samples );
-        int[] offsets = new int[samples.size()];
-        for ( int i = 0; i < samples.size(); i++ ) {
-            offsets[i] = i * numCellsPerBioAssay;
-        }
-        dimension.setBioAssaysOffset( offsets );
+        SingleCellDimension dimension = createDimension( ee, numCellsPerBioAssay );
         // necessary for reproducible results
         List<CompositeSequence> sortedCs = new ArrayList<>( ad.getCompositeSequences() );
         sortedCs.sort( Comparator.comparing( CompositeSequence::getName ) );
@@ -120,10 +97,23 @@ public class RandomSingleCellDataUtils {
         return results;
     }
 
+    public static SingleCellExpressionDataVector randomSingleCellVector( ExpressionExperiment ee, CompositeSequence compositeSequence, QuantitationType qt, int numCellsPerBioAssay, double sparsity ) {
+        return randomSingleCellVector( ee, compositeSequence, qt, createDimension( ee, numCellsPerBioAssay ), sparsity );
+    }
+
     /**
      * Generate a single random single-cell vector.
      */
     public static SingleCellExpressionDataVector randomSingleCellVector( ExpressionExperiment ee, CompositeSequence compositeSequence, QuantitationType qt, SingleCellDimension dimension, double sparsity ) {
+        Assert.isTrue( qt.getGeneralType() == GeneralType.QUANTITATIVE,
+                "Can only generate quantitative data." );
+        Assert.isTrue( qt.getType() == StandardQuantitationType.COUNT || qt.getType() == StandardQuantitationType.AMOUNT );
+        Assert.isTrue( qt.getScale() == ScaleType.COUNT || qt.getScale() == ScaleType.LINEAR
+                        || qt.getScale() == ScaleType.LOG2 || qt.getScale() == ScaleType.LOG1P
+                        || qt.getScale() == ScaleType.PERCENT || qt.getScale() == ScaleType.PERCENT1,
+                "Unsupported scale type for random data vectors: " + qt.getScale() );
+        Assert.isTrue( qt.getRepresentation() == PrimitiveType.DOUBLE,
+                "Can only generate double vectors." );
         SingleCellExpressionDataVector vector = new SingleCellExpressionDataVector();
         vector.setExpressionExperiment( ee );
         vector.setDesignElement( compositeSequence );
@@ -144,6 +134,8 @@ public class RandomSingleCellDataUtils {
                     X[i] = RandomExpressionDataMatrixUtils.transform( logNormalDistribution.sample(), qt.getScale() );
                 } else if ( qt.getType() == StandardQuantitationType.COUNT ) {
                     X[i] = RandomExpressionDataMatrixUtils.transform( countDistribution.sample(), qt.getScale() );
+                } else {
+                    throw new IllegalArgumentException( "Don't know how to generate " + qt + " data." );
                 }
             }
             IX[i] = ( i * step ) + random.nextInt( step );
@@ -151,5 +143,24 @@ public class RandomSingleCellDataUtils {
         vector.setDataAsDoubles( X );
         vector.setDataIndices( IX );
         return vector;
+    }
+
+    private static SingleCellDimension createDimension( ExpressionExperiment ee, int numCellsPerBioAssay ) {
+        List<BioAssay> samples = ee.getBioAssays().stream()
+                // for reproducibility
+                .sorted( Comparator.comparing( BioAssay::getName ) )
+                .collect( Collectors.toList() );
+        int numCells = numCellsPerBioAssay * ee.getBioAssays().size();
+        SingleCellDimension dimension = new SingleCellDimension();
+        dimension.setName( "Bunch of test cells" );
+        dimension.setCellIds( IntStream.rangeClosed( 1, numCells ).mapToObj( Integer::toString ).collect( Collectors.toList() ) );
+        dimension.setNumberOfCells( numCells );
+        dimension.setBioAssays( samples );
+        int[] offsets = new int[samples.size()];
+        for ( int i = 0; i < samples.size(); i++ ) {
+            offsets[i] = i * numCellsPerBioAssay;
+        }
+        dimension.setBioAssaysOffset( offsets );
+        return dimension;
     }
 }

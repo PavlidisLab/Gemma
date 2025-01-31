@@ -1,4 +1,4 @@
-package ubic.gemma.persistence.service.expression.experiment;
+package ubic.gemma.core.analysis.singleCell.aggregate;
 
 import org.assertj.core.data.Offset;
 import org.junit.After;
@@ -8,8 +8,8 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.analysis.singleCell.SingleCellSparsityMetrics;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
@@ -29,6 +29,8 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -45,7 +47,6 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
 
     @Configuration
     @TestComponent
-    @Import(SingleCellConfig.class)
     static class CC {
 
         @Bean
@@ -76,6 +77,11 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         @Bean
         public AuditTrailService auditTrailService() {
             return mock();
+        }
+
+        @Bean
+        public SingleCellSparsityMetrics singleCellSparsityMetrics() {
+            return new SingleCellSparsityMetrics();
         }
     }
 

@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
-import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.convertVector;
+import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.convertVector;
 import static ubic.gemma.core.util.TsvUtils.SUB_DELIMITER;
 import static ubic.gemma.core.util.TsvUtils.format;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.getSampleEnd;

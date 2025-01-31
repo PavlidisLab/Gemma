@@ -1,4 +1,4 @@
-package ubic.gemma.persistence.service.expression.experiment;
+package ubic.gemma.core.analysis.singleCell.aggregate;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
@@ -14,6 +14,8 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
+import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;

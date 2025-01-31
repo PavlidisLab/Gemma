@@ -1,5 +1,6 @@
-package ubic.gemma.persistence.service.expression.experiment;
+package ubic.gemma.core.analysis.singleCell;
 
+import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
@@ -17,6 +18,7 @@ import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataV
  * Compute sparsity metrics for single cell data.
  * @author poirigui
  */
+@Component
 public class SingleCellSparsityMetrics {
 
     /**

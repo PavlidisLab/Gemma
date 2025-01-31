@@ -15,10 +15,10 @@ import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentAggregatorService;
+import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentAggregatorService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentSplitService;
-import ubic.gemma.persistence.service.expression.experiment.UnsupportedScaleTypeForAggregationException;
+import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentSplitService;
+import ubic.gemma.core.analysis.singleCell.aggregate.UnsupportedScaleTypeForAggregationException;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import javax.annotation.Nullable;

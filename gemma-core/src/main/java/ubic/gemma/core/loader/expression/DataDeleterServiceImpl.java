@@ -8,7 +8,7 @@ import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentAggregatorService;
+import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentAggregatorService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
 import static java.util.Objects.requireNonNull;

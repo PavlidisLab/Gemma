@@ -1,8 +1,7 @@
-package ubic.gemma.core.analysis.expression.convert;
+package ubic.gemma.core.analysis.preprocess.convert;
 
 import org.junit.Before;
 import org.junit.Test;
-import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.detect.InferredQuantitationMismatchException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.*;

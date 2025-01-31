@@ -1,4 +1,4 @@
-package ubic.gemma.persistence.service.expression.experiment;
+package ubic.gemma.core.analysis.singleCell.aggregate;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.core.analysis.singleCell.SingleCellSparsityMetrics;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
 import ubic.gemma.model.common.description.Characteristic;
@@ -18,6 +19,8 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
@@ -28,7 +31,7 @@ import java.util.stream.Collectors;
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.getSampleEnd;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.getSampleStart;
-import static ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentSplitServiceImpl.mapCellTypeAssignmentToCellTypeFactor;
+import static ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentSplitServiceImpl.mapCellTypeAssignmentToCellTypeFactor;
 
 /**
  * Aggregates single-cell expression data.

@@ -1,4 +1,4 @@
-package ubic.gemma.persistence.service.expression.experiment;
+package ubic.gemma.core.analysis.singleCell.aggregate;
 
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 

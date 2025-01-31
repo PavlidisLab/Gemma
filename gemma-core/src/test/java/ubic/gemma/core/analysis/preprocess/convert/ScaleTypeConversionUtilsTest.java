@@ -1,4 +1,4 @@
-package ubic.gemma.core.datastructure.matrix.io;
+package ubic.gemma.core.analysis.preprocess.convert;
 
 
 import org.junit.Test;
@@ -6,9 +6,9 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.convertVector;
+import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.convertVector;
 
-public class ExpressionDataWriterUtilsTest {
+public class ScaleTypeConversionUtilsTest {
 
     @Test
     public void testConvertData() {

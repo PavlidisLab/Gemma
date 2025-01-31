@@ -12,8 +12,8 @@ import org.mockito.ThrowingConsumer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.analysis.singleCell.SingleCellSparsityMetrics;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
@@ -58,7 +58,6 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
 
     @Configuration
     @TestComponent
-    @Import(SingleCellConfig.class)
     static class SingleCellExpressionExperimentServiceTestContextConfiguration extends BaseDatabaseTestContextConfiguration {
 
         @Bean
@@ -99,6 +98,11 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         @Bean
         public QuantitationTypeService quantitationTypeService() {
             return mock();
+        }
+
+        @Bean
+        public SingleCellSparsityMetrics singleCellSparsityMetrics() {
+            return new SingleCellSparsityMetrics();
         }
     }
 

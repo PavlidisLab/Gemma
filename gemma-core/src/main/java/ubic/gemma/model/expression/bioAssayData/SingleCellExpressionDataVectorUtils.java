@@ -3,7 +3,6 @@ package ubic.gemma.model.expression.bioAssayData;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 import java.util.Arrays;
@@ -86,6 +85,23 @@ public class SingleCellExpressionDataVectorUtils {
             end = -end - 1;
         }
         return end;
+    }
+
+    public static double[] getSampleDataAsDoubles( SingleCellExpressionDataVector vector, BioAssay sample ) {
+        int sampleIndex = vector.getSingleCellDimension().getBioAssays().indexOf( sample );
+        if ( sampleIndex == -1 ) {
+            throw new IllegalArgumentException( sample + " is not found in the single-cell dimension." );
+        }
+        return getSampleDataAsDoubles( vector, sampleIndex );
+    }
+
+    /**
+     * Obtain the data of a sample.
+     */
+    public static double[] getSampleDataAsDoubles( SingleCellExpressionDataVector vector, int sampleIndex ) {
+        int start = getSampleStart( vector, sampleIndex, 0 );
+        int end = getSampleEnd( vector, sampleIndex, start );
+        return Arrays.copyOfRange( vector.getDataAsDoubles(), start, end );
     }
 
     public static Consumer<SingleCellExpressionDataVector> createStreamMonitor( String logCategory, long numVecs ) {

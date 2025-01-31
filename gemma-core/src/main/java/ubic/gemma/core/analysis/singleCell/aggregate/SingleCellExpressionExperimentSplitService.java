@@ -1,4 +1,4 @@
-package ubic.gemma.persistence.service.expression.experiment;
+package ubic.gemma.core.analysis.singleCell.aggregate;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
