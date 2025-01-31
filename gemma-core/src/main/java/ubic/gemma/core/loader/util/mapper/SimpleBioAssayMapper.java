@@ -65,7 +65,8 @@ public class SimpleBioAssayMapper extends AbstractBioAssayMapper implements Hint
             return results;
         }
 
-        log.warn( "No match found for '" + n + "'" );
+        log.debug( "No match found for '" + n + "'" );
+
         return results;
     }
 

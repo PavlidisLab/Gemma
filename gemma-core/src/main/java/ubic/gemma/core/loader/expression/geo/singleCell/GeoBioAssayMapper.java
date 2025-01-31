@@ -85,7 +85,8 @@ public class GeoBioAssayMapper extends AbstractBioAssayMapper implements Hinting
             return results;
         }
 
-        log.warn( "No match found for '" + sampleName + "'" );
+        log.debug( "No match found for '" + sampleName + "'" );
+
         return results;
     }
 
