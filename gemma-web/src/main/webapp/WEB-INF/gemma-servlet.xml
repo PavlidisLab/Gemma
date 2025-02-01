@@ -894,6 +894,8 @@
         <dwr:convert type="bean"
                      class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject"/>
         <dwr:convert type="bean"
+                     class="ubic.gemma.model.analysis.ProtocolValueObject"/>
+        <dwr:convert type="bean"
                      class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResultValueObject"/>
         <dwr:convert type="bean"
                      class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject"/>
