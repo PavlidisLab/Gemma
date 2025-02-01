@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Base class for {@link AnnDataSingleCellDataLoader} configurers.
@@ -84,10 +85,11 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
     @Override
     public AnnDataSingleCellDataLoader configureLoader( SingleCellDataLoaderConfig config ) {
         ArrayList<Path> tempFilesToRemove = new ArrayList<Path>();
+        AtomicBoolean wasTransposedOnDisk = new AtomicBoolean( false );
         Path dataFileToUse;
         if ( pythonExecutable != null && scratchDir != null ) {
             try {
-                dataFileToUse = transformIfNecessary( tempFilesToRemove, pythonExecutable, scratchDir, config );
+                dataFileToUse = transformIfNecessary( tempFilesToRemove, pythonExecutable, scratchDir, config, wasTransposedOnDisk );
             } catch ( Exception e ) {
                 deleteTemporaryFilesQuietly( tempFilesToRemove );
                 throw new RuntimeException( "Error wile attempting to automatically transform " + annDataFile + ".", e );
@@ -107,7 +109,7 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
             }
         };
         try ( AnnData ad = AnnData.open( dataFileToUse ) ) {
-            boolean transpose = configureTranspose( loader, ad, config );
+            boolean transpose = configureTranspose( loader, ad, config, wasTransposedOnDisk.get() );
             if ( transpose ) {
                 configureSampleAndCellTypeColumns( ad.getObs(), loader, config );
             } else {
@@ -129,15 +131,21 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
         return loader;
     }
 
-    private boolean configureTranspose( AnnDataSingleCellDataLoader loader, AnnData ad, SingleCellDataLoaderConfig config ) {
+    private boolean configureTranspose( AnnDataSingleCellDataLoader loader, AnnData ad, SingleCellDataLoaderConfig config, boolean wasTransposedOnDisk ) {
         // then detect if transposing is necessary
         if ( isTransposed( ad.getObs(), ad.getVar(), config ) ) {
+            if ( wasTransposedOnDisk ) {
+                log.info( "AnnData object was already transposed on-disk, the loader will be configured to use it as-is." );
+                loader.setTranspose( false );
+                return false;
+            }
             // this is typically the case, so check it first
             log.info( "AnnData loader settings were applied on the obs dataframe, the loader will be configured to use the transpose." );
             loader.setTranspose( true );
             return true;
         } else {
             // already has the right orientation, var contains cells/samples
+            log.info( "AnnData object has the correct orientation, no transpose is needed." );
             loader.setTranspose( false );
             return false;
         }
@@ -205,7 +213,7 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
         }
     }
 
-    private Path transformIfNecessary( Collection<Path> tempFilesToRemove, Path pythonExecutable, Path scratchDir, SingleCellDataLoaderConfig config ) throws IOException {
+    private Path transformIfNecessary( Collection<Path> tempFilesToRemove, Path pythonExecutable, Path scratchDir, SingleCellDataLoaderConfig config, AtomicBoolean wasTransposedOnDisk ) throws IOException {
         Path dataFileToUse = annDataFile;
 
         // check if rewriting is necessary
@@ -230,6 +238,7 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
             if ( ad.getX() != null && isTransposeOnDiskNecessary( ad.getX(), ad.getObs(), ad.getVar(), config ) ) {
                 log.info( "AnnData file" + annDataFile + " needs to be transposed on-disk, performing..." );
                 dataFileToUse = performTransformation( new SingleCellDataTranspose(), dataFileToUse, tempFilesToRemove, pythonExecutable, scratchDir );
+                wasTransposedOnDisk.set( true );
             }
         }
 
