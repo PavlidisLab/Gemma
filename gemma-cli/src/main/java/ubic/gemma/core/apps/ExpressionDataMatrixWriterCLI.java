@@ -31,6 +31,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -93,14 +94,22 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
         } else {
             fileName = Paths.get( ExpressionDataFileUtils.getDataOutputFilename( ee, filter, ExpressionDataFileUtils.TABULAR_BULK_DATA_FILE_SUFFIX ) );
         }
-        if ( !isForce() && Files.exists( fileName ) ) {
-            throw new RuntimeException( "Output file " + fileName + " already exists, use -force to overwrite." );
-        }
-        try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( fileName ) ), StandardCharsets.UTF_8 ) ) {
+        try ( Writer writer = new OutputStreamWriter( openOutputFile( fileName, isForce() ), StandardCharsets.UTF_8 ) ) {
             int written = fs.writeProcessedExpressionData( ee, filter, writer );
             addSuccessObject( ee, "Wrote " + written + " vectors to " + fileName + "." );
         } catch ( IOException | FilteringException e ) {
             throw new RuntimeException( e );
+        }
+    }
+
+    private OutputStream openOutputFile( Path fileName, boolean overwriteExisting ) throws IOException {
+        if ( !overwriteExisting && Files.exists( fileName ) ) {
+            throw new RuntimeException( fileName + " already exists, use -force/--force to override." );
+        }
+        if ( fileName.toString().endsWith( ".gz" ) ) {
+            return new GZIPOutputStream( Files.newOutputStream( fileName ) );
+        } else {
+            return Files.newOutputStream( fileName );
         }
     }
 }
