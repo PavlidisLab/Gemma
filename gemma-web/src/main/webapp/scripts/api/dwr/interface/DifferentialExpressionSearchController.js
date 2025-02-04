@@ -1,4 +1,4 @@
-/* this code is generated, see generate-dwr-client.sh for details */
+/* this code is generated, see generate-dwr-client.py for details */
 var DifferentialExpressionSearchController = {};
 DifferentialExpressionSearchController._path = '/dwr';
 DifferentialExpressionSearchController.scheduleDiffExpSearchTask = function(p0, p1, p2, callback) {
@@ -10,11 +10,11 @@ DifferentialExpressionSearchController.getDifferentialExpressionWithoutBatch = f
 DifferentialExpressionSearchController.getFactors = function(p0, callback) {
   dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController', 'getFactors', p0, callback);
 }
-DifferentialExpressionSearchController.getDifferentialExpression = function(p0, p1, p2, callback) {
-  dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController', 'getDifferentialExpression', p0, p1, p2, callback);
-}
 DifferentialExpressionSearchController.getDifferentialExpression = function(p0, p1, callback) {
   dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController', 'getDifferentialExpression', p0, p1, callback);
+}
+DifferentialExpressionSearchController.getDifferentialExpression = function(p0, p1, p2, callback) {
+  dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController', 'getDifferentialExpression', p0, p1, p2, callback);
 }
 window.DifferentialExpressionSearchController = DifferentialExpressionSearchController;
 export default DifferentialExpressionSearchController;

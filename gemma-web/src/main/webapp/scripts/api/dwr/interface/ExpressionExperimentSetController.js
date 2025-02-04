@@ -1,4 +1,4 @@
-/* this code is generated, see generate-dwr-client.sh for details */
+/* this code is generated, see generate-dwr-client.py for details */
 var ExpressionExperimentSetController = {};
 ExpressionExperimentSetController._path = '/dwr';
 ExpressionExperimentSetController.remove = function(p0, callback) {
@@ -12,9 +12,6 @@ ExpressionExperimentSetController.load = function(p0, callback) {
 }
 ExpressionExperimentSetController.create = function(p0, callback) {
   dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'create', p0, callback);
-}
-ExpressionExperimentSetController.canCurrentUserEditGroup = function(p0, callback) {
-  dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'canCurrentUserEditGroup', p0, callback);
 }
 ExpressionExperimentSetController.loadAllSessionGroups = function(callback) {
   dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'loadAllSessionGroups', callback);
@@ -46,11 +43,14 @@ ExpressionExperimentSetController.addSessionGroup = function(p0, p1, callback) {
 ExpressionExperimentSetController.addUserAndSessionGroups = function(p0, callback) {
   dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'addUserAndSessionGroups', p0, callback);
 }
-ExpressionExperimentSetController.getExperimentsInSet = function(p0, p1, callback) {
-  dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'getExperimentsInSet', p0, p1, callback);
+ExpressionExperimentSetController.canCurrentUserEditGroup = function(p0, callback) {
+  dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'canCurrentUserEditGroup', p0, callback);
 }
 ExpressionExperimentSetController.getExperimentIdsInSet = function(p0, callback) {
   dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'getExperimentIdsInSet', p0, callback);
+}
+ExpressionExperimentSetController.getExperimentsInSet = function(p0, p1, callback) {
+  dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'getExperimentsInSet', p0, p1, callback);
 }
 ExpressionExperimentSetController.updateMembers = function(p0, p1, callback) {
   dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'updateMembers', p0, p1, callback);

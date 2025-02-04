@@ -1,4 +1,4 @@
-/* this code is generated, see generate-dwr-client.sh for details */
+/* this code is generated, see generate-dwr-client.py for details */
 var AuditController = {};
 AuditController._path = '/dwr';
 AuditController.addAuditEvent = function(p0, p1, p2, p3, callback) {

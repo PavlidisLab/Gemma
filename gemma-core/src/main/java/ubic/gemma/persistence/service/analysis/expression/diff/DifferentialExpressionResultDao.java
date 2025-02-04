@@ -18,10 +18,9 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.BioAssaySetValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.BaseDao;
 
@@ -68,28 +67,30 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      * Find differential expression for a gene in given data sets, exceeding a given significance level (using the
      * corrected pvalue field)
      */
-    Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> findByGeneAndExperimentAnalyzed( Gene gene,
+    Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGeneAndExperimentAnalyzed( Gene gene,
             Collection<Long> experimentsAnalyzed, double threshold, int limit );
 
     /**
      * Given a list of experiments and a threshold value finds all the probes that met the cut off in the given
      * experiments
      */
-    Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> findByExperimentAnalyzed(
+    Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByExperimentAnalyzed(
             Collection<Long> experimentsAnalyzed, double threshold, int limit );
 
     /**
      * Find differential expression results for a given gene, grouped by experiment.
+     *
      * @return a map of a collection of {@link DifferentialExpressionAnalysisResult}s keyed by {@link BioAssaySet}.
      */
-    Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> findByGene( Gene gene );
+    Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGene( Gene gene );
 
     /**
      * Find differential expression results for a given gene and set of experiments, grouped by experiment.
+     *
      * @return a map of a collection of {@link DifferentialExpressionAnalysisResult}s keyed by
-     *                             {@link BioAssaySet}.
+     * {@link BioAssaySet}.
      */
-    Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> findByGeneAndExperimentAnalyzed( Gene gene,
+    Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGeneAndExperimentAnalyzed( Gene gene,
             Collection<Long> experimentsAnalyzed );
 
     /**
@@ -111,6 +112,6 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      * @param  limit     limit
      * @return map to diff exp VOs
      */
-    Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene, double threshold,
+    Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> find( Gene gene, double threshold,
             int limit );
 }

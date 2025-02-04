@@ -1,4 +1,4 @@
-/* this code is generated, see generate-dwr-client.sh for details */
+/* this code is generated, see generate-dwr-client.py for details */
 var FileUploadController = {};
 FileUploadController._path = '/dwr';
 FileUploadController.getUploadStatus = function(callback) {

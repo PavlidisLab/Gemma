@@ -106,7 +106,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Override
     public void evictFromCache( Long id ) {
         this.statsCache.evict( id );
-        experimentalDesignVisualizationService.clearCaches( id );
     }
 
     @Override

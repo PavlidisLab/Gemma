@@ -1,4 +1,4 @@
-/* this code is generated, see generate-dwr-client.sh for details */
+/* this code is generated, see generate-dwr-client.py for details */
 var SystemMonitorController = {};
 SystemMonitorController._path = '/dwr';
 SystemMonitorController.clearCache = function(p0, callback) {

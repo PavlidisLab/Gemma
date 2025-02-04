@@ -1,4 +1,4 @@
-/* this code is generated, see generate-dwr-client.sh for details */
+/* this code is generated, see generate-dwr-client.py for details */
 var UserListController = {};
 UserListController._path = '/dwr';
 UserListController.saveUser = function(p0, callback) {

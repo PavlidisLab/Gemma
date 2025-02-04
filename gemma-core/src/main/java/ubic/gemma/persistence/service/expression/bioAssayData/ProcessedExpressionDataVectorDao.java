@@ -60,6 +60,17 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
     List<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, int offset, int limit );
 
     /**
+     * Obtain processed expression vectors with their associated genes.
+     *
+     * @param  cs2gene Map of probe to genes.
+     * @param  ees     ees
+     * @return map of vectors to genes.
+     */
+    Map<ProcessedExpressionDataVector, Collection<Long>> getProcessedVectorsAndGenes( Collection<ExpressionExperiment> ees, Map<Long, Collection<Long>> cs2gene );
+
+    Collection<ProcessedExpressionDataVector> getRandomProcessedVectors( ExpressionExperiment ee, int limit );
+
+    /**
      * Only retrieve the design elements for a slice of vectors.
      */
     List<CompositeSequence> getProcessedVectorsDesignElements( ExpressionExperiment ee, BioAssayDimension dimension, int offset, int limit );

@@ -1,4 +1,4 @@
-/* this code is generated, see generate-dwr-client.sh for details */
+/* this code is generated, see generate-dwr-client.py for details */
 var ExpressionExperimentReportGenerationController = {};
 ExpressionExperimentReportGenerationController._path = '/dwr';
 ExpressionExperimentReportGenerationController.run = function(p0, callback) {

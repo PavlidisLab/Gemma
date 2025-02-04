@@ -699,6 +699,8 @@
 
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject"
                      javascript="ExpressionExperimentValueObject"/>
+        <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentSubsetValueObject"
+                     javascript="ExpressionExperimentSubsetValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.GeeqValueObject"
                      javascript="GeeqValueObject"/>
         <dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.GeeqAdminValueObject"

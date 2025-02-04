@@ -244,7 +244,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     }
 
     @Override
-    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> findByGeneAndExperimentAnalyzed( Gene gene,
+    public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGeneAndExperimentAnalyzed( Gene gene,
             Collection<Long> experimentsAnalyzed, double threshold, int limit ) {
         if ( experimentsAnalyzed.isEmpty() ) {
             return Collections.emptyMap();
@@ -264,7 +264,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
                 .setCacheRegion( "diffExResult" )
                 .list();
 
-        Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = groupDiffExResultVos( qResult );
+        Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> results = groupDiffExResultVos( qResult );
         log.info( String.format( "Num experiments with probe analysis results (with limit = %d) : %d. Number of probes returned in total: %d",
                 limit, results.size(), qResult.size() ) );
 
@@ -277,7 +277,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     }
 
     @Override
-    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> findByExperimentAnalyzed(
+    public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByExperimentAnalyzed(
             Collection<Long> experiments, double qvalueThreshold, int limit ) {
         if ( experiments.isEmpty() ) {
             return Collections.emptyMap();
@@ -308,7 +308,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     }
 
     @Override
-    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> findByGene( Gene gene ) {
+    public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGene( Gene gene ) {
         Assert.notNull( gene );
         StopWatch timer = StopWatch.createStarted();
         List<?> qResult = getSessionFactory().getCurrentSession()
@@ -327,7 +327,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     }
 
     @Override
-    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> findByGeneAndExperimentAnalyzed( Gene gene,
+    public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGeneAndExperimentAnalyzed( Gene gene,
             Collection<Long> experimentsAnalyzed ) {
         Assert.notNull( gene );
         if ( experimentsAnalyzed.isEmpty() ) {
@@ -349,17 +349,31 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
         }
     }
 
-    private Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> groupDiffExResultVos( List<?> qResult ) {
-        Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = new HashMap<>();
+    private Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> groupDiffExResultVos( List<?> qResult ) {
+        Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> results = new HashMap<>();
         for ( Object o : qResult ) {
             Object[] oa = ( Object[] ) o;
-            ExpressionExperimentValueObject ee = ( ( BioAssaySet ) oa[0] ).createValueObject();
+            BioAssaySetValueObject ee = createValueObject( ( ( BioAssaySet ) oa[0] ) );
             DifferentialExpressionAnalysisResult dear = ( DifferentialExpressionAnalysisResult ) oa[1];
             Hibernate.initialize( dear.getProbe() );
             DifferentialExpressionValueObject probeResult = new DifferentialExpressionValueObject( dear );
             results.computeIfAbsent( ee, k -> new ArrayList<>() ).add( probeResult );
         }
         return results;
+    }
+
+    /**
+     * Special use case. Use a constructor of the desired VO instead, or the loadValueObject() in all VO-Enabled services.
+     * @return an expression experiment value object.
+     */
+    private BioAssaySetValueObject createValueObject( BioAssaySet bioAssaySet ) {
+        if ( bioAssaySet instanceof ExpressionExperiment ) {
+            return new ExpressionExperimentValueObject( ( ExpressionExperiment ) bioAssaySet );
+        } else if ( bioAssaySet instanceof ExpressionExperimentSubSet ) {
+            return new ExpressionExperimentSubsetValueObject( ( ExpressionExperimentSubSet ) bioAssaySet );
+        } else {
+            throw new UnsupportedOperationException( "Unsupported BioAssaySet type for VO conversion: " + bioAssaySet.getClass().getName() );
+        }
     }
 
     @Override
@@ -666,7 +680,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
     }
 
     @Override
-    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
+    public Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
             double threshold, int limit ) {
 
         StopWatch timer = new StopWatch();
@@ -693,7 +707,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
             query.setParameter( "threshold", threshold );
         }
 
-        Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = new HashMap<>();
+        Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> results = new HashMap<>();
 
         //noinspection unchecked
         List<Object[]> qResult = query.list();
@@ -760,7 +774,7 @@ public class DifferentialExpressionResultDaoImpl extends AbstractDao<Differentia
          */
         for ( Object[] oa : ees ) {
             ExpressionAnalysisResultSet rs = ( ExpressionAnalysisResultSet ) oa[1];
-            ExpressionExperimentValueObject evo = ( ( BioAssaySet ) oa[0] ).createValueObject();
+            BioAssaySetValueObject evo = createValueObject( ( BioAssaySet ) oa[0] );
 
             if ( !results.containsKey( evo ) ) {
                 results.put( evo, new ArrayList<>() );

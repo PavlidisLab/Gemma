@@ -88,8 +88,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         return efvo;
     }
 
-    @Override
-    public ExpressionExperimentValueObject configExpressionExperimentValueObject( ExpressionExperimentValueObject ee ) {
+    private BioAssaySetValueObject configExpressionExperimentValueObject( BioAssaySetValueObject ee ) {
 
         // if ( ee instanceof ExpressionExperiment ) {
         // eevo.setShortName( ( ( ExpressionExperiment ) ee ).getShortName() );
@@ -112,7 +111,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         if ( gene == null )
             return devos;
 
-        Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = differentialExpressionResultService
+        Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> results = differentialExpressionResultService
                 .find( gene, IdentifiableUtils.getIds( ees ) );
         timer.stop();
         if ( timer.getTime() > 1000 ) {
@@ -131,7 +130,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         if ( gene == null )
             return devos;
 
-        Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = differentialExpressionResultService
+        Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> results = differentialExpressionResultService
                 .find( gene, Collections.singleton( ee.getId() ), threshold, limit );
         timer.stop();
         if ( timer.getTime() > 1000 ) {
@@ -150,7 +149,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         if ( gene == null )
             return result;
 
-        Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> rawDiffEx = differentialExpressionResultService
+        Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> rawDiffEx = differentialExpressionResultService
                 .find( gene, threshold, -1 );
 
         // Collection<DifferentialExpressionValueObject> rawProcResults = postProcessDiffExResults( gene, threshold,
@@ -161,7 +160,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
             eeId2FactorCommand.put( dsfc.getEeId(), dsfc );
         }
 
-        for ( ExpressionExperimentValueObject ee : rawDiffEx.keySet() ) {
+        for ( BioAssaySetValueObject ee : rawDiffEx.keySet() ) {
             for ( DifferentialExpressionValueObject raw : rawDiffEx.get( ee ) ) {
                 if ( eeId2FactorCommand.containsKey( raw.getExpressionExperiment().getId() ) ) {
                     DiffExpressionSelectedFactorCommand factorCommandForEE = eeId2FactorCommand
@@ -200,7 +199,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         StopWatch timer = new StopWatch();
         timer.start();
 
-        Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = differentialExpressionResultService
+        Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> results = differentialExpressionResultService
                 .find( gene, threshold, limit );
 
         if ( timer.getTime() > 1000 ) {
@@ -221,7 +220,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
          * Get results for each active experiment on given gene. Handling the threshold check below since we ignore this
          * for the meta analysis. The results returned are for all factors, not just the factors we are seeking.
          */
-        Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> resultsMap = differentialExpressionResultService
+        Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> resultsMap = differentialExpressionResultService
                 .find( g, IdentifiableUtils.getIds( activeExperiments ) );
 
         GeneDifferentialExpressionServiceImpl.log
@@ -236,9 +235,9 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
 
         Collection<Long> eesThatMetThreshold = new HashSet<>();
 
-        for ( ExpressionExperimentValueObject ee : resultsMap.keySet() ) {
+        for ( BioAssaySetValueObject ee : resultsMap.keySet() ) {
 
-            ExpressionExperimentValueObject eevo = this.configExpressionExperimentValueObject( ee );
+            BioAssaySetValueObject eevo = this.configExpressionExperimentValueObject( ee );
 
             Collection<DifferentialExpressionValueObject> proberesults = resultsMap.get( ee );
 
@@ -387,7 +386,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
     }
 
     private Collection<DifferentialExpressionValueObject> postProcessDiffExResults(
-            Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results ) {
+            Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> results ) {
         StopWatch timer = new StopWatch();
         timer.start();
 
@@ -396,7 +395,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         /*
          * convert to DEVOs
          */
-        for ( ExpressionExperimentValueObject eevo : results.keySet() ) {
+        for ( BioAssaySetValueObject eevo : results.keySet() ) {
 
             Collection<DifferentialExpressionValueObject> probeResults = results.get( eevo );
 

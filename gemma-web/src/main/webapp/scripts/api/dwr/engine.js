@@ -1,4 +1,4 @@
-/* this code is generated, see generate-dwr-client.sh for details */
+/* this code is generated, see generate-dwr-client.py for details */
 /*
  * Copyright 2005 Joe Walker
  *
@@ -225,7 +225,7 @@ dwr.engine.setPollType = function() { dwr.engine._debug("Manually setting the Po
 //==============================================================================
 
 /** The original page id sent from the server */
-dwr.engine._origScriptSessionId = "B2847CB374AAFF14C3E8088C9B8D08AE";
+dwr.engine._origScriptSessionId = "9B5EE85DEDD5E9883FA587F4EBCFBBB7";
 
 /** The session cookie name */
 dwr.engine._sessionCookieName = "JSESSIONID"; // JSESSIONID

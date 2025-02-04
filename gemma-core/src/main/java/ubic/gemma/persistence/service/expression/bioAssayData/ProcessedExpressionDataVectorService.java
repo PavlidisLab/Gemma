@@ -30,12 +30,14 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Slice;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Paul
@@ -47,6 +49,8 @@ public interface ProcessedExpressionDataVectorService
      * Create processed vectors and optionally update ranks.
      * <p>
      * Mismatch between quantitation type and data is ignored.
+     * <p>
+     * This also adds an audit event and evict the vectors from the cache.
      * @param updateRanks whether to update the rnaks of the vectors or not
      * @see #updateRanks(ExpressionExperiment)
      * @see ProcessedExpressionDataVectorDao#createProcessedDataVectors(ExpressionExperiment, boolean)
@@ -57,6 +61,8 @@ public interface ProcessedExpressionDataVectorService
 
     /**
      * Create processed vectors and optionally update ranks.
+     * <p>
+     * This also adds an audit event and evict the vectors from the cache.
      * @see #createProcessedDataVectors(ExpressionExperiment, boolean)
      * @see #updateRanks(ExpressionExperiment)
      * @throws QuantitationTypeDetectionException if the QT caanot be detected from data, never raised if
@@ -70,6 +76,8 @@ public interface ProcessedExpressionDataVectorService
      * Replace the processed vectors of a EE with the given vectors.
      * <p>
      * Ranks are recomputed, no conversion of QT is done.
+     * <p>
+     * This also adds an audit event and evict the vectors from the cache.
      *
      * @param ee      ee
      * @param vectors non-persistent, all of the same {@link QuantitationType}
@@ -80,13 +88,26 @@ public interface ProcessedExpressionDataVectorService
     int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors, boolean updateRanks );
 
     /**
+     * Remove the processed vectors of an EE.
+     * <p>
+     * This also adds an audit event and evict the vectors from the cache.
+     * @see ExpressionExperimentService#removeProcessedDataVectors(ExpressionExperiment)
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    int removeProcessedDataVectors( ExpressionExperiment ee );
+
+    /**
      * Creates new bioAssayDimensions to match the experimental design, reorders the data to match, updates.
+     * <p>
+     * This also adds an audit event and evict the vectors from the cache.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void reorderByDesign( ExpressionExperiment ee );
 
     /**
      * Update the ranks of the processed vectors for the given experiment.
+     * <p>
+     * This also adds an audit event and evict the vectors from the cache.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void updateRanks( ExpressionExperiment ee );
@@ -160,6 +181,8 @@ public interface ProcessedExpressionDataVectorService
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<DoubleVectorValueObject> getRandomProcessedDataArrays( ExpressionExperiment ee, int limit );
+
+    Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe( ExpressionExperiment ee, Collection<CompositeSequence> compositeSequences );
 
     /**
      * @see CachedProcessedExpressionDataVectorService#getProcessedDataArraysByProbe(Collection, Collection)

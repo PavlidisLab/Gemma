@@ -36,7 +36,10 @@ import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorType;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -214,10 +217,8 @@ public class SVDServiceImpl implements SVDService {
 
         assert probes.size() <= count;
 
-        Collection<ExpressionExperiment> ees = new HashSet<>();
-        ees.add( ee );
         Collection<DoubleVectorValueObject> dvVos = processedExpressionDataVectorService
-                .getProcessedDataArraysByProbe( ees, p );
+                .getProcessedDataArraysByProbe( ee, p );
 
         if ( dvVos.isEmpty() ) {
             SVDServiceImpl.log.warn( "No vectors came back from the call; check the Gene2CS table?" );
@@ -246,8 +247,9 @@ public class SVDServiceImpl implements SVDService {
 
             assert bioAssayDimension.getBioAssays().size() == vct.getData().length;
 
+            // create a copy because we're going to modify its rank
+            vct = vct.copy();
             vct.setRank( probeLoading.getLoadingRank().doubleValue() );
-            vct.setExpressionExperiment( new ExpressionExperimentValueObject( ee ) );
             result.put( probeLoading, vct );
         }
 

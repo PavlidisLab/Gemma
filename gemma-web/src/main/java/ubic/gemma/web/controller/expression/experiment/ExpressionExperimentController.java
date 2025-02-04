@@ -1115,7 +1115,7 @@ public class ExpressionExperimentController {
             throw new EntityNotFoundException( "No experiment subset with ID " + id + "." );
         }
         BioAssayDimension dimension;
-        Collection<BioAssayDimension> possibleDimensions = bioAssayDimensionService.findByBioAssayContainsAll( subset.getBioAssays() );
+        Collection<BioAssayDimension> possibleDimensions = bioAssayDimensionService.findByBioAssaysContainingAll( subset.getBioAssays() );
         if ( dimensionId != null ) {
             dimension = bioAssayDimensionService.loadOrFail( dimensionId, EntityNotFoundException::new );
             if ( !CollectionUtils.containsAll( dimension.getBioAssays(), subset.getBioAssays() ) ) {

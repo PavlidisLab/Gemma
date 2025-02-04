@@ -28,9 +28,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Represents a set of BioAssays. This is not associated with any actual data, and soley represents a logical grouping
- * of "samples" that can be used for any purpose. These could be a published grouping, or a subset of samples from a
- * published study.
+ * Represents a set of {@link BioAssay}s.
+ * <p>
+ * This is not associated with any actual data, and soley represents a logical grouping of "samples" that can be used
+ * for any purpose. These could be a published grouping, or a subset of samples from a published study.
+ * @see ExpressionExperiment
+ * @see ExpressionExperimentSubSet
  */
 public abstract class BioAssaySet extends Investigation {
 
@@ -47,7 +50,6 @@ public abstract class BioAssaySet extends Investigation {
         this.accession = accession;
     }
 
-    @SuppressWarnings("JpaAttributeTypeInspection") // Inspector is not handling this correctly
     public Set<BioAssay> getBioAssays() {
         return bioAssays;
     }
@@ -55,10 +57,4 @@ public abstract class BioAssaySet extends Investigation {
     public void setBioAssays( Set<BioAssay> bioAssays ) {
         this.bioAssays = bioAssays;
     }
-
-    /**
-     * Special use case. Use a constructor of the desired VO instead, or the loadValueObject() in all VO-Enabled services.
-     * @return an expression experiment value object.
-     */
-    public abstract ExpressionExperimentValueObject createValueObject();
 }

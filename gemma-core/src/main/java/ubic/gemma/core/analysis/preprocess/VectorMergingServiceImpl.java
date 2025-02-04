@@ -234,7 +234,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
         ee.getQuantitationTypes().addAll( qt2Vec.keySet() );
 
         // remove processed vectors
-        expressionExperimentService.removeProcessedDataVectors( ee );
+        processedExpressionDataVectorService.removeProcessedDataVectors( ee );
 
         this.cleanUp( ee, allOldBioAssayDims, newBioAd );
 

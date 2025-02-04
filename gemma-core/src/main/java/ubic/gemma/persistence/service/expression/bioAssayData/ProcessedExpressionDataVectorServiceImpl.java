@@ -95,6 +95,8 @@ public class ProcessedExpressionDataVectorServiceImpl
         if ( updateRanks ) {
             updateRanks( expressionExperiment );
         }
+        // cached vectors are no-longer valid
+        cachedProcessedExpressionDataVectorService.evict( expressionExperiment );
         return created;
     }
 
@@ -112,7 +114,23 @@ public class ProcessedExpressionDataVectorServiceImpl
         if ( updateRanks ) {
             updateRanks( ee );
         }
+        cachedProcessedExpressionDataVectorService.evict( ee );
         return replaced;
+    }
+
+    @Override
+    @Transactional
+    public int removeProcessedDataVectors( ExpressionExperiment ee ) {
+        int removed;
+        try {
+            removed = expressionExperimentService.removeProcessedDataVectors( ee );
+            auditTrailService.addUpdateEvent( ee, ProcessedVectorComputationEvent.class, String.format( "Removed processed expression data for %s.", ee ) );
+        } catch ( Exception e ) {
+            auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.class, "Failed to remove processed expression data vectors.", e );
+            throw e;
+        }
+        cachedProcessedExpressionDataVectorService.evict( ee );
+        return removed;
     }
 
     @Override
@@ -120,6 +138,7 @@ public class ProcessedExpressionDataVectorServiceImpl
     public void reorderByDesign( ExpressionExperiment ee ) {
         this.helperService.reorderByDesign( ee );
         this.auditTrailService.addUpdateEvent( ee, "Reordered the data vectors by experimental design" );
+        cachedProcessedExpressionDataVectorService.evict( ee );
     }
 
     @Override
@@ -127,6 +146,7 @@ public class ProcessedExpressionDataVectorServiceImpl
     public void updateRanks( ExpressionExperiment ee ) {
         try {
             helperService.updateRanks( ee );
+            cachedProcessedExpressionDataVectorService.evict( ee );
         } catch ( Exception e ) {
             auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.class, "Failed to update ranks for expression data vectors.", e );
             throw e;
@@ -233,6 +253,12 @@ public class ProcessedExpressionDataVectorServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe( ExpressionExperiment ee, Collection<CompositeSequence> compositeSequences ) {
+        return cachedProcessedExpressionDataVectorService.getProcessedDataArraysByProbe( ee, compositeSequences );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe( Collection<ExpressionExperiment> expressionExperiments, Collection<CompositeSequence> compositeSequences ) {
         return cachedProcessedExpressionDataVectorService.getProcessedDataArraysByProbe( expressionExperiments, compositeSequences );
     }
@@ -298,7 +324,10 @@ public class ProcessedExpressionDataVectorServiceImpl
         }
 
         Collection<DoubleVectorValueObject> processedDataArraysByProbe = cachedProcessedExpressionDataVectorService.getProcessedDataArraysByProbeIds( analyzedSet, probes );
-        List<DoubleVectorValueObject> dedvs = new ArrayList<>( processedDataArraysByProbe );
+        // create a deep copy because we're going to modify it (with p-values)
+        List<DoubleVectorValueObject> dedvs = processedDataArraysByProbe.stream()
+                .map( DoubleVectorValueObject::copy )
+                .collect( Collectors.toList() );
 
         /*
          * Resort

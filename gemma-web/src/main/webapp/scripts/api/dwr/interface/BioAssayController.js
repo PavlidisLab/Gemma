@@ -1,4 +1,4 @@
-/* this code is generated, see generate-dwr-client.sh for details */
+/* this code is generated, see generate-dwr-client.py for details */
 var BioAssayController = {};
 BioAssayController._path = '/dwr';
 BioAssayController.markOutlier = function(p0, callback) {

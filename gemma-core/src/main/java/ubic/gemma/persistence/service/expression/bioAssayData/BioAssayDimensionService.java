@@ -43,7 +43,7 @@ public interface BioAssayDimensionService
     BioAssayDimension create( BioAssayDimension bioAssayDimension );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
-    Collection<BioAssayDimension> findByBioAssayContainsAll( Collection<BioAssay> bioAssays );
+    Collection<BioAssayDimension> findByBioAssaysContainingAll( Collection<BioAssay> bioAssays );
 
     @Override
     @Secured({ "GROUP_USER" })

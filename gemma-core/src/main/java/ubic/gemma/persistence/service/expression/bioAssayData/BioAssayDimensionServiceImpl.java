@@ -53,8 +53,8 @@ public class BioAssayDimensionServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<BioAssayDimension> findByBioAssayContainsAll( Collection<BioAssay> bioAssays ) {
-        return bioAssayDimensionDao.findByBioAssayContainsAll( bioAssays );
+    public Collection<BioAssayDimension> findByBioAssaysContainingAll( Collection<BioAssay> bioAssays ) {
+        return bioAssayDimensionDao.findByBioAssaysContainingAll( bioAssays );
     }
 
     @Override

@@ -1,4 +1,4 @@
-/* this code is generated, see generate-dwr-client.sh for details */
+/* this code is generated, see generate-dwr-client.py for details */
 var GeneController = {};
 GeneController._path = '/dwr';
 GeneController.loadGeneDetails = function(p0, callback) {

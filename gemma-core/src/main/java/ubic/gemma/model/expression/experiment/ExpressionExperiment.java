@@ -111,11 +111,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     private Set<Characteristic> allCharacteristics;
 
     @Override
-    public ExpressionExperimentValueObject createValueObject() {
-        return new ExpressionExperimentValueObject( this );
-    }
-
-    @Override
     @DocumentId
     public Long getId() {
         return super.getId();

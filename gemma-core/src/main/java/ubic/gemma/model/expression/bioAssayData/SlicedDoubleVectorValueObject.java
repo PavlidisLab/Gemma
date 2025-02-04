@@ -1,5 +1,6 @@
 package ubic.gemma.model.expression.bioAssayData;
 
+import lombok.Data;
 import org.apache.commons.lang3.ArrayUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
@@ -9,9 +10,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
 
+@Data
 public class SlicedDoubleVectorValueObject extends DoubleVectorValueObject {
 
-    private final Long sourceVectorId;
+    /**
+     * Obtain the ID of the vector from which this slice is derived from.
+     */
+    private Long sourceVectorId;
 
     /**
      * Constructor for creating a slice.
@@ -34,11 +39,14 @@ public class SlicedDoubleVectorValueObject extends DoubleVectorValueObject {
         setData( ArrayUtils.toPrimitive( values.toArray( new Double[] {} ) ) );
     }
 
-    /**
-     * Obtain the ID of the vector from which this slice is derived from.
-     */
-    public Long getSourceVectorId() {
-        return sourceVectorId;
+    protected SlicedDoubleVectorValueObject( SlicedDoubleVectorValueObject other ) {
+        super( other );
+        this.sourceVectorId = other.sourceVectorId;
+    }
+
+    @Override
+    public DoubleVectorValueObject copy() {
+        return new SlicedDoubleVectorValueObject( this );
     }
 
     @Override

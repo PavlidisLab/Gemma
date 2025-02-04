@@ -14,7 +14,7 @@ from os.path import dirname, join
 gemma_host_url = os.getenv('GEMMA_HOST') or 'https://gemma.msl.ubc.ca'
 header = "/* this code is generated, see generate-dwr-client.py for details */"
 dwr_script_dir = join(dirname(__file__), "src/main/webapp/scripts/api/dwr")
-session_id = getpass('Supply your JSESSIONID for ' + gemma_host_url + ': ')
+session_id = os.getenv('GEMMA_SESSION_ID') or getpass('Supply your JSESSIONID for ' + gemma_host_url + ': ')
 
 with requests.Session() as session:
     session.cookies['JSESSIONID'] = session_id

@@ -46,11 +46,6 @@ public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredCh
     public ExpressionExperimentSubSet() {
     }
 
-    @Override
-    public ExpressionExperimentValueObject createValueObject() {
-        return new ExpressionExperimentSubsetValueObject( this );
-    }
-
     @Transient
     @Override
     public Securable getSecurityOwner() {

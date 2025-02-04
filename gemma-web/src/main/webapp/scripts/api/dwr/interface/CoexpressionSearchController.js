@@ -1,4 +1,4 @@
-/* this code is generated, see generate-dwr-client.sh for details */
+/* this code is generated, see generate-dwr-client.py for details */
 var CoexpressionSearchController = {};
 CoexpressionSearchController._path = '/dwr';
 CoexpressionSearchController.doBackgroundCoexSearch = function(p0, callback) {

@@ -24,8 +24,9 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
+import ubic.gemma.model.expression.experiment.BioAssaySetValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubsetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.util.IdentifiableUtils;
@@ -45,7 +46,7 @@ public class VisualizationValueObject {
 
     private final Map<Long, String> colorMap = new HashMap<>();
 
-    private ExpressionExperimentDetailsValueObject eevo = null;
+    private BioAssaySetValueObject eevo = null;
 
     private LinkedHashMap<String, LinkedHashMap<String, String>> factorNames; // map of factor name to value-colour map
 
@@ -84,7 +85,7 @@ public class VisualizationValueObject {
 
         for ( DoubleVectorValueObject vector : vectors ) {
             if ( this.eevo == null ) {
-                this.setEEwithPvalue( new ExpressionExperimentDetailsValueObject( vector.getExpressionExperiment() ),
+                this.setEEwithPvalue( vector.getExpressionExperiment(),
                         minPvalue );
             } else if ( !( this.eevo.getId().equals( vector.getExpressionExperiment().getId() ) ) ) {
                 throw new IllegalArgumentException(
@@ -145,8 +146,7 @@ public class VisualizationValueObject {
 
         for ( DoubleVectorValueObject vector : vectors ) {
             if ( this.eevo == null ) {
-                this.setEEwithPvalue( new ExpressionExperimentDetailsValueObject( vector.getExpressionExperiment() ),
-                        minPvalue );
+                this.setEEwithPvalue( vector.getExpressionExperiment(), minPvalue );
             } else if ( !( this.eevo.getId().equals( vector.getExpressionExperiment().getId() ) ) ) {
                 throw new IllegalArgumentException(
                         "All vectors have to have the same ee for this constructor. ee1: " + this.eevo.getId()
@@ -184,7 +184,7 @@ public class VisualizationValueObject {
 
     public VisualizationValueObject( DoubleVectorValueObject dvvo ) {
         this();
-        this.setEevo( new ExpressionExperimentDetailsValueObject( dvvo.getExpressionExperiment() ) );
+        this.setEevo( dvvo.getExpressionExperiment() );
         GeneExpressionProfile profile = new GeneExpressionProfile( dvvo );
         profiles.add( profile );
     }
@@ -221,11 +221,11 @@ public class VisualizationValueObject {
         }
     }
 
-    public ExpressionExperimentValueObject getEevo() {
+    public BioAssaySetValueObject getEevo() {
         return eevo;
     }
 
-    public void setEevo( ExpressionExperimentDetailsValueObject eevo ) {
+    public void setEevo( BioAssaySetValueObject eevo ) {
         this.eevo = eevo;
     }
 
@@ -277,9 +277,17 @@ public class VisualizationValueObject {
         this.sampleNames = sampleNames;
     }
 
-    public void setEEwithPvalue( ExpressionExperimentDetailsValueObject ee, Double minP ) {
+    public void setEEwithPvalue( BioAssaySetValueObject ee, Double minP ) {
+        if ( ee instanceof ExpressionExperimentValueObject ) {
+            ( ( ExpressionExperimentValueObject ) ee )
+                    .setMinPvalue( minP );
+        } else if ( ee instanceof ExpressionExperimentSubsetValueObject ) {
+            ( ( ExpressionExperimentSubsetValueObject ) ee )
+                    .setMinPvalue( minP );
+        } else {
+            log.warn( "Cannot set min P-value on " + ee + "." );
+        }
         this.setEevo( ee );
-        this.eevo.setMinPvalue( minP );
     }
 
     private void populateColorMap( List<Long> genes ) {

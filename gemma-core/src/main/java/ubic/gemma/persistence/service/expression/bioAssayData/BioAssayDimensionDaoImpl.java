@@ -104,7 +104,7 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
     }
 
     @Override
-    public Collection<BioAssayDimension> findByBioAssayContainsAll( Collection<BioAssay> bioAssays ) {
+    public Collection<BioAssayDimension> findByBioAssaysContainingAll( Collection<BioAssay> bioAssays ) {
         if ( bioAssays.isEmpty() ) {
             return Collections.emptySet();
         }

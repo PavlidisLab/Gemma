@@ -1,4 +1,4 @@
-/* this code is generated, see generate-dwr-client.sh for details */
+/* this code is generated, see generate-dwr-client.py for details */
 var CompositeSequenceController = {};
 CompositeSequenceController._path = '/dwr';
 CompositeSequenceController.search = function(p0, p1, callback) {

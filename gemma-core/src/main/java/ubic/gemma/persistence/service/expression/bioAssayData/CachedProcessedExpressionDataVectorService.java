@@ -9,8 +9,9 @@ import java.util.Collection;
 /**
  * A service that provides cached {@link ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector} in the
  * form of {@link DoubleVectorValueObject}.
+ * @see ProcessedExpressionDataVectorService
  */
-public interface CachedProcessedExpressionDataVectorService {
+interface CachedProcessedExpressionDataVectorService {
 
     /**
      * Retrieve processed vectors for a given experiment or subset.
@@ -32,6 +33,8 @@ public interface CachedProcessedExpressionDataVectorService {
      */
     Collection<DoubleVectorValueObject> getProcessedDataArrays( Collection<? extends BioAssaySet> expressionExperiments, Collection<Long> genes );
 
+    Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe( BioAssaySet ee, Collection<CompositeSequence> compositeSequences );
+
     /**
      * Retrieves processed vectors by probes and experiments
      *
@@ -42,4 +45,9 @@ public interface CachedProcessedExpressionDataVectorService {
     Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe( Collection<? extends BioAssaySet> expressionExperiments, Collection<CompositeSequence> probes );
 
     Collection<DoubleVectorValueObject> getProcessedDataArraysByProbeIds( BioAssaySet ee, Collection<Long> probes );
+
+    /**
+     * Evict the cache(s) for the given BioAssaySet.
+     */
+    void evict( BioAssaySet bas );
 }

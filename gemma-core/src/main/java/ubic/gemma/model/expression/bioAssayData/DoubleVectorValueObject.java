@@ -19,15 +19,19 @@
 package ubic.gemma.model.expression.bioAssayData;
 
 import cern.colt.list.DoubleArrayList;
+import lombok.Data;
 import org.springframework.util.Assert;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -35,22 +39,30 @@ import java.util.*;
  *
  * @author paul
  */
-@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
+@Data
 public class DoubleVectorValueObject extends DataVectorValueObject {
 
     private static final long serialVersionUID = -5116242513725297615L;
 
     private double[] data = null;
     private boolean masked = false;
+    /**
+     * True if the data has been rearranged relative to the bioassay dimension (as a matter of practice the
+     * bioassay dimension should be set to null if it is not valid; this boolean is an additional check)
+     */
     private boolean reorganized = false;
     private Double pvalue;
     private Double rank;
     private Double rankByMax;
     private Double rankByMean;
 
-    public DoubleVectorValueObject( BulkExpressionDataVector dedv, Collection<Long> genes,
-            BioAssayDimensionValueObject badVo ) {
-        super( dedv, genes, badVo );
+    public DoubleVectorValueObject() {
+
+    }
+
+    public DoubleVectorValueObject( BulkExpressionDataVector dedv, ExpressionExperimentValueObject eevo,
+            QuantitationTypeValueObject qtvo, BioAssayDimensionValueObject badVo, @Nullable Collection<Long> genes ) {
+        super( dedv, eevo, qtvo, badVo, genes );
         QuantitationType qt = dedv.getQuantitationType();
         if ( !qt.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
             throw new IllegalArgumentException(
@@ -65,17 +77,13 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
             this.rankByMean = ( ( ProcessedExpressionDataVector ) dedv ).getRankByMean();
         }
 
-        int i = 0;
-        for ( BioAssayValueObject bVo : this.getBioAssays() ) {
+        List<BioAssayValueObject> bioAssays = this.getBioAssays();
+        for ( int j = 0; j < bioAssays.size(); j++ ) {
+            BioAssayValueObject bVo = bioAssays.get( j );
             if ( bVo.isOutlier() ) {
-                data[i] = Double.NaN;
+                data[j] = Double.NaN;
             }
-            i++;
         }
-    }
-
-    public DoubleVectorValueObject( BulkExpressionDataVector dedv, BioAssayDimensionValueObject badVo ) {
-        this( dedv, null, badVo );
     }
 
     /**
@@ -87,26 +95,23 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      * @param dedv dedv
      * @param vectorsBadVo BA dimension vo
      */
-    public DoubleVectorValueObject( BulkExpressionDataVector dedv, BioAssayDimensionValueObject vectorsBadVo,
-            Collection<Long> genes, BioAssayDimension dimToMatch ) {
-        this( dedv, genes, vectorsBadVo );
-
+    public DoubleVectorValueObject( BulkExpressionDataVector dedv, ExpressionExperimentValueObject eevo, QuantitationTypeValueObject qtvo, BioAssayDimensionValueObject vectorsBadVo, @Nullable Collection<Long> genes, BioAssayDimension dimToMatch ) {
+        this( dedv, eevo, qtvo, vectorsBadVo, genes );
         if ( dimToMatch.getBioAssays().size() != this.data.length ) {
             this.addGaps( dimToMatch );
         }
-
     }
 
     /**
      * Copy constructor.
      */
-    public DoubleVectorValueObject( DoubleVectorValueObject dvvo ) {
+    protected DoubleVectorValueObject( DoubleVectorValueObject dvvo ) {
         super( dvvo );
-        this.masked = dvvo.isMasked();
-        this.reorganized = dvvo.isReorganized();
-        this.data = dvvo.getData();
-        this.pvalue = dvvo.getPvalue();
-        this.rank = dvvo.getRank();
+        this.masked = dvvo.masked;
+        this.reorganized = dvvo.reorganized;
+        this.data = Arrays.copyOf( dvvo.getData(), dvvo.getData().length );
+        this.pvalue = dvvo.pvalue;
+        this.rank = dvvo.rank;
         this.rankByMax = dvvo.rankByMax;
         this.rankByMean = dvvo.rankByMean;
     }
@@ -123,56 +128,13 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
                 && Arrays.equals( data, other.data );
     }
 
-    public double[] getData() {
-        return data;
-    }
-
-    public void setData( double[] data ) {
-        this.data = data;
-    }
-
-    public Double getPvalue() {
-        return pvalue;
-    }
-
-    public void setPvalue( Double pvalue ) {
-        this.pvalue = pvalue;
-    }
-
-    public Double getRank() {
-        return rank;
-    }
-
-    public void setRank( Double rank ) {
-        this.rank = rank;
-    }
-
-    public Double getRankByMax() {
-        return rankByMax;
-    }
-
-    public Double getRankByMean() {
-        return rankByMean;
-    }
-
-    public boolean isMasked() {
-        return masked;
-    }
-
-    public void setMasked( boolean masked ) {
-        this.masked = masked;
-    }
-
     /**
-     * @return true if the data has been rearranged relative to the bioassay dimension (as a matter of practice the
-     *         bioassay dimension should be set to null if it is not valid; this boolean is an additional check)
+     * Create a copy of this vector.
+     * <p>
+     * Use this if you intend to modify it as the original might be stored in a shared cache.
      */
-    public boolean isReorganized() {
-        return reorganized;
-    }
-
-    public void setReorganized( boolean reorganized ) {
-        this.reorganized = reorganized;
+    public DoubleVectorValueObject copy() {
+        return new DoubleVectorValueObject( this );
     }
 
     /**

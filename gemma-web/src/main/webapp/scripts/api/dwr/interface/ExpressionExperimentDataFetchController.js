@@ -1,4 +1,4 @@
-/* this code is generated, see generate-dwr-client.sh for details */
+/* this code is generated, see generate-dwr-client.py for details */
 var ExpressionExperimentDataFetchController = {};
 ExpressionExperimentDataFetchController._path = '/dwr';
 ExpressionExperimentDataFetchController.getMetadataFiles = function(p0, callback) {

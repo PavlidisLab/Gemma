@@ -1,4 +1,4 @@
-/* this code is generated, see generate-dwr-client.sh for details */
+/* this code is generated, see generate-dwr-client.py for details */
 var BioMaterialController = {};
 BioMaterialController._path = '/dwr';
 BioMaterialController.getAnnotation = function(p0, callback) {

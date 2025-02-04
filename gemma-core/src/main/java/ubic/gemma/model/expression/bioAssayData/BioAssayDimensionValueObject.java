@@ -27,6 +27,7 @@ import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -45,6 +46,7 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
     /**
      * If this is a subset, or a padded, BioAssayDimensionValueObject, the sourceBioAssayDimension is the original.
      */
+    @Nullable
     private BioAssayDimensionValueObject sourceBioAssayDimension;
 
     /**
