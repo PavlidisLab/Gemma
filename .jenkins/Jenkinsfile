@@ -5,9 +5,9 @@ def testdbUrl
 def gemmaVersion
 def baseCodeVersion
 def dataDir
-def deployDir
-def cliDir
-def cliDirSymlink
+def deployRef
+def deployServer
+def cliRef
 
 void setBuildStatus(String context, String message, String state) {
     step([
@@ -30,7 +30,7 @@ pipeline {
         string(name: 'DEV_DATA_DIR', defaultValue: '/space/sandboxgemmaData', description: 'Directory where development data is stored.')
         string(name: 'MAVEN_SITES_DIR', defaultValue: '/space/web/maven-sites', description: 'Directory where Maven sites are deployed.')
         string(name: 'CLI_DIR_PREFIX', defaultValue: '/space/opt/gemma-cli', description: 'Prefix for Gemma CLI deployment directory.')
-        string(name: 'DEPLOY_DIR_PREFIX', defaultValue: '/var/local/tomcat/gemma', description: 'Prefix for Gemma Web deployment directories.')
+        string(name: 'DEPLOY_DIR_PREFIX', defaultValue: '/var/local/tomcat', description: 'Prefix for Gemma Web deployment directories.')
         // either hotfix or release, we only have one staging server & CLI symlink
         choice(name: 'STAGING_BRANCH', choices: ['hotfix', 'release'], description: 'Branch deployed to the staging server and CLI symlink.')
         // whether or not to force integration tests
@@ -62,22 +62,23 @@ pipeline {
                         dataDir = params.DEV_DATA_DIR
                     }
                     if (env.BRANCH_NAME == 'master') {
-                        deployDir = 'moe:' + params.DEPLOY_DIR_PREFIX
+                        deployServer = 'moe'
+                        deployRef = 'gemma'
                     } else {
-                        deployDir = 'chalmers:' + params.DEPLOY_DIR_PREFIX
+                        deployServer = 'chalmers'
                         if (env.BRANCH_NAME =~ '^' + params.STAGING_BRANCH + '-.*') {
-                            deployDir += '-staging'
+                            deployRef = 'gemma-staging'
+                        } else {
+                            deployRef = 'gemma'
                         }
                     }
                     if (env.BRANCH_NAME == 'master') {
-                        cliDir = params.CLI_DIR_PREFIX + '/builds/' + buildHash
-                        cliDirSymlink = params.CLI_DIR_PREFIX + '/refs/production'
+                        cliRef = 'production'
                     } else {
-                        cliDir = params.CLI_DIR_PREFIX + '/builds/' + buildHash
                         if (env.BRANCH_NAME =~ '^' + params.STAGING_BRANCH + '-.*') {
-                            cliDirSymlink = params.CLI_DIR_PREFIX + '/refs/staging'
+                            cliRef = 'staging'
                         } else {
-                            cliDirSymlink = params.CLI_DIR_PREFIX + "/refs/${gemmaVersion}"
+                            cliRef = gemmaVersion
                         }
                     }
                 }
@@ -271,8 +272,7 @@ pipeline {
                         }
                     }
                     steps {
-                        sh "rsync gemma-web/src/main/config/log4j.properties ${deployDir}/lib/log4j.properties"
-                        sh "rsync gemma-web/target/Gemma.war ${deployDir}/Gemma.war"
+                        sh "env GEMMA_WEB_DEPLOY_SERVER=${deployServer} GEMMA_WEB_PREFIX=${params.DEPLOY_DIR_PREFIX} ./gemma-web/deploy.sh ${deployRef}"
                     }
                 }
                 stage('Deploy Gemma CLI') {
@@ -286,13 +286,7 @@ pipeline {
                         }
                     }
                     steps {
-                        script {
-                            if (fileExists(cliDir)) {
-                                error("There is already a deployed build at ${cliDir}.")
-                            }
-                        }
-                        sh "rsync -av --link-dest ${cliDirSymlink} ./gemma-cli/target/appassembler/ ${cliDir}/"
-                        sh "ln -Tsf ${cliDir} ${cliDirSymlink}"
+                        sh "env GEMMA_CLI_PREFIX=${params.CLI_DIR_PREFIX} ./gemma-cli/deploy.sh ${cliRef}"
                     }
                 }
             }
