@@ -25,6 +25,7 @@ import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPConfig;
 import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
 import ubic.gemma.core.loader.util.mapper.RenamingBioAssayMapper;
+import ubic.gemma.core.loader.util.mapper.SimpleDesignElementMapper;
 import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -715,6 +716,38 @@ public class GeoSingleCellDetectorTest extends BaseTest {
         assertThatThrownBy( () -> detector.downloadSingleCellData( series ) )
                 .isInstanceOf( UnsupportedOperationException.class )
                 .hasMessage( "MEX files were found, but single-cell data is not supported at the series level." );
+    }
+
+    /**
+     * This dataset as an array of ENUM, a raw.X and needs to be transposed.
+     */
+    @Test
+    @Category(SlowTest.class)
+    public void testGSE244451() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE244451" );
+        detector.downloadSingleCellData( series );
+        SingleCellDataLoader loader = detector.getSingleCellDataLoader( series );
+        // FIXME: the GEO metadata are not suitable for detecting the sample column
+        ( ( AnnDataSingleCellDataLoader ) loader ).setSampleFactorName( "sample_id" );
+        BioAssay ba = BioAssay.Factory.newInstance( "PPG4", null, BioMaterial.Factory.newInstance( "PPG4" ) );
+        SingleCellDimension dim = loader.getSingleCellDimension( Collections.singleton( ba ) );
+        Set<QuantitationType> qts = loader.getQuantitationTypes();
+        assertThat( qts ).hasSize( 6 );
+        QuantitationType qt = qts.stream().filter( q -> q.getName().equals( "AnnData" ) ).findAny().get();
+        assertThat( dim.getCellIds() ).hasSize( 8618 );
+        assertThat( loader.getGenes() )
+                .hasSize( 16814 );
+        assertThat( loader.getCellTypeAssignments( dim ) )
+                .hasSize( 1 );
+        assertThat( loader.getOtherCellLevelCharacteristics( dim ) )
+                .hasSize( 52 );
+        Set<CompositeSequence> designElements = Collections.singleton( CompositeSequence.Factory.newInstance( "Cdh1" ) );
+        loader.setDesignElementToGeneMapper( new SimpleDesignElementMapper( designElements ) );
+        // on-disk transposition is required, but the GeoSingleCellDetector is not setup to perform on-disk
+        // transformations as that would require passing a Python executable and a scratch directory
+        assertThatThrownBy( () -> loader.loadVectors( designElements, dim, qt ) )
+                .isInstanceOf( UnsupportedOperationException.class )
+                .hasMessage( "The matrix at 'raw/X' is stored as CSR and transposition is enabled; it must be converted to CSC for being loaded." );
     }
 
     private GeoSeries readSeriesFromGeo( String accession ) throws IOException {
