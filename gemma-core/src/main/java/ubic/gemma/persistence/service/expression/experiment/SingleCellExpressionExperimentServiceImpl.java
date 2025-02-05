@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.singleCell.SingleCellSparsityMetrics;
-import ubic.gemma.core.datastructure.matrix.DoubleSingleCellExpressionDataMatrix;
+import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.description.Categories;
@@ -127,7 +127,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( "No vector for " + quantitationType + " in " + expressionExperiment );
         }
-        return new DoubleSingleCellExpressionDataMatrix( vectors );
+        return new SingleCellExpressionDataDoubleMatrix( vectors );
     }
 
     @Override

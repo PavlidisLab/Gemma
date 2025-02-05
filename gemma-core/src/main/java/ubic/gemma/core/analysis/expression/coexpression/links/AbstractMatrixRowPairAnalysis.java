@@ -318,7 +318,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
         for ( int i = 0; i < numrows; i++ ) {
             int rowmissing = 0;
             for ( int j = 0; j < numcols; j++ ) {
-                if ( Double.isNaN( this.dataMatrix.get( i, j ) ) ) {
+                if ( Double.isNaN( this.dataMatrix.getAsDouble( i, j ) ) ) {
                     missingCount++;
                     rowmissing++;
                     used.put( i, j, false );
@@ -559,7 +559,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
             rowMapCache.put( element, de );
 
             Set<Gene> geneIdSet = this.probeToGeneMap.get( de );
-            Integer i = element.getIndex();
+            int i = element.getIndex();
             hasGenesCache[i] = geneIdSet != null && geneIdSet.size() > 0;
 
         }

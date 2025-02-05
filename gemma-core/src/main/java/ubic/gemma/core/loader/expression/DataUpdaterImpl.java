@@ -16,7 +16,6 @@ package ubic.gemma.core.loader.expression;
 
 import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -682,8 +681,8 @@ public class DataUpdaterImpl implements DataUpdater {
     private void addTotalCountInformation( ExpressionExperiment ee, ExpressionDataDoubleMatrix countEEMatrix,
             @Nullable Integer readLength, @Nullable Boolean isPairedReads ) {
         for ( BioAssay ba : ee.getBioAssays() ) {
-            Double[] col = countEEMatrix.getColumn( ba );
-            long librarySize = ( long ) Math.floor( DescriptiveWithMissing.sum( new DoubleArrayList( ArrayUtils.toPrimitive( col ) ) ) );
+            double[] col = countEEMatrix.getColumnAsDoubles( ba );
+            long librarySize = ( long ) Math.floor( DescriptiveWithMissing.sum( new DoubleArrayList( col ) ) );
 
             if ( librarySize <= 0 ) {
                 // unlike readLength and isPairedReads, we might want to use this value! Sanity check, anyway.
@@ -1004,7 +1003,7 @@ public class DataUpdaterImpl implements DataUpdater {
             vector.setQuantitationType( qt );
             vector.setExpressionExperiment( ee );
             vector.setBioAssayDimension( bioAssayDimension );
-            vector.setDataAsDoubles( data.getRawRow( i ) );
+            vector.setDataAsDoubles( data.getRowAsDoubles( i ) );
             vectors.add( vector );
         }
         return vectors;

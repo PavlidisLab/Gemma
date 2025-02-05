@@ -198,7 +198,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
         boolean found = false;
         for ( int i = 0; i < mat.rows(); i++ ) {
-            Double[] row = mat.getRow( i );
+            double[] row = mat.getRowAsDoubles( i );
 
             // debugging
             if ( i == 0 ) {
@@ -209,7 +209,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             }
             System.err.print( mat.getRowElement( i ).getDesignElement().getName() + "\t" );
             for ( double d : row ) {
-                System.err.print( String.format( "%4.2f\t", d ) );
+                System.err.printf( "%4.2f\t", d );
             }
             System.err.print( "\n" );
 

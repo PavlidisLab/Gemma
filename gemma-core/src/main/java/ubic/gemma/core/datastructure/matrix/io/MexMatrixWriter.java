@@ -10,7 +10,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.springframework.util.Assert;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.datastructure.matrix.DoubleSingleCellExpressionDataMatrix;
+import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -264,11 +264,11 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
     }
 
     private void writeMatrix( SingleCellExpressionDataMatrix<?> mat, int sampleIndex, OutputStream out ) {
-        Assert.isInstanceOf( DoubleSingleCellExpressionDataMatrix.class, mat );
-        writeDoubleMatrix( ( DoubleSingleCellExpressionDataMatrix ) mat, sampleIndex, out );
+        Assert.isInstanceOf( SingleCellExpressionDataDoubleMatrix.class, mat );
+        writeDoubleMatrix( ( SingleCellExpressionDataDoubleMatrix ) mat, sampleIndex, out );
     }
 
-    private void writeDoubleMatrix( DoubleSingleCellExpressionDataMatrix mat, int sampleIndex, OutputStream out ) {
+    private void writeDoubleMatrix( SingleCellExpressionDataDoubleMatrix mat, int sampleIndex, OutputStream out ) {
         CompRowMatrix matrix = mat.getMatrix();
         int[] rowptr = matrix.getRowPointers();
         int[] colind = matrix.getColumnIndices();

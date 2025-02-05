@@ -29,7 +29,7 @@ import ubic.gemma.core.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -164,9 +164,9 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
         ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vecs );
 
-        ExpressionDataMatrix<Double> matrix = builder.getProcessedData();
-        double a = matrix.get( 0, 0 );
-        double b = matrix.get( 0, 1 );
+        ExpressionDataDoubleMatrix matrix = builder.getProcessedData();
+        double a = matrix.getAsDouble( 0, 0 );
+        double b = matrix.getAsDouble( 0, 1 );
         assertTrue( a - b != 0.0 );
     }
 

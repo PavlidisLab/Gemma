@@ -103,7 +103,7 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
     private MeanVarianceRelation calculateMeanVariance( ExpressionDataDoubleMatrix matrix ) {
         DoubleMatrix2D mat = new DenseDoubleMatrix2D( matrix.rows(), matrix.columns() );
         for ( int row = 0; row < mat.rows(); row++ ) {
-            mat.viewRow( row ).assign( matrix.getRawRow( row ) );
+            mat.viewRow( row ).assign( matrix.getRowAsDoubles( row ) );
         }
         MeanVarianceEstimator mve = new MeanVarianceEstimator( mat );
 

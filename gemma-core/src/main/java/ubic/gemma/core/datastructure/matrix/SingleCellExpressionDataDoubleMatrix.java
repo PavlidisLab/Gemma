@@ -1,6 +1,7 @@
 package ubic.gemma.core.datastructure.matrix;
 
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
+import org.apache.commons.lang.ArrayUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.core.datastructure.SparseRangeArrayList;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -11,12 +12,14 @@ import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author poirigui
  */
-public class DoubleSingleCellExpressionDataMatrix implements SingleCellExpressionDataMatrix<Double> {
+public class SingleCellExpressionDataDoubleMatrix implements SingleCellExpressionDataMatrix<Double>, ExpressionDataPrimitiveDoubleMatrix {
 
     private static final Comparator<CompositeSequence> designElementComparator = Comparator.comparing( CompositeSequence::getName )
             .thenComparing( CompositeSequence::getId );
@@ -30,7 +33,13 @@ public class DoubleSingleCellExpressionDataMatrix implements SingleCellExpressio
 
     private final double defaultValue;
 
-    public DoubleSingleCellExpressionDataMatrix( Collection<SingleCellExpressionDataVector> vectors ) {
+    /**
+     * Row elements, only computed on-demand.
+     */
+    @Nullable
+    private List<ExpressionDataMatrixRowElement> rowElements = null;
+
+    public SingleCellExpressionDataDoubleMatrix( Collection<SingleCellExpressionDataVector> vectors ) {
         Assert.isTrue( !vectors.isEmpty(), "At least one vector must be supplied. Use EmptyExpressionDataMatrix for empty data matrices instead." );
         Assert.isTrue( vectors.stream().map( SingleCellExpressionDataVector::getQuantitationType ).distinct().count() == 1,
                 "All vectors must have the same quantitation type." );
@@ -95,6 +104,11 @@ public class DoubleSingleCellExpressionDataMatrix implements SingleCellExpressio
 
     @Override
     public Double get( int row, int column ) {
+        return getAsDouble( row, column );
+    }
+
+    @Override
+    public double getAsDouble( int row, int column ) {
         double result = matrix.get( row, column );
         if ( result == 0 && defaultValue != 0 ) {
             int j = Arrays.binarySearch( matrix.getColumnIndices(), matrix.getRowPointers()[row], matrix.getRowPointers()[row + 1], column );
@@ -107,7 +121,12 @@ public class DoubleSingleCellExpressionDataMatrix implements SingleCellExpressio
 
     @Override
     public Double[] getColumn( int column ) {
-        Double[] vec = new Double[rows()];
+        return ArrayUtils.toObject( getColumnAsDoubles( column ) );
+    }
+
+    @Override
+    public double[] getColumnAsDoubles( int column ) {
+        double[] vec = new double[rows()];
         for ( int i = 0; i < vec.length; i++ ) {
             vec[i] = get( i, column );
         }
@@ -126,11 +145,17 @@ public class DoubleSingleCellExpressionDataMatrix implements SingleCellExpressio
 
     @Override
     public List<String> getCellIds() {
+        if ( singleCellDimension.getCellIds() == null ) {
+            throw new IllegalStateException( "Cell IDs are not loaded in the single-cell dimension." );
+        }
         return singleCellDimension.getCellIds();
     }
 
     @Override
     public String getCellIdForColumn( int j ) {
+        if ( singleCellDimension.getCellIds() == null ) {
+            throw new IllegalStateException( "Cell IDs are not loaded in the single-cell dimension." );
+        }
         return singleCellDimension.getCellIds().get( j );
     }
 
@@ -146,16 +171,26 @@ public class DoubleSingleCellExpressionDataMatrix implements SingleCellExpressio
 
     @Override
     public Double[] getRow( CompositeSequence designElement ) {
+        return ArrayUtils.toObject( getRowAsDoubles( designElement ) );
+    }
+
+    @Override
+    public double[] getRowAsDoubles( CompositeSequence designElement ) {
         int ix = getRowIndex( designElement );
         if ( ix == -1 ) {
             return null;
         }
-        return getRow( ix );
+        return getRowAsDoubles( ix );
     }
 
     @Override
     public Double[] getRow( int index ) {
-        Double[] vec = new Double[matrix.numColumns()];
+        return ArrayUtils.toObject( getRowAsDoubles( index ) );
+    }
+
+    @Override
+    public double[] getRowAsDoubles( int index ) {
+        double[] vec = new double[matrix.numColumns()];
         Arrays.fill( vec, defaultValue );
         int[] rowptr = matrix.getRowPointers();
         int[] colind = matrix.getColumnIndices();
@@ -172,6 +207,35 @@ public class DoubleSingleCellExpressionDataMatrix implements SingleCellExpressio
     }
 
     @Override
+    public List<ExpressionDataMatrixRowElement> getRowElements() {
+        if ( rowElements == null ) {
+            rowElements = designElements.stream()
+                    .map( de -> new ExpressionDataMatrixRowElement( this, getRowIndex( de ) ) )
+                    .collect( Collectors.toList() );
+        }
+        return rowElements;
+    }
+
+    @Override
+    public ExpressionDataMatrixRowElement getRowElement( int row ) {
+        if ( rowElements != null ) {
+            return rowElements.get( row );
+        } else {
+            return new ExpressionDataMatrixRowElement( this, row );
+        }
+    }
+
+    @Nullable
+    @Override
+    public ExpressionDataMatrixRowElement getRowElement( CompositeSequence designElement ) {
+        int i = getRowIndex( designElement );
+        if ( i == -1 ) {
+            return null;
+        }
+        return getRowElement( i );
+    }
+
+    @Override
     public int rows() {
         return matrix.numRows();
     }
@@ -185,5 +249,4 @@ public class DoubleSingleCellExpressionDataMatrix implements SingleCellExpressio
     public SingleCellDimension getSingleCellDimension() {
         return singleCellDimension;
     }
-
 }

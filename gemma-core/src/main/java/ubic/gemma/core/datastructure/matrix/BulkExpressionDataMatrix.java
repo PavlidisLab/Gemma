@@ -6,8 +6,10 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 
@@ -40,6 +42,13 @@ import java.util.List;
  * @see BulkExpressionDataVector
  */
 public interface BulkExpressionDataMatrix<T> extends ExpressionDataMatrix<T> {
+
+    /**
+     * The experiment this matrix is associated with, if known.
+     */
+    @Nullable
+    @Override
+    ExpressionExperiment getExpressionExperiment();
 
     /**
      * Return the quantitation types for this matrix. Often (usually) there will be just one.
@@ -103,12 +112,6 @@ public interface BulkExpressionDataMatrix<T> extends ExpressionDataMatrix<T> {
      */
     T[][] getColumns( List<BioAssay> bioAssays );
 
-
-    /**
-     * @return list of elements representing the row 'labels'.
-     */
-    List<ExpressionDataMatrixRowElement> getRowElements();
-
     /**
      * Number of columns that use the given design element. Useful if the matrix includes data from more than one array
      * design.
@@ -127,9 +130,14 @@ public interface BulkExpressionDataMatrix<T> extends ExpressionDataMatrix<T> {
 
     /**
      * @param bioMaterial bm
-     * @return the index of the column for the data for the bioMaterial.
+     * @return the index of the column for the data for the bioMaterial, or -1 if missing
      */
     int getColumnIndex( BioMaterial bioMaterial );
+
+    /**
+     * @return the index of the column for the data for the bioAssay, or -1 if missing
+     */
+    int getColumnIndex( BioAssay bioAssay );
 
     /**
      * Produce a BioAssayDimension representing the matrix columns for a specific row. The designelement argument is

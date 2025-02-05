@@ -370,7 +370,7 @@ public class ExpressionExperimentFilter {
 
         for ( int i = 0; i < eeDoubleMatrix.rows(); i++ ) {
             for ( int j = 0; j < eeDoubleMatrix.columns(); j++ ) {
-                double v = eeDoubleMatrix.get( i, j );
+                double v = eeDoubleMatrix.getAsDouble( i, j );
                 if ( v > 20 ) {
                     ExpressionExperimentFilter.log.info( "Data has large values, doesn't look log transformed" );
                     return false;

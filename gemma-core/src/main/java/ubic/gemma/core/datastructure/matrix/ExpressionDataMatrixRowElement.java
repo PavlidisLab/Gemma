@@ -26,21 +26,19 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
  *
  * @author pavlidis
  */
-@SuppressWarnings("unused") // Possible external use
 public class ExpressionDataMatrixRowElement implements Comparable<ExpressionDataMatrixRowElement> {
 
-    private CompositeSequence designElement;
-
-    private Integer index;
+    private final CompositeSequence designElement;
+    private final int index;
 
     public ExpressionDataMatrixRowElement( ExpressionDataMatrix<?> matrix, int i ) {
-        this.index = i;
         this.designElement = matrix.getDesignElementForRow( i );
+        this.index = i;
     }
 
     public ExpressionDataMatrixRowElement( ExpressionDataMatrixRowElement toCopy ) {
-        this.index = toCopy.getIndex();
         this.designElement = toCopy.getDesignElement();
+        this.index = toCopy.getIndex();
     }
 
     @Override
@@ -52,32 +50,23 @@ public class ExpressionDataMatrixRowElement implements Comparable<ExpressionData
         return designElement;
     }
 
-    public void setDesignElement( CompositeSequence designElement ) {
-        this.designElement = designElement;
-    }
-
-    public Integer getIndex() {
+    public int getIndex() {
         return index;
-    }
-
-    public void setIndex( Integer index ) {
-        this.index = index;
     }
 
     @Override
     public int hashCode() {
-        return index.hashCode();
+        return Integer.hashCode( index );
     }
 
     @Override
     public boolean equals( Object obj ) {
-        return obj instanceof ExpressionDataMatrixRowElement && this.index
-                .equals( ( ( ExpressionDataMatrixRowElement ) obj ).getIndex() );
+        return obj instanceof ExpressionDataMatrixRowElement
+                && this.index == ( ( ( ExpressionDataMatrixRowElement ) obj ).getIndex() );
     }
 
     @Override
     public String toString() {
         return designElement.getName() + " " + designElement.getId();
     }
-
 }

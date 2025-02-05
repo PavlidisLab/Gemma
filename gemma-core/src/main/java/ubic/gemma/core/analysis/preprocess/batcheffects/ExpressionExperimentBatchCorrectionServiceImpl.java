@@ -221,7 +221,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
                     skip++;
                     continue; // leave it alone; normally this will be an NaN.
                 }
-                originalDataMatrix.set( i, j, correctedMatrix.get( i, j - skip ) );
+                originalDataMatrix.set( i, j, correctedMatrix.getAsDouble( i, j - skip ) );
             }
         }
 

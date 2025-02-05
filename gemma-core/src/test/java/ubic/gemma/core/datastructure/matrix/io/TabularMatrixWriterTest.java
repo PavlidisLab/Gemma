@@ -2,7 +2,7 @@ package ubic.gemma.core.datastructure.matrix.io;
 
 import org.junit.Before;
 import org.junit.Test;
-import ubic.gemma.core.datastructure.matrix.DoubleSingleCellExpressionDataMatrix;
+import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
@@ -31,7 +31,7 @@ public class TabularMatrixWriterTest {
     public void testWriteMatrix() throws IOException {
         setSeed( 123 );
         Collection<SingleCellExpressionDataVector> vectors = randomSingleCellVectors();
-        DoubleSingleCellExpressionDataMatrix matrix = new DoubleSingleCellExpressionDataMatrix( vectors );
+        SingleCellExpressionDataDoubleMatrix matrix = new SingleCellExpressionDataDoubleMatrix( vectors );
         byte[] blob;
         try ( ByteArrayOutputStream baos = new ByteArrayOutputStream() ) {
             writer.write( matrix, baos );

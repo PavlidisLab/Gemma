@@ -533,8 +533,8 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                 Long sequenceReadCount = ba.getSequenceReadCount();
                 if ( !ba.getIsOutlier() && ( sequenceReadCount == null || sequenceReadCount == 0 ) ) {
                     // double check.
-                    Double[] col = dmatrix.getColumn( i );
-                    double maxExpression = DescriptiveWithMissing.max( new cern.colt.list.DoubleArrayList( ArrayUtils.toPrimitive( col ) ) );
+                    double[] col = dmatrix.getColumnAsDoubles( i );
+                    double maxExpression = DescriptiveWithMissing.max( new DoubleArrayList( col ) );
                     if ( maxExpression <= 0 ) {
                         throw new IllegalStateException(
                                 "Sample has a null or zero read-count, isn't marked as an outlier, and max expression level is " + maxExpression

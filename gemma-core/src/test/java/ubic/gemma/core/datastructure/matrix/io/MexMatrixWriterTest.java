@@ -7,7 +7,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.file.PathUtils;
 import org.junit.Test;
-import ubic.gemma.core.datastructure.matrix.DoubleSingleCellExpressionDataMatrix;
+import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -33,7 +33,7 @@ public class MexMatrixWriterTest {
     @Test
     public void test() throws IOException {
         Collection<SingleCellExpressionDataVector> vectors = randomSingleCellVectors();
-        DoubleSingleCellExpressionDataMatrix matrix = new DoubleSingleCellExpressionDataMatrix( vectors );
+        SingleCellExpressionDataDoubleMatrix matrix = new SingleCellExpressionDataDoubleMatrix( vectors );
         byte[] blob;
         try ( ByteArrayOutputStream baos = new ByteArrayOutputStream() ) {
             writer.write( matrix, null, baos );

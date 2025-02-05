@@ -22,6 +22,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.util.Assert;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -50,7 +51,7 @@ import static ubic.gemma.core.util.StringUtils.abbreviateInBytes;
  * @author pavlidis
  * @author keshav
  */
-public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double> {
+public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double> implements ExpressionDataPrimitiveDoubleMatrix {
 
     private static final int MAX_ROWS_TO_STRING = 200;
     private static final long serialVersionUID = 1L;
@@ -168,7 +169,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         int i = 0;
         for ( CompositeSequence element : rowsToUse ) {
             super.addToRowMaps( i, element );
-            Double[] rowVals = sourceMatrix.getRow( element );
+            double[] rowVals = sourceMatrix.getRowAsDoubles( element );
             assert rowVals != null : "Source matrix does not have row for " + element;
 
             this.matrix.addRowName( element );
@@ -191,10 +192,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      */
     public ExpressionDataDoubleMatrix( ExpressionExperiment ee, QuantitationType qt,
             DoubleMatrix<CompositeSequence, BioMaterial> matrix ) {
-
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Experiment cannot be null" );
-        }
+        Assert.notNull( ee, "Experiment cannot be null" );
 
         if ( matrix.rows() == 0 || matrix.columns() == 0 || matrix.getRowNames().isEmpty() || matrix.getColNames()
                 .isEmpty() ) {
@@ -224,7 +222,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
         dim.setBioAssays( bioassays );
         dim.setDescription( "Built from matrix supplied to Constructor for " + ee + " from matrix" );
-        dim.setName( abbreviateInBytes( "For " + ee.getShortName() + " from matrix", "…", BioAssayDimension.MAX_NAME_LENGTH, StandardCharsets.UTF_8 ) );
+        dim.setName( abbreviateInBytes( "For " + ee.getShortName() + " from matrix", "…", BioAssayDimension.MAX_NAME_LENGTH, true, StandardCharsets.UTF_8 ) );
 
         assert !matrix.getRowNames().isEmpty();
         int i = 0;
@@ -273,7 +271,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
             CompositeSequence designElement = element.getDesignElement();
             super.addToRowMaps( i, designElement );
 
-            Double[] sourceRow = sourceMatrix.getRow( designElement );
+            double[] sourceRow = sourceMatrix.getRowAsDoubles( designElement );
 
             assert sourceRow != null : "Source matrix does not have row for " + designElement;
             bioAssayDimensions.put( designElement, reorderedDim );
@@ -310,26 +308,45 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     }
 
     @Override
+    public double getAsDouble( int row, int column ) {
+        return matrix.get( row, column );
+    }
+
+    @Override
     public Double[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays ) {
+        throw new UnsupportedOperationException( "Sorry, not implemented yet" );
+    }
+
+    public double[][] getAsDoubles( List<CompositeSequence> designElements, List<BioAssay> bioAssays ) {
         throw new UnsupportedOperationException( "Sorry, not implemented yet" );
     }
 
     @Override
     public Double[] getColumn( BioAssay bioAssay ) {
-        int index = this.columnAssayMap.get( bioAssay );
+        return getColumn( this.columnAssayMap.get( bioAssay ) );
+    }
 
-        return this.getColumn( index );
+    /**
+     * Retrieve the given column without boxing.
+     * @see #getColumn(BioAssay)
+     */
+    public double[] getColumnAsDoubles( BioAssay bioAssay ) {
+        Integer j = this.columnAssayMap.get( bioAssay );
+        if ( j == null ) {
+            return null;
+        }
+        return getColumnAsDoubles( j );
     }
 
     @Override
     public Double[] getColumn( int index ) {
-        double[] rawResult = this.matrix.getColumn( index );
-        assert rawResult != null;
-        Double[] result = new Double[rawResult.length];
-        for ( int i = 0; i < rawResult.length; i++ ) {
-            result[i] = rawResult[i];
-        }
-        return result;
+        // FIXME: DoubleMatrix.getColObj is not efficient
+        return ArrayUtils.toObject( matrix.getColumn( index ) );
+    }
+
+    @Override
+    public double[] getColumnAsDoubles( int index ) {
+        return this.matrix.getColumn( index );
     }
 
     @Override
@@ -339,34 +356,57 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     @Override
     public Double[][] getRawMatrix() {
-
         Double[][] dMatrix = new Double[matrix.rows()][matrix.columns()];
         for ( int i = 0; i < matrix.rows(); i++ ) {
-            Double[] row = matrix.getRowObj( i );
-            dMatrix[i] = row;
+            // FIXME: getRowObj() is not efficient
+            dMatrix[i] = ArrayUtils.toObject( matrix.getRow( i ) );
         }
-
         return dMatrix;
+    }
+
+    /**
+     * Obtain the raw matrix without boxing.
+     * @see #getRawMatrix()
+     */
+    public double[][] getRawMatrixAsDoubles() {
+        return matrix.getRawMatrix();
     }
 
     @Override
     public Double[] getRow( CompositeSequence designElement ) {
         Integer row = this.rowElementMap.get( designElement );
-        if ( row == null )
+        if ( row == null ) {
             return null;
+        }
         return this.getRow( row );
     }
 
     @Override
+    public double[] getRowAsDoubles( CompositeSequence designElement ) {
+        Integer row = this.rowElementMap.get( designElement );
+        if ( row == null ) {
+            return null;
+        }
+        return this.getRowAsDoubles( row );
+    }
+
+    @Override
     public Double[] getRow( int index ) {
-        double[] rawRow = matrix.getRow( index );
-        return ArrayUtils.toObject( rawRow );
+        // FIXME: DoubleMatrix.getRowObj is not efficient
+        return ArrayUtils.toObject( matrix.getRow( index ) );
+    }
+
+    @Override
+    public double[] getRowAsDoubles( int index ) {
+        return matrix.getRow( index );
     }
 
     @Override
     public boolean hasMissingValues() {
-        for ( int i = 0; i < matrix.rows(); i++ ) {
-            for ( int j = 0; j < matrix.columns(); j++ ) {
+        int rows = matrix.rows();
+        int cols = matrix.columns();
+        for ( int i = 0; i < rows; i++ ) {
+            for ( int j = 0; j < cols; j++ ) {
                 if ( Double.isNaN( matrix.get( i, j ) ) )
                     return true;
             }
@@ -403,7 +443,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
             v.setBioAssayDimension( bad );
             v.setDesignElement( this.getRowNames().get( i ) );
             v.setQuantitationType( qt );
-            v.setDataAsDoubles( this.getRawRow( i ) );
+            v.setDataAsDoubles( getRowAsDoubles( i ) );
             v.setExpressionExperiment( this.expressionExperiment );
             // we don't fill in the ranks because we only have the mean value here.
             result.add( v );
@@ -430,7 +470,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
             v.setBioAssayDimension( bad );
             v.setDesignElement( this.getRowNames().get( i ) );
             v.setQuantitationType( qt );
-            v.setDataAsDoubles( this.getRawRow( i ) );
+            v.setDataAsDoubles( getRowAsDoubles( i ) );
             v.setExpressionExperiment( this.expressionExperiment );
             // we don't fill in the ranks because we only have the mean value here.
             result.add( v );
@@ -451,10 +491,6 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      */
     public Map<CompositeSequence, Double> getRanks() {
         return this.ranks;
-    }
-
-    public double[] getRawRow( int index ) {
-        return matrix.getRow( index );
     }
 
     public List<CompositeSequence> getRowNames() {
@@ -515,11 +551,11 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
             buf.append( this.rowDesignElementMapByInteger.get( j ).getName() );
             for ( int i = 0; i < columns; i++ ) {
-                Double val = this.get( j, i );
+                double val = this.getAsDouble( j, i );
                 if ( Double.isNaN( val ) ) {
                     buf.append( "\t" ).append( val );
                 } else {
-                    buf.append( "\t" ).append( nf.format( this.get( j, i ) ) );
+                    buf.append( "\t" ).append( nf.format( this.getAsDouble( j, i ) ) );
                 }
             }
 
@@ -534,7 +570,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     }
 
     /**
-     * Convert {@link BulkExpressionDataVector}s into Double matrix.
+     * Populate this matrix from a given collection of {@link BulkExpressionDataVector}s.
      */
     @Override
     protected void vectorsToMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
@@ -562,12 +598,12 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     private DoubleMatrix<CompositeSequence, BioMaterial> createMatrix(
             Collection<? extends BulkExpressionDataVector> vectors, int maxSize ) {
 
-        int numRows = this.rowDesignElementMapByInteger.keySet().size();
+        int numRows = this.rowDesignElementMapByInteger.size();
 
         DoubleMatrix<CompositeSequence, BioMaterial> mat = new DenseDoubleMatrix<>( numRows, maxSize );
 
         for ( int j = 0; j < mat.columns(); j++ ) {
-            mat.addColumnName( this.getBioMaterialForColumn( j ) );
+            mat.addColumnName( this.columnBioMaterialMapByInteger.get( j ) );
         }
 
         // initialize the matrix to -Infinity; this marks values that are not yet initialized.

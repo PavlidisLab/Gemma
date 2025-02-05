@@ -29,9 +29,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentSplitServiceImpl.mapCellTypeAssignmentToCellTypeFactor;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.getSampleEnd;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.getSampleStart;
-import static ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentSplitServiceImpl.mapCellTypeAssignmentToCellTypeFactor;
 
 /**
  * Aggregates single-cell expression data.
@@ -297,6 +297,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
                 int cellTypeIndex = cellTypeIndices.get( sample );
                 int sourceSampleIndex = requireNonNull( sourceSampleToIndex.get( sourceSample ),
                         () -> "Could not locate the source sample of " + sample + " (" + sourceSample + ") in " + scv.getSingleCellDimension() + "." );
+                // samples are not necessarily ordered, so we cannot use the start=end trick
                 int start = getSampleStart( scv, sourceSampleIndex, 0 );
                 int end = getSampleEnd( scv, sourceSampleIndex, start );
                 for ( int k = start; k < end; k++ ) {
@@ -397,6 +398,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
             if ( cellByDesignElementByBioAssay != null ) {
                 cellByDesignElementByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + metrics.getNumberOfCellsByDesignElements( Collections.singleton( scv ), sourceSampleIndex, cta, cellTypeIndex ) );
             }
+
         }
 
         return rv;

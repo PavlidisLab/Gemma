@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -95,6 +96,16 @@ public interface ExpressionDataMatrix<T> {
      * @return the index for the given design element, or -1 if not found
      */
     int getRowIndex( CompositeSequence designElement );
+
+    /**
+     * @return list of elements representing the row 'labels'.
+     */
+    List<ExpressionDataMatrixRowElement> getRowElements();
+
+    ExpressionDataMatrixRowElement getRowElement( int row );
+
+    @Nullable
+    ExpressionDataMatrixRowElement getRowElement( CompositeSequence designElement );
 
     /**
      * Access a single value of the matrix by row and column.

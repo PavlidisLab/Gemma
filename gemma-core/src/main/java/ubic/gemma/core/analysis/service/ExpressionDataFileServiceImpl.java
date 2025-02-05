@@ -509,7 +509,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         if ( scaleType != null && qt.getScale() != scaleType ) {
             log.info( "Data will be converted from " + qt.getScale() + " to " + scaleType + "." );
         }
-        DoubleSingleCellExpressionDataMatrix matrix = new DoubleSingleCellExpressionDataMatrix( vectors );
+        SingleCellExpressionDataDoubleMatrix matrix = new SingleCellExpressionDataDoubleMatrix( vectors );
         MexMatrixWriter writer = new MexMatrixWriter();
         writer.setScaleType( scaleType );
         writer.setUseEnsemblIds( useEnsemblIds );

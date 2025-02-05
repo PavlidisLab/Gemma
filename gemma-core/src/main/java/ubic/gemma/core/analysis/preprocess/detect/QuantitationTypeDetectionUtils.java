@@ -11,7 +11,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.hibernate.LazyInitializationException;
 import ubic.basecode.math.DescriptiveWithMissing;
-import ubic.gemma.core.datastructure.matrix.DoubleSingleCellExpressionDataMatrix;
+import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -61,8 +61,8 @@ public class QuantitationTypeDetectionUtils {
         Object matrix;
         if ( expressionData instanceof ExpressionDataDoubleMatrix ) {
             matrix = new DenseDoubleMatrix2D( ( ( ExpressionDataDoubleMatrix ) expressionData ).getMatrix().asArray() );
-        } else if ( expressionData instanceof DoubleSingleCellExpressionDataMatrix ) {
-            matrix = ( ( DoubleSingleCellExpressionDataMatrix ) expressionData ).getMatrix();
+        } else if ( expressionData instanceof SingleCellExpressionDataDoubleMatrix ) {
+            matrix = ( ( SingleCellExpressionDataDoubleMatrix ) expressionData ).getMatrix();
         } else {
             throw new UnsupportedOperationException( "Unsupported expression data matrix type " + expressionData.getClass().getName() + "." );
         }

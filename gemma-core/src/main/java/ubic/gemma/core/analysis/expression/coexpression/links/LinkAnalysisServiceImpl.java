@@ -336,7 +336,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         Collection<CompositeSequence> probesForVectors = new HashSet<>();
         for ( DesignElementDataVector v : dataVectors ) {
             CompositeSequence cs = v.getDesignElement();
-            if ( eeDoubleMatrix.getRow( cs ) != null )
+            if ( eeDoubleMatrix.getRowAsDoubles( cs ) != null )
                 probesForVectors.add( cs );
         }
 

@@ -4,7 +4,7 @@ import lombok.Setter;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
-import ubic.gemma.core.datastructure.matrix.DoubleSingleCellExpressionDataMatrix;
+import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.TsvUtils;
@@ -68,9 +68,9 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
     }
 
     public int write( SingleCellExpressionDataMatrix<?> matrix, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer writer ) throws IOException {
-        Assert.isInstanceOf( DoubleSingleCellExpressionDataMatrix.class, matrix,
+        Assert.isInstanceOf( SingleCellExpressionDataDoubleMatrix.class, matrix,
                 "Only single-cell matrices of doubles are supported." );
-        CompRowMatrix mat = ( ( DoubleSingleCellExpressionDataMatrix ) matrix ).getMatrix();
+        CompRowMatrix mat = ( ( SingleCellExpressionDataDoubleMatrix ) matrix ).getMatrix();
         int[] rowptr = mat.getRowPointers();
         int[] colind = mat.getColumnIndices();
         double[] data = mat.getData();

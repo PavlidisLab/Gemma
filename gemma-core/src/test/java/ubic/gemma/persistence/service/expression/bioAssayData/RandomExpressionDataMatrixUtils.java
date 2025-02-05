@@ -48,7 +48,7 @@ public class RandomExpressionDataMatrixUtils {
         }
         for ( int i = 0; i < matrix.rows(); i++ ) {
             for ( int j = 0; j < matrix.columns(); j++ ) {
-                matrix.set( i, j, transform( matrix.get( i, j ), scaleType ) );
+                matrix.set( i, j, transform( matrix.getAsDouble( i, j ), scaleType ) );
             }
         }
         return matrix;

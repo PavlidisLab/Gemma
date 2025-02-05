@@ -270,11 +270,11 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
         DoubleArrayList rowAsList = new DoubleArrayList( new double[numCols] );
         int numAllNeg = 0;
         for ( int i = 0; i < numRows; i++ ) {
-            Double[] row = data.getRow( i );
+            double[] row = data.getRowAsDoubles( i );
             int numNeg = 0;
             /* stupid, copy into a DoubleArrayList so we can do stats */
             for ( int j = 0; j < numCols; j++ ) {
-                Double item = row[j];
+                double item = row[j];
                 if ( Double.isNaN( item ) )
                     rowAsList.set( j, Double.NaN ); // previously: we set to zero! Just leave it and use "stats with missing" classes.
                 else

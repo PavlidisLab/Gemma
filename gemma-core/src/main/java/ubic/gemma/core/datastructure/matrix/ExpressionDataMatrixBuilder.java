@@ -526,8 +526,8 @@ public class ExpressionDataMatrixBuilder {
     private void addBackgroundBack( ExpressionDataDoubleMatrix signalDataA, ExpressionDataDoubleMatrix bkgDataA ) {
         for ( int i = 0; i < signalDataA.rows(); i++ ) {
             for ( int j = 0; j < signalDataA.columns(); j++ ) {
-                double oldVal = signalDataA.get( i, j );
-                double bkg = bkgDataA.get( i, j );
+                double oldVal = signalDataA.getAsDouble( i, j );
+                double bkg = bkgDataA.getAsDouble( i, j );
                 signalDataA.set( i, j, oldVal + bkg );
             }
         }
@@ -855,7 +855,7 @@ public class ExpressionDataMatrixBuilder {
             int rowNum = el.getIndex();
             CompositeSequence del = el.getDesignElement();
 
-            if ( b.getRow( del ) == null ) {
+            if ( b.getRowAsDoubles( del ) == null ) {
                 log.warn( "Matrix 'b' is missing a row for " + del + ", it will not be subtracted" );
                 continue;
             }
@@ -890,7 +890,7 @@ public class ExpressionDataMatrixBuilder {
         for ( ExpressionDataMatrixRowElement el : a.getRowElements() ) {
             CompositeSequence del = el.getDesignElement();
 
-            if ( b.getRow( del ) == null ) {
+            if ( b.getRowAsDoubles( del ) == null ) {
                 log.warn( "Matrix 'b' is missing a row for " + del + ", this row will not be added" );
                 continue;
             }

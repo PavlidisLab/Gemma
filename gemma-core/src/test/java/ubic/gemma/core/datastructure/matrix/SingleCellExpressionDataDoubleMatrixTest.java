@@ -11,12 +11,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils.randomSingleCellVectors;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils.setSeed;
 
-public class DoubleSingleCellExpressionDataMatrixTest {
+public class SingleCellExpressionDataDoubleMatrixTest {
 
     @Test
     public void test() {
         List<SingleCellExpressionDataVector> vecs = randomSingleCellVectors();
-        DoubleSingleCellExpressionDataMatrix mat = new DoubleSingleCellExpressionDataMatrix( vecs );
+        SingleCellExpressionDataDoubleMatrix mat = new SingleCellExpressionDataDoubleMatrix( vecs );
         assertThat( mat.getBioAssays() )
                 .hasSize( 4000 );
         assertThat( mat.getCellIds() )
@@ -39,7 +39,7 @@ public class DoubleSingleCellExpressionDataMatrixTest {
     public void testLog() {
         setSeed( 123 );
         List<SingleCellExpressionDataVector> vecs = randomSingleCellVectors( 100, 4, 1000, 0.9, ScaleType.LOG2 );
-        DoubleSingleCellExpressionDataMatrix mat = new DoubleSingleCellExpressionDataMatrix( vecs );
+        SingleCellExpressionDataDoubleMatrix mat = new SingleCellExpressionDataDoubleMatrix( vecs );
         assertThat( mat.get( 1, 2 ) ).isNegative().isInfinite();
         assertThat( mat.getColumn( 2 ) )
                 .startsWith(
@@ -60,7 +60,7 @@ public class DoubleSingleCellExpressionDataMatrixTest {
     public void testLog1p() {
         setSeed( 123 );
         List<SingleCellExpressionDataVector> vecs = randomSingleCellVectors( 100, 4, 1000, 0.9, ScaleType.LOG1P );
-        DoubleSingleCellExpressionDataMatrix mat = new DoubleSingleCellExpressionDataMatrix( vecs );
+        SingleCellExpressionDataDoubleMatrix mat = new SingleCellExpressionDataDoubleMatrix( vecs );
         assertThat( mat.get( 1, 2 ) ).isZero();
         assertThat( mat.getColumn( 2 ) )
                 .startsWith(

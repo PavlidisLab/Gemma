@@ -107,7 +107,7 @@ public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
                 for ( int j = 0; j < numcols; j++ ) { // second vector
                     usedB[i][j] = used.get( i, j ); // this is only needed if we use it below, speeds things up
                     // slightly.
-                    data[i][j] = this.dataMatrix.get( i, j );
+                    data[i][j] = this.dataMatrix.getAsDouble( i, j );
                 }
             }
 
@@ -226,12 +226,12 @@ public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
             double ax = 0.0;
             double sxx = 0.0;
             for ( int j = 0; j < numcols; j++ ) {
-                ax += this.dataMatrix.get( i, j );
+                ax += this.dataMatrix.getAsDouble( i, j );
             }
             rowMeans[i] = ( ax / numcols );
 
             for ( int j = 0; j < numcols; j++ ) {
-                double xt = this.dataMatrix.get( i, j ) - rowMeans[i]; /* deviation from mean */
+                double xt = this.dataMatrix.getAsDouble( i, j ) - rowMeans[i]; /* deviation from mean */
                 sxx += xt * xt; /* sum of squared error */
             }
             rowSumSquaresSqrt[i] = Math.sqrt( sxx );
@@ -301,7 +301,7 @@ public class PearsonMetrics extends AbstractMatrixRowPairAnalysis {
             data = new double[numrows][numcols];
             for ( int i = 0; i < numrows; i++ ) { // first vector
                 for ( int j = 0; j < numcols; j++ ) { // second vector
-                    data[i][j] = this.dataMatrix.get( i, j );
+                    data[i][j] = this.dataMatrix.getAsDouble( i, j );
                 }
             }
         }

@@ -20,7 +20,6 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import cern.colt.list.DoubleArrayList;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -283,7 +282,7 @@ class ProcessedExpressionDataVectorHelperServiceImpl
 
         for ( ProcessedExpressionDataVector vector : processedDataVectors ) {
             CompositeSequence de = vector.getDesignElement();
-            if ( intensities.getRow( de ) == null ) {
+            if ( intensities.getRowAsDoubles( de ) == null ) {
                 ProcessedExpressionDataVectorHelperServiceImpl.log
                         .warn( "No intensity value for " + de + ", rank for vector will be null" );
                 vector.setRankByMean( null );
@@ -304,7 +303,7 @@ class ProcessedExpressionDataVectorHelperServiceImpl
         DoubleArrayList result = new DoubleArrayList( intensities.rows() );
 
         for ( ExpressionDataMatrixRowElement de : intensities.getRowElements() ) {
-            double[] rowObj = ArrayUtils.toPrimitive( intensities.getRow( de.getDesignElement() ) );
+            double[] rowObj = intensities.getRowAsDoubles( de.getDesignElement() );
             double valueForRank = Double.MIN_VALUE;
             if ( rowObj != null ) {
                 DoubleArrayList row = new DoubleArrayList( rowObj );
