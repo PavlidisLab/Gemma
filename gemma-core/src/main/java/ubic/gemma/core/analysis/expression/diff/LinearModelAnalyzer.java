@@ -360,7 +360,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             String subsetName = "Subset for " + FactorValueUtils.getSummaryString( subsetFactorValue );
             if ( subsetName.getBytes( StandardCharsets.UTF_8 ).length > ExpressionExperimentSubSet.MAX_NAME_LENGTH ) {
                 log.warn( "Name for resulting subset of " + subsetFactorValue + " exceeds " + ExpressionExperimentSubSet.MAX_NAME_LENGTH + " characters, it will be abbreviated." );
-                subsetName = abbreviateInBytes( subsetName, "…", ExpressionExperimentSubSet.MAX_NAME_LENGTH, StandardCharsets.UTF_8 );
+                subsetName = abbreviateInBytes( subsetName, "…", ExpressionExperimentSubSet.MAX_NAME_LENGTH, true, StandardCharsets.UTF_8 );
             }
             ExpressionExperimentSubSet eeSubSet = ExpressionExperimentSubSet.Factory.newInstance( subsetName, expressionExperiment );
             Collection<BioAssay> bioAssays = new HashSet<>();

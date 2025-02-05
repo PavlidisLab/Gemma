@@ -18,12 +18,22 @@ public class StringUtils {
      */
     @Nullable
     public static String abbreviateInBytes( @Nullable String value, String abbrevMarker, int maxLengthInBytes, Charset charset ) {
+        return abbreviateInBytes( value, abbrevMarker, maxLengthInBytes, false, charset );
+    }
+
+    /**
+     * Abbreviate the value of a field stored with the given charset if it exceeds a certain length in bytes.
+     * @see org.apache.commons.lang3.StringUtils#abbreviate(String, int)
+     * @param stripBeforeAddingMarker if true, the string will be stripped before adding the marker
+     */
+    @Nullable
+    public static String abbreviateInBytes( @Nullable String value, String abbrevMarker, int maxLengthInBytes, boolean stripBeforeAddingMarker, Charset charset ) {
         int zl = sizeInBytes( abbrevMarker, charset );
         if ( maxLengthInBytes < zl + 1 ) {
             throw new IllegalArgumentException( "The maximum length must be at least one byte more than the length of the marker in bytes." );
         }
         if ( value == null ) {
-            return value;
+            return null;
         }
         // worst case scenario: all characters are 4 bytes long
         if ( largestSizeInBytes( value, charset ) <= maxLengthInBytes ) {
@@ -32,19 +42,22 @@ public class StringUtils {
         int byteLength = sizeInBytes( value, charset );
         if ( byteLength > maxLengthInBytes ) {
             value = truncateInBytes( value, maxLengthInBytes - zl, charset );
+            if ( stripBeforeAddingMarker ) {
+                value = org.apache.commons.lang3.StringUtils.strip( value );
+            }
             return value + abbrevMarker;
         }
         return value;
     }
 
     /**
-     * Abbreviate a string with a suffix as per {@link #abbreviateInBytes(String, String, int, Charset)}.
+     * Abbreviate a string with a suffix as per {@link #abbreviateInBytes(String, String, int, boolean, Charset)}.
      * <p>
      * This produce strings of the form: {@code some text{abbrevMarker}suffix} such that the length of the string in
      * bytes is at most the given maximum.
      */
-    public static String abbreviateWithSuffix( @Nullable String value, String suffix, String abbrevMarker, int maxLengthInBytes, Charset charset ) {
-        return abbreviateInBytes( value, abbrevMarker, maxLengthInBytes - sizeInBytes( suffix, charset ), charset ) + suffix;
+    public static String abbreviateWithSuffix( @Nullable String value, String suffix, String abbrevMarker, int maxLengthInBytes, boolean stripBeforeAddingMarker, Charset charset ) {
+        return abbreviateInBytes( value, abbrevMarker, maxLengthInBytes - sizeInBytes( suffix, charset ), stripBeforeAddingMarker, charset ) + suffix;
     }
 
     /**

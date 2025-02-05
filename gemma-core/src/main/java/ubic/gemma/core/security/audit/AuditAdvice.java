@@ -323,7 +323,7 @@ public class AuditAdvice {
                     AuditAction.CREATE, auditable ) );
             return;
         }
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance( date, auditAction, abbreviateInBytes( note, "…", AuditEvent.MAX_NOTE_LENGTH, StandardCharsets.UTF_8 ), null, user, null );
+        AuditEvent auditEvent = AuditEvent.Factory.newInstance( date, auditAction, abbreviateInBytes( note, "…", AuditEvent.MAX_NOTE_LENGTH, true, StandardCharsets.UTF_8 ), null, user, null );
         auditable.getAuditTrail().getEvents().add( auditEvent );
         if ( auditable instanceof Curatable && auditAction == AuditAction.UPDATE ) {
             curatableDao.updateCurationDetailsFromAuditEvent( ( Curatable ) auditable, auditEvent );

@@ -135,8 +135,8 @@ public class AuditTrailServiceImpl extends AbstractService<AuditTrail> implement
     private AuditEvent createAuditEvent( @Nullable Class<? extends AuditEventType> auditEventType, @Nullable String note, @Nullable String detail, Date performedDate ) {
         Assert.isTrue( !performedDate.after( new Date() ), "Cannot create an audit event for something that has not yet occurred." );
         return AuditEvent.Factory.newInstance( performedDate, AuditAction.UPDATE,
-                abbreviateInBytes( note, "…", AuditEvent.MAX_NOTE_LENGTH, StandardCharsets.UTF_8 ),
-                abbreviateInBytes( detail, "…", AuditEvent.MAX_DETAIL_LENGTH, StandardCharsets.UTF_8 ),
+                abbreviateInBytes( note, "…", AuditEvent.MAX_NOTE_LENGTH, true, StandardCharsets.UTF_8 ),
+                abbreviateInBytes( detail, "…", AuditEvent.MAX_DETAIL_LENGTH, true, StandardCharsets.UTF_8 ),
                 userManager.getCurrentUser(), auditEventType != null ? getAuditEventType( auditEventType ) : null );
     }
 

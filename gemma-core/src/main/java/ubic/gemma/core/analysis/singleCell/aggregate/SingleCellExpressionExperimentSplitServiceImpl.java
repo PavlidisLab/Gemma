@@ -63,7 +63,7 @@ public class SingleCellExpressionExperimentSplitServiceImpl implements SingleCel
             }
             String cellTypeName = cellType.getValue();
             ExpressionExperimentSubSet subset = new ExpressionExperimentSubSet();
-            subset.setName( abbreviateWithSuffix( ee.getName(), " - " + cellTypeName, "…", ExpressionExperiment.MAX_NAME_LENGTH, StandardCharsets.UTF_8 ) );
+            subset.setName( abbreviateWithSuffix( ee.getName(), " - " + cellTypeName, "…", ExpressionExperiment.MAX_NAME_LENGTH, true, StandardCharsets.UTF_8 ) );
             subset.setSourceExperiment( ee );
             subset.getCharacteristics().add( Characteristic.Factory.newInstance( cellType ) );
             for ( BioAssay sample : ee.getBioAssays() ) {
@@ -134,7 +134,7 @@ public class SingleCellExpressionExperimentSplitServiceImpl implements SingleCel
 
     private BioAssay createBioAssayForCellPopulation( BioAssay sample, FactorValue cellTypeFactorValue, Characteristic cellType, String cellTypeName ) {
         BioAssay cellPopBa = new BioAssay();
-        cellPopBa.setName( abbreviateWithSuffix( sample.getName(), " - " + cellTypeName, "…", BioAssay.MAX_NAME_LENGTH, StandardCharsets.UTF_8 ) );
+        cellPopBa.setName( abbreviateWithSuffix( sample.getName(), " - " + cellTypeName, "…", BioAssay.MAX_NAME_LENGTH, true, StandardCharsets.UTF_8 ) );
         cellPopBa.setArrayDesignUsed( sample.getArrayDesignUsed() );
         BioMaterial cellPopBm = createBioMaterialForCellPopulation( sample.getSampleUsed(), cellTypeFactorValue, cellType, cellTypeName );
         cellPopBa.setSampleUsed( cellPopBm );
@@ -147,7 +147,7 @@ public class SingleCellExpressionExperimentSplitServiceImpl implements SingleCel
 
     private BioMaterial createBioMaterialForCellPopulation( BioMaterial sourceBioMaterial, FactorValue cellTypeFactor, Characteristic cellType, String cellTypeName ) {
         BioMaterial bm = new BioMaterial();
-        bm.setName( abbreviateWithSuffix( sourceBioMaterial.getName(), " - " + cellTypeName, "…", BioMaterial.MAX_NAME_LENGTH, StandardCharsets.UTF_8 ) );
+        bm.setName( abbreviateWithSuffix( sourceBioMaterial.getName(), " - " + cellTypeName, "…", BioMaterial.MAX_NAME_LENGTH, true, StandardCharsets.UTF_8 ) );
         bm.setSourceTaxon( sourceBioMaterial.getSourceTaxon() );
         bm.setSourceBioMaterial( sourceBioMaterial );
         bm.getCharacteristics().add( Characteristic.Factory.newInstance( cellType ) );

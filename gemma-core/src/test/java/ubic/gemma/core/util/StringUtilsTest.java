@@ -29,7 +29,7 @@ public class StringUtilsTest {
 
     @Test
     public void testAbbreviateWithSuffix() {
-        assertEquals( "tes… suffix", abbreviateWithSuffix( "test12313", " suffix", "…", 13, StandardCharsets.UTF_8 ) );
-        assertThrows( IllegalArgumentException.class, () -> abbreviateWithSuffix( "test12313", " suffix", "…", 5, StandardCharsets.UTF_8 ) );
+        assertEquals( "tes… suffix", abbreviateWithSuffix( "test12313", " suffix", "…", 13, true, StandardCharsets.UTF_8 ) );
+        assertThrows( IllegalArgumentException.class, () -> abbreviateWithSuffix( "test12313", " suffix", "…", 5, true, StandardCharsets.UTF_8 ) );
     }
 }
