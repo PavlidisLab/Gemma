@@ -1,8 +1,6 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import cern.jet.random.NegativeBinomial;
-import org.apache.commons.math3.distribution.LogNormalDistribution;
-import org.apache.commons.math3.distribution.UniformRealDistribution;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -23,22 +21,18 @@ import java.util.stream.IntStream;
 /**
  * Utilities for generating random single-cell data.
  * @author poirigui
- * @see ubic.gemma.persistence.service.expression.bioAssayData.RandomExpressionDataMatrixUtils
+ * @see RandomExpressionDataMatrixUtils
+ * @see RandomBulkDataUtils
  */
 public class RandomSingleCellDataUtils {
 
-    private static final NegativeBinomialDistribution countDistribution = new NegativeBinomialDistribution( 6, 0.5 );
-    private static final LogNormalDistribution logNormalDistribution = new LogNormalDistribution( 6, 0.5 );
-    private static final UniformRealDistribution uniform100Distribution = new UniformRealDistribution( 0, 100 );
     private static final Random random = new Random();
 
     /**
      * Set the seed used to generate random single-cell vectors.
      */
     public static void setSeed( int seed ) {
-        countDistribution.reseedRandomGenerator( seed );
-        logNormalDistribution.reseedRandomGenerator( seed );
-        uniform100Distribution.reseedRandomGenerator( seed );
+        RandomDataUtils.setSeed( seed );
         random.setSeed( seed );
     }
 
@@ -125,19 +119,7 @@ public class RandomSingleCellDataUtils {
         int[] IX = new int[X.length];
         int step = ( int ) ( 1.0 / density );
         for ( int i = 0; i < N; i++ ) {
-            if ( qt.getScale() == ScaleType.PERCENT ) {
-                X[i] = uniform100Distribution.sample();
-            } else if ( qt.getScale() == ScaleType.PERCENT1 ) {
-                X[i] = uniform100Distribution.sample() / 100.0;
-            } else {
-                if ( qt.getType() == StandardQuantitationType.AMOUNT ) {
-                    X[i] = RandomExpressionDataMatrixUtils.transform( logNormalDistribution.sample(), qt.getScale() );
-                } else if ( qt.getType() == StandardQuantitationType.COUNT ) {
-                    X[i] = RandomExpressionDataMatrixUtils.transform( countDistribution.sample(), qt.getScale() );
-                } else {
-                    throw new IllegalArgumentException( "Don't know how to generate " + qt + " data." );
-                }
-            }
+            X[i] = RandomDataUtils.sample( qt );
             IX[i] = ( i * step ) + random.nextInt( step );
         }
         vector.setDataAsDoubles( X );
