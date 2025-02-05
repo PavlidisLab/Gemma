@@ -132,4 +132,10 @@ public class SingleCellDataLoaderConfig {
      */
     @Nullable
     private String preferredCellTypeAssignmentName;
+
+    /**
+     * A file containing a mapping of sample names to bioassay names.
+     */
+    @Nullable
+    private Path renamingFile;
 }

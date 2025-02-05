@@ -475,7 +475,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     }
 
     private SingleCellDataLoader getAnnDataLoader( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
-        BioAssayMapper bioAssayMapper = getBioAssayMapper( ee );
+        BioAssayMapper bioAssayMapper = getBioAssayMapper( ee, config );
         Path p = config.getDataPath() != null ? config.getDataPath() : getAnnDataFile( ee );
         AnnDataSingleCellDataLoaderConfigurer annDataConfigurer = new AnnDataSingleCellDataLoaderConfigurer( p, ee.getBioAssays(), bioAssayMapper );
         annDataConfigurer.setPythonExecutable( pythonExecutable );
@@ -488,7 +488,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     }
 
     private SingleCellDataLoader getMexLoader( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
-        BioAssayMapper bioAssayMapper = getBioAssayMapper( ee );
+        BioAssayMapper bioAssayMapper = getBioAssayMapper( ee, config );
         Path dir;
         if ( config.getDataPath() != null ) {
             dir = config.getDataPath();
@@ -520,16 +520,28 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
      * <p>
      * In most cases, this should be a {@link GeoBioAssayMapper}.
      */
-    private BioAssayMapper getBioAssayMapper( ExpressionExperiment ee ) {
+    private BioAssayMapper getBioAssayMapper( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
         // select the best strategy for mapping sample names to assays
+        BioAssayMapper mapper;
         if ( ee.getAccession() != null && ee.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
             log.info( String.format( "%s has a GEO accession, using %s for matching samples names to assays.",
                     ee, GeoBioAssayMapper.class.getSimpleName() ) );
-            return new GeoBioAssayMapper();
+            mapper = new GeoBioAssayMapper();
         } else {
             log.info( String.format( "%s does not have a GEO accession, using %s for matching sample names to assays.",
                     ee, SimpleBioAssayMapper.class.getSimpleName() ) );
-            return new SimpleBioAssayMapper();
+            mapper = new SimpleBioAssayMapper();
+        }
+        if ( config.getRenamingFile() != null ) {
+            log.info( "Applying a sample renaming file " + config.getRenamingFile() + " to the sample name mapping strategy." );
+            try {
+                return new RenamingBioAssayMapperParser( mapper )
+                        .parse( config.getRenamingFile() );
+            } catch ( IOException e ) {
+                throw new RuntimeException( "Failed to parse renaming file " + config.getRenamingFile() + ".", e );
+            }
+        } else {
+            return mapper;
         }
     }
 

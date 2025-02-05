@@ -10,10 +10,11 @@ import ubic.basecode.util.DateUtil;
 import javax.annotation.Nullable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class OptionsUtils {
 
@@ -122,6 +123,135 @@ public class OptionsUtils {
             return true;
         } else {
             return null;
+        }
+    }
+
+    /**
+     * Obtain the value of an option and if present, make sure that it satisfies a predicate.
+     */
+    @Nullable
+    public static String getOptionValue( CommandLine commandLine, String optionName, Predicate<CommandLine> predicate ) throws org.apache.commons.cli.ParseException {
+        if ( hasOption( commandLine, optionName, predicate ) ) {
+            return commandLine.getOptionValue( optionName );
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * @see #getOptionValue(CommandLine, String, Predicate)
+     */
+    @Nullable
+    public static <T> T getParsedOptionValue( CommandLine commandLine, String optionName, Predicate<CommandLine> predicate ) throws org.apache.commons.cli.ParseException {
+        if ( hasOption( commandLine, optionName, predicate ) ) {
+            return commandLine.getParsedOptionValue( optionName );
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Check if an option is present, and if so make sure that the predicate is satisfied.
+     * <p>
+     * The predicate can be any {@link Predicate}, but using the ones defined in this class will produce more
+     * informative error messages.
+     */
+    public static boolean hasOption( CommandLine commandLine, String optionName, Predicate<CommandLine> predicate ) throws org.apache.commons.cli.ParseException {
+        if ( commandLine.hasOption( optionName ) ) {
+            // make sure that all the required options are set
+            if ( !predicate.test( commandLine ) ) {
+                throw ( ( Supplier<org.apache.commons.cli.ParseException> ) () -> new org.apache.commons.cli.ParseException( String.format( "The -%s option %s.", optionName, predicate ) ) ).get();
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Make sure that the given predicate is satisfied.
+     * <p>
+     * This is useful as a top-level predicate as it prepents "requires " to the description.
+     */
+    public static Predicate<CommandLine> requires( Predicate<CommandLine> predicate ) {
+        return new OptionRequirement( predicate, cl -> "requires " + formatPredicate( predicate, cl ) );
+    }
+
+    /**
+     * Make sure that at least one of the given predicate is true.
+     */
+    @SafeVarargs
+    public static Predicate<CommandLine> anyOf( Predicate<CommandLine>... optionNames ) {
+        return new OptionRequirement( cl -> Arrays.stream( optionNames ).anyMatch( p -> p.test( cl ) ),
+                cl -> "any of " + formatPredicates( optionNames, cl ) );
+    }
+
+
+    /**
+     * Make sure that all the given predicates are true.
+     */
+    @SafeVarargs
+    public static Predicate<CommandLine> allOf( Predicate<CommandLine>... optionNames ) {
+        return new OptionRequirement( cl -> Arrays.stream( optionNames ).allMatch( p -> p.test( cl ) ),
+                cl -> "all of " + formatPredicates( optionNames, cl ) );
+    }
+
+    /**
+     * Make sure that none of the given predicates are true.
+     */
+    @SafeVarargs
+    public static Predicate<CommandLine> noneOf( Predicate<CommandLine>... optionNames ) {
+        return new OptionRequirement( cl -> Arrays.stream( optionNames ).noneMatch( p -> p.test( cl ) ),
+                cl -> "none of " + formatPredicates( optionNames, cl ) );
+    }
+
+    /**
+     * Make sure that the given option is present.
+     */
+    public static Predicate<CommandLine> toBeSet( String optionName ) {
+        return new OptionRequirement( cl -> cl.hasOption( optionName ), cl -> formatOption( cl, optionName ) + " to be set" );
+    }
+
+    /**
+     * Make sure that the given option is missing.
+     */
+    public static Predicate<CommandLine> isUnset( String optionName ) {
+        return new OptionRequirement( cl -> cl.hasOption( optionName ), cl -> formatOption( cl, optionName ) + " to be unset" );
+    }
+
+    private static String formatOption( CommandLine cl, String optionName ) {
+        return "-" + optionName;
+    }
+
+    private static String formatPredicates( Predicate<CommandLine>[] predicates, CommandLine cl ) {
+        return Arrays.stream( predicates )
+                .map( p -> formatPredicate( p, cl ) )
+                .collect( Collectors.joining( ", " ) );
+    }
+
+    private static String formatPredicate( Predicate<CommandLine> p, CommandLine cl ) {
+        if ( p instanceof OptionRequirement ) {
+            return ( ( OptionRequirement ) p ).describe( cl );
+        } else {
+            return p.toString();
+        }
+    }
+
+    private static class OptionRequirement implements Predicate<CommandLine> {
+
+        private final Predicate<CommandLine> delegate;
+        private final Function<CommandLine, String> description;
+
+        private OptionRequirement( Predicate<CommandLine> delegate, Function<CommandLine, String> description ) {
+            this.delegate = delegate;
+            this.description = description;
+        }
+
+        @Override
+        public boolean test( CommandLine commandLine ) {
+            return delegate.test( commandLine );
+        }
+
+        public String describe( CommandLine cl ) {
+            return description.apply( cl );
         }
     }
 }

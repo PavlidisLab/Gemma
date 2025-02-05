@@ -22,7 +22,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.core.util.OptionsUtils.getAutoOption;
+import static ubic.gemma.core.util.OptionsUtils.*;
 
 public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI {
 
@@ -43,6 +43,9 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             CELL_TYPE_ASSIGNMENT_PROTOCOL_NAME_OPTION = "ctaProtocol",
             PREFERRED_CELL_TYPE_ASSIGNMENT = "preferredCta",
             OTHER_CELL_LEVEL_CHARACTERISTICS_FILE = "clcFile";
+
+    private static final String
+            RENAMING_FILE_OPTION = "renamingFile";
 
     private static final String
             INFER_SAMPLES_FROM_CELL_IDS_OVERLAP_OPTION = "inferSamplesFromCellIdsOverlap",
@@ -108,6 +111,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private Path otherCellLevelCharacteristicsFile;
     private boolean inferSamplesFromCellIdsOverlap;
     private boolean ignoreUnmatchedCellIds;
+    @Nullable
+    private Path renamingFile;
 
     // AnnData
     @Nullable
@@ -156,7 +161,13 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         options.addOption( QT_NEW_SCALE_TYPE_OPTION, "quantitation-type-new-scale-type", true, "New scale type to use for the imported quantitation type (optional, defaults to the data)" );
         options.addOption( PREFERRED_QT_OPTION, "preferred-quantitation-type", false, "Make the quantitation type the preferred one." );
         options.addOption( REPLACE_OPTION, "replace", false, "Replace an existing quantitation type." );
-        // for the generic metadata loader
+
+        // for all loaders
+        options.addOption( Option.builder( RENAMING_FILE_OPTION )
+                .longOpt( "renaming-file" )
+                .hasArg().type( Path.class )
+                .desc( "File containing sample a renaming scheme. The format is a two-column TSV with the first column containing author-provided sample names and the second column suitable assay identifiers (i.e. name, GEO accessions)." )
+                .build() );
 
         // for the generic metadata loader
         options.addOption( Option.builder( CELL_TYPE_ASSIGNMENT_FILE_OPTION )
@@ -212,18 +223,15 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             mode = Mode.LOAD_EVERYTHING;
             platformName = commandLine.getOptionValue( PLATFORM_OPTION );
             if ( platformName == null ) {
-                throw new MissingArgumentException( "The -" + PLATFORM_OPTION + " option is required when loading vectors." );
+                throw new MissingOptionException( "The -" + PLATFORM_OPTION + " option is required when loading vectors." );
             }
         }
         if ( commandLine.hasOption( DATA_TYPE_OPTION ) ) {
             dataType = SingleCellDataType.valueOf( commandLine.getOptionValue( DATA_TYPE_OPTION ) );
+        } else {
+            dataType = null;
         }
-        if ( commandLine.hasOption( DATA_PATH_OPTION ) ) {
-            if ( dataType == null ) {
-                throw new ParseException( "The -" + DATA_TYPE_OPTION + " option must be set if a data path is provided." );
-            }
-            dataPath = commandLine.getParsedOptionValue( DATA_PATH_OPTION );
-        }
+        dataPath = getParsedOptionValue( commandLine, DATA_PATH_OPTION, requires( toBeSet( DATA_TYPE_OPTION ) ) );
         qtName = commandLine.getOptionValue( QT_NAME_OPTION );
         newName = commandLine.getOptionValue( QT_NEW_NAME_OPTION );
         if ( commandLine.hasOption( QT_NEW_TYPE_OPTION ) ) {
@@ -239,12 +247,19 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         replaceQt = commandLine.hasOption( REPLACE_OPTION );
         preferredQt = commandLine.hasOption( PREFERRED_QT_OPTION );
         cellTypeAssignmentFile = commandLine.getParsedOptionValue( CELL_TYPE_ASSIGNMENT_FILE_OPTION );
-        cellTypeAssignmentName = commandLine.getOptionValue( CELL_TYPE_ASSIGNMENT_NAME_OPTION );
-        cellTypeAssignmentProtocolName = commandLine.getOptionValue( CELL_TYPE_ASSIGNMENT_PROTOCOL_NAME_OPTION );
+        cellTypeAssignmentName = getOptionValue( commandLine, CELL_TYPE_ASSIGNMENT_NAME_OPTION, requires( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ) ) );
+        cellTypeAssignmentProtocolName = getOptionValue( commandLine, CELL_TYPE_ASSIGNMENT_PROTOCOL_NAME_OPTION, requires( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ) ) );
+        preferredCellTypeAssignment = hasOption( commandLine, PREFERRED_CELL_TYPE_ASSIGNMENT, requires( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ) ) );
         otherCellLevelCharacteristicsFile = commandLine.getParsedOptionValue( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE );
-        preferredCellTypeAssignment = commandLine.hasOption( PREFERRED_CELL_TYPE_ASSIGNMENT );
-        inferSamplesFromCellIdsOverlap = commandLine.hasOption( INFER_SAMPLES_FROM_CELL_IDS_OVERLAP_OPTION );
-        ignoreUnmatchedCellIds = commandLine.hasOption( IGNORE_UNMATCHED_CELL_IDS_OPTION );
+        inferSamplesFromCellIdsOverlap = hasOption( commandLine, INFER_SAMPLES_FROM_CELL_IDS_OVERLAP_OPTION,
+                requires( anyOf( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ), toBeSet( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE ) ) ) );
+        ignoreUnmatchedCellIds = hasOption( commandLine, IGNORE_UNMATCHED_CELL_IDS_OPTION,
+                requires( anyOf( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ), toBeSet( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE ) ) ) );
+
+        // all data types
+        renamingFile = commandLine.getParsedOptionValue( RENAMING_FILE_OPTION );
+
+        // data-type specific options
         rejectInvalidOptionsForDataType( commandLine, dataType );
         if ( dataType == SingleCellDataType.ANNDATA ) {
             annDataSampleFactorName = commandLine.getOptionValue( ANNDATA_SAMPLE_FACTOR_NAME_OPTION );
@@ -355,6 +370,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         return platform;
     }
 
+    @SuppressWarnings("DataFlowIssue") // nullable interferes with Lombok's generated builder methods
     private SingleCellDataLoaderConfig getConfigForDataType( @Nullable SingleCellDataType dataType ) {
         SingleCellDataLoaderConfig.SingleCellDataLoaderConfigBuilder<?, ?> configBuilder;
         if ( dataType == SingleCellDataType.ANNDATA ) {
@@ -406,6 +422,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         configBuilder.useCellIdsIfSampleNameIsMissing( true );
         // ignore only on-demand
         configBuilder.ignoreUnmatchedCellIds( ignoreUnmatchedCellIds );
+        configBuilder.renamingFile( renamingFile );
         return configBuilder.build();
     }
 }
