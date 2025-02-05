@@ -114,7 +114,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
     @Override
     public Set<String> getSampleNames() throws IOException {
-        Assert.notNull( sampleFactorName, "A sample factor name must be set." );
+        checkSampleFactorName();
         try ( AnnData h5File = AnnData.open( file ); Dataframe<?> v = getCellsDataframe( h5File ) ) {
             return v.getColumn( sampleFactorName, String.class ).uniqueValues();
         }
@@ -124,10 +124,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     public SingleCellDimension getSingleCellDimension( Collection<BioAssay> bioAssays ) throws IOException {
         Assert.isTrue( !bioAssays.isEmpty(), "At least one bioassay must be provided" );
         Assert.notNull( bioAssayToSampleNameMapper, "A sample name comparator is necessary to match samples to BioAssays." );
-        Assert.notNull( sampleFactorName, "The sample factor name must be set. Possible values are:\n\t"
-                + getPossibleSampleNameColumns().entrySet().stream()
-                .map( e -> e.getKey() + ":\t" + e.getValue().stream().limit( 10 ).collect( Collectors.joining( ", " ) ) + ", ..." )
-                .collect( Collectors.joining( "\n\t" ) ) );
+        checkSampleFactorName();
         SingleCellDimension singleCellDimension = new SingleCellDimension();
         try ( AnnData h5File = AnnData.open( file ) ) {
             Dataframe.Column<?, String> cellIds;
@@ -267,7 +264,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
     @Override
     public Set<CellTypeAssignment> getCellTypeAssignments( SingleCellDimension dimension ) throws IOException {
-        Assert.notNull( cellTypeFactorName, "A cell type factor name must be set to determine cell type assignments." );
+        checkCellTypeFactorName();
         try ( AnnData h5File = AnnData.open( file ); Dataframe<?> var = getCellsDataframe( h5File ) ) {
             // TODO: support cell types encoded as string-array
             CategoricalArray<String> cellTypes = var.getCategoricalColumn( cellTypeFactorName, String.class );
@@ -305,7 +302,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
     @Override
     public Set<CellLevelCharacteristics> getOtherCellLevelCharacteristics( SingleCellDimension dimension ) throws IOException {
-        Assert.notNull( sampleFactorName, "A sample factor name must be set." );
+        checkSampleFactorName();
         if ( cellTypeFactorName == null ) {
             log.warn( "No cell type factor name is set, cell types might be treated as \"other cell-level characteristics\"." );
         }
@@ -386,7 +383,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
     @Override
     public Set<ExperimentalFactor> getFactors( Collection<BioAssay> samples, @Nullable Map<BioMaterial, Set<FactorValue>> factorValueAssignments ) throws IOException {
-        Assert.notNull( sampleFactorName, "A sample factor name must be set." );
+        checkSampleFactorName();
         Set<ExperimentalFactor> factors = new HashSet<>();
         try ( AnnData h5File = AnnData.open( file ) ) {
             try ( Dataframe<?> vars = getCellsDataframe( h5File ) ) {
@@ -490,7 +487,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
     @Override
     public Map<BioMaterial, Set<Characteristic>> getSamplesCharacteristics( Collection<BioAssay> samples ) throws IOException {
-        Assert.notNull( sampleFactorName, "A sample factor name must be set." );
+        checkSampleFactorName();
         Map<BioMaterial, Set<Characteristic>> result = new HashMap<>();
         try ( AnnData h5File = AnnData.open( file ) ) {
             try ( Dataframe<?> vars = getCellsDataframe( h5File ) ) {
@@ -614,7 +611,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             QuantitationType quantitationType,
             @Nullable String layerName ) throws IOException {
         Assert.notNull( designElementToGeneMapper, "A design element mapper must be set to load vectors." );
-        Assert.notNull( sampleFactorName, "A sample factor name must be set." );
+        checkSampleFactorName();
         // we don't want to close it since it will be closed by the stream
         EntityMapper.StatefulEntityMapper<CompositeSequence> statefulDesignElementMapper = designElementToGeneMapper.forCandidates( designElements );
         // indicate if closing the H5 file been delegated to the Stream
@@ -866,12 +863,30 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         }
     }
 
+    private void checkSampleFactorName() throws IOException {
+        if ( sampleFactorName == null ) {
+            throw new IllegalStateException( "The sample factor name must be set. Possible values are:\n\t"
+                    + getPossibleSampleNameOrCellTypeColumns().entrySet().stream()
+                    .map( e -> e.getKey() + ":\t" + e.getValue().stream().limit( 10 ).collect( Collectors.joining( ", " ) ) + ", ..." )
+                    .collect( Collectors.joining( "\n\t" ) ) );
+        }
+    }
+
+    private void checkCellTypeFactorName() throws IOException {
+        if ( cellTypeFactorName == null ) {
+            throw new IllegalStateException( "A cell type factor name must be set to determine cell type assignments. Possible values are:\n\t"
+                    + getPossibleSampleNameOrCellTypeColumns().entrySet().stream()
+                    .map( e -> e.getKey() + ":\t" + e.getValue().stream().limit( 10 ).collect( Collectors.joining( ", " ) ) + ", ..." )
+                    .collect( Collectors.joining( "\n\t" ) ) );
+        }
+    }
+
     /**
      * Obtain a mapping of possible sample name columns with their unique values.
      * <p>
      * TODO: do some more filtering for the suggested columns.
      */
-    private Map<String, Set<String>> getPossibleSampleNameColumns() throws IOException {
+    private Map<String, Set<String>> getPossibleSampleNameOrCellTypeColumns() throws IOException {
         Map<String, Set<String>> candidates = new HashMap<>();
         try ( AnnData f = AnnData.open( file ) ) {
             try ( Dataframe<?> obs = getCellsDataframe( f ) ) {
