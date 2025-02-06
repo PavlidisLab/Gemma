@@ -52,6 +52,33 @@ public class H5Dataset implements AutoCloseable {
     }
 
     /**
+     * Obtain a single double value.
+     */
+    public double getDouble( long i ) {
+        try ( H5Dataspace d = slice( i, i + 1 ) ) {
+            return d.toDoubleVector()[0];
+        }
+    }
+
+    /**
+     * Obtain a single integer value.
+     */
+    public int getInteger( long i ) {
+        try ( H5Dataspace d = slice( i, i + 1 ) ) {
+            return d.toIntegerVector()[0];
+        }
+    }
+
+    /**
+     * Obtain a single boolean value.
+     */
+    public boolean getBoolean( long i ) {
+        try ( H5Dataspace d = slice( i, i + 1 ) ) {
+            return d.toBooleanVector()[0];
+        }
+    }
+
+    /**
      * Obtain a 1D slice of the dataset.
      */
     public H5Dataspace slice( long start, long end ) {

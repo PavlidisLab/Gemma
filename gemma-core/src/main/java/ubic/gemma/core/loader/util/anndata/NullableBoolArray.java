@@ -13,9 +13,7 @@ public class NullableBoolArray extends NullableArray<Boolean> {
     @Override
     @Nullable
     public Boolean get( int i ) {
-        boolean v = values.slice( i, i + 1 ).toBooleanVector()[0];
-        boolean m = mask.slice( i, i + 1 ).toBooleanVector()[0];
-        return m ? v : null;
+        return mask.getBoolean( i ) ? values.getBoolean( i ) : null;
     }
 
     public Boolean[] toBooleanArray() {

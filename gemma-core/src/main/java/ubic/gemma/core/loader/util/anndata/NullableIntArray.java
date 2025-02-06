@@ -13,9 +13,7 @@ public class NullableIntArray extends NullableArray<Integer> {
     @Override
     @Nullable
     public Integer get( int i ) {
-        int v = values.slice( i, i + 1 ).toIntegerVector()[0];
-        boolean m = mask.slice( i, i + 1 ).toBooleanVector()[0];
-        return m ? v : null;
+        return mask.getBoolean( i ) ? values.getInteger( i ) : null;
     }
 
     public Integer[] toIntegerArray() {
