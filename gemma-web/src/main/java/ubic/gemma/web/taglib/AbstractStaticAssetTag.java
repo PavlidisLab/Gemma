@@ -4,19 +4,19 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.web.servlet.tags.HtmlEscapingAwareTag;
 import org.springframework.web.servlet.tags.form.TagWriter;
 import org.springframework.web.util.HtmlUtils;
-import ubic.gemma.web.util.StaticAssetServer;
+import ubic.gemma.web.util.StaticAssetResolver;
 
 import javax.servlet.jsp.JspException;
 
 /**
  * Base class for tags that refers to static assets.
  * @author poirigui
- * @see StaticAssetServer
+ * @see StaticAssetResolver
  */
 @CommonsLog
 public abstract class AbstractStaticAssetTag extends HtmlEscapingAwareTag {
 
-    private StaticAssetServer staticAssetServer;
+    private transient StaticAssetResolver staticAssetResolver;
 
     private final String srcAttributeName;
     private String src;
@@ -37,10 +37,10 @@ public abstract class AbstractStaticAssetTag extends HtmlEscapingAwareTag {
     }
 
     protected String resolveUrl( String src ) {
-        if ( staticAssetServer == null ) {
-            staticAssetServer = getRequestContext().getWebApplicationContext().getBean( StaticAssetServer.class );
+        if ( staticAssetResolver == null ) {
+            staticAssetResolver = getRequestContext().getWebApplicationContext().getBean( StaticAssetResolver.class );
         }
-        return staticAssetServer.resolveUrl( src );
+        return staticAssetResolver.resolveUrl( src );
     }
 
     protected String htmlEscape( String value ) {

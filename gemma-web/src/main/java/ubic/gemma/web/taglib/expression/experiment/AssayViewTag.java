@@ -31,7 +31,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.web.util.StaticAssetServer;
+import ubic.gemma.web.util.StaticAssetResolver;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
 import javax.annotation.Nullable;
@@ -52,8 +52,8 @@ public class AssayViewTag extends HtmlEscapingAwareTag {
      */
     private static final int NUM_EXTRA_BIOMATERIALS = 12;
 
-    private StaticAssetServer staticAssetServer;
-    private WebEntityUrlBuilder entityUrlBuilder;
+    private transient StaticAssetResolver staticAssetResolver;
+    private transient WebEntityUrlBuilder entityUrlBuilder;
 
     private Collection<BioAssayValueObject> bioAssays;
 
@@ -83,8 +83,8 @@ public class AssayViewTag extends HtmlEscapingAwareTag {
 
     @Override
     public int doStartTagInternal() throws Exception {
-        if ( staticAssetServer == null ) {
-            staticAssetServer = getRequestContext().getWebApplicationContext().getBean( StaticAssetServer.class );
+        if ( staticAssetResolver == null ) {
+            staticAssetResolver = getRequestContext().getWebApplicationContext().getBean( StaticAssetResolver.class );
         }
         if ( entityUrlBuilder == null ) {
             entityUrlBuilder = getRequestContext().getWebApplicationContext().getBean( WebEntityUrlBuilder.class );
@@ -255,7 +255,7 @@ public class AssayViewTag extends HtmlEscapingAwareTag {
                             writer.writeAttribute( "height", "16" );
                             writer.writeAttribute( "width", "16" );
 
-                            writer.writeAttribute( "src", staticAssetServer.resolveUrl( "/images/icons/arrow_switch.png" ) );
+                            writer.writeAttribute( "src", staticAssetResolver.resolveUrl( "/images/icons/arrow_switch.png" ) );
                             writer.endTag();
                             writer.appendValue( "&nbsp;" );
                         }
@@ -349,7 +349,7 @@ public class AssayViewTag extends HtmlEscapingAwareTag {
             writer.startTag( "img" );
             writer.writeAttribute( "height", "10" );
             writer.writeAttribute( "width", "20" );
-            writer.writeAttribute( "src", staticAssetServer.resolveUrl( "/images/arrow_out.png" ) );
+            writer.writeAttribute( "src", staticAssetResolver.resolveUrl( "/images/arrow_out.png" ) );
             writer.endTag(); // </img>
             emptyAssays++;
         } else {

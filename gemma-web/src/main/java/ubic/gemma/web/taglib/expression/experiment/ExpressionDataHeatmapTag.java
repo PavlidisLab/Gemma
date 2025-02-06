@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 @Setter
 public class ExpressionDataHeatmapTag extends AbstractHeatmapTag<ExpressionDataHeatmap> {
 
-    private WebEntityUrlBuilder entityUrlBuilder;
+    private transient WebEntityUrlBuilder entityUrlBuilder;
 
     // needed for JSP
     @Override

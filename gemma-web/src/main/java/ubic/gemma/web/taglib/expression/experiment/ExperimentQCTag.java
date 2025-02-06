@@ -26,7 +26,7 @@ import ubic.gemma.core.visualization.SingleCellSparsityHeatmap;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentQCController;
 import ubic.gemma.web.taglib.TagWriterUtils;
-import ubic.gemma.web.util.StaticAssetServer;
+import ubic.gemma.web.util.StaticAssetResolver;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
 import javax.annotation.Nullable;
@@ -43,8 +43,8 @@ import static org.springframework.web.util.JavaScriptUtils.javaScriptEscape;
 @Setter
 public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttributes {
 
-    private StaticAssetServer staticAssetServer;
-    private WebEntityUrlBuilder entityUrlBuilder;
+    private transient StaticAssetResolver staticAssetResolver;
+    private transient WebEntityUrlBuilder entityUrlBuilder;
 
     /**
      * Expression experiment to display the QC info for.
@@ -125,8 +125,8 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
 
     @Override
     public int doStartTagInternal() throws JspException {
-        if ( staticAssetServer == null ) {
-            staticAssetServer = getRequestContext().getWebApplicationContext().getBean( StaticAssetServer.class );
+        if ( staticAssetResolver == null ) {
+            staticAssetResolver = getRequestContext().getWebApplicationContext().getBean( StaticAssetResolver.class );
         }
         if ( entityUrlBuilder == null ) {
             entityUrlBuilder = getRequestContext().getWebApplicationContext().getBean( WebEntityUrlBuilder.class );
@@ -136,7 +136,7 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
     }
 
     public void writeQc( TagWriter writer, String contextPath ) throws JspException {
-        Assert.notNull( staticAssetServer );
+        Assert.notNull( staticAssetResolver );
 
         /*
          * check if the files are available...if not, show something intelligent.
@@ -270,7 +270,7 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
                     writer.writeAttribute( "onclick", "Ext.getCmp('" + eeManagerId + "').visualizePcaHandler(" + this.expressionExperiment.getId() + "," + component + "," + 100 + ")" );
                     writer.writeAttribute( "title", "Visualize top loaded probes for component #" + component );
                     writer.startTag( "img" );
-                    writer.writeAttribute( "src", staticAssetServer.resolveUrl( "/images/icons/chart_curve.png" ) );
+                    writer.writeAttribute( "src", staticAssetResolver.resolveUrl( "/images/icons/chart_curve.png" ) );
                     writer.endTag(); // </img>
                     writer.endTag(); // </span>
                 }

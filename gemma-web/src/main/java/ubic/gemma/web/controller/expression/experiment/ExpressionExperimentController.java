@@ -100,7 +100,7 @@ import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
 import ubic.gemma.web.taglib.expression.experiment.ExperimentQCTag;
 import ubic.gemma.web.util.EntityNotFoundException;
-import ubic.gemma.web.util.StaticAssetServer;
+import ubic.gemma.web.util.StaticAssetResolver;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 import ubic.gemma.web.view.TextView;
 
@@ -195,7 +195,7 @@ public class ExpressionExperimentController {
     @Autowired
     private QuantitationTypeService quantitationTypeService;
     @Autowired
-    private StaticAssetServer staticAssetServer;
+    private StaticAssetResolver staticAssetResolver;
     @Autowired
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
     @Autowired
@@ -483,7 +483,7 @@ public class ExpressionExperimentController {
     private String getQCTagHTML( ExpressionExperiment ee ) {
         try ( StringWriter sw = new StringWriter() ) {
             ExperimentQCTag qc = new ExperimentQCTag( true );
-            qc.setStaticAssetServer( staticAssetServer );
+            qc.setStaticAssetResolver( staticAssetResolver );
             qc.setEntityUrlBuilder( entityUrlBuilder );
             qc.setExpressionExperiment( ee );
             qc.setEeManagerId( ee.getId() + "-eemanager" );

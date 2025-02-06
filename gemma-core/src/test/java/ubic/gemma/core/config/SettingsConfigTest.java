@@ -68,6 +68,12 @@ public class SettingsConfigTest extends AbstractJUnit4SpringContextTests {
     @Value("${gemma.hosturl}")
     private String hostUrl;
 
+    @Value("${gemma.project.dir}")
+    private String projectDir;
+
+    @Value("${gemma.log.dir}")
+    private String logDir;
+
     @Test
     public void test() {
         assertNotNull( version );
@@ -79,5 +85,7 @@ public class SettingsConfigTest extends AbstractJUnit4SpringContextTests {
         assertEquals( appDataHome + "/download", downloadPath );
         assertEquals( appDataHome + "/searchIndices", searchDir );
         assertEquals( searchDir, compassDir );
+        assertEquals( ".", projectDir );
+        assertEquals( ".", logDir );
     }
 }

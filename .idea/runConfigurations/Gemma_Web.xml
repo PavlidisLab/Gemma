@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Gemma Web" type="#com.intellij.j2ee.web.tomcat.TomcatRunConfigurationFactory" factoryName="Local" APPLICATION_SERVER_NAME="Tomcat 9.0.80" ALTERNATIVE_JRE_ENABLED="false">
-    <option name="COMMON_VM_ARGUMENTS" value="-Dspring.profiles.active=dev -Dspring.security.strategy=MODE_INHERITABLETHREADLOCAL -Dlog4j.configuration=$PROJECT_DIR$/gemma-web/src/main/config/log4j-dev.properties" />
+    <option name="COMMON_VM_ARGUMENTS" value="-Dspring.profiles.active=dev -Dspring.security.strategy=MODE_INHERITABLETHREADLOCAL -Dlog4j.configuration=$PROJECT_DIR$/gemma-web/src/main/config/log4j-dev.properties -Dgemma.project.dir=$PROJECT_DIR$ -Dgemma.log.dir=%IDEA_RUN:TOMCAT_HOME%/logs" />
     <option name="UPDATE_ON_FRAME_DEACTIVATION" value="true" />
     <option name="UPDATING_POLICY" value="redeploy-artifacts" />
     <deployment>
@@ -14,6 +14,7 @@
       <option name="BASE_DIRECTORY_NAME" value="459dd473-df67-4ced-a8e5-37cc2e910623" />
       <option name="PRESERVE_SESSIONS" value="true" />
     </server-settings>
+    <log_file alias="Static Asset Server" path="%IDEA_RUN:TOMCAT_HOME%/logs/gemma-static-asset-server.log" />
     <predefined_log_file enabled="true" id="Tomcat" />
     <predefined_log_file enabled="true" id="Tomcat Catalina" />
     <predefined_log_file id="Tomcat Manager" />

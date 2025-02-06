@@ -25,7 +25,7 @@ import static ubic.gemma.web.taglib.TagWriterUtils.writeAttributes;
  */
 public class EntityLinkTag extends HtmlEscapingAwareTag implements DynamicAttributes {
 
-    private WebEntityUrlBuilder entityUrlBuilder;
+    private transient WebEntityUrlBuilder entityUrlBuilder;
 
     private Identifiable entity;
     private boolean external;
@@ -35,7 +35,7 @@ public class EntityLinkTag extends HtmlEscapingAwareTag implements DynamicAttrib
     private BioAssayDimension dimension;
     private final Map<String, Object> dynamicAttributes = new LinkedHashMap<>();
 
-    private TagWriter tagWriter;
+    private transient TagWriter tagWriter;
 
     @Override
     protected int doStartTagInternal() throws Exception {

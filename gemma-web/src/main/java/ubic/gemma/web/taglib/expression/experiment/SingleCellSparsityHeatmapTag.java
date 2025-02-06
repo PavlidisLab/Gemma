@@ -27,7 +27,7 @@ import java.util.Map;
 @Setter
 public class SingleCellSparsityHeatmapTag extends AbstractHeatmapTag<SingleCellSparsityHeatmap> {
 
-    private WebEntityUrlBuilder entityUrlBuilder;
+    private transient WebEntityUrlBuilder entityUrlBuilder;
 
     // this is mainly to prevent access to the pageContext which is not set when rendering via DWR
     private final Boolean htmlEscape;

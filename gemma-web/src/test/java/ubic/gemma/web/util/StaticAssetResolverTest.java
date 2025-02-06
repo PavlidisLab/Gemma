@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @ContextConfiguration
-public class StaticAssetServerTest extends BaseWebTest {
+public class StaticAssetResolverTest extends BaseWebTest {
 
     @Configuration
     @TestComponent
@@ -35,22 +35,22 @@ public class StaticAssetServerTest extends BaseWebTest {
         }
 
         @Bean
-        public StaticAssetServer staticAssetServer() {
-            return new StaticAssetServer();
+        public StaticAssetResolver staticAssetServer() {
+            return new StaticAssetResolver();
         }
     }
 
     @Autowired
-    private StaticAssetServer staticAssetServer;
+    private StaticAssetResolver staticAssetResolver;
 
     @Autowired
     private ServletContext servletContext;
 
     @Test
     public void test() {
-        assertThat( staticAssetServer.resolveUrl( "/bundles/include.js" ) )
+        assertThat( staticAssetResolver.resolveUrl( "/bundles/include.js" ) )
                 .isEqualTo( "http://localhost:8082/bundles/include.js" );
-        assertThatThrownBy( () -> staticAssetServer.resolveUrl( "/include.js" ) )
+        assertThatThrownBy( () -> staticAssetResolver.resolveUrl( "/include.js" ) )
                 .isInstanceOf( IllegalArgumentException.class );
     }
 
