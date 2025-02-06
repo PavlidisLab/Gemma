@@ -11,10 +11,18 @@ import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUti
 public class ScaleTypeConversionUtilsTest {
 
     @Test
-    public void testConvertData() {
+    public void testConvertCountingData() {
         QuantitationType qt = new QuantitationType();
         qt.setScale( ScaleType.COUNT );
-        assertThat( convertVector( new double[] { 1.0, 2.0, 3.0 }, qt, ScaleType.COUNT ) )
-                .containsExactly( 1.0, 2.0, 3.0 );
+        double[] vec = new double[] { 1.0, 2.0, 3.0 };
+
+        assertThat( convertVector( vec, qt, ScaleType.COUNT ) )
+                .isSameAs( vec );
+
+        assertThat( convertVector( vec, qt, ScaleType.LINEAR ) )
+                .isSameAs( vec );
+
+        assertThat( convertVector( vec, qt, ScaleType.LOG2 ) )
+                .containsExactly( 0.0, 1.0, Math.log( 3.0 ) / Math.log( 2.0 ) );
     }
 }

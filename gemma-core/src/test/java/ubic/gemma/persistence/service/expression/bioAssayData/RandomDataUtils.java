@@ -2,9 +2,12 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
+import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+
+import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.convertVector;
 
 /**
  * Shared utilities for generating random data.
@@ -34,9 +37,13 @@ class RandomDataUtils {
             return uniform100Distribution.sample() / 100.0;
         } else {
             if ( qt.getType() == StandardQuantitationType.AMOUNT ) {
-                return transform( logNormalDistribution.sample(), qt.getScale() );
+                double val = logNormalDistribution.sample();
+                ScaleType scale = qt.getScale();
+                return convertVector( new double[] { val }, StandardQuantitationType.AMOUNT, ScaleType.LINEAR, scale )[0];
             } else if ( qt.getType() == StandardQuantitationType.COUNT ) {
-                return transform( countDistribution.sample(), qt.getScale() );
+                int val = countDistribution.sample();
+                ScaleType scale = qt.getScale();
+                return convertVector( new int[] { val }, scale )[0];
             } else {
                 throw new IllegalArgumentException( "Don't know how to generate " + qt + " data." );
             }
@@ -54,46 +61,14 @@ class RandomDataUtils {
             return vec;
         } else {
             if ( qt.getType() == StandardQuantitationType.AMOUNT ) {
-                return transform( logNormalDistribution.sample( n ), qt.getScale() );
+                double[] val = logNormalDistribution.sample( n );
+                return convertVector( val, StandardQuantitationType.AMOUNT, ScaleType.LINEAR, qt.getScale() );
             } else if ( qt.getType() == StandardQuantitationType.COUNT ) {
-                return transform( countDistribution.sample( n ), qt.getScale() );
+                int[] val = countDistribution.sample( n );
+                return convertVector( val, qt.getScale() );
             } else {
                 throw new IllegalArgumentException( "Don't know how to generate " + qt + " data." );
             }
-        }
-    }
-
-    private static double[] transform( double[] val, ScaleType scale ) {
-        for ( int i = 0; i < val.length; i++ ) {
-            val[i] = transform( val[i], scale );
-        }
-        return val;
-    }
-
-    private static double[] transform( int[] val, ScaleType scale ) {
-        double[] newVal = new double[val.length];
-        for ( int i = 0; i < val.length; i++ ) {
-            newVal[i] = transform( ( double ) val[i], scale );
-        }
-        return newVal;
-    }
-
-    static double transform( double val, ScaleType scale ) {
-        switch ( scale ) {
-            case LINEAR:
-                return val;
-            case COUNT:
-                return Math.rint( val );
-            case LOG2:
-                return Math.log( val ) / Math.log( 2 );
-            case LN:
-                return Math.log( val );
-            case LOG10:
-                return Math.log10( val );
-            case LOG1P:
-                return Math.log1p( val );
-            default:
-                throw new IllegalArgumentException( "Unsupported scale type: " + scale );
         }
     }
 }

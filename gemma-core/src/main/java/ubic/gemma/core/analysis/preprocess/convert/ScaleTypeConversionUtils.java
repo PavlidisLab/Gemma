@@ -1,5 +1,6 @@
 package ubic.gemma.core.analysis.preprocess.convert;
 
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -19,6 +20,10 @@ public class ScaleTypeConversionUtils {
      * @throws IllegalArgumentException if the conversion is not possible
      */
     public static double[] convertVector( DataVector vec, @Nullable ScaleType scaleType ) {
+        if ( vec.getQuantitationType().getRepresentation().equals( PrimitiveType.INT ) ) {
+            return convertVector( vec.getDataAsInts(), scaleType );
+        }
+        // assume double, any other type will produce an exception
         return convertVector( vec.getDataAsDoubles(), vec.getQuantitationType(), scaleType );
     }
 
@@ -26,23 +31,65 @@ public class ScaleTypeConversionUtils {
      * Convert a vector of data to the target scale.
      */
     public static double[] convertVector( double[] vec, QuantitationType quantitationType, @Nullable ScaleType scaleType ) {
-        if ( scaleType == null || quantitationType.getScale() == scaleType ) {
+        return convertVector( vec, quantitationType.getType(), quantitationType.getScale(), scaleType );
+    }
+
+    /**
+     * Convert a vector of counting data to the target scale.
+     * <p>
+     * The type and scale are assumed to be counts.
+     */
+    public static double[] convertVector( int[] vec, @Nullable ScaleType scaleType ) {
+        double[] result = new double[vec.length];
+        if ( scaleType == null ) {
+            scaleType = ScaleType.COUNT;
+        }
+        switch ( scaleType ) {
+            case LINEAR:
+            case COUNT:
+                for ( int i = 0; i < vec.length; i++ ) {
+                    result[i] = vec[i];
+                }
+                break;
+            case LOG2:
+            case LN:
+            case LOG10:
+                double logBase = getLogBase( scaleType );
+                for ( int i = 0; i < vec.length; i++ ) {
+                    result[i] = Math.log( vec[i] ) / Math.log( logBase );
+                }
+                break;
+            case LOG1P:
+                for ( int i = 0; i < vec.length; i++ ) {
+                    result[i] = Math.log1p( vec[i] );
+                }
+                break;
+            default:
+                throw new UnsupportedOperationException( "Cannot rescale counting data on to a " + scaleType + " scale." );
+        }
+        return result;
+    }
+
+    public static double[] convertVector( double[] vec, StandardQuantitationType fromType, ScaleType fromScale, @Nullable ScaleType scaleType ) {
+        if ( scaleType == null || fromScale == scaleType ) {
             return vec;
         }
         double[] unscaled;
         // first, unscale the data
-        switch ( quantitationType.getScale() ) {
-            case LINEAR:
-                if ( scaleType == ScaleType.LINEAR || scaleType == ScaleType.COUNT ) {
+        switch ( fromScale ) {
+            case COUNT:
+                if ( scaleType == ScaleType.LINEAR ) {
+                    // count -> linear requires no transformation
                     return vec;
                 }
+            case LINEAR:
                 unscaled = new double[vec.length];
                 System.arraycopy( vec, 0, unscaled, 0, vec.length );
                 break;
             case LOG2:
             case LN:
             case LOG10:
-                double logBase = getLogBase( quantitationType.getScale() );
+                double logBase = getLogBase( fromScale );
                 unscaled = new double[vec.length];
                 if ( scaleType == ScaleType.LOG2 || scaleType == ScaleType.LN || scaleType == ScaleType.LOG10 ) {
                     double targetLogBase = getLogBase( scaleType );
@@ -63,7 +110,7 @@ public class ScaleTypeConversionUtils {
                 }
                 break;
             default:
-                throw new UnsupportedOperationException( "Cannot unscale data on a " + quantitationType.getScale() + " scale." );
+                throw new UnsupportedOperationException( "Cannot unscale data on a " + fromScale + " scale." );
         }
 
         // then rescale
@@ -71,7 +118,7 @@ public class ScaleTypeConversionUtils {
             case LINEAR:
                 return unscaled;
             case COUNT:
-                if ( quantitationType.getType() != StandardQuantitationType.COUNT ) {
+                if ( fromType != StandardQuantitationType.COUNT ) {
                     throw new IllegalArgumentException( "Cannot generate data on a COUNT scale from non-counting data." );
                 }
                 unscaled = new double[vec.length];

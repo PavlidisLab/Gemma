@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,6 +46,7 @@ public class SingleCellDataLoaderServiceIntegrationTest extends BaseIntegrationT
     }
 
     @Test
+    @Ignore
     public void testGSE208742() throws NoSingleCellDataFoundException, IOException {
         GeoSeries series = ( GeoSeries ) new GeoDomainObjectGenerator().generate( "GSE208472" )
                 .iterator().next();

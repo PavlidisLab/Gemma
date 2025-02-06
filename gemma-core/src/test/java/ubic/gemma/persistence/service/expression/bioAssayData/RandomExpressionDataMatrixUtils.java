@@ -3,6 +3,7 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.math3.distribution.*;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
+import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -15,7 +16,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.persistence.service.expression.bioAssayData.RandomDataUtils.transform;
+import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.convertVector;
 
 /**
  * Utilities for generating random {@link ExpressionDataDoubleMatrix} following various random distributions.
@@ -33,6 +34,11 @@ public class RandomExpressionDataMatrixUtils {
         RandomExpressionDataMatrixUtils.seed = seed;
     }
 
+    /**
+     * Generate a count matrix.
+     * <p>
+     * The counts are drawn from a Negative Binomial distribution.
+     */
     public static ExpressionDataDoubleMatrix randomCountMatrix( ExpressionExperiment ee ) {
         QuantitationType qt = new QuantitationType();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
@@ -42,6 +48,9 @@ public class RandomExpressionDataMatrixUtils {
         return randomExpressionMatrix( ee, qt, new NegativeBinomialDistribution( 6, 0.5 ) );
     }
 
+    /**
+     * Generate a "transformed" count matrix.
+     */
     public static ExpressionDataDoubleMatrix randomCountMatrix( ExpressionExperiment ee, ScaleType scaleType ) {
         ExpressionDataDoubleMatrix matrix = randomCountMatrix( ee );
         for ( QuantitationType qt : matrix.getQuantitationTypes() ) {
@@ -52,7 +61,8 @@ public class RandomExpressionDataMatrixUtils {
         }
         for ( int i = 0; i < matrix.rows(); i++ ) {
             for ( int j = 0; j < matrix.columns(); j++ ) {
-                matrix.set( i, j, transform( matrix.getAsDouble( i, j ), scaleType ) );
+                double val = matrix.getAsDouble( i, j );
+                matrix.set( i, j, convertVector( new double[] { val }, StandardQuantitationType.COUNT, ScaleType.COUNT, scaleType )[0] );
             }
         }
         return matrix;
