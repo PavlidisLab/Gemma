@@ -67,20 +67,6 @@ public class StaticAssetResolver implements InitializingBean {
     }
 
     /**
-     * Check if the static asset server is enabled.
-     */
-    public boolean isEnabled() {
-        return staticAssetServer != null;
-    }
-
-    /**
-     * Check if the static asset server is alive.
-     */
-    public boolean isAlive() {
-        return staticAssetServer != null && staticAssetServer.isAlive();
-    }
-
-    /**
      * Resolve a URL to a static asset.
      */
     public String resolveUrl( String path ) {

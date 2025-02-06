@@ -7,6 +7,10 @@ import org.springframework.util.Assert;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.net.ConnectException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;

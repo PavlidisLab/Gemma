@@ -38,6 +38,11 @@ public class StaticAssetResolverTest extends BaseWebTest {
         public StaticAssetResolver staticAssetServer() {
             return new StaticAssetResolver();
         }
+
+        @Bean
+        public StaticAssetServer staticAssetServes2() {
+            return new ExternalStaticAssetServer( "http://localhost:8082" );
+        }
     }
 
     @Autowired
