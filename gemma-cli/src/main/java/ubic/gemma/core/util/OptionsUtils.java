@@ -11,9 +11,8 @@ import javax.annotation.Nullable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class OptionsUtils {
@@ -160,8 +159,10 @@ public class OptionsUtils {
         if ( commandLine.hasOption( optionName ) ) {
             // make sure that all the required options are set
             if ( !predicate.test( commandLine ) ) {
-                throw ( ( Supplier<org.apache.commons.cli.ParseException> ) () -> new org.apache.commons.cli.ParseException( String.format( "The -%s option %s.", optionName, predicate ) ) ).get();
+                throw new org.apache.commons.cli.ParseException( String.format( "The %s option %s.",
+                        formatOption( commandLine, optionName ), formatPredicate( predicate, commandLine, 0 ) ) );
             }
+            return true;
         }
         return false;
     }
@@ -172,7 +173,7 @@ public class OptionsUtils {
      * This is useful as a top-level predicate as it prepents "requires " to the description.
      */
     public static Predicate<CommandLine> requires( Predicate<CommandLine> predicate ) {
-        return new OptionRequirement( predicate, cl -> "requires " + formatPredicate( predicate, cl ) );
+        return new OptionRequirement( predicate, ( cl, depth ) -> "requires " + formatPredicate( predicate, cl, depth ) );
     }
 
     /**
@@ -181,7 +182,7 @@ public class OptionsUtils {
     @SafeVarargs
     public static Predicate<CommandLine> anyOf( Predicate<CommandLine>... optionNames ) {
         return new OptionRequirement( cl -> Arrays.stream( optionNames ).anyMatch( p -> p.test( cl ) ),
-                cl -> "any of " + formatPredicates( optionNames, cl ) );
+                ( cl, depth ) -> formatPredicates( optionNames, cl, " or ", depth ) );
     }
 
 
@@ -191,7 +192,7 @@ public class OptionsUtils {
     @SafeVarargs
     public static Predicate<CommandLine> allOf( Predicate<CommandLine>... optionNames ) {
         return new OptionRequirement( cl -> Arrays.stream( optionNames ).allMatch( p -> p.test( cl ) ),
-                cl -> "all of " + formatPredicates( optionNames, cl ) );
+                ( cl, depth ) -> formatPredicates( optionNames, cl, " and ", depth ) );
     }
 
     /**
@@ -200,36 +201,47 @@ public class OptionsUtils {
     @SafeVarargs
     public static Predicate<CommandLine> noneOf( Predicate<CommandLine>... optionNames ) {
         return new OptionRequirement( cl -> Arrays.stream( optionNames ).noneMatch( p -> p.test( cl ) ),
-                cl -> "none of " + formatPredicates( optionNames, cl ) );
+                ( cl, depth ) -> "none of " + formatPredicates( optionNames, cl, " nor ", depth ) );
     }
 
     /**
      * Make sure that the given option is present.
      */
     public static Predicate<CommandLine> toBeSet( String optionName ) {
-        return new OptionRequirement( cl -> cl.hasOption( optionName ), cl -> formatOption( cl, optionName ) + " to be set" );
+        return new OptionRequirement(
+                cl -> cl.hasOption( optionName ),
+                ( cl, depth ) -> formatOption( cl, optionName ) + " to be set" );
     }
 
     /**
      * Make sure that the given option is missing.
      */
     public static Predicate<CommandLine> isUnset( String optionName ) {
-        return new OptionRequirement( cl -> cl.hasOption( optionName ), cl -> formatOption( cl, optionName ) + " to be unset" );
+        return new OptionRequirement(
+                cl -> !cl.hasOption( optionName ),
+                ( cl, depth ) -> formatOption( cl, optionName ) + " to be unset" );
     }
 
     private static String formatOption( CommandLine cl, String optionName ) {
-        return "-" + optionName;
+        // FIXME: this only works for options that the user has provided
+        return Arrays.stream( cl.getOptions() )
+                .filter( o -> o.getOpt().equals( optionName ) )
+                .findFirst()
+                .map( Option::getLongOpt )
+                .map( longOpt -> "-" + optionName + "/" + "--" + longOpt )
+                .orElse( "-" + optionName );
     }
 
-    private static String formatPredicates( Predicate<CommandLine>[] predicates, CommandLine cl ) {
-        return Arrays.stream( predicates )
-                .map( p -> formatPredicate( p, cl ) )
-                .collect( Collectors.joining( ", " ) );
+    private static String formatPredicates( Predicate<CommandLine>[] predicates, CommandLine cl, String w, int depth ) {
+        String s = Arrays.stream( predicates )
+                .map( p -> formatPredicate( p, cl, depth + 1 ) )
+                .collect( Collectors.joining( w ) );
+        return depth > 0 ? ( "(" + s + ")" ) : s;
     }
 
-    private static String formatPredicate( Predicate<CommandLine> p, CommandLine cl ) {
+    private static String formatPredicate( Predicate<CommandLine> p, CommandLine cl, int depth ) {
         if ( p instanceof OptionRequirement ) {
-            return ( ( OptionRequirement ) p ).describe( cl );
+            return ( ( OptionRequirement ) p ).describe( cl, depth );
         } else {
             return p.toString();
         }
@@ -238,9 +250,9 @@ public class OptionsUtils {
     private static class OptionRequirement implements Predicate<CommandLine> {
 
         private final Predicate<CommandLine> delegate;
-        private final Function<CommandLine, String> description;
+        private final BiFunction<CommandLine, Integer, String> description;
 
-        private OptionRequirement( Predicate<CommandLine> delegate, Function<CommandLine, String> description ) {
+        private OptionRequirement( Predicate<CommandLine> delegate, BiFunction<CommandLine, Integer, String> description ) {
             this.delegate = delegate;
             this.description = description;
         }
@@ -250,8 +262,8 @@ public class OptionsUtils {
             return delegate.test( commandLine );
         }
 
-        public String describe( CommandLine cl ) {
-            return description.apply( cl );
+        public String describe( CommandLine cl, int depth ) {
+            return description.apply( cl, depth );
         }
     }
 }
