@@ -498,6 +498,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
+    public SingleCellDimension getSingleCellDimensionWithCellLevelCharacteristicsWithoutCellIds( ExpressionExperiment ee, QuantitationType qt ) {
+        return expressionExperimentDao.getSingleCellDimensionWithCellLevelCharacteristicsWithoutCellIds( ee, qt );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<SingleCellDimension> getSingleCellDimensions( ExpressionExperiment ee ) {
         return expressionExperimentDao.getSingleCellDimensions( ee );
     }

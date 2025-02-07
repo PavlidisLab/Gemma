@@ -51,6 +51,7 @@ public class SingleCellDimensionValueObject extends IdentifiableValueObject<Sing
     /**
      * A list of {@link ubic.gemma.model.expression.bioAssay.BioAssay} IDs that are applicable to the cells.
      */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<Long> bioAssayIds;
 
     /**
@@ -65,26 +66,28 @@ public class SingleCellDimensionValueObject extends IdentifiableValueObject<Sing
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<CellLevelCharacteristicsValueObject> cellLevelCharacteristics;
 
-    public SingleCellDimensionValueObject( SingleCellDimension singleCellDimension ) {
+    public SingleCellDimensionValueObject( SingleCellDimension singleCellDimension, boolean excludeBioAssayIds, boolean excludeCellTypeIds, boolean excludeCharacteristicIds ) {
         super( singleCellDimension );
         this.cellIds = singleCellDimension.getCellIds();
         this.numberOfCells = singleCellDimension.getNumberOfCells();
-        this.bioAssayIds = new ArrayList<>( singleCellDimension.getNumberOfCells() );
-        try {
-            for ( int i = 0; i < singleCellDimension.getNumberOfCells(); i++ ) {
-                this.bioAssayIds.add( requireNonNull( singleCellDimension.getBioAssay( i ).getId() ) );
+        if ( !excludeBioAssayIds ) {
+            this.bioAssayIds = new ArrayList<>( singleCellDimension.getNumberOfCells() );
+            try {
+                for ( int i = 0; i < singleCellDimension.getNumberOfCells(); i++ ) {
+                    this.bioAssayIds.add( requireNonNull( singleCellDimension.getBioAssay( i ).getId() ) );
+                }
+            } catch ( IllegalArgumentException | IndexOutOfBoundsException e ) {
+                log.warn( "The bioassays sparse range array is invalid for " + singleCellDimension, e );
             }
-        } catch ( IllegalArgumentException | IndexOutOfBoundsException e ) {
-            log.warn( "The bioassays sparse range array is invalid for " + singleCellDimension, e );
         }
         if ( Hibernate.isInitialized( singleCellDimension.getCellTypeAssignments() ) ) {
             this.cellTypeAssignments = singleCellDimension.getCellTypeAssignments().stream()
-                    .map( CellTypeAssignmentValueObject::new )
+                    .map( cellTypeAssignment -> new CellTypeAssignmentValueObject( cellTypeAssignment, excludeCellTypeIds ) )
                     .collect( Collectors.toSet() );
         }
         if ( Hibernate.isInitialized( singleCellDimension.getCellLevelCharacteristics() ) ) {
             this.cellLevelCharacteristics = singleCellDimension.getCellLevelCharacteristics().stream()
-                    .map( CellLevelCharacteristicsValueObject::new )
+                    .map( ( CellLevelCharacteristics clc ) -> new CellLevelCharacteristicsValueObject( clc, excludeCharacteristicIds ) )
                     .collect( Collectors.toSet() );
         }
     }

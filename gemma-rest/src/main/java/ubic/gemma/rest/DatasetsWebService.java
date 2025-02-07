@@ -57,6 +57,7 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
+import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
@@ -134,6 +135,10 @@ public class DatasetsWebService {
 
     private static final int MAX_DATASETS_CATEGORIES = 200;
     private static final int MAX_DATASETS_ANNOTATIONS = 5000;
+
+    // fields allowed to be excluded
+    private static final Set<String> SCD_ALLOWED_EXCLUDE_FIELDS = new HashSet<>( Arrays.asList( "cellIds", "bioAssayIds", "cellTypeAssignments.cellTypeIds", "cellLevelCharacteristics.characteristicIds" ) );
+    private static final Set<String> ANNOTATION_ALLOWED_EXCLUDE_FIELDS = Collections.singleton( "parentTerms" );
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -451,8 +456,6 @@ public class DatasetsWebService {
         }
     }
 
-    private static final Set<String> ALLOWED_FIELDS = Collections.singleton( "parentTerms" );
-
     @GET
     @GZIP
     @CacheControl(maxAge = 1200)
@@ -479,7 +482,7 @@ public class DatasetsWebService {
             @Parameter(description = "Exclude uncategorized terms.", hidden = true) @QueryParam("excludeUncategorizedTerms") @DefaultValue("false") Boolean excludeUncategorizedTerms,
             @Parameter(description = "Retain terms mentioned in the `filter` parameter even if they don't meet the `minFrequency` threshold or are excluded via `excludedCategories` or `excludedTerms`.", hidden = true) @QueryParam("retainMentionedTerms") @DefaultValue("false") Boolean retainMentionedTerms
     ) {
-        boolean excludeParentTerms = getExcludedFields( exclude ).contains( "parentTerms" );
+        boolean excludeParentTerms = exclude != null && exclude.getValue( ANNOTATION_ALLOWED_EXCLUDE_FIELDS ).contains( "parentTerms" );
         // if a minFrequency is requested, use the hard cap, otherwise use 100 as a reasonable default
         int limit = limitArg != null ? limitArg.getValue( MAX_DATASETS_ANNOTATIONS ) : minFrequency != null ? MAX_DATASETS_ANNOTATIONS : 100;
         if ( minFrequency != null && minFrequency < 0 ) {
@@ -545,17 +548,6 @@ public class DatasetsWebService {
                 Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, Sort.NullMode.LAST, "numberOfExpressionExperiments" ),
                 limit, inferredTerms )
                 .addWarnings( queryWarnings, "query", LocationType.QUERY );
-    }
-
-    private Set<String> getExcludedFields( @Nullable ExcludeArg<AnnotationWithUsageStatisticsValueObject> exclude ) {
-        if ( exclude == null ) {
-            return Collections.emptySet();
-        }
-        if ( !ALLOWED_FIELDS.containsAll( exclude.getValue() ) ) {
-            throw new BadRequestException( String.format( "Only the following fields can be excluded: %s.",
-                    String.join( ", ", ALLOWED_FIELDS ) ) );
-        }
-        return new HashSet<>( exclude.getValue() );
     }
 
     private Set<OntologyTermValueObject> getParentTerms( OntologyTerm c, Map<OntologyTerm, Set<OntologyTermValueObject>> visited, long timeoutMs ) throws TimeoutException {
@@ -1092,6 +1084,7 @@ public class DatasetsWebService {
     public Object getDatasetSingleCellDimension(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
+            @Parameter(description = "Exclude cell IDs from the output") @QueryParam("exclude") ExcludeArg<SingleCellDimensionValueObject> excludeArg,
             @Parameter(description = "Use numerical BioAssay identifier", hidden = true) @QueryParam("useBioAssayId") @DefaultValue("false") Boolean useBioAssayId,
             @Context HttpHeaders headers
     ) {
@@ -1103,19 +1096,37 @@ public class DatasetsWebService {
         } else {
             qt = quantitationTypeArgService.getEntity( qtArg, ee, SingleCellExpressionDataVector.class );
         }
-        SingleCellDimension dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristics( ee, qt );
-        if ( dimension == null ) {
-            throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
-        }
         MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
         if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
+            if ( excludeArg != null ) {
+                throw new BadRequestException( "The 'exclude' query parameter cannot be used with the TSV output." );
+            }
+            SingleCellDimension dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristics( ee, qt );
+            if ( dimension == null ) {
+                throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
+            }
             return ( StreamingOutput ) output -> {
                 CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
                 writer.setUseBioAssayId( useBioAssayId );
                 writer.write( dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
             };
         } else {
-            return respond( new SingleCellDimensionValueObject( dimension ) );
+            SingleCellDimension dimension;
+            Set<String> excludedFields;
+            if ( excludeArg == null ) {
+                excludedFields = Collections.emptySet();
+            } else {
+                excludedFields = excludeArg.getValue( SCD_ALLOWED_EXCLUDE_FIELDS );
+            }
+            if ( excludedFields.contains( "cellIds" ) ) {
+                dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristicsWithoutCellIds( ee, qt );
+            } else {
+                dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristics( ee, qt );
+            }
+            if ( dimension == null ) {
+                throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
+            }
+            return respond( new SingleCellDimensionValueObject( dimension, excludedFields.contains( "bioAssayIds" ), excludedFields.contains( "cellTypeAssignments.cellTypeIds" ), excludedFields.contains( "cellLevelCharacteristics.characteristicIds" ) ) );
         }
     }
 
@@ -1159,7 +1170,7 @@ public class DatasetsWebService {
                 writer.write( cta, dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
             };
         } else {
-            return respond( new SingleCellDimensionValueObject( dimension ) );
+            return respond( new CellTypeAssignmentValueObject( cta, false ) );
         }
     }
 

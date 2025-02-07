@@ -493,6 +493,9 @@ public interface ExpressionExperimentDao
     @Nullable
     SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt );
 
+    @Nullable
+    SingleCellDimension getSingleCellDimensionWithCellLevelCharacteristicsWithoutCellIds( ExpressionExperiment ee, QuantitationType qt );
+
     /**
      * Obtain the preferred single cell dimension, that is the dimension associated to the preferred set of single-cell vectors.
      */

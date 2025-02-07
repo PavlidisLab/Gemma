@@ -2107,6 +2107,34 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public SingleCellDimension getSingleCellDimensionWithCellLevelCharacteristicsWithoutCellIds( ExpressionExperiment ee, QuantitationType qt ) {
+        SingleCellDimension result = ( SingleCellDimension ) getSessionFactory().getCurrentSession()
+                .createQuery( "select dimension.id as id, dimension.name as name, dimension.description as description, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
+                        + "join scedv.singleCellDimension dimension "
+                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt "
+                        + "group by dimension" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", qt )
+                .setResultTransformer( aliasToBean( SingleCellDimension.class ) )
+                .uniqueResult();
+        if ( result != null ) {
+            initializeSingleCellDimensionWithoutCellIds( result );
+            // FIXME: fix lazy initialization and use Hibernate.initialize() instead
+            List<CellTypeAssignment> ctas = getSessionFactory().getCurrentSession()
+                    .createQuery( "select cta from SingleCellDimension scd join scd.cellTypeAssignments cta where scd = :scd" )
+                    .setParameter( "scd", result )
+                    .list();
+            result.setCellTypeAssignments( new HashSet<>( ctas ) );
+            List<CellLevelCharacteristics> clcs = getSessionFactory().getCurrentSession()
+                    .createQuery( "select clc from SingleCellDimension scd join scd.cellLevelCharacteristics clc where scd = :scd" )
+                    .setParameter( "scd", result )
+                    .list();
+            result.setCellLevelCharacteristics( new HashSet<>( clcs ) );
+        }
+        return result;
+    }
+
+    @Override
     public SingleCellDimension getPreferredSingleCellDimension( ExpressionExperiment ee ) {
         return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
                 .createQuery( "select scedv.singleCellDimension from SingleCellExpressionDataVector scedv "

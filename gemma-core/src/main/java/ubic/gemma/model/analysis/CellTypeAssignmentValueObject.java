@@ -1,5 +1,6 @@
 package ubic.gemma.model.analysis;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.apachecommons.CommonsLog;
@@ -31,6 +32,7 @@ public class CellTypeAssignmentValueObject extends AnalysisValueObject<CellTypeA
      * <p>
      * {@code null} is used to indicate an unknown cell type.
      */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<Long> cellTypeIds;
 
     /**
@@ -43,19 +45,21 @@ public class CellTypeAssignmentValueObject extends AnalysisValueObject<CellTypeA
      */
     private boolean isPreferred;
 
-    public CellTypeAssignmentValueObject( CellTypeAssignment cellTypeAssignment ) {
+    public CellTypeAssignmentValueObject( CellTypeAssignment cellTypeAssignment, boolean excludeCellTypeIds ) {
         super( cellTypeAssignment );
         cellTypes = cellTypeAssignment.getCellTypes().stream()
                 .map( CharacteristicValueObject::new )
                 .collect( Collectors.toSet() );
-        try {
-            cellTypeIds = Arrays.stream( cellTypeAssignment.getCellTypeIndices() )
-                    .mapToObj( i -> i != CellTypeAssignment.UNKNOWN_CELL_TYPE ? requireNonNull( cellTypeAssignment.getCellTypes().get( i ).getId() ) : null )
-                    .collect( Collectors.toList() );
-        } catch ( IndexOutOfBoundsException e ) {
-            // this may happen because getCellType() can fail if the data we have is incorrect, but we don't want to
-            // break the VO serialization which would break the REST API.
-            log.warn( "Cell type indices are invalid for " + cellTypeAssignment + "." );
+        if ( !excludeCellTypeIds ) {
+            try {
+                cellTypeIds = Arrays.stream( cellTypeAssignment.getCellTypeIndices() )
+                        .mapToObj( i -> i != CellTypeAssignment.UNKNOWN_CELL_TYPE ? requireNonNull( cellTypeAssignment.getCellTypes().get( i ).getId() ) : null )
+                        .collect( Collectors.toList() );
+            } catch ( IndexOutOfBoundsException e ) {
+                // this may happen because getCellType() can fail if the data we have is incorrect, but we don't want to
+                // break the VO serialization which would break the REST API.
+                log.warn( "Cell type indices are invalid for " + cellTypeAssignment + "." );
+            }
         }
         if ( cellTypeAssignment.getNumberOfAssignedCells() != null ) {
             numberOfAssignedCells = cellTypeAssignment.getNumberOfAssignedCells();

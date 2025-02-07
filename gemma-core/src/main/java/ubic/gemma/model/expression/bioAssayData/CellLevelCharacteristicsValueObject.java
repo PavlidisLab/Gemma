@@ -1,5 +1,6 @@
 package ubic.gemma.model.expression.bioAssayData;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.apachecommons.CommonsLog;
@@ -20,6 +21,7 @@ public class CellLevelCharacteristicsValueObject extends IdentifiableValueObject
 
     private Set<CharacteristicValueObject> characteristics;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<Long> characteristicIds;
 
     /**
@@ -27,18 +29,20 @@ public class CellLevelCharacteristicsValueObject extends IdentifiableValueObject
      */
     private int numberOfAssignedCells;
 
-    public CellLevelCharacteristicsValueObject( CellLevelCharacteristics cellLevelCharacteristics ) {
+    public CellLevelCharacteristicsValueObject( CellLevelCharacteristics cellLevelCharacteristics, boolean excludeCharacteristicIds ) {
         this.characteristics = cellLevelCharacteristics.getCharacteristics()
                 .stream().map( CharacteristicValueObject::new )
                 .collect( Collectors.toSet() );
-        try {
-            this.characteristicIds = Arrays.stream( cellLevelCharacteristics.getIndices() )
-                    .mapToObj( i -> i != CellLevelCharacteristics.UNKNOWN_CHARACTERISTIC ? requireNonNull( cellLevelCharacteristics.getCharacteristics().get( i ).getId() ) : null )
-                    .collect( Collectors.toList() );
-        } catch ( IndexOutOfBoundsException e ) {
-            // this may happen because getCellType() can fail if the data we have is incorrect, but we don't want to
-            // break the VO serialization which would break the REST API.
-            log.warn( "Characteristic indices are invalid for " + cellLevelCharacteristics + "." );
+        if ( !excludeCharacteristicIds ) {
+            try {
+                this.characteristicIds = Arrays.stream( cellLevelCharacteristics.getIndices() )
+                        .mapToObj( i -> i != CellLevelCharacteristics.UNKNOWN_CHARACTERISTIC ? requireNonNull( cellLevelCharacteristics.getCharacteristics().get( i ).getId() ) : null )
+                        .collect( Collectors.toList() );
+            } catch ( IndexOutOfBoundsException e ) {
+                // this may happen because getCellType() can fail if the data we have is incorrect, but we don't want to
+                // break the VO serialization which would break the REST API.
+                log.warn( "Characteristic indices are invalid for " + cellLevelCharacteristics + "." );
+            }
         }
         if ( cellLevelCharacteristics.getNumberOfAssignedCells() != null ) {
             numberOfAssignedCells = cellLevelCharacteristics.getNumberOfAssignedCells();
