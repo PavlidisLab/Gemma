@@ -17,6 +17,7 @@ import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.util.ResourceUtils;
 import org.springframework.web.context.ServletConfigAware;
 
 import javax.servlet.ServletConfig;

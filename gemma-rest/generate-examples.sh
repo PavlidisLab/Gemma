@@ -13,7 +13,7 @@ if [ -n "$GEMMA_USERNAME" ]; then
   if [ -n "$GEMMA_PASSWORD" ]; then
     gemma_credentials="$GEMMA_USERNAME:$GEMMA_PASSWORD"
   elif [ -n "$GEMMA_PASSWORD_CMD" ]; then
-    gemma_credentials="$GEMMA_USERNAME:$(eval "$GEMMA_PASSWORD_CMD")"
+    gemma_credentials="$GEMMA_USERNAME:$(eval "$GEMMA_PASSWORD_CMD" | head -n1)"
   else
     # curl will prompt for the password
     gemma_credentials="$GEMMA_USERNAME"
@@ -34,3 +34,7 @@ curl --show-error --silent -u "${gemma_credentials}" --compressed "${gemma_host}
 curl --show-error --silent -u "${gemma_credentials}" --compressed "${gemma_host}/rest/v2/datasets/GSE199762/data/singleCell?force=${force}" -H Accept:text/tab-separated-values | head -n 20 > "$examples_dir"/dataset-single-cell-data.tsv
 curl --show-error --silent -u "${gemma_credentials}" --compressed "${gemma_host}/rest/v2/platforms/2/annotations?force=${force}" | head -n 20 > "$examples_dir"//platform-annotations.tsv
 curl --show-error --silent -u "${gemma_credentials}" --compressed "${gemma_host}/rest/v2/resultSets/425093" -H Accept:text/tab-separated-values | head -n 20 > "$examples_dir"/result-set.tsv
+
+curl --show-error -u "${gemma_credentials}" --compressed "${gemma_host}/rest/v2/datasets/GSE199762/singleCellDimension" -H Accept:text/tab-separated-values | head -n 20 > "$examples_dir"/dataset-single-cell-dimension.tsv
+curl --show-error -u "${gemma_credentials}" --compressed "${gemma_host}/rest/v2/datasets/GSE199762/cellTypeAssignment" -H Accept:text/tab-separated-values | head -n 20 > "$examples_dir"/dataset-cell-type-assignment.tsv
+curl --show-error -u "${gemma_credentials}" --compressed "${gemma_host}/rest/v2/datasets/GSE199762/cellLevelCharacteristics" -H Accept:text/tab-separated-values | head -n 20 > "$examples_dir"/dataset-cell-level-characteristics.tsv

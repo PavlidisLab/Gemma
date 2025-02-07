@@ -1080,7 +1080,12 @@ public class DatasetsWebService {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @Path("/{dataset}/singleCellDimension")
-    @Operation(summary = "Retrieve a single-cell dimension of a single-cell dataset")
+    @Operation(summary = "Retrieve a single-cell dimension of a single-cell dataset", responses = {
+            @ApiResponse(content = {
+                    @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectSingleCellDimensionValueObject.class)),
+                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-single-cell-dimension.tsv") })
+            })
+    })
     public Object getDatasetSingleCellDimension(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
@@ -1133,7 +1138,12 @@ public class DatasetsWebService {
     @GET
     @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @Path("/{dataset}/cellTypeAssignment")
-    @Operation(summary = "Retrieve a cell-type assignment of a single-cell dataset")
+    @Operation(summary = "Retrieve a cell-type assignment of a single-cell dataset", responses = {
+            @ApiResponse(content = {
+                    @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectCellTypeAssignmentValueObject.class)),
+                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-cell-type-assignment.tsv") })
+            })
+    })
     public Object getDatasetCellTypeAssignment(
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
@@ -1171,6 +1181,45 @@ public class DatasetsWebService {
             };
         } else {
             return respond( new CellTypeAssignmentValueObject( cta, false ) );
+        }
+    }
+
+    @GET
+    @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
+    @Path("/{dataset}/cellLevelCharacteristics")
+    @Operation(summary = "Retrieve all other cell-level characteristics of a single-cell dataset", responses = {
+            @ApiResponse(content = {
+                    @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectListCellLevelCharacteristicsValueObject.class)),
+                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-cell-level-characteristics.tsv") })
+            })
+    })
+    public Object getDatasetCellLevelCharacteristics(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
+            @Context HttpHeaders headers
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        QuantitationType qt;
+        if ( qtArg == null ) {
+            qt = singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee )
+                    .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have a preferred single-cell quantitation type." ) );
+        } else {
+            qt = quantitationTypeArgService.getEntity( qtArg, ee, SingleCellExpressionDataVector.class );
+        }
+        SingleCellDimension dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristics( ee, qt );
+        if ( dimension == null ) {
+            throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
+        }
+        MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+        if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
+            return ( StreamingOutput ) output -> {
+                CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
+                writer.write( dimension.getCellLevelCharacteristics(), dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
+            };
+        } else {
+            return respond( dimension.getCellLevelCharacteristics().stream()
+                    .map( clc -> new CellLevelCharacteristicsValueObject( clc, false ) )
+                    .collect( Collectors.toList() ) );
         }
     }
 
@@ -1979,6 +2028,27 @@ public class DatasetsWebService {
             return ids.subList( offset, Math.min( offset + limit, ids.size() ) );
         } else {
             return Collections.emptyList();
+        }
+    }
+
+    public static class ResponseDataObjectCellTypeAssignmentValueObject extends ResponseDataObject<CellTypeAssignmentValueObject> {
+
+        public ResponseDataObjectCellTypeAssignmentValueObject( CellTypeAssignmentValueObject payload ) {
+            super( payload );
+        }
+    }
+
+    public static class ResponseDataObjectListCellLevelCharacteristicsValueObject extends ResponseDataObject<List<CellLevelCharacteristicsValueObject>> {
+
+        public ResponseDataObjectListCellLevelCharacteristicsValueObject( List<CellLevelCharacteristicsValueObject> payload ) {
+            super( payload );
+        }
+    }
+
+    public static class ResponseDataObjectSingleCellDimensionValueObject extends ResponseDataObject<SingleCellDimensionValueObject> {
+
+        public ResponseDataObjectSingleCellDimensionValueObject( SingleCellDimensionValueObject payload ) {
+            super( payload );
         }
     }
 }
