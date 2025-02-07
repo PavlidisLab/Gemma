@@ -42,6 +42,13 @@ public class SingleCellDimensionValueObject extends IdentifiableValueObject<Sing
     private List<String> cellIds;
 
     /**
+     * Number of cells.
+     * <p>
+     * This is always equal to the length of {@link #cellIds}.
+     */
+    private int numberOfCells;
+
+    /**
      * A list of {@link ubic.gemma.model.expression.bioAssay.BioAssay} IDs that are applicable to the cells.
      */
     private List<Long> bioAssayIds;
@@ -61,6 +68,7 @@ public class SingleCellDimensionValueObject extends IdentifiableValueObject<Sing
     public SingleCellDimensionValueObject( SingleCellDimension singleCellDimension ) {
         super( singleCellDimension );
         this.cellIds = singleCellDimension.getCellIds();
+        this.numberOfCells = singleCellDimension.getNumberOfCells();
         this.bioAssayIds = new ArrayList<>( singleCellDimension.getNumberOfCells() );
         try {
             for ( int i = 0; i < singleCellDimension.getNumberOfCells(); i++ ) {
