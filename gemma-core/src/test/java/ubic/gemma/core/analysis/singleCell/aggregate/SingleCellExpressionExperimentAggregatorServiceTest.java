@@ -488,6 +488,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                 .collect( Collectors.toList() ) );
         cta.setNumberOfCellTypes( 4 );
         cta.setCellTypeIndices( indices );
+        cta.setNumberOfAssignedCells( indices.length );
         cta.setPreferred( true );
         return cta;
     }

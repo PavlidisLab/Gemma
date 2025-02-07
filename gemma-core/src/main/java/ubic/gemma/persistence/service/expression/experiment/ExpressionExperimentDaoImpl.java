@@ -2206,11 +2206,18 @@ public class ExpressionExperimentDaoImpl
                     "Cell type labels must be unique." );
             Assert.isTrue( numberOfCellTypeLabels == labelling.getNumberOfCellTypes(),
                     "The number of cell types must match the number of values the cellTypes collection." );
+            int N = 0;
             for ( int k : labelling.getCellTypeIndices() ) {
-                Assert.isTrue( ( k >= 0 && k < numberOfCellTypeLabels ) || k == CellLevelCharacteristics.UNKNOWN_CHARACTERISTIC,
+                Assert.isTrue( ( k >= 0 && k < numberOfCellTypeLabels ) || k == CellTypeAssignment.UNKNOWN_CHARACTERISTIC,
                         String.format( "Cell type vector values must be within the [%d, %d[ range or use %d as an unknown indicator.",
-                                0, numberOfCellTypeLabels, CellLevelCharacteristics.UNKNOWN_CHARACTERISTIC ) );
+                                0, numberOfCellTypeLabels, CellTypeAssignment.UNKNOWN_CHARACTERISTIC ) );
+                if ( k != CellTypeAssignment.UNKNOWN_CELL_TYPE ) {
+                    N++;
+                }
             }
+            Assert.isTrue( labelling.getNumberOfAssignedCells() == N,
+                    "The number of assigned cells must match the number of assigned values in cellTypeIndices." );
+            ;
             for ( Characteristic c : labelling.getCellTypes() ) {
                 Assert.isTrue( CharacteristicUtils.hasCategory( c, Categories.CELL_TYPE ), "All cell types must have the " + Categories.CELL_TYPE + " category." );
             }
@@ -2227,11 +2234,17 @@ public class ExpressionExperimentDaoImpl
             int numberOfCharacteristics = clc.getCharacteristics().size();
             Assert.isTrue( numberOfCharacteristics == clc.getNumberOfCharacteristics(),
                     "The number of cell-level characteristics must match the size of the characteristics collection." );
+            int N = 0;
             for ( int k : clc.getIndices() ) {
                 Assert.isTrue( ( k >= 0 && k < numberOfCharacteristics ) || k == CellTypeAssignment.UNKNOWN_CELL_TYPE,
                         String.format( "Cell-level characteristics vector values must be within the [%d, %d[ range or use %d as an unknown indicator.",
                                 0, numberOfCharacteristics, CellTypeAssignment.UNKNOWN_CELL_TYPE ) );
+                if ( k != CellTypeAssignment.UNKNOWN_CHARACTERISTIC ) {
+                    N++;
+                }
             }
+            Assert.isTrue( clc.getNumberOfAssignedCells() == N,
+                    "The number of assigned cells must match the number of assigned values in indices." );
         }
     }
 

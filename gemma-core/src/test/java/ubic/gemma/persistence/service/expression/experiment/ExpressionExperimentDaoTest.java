@@ -506,6 +506,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         scd.setBioAssaysOffset( new int[] { 0 } );
         CellTypeAssignment cta = new CellTypeAssignment();
         cta.setCellTypeIndices( new int[] { 0, 1, 1, 0 } );
+        cta.setNumberOfAssignedCells( 4 );
         cta.setCellTypes( Arrays.asList( Characteristic.Factory.newInstance( Categories.CELL_TYPE, "X", null ),
                 Characteristic.Factory.newInstance( Categories.CELL_TYPE, "Y", null ) ) );
         cta.setPreferred( true );

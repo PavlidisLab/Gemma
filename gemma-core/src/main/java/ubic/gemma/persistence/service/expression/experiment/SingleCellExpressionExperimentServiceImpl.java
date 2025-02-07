@@ -555,10 +555,18 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         cta.setDescription( description );
         int[] ct = new int[dimension.getNumberOfCells()];
         List<String> labels = newCellTypeLabels.stream().sorted().distinct().collect( Collectors.toList() );
+        int N = 0;
         for ( int i = 0; i < ct.length; i++ ) {
-            ct[i] = Collections.binarySearch( labels, newCellTypeLabels.get( i ) );
+            int k = Collections.binarySearch( labels, newCellTypeLabels.get( i ) );
+            if ( k >= 0 ) {
+                ct[i] = k;
+                N++;
+            } else {
+                ct[i] = CellTypeAssignment.UNKNOWN_CELL_TYPE;
+            }
         }
         cta.setCellTypeIndices( ct );
+        cta.setNumberOfAssignedCells( N );
         cta.setCellTypes( labels.stream()
                 .map( l -> Characteristic.Factory.newInstance( Categories.CELL_TYPE, l, null ) )
                 .collect( Collectors.toList() ) );

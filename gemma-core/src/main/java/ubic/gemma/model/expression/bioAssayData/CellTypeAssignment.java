@@ -40,6 +40,9 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
      */
     private int[] cellTypeIndices;
 
+    @Nullable
+    private Integer numberOfAssignedCells;
+
     /**
      * List of cell types.
      */
@@ -133,8 +136,9 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
             CellTypeAssignment cta = new CellTypeAssignment();
             cta.setName( name );
             cta.setCellTypes( characteristics );
-            cta.setCellTypeIndices( indices );
             cta.setNumberOfCellTypes( characteristics.size() );
+            cta.setCellTypeIndices( indices );
+            cta.setNumberOfAssignedCells( ( int ) Arrays.stream( indices ).filter( i -> i != UNKNOWN_CELL_TYPE ).count() );
             return cta;
         }
     }

@@ -31,6 +31,9 @@ class GenericCellLevelCharacteristics extends AbstractIdentifiable implements Ce
     private int[] indices;
 
     @Nullable
+    private Integer numberOfAssignedCells;
+
+    @Nullable
     @Override
     public Characteristic getCharacteristic( int cellIndex ) {
         int i = indices[cellIndex];

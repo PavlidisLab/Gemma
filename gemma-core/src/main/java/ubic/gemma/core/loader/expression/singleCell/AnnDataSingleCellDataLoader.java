@@ -269,11 +269,11 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             // TODO: support cell types encoded as string-array
             CategoricalArray<String> cellTypes = var.getCategoricalColumn( cellTypeFactorName, String.class );
             CellTypeAssignment assignment = new CellTypeAssignment();
-            int unknownCellTypeCode = -1;
+            int unknownCellTypeCode = CellTypeAssignment.UNKNOWN_CELL_TYPE;
             for ( int i = 0; i < cellTypes.getCategories().length; i++ ) {
                 String ct = cellTypes.getCategories()[i];
                 if ( ct.equals( unknownCellTypeIndicator ) ) {
-                    if ( unknownCellTypeCode != -1 ) {
+                    if ( unknownCellTypeCode != CellTypeAssignment.UNKNOWN_CELL_TYPE ) {
                         throw new IllegalStateException( "There is not than one unknown cell type indicator." );
                     }
                     log.info( h5File + " uses a special indicator for unknown cell types: " + ct + " with code: " + i + ", its occurrences will be replaced with -1." );
@@ -282,20 +282,23 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 }
                 assignment.getCellTypes().add( Characteristic.Factory.newInstance( Categories.CELL_TYPE, ct, null ) );
             }
-            if ( unknownCellTypeIndicator != null && unknownCellTypeCode == -1 ) {
+            if ( unknownCellTypeIndicator != null && unknownCellTypeCode == CellTypeAssignment.UNKNOWN_CELL_TYPE ) {
                 throw new IllegalStateException( String.format( "The unknown cell type indicator %s was not found. Possible values are: %s. If none of these indicate a missing cell type, set the indicator to null.",
                         unknownCellTypeIndicator, String.join( ", ", cellTypes.getCategories() ) ) );
             }
             assignment.setNumberOfCellTypes( assignment.getCellTypes().size() );
+            int[] codes = cellTypes.getCodes();
             if ( unknownCellTypeCode != -1 ) {
-                // rewrite unknown codes
-                for ( int i = 0; i < cellTypes.getCodes().length; i++ ) {
-                    if ( cellTypes.getCodes()[i] == unknownCellTypeCode ) {
-                        cellTypes.getCodes()[i] = CellTypeAssignment.UNKNOWN_CELL_TYPE;
+                // rewrite unknown codes, make a copy to ensure we don't modify the AnnData object
+                codes = Arrays.copyOf( codes, codes.length );
+                for ( int i = 0; i < codes.length; i++ ) {
+                    if ( codes[i] == unknownCellTypeCode ) {
+                        codes[i] = CellTypeAssignment.UNKNOWN_CELL_TYPE;
                     }
                 }
             }
-            assignment.setCellTypeIndices( cellTypes.getCodes() );
+            assignment.setCellTypeIndices( codes );
+            assignment.setNumberOfAssignedCells( ( int ) Arrays.stream( codes ).filter( i -> i != CellTypeAssignment.UNKNOWN_CELL_TYPE ).count() );
             return Collections.singleton( assignment );
         }
     }

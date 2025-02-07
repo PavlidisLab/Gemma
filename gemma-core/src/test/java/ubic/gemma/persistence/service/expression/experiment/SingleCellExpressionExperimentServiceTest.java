@@ -547,6 +547,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         CellTypeAssignment labelling = new CellTypeAssignment();
         labelling.setPreferred( true );
         labelling.setCellTypeIndices( ct );
+        labelling.setNumberOfAssignedCells( 100 );
         labelling.setCellTypes( Arrays.asList(
                 Characteristic.Factory.newInstance( Categories.CELL_TYPE, "A", null ),
                 Characteristic.Factory.newInstance( Categories.CELL_TYPE, "B", null ) ) );
