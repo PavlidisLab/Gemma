@@ -15,6 +15,8 @@ public class StaticAssetServerConfig {
     private String baseUrl;
 
     // settings for the internal server
+    @Value("${npm.exe}")
+    private Path npmExe;
     @Value("${gemma.staticAssetServer.internal.enabled}")
     private boolean internal;
     @Value("${gemma.staticAssetServer.internal.prefix}")
@@ -28,7 +30,7 @@ public class StaticAssetServerConfig {
             return null;
         }
         if ( internal ) {
-            return new InternalStaticAssetServer( prefix, baseUrl, true, logFile );
+            return new InternalStaticAssetServer( npmExe, prefix, baseUrl, true, logFile );
         } else {
             return new ExternalStaticAssetServer( baseUrl );
         }

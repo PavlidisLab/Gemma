@@ -7,10 +7,6 @@ import org.springframework.util.Assert;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.net.ConnectException;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,6 +16,7 @@ import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 @CommonsLog
 public class InternalStaticAssetServer implements StaticAssetServer, SmartLifecycle {
 
+    private final Path npmExe;
     private final Path prefix;
     private final String baseUrl;
     private final boolean autoStartup;
@@ -30,7 +27,8 @@ public class InternalStaticAssetServer implements StaticAssetServer, SmartLifecy
     @Nullable
     private String errorMessage;
 
-    public InternalStaticAssetServer( Path prefix, String baseUrl, boolean autoStartup, Path logFile ) {
+    public InternalStaticAssetServer( Path npmExe, Path prefix, String baseUrl, boolean autoStartup, Path logFile ) {
+        this.npmExe = npmExe;
         this.prefix = prefix;
         this.baseUrl = baseUrl;
         this.autoStartup = autoStartup;
@@ -57,7 +55,7 @@ public class InternalStaticAssetServer implements StaticAssetServer, SmartLifecy
         Assert.isTrue( Files.exists( prefix.resolve( "package.json" ) ), "There is no package.json under " + prefix + "." );
         try {
             log.info( "Launching npm serve from " + prefix + "..." );
-            npmServeProcess = new ProcessBuilder( "npm", "--prefix", prefix.toString(), "run", "serve" )
+            npmServeProcess = new ProcessBuilder( npmExe.toString(), "--prefix", prefix.toString(), "run", "serve" )
                     .redirectOutput( logFile.toFile() )
                     .redirectError( ProcessBuilder.Redirect.PIPE )
                     .start();
