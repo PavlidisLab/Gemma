@@ -22,18 +22,30 @@ public class CellLevelCharacteristicsValueObject extends IdentifiableValueObject
 
     private List<Long> characteristicIds;
 
+    /**
+     * Indicate how many cells have an assigned characteristic.
+     */
+    private int numberOfAssignedCells;
+
     public CellLevelCharacteristicsValueObject( CellLevelCharacteristics cellLevelCharacteristics ) {
         this.characteristics = cellLevelCharacteristics.getCharacteristics()
                 .stream().map( CharacteristicValueObject::new )
                 .collect( Collectors.toSet() );
         try {
             this.characteristicIds = Arrays.stream( cellLevelCharacteristics.getIndices() )
-                    .mapToObj( i -> i != -1 ? requireNonNull( cellLevelCharacteristics.getCharacteristics().get( i ).getId() ) : null )
+                    .mapToObj( i -> i != CellLevelCharacteristics.UNKNOWN_CHARACTERISTIC ? requireNonNull( cellLevelCharacteristics.getCharacteristics().get( i ).getId() ) : null )
                     .collect( Collectors.toList() );
         } catch ( IndexOutOfBoundsException e ) {
             // this may happen because getCellType() can fail if the data we have is incorrect, but we don't want to
             // break the VO serialization which would break the REST API.
             log.warn( "Characteristic indices are invalid for " + cellLevelCharacteristics + "." );
+        }
+        if ( cellLevelCharacteristics.getNumberOfAssignedCells() != null ) {
+            numberOfAssignedCells = cellLevelCharacteristics.getNumberOfAssignedCells();
+        } else {
+            numberOfAssignedCells = ( int ) Arrays.stream( cellLevelCharacteristics.getIndices() )
+                    .filter( i -> i != CellLevelCharacteristics.UNKNOWN_CHARACTERISTIC )
+                    .count();
         }
     }
 }

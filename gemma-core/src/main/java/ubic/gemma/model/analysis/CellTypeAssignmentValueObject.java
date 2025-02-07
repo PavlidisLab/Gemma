@@ -34,6 +34,11 @@ public class CellTypeAssignmentValueObject extends AnalysisValueObject<CellTypeA
     private List<Long> cellTypeIds;
 
     /**
+     * Indicate how many cells have an assigned cell type.
+     */
+    private int numberOfAssignedCells;
+
+    /**
      * Indicate if this assignment is the preferred one.
      */
     private boolean isPreferred;
@@ -45,12 +50,19 @@ public class CellTypeAssignmentValueObject extends AnalysisValueObject<CellTypeA
                 .collect( Collectors.toSet() );
         try {
             cellTypeIds = Arrays.stream( cellTypeAssignment.getCellTypeIndices() )
-                    .mapToObj( i -> i != -1 ? requireNonNull( cellTypeAssignment.getCellTypes().get( i ).getId() ) : null )
+                    .mapToObj( i -> i != CellTypeAssignment.UNKNOWN_CELL_TYPE ? requireNonNull( cellTypeAssignment.getCellTypes().get( i ).getId() ) : null )
                     .collect( Collectors.toList() );
         } catch ( IndexOutOfBoundsException e ) {
             // this may happen because getCellType() can fail if the data we have is incorrect, but we don't want to
             // break the VO serialization which would break the REST API.
             log.warn( "Cell type indices are invalid for " + cellTypeAssignment + "." );
+        }
+        if ( cellTypeAssignment.getNumberOfAssignedCells() != null ) {
+            numberOfAssignedCells = cellTypeAssignment.getNumberOfAssignedCells();
+        } else {
+            numberOfAssignedCells = ( int ) Arrays.stream( cellTypeAssignment.getCellTypeIndices() )
+                    .filter( i -> i != CellTypeAssignment.UNKNOWN_CELL_TYPE )
+                    .count();
         }
         isPreferred = cellTypeAssignment.isPreferred();
     }
