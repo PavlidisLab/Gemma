@@ -6,18 +6,28 @@
 
 import os
 import re
-import requests
-from bs4 import BeautifulSoup
+import subprocess
 from getpass import getpass
 from os.path import dirname, join
+
+import requests
+from bs4 import BeautifulSoup
 
 gemma_host_url = os.getenv('GEMMA_HOST') or 'https://gemma.msl.ubc.ca'
 header = "/* this code is generated, see generate-dwr-client.py for details */"
 dwr_script_dir = join(dirname(__file__), "src/main/webapp/scripts/api/dwr")
-session_id = os.getenv('GEMMA_SESSION_ID') or getpass('Supply your JSESSIONID for ' + gemma_host_url + ': ')
+pwd = os.getenv('GEMMA_PASSWORD')
+username = os.getenv('GEMMA_USERNAME') or input('Supply your username: ')
+if os.getenv('GEMMA_PASSWORD'):
+    password = os.getenv('GEMMA_PASSWORD')
+elif os.getenv('GEMMA_PASSWORD_CMD'):
+    password = subprocess.run(os.getenv('GEMMA_PASSWORD_CMD'), shell=True, check=True, stdout=subprocess.PIPE, text=True).stdout
+    password = password.splitlines()[0]
+else:
+    password = getpass('Supply your password: ')
 
 with requests.Session() as session:
-    session.cookies['JSESSIONID'] = session_id
+    session.auth = (username, password)
     res = session.get(gemma_host_url + '/dwr/index.html')
     res.raise_for_status()
     s = BeautifulSoup(res.text, features='html.parser')
