@@ -2,6 +2,7 @@ package ubic.gemma.core.loader.expression.geo.singleCell;
 
 import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.core.loader.util.anndata.AnnData;
+import ubic.gemma.core.loader.util.anndata.AnnDataException;
 import ubic.gemma.core.loader.util.hdf5.TruncatedH5FileException;
 
 import java.io.IOException;
@@ -28,15 +29,12 @@ public abstract class AbstractSingleH5FileInSeriesSingleCellDetector extends Abs
                 && !isTruncated( dest );
     }
 
-    private boolean isTruncated( Path dest ) throws IOException {
+    protected boolean isTruncated( Path dest ) throws IOException {
         try ( AnnData ignored = AnnData.open( dest ) ) {
             return false;
         } catch ( TruncatedH5FileException e ) {
             log.warn( dest + " appears to be a truncated H5 file, it will re-downloaded...", e );
             return true;
-        } catch ( IllegalArgumentException e ) {
-            log.warn( "AnnData file " + dest + " is likely invalid, however this method is only checking if the file is truncated.", e );
-            return false;
         }
     }
 }
