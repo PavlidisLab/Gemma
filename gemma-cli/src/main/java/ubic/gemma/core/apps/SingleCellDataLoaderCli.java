@@ -303,6 +303,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
+        ee = eeService.thawLite( ee );
         SingleCellDataLoaderConfig config = getConfigForDataType( dataType );
         switch ( mode ) {
             case LOAD_CELL_TYPE_ASSIGNMENTS:

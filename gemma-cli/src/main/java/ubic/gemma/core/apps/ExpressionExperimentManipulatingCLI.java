@@ -395,11 +395,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     private List<ExpressionExperiment> experimentsFromCliList( String[] identifiers ) {
         List<ExpressionExperiment> ees = new ArrayList<>( identifiers.length );
         for ( String identifier : identifiers ) {
-            ExpressionExperiment expressionExperiment = entityLocator.locateExpressionExperiment( identifier, useReferencesIfPossible );
-            if ( !useReferencesIfPossible ) {
-                expressionExperiment = eeService.thawLite( expressionExperiment );
-            }
-            ees.add( expressionExperiment );
+            ees.add( entityLocator.locateExpressionExperiment( identifier, useReferencesIfPossible ) );
         }
         return ees;
     }

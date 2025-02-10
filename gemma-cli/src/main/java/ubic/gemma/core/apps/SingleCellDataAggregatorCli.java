@@ -80,12 +80,15 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
     protected void processExpressionExperimentVectors( ExpressionExperiment expressionExperiment, QuantitationType qt ) {
         log.info( "Splitting single cell data into pseudo-bulks for: " + expressionExperiment + " and " + qt );
 
+        expressionExperiment = eeService.thawLite( expressionExperiment );
+
         CellTypeAssignment cta;
         if ( ctaName != null ) {
             cta = entityLocator.locateCellTypeAssignment( expressionExperiment, qt, ctaName );
         } else {
+            ExpressionExperiment finalExpressionExperiment = expressionExperiment;
             cta = singleCellExpressionExperimentService.getPreferredCellTypeAssignment( expressionExperiment, qt )
-                    .orElseThrow( () -> new IllegalStateException( expressionExperiment + " does not have a preferred cell-type assignment for " + qt + "." ) );
+                    .orElseThrow( () -> new IllegalStateException( finalExpressionExperiment + " does not have a preferred cell-type assignment for " + qt + "." ) );
         }
 
         QuantitationType newQt;
