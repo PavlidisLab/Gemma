@@ -30,6 +30,7 @@ import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.DataUpdater;
+import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -43,6 +44,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -52,7 +54,9 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -149,9 +153,14 @@ public class DiffExTest extends AbstractGeoServiceTest {
                     .getTestPersistentArrayDesign( probeNames, taxonService.findByCommonName( "human" ) );
             targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
 
+            Map<BioAssay, SequencingMetadata> sequencingMetadata = new HashMap<>();
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                sequencingMetadata.put( ba, SequencingMetadata.builder().readLength( 36 ).isPaired( true ).build() );
+            }
+
             // the experiment has 8 samples but the data has 4 columns so allow missing samples
             // GSM718707 GSM718708 GSM718709 GSM718710
-            dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, null, 36, true, true );
+            dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, null, sequencingMetadata, true );
         }
 
         // make sure to do a thawRawAndProcessed() to get the addCountData() updates

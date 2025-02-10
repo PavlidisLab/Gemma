@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoBioAssayMapper;
+import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.util.mapper.*;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
@@ -92,10 +93,16 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
 
     @Override
     @Transactional
+    public Map<BioAssay, SequencingMetadata> loadSequencingMetadata( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
+        return loadSequencingMetadata( getLoader( ee, config ), getSingleCellDimension( ee, false, config ) );
+    }
+
+    @Override
+    @Transactional
     public Collection<CellTypeAssignment> loadCellTypeAssignments( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, config ) ) {
-            SingleCellDimension dimension = getSingleCellDimension( ee, config );
+            SingleCellDimension dimension = getSingleCellDimension( ee, true, config );
             Set<CellTypeAssignment> ctas = loader.getCellTypeAssignments( dimension );
             applyPreferredCellTypeAssignment( ctas, config );
             Set<CellTypeAssignment> set = new HashSet<>();
@@ -114,7 +121,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     public Collection<CellTypeAssignment> loadCellTypeAssignments( ExpressionExperiment ee, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, dataType, config ) ) {
-            SingleCellDimension dimension = getSingleCellDimension( ee, config );
+            SingleCellDimension dimension = getSingleCellDimension( ee, true, config );
             Set<CellTypeAssignment> ctas = loader.getCellTypeAssignments( dimension );
             applyPreferredCellTypeAssignment( ctas, config );
             Set<CellTypeAssignment> set = new HashSet<>();
@@ -133,7 +140,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     public Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, config ) ) {
-            SingleCellDimension dimension = getSingleCellDimension( ee, config );
+            SingleCellDimension dimension = getSingleCellDimension( ee, true, config );
             Collection<CellLevelCharacteristics> created = new HashSet<>();
             for ( CellLevelCharacteristics clc : loader.getOtherCellLevelCharacteristics( dimension ) ) {
                 created.add( singleCellExpressionExperimentService.addCellLevelCharacteristics( ee, dimension, clc ) );
@@ -149,7 +156,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     public Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, dataType, config ) ) {
-            SingleCellDimension dimension = getSingleCellDimension( ee, config );
+            SingleCellDimension dimension = getSingleCellDimension( ee, true, config );
             Collection<CellLevelCharacteristics> created = new HashSet<>();
             for ( CellLevelCharacteristics clc : loader.getOtherCellLevelCharacteristics( dimension ) ) {
                 created.add( singleCellExpressionExperimentService.addCellLevelCharacteristics( ee, dimension, clc ) );
@@ -160,20 +167,35 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         }
     }
 
-    private SingleCellDimension getSingleCellDimension( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
+    /**
+     * @param includeCellIds whether to include cell IDs in the dimension. Note that if you choose not to, you will not
+     *                       be able to access {@link SingleCellDimension#getCellTypeAssignments()} and
+     *                       {@link SingleCellDimension#getCellLevelCharacteristics()} since lazy-initialization hasn't
+     *                       been implemented.
+     */
+    private SingleCellDimension getSingleCellDimension( ExpressionExperiment ee, boolean includeCellIds, SingleCellDataLoaderConfig config ) {
         if ( config.getQuantitationTypeName() != null ) {
             try {
                 QuantitationType qt = quantitationTypeService.findByNameAndVectorType( ee, config.getQuantitationTypeName(), SingleCellExpressionDataVector.class );
                 if ( qt == null ) {
                     throw new IllegalArgumentException( "No quantitation type with name " + config.getQuantitationTypeName() + " for " + ee + "." );
                 }
-                return singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristics( ee, qt );
+                if ( includeCellIds ) {
+                    return singleCellExpressionExperimentService.getSingleCellDimension( ee, qt );
+                } else {
+                    return singleCellExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt );
+                }
             } catch ( NonUniqueQuantitationTypeByNameException e ) {
                 throw new RuntimeException( e );
             }
         } else {
-            return singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithCellLevelCharacteristics( ee )
-                    .orElseThrow( () -> new IllegalStateException( ee + " does not have a preferred single-cell dimension." ) );
+            if ( includeCellIds ) {
+                return singleCellExpressionExperimentService.getPreferredSingleCellDimension( ee )
+                        .orElseThrow( () -> new IllegalStateException( ee + " does not have a preferred single-cell dimension." ) );
+            } else {
+                return singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee )
+                        .orElseThrow( () -> new IllegalStateException( ee + " does not have a preferred single-cell dimension." ) );
+            }
         }
     }
 
@@ -186,6 +208,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         QuantitationType qt = loadQuantitationType( loader, ee, config );
         loadCellTypeAssignments( loader, dim, config );
         loadCellLevelCharacteristics( loader, dim );
+        loadSequencingMetadata( loader, dim );
         loadVectors( loader, ee, dim, qt, platform, config );
         return qt;
     }
@@ -335,6 +358,39 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         }
     }
 
+    private Map<BioAssay, SequencingMetadata> loadSequencingMetadata( SingleCellDataLoader loader, SingleCellDimension dim ) {
+        Map<BioAssay, SequencingMetadata> sequencingMetadata;
+        try {
+            sequencingMetadata = loader.getSequencingMetadata( dim );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+        for ( BioAssay ba : dim.getBioAssays() ) {
+            SequencingMetadata sm = sequencingMetadata.get( ba );
+            if ( sm == null ) {
+                log.warn( "There is no sequencing metadata available for " + ba + ", ignoring." );
+                continue;
+            }
+            if ( sm.getReadCount() != null ) {
+                if ( sm.getReadCount() <= 0 ) {
+                    throw new IllegalStateException( "Read count must be strictly positive." );
+                }
+                ba.setSequenceReadCount( sm.getReadCount() );
+            }
+            if ( sm.getReadLength() != null ) {
+                if ( sm.getReadLength() <= 0 ) {
+                    throw new IllegalStateException( "Read length must be strictly positive." );
+                }
+                ba.setSequenceReadLength( sm.getReadLength() );
+            }
+            if ( sm.getIsPaired() != null ) {
+                ba.setSequencePairedReads( sm.getIsPaired() );
+            }
+            bioAssayService.update( ba );
+        }
+        return sequencingMetadata;
+    }
+
     private void loadVectors( SingleCellDataLoader loader, ExpressionExperiment ee, SingleCellDimension dim, QuantitationType qt, ArrayDesign platform, SingleCellDataLoaderConfig config ) {
         DesignElementMapper mapper;
         Set<SingleCellExpressionDataVector> vectors;
@@ -468,7 +524,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
             case LOOM:
                 return getLoomLoader();
             case NULL:
-                return getNullLoader();
+                return getNullLoader( ee, config );
             default:
                 throw new IllegalArgumentException( "Unknown single-cell data type " + dataType + "." );
         }
@@ -480,7 +536,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         AnnDataSingleCellDataLoaderConfigurer annDataConfigurer = new AnnDataSingleCellDataLoaderConfigurer( p, ee.getBioAssays(), bioAssayMapper );
         annDataConfigurer.setPythonExecutable( pythonExecutable );
         annDataConfigurer.setScratchDir( scratchDir );
-        return configureGenericMetadataLoader( annDataConfigurer, bioAssayMapper, config );
+        return configureLoader( annDataConfigurer, bioAssayMapper, config );
     }
 
     private SingleCellDataLoader getSeuratDiskLoader() {
@@ -495,24 +551,25 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         } else {
             dir = getMexDir( ee );
         }
-        return configureGenericMetadataLoader( new MexSingleCellDataLoaderConfigurer( dir, ee.getBioAssays(), bioAssayMapper ), bioAssayMapper, config );
+        return configureLoader( new MexSingleCellDataLoaderConfigurer( dir, ee.getBioAssays(), bioAssayMapper ), bioAssayMapper, config );
     }
 
     private SingleCellDataLoader getLoomLoader() {
         throw new UnsupportedOperationException( "Loom is not supported yet." );
     }
 
-    private SingleCellDataLoader getNullLoader() {
-        return new NullSingleCellDataLoader();
+    private SingleCellDataLoader getNullLoader( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
+        return configureLoader( new NullSingleCellDataLoaderConfigurer(), getBioAssayMapper( ee, config ), config );
     }
 
-    private SingleCellDataLoader configureGenericMetadataLoader( SingleCellDataLoaderConfigurer<?> loader, BioAssayMapper bioAssayMapper, SingleCellDataLoaderConfig config ) {
-        if ( config.getCellTypeAssignmentFile() != null || config.getOtherCellLevelCharacteristicsFile() != null ) {
-            return new GenericMetadataSingleCellDataLoaderConfigurer( loader, bioAssayMapper )
-                    .configureLoader( config );
-        } else {
-            return loader.configureLoader( config );
+    private SingleCellDataLoader configureLoader( SingleCellDataLoaderConfigurer<?> loaderConfigurer, BioAssayMapper bioAssayMapper, SingleCellDataLoaderConfig config ) {
+        if ( config.getSequencingMetadataFile() != null || config.getDefaultSequencingMetadata() != null ) {
+            loaderConfigurer = new SequencingMetadataFileSingleCellDataLoaderConfigurer( loaderConfigurer, bioAssayMapper );
         }
+        if ( config.getCellTypeAssignmentFile() != null || config.getOtherCellLevelCharacteristicsFile() != null ) {
+            loaderConfigurer = new GenericMetadataSingleCellDataLoaderConfigurer( loaderConfigurer, bioAssayMapper );
+        }
+        return loaderConfigurer.configureLoader( config );
     }
 
     /**

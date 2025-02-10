@@ -32,6 +32,7 @@ import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
+import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.loader.util.TestUtils;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -49,10 +50,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
@@ -247,8 +245,13 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
         assertEquals( 199, targetArrayDesign.getCompositeSequences().size() );
 
+        Map<BioAssay, SequencingMetadata> sequencingMetadata = new HashMap<>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            sequencingMetadata.put( ba, SequencingMetadata.builder().readLength( 36 ).isPaired( true ).build() );
+        }
+
         // Main step.
-        dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
+        dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, sequencingMetadata, false );
         ee = experimentService.loadOrFail( ee.getId() );
         ee = experimentService.thaw( ee );
 
@@ -292,7 +295,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         assertFalse( dataVectorService.getProcessedDataVectors( ee2 ).isEmpty() );
 
         // Call it again to test that we don't leak QTs
-        dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
+        dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, sequencingMetadata, false );
         ee = experimentService.load( ee.getId() );
         assertNotNull( ee );
         ee = this.experimentService.thawLite( ee );
@@ -334,13 +337,19 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             targetArrayDesign = this
                     .getTestPersistentArrayDesign( probeNames, taxonService.findByCommonName( "human" ) );
             targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
+
+            Map<BioAssay, SequencingMetadata> sequencingMetadata = new HashMap<>();
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                sequencingMetadata.put( ba, SequencingMetadata.builder().readLength( 36 ).isPaired( true ).build() );
+            }
+
             try {
-                dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
+                dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, sequencingMetadata, false );
                 fail( "Should have gotten an exception" );
             } catch ( IllegalArgumentException e ) {
                 // Expected
             }
-            dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, true );
+            dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, sequencingMetadata, true );
         }
 
         /*

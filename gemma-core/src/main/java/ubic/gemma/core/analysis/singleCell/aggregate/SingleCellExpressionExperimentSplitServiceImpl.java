@@ -136,6 +136,11 @@ public class SingleCellExpressionExperimentSplitServiceImpl implements SingleCel
         BioAssay cellPopBa = new BioAssay();
         cellPopBa.setName( abbreviateWithSuffix( sample.getName(), " - " + cellTypeName, "…", BioAssay.MAX_NAME_LENGTH, true, StandardCharsets.UTF_8 ) );
         cellPopBa.setArrayDesignUsed( sample.getArrayDesignUsed() );
+        // we can't fill that yet, because we don't deal with expression data, but the rest of the sequencing
+        // information can be copied
+        // cellPopBa.setSequenceReadCount( sample.getSequenceReadCount() );
+        cellPopBa.setSequenceReadLength( sample.getSequenceReadLength() );
+        cellPopBa.setSequencePairedReads( sample.getSequencePairedReads() );
         BioMaterial cellPopBm = createBioMaterialForCellPopulation( sample.getSampleUsed(), cellTypeFactorValue, cellType, cellTypeName );
         cellPopBa.setSampleUsed( cellPopBm );
         cellPopBm.setBioAssaysUsedIn( Collections.singleton( cellPopBa ) );

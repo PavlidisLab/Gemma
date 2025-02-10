@@ -56,4 +56,9 @@ public class BooleanVectorValueObject extends DataVectorValueObject {
         return super.equals( obj )
                 && Arrays.equals( data, other.data );
     }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 }

@@ -93,6 +93,9 @@ public class SingleCellExpressionExperimentSplitServiceTest extends AbstractJUni
             BioAssay ba = new BioAssay();
             ba.setArrayDesignUsed( ad );
             ba.setName( "ba" + i );
+            ba.setSequencePairedReads( true );
+            ba.setSequenceReadLength( 100 );
+            ba.setSequenceReadCount( 10000L );
             BioMaterial bm = new BioMaterial();
             bm.setName( "bm" + i );
             ba.setSampleUsed( bm );
@@ -136,6 +139,9 @@ public class SingleCellExpressionExperimentSplitServiceTest extends AbstractJUni
                                         .matches( "ba\\d+ - " + cellTypeName );
                                 assertThat( ba.getArrayDesignUsed() )
                                         .isEqualTo( ad );
+                                assertThat( ba.getSequenceReadCount() ).isNull();
+                                assertThat( ba.getSequenceReadLength() ).isEqualTo( 100 );
+                                assertThat( ba.getSequencePairedReads() ).isTrue();
                                 assertThat( ba.getSampleUsed() )
                                         .isNotNull()
                                         .satisfies( bm -> {

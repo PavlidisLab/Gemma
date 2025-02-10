@@ -1,12 +1,15 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
+import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * High-level service for loading single-cell data.
@@ -29,6 +32,11 @@ public interface SingleCellDataLoaderService {
      * @param config   a configuration
      */
     QuantitationType load( ExpressionExperiment ee, ArrayDesign platform, SingleCellDataType dataType, SingleCellDataLoaderConfig config );
+
+    /**
+     * Load sequencing metadata.
+     */
+    Map<BioAssay, SequencingMetadata> loadSequencingMetadata( ExpressionExperiment ee, SingleCellDataLoaderConfig config );
 
     /**
      * Load the cell type assignments, the data type is automatically detected.

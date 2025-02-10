@@ -2,6 +2,8 @@ package ubic.gemma.core.analysis.singleCell.aggregate;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -15,6 +17,18 @@ public interface SingleCellExpressionExperimentAggregatorService {
 
     /**
      * Aggregate preferred single-cell data vectors by the preferred cell type assignment.
+     * <p>
+     * Data is transformed to {@code log2cpm} only if it is of {@link StandardQuantitationType#COUNT} type and using one
+     * of the following scale type:
+     * <ul>
+     *     <li>{@link ScaleType#LINEAR}</li>
+     *     <li>{@link ScaleType#COUNT}</li>
+     *     <li>{@link ScaleType#LOG2}</li>
+     *     <li>{@link ScaleType#LOG10}</li>
+     *     <li>{@link ScaleType#LOG1P}</li>
+     *     <li>{@link ScaleType#LN}</li>
+     * </ul>
+     *
      * @param qt            single-cell quantitation type to aggregate
      * @param cellBAs       samples to aggregate vectors for
      * @param makePreferred make the resulting QT preferred

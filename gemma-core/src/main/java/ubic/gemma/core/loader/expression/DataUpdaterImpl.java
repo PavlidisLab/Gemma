@@ -35,6 +35,7 @@ import ubic.gemma.core.loader.expression.arrayDesign.AffyChipTypeExtractor;
 import ubic.gemma.core.loader.expression.geo.fetcher.RawDataFetcher;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
+import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
@@ -183,7 +184,7 @@ public class DataUpdaterImpl implements DataUpdater {
     /**
      * RNA-seq: Replaces data. Starting with the count data, we compute the log2cpm, which is the preferred quantitation
      * type we use internally. Counts and FPKM (if provided) are stored in addition.
-     *
+     * <p>
      * Rows (genes) that have all zero counts are ignored entirely.
      *
      * @param ee                  ee
@@ -191,15 +192,14 @@ public class DataUpdaterImpl implements DataUpdater {
      *                            switched to use it.
      * @param countMatrix         Representing 'raw' counts (added after rpkm, if provided).
      * @param rpkmMatrix          Representing per-gene normalized data, optional (RPKM or FPKM)
+     * @param sequencingMetadata  sequencing metadata
+     *                            TODO: have per-assay sequencing metadata
      * @param allowMissingSamples if true, samples that are missing data will be deleted from the experiment.
-     * @param isPairedReads       is paired reads
-     * @param readLength          read length
      */
     @Override
     @Transactional(propagation = Propagation.NEVER)
-    public void addCountData( ExpressionExperiment ee, ArrayDesign targetArrayDesign,
-            DoubleMatrix<String, String> countMatrix, DoubleMatrix<String, String> rpkmMatrix, @Nullable Integer readLength,
-            @Nullable Boolean isPairedReads, boolean allowMissingSamples ) {
+    public void addCountData( ExpressionExperiment ee, ArrayDesign targetArrayDesign, DoubleMatrix<String, String> countMatrix,
+            DoubleMatrix<String, String> rpkmMatrix, Map<BioAssay, SequencingMetadata> sequencingMetadata, boolean allowMissingSamples ) {
 
         if ( countMatrix == null )
             throw new IllegalArgumentException( "You must provide count matrix (rpkm is optional)" );
@@ -258,7 +258,7 @@ public class DataUpdaterImpl implements DataUpdater {
 
         this.addData( ee, targetArrayDesign, countEEMatrix );
 
-        this.addTotalCountInformation( ee, countEEMatrix, readLength, isPairedReads );
+        this.addTotalCountInformation( ee, countEEMatrix, sequencingMetadata );
 
         if ( rpkmMatrix != null ) {
 
@@ -675,24 +675,37 @@ public class DataUpdaterImpl implements DataUpdater {
      *
      * @param ee            experiment
      * @param countEEMatrix count ee matrix
-     * @param readLength    read length
-     * @param isPairedReads is paired reads
+     * @param sequencingMetadata sequencing metadata
      */
     private void addTotalCountInformation( ExpressionExperiment ee, ExpressionDataDoubleMatrix countEEMatrix,
-            @Nullable Integer readLength, @Nullable Boolean isPairedReads ) {
+            Map<BioAssay, SequencingMetadata> sequencingMetadata ) {
         for ( BioAssay ba : ee.getBioAssays() ) {
             double[] col = countEEMatrix.getColumnAsDoubles( ba );
-            long librarySize = ( long ) Math.floor( DescriptiveWithMissing.sum( new DoubleArrayList( col ) ) );
 
+            SequencingMetadata sm = sequencingMetadata.get( ba );
+            if ( sm != null ) {
+                ba.setSequenceReadLength( sm.getReadLength() );
+                ba.setSequencePairedReads( sm.getIsPaired() );
+            }
+
+            // obtain the library size from the count matrix
+            long librarySize = ( long ) Math.floor( DescriptiveWithMissing.sum( new DoubleArrayList( col ) ) );
             if ( librarySize <= 0 ) {
                 // unlike readLength and isPairedReads, we might want to use this value! Sanity check, anyway.
                 throw new IllegalStateException( ba + " had no reads" );
             }
-            DataUpdaterImpl.log.info( ba + " total library size=" + librarySize );
 
-            ba.setSequenceReadLength( readLength );
-            ba.setSequencePairedReads( isPairedReads );
-            ba.setSequenceReadCount( librarySize );
+            if ( sm != null && sm.getReadCount() != null ) {
+                if ( librarySize > sm.getReadCount() ) {
+                    throw new IllegalStateException( String.format( "%s has more reads (%d) than the provided library size (%d).",
+                            ba, librarySize, sm.getReadCount() ) );
+                }
+                DataUpdaterImpl.log.info( ba + " total library size=" + sm.getReadCount() );
+                ba.setSequenceReadCount( sm.getReadCount() );
+            } else {
+                DataUpdaterImpl.log.info( ba + " total library size=" + librarySize );
+                ba.setSequenceReadCount( librarySize );
+            }
 
             bioAssayService.update( ba );
 

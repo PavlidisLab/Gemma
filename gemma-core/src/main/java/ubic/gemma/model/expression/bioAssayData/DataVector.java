@@ -76,6 +76,11 @@ public abstract class DataVector extends AbstractIdentifiable {
         return byteArrayToInts( data );
     }
 
+    public void setDataAsInts( int[] data ) {
+        ensureRepresentation( PrimitiveType.INT );
+        setData( intArrayToBytes( data ) );
+    }
+
     @Transient
     public long[] getDataAsLongs() {
         ensureRepresentation( PrimitiveType.LONG );

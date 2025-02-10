@@ -4,6 +4,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Converter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.lang3.StringUtils;
 import org.ocpsoft.prettytime.nlp.PrettyTimeParser;
 import ubic.basecode.util.DateUtil;
 
@@ -103,7 +104,7 @@ public class OptionsUtils {
     /**
      * Add an option with three possible values: {@code true}, {@code false}, or {@code null}.
      * <p>
-     * Use {@link #getAutoOption(CommandLine, String, String)} to retrieve its value later on.
+     * Use {@link #getAutoOptionValue(CommandLine, String, String)} to retrieve its value later on.
      */
     public static void addAutoOption( Options options, String optionName, String longOptionName, String description, String noOptionName, String longNoOptionName, String noDescription ) {
         options.addOption( optionName, longOptionName, false, description + " This option is incompatible with -" + noOptionName + "/--" + longNoOptionName + ". Default is to auto-detect." );
@@ -111,7 +112,7 @@ public class OptionsUtils {
     }
 
     @Nullable
-    public static Boolean getAutoOption( CommandLine commandLine, String optionName, String noOptionName ) throws org.apache.commons.cli.ParseException {
+    public static Boolean getAutoOptionValue( CommandLine commandLine, String optionName, String noOptionName ) throws org.apache.commons.cli.ParseException {
         if ( commandLine.hasOption( optionName ) && commandLine.hasOption( noOptionName ) ) {
             throw new org.apache.commons.cli.ParseException( String.format( "Cannot specify -%s and -%s at the same time.",
                     optionName, noOptionName ) );
@@ -123,6 +124,23 @@ public class OptionsUtils {
         } else {
             return null;
         }
+    }
+
+    public static void addEnumOption( Options options, String optionName, String longOption, String description, Class<? extends Enum> enumClass ) {
+        options.addOption( optionName, longOption, true, description + " Possible values are " + enumClass + "." );
+    }
+
+    /**
+     * Obtain the value of an enumerated option.
+     */
+    @Nullable
+    public static <T extends Enum> T getEnumOptionValue( CommandLine commandLine, String optionName, Class<T> enumClass, Predicate<CommandLine> predicate ) throws org.apache.commons.cli.ParseException {
+        String value = getOptionValue( commandLine, optionName, predicate );
+        if ( value == null ) {
+            return null;
+        }
+        //noinspection unchecked
+        return ( T ) Enum.valueOf( enumClass, StringUtils.strip( value ).toUpperCase() );
     }
 
     /**
@@ -216,7 +234,7 @@ public class OptionsUtils {
     /**
      * Make sure that the given option is missing.
      */
-    public static Predicate<CommandLine> isUnset( String optionName ) {
+    public static Predicate<CommandLine> toBeUnset( String optionName ) {
         return new OptionRequirement(
                 cl -> !cl.hasOption( optionName ),
                 ( cl, depth ) -> formatOption( cl, optionName ) + " to be unset" );

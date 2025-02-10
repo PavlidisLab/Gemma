@@ -98,7 +98,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
                         "P-1034", "P-13151", "P-1366", "P-13281", "C-1572", "P-13291", "C-1252", "C-1670", "P-1262",
                         "C-1034", "P-1252", "P-1670", "P-13114", "P-1488", "C-13151", "C-13114" );
         assertThat( loader.getGenes() )
-                .hasSize( 31393 );
+                .hasSize( 31611 );
 
         // load two samples
         Set<BioAssay> bas = new HashSet<>();
@@ -187,9 +187,9 @@ public class GeoSingleCellDetectorTest extends BaseTest {
                     assertThat( dim.getNumberOfCells() ).isEqualTo( 413 );
                     assertThat( loader.getQuantitationTypes() )
                             .extracting( QuantitationType::getName )
-                            .containsExactlyInAnyOrder( "X", "layers/counts" );
+                            .containsExactlyInAnyOrder( "AnnData", "AnnData from layer counts" );
                     assertThat( loader.getGenes() )
-                            .hasSize( 18322 );
+                            .hasSize( 21327 );
                 } );
     }
 

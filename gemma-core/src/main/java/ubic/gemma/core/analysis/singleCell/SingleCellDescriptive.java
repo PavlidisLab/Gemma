@@ -106,6 +106,15 @@ public class SingleCellDescriptive {
         return d;
     }
 
+    public static double[] sumUnscaled( SingleCellExpressionDataVector vector ) {
+        ScaleType scaleType = vector.getQuantitationType().getScale();
+        double[] d = new double[vector.getSingleCellDimension().getBioAssays().size()];
+        for ( int i = 0; i < d.length; i++ ) {
+            d[i] = DataVectorDescriptive.sumUnscaled( getSampleDataAsDoubles( vector, i ), scaleType );
+        }
+        return d;
+    }
+
     /**
      * Calculate the mean of each assay for a given vector.
      */

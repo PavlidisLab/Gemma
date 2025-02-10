@@ -15,6 +15,77 @@ import ubic.gemma.model.expression.bioAssayData.DataVector;
  */
 public class DataVectorDescriptive {
 
+    public static double sum( DataVector vector ) {
+        return sum( vector.getDataAsDoubles(), vector.getQuantitationType().getScale() );
+    }
+
+    public static double sum( double[] data, ScaleType scaleType ) {
+        DoubleArrayList vec = new DoubleArrayList( data );
+        switch ( scaleType ) {
+            case LINEAR:
+            case COUNT:
+                return DescriptiveWithMissing.sum( vec );
+            case LOG2:
+            case LN:
+            case LOG10:
+            case LOGBASEUNKNOWN:
+                double s = 0;
+                for ( double datum : data ) {
+                    if ( Double.isNaN( datum ) ) {
+                        continue;
+                    }
+                    s += Math.exp( datum );
+                }
+                return Math.log( s );
+            case LOG1P:
+                double s2 = 0;
+                for ( double datum : data ) {
+                    if ( Double.isNaN( datum ) ) {
+                        continue;
+                    }
+                    s2 += Math.expm1( datum );
+                }
+                return Math.log1p( s2 );
+            default:
+                throw new IllegalArgumentException( "Don't know how to calculate sum for scale type " + scaleType );
+        }
+    }
+
+    /**
+     * Calculate the sum of the data in the vector, but keep the result unscaled.
+     */
+    public static double sumUnscaled( double[] data, ScaleType scaleType ) {
+        DoubleArrayList vec = new DoubleArrayList( data );
+        switch ( scaleType ) {
+            case LINEAR:
+            case COUNT:
+                return DescriptiveWithMissing.sum( vec );
+            case LOG2:
+            case LN:
+            case LOG10:
+            case LOGBASEUNKNOWN:
+                double s = 0;
+                for ( double datum : data ) {
+                    if ( Double.isNaN( datum ) ) {
+                        continue;
+                    }
+                    s += Math.exp( datum );
+                }
+                return s;
+            case LOG1P:
+                double s2 = 0;
+                for ( double datum : data ) {
+                    if ( Double.isNaN( datum ) ) {
+                        continue;
+                    }
+                    s2 += Math.expm1( datum );
+                }
+                return s2;
+            default:
+                throw new IllegalArgumentException( "Don't know how to calculate sum for scale type " + scaleType );
+        }
+    }
+
     /**
      * Calculate the mean of the data in the vector.
      * <p>

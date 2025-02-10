@@ -1,5 +1,6 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
+import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.DesignElementMapper;
 import ubic.gemma.model.common.description.Characteristic;
@@ -91,8 +92,18 @@ public class NullSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     @Override
+    public Map<BioAssay, SequencingMetadata> getSequencingMetadata( Collection<BioAssay> samples ) throws IOException {
+        return Collections.emptyMap();
+    }
+
+    @Override
+    public Map<BioAssay, SequencingMetadata> getSequencingMetadata( SingleCellDimension dimension ) throws IOException {
+        return Collections.emptyMap();
+    }
+
+    @Override
     public Stream<SingleCellExpressionDataVector> loadVectors( Collection<CompositeSequence> designElements, SingleCellDimension dimension, QuantitationType quantitationType ) throws IOException, IllegalArgumentException {
-        throw new UnsupportedOperationException( "The null loader does not support loading single-cell vectors." );
+        return Stream.empty();
     }
 
     @Override

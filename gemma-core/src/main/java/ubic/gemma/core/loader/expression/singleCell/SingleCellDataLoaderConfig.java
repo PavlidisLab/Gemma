@@ -2,10 +2,9 @@ package ubic.gemma.core.loader.expression.singleCell;
 
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
+import ubic.gemma.core.loader.expression.sequencing.SequencingDataLoaderConfig;
 import ubic.gemma.core.loader.expression.singleCell.metadata.GenericMetadataSingleCellDataLoader;
 import ubic.gemma.model.common.protocol.Protocol;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 
 import javax.annotation.Nullable;
 import java.nio.file.Path;
@@ -17,54 +16,7 @@ import java.nio.file.Path;
  */
 @Getter
 @SuperBuilder
-public class SingleCellDataLoaderConfig {
-
-    /**
-     * Load single-cell data from that specific path instead of looking up standard locations.
-     */
-    @Nullable
-    private Path dataPath;
-
-    /**
-     * Name of the QT to use if more than one is present in the data as per {@link SingleCellDataLoader#getQuantitationTypes()}.
-     * <p>
-     * This may be set to null, in which case the loader must only detect a single QT.
-     */
-    @Nullable
-    private String quantitationTypeName;
-
-    /**
-     * Replace the vectors of an existing QT.
-     * <p>
-     * Requires {@link #quantitationTypeName} to be set.
-     */
-    private boolean replaceExistingQuantitationType;
-
-    /**
-     * Override the name of the resulting QT.
-     */
-    @Nullable
-    private String quantitationTypeNewName;
-
-    /**
-     * Override the type of the resulting QT.
-     */
-    @Nullable
-    private StandardQuantitationType quantitationTypeNewType;
-
-    /**
-     * Override the scale type of the resulting QT.
-     */
-    @Nullable
-    private ScaleType quantitationTypeNewScaleType;
-
-    /**
-     * Mark the QT as preferred.
-     * <p>
-     * All other single-cell QT will be set to non-preferred as a result.
-     * @see ubic.gemma.model.common.quantitationtype.QuantitationType#setIsSingleCellPreferred(boolean)
-     */
-    private boolean markQuantitationTypeAsPreferred;
+public class SingleCellDataLoaderConfig extends SequencingDataLoaderConfig {
 
     /**
      * A location where cell type can be found in a format covered by {@link GenericMetadataSingleCellDataLoader}.
@@ -132,10 +84,4 @@ public class SingleCellDataLoaderConfig {
      */
     @Nullable
     private String preferredCellTypeAssignmentName;
-
-    /**
-     * A file containing a mapping of sample names to bioassay names.
-     */
-    @Nullable
-    private Path renamingFile;
 }

@@ -128,6 +128,11 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
                 && Arrays.equals( data, other.data );
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /**
      * Create a copy of this vector.
      * <p>

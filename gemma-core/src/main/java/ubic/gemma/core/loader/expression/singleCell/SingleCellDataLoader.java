@@ -1,21 +1,16 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
-import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
-import ubic.gemma.core.loader.util.mapper.DesignElementMapper;
-import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.core.loader.expression.DataLoader;
+import ubic.gemma.core.loader.expression.sequencing.SequencingDataLoader;
+import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.FactorValue;
 
-import javax.annotation.Nullable;
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
@@ -27,39 +22,7 @@ import java.util.stream.Stream;
  *
  * @author poirigui
  */
-public interface SingleCellDataLoader extends Closeable {
-
-    /**
-     * Set the strategy used for mapping {@link BioAssay} to sample names from the data.
-     */
-    void setBioAssayToSampleNameMapper( BioAssayMapper bioAssayToSampleNameMatcher );
-
-    /**
-     * Ignore unmatched samples from the data when creating the {@link SingleCellDimension} in {@link #getSingleCellDimension(Collection)}.
-     * <p>
-     * This defaults to true.
-     */
-    void setIgnoreUnmatchedSamples( boolean ignoreUnmatchedSamples );
-
-    /**
-     * Set the strategy used for mapping {@link CompositeSequence} to gene identifiers from the data.
-     */
-    void setDesignElementToGeneMapper( DesignElementMapper designElementToGeneMapper );
-
-    /**
-     * Ignore unmatched design elements from the data when creating vectors in {@link #loadVectors(Collection, SingleCellDimension, QuantitationType)}.
-     * <p>
-     * This defaults to true.
-     * <p>
-     * There's a <a href="https://github.com/PavlidisLab/Gemma/issues/973">discussions to make this default in false</a>
-     * in general for sequencing data.
-     */
-    void setIgnoreUnmatchedDesignElements( boolean ignoreUnmatchedDesignElements );
-
-    /**
-     * Obtain the sample names present in the data.
-     */
-    Set<String> getSampleNames() throws IOException;
+public interface SingleCellDataLoader extends DataLoader, SequencingDataLoader {
 
     /**
      * Load the single-cell dimension present in the data.
@@ -75,11 +38,6 @@ public interface SingleCellDataLoader extends Closeable {
     SingleCellDimension getSingleCellDimension( Collection<BioAssay> bioAssays ) throws IOException, IllegalArgumentException;
 
     /**
-     * Load quantitation types present in the data.
-     */
-    Set<QuantitationType> getQuantitationTypes() throws IOException;
-
-    /**
      * Load single-cell type assignments present in the data.
      */
     Set<CellTypeAssignment> getCellTypeAssignments( SingleCellDimension dimension ) throws IOException;
@@ -89,26 +47,7 @@ public interface SingleCellDataLoader extends Closeable {
      */
     Set<CellLevelCharacteristics> getOtherCellLevelCharacteristics( SingleCellDimension dimension ) throws IOException;
 
-    /**
-     * Load experimental factors present in the data.
-     * @param samples                samples to use when determining which factors to load
-     * @param factorValueAssignments if non-null, the proposed assignment of factor values to samples are populated in
-     *                               the mapping.
-     * @return a set of factors present in the data
-     */
-    Set<ExperimentalFactor> getFactors( Collection<BioAssay> samples, @Nullable Map<BioMaterial, Set<FactorValue>> factorValueAssignments ) throws IOException;
-
-    /**
-     * Load samples characteristics present in the data.
-     * @param samples to use when determining which characteristics to load
-     * @return proposed characteristics grouped by sample
-     */
-    Map<BioMaterial, Set<Characteristic>> getSamplesCharacteristics( Collection<BioAssay> samples ) throws IOException;
-
-    /**
-     * Load gene identifiers present in the data.
-     */
-    Set<String> getGenes() throws IOException;
+    Map<BioAssay, SequencingMetadata> getSequencingMetadata( SingleCellDimension dimension ) throws IOException;
 
     /**
      * Produces a stream of single-cell expression data vectors for the given {@link QuantitationType}.
@@ -125,10 +64,4 @@ public interface SingleCellDataLoader extends Closeable {
      * try-with-resource block.
      */
     Stream<SingleCellExpressionDataVector> loadVectors( Collection<CompositeSequence> designElements, SingleCellDimension dimension, QuantitationType quantitationType ) throws IOException, IllegalArgumentException;
-
-    /**
-     * Free any resources that the loaded has setup.
-     */
-    @Override
-    void close() throws IOException;
 }

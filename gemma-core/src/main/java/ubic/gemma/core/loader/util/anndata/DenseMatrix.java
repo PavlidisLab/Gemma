@@ -35,6 +35,7 @@ public class DenseMatrix implements Matrix {
         return dataset.getType();
     }
 
+    @Override
     public H5Dataset getData() {
         return dataset;
     }

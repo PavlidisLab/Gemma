@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.config.SettingsConfig;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.expression.geo.GeoFamilyParser;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
@@ -98,6 +99,11 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
         assertThat( dimension.getNumberOfCellsBySample( 9 ) ).isEqualTo( 1000 );
         assertThat( dimension.getBioAssaysOffset() )
                 .containsExactly( 0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000 );
+        assertThat( loader.getSequencingMetadata( dimension ) )
+                .containsOnlyKeys( bas )
+                .values()
+                .extracting( SequencingMetadata::getReadCount )
+                .containsExactlyInAnyOrder( 197092L, 240642L, 178510L, 200020L, 128837L, 161978L, 203185L, 345699L, 267183L, 263007L );
         loader.setDesignElementToGeneMapper( new MapBasedDesignElementMapper( "test", elementsMapping ) );
         List<SingleCellExpressionDataVector> vectors = loader.loadVectors( elementsMapping.values(), dimension, qt ).collect( Collectors.toList() );
         assertThat( vectors )

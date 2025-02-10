@@ -10,6 +10,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.util.Assert;
+import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.DesignElementMapper;
 import ubic.gemma.core.loader.util.mapper.EntityMapper;
@@ -213,6 +214,44 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
                     .forEach( result::add );
         }
         return result;
+    }
+
+    @Override
+    public Map<BioAssay, SequencingMetadata> getSequencingMetadata( SingleCellDimension dimension ) throws IOException {
+        Map<BioAssay, SequencingMetadata> result = new HashMap<>();
+        for ( int i = 0; i < dimension.getBioAssays().size(); i++ ) {
+            BioAssay ba = dimension.getBioAssays().get( i );
+            log.info( "Reading sequencing metadata for " + ba + " from " + matrixFiles.get( i ) + "..." );
+            StopWatch timer = StopWatch.createStarted();
+            try ( MatrixVectorReader reader = readMatrixMarketFromPath( matrixFiles.get( i ) ) ) {
+                MatrixInfo matrixInfo = reader.readMatrixInfo();
+                if ( !matrixInfo.isInteger() ) {
+                    log.warn( "Matrix " + matrixFiles.get( i ) + " contains non-integer data, not suitable for computing sequencing metadata." );
+                    continue;
+                }
+                MatrixSize size = reader.readMatrixSize( matrixInfo );
+                size.numEntries();
+                int[] row = new int[size.numEntries()];
+                int[] column = new int[size.numEntries()];
+                int[] data = new int[size.numEntries()];
+                reader.readCoordinate( row, column, data );
+                long librarySize = 0;
+                for ( int d : data ) {
+                    librarySize += d;
+                }
+                SequencingMetadata sm = SequencingMetadata.builder()
+                        .readCount( librarySize )
+                        .build();
+                log.info( "Loaded sequencing metadata for " + ba + ": " + sm + " in " + timer.getTime() + "ms." );
+                result.put( ba, sm );
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public Map<BioAssay, SequencingMetadata> getSequencingMetadata( Collection<BioAssay> samples ) throws IOException {
+        return getSequencingMetadata( getSingleCellDimension( samples ) );
     }
 
     @Override

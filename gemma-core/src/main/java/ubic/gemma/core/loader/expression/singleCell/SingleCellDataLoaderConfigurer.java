@@ -1,5 +1,7 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
+import ubic.gemma.core.loader.expression.DataLoaderConfigurer;
+
 /**
  * Interface for configuring a single-cell data loader.
  * <p>
@@ -15,10 +17,6 @@ package ubic.gemma.core.loader.expression.singleCell;
  * @param <T> the type of loader this configurer produces
  * @author poirigui
  */
-public interface SingleCellDataLoaderConfigurer<T extends SingleCellDataLoader> {
+public interface SingleCellDataLoaderConfigurer<T extends SingleCellDataLoader> extends DataLoaderConfigurer<T, SingleCellDataLoaderConfig> {
 
-    /**
-     * Pre-configure a single-cell data loader.
-     */
-    T configureLoader( SingleCellDataLoaderConfig config );
 }

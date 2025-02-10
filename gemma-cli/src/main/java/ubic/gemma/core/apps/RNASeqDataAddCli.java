@@ -21,12 +21,14 @@ import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
-import ubic.gemma.core.analysis.service.ExpressionMetadataChangelogFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.analysis.service.ExpressionMetadataChangelogFileService;
 import ubic.gemma.core.loader.expression.DataUpdater;
+import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
@@ -36,6 +38,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Designed to add count and/or RPKM data to a data set that has only meta-data.
@@ -199,8 +203,17 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
                 rpkmMatrix = reader.read( rpkmFile );
             }
 
-            serv.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, readLength, isPairedReads,
-                    allowMissingSamples );
+            // TODO: support per-assay read length and pairedness
+            // TODO: support supplying library size from the CLI
+            Map<BioAssay, SequencingMetadata> sequencingMetadata = new HashMap<>();
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                sequencingMetadata.put( ba, SequencingMetadata.builder()
+                        .readLength( readLength )
+                        .isPaired( isPairedReads )
+                        .build() );
+            }
+
+            serv.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, sequencingMetadata, allowMissingSamples );
         } catch ( IOException e ) {
             addErrorObject( ee, "Failed to add count and RPKM data.", e );
             return;

@@ -1,9 +1,12 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
 import lombok.Setter;
+import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
+import ubic.gemma.core.analysis.singleCell.SingleCellDescriptive;
+import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.util.anndata.*;
 import ubic.gemma.core.loader.util.hdf5.H5Dataset;
 import ubic.gemma.core.loader.util.hdf5.H5FundamentalType;
@@ -230,36 +233,96 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         try ( Matrix matrix = layer.getMatrix(); H5Type datasetType = matrix.getDataType() ) {
             fundamentalType = datasetType.getFundamentalType();
         }
-        if ( fundamentalType.equals( H5FundamentalType.INTEGER ) ) {
-            qt.setType( StandardQuantitationType.COUNT );
-            qt.setScale( ScaleType.COUNT );
-            // TODO: support integer QTs
-            qt.setRepresentation( PrimitiveType.DOUBLE );
-        } else if ( fundamentalType.equals( H5FundamentalType.FLOAT ) ) {
-            qt.setType( StandardQuantitationType.AMOUNT );
-            qt.setScale( detectScale( h5File, layer ) );
-            qt.setRepresentation( PrimitiveType.DOUBLE );
-        } else {
-            throw new IllegalArgumentException( "Unsupported H5 fundamental type " + fundamentalType + " for a quantitation type." );
-        }
+        detectQuantitationType( qt, h5File, layer, fundamentalType );
         qt.setDescription( String.format( "Data from a layer located at '%s' originally encoded as an %s of %ss.",
                 layer.getPath(), layer.getEncodingType(), fundamentalType.toString().toLowerCase() ) );
         log.info( "Detected quantitation type for '" + layer.getPath() + "': " + qt );
         return qt;
     }
 
-    private ScaleType detectScale( AnnData h5File, Layer layer ) {
+    /**
+     * TODO: use {@link ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionUtils}
+     */
+    private void detectQuantitationType( QuantitationType qt, AnnData h5File, Layer layer, H5FundamentalType fundamentalType ) {
+        if ( fundamentalType.equals( H5FundamentalType.INTEGER ) ) {
+            qt.setType( StandardQuantitationType.COUNT );
+            qt.setScale( ScaleType.COUNT );
+            // TODO: support integer QTs
+            qt.setRepresentation( PrimitiveType.DOUBLE );
+        } else if ( fundamentalType.equals( H5FundamentalType.FLOAT ) ) {
+            // detect various count encodings
+            for ( ScaleType st : new ScaleType[] { ScaleType.COUNT, ScaleType.LOG2, ScaleType.LN, ScaleType.LOG10, ScaleType.LOG1P } ) {
+                if ( isCountEncodedInDouble( layer, st ) ) {
+                    qt.setType( StandardQuantitationType.COUNT );
+                    qt.setScale( st );
+                    qt.setRepresentation( PrimitiveType.DOUBLE );
+                    return;
+                }
+            }
+            qt.setType( StandardQuantitationType.AMOUNT );
+            if ( isLog1p( h5File, layer ) ) {
+                qt.setScale( ScaleType.LOG1P );
+            } else {
+                // FIXME: infer scale from data using the logic from ExpressionDataDoubleMatrixUtil.inferQuantitationType()
+                log.warn( "Scale type cannot be detected for non-counting data in " + layer.getPath() + "." );
+                qt.setScale( ScaleType.OTHER );
+            }
+            qt.setRepresentation( PrimitiveType.DOUBLE );
+        } else {
+            throw new IllegalArgumentException( "Unsupported H5 fundamental type " + fundamentalType + " for a quantitation type." );
+        }
+    }
+
+    private boolean isCountEncodedInDouble( Layer layer, ScaleType scaleType ) {
+        H5Dataset data = layer.getMatrix().getData();
+        if ( data.getShape().length == 2 ) {
+            log.warn( "Detecting counts from dense matrices are not supported, ignoring " + layer + "." );
+            return false;
+        }
+        for ( int i = 0; i < data.size(); i += 1000 ) {
+            double[] vec = data.slice( i, Math.min( i + 1000, data.size() ) ).toDoubleVector();
+            for ( double d : vec ) {
+                double uv;
+                switch ( scaleType ) {
+                    case COUNT:
+                        uv = d;
+                        break;
+                    case LOG2:
+                        uv = Math.pow( 2, d );
+                        break;
+                    case LN:
+                        uv = Math.exp( d );
+                        break;
+                    case LOG10:
+                        uv = Math.pow( 10, d );
+                        break;
+                    case LOG1P:
+                        uv = Math.expm1( d );
+                        break;
+                    default:
+                        throw new UnsupportedOperationException();
+                }
+                if ( uv != Math.rint( uv ) ) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Check if the given layer is scaled with log1p.
+     */
+    private boolean isLog1p( AnnData h5File, Layer layer ) {
         if ( "X".equals( layer.getPath() ) ) {
             try ( Mapping uns = h5File.getUns() ) {
                 if ( uns != null && uns.getKeys().contains( "log1p" ) ) {
                     log.info( h5File + " contains unstructured data describing the scale type: " + ScaleType.LOG1P + ", using it for X." );
-                    return ScaleType.LOG1P;
+                    return true;
                 }
             }
         }
-        // FIXME: infer scale from data using the logic from ExpressionDataDoubleMatrixUtil.inferQuantitationType()
-        log.warn( "Scale type cannot be detected for non-counting data in " + layer.getPath() + "." );
-        return ScaleType.OTHER;
+        return false;
     }
 
     @Override
@@ -304,7 +367,8 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     @Override
-    public Set<CellLevelCharacteristics> getOtherCellLevelCharacteristics( SingleCellDimension dimension ) throws IOException {
+    public Set<CellLevelCharacteristics> getOtherCellLevelCharacteristics( SingleCellDimension dimension ) throws
+            IOException {
         checkSampleFactorName();
         if ( cellTypeFactorName == null ) {
             log.warn( "No cell type factor name is set, cell types might be treated as \"other cell-level characteristics\"." );
@@ -385,7 +449,9 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     @Override
-    public Set<ExperimentalFactor> getFactors( Collection<BioAssay> samples, @Nullable Map<BioMaterial, Set<FactorValue>> factorValueAssignments ) throws IOException {
+    public Set<ExperimentalFactor> getFactors
+            ( Collection<BioAssay> samples, @Nullable Map<BioMaterial, Set<FactorValue>> factorValueAssignments ) throws
+            IOException {
         checkSampleFactorName();
         Set<ExperimentalFactor> factors = new HashSet<>();
         try ( AnnData h5File = AnnData.open( file ) ) {
@@ -489,7 +555,8 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     @Override
-    public Map<BioMaterial, Set<Characteristic>> getSamplesCharacteristics( Collection<BioAssay> samples ) throws IOException {
+    public Map<BioMaterial, Set<Characteristic>> getSamplesCharacteristics( Collection<BioAssay> samples ) throws
+            IOException {
         checkSampleFactorName();
         Map<BioMaterial, Set<Characteristic>> result = new HashMap<>();
         try ( AnnData h5File = AnnData.open( file ) ) {
@@ -557,7 +624,9 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     /**
      * Extract a single value by sample name if possible.
      */
-    private <T> Optional<Map<String, T>> extractSingleValueBySampleName( Dataframe.Column<?, String> sampleNames, T[] values ) {
+    private <
+            T> Optional<Map<String, T>> extractSingleValueBySampleName( Dataframe.Column<?, String> sampleNames, T[]
+            values ) {
         Map<String, T> cs = new HashMap<>();
         for ( int i = 0; i < sampleNames.size(); i++ ) {
             String sampleName = sampleNames.get( i );
@@ -576,6 +645,79 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         }
     }
 
+    @Override
+    public Map<BioAssay, SequencingMetadata> getSequencingMetadata( Collection<BioAssay> samples ) throws
+            IOException {
+        return getSequencingMetadata( getSingleCellDimension( samples ) );
+    }
+
+    @Override
+    public Map<BioAssay, SequencingMetadata> getSequencingMetadata( SingleCellDimension dimension ) throws IOException {
+        checkSampleFactorName();
+        try ( AnnData h5File = AnnData.open( file ) ) {
+            String unsupportedMatrixWarningMessage = "Sequencing metadata can only be extracted from sparse matrices encoded in the CSR format. Layer with counting data %s will be ignored.";
+
+            Dataframe.Column<?, String> samples = getCellsDataframe( h5File ).getColumn( sampleFactorName, String.class );
+
+            Layer X = getX( h5File );
+            QuantitationType Xqt = createQt( h5File, X, null );
+            if ( Xqt.getType() == StandardQuantitationType.COUNT ) {
+                String matrixEncodingType = X.getEncodingType();
+                if ( ( matrixEncodingType.equals( "csr_matrix" ) && !transpose ) || ( matrixEncodingType.equals( "csc_matrix" ) && transpose ) ) {
+                    return getSequencingMetadata( dimension, Xqt, samples, X.getSparseMatrix() );
+                } else {
+                    log.warn( String.format( unsupportedMatrixWarningMessage, "X" ) );
+                }
+            }
+
+            // check each layer to see if we can found one with counts
+            for ( String layerName : h5File.getLayers() ) {
+                Layer layer = h5File.getLayer( layerName );
+                QuantitationType qt = createQt( h5File, layer, layerName );
+                if ( qt.getType() != StandardQuantitationType.COUNT ) {
+                    continue;
+                }
+                String matrixEncodingType = layer.getEncodingType();
+                if ( ( matrixEncodingType.equals( "csr_matrix" ) && !transpose ) || ( matrixEncodingType.equals( "csc_matrix" ) && transpose ) ) {
+                    return getSequencingMetadata( dimension, qt, samples, layer.getSparseMatrix() );
+                } else {
+                    log.warn( String.format( unsupportedMatrixWarningMessage, layerName ) );
+                }
+            }
+        }
+        return Collections.emptyMap();
+    }
+
+    /**
+     * Extract sequencing metadata from a given layer containing count data.
+     * <p>
+     * Since we're not loading data, just summing it, we can process it more efficiently.
+     */
+    private Map<BioAssay, SequencingMetadata> getSequencingMetadata( SingleCellDimension scd, QuantitationType
+            qt, Dataframe.Column<?, String> samples, SparseMatrix matrix ) {
+        SampleMetadata m = createSampleMetadata( scd, samples );
+
+        // we just need enough information for SingleCellDescriptive.sum() to work
+        SingleCellExpressionDataVector vector = new SingleCellExpressionDataVector();
+        vector.setSingleCellDimension( scd );
+        vector.setQuantitationType( qt );
+
+        double[] librarySize = new double[scd.getBioAssays().size()];
+        for ( int i = 0; i < matrix.getShape()[0]; i++ ) {
+            populateVectorData( vector, i, scd, matrix, m );
+            double[] S = SingleCellDescriptive.sumUnscaled( vector );
+            for ( int j = 0; j < S.length; j++ ) {
+                librarySize[j] += S[j];
+            }
+        }
+
+        Map<BioAssay, SequencingMetadata> result = new HashMap<>( scd.getBioAssays().size() );
+        for ( int i = 0; i < scd.getBioAssays().size(); i++ ) {
+            result.put( scd.getBioAssays().get( i ), SequencingMetadata.builder().readCount( Math.round( librarySize[i] ) ).build() );
+        }
+        return result;
+    }
+
     /**
      * Obtain the genes for a specific QT.
      */
@@ -586,7 +728,9 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     @Override
-    public Stream<SingleCellExpressionDataVector> loadVectors( Collection<CompositeSequence> designElements, SingleCellDimension dimension, QuantitationType quantitationType ) throws IOException, IllegalArgumentException {
+    public Stream<SingleCellExpressionDataVector> loadVectors
+            ( Collection<CompositeSequence> designElements, SingleCellDimension dimension, QuantitationType
+                    quantitationType ) throws IOException, IllegalArgumentException {
         return loadVectors( designElements, dimension, quantitationType, getLayerName( quantitationType ) );
     }
 
@@ -682,7 +826,9 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         }
     }
 
-    private Stream<SingleCellExpressionDataVector> loadVectorsFromSparseMatrix( SparseMatrix matrix, Dataframe.Column<?, String> samples, Dataframe.Column<?, String> genes, QuantitationType qt, SingleCellDimension scd, Collection<CompositeSequence> designElements ) {
+    private Stream<SingleCellExpressionDataVector> loadVectorsFromSparseMatrix( SparseMatrix
+            matrix, Dataframe.Column<?, String> samples, Dataframe.Column<?, String> genes, QuantitationType
+            qt, SingleCellDimension scd, Collection<CompositeSequence> designElements ) {
         Assert.isTrue( genes.size() == matrix.getShape()[0],
                 "The number of supplied genes does not match the number of rows in the sparse matrix." );
         Assert.isTrue( samples.size() == matrix.getShape()[1],
@@ -690,41 +836,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         Assert.isTrue( scd.getNumberOfCells() <= matrix.getShape()[1],
                 "The number of cells in the dimension cannot exceed the number of columns in the sparse matrix." );
 
-        // build a sample offset index for efficiently selecting samples
-        // if a sample does not have a corresponding BioAssay (i.e. an unwanted sample), it is set to null
-        int numberOfSamples = samples.uniqueValues().size();
-        List<BioAssay> samplesBioAssay = new ArrayList<>( numberOfSamples );
-        List<String> samplesName = new ArrayList<>( numberOfSamples );
-        int[] samplesBioAssayOffset = new int[numberOfSamples];
-        int W = 0;
-        String currentSample = null;
-        for ( int i = 0; i < samples.size(); i++ ) {
-            String sample = requireNonNull( samples.get( i ), "Sample name cannot be missing." );
-            if ( !sample.equals( currentSample ) ) {
-                currentSample = sample;
-                samplesBioAssayOffset[W++] = i;
-                samplesBioAssay.add( getBioAssayBySampleName( scd.getBioAssays(), sample ).orElse( null ) );
-                samplesName.add( sample );
-            }
-        }
-
-        if ( samplesBioAssay.size() != numberOfSamples ) {
-            throw new IllegalStateException( "The number of distinct contiguous sample does not match the number of distinct samples, this is likely due to the samples being unsorted." );
-        }
-
-        // in the simple scenario, the SCD sample layout exactly match what is present in he data, so we don't need to
-        // do anything in particular
-        boolean isSimpleCase = scd.getBioAssays().equals( samplesBioAssay );
-
-        if ( !isSimpleCase ) {
-            // map BAs to the corresponding sample name in data
-            String scdNames = scd.getBioAssays().stream()
-                    .map( ba -> samplesName.get( samplesBioAssay.indexOf( ba ) ) )
-                    .collect( Collectors.joining( ", " ) );
-            log.info( "Samples in the data do not follow the same layout, will have to slice and adjust indices.\n"
-                    + "\tIn data: " + String.join( ", ", samplesName ) + "\n"
-                    + "\tIn single-cell dimension: " + scdNames );
-        }
+        SampleMetadata m = createSampleMetadata( scd, samples );
 
         EntityMapper.StatefulEntityMapper<CompositeSequence> statefulDesignElementMapper = designElementToGeneMapper
                 .forCandidates( designElements );
@@ -739,80 +851,154 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                     vector.setDesignElement( statefulDesignElementMapper.matchOne( genes.get( i ) ).get() );
                     vector.setSingleCellDimension( scd );
                     vector.setQuantitationType( qt );
-                    int[] IX;
-                    try ( H5Dataset indices = matrix.getIndices() ) {
-                        IX = indices.slice( matrix.getIndptr()[i], matrix.getIndptr()[i + 1] ).toIntegerVector();
-                    }
-                    if ( !ArrayUtils.isSorted( IX ) ) {
-                        // this is annoying, AnnData does not guarantee that indices are sorted
-                        // https://github.com/scverse/anndata/issues/1388
-                        throw new IllegalStateException( String.format( "Indices for %s are not sorted.", genes.get( i ) ) );
-                    }
-                    // simple case: the number of BAs match the number of samples and the sample order match
-                    if ( isSimpleCase ) {
-                        // this is using the same storage strategy from ByteArrayConverter
-                        try ( H5Dataset data = matrix.getData() ) {
-                            vector.setData( data.slice( matrix.getIndptr()[i], matrix.getIndptr()[i + 1] ).toByteVector( H5Type.IEEE_F64BE ) );
-                        }
-                        vector.setDataIndices( IX );
-                    } else {
-                        // for each sample we want, we compute the starting, ending and position in the vector
-                        int[] sampleStarts = new int[scd.getBioAssaysOffset().length];
-                        int[] sampleEnds = new int[scd.getBioAssaysOffset().length];
-                        int[] sampleIndices = new int[scd.getBioAssaysOffset().length];
-                        // this will hold the size of the vector necessary to hold all the desired sample
-                        int nnz = 0;
-                        List<BioAssay> bioAssays = scd.getBioAssays();
-                        for ( int k = 0; k < bioAssays.size(); k++ ) {
-                            BioAssay ba = bioAssays.get( k );
-                            int j = samplesBioAssay.indexOf( ba );
-                            assert j != -1;
-                            int start = Arrays.binarySearch( IX, samplesBioAssayOffset[j] );
-                            if ( start < 0 ) {
-                                start = -start - 1;
-                            }
-                            int end;
-                            if ( j < samplesBioAssayOffset.length - 1 ) {
-                                end = Arrays.binarySearch( IX, samplesBioAssayOffset[j + 1] );
-                                if ( end < 0 ) {
-                                    end = -end - 1;
-                                }
-                            } else {
-                                end = IX.length;
-                            }
-                            nnz += end - start;
-                            sampleStarts[k] = start;
-                            sampleEnds[k] = end;
-                            sampleIndices[k] = j;
-                        }
-                        byte[] vectorData = new byte[8 * nnz];
-                        int[] vectorIndices = new int[nnz];
-                        // select indices relevant to BAs
-                        int sampleOffsetInVector = 0;
-                        for ( int i1 = 0; i1 < bioAssays.size(); i1++ ) {
-                            int j = sampleIndices[i1];
-                            int start = sampleStarts[i1];
-                            int end = sampleEnds[i1];
-                            int sampleNnz = end - start;
-                            if ( sampleNnz == 0 ) {
-                                continue;
-                            }
-                            try ( H5Dataset data = matrix.getData() ) {
-                                data.slice( start, end ).toByteVector( vectorData, sampleOffsetInVector, sampleOffsetInVector + sampleNnz, H5Type.IEEE_F64BE );
-                            }
-                            System.arraycopy( IX, start, vectorIndices, sampleOffsetInVector, sampleNnz );
-                            // adjust indices to be relative to the BA offset
-                            for ( int k = sampleOffsetInVector; k < sampleOffsetInVector + sampleNnz; k++ ) {
-                                vectorIndices[k] = vectorIndices[k] - samplesBioAssayOffset[j] + scd.getBioAssaysOffset()[i1];
-                            }
-                            sampleOffsetInVector += sampleNnz;
-                        }
-                        vector.setData( vectorData );
-                        vector.setDataIndices( vectorIndices );
-                    }
+                    populateVectorData( vector, i, scd, matrix, m );
                     return vector;
                 } )
                 .onClose( matrix::close );
+    }
+
+    @Value
+    private static class SampleMetadata {
+        /**
+         * Samples, as they appear in the data.
+         * <p>
+         * An unmapped sample is encoded by {@code null}.
+         */
+        BioAssay[] samplesBioAssay;
+        /**
+         * Index of the samples in {@link #samplesBioAssay}.
+         * <p>
+         * This is meant to speed-up lookups.
+         */
+        Map<BioAssay, Integer> samplesBioAssayIndex;
+        /**
+         * Offset (i.e. the column where it starts) of the sample in the data matrix.
+         */
+        int[] samplesBioAssayOffset;
+        /**
+         * Indicate if the sample layout exactly match that of the {@link SingleCellDimension}.
+         */
+        boolean isSimpleCase;
+    }
+
+    /**
+     * Create a data structure that facilitate locating samples in the data matrix.
+     */
+    private SampleMetadata createSampleMetadata( SingleCellDimension scd, Dataframe.Column<?, String> samples ) {
+        int numberOfSamples = samples.uniqueValues().size();
+        // build a sample offset index for efficiently selecting samples
+        // if a sample does not have a corresponding BioAssay (i.e. an unwanted sample), it is set to null
+        List<BioAssay> samplesBioAssay = new ArrayList<>( numberOfSamples );
+        Map<BioAssay, Integer> samplesBioAssayIndex = new HashMap<>( numberOfSamples );
+        List<String> samplesName = new ArrayList<>( numberOfSamples );
+        int[] samplesBioAssayOffset = new int[numberOfSamples];
+        int W = 0;
+        String currentSample = null;
+        for ( int i = 0; i < samples.size(); i++ ) {
+            String sample = requireNonNull( samples.get( i ), "Sample name cannot be missing." );
+            if ( !sample.equals( currentSample ) ) {
+                currentSample = sample;
+                samplesBioAssayOffset[W] = i;
+                BioAssay ba = getBioAssayBySampleName( scd.getBioAssays(), sample ).orElse( null );
+                samplesBioAssay.add( ba );
+                if ( ba != null ) {
+                    samplesBioAssayIndex.put( ba, W );
+                }
+                samplesName.add( sample );
+                W++;
+            }
+        }
+        if ( samplesBioAssay.size() != numberOfSamples ) {
+            throw new IllegalStateException( "The number of distinct contiguous sample does not match the number of distinct samples, this is likely due to the samples being unsorted." );
+        }
+        // in the simple scenario, the SCD sample layout exactly match what is present in he data, so we don't need to
+        // do anything in particular
+        boolean isSimpleCase = scd.getBioAssays().equals( samplesBioAssay );
+        if ( !isSimpleCase ) {
+            // map BAs to the corresponding sample name in data
+            String scdNames = scd.getBioAssays().stream()
+                    .map( ba -> samplesName.get( samplesBioAssayIndex.get( ba ) ) )
+                    .collect( Collectors.joining( ", " ) );
+            log.info( "Samples in the data do not follow the same layout, will have to slice and adjust indices.\n"
+                    + "\tIn data: " + String.join( ", ", samplesName ) + "\n"
+                    + "\tIn single-cell dimension: " + scdNames );
+        }
+        return new SampleMetadata( samplesBioAssay.toArray( new BioAssay[0] ), samplesBioAssayIndex, samplesBioAssayOffset, isSimpleCase );
+    }
+
+    private void populateVectorData( SingleCellExpressionDataVector vector, int i, SingleCellDimension
+            scd, SparseMatrix matrix, SampleMetadata m ) {
+        int[] IX;
+        try ( H5Dataset indices = matrix.getIndices() ) {
+            IX = indices.slice( matrix.getIndptr()[i], matrix.getIndptr()[i + 1] ).toIntegerVector();
+        }
+        if ( !ArrayUtils.isSorted( IX ) ) {
+            // this is annoying, AnnData does not guarantee that indices are sorted
+            // https://github.com/scverse/anndata/issues/1388
+            throw new IllegalStateException( String.format( "Indices for %s are not sorted.", vector.getDesignElement() ) );
+        }
+        // simple case: the number of BAs match the number of samples and the sample order match
+        if ( m.isSimpleCase ) {
+            // this is using the same storage strategy from ByteArrayConverter
+            try ( H5Dataset data = matrix.getData() ) {
+                vector.setData( data.slice( matrix.getIndptr()[i], matrix.getIndptr()[i + 1] ).toByteVector( H5Type.IEEE_F64BE ) );
+            }
+            vector.setDataIndices( IX );
+        } else {
+            // for each sample we want, we compute the starting, ending and position in the vector
+            int[] sampleStarts = new int[scd.getBioAssaysOffset().length];
+            int[] sampleEnds = new int[scd.getBioAssaysOffset().length];
+            int[] sampleIndices = new int[scd.getBioAssaysOffset().length];
+            // this will hold the size of the vector necessary to hold all the desired sample
+            int nnz = 0;
+            List<BioAssay> bioAssays = scd.getBioAssays();
+            for ( int k = 0; k < bioAssays.size(); k++ ) {
+                BioAssay ba = bioAssays.get( k );
+                assert m.samplesBioAssayIndex.containsKey( ba );
+                int j = m.samplesBioAssayIndex.get( ba );
+                int start = Arrays.binarySearch( IX, m.samplesBioAssayOffset[j] );
+                if ( start < 0 ) {
+                    start = -start - 1;
+                }
+                int end;
+                if ( j < m.samplesBioAssayOffset.length - 1 ) {
+                    end = Arrays.binarySearch( IX, m.samplesBioAssayOffset[j + 1] );
+                    if ( end < 0 ) {
+                        end = -end - 1;
+                    }
+                } else {
+                    end = IX.length;
+                }
+                nnz += end - start;
+                sampleStarts[k] = start;
+                sampleEnds[k] = end;
+                sampleIndices[k] = j;
+            }
+            byte[] vectorData = new byte[8 * nnz];
+            int[] vectorIndices = new int[nnz];
+            // select indices relevant to BAs
+            int sampleOffsetInVector = 0;
+            for ( int i1 = 0; i1 < bioAssays.size(); i1++ ) {
+                int j = sampleIndices[i1];
+                int start = sampleStarts[i1];
+                int end = sampleEnds[i1];
+                int sampleNnz = end - start;
+                if ( sampleNnz == 0 ) {
+                    continue;
+                }
+                try ( H5Dataset data = matrix.getData() ) {
+                    data.slice( start, end ).toByteVector( vectorData, sampleOffsetInVector, sampleOffsetInVector + sampleNnz, H5Type.IEEE_F64BE );
+                }
+                System.arraycopy( IX, start, vectorIndices, sampleOffsetInVector, sampleNnz );
+                // adjust indices to be relative to the BA offset
+                for ( int k = sampleOffsetInVector; k < sampleOffsetInVector + sampleNnz; k++ ) {
+                    vectorIndices[k] = vectorIndices[k] - m.samplesBioAssayOffset[j] + scd.getBioAssaysOffset()[i1];
+                }
+                sampleOffsetInVector += sampleNnz;
+            }
+            vector.setData( vectorData );
+            vector.setDataIndices( vectorIndices );
+        }
     }
 
     private Dataframe<?> getCellsDataframe( AnnData h5File ) {

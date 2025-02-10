@@ -3,6 +3,7 @@ package ubic.gemma.core.loader.expression.singleCell;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationPipeline;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTranspose;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataUnraw;
@@ -15,6 +16,7 @@ import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
@@ -148,8 +150,12 @@ public class AnnDataSingleCellDataLoaderTest {
             Set<QuantitationType> qts = loader.getQuantitationTypes();
             assertThat( qts ).hasSize( 1 ).first().satisfies( qt -> {
                 assertThat( qt.getName() ).isEqualTo( "AnnData" );
+                assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.AMOUNT );
                 assertThat( qt.getScale() ).isEqualTo( ScaleType.LOG1P );
+                assertThat( qt.getRepresentation() ).isEqualTo( PrimitiveType.DOUBLE );
             } );
+
+            assertThat( loader.getSequencingMetadata( dimension ) ).isEmpty();
 
             Map<String, CompositeSequence> elementsMapping = new HashMap<>();
             elementsMapping.put( "SLCO3A1", CompositeSequence.Factory.newInstance( "SLCO3A1" ) );
@@ -312,6 +318,7 @@ public class AnnDataSingleCellDataLoaderTest {
             Collection<BioAssay> bas = Arrays.asList( BioAssay.Factory.newInstance( "test", null, BioMaterial.Factory.newInstance( "test" ) ) );
             SingleCellDimension dim = loader.getSingleCellDimension( bas );
             QuantitationType qt = loader.getQuantitationTypes().iterator().next();
+            assertThat( loader.getSequencingMetadata( dim ) ).isEmpty();
             assertThat( loader.loadVectors( designElements, dim, qt ) ).singleElement()
                     .satisfies( vec -> {
                         assertThat( vec.getDataAsDoubles() ).isEmpty();
@@ -349,6 +356,9 @@ public class AnnDataSingleCellDataLoaderTest {
             QuantitationType qt2 = loader.getQuantitationTypes().iterator().next();
             assertThat( qt2.getName() ).isEqualTo( "AnnData" );
             assertThat( qt2.getDescription() ).isEqualTo( "Data from a layer located at 'raw/X' originally encoded as an csr_matrix of floats." );
+
+            loader.getSequencingMetadata( dim );
+
             // we could load data in principle, but in transpose mode the matrix would have to be encoded in CSC
             assertThatThrownBy( () -> loader.loadVectors( designElements, dim, qt2 ) )
                     .isInstanceOf( UnsupportedOperationException.class );
@@ -377,6 +387,9 @@ public class AnnDataSingleCellDataLoaderTest {
                                     assertThat( vec.getDesignElement() ).isEqualTo( designElements.iterator().next() );
                                 } );
                     } );
+
+            assertThat( loader.getSequencingMetadata( dim ) )
+                    .containsValue( SequencingMetadata.builder().readCount( 14535L ).build() );
         }
     }
 

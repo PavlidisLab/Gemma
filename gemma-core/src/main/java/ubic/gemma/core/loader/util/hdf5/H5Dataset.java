@@ -82,6 +82,8 @@ public class H5Dataset implements AutoCloseable {
      * Obtain a 1D slice of the dataset.
      */
     public H5Dataspace slice( long start, long end ) {
+        long[] shape = getShape();
+        Assert.isTrue( shape.length == 1, String.format( "Invalid slice: the the dataset have %d dimensions, but the slice has 1.", shape.length ) );
         Assert.isTrue( start >= 0 && end <= size() && start <= end, "Invalid slice: [" + start + ", " + end + "[" );
         long diskSpaceId = H5Dget_space( datasetId );
         H5Sselect_hyperslab( diskSpaceId, HDF5Constants.H5S_SELECT_SET, new long[] { start }, null, new long[] { end - start }, null );

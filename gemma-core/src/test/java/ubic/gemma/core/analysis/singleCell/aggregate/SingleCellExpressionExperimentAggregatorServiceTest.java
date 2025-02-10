@@ -162,6 +162,14 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         qt.setRepresentation( PrimitiveType.DOUBLE );
         List<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( ee, ad, qt );
         SingleCellDimension dimension = vectors.iterator().next().getSingleCellDimension();
+        // these are the actual library sizes, no adjustment is necessary
+        long[] sourceLibrarySize = { 2236, 2392, 2260, 2460 };
+        int i = 0;
+        for ( BioAssay ba : dimension.getBioAssays() ) {
+            ba.setSequenceReadCount( sourceLibrarySize[i++] );
+            ba.setSequenceReadLength( 100 );
+            ba.setSequencePairedReads( true );
+        }
         // randomly assign cell types
         CellTypeAssignment cta = createCellTypeAssignment( dimension );
         dimension.getCellTypeAssignments().add( cta );
@@ -179,7 +187,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
 
         verify( bioAssayDimensionService ).findOrCreate( any() );
         ArgumentCaptor<Collection<BioAssay>> capt2 = ArgumentCaptor.captor();
-        verify( bioAssayService ).update( capt2.capture() );
+        verify( bioAssayService, times( 2 ) ).update( capt2.capture() );
         assertThat( capt2.getValue() )
                 .hasSize( 16 )
                 .satisfies( bas -> {
@@ -221,6 +229,93 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                     assertThat( rawVec.getDataAsDoubles() )
                             .hasSize( 16 )
                             .containsExactly( 19.927216544784468, 19.927216544784468, 19.927216544784468, 19.927216544784468, 19.927108921133478, 19.927108921133478, 19.927108921133478, 19.927108921133478, 19.925786216730167, 19.925786216730167, 19.925786216730167, 19.925786216730167, 19.925544781696406, 19.925544781696406, 19.925544781696406, 19.925544781696406 );
+                } );
+        verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
+    }
+
+    @Test
+    public void testCountWithAdjustedLibrarySize() {
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "Counts" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.COUNT );
+        qt.setScale( ScaleType.COUNT );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        List<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( ee, ad, qt );
+        SingleCellDimension dimension = vectors.iterator().next().getSingleCellDimension();
+        long[] sourceLibrarySize = { ( long ) ( 1.1 * 2236 ), ( long ) ( 1.1 * 2392 ), ( long ) ( 1.1 * 2260 ), ( long ) ( 1.1 * 2460 ) };
+        int i = 0;
+        for ( BioAssay ba : dimension.getBioAssays() ) {
+            ba.setSequenceReadCount( sourceLibrarySize[i++] );
+            ba.setSequenceReadLength( 100 );
+            ba.setSequencePairedReads( true );
+        }
+        for ( BioAssay ba : cellBAs ) {
+            ba.setSequenceReadLength( 100 );
+            ba.setSequencePairedReads( true );
+        }
+        // randomly assign cell types
+        CellTypeAssignment cta = createCellTypeAssignment( dimension );
+        dimension.getCellTypeAssignments().add( cta );
+        when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, qt ) )
+                .thenReturn( Optional.of( cta ) );
+        when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
+                .thenReturn( vectors );
+
+        QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true );
+        assertThat( newQt.getName() ).isEqualTo( "Counts aggregated by cell type (log2cpm)" );
+        assertThat( newQt.getDescription() ).isEqualTo( "Expression data has been aggregated by cell type using SUM. The data was subsequently converted to log2cpm." );
+        assertThat( newQt.getIsPreferred() ).isTrue();
+        assertThat( newQt.getType() ).isEqualTo( StandardQuantitationType.AMOUNT );
+        assertThat( newQt.getScale() ).isEqualTo( ScaleType.LOG2 );
+
+        verify( bioAssayDimensionService ).findOrCreate( any() );
+        ArgumentCaptor<Collection<BioAssay>> capt2 = ArgumentCaptor.captor();
+        verify( bioAssayService, times( 2 ) ).update( capt2.capture() );
+        assertThat( capt2.getValue() )
+                .hasSize( 16 )
+                .satisfies( bas -> {
+                    assertThat( bas )
+                            .extracting( BioAssay::getNumberOfCells )
+                            .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31, 33, 33, 33, 33 );
+                    assertThat( bas )
+                            .extracting( BioAssay::getNumberOfDesignElements )
+                            .containsExactly( 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 );
+                    assertThat( bas )
+                            .extracting( BioAssay::getNumberOfCellsByDesignElements )
+                            .containsExactly( 24, 24, 24, 24, 20, 20, 20, 20, 31, 31, 31, 31, 33, 33, 33, 33 );
+                    assertThat( bas )
+                            .extracting( BioAssay::getSequenceReadLength )
+                            .containsOnly( 100 );
+                    assertThat( bas )
+                            .extracting( BioAssay::getSequencePairedReads )
+                            .containsOnly( true );
+                } );
+        ArgumentCaptor<Collection<RawExpressionDataVector>> capt = ArgumentCaptor.captor();
+        verify( expressionExperimentService ).addRawDataVectors( eq( ee ), eq( newQt ), capt.capture() );
+        assertThat( capt.getValue() )
+                .hasSameSizeAs( ad.getCompositeSequences() )
+                .satisfies( vecs -> {
+                    // make sure the data is log2cpm
+                    double total = 0;
+                    for ( RawExpressionDataVector vec : vecs ) {
+                        total += Math.pow( 2, vec.getDataAsDoubles()[0] );
+                    }
+                    // because the numerator (librarySize + 1) and numerical error from log/exp transformation, the
+                    // offset will be pretty large. This is attenuated by large library sizes.
+                    // also, because we have about 10% of unaccounted reads, the total should reflect that
+                    assertThat( total ).isEqualTo( 1e6 / 1.1, Offset.offset( 1e4 ) );
+                } )
+                .anySatisfy( rawVec -> {
+                    assertThat( rawVec.getDesignElement().getName() ).isEqualTo( "cs1" );
+                    assertThat( rawVec.getBioAssayDimension().getName() )
+                            .isEqualTo( "Bunch of test cells aggregated by cell type" );
+                    assertThat( rawVec.getBioAssayDimension().getBioAssays() )
+                            .hasSize( 4 * 4 );
+                    assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
+                    assertThat( rawVec.getDataAsDoubles() )
+                            .hasSize( 16 )
+                            .containsExactly( 19.79085337048598, 19.79085337048598, 19.79085337048598, 19.79085337048598, 19.790524266814366, 19.790524266814366, 19.790524266814366, 19.790524266814366, 19.789332307461518, 19.789332307461518, 19.789332307461518, 19.789332307461518, 19.78913462294074, 19.78913462294074, 19.78913462294074, 19.78913462294074 );
                 } );
         verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
     }
@@ -269,7 +364,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                                     19.929304310569375, 19.929304310569375, 19.929304310569375, 19.929304310569375,
                                     19.92901519935523, 19.92901519935523, 19.92901519935523, 19.92901519935523 );
                 } );
-        verify( bioAssayService ).update( anyCollection() );
+        verify( bioAssayService, times( 2 ) ).update( anyCollection() );
         verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
     }
 
@@ -314,7 +409,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                                     19.925786216730167, 19.925786216730167, 19.925786216730167, 19.925786216730167,
                                     19.925544781696406, 19.925544781696406, 19.925544781696406, 19.925544781696406 );
                 } );
-        verify( bioAssayService ).update( anyCollection() );
+        verify( bioAssayService, times( 2 ) ).update( anyCollection() );
         verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
     }
 
@@ -361,7 +456,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                                     19.925786216730167, 19.925786216730167, 19.925786216730167, 19.925786216730167,
                                     19.925544781696406, 19.925544781696406, 19.925544781696406, 19.925544781696406 );
                 } );
-        verifyNoInteractions( bioAssayService );
+        verify( bioAssayService ).update( anyCollection() );
         verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
     }
 
@@ -431,7 +526,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
 
         verify( bioAssayDimensionService ).findOrCreate( any() );
         ArgumentCaptor<Collection<BioAssay>> capt2 = ArgumentCaptor.captor();
-        verify( bioAssayService ).update( capt2.capture() );
+        verify( bioAssayService, times( 2 ) ).update( capt2.capture() );
         assertThat( capt2.getValue() )
                 .hasSize( 12 )
                 .satisfies( bas -> {

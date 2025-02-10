@@ -113,7 +113,7 @@ public class SingleCellExpressionDataVectorUtils {
             @Override
             public void accept( SingleCellExpressionDataVector x ) {
                 int done = i.incrementAndGet();
-                if ( done % 1000 == 0 ) {
+                if ( done % 10 == 0 ) {
                     log.info( String.format( "Processed %d/%d vectors (%f.2 vectors/sec)", done, numVecs, 1000.0 * done / timer.getTime() ) );
                 }
             }

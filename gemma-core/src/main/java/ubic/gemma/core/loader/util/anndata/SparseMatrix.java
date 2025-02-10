@@ -70,6 +70,7 @@ public class SparseMatrix implements Matrix {
         return indptr;
     }
 
+    @Override
     public H5Dataset getData() {
         return group.getDataset( "data" );
     }

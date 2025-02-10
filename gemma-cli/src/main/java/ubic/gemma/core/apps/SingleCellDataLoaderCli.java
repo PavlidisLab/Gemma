@@ -4,12 +4,14 @@ import org.apache.commons.cli.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
+import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.expression.singleCell.*;
 import ubic.gemma.core.util.OptionsUtils;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -20,6 +22,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.core.util.OptionsUtils.*;
@@ -29,6 +32,9 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private static final String
             LOAD_CELL_TYPE_ASSIGNMENT_OPTION = "loadCta",
             LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION = "loadClc",
+            LOAD_SEQUENCING_METADATA_OPTION = "loadSequencingMetadata";
+
+    private static final String
             DATA_TYPE_OPTION = "dataType",
             DATA_PATH_OPTION = "p",
             PLATFORM_OPTION = "a",
@@ -38,18 +44,22 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             QT_NEW_SCALE_TYPE_OPTION = "qtNewScaleType",
             PREFERRED_QT_OPTION = "preferredQt",
             REPLACE_OPTION = "replace",
+            RENAMING_FILE_OPTION = "renamingFile";
+
+    private static final String
             CELL_TYPE_ASSIGNMENT_FILE_OPTION = "ctaFile",
             CELL_TYPE_ASSIGNMENT_NAME_OPTION = "ctaName",
             CELL_TYPE_ASSIGNMENT_PROTOCOL_NAME_OPTION = "ctaProtocol",
             PREFERRED_CELL_TYPE_ASSIGNMENT = "preferredCta",
-            OTHER_CELL_LEVEL_CHARACTERISTICS_FILE = "clcFile";
-
-    private static final String
-            RENAMING_FILE_OPTION = "renamingFile";
-
-    private static final String
+            OTHER_CELL_LEVEL_CHARACTERISTICS_FILE = "clcFile",
             INFER_SAMPLES_FROM_CELL_IDS_OVERLAP_OPTION = "inferSamplesFromCellIdsOverlap",
             IGNORE_UNMATCHED_CELL_IDS_OPTION = "ignoreUnmatchedCellIds";
+
+    private static final String
+            SEQUENCING_METADATA_FILE_OPTION = "sequencingMetadataFile",
+            SEQUENCING_READ_LENGTH_OPTION = "sequencingReadLength",
+            SEQUENCING_IS_PAIRED_OPTION = "sequencingIsPaired",
+            SEQUENCING_IS_SINGLE_END_OPTION = "sequencingIsSingleEnd";
 
     private static final String ANNDATA_OPTION_PREFIX = "annData";
     private static final String
@@ -81,9 +91,11 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     enum Mode {
         LOAD_CELL_TYPE_ASSIGNMENTS,
         LOAD_CELL_LEVEL_CHARACTERISTICS,
+        LOAD_SEQUENCING_METADATA,
         LOAD_EVERYTHING
     }
 
+    // data vectors
     @Nullable
     private String platformName;
     @Nullable
@@ -100,6 +112,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private ScaleType newScaleType;
     private boolean preferredQt;
     private boolean replaceQt;
+
+    // cell type assignment and cell-level characteristics
     @Nullable
     private Path cellTypeAssignmentFile;
     @Nullable
@@ -113,6 +127,14 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private boolean ignoreUnmatchedCellIds;
     @Nullable
     private Path renamingFile;
+
+    // sequencing metadata
+    @Nullable
+    private Path sequencingMetadataFile;
+    @Nullable
+    private Integer sequencingReadLength;
+    @Nullable
+    private Boolean sequencingIsPaired;
 
     // AnnData
     @Nullable
@@ -147,6 +169,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     protected void buildExperimentOptions( Options options ) {
         options.addOption( LOAD_CELL_TYPE_ASSIGNMENT_OPTION, "load-cell-type-assignment", false, "Only load cell type assignment. Use -" + QT_NAME_OPTION + " to specify which set of vectors this is applicable to." );
         options.addOption( LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION, "load-cell-level-characteristics", false, "Only load cell-level characteristics. Use -" + QT_NAME_OPTION + " to specify which set of vectors this is applicable to." );
+        options.addOption( LOAD_SEQUENCING_METADATA_OPTION, "load-sequencing-metadata", false, "Load sequencing metadata." );
+
         options.addOption( DATA_TYPE_OPTION, "data-type", true, "Data type to import. Must be one of " + Arrays.stream( SingleCellDataType.values() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) + "." );
         options.addOption( Option.builder( DATA_PATH_OPTION )
                 .longOpt( "data-path" )
@@ -186,6 +210,22 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         options.addOption( INFER_SAMPLES_FROM_CELL_IDS_OVERLAP_OPTION, "infer-samples-from-cell-ids-overlap", false, "Infer sample names from cell IDs overlap." );
         options.addOption( IGNORE_UNMATCHED_CELL_IDS_OPTION, "ignore-unmatched-cell-ids", false, "Ignore unmatched cell IDs when loading cell type assignments and other cell-level characteristics." );
 
+        options.addOption( Option.builder( SEQUENCING_METADATA_FILE_OPTION )
+                .longOpt( "sequencing-metadata-file" )
+                .hasArg().type( Path.class )
+                .desc( "Path to a file containing sequencing metadata to import. These values will override defaults set by -" + SEQUENCING_READ_LENGTH_OPTION + " and -" + SEQUENCING_IS_PAIRED_OPTION + "." )
+                .build() );
+        options.addOption( Option.builder( SEQUENCING_READ_LENGTH_OPTION )
+                .longOpt( "sequencing-read-length" )
+                .hasArg().type( Integer.class )
+                .desc( "Read length to use for the imported sequencing metadata." )
+                .build() );
+        OptionsUtils.addAutoOption( options,
+                SEQUENCING_IS_PAIRED_OPTION, "sequencing-is-paired",
+                "Indicate that the sequencing data is paired.",
+                SEQUENCING_IS_SINGLE_END_OPTION, "sequencing-is-single-end",
+                "Indicate that the sequencing data is single-end." );
+
         // for AnnData
         options.addOption( ANNDATA_SAMPLE_FACTOR_NAME_OPTION, "anndata-sample-factor-name", true, "Name of the factor used for the sample name." );
         options.addOption( ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION, "anndata-cell-type-factor-name", true, "Name of the factor used for the cell type, incompatible with -" + CELL_TYPE_ASSIGNMENT_FILE_OPTION + "." );
@@ -206,19 +246,15 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
 
     @Override
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
-        if ( commandLine.hasOption( LOAD_CELL_TYPE_ASSIGNMENT_OPTION ) && commandLine.hasOption( LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION ) ) {
-            throw new IllegalArgumentException( "Can only choose one of -" + LOAD_CELL_TYPE_ASSIGNMENT_OPTION + " and -" + LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION + " at a time." );
-        }
-        if ( commandLine.hasOption( LOAD_CELL_TYPE_ASSIGNMENT_OPTION ) ) {
+        if ( hasOption( commandLine, LOAD_CELL_TYPE_ASSIGNMENT_OPTION,
+                noneOf( toBeSet( LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION ), toBeSet( LOAD_SEQUENCING_METADATA_OPTION ) ) ) ) {
             mode = Mode.LOAD_CELL_TYPE_ASSIGNMENTS;
-            if ( commandLine.hasOption( PLATFORM_OPTION ) ) {
-                throw new ParseException( "The -" + PLATFORM_OPTION + " cannot be used with -" + LOAD_CELL_TYPE_ASSIGNMENT_OPTION + "." );
-            }
-        } else if ( commandLine.hasOption( LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION ) ) {
+        } else if ( hasOption( commandLine, LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION,
+                noneOf( toBeSet( LOAD_CELL_TYPE_ASSIGNMENT_OPTION ), toBeSet( LOAD_SEQUENCING_METADATA_OPTION ) ) ) ) {
             mode = Mode.LOAD_CELL_LEVEL_CHARACTERISTICS;
-            if ( commandLine.hasOption( PLATFORM_OPTION ) ) {
-                throw new ParseException( "The -" + PLATFORM_OPTION + " cannot be used with -" + LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION + "." );
-            }
+        } else if ( hasOption( commandLine, LOAD_SEQUENCING_METADATA_OPTION,
+                noneOf( toBeSet( LOAD_CELL_TYPE_ASSIGNMENT_OPTION ), toBeSet( LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION ) ) ) ) {
+            mode = Mode.LOAD_SEQUENCING_METADATA;
         } else {
             mode = Mode.LOAD_EVERYTHING;
             platformName = commandLine.getOptionValue( PLATFORM_OPTION );
@@ -246,6 +282,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         }
         replaceQt = commandLine.hasOption( REPLACE_OPTION );
         preferredQt = commandLine.hasOption( PREFERRED_QT_OPTION );
+        renamingFile = commandLine.getParsedOptionValue( RENAMING_FILE_OPTION );
+
         cellTypeAssignmentFile = commandLine.getParsedOptionValue( CELL_TYPE_ASSIGNMENT_FILE_OPTION );
         cellTypeAssignmentName = getOptionValue( commandLine, CELL_TYPE_ASSIGNMENT_NAME_OPTION, requires( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ) ) );
         cellTypeAssignmentProtocolName = getOptionValue( commandLine, CELL_TYPE_ASSIGNMENT_PROTOCOL_NAME_OPTION, requires( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ) ) );
@@ -256,8 +294,9 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         ignoreUnmatchedCellIds = hasOption( commandLine, IGNORE_UNMATCHED_CELL_IDS_OPTION,
                 requires( anyOf( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ), toBeSet( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE ) ) ) );
 
-        // all data types
-        renamingFile = commandLine.getParsedOptionValue( RENAMING_FILE_OPTION );
+        sequencingMetadataFile = commandLine.getParsedOptionValue( SEQUENCING_METADATA_FILE_OPTION );
+        sequencingReadLength = commandLine.getParsedOptionValue( SEQUENCING_READ_LENGTH_OPTION );
+        sequencingIsPaired = OptionsUtils.getAutoOptionValue( commandLine, SEQUENCING_IS_PAIRED_OPTION, SEQUENCING_IS_SINGLE_END_OPTION );
 
         // data-type specific options
         rejectInvalidOptionsForDataType( commandLine, dataType );
@@ -265,14 +304,14 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             annDataSampleFactorName = commandLine.getOptionValue( ANNDATA_SAMPLE_FACTOR_NAME_OPTION );
             annDataCellTypeFactorName = commandLine.getOptionValue( ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION );
             annDataUnknownCellTypeIndicator = commandLine.getOptionValue( ANNDATA_UNKNOWN_CELL_TYPE_INDICATOR_OPTION );
-            annDataTranspose = getAutoOption( commandLine, ANNDATA_TRANSPOSE_OPTION, ANNDATA_NO_TRANSPOSE_OPTION );
-            annDataUseRawX = getAutoOption( commandLine, ANNDATA_USE_RAW_X_OPTION, ANNDATA_USE_X_OPTION );
+            annDataTranspose = getAutoOptionValue( commandLine, ANNDATA_TRANSPOSE_OPTION, ANNDATA_NO_TRANSPOSE_OPTION );
+            annDataUseRawX = getAutoOptionValue( commandLine, ANNDATA_USE_RAW_X_OPTION, ANNDATA_USE_X_OPTION );
             if ( cellTypeAssignmentFile != null && annDataCellTypeFactorName != null ) {
                 throw new ParseException( String.format( "The -%s option would override the value of -%s.",
                         CELL_TYPE_ASSIGNMENT_FILE_OPTION, ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION ) );
             }
         } else if ( dataType == SingleCellDataType.MEX ) {
-            mexDiscardEmptyCells = OptionsUtils.getAutoOption( commandLine, MEX_DISCARD_EMPTY_CELLS_OPTION, MEX_KEEP_EMPTY_CELLS_OPTION );
+            mexDiscardEmptyCells = OptionsUtils.getAutoOptionValue( commandLine, MEX_DISCARD_EMPTY_CELLS_OPTION, MEX_KEEP_EMPTY_CELLS_OPTION );
             mexAllowMappingDesignElementsToGeneSymbols = commandLine.hasOption( MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION );
         }
     }
@@ -295,8 +334,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
 
     @Override
     protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
-        if ( dataPath != null || qtName != null || cellTypeAssignmentFile != null || otherCellLevelCharacteristicsFile != null ) {
-            throw new IllegalArgumentException( "Cannot specify a data path, quantitation type name, cell type assignment file or cell-level characteristics file when processing more than one experiment." );
+        if ( dataPath != null || qtName != null || cellTypeAssignmentFile != null || otherCellLevelCharacteristicsFile != null || sequencingMetadataFile != null ) {
+            throw new IllegalArgumentException( "Cannot specify a data path, quantitation type name, cell type assignment file, cell-level characteristics file or sequencing metadata file when processing more than one experiment." );
         }
         super.processBioAssaySets( expressionExperiments );
     }
@@ -323,6 +362,14 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                     clc = singleCellDataLoaderService.loadOtherCellLevelCharacteristics( ee, config );
                 }
                 addSuccessObject( ee, "Loaded cell-level characteristics " + clc );
+                break;
+            case LOAD_SEQUENCING_METADATA:
+                Map<BioAssay, SequencingMetadata> sm = singleCellDataLoaderService.loadSequencingMetadata( ee, config );
+                if ( !sm.isEmpty() ) {
+                    addSuccessObject( ee, "Loaded sequencing metadata for " + sm.size() + " assays." );
+                } else {
+                    addErrorObject( ee, "No sequencing metadata were loaded." );
+                }
                 break;
             case LOAD_EVERYTHING:
                 QuantitationType qt;
@@ -399,8 +446,11 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .replaceExistingQuantitationType( replaceQt )
                 .quantitationTypeNewName( newName )
                 .quantitationTypeNewType( newType )
-                .quantitationTypeNewScaleType( newScaleType );
-        configBuilder.markQuantitationTypeAsPreferred( preferredQt );
+                .quantitationTypeNewScaleType( newScaleType )
+                .markQuantitationTypeAsPreferred( preferredQt );
+        if ( renamingFile != null ) {
+            configBuilder.renamingFile( renamingFile );
+        }
         if ( cellTypeAssignmentFile != null ) {
             configBuilder
                     .cellTypeAssignmentFile( cellTypeAssignmentFile )
@@ -423,7 +473,15 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         configBuilder.useCellIdsIfSampleNameIsMissing( true );
         // ignore only on-demand
         configBuilder.ignoreUnmatchedCellIds( ignoreUnmatchedCellIds );
-        configBuilder.renamingFile( renamingFile );
+        if ( sequencingMetadataFile != null ) {
+            configBuilder.sequencingMetadataFile( sequencingMetadataFile );
+        }
+        if ( sequencingReadLength != null || sequencingIsPaired != null ) {
+            configBuilder.defaultSequencingMetadata( SequencingMetadata.builder()
+                    .readLength( sequencingReadLength )
+                    .isPaired( sequencingIsPaired )
+                    .build() );
+        }
         return configBuilder.build();
     }
 }

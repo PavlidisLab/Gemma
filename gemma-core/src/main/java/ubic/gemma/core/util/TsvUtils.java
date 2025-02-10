@@ -56,7 +56,7 @@ public class TsvUtils {
     }
 
     /**
-     * Preconfigure a {@link CSVFormat.Builder} with desirable defaults.
+     * Preconfigure a {@link CSVFormat.Builder} with desirable defaults
      * @param what                a short description of what data is being written
      * @param buildInfo           build information to include in the header
      * @param extraHeaderComments additional header comments that will be included at the top of the TSV file, right
@@ -78,6 +78,34 @@ public class TsvUtils {
                 .create( CSVFormat.TDF )
                 .setCommentMarker( COMMENT )
                 .setHeaderComments( headerComments.toArray( new String[0] ) );
+    }
+
+    public static double parseDouble( @Nullable String val ) {
+        val = StringUtils.stripToNull( val );
+        if ( val == null ) {
+            return Double.NaN;
+        } else if ( val.equals( "inf" ) ) {
+            return Double.POSITIVE_INFINITY;
+        } else if ( val.equals( "-inf" ) ) {
+            return Double.NEGATIVE_INFINITY;
+        } else {
+            return Double.parseDouble( StringUtils.strip( val ) );
+        }
+    }
+
+    @Nullable
+    public static Long parseLong( @Nullable String val ) {
+        return StringUtils.isNotBlank( val ) ? Long.parseLong( StringUtils.strip( val ) ) : null;
+    }
+
+    @Nullable
+    public static Integer parseInt( @Nullable String val ) {
+        return StringUtils.isNotBlank( val ) ? Integer.parseInt( StringUtils.strip( val ) ) : null;
+    }
+
+    @Nullable
+    public static Boolean parseBoolean( @Nullable String val ) {
+        return StringUtils.isNotBlank( val ) ? Boolean.parseBoolean( StringUtils.strip( val ) ) : null;
     }
 
     /**
