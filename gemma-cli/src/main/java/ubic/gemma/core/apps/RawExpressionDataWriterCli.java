@@ -7,7 +7,9 @@ import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
+import ubic.gemma.core.util.OptionsUtils;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -27,6 +29,9 @@ public class RawExpressionDataWriterCli extends ExpressionExperimentVectorsManip
 
     @Autowired
     private ExpressionDataFileService expressionDataFileService;
+
+    @Nullable
+    private ScaleType scaleType;
 
     @Nullable
     private Path outputFile;
@@ -51,11 +56,13 @@ public class RawExpressionDataWriterCli extends ExpressionExperimentVectorsManip
     @Override
     protected void buildExperimentVectorsOptions( Options options ) {
         options.addOption( Option.builder( "o" ).longOpt( "output-file" ).hasArg().type( Path.class ).build() );
+        OptionsUtils.addEnumOption( options, "scaleType", "scale-type", "Scale type to use for the data.", ScaleType.class );
         addForceOption( options );
     }
 
     @Override
     protected void processExperimentVectorsOptions( CommandLine commandLine ) throws ParseException {
+        this.scaleType = OptionsUtils.getEnumOptionValue( commandLine, "scaleType", ScaleType.class );
         this.outputFile = commandLine.getParsedOptionValue( "o" );
     }
 
@@ -78,7 +85,7 @@ public class RawExpressionDataWriterCli extends ExpressionExperimentVectorsManip
             throw new RuntimeException( "Output file " + f + " already exists, use -force to overwrite." );
         }
         try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( f ) ), StandardCharsets.UTF_8 ) ) {
-            int written = expressionDataFileService.writeRawExpressionData( ee, qt, writer );
+            int written = expressionDataFileService.writeRawExpressionData( ee, qt, scaleType, writer );
             addSuccessObject( ee, "Wrote " + written + " vectors for " + qt + " to " + f + "." );
         } catch ( IOException e ) {
             throw new RuntimeException( e );

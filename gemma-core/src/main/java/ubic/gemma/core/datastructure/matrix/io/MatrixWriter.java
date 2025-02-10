@@ -20,10 +20,12 @@ package ubic.gemma.core.datastructure.matrix.io;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -56,9 +58,17 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
     private final EntityUrlBuilder entityUrlBuilder;
     private final BuildInfo buildInfo;
 
+    @Nullable
+    private ScaleType scaleType;
+
     public MatrixWriter( EntityUrlBuilder entityUrlBuilder, BuildInfo buildInfo ) {
         this.entityUrlBuilder = entityUrlBuilder;
         this.buildInfo = buildInfo;
+    }
+
+    @Override
+    public void setScaleType( @Nullable ScaleType scaleType ) {
+        this.scaleType = scaleType;
     }
 
     @Override
@@ -75,11 +85,12 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
      * @throws IOException when the write failed
      */
     public int write( BulkExpressionDataMatrix<?> matrix, @Nullable Map<CompositeSequence, Collection<Gene>> geneAnnotations, Writer writer ) throws IOException {
-        int rows = matrix.rows();
+        QuantitationType qt = matrix.getQuantitationTypes().iterator().next();
 
         List<BioMaterial> bioMaterials = this.getBioMaterialsInRequestedOrder( matrix, false );
         this.writeHeader( bioMaterials, matrix, geneAnnotations, writer );
 
+        int rows = matrix.rows();
         for ( int j = 0; j < rows; j++ ) {
             CompositeSequence probeForRow = matrix.getDesignElementForRow( j );
             writer.append( format( probeForRow.getName() ) );
@@ -90,7 +101,8 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
             // print the data.
             for ( BioMaterial bioMaterial : bioMaterials ) {
                 int i = matrix.getColumnIndex( bioMaterial );
-                writer.append( "\t" ).append( format( matrix.get( j, i ) ) );
+                writer.append( "\t" );
+                writeValue( matrix.get( j, i ), qt, writer );
             }
             writer.append( "\n" );
         }
@@ -110,12 +122,13 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
      * @see ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl#readAnnotationFile(ArrayDesign)
      */
     public int writeWithStringifiedGeneAnnotations( Writer writer, BulkExpressionDataMatrix<?> matrix, @Nullable Map<CompositeSequence, String[]> geneAnnotations ) throws IOException {
-        int rows = matrix.rows();
+        QuantitationType qt = matrix.getQuantitationTypes().iterator().next();
 
         List<BioMaterial> orderedBioMaterials = this.getBioMaterialsInRequestedOrder( matrix, true );
 
         this.writeHeader( orderedBioMaterials, matrix, geneAnnotations, writer );
 
+        int rows = matrix.rows();
         for ( int j = 0; j < rows; j++ ) {
             CompositeSequence probeForRow = matrix.getDesignElementForRow( j );
             writer.append( format( probeForRow.getName() ) );
@@ -127,7 +140,8 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
             for ( BioMaterial bioMaterial : orderedBioMaterials ) {
                 int i = matrix.getColumnIndex( bioMaterial );
                 Object val = matrix.get( j, i );
-                writer.append( "\t" ).append( format( val ) );
+                writer.append( "\t" );
+                writeValue( val, qt, writer );
             }
 
             writer.append( "\n" );
@@ -306,6 +320,14 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
         buf.append( "\t" );
         if ( biologicalCharacteristic != null ) {
             buf.append( format( biologicalCharacteristic.getName() ) );
+        }
+    }
+
+    private void writeValue( Object val, QuantitationType qt, Writer buf ) throws IOException {
+        if ( val instanceof Number ) {
+            buf.write( format( ScaleTypeConversionUtils.convertScalar( ( Number ) val, qt, scaleType ) ) );
+        } else {
+            buf.write( format( val ) );
         }
     }
 }

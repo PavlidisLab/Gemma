@@ -2,9 +2,8 @@ package ubic.gemma.core.util;
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static ubic.gemma.core.util.TsvUtils.format;
-import static ubic.gemma.core.util.TsvUtils.formatComment;
+import static org.junit.Assert.*;
+import static ubic.gemma.core.util.TsvUtils.*;
 
 public class TsvUtilsTest {
 
@@ -42,6 +41,34 @@ public class TsvUtilsTest {
     public void testFormat() {
         assertEquals( "\\t\\n\\r\\\\", format( "\t\n\r\\" ) );
         assertEquals( "", format( ( String ) null ) );
+    }
+
+    @Test
+    public void testParse() {
+        assertNull( parseInt( "" ) );
+        assertNull( parseInt( null ) );
+        assertEquals( ( Integer ) 12, parseInt( "12" ) );
+        assertEquals( ( Long ) 12L, parseLong( "12" ) );
+        assertEquals( Boolean.TRUE, parseBoolean( "true" ) );
+        assertEquals( Boolean.FALSE, parseBoolean( "false" ) );
+    }
+
+    @Test
+    public void testParseDouble() {
+        assertEquals( 1e-5, parseDouble( "1E-5" ), Double.MIN_VALUE );
+        assertEquals( 1e3, parseDouble( "1000.0" ), Double.MIN_VALUE );
+        assertEquals( 1000.0, parseDouble( "1000.0" ), Double.MIN_VALUE );
+        assertEquals( 1234.5, parseDouble( "1234.5" ), Double.MIN_VALUE );
+        assertEquals( 1e5, parseDouble( "100000.0" ), Double.MIN_VALUE );
+        assertEquals( -1e5, parseDouble( "-100000.0" ), Double.MIN_VALUE );
+        assertEquals( 100.1234, parseDouble( "100.1234" ), Double.MIN_VALUE );
+        assertEquals( -100.1234, parseDouble( "-100.1234" ), Double.MIN_VALUE );
+        assertTrue( Double.isNaN( parseDouble( "" ) ) );
+        assertTrue( Double.isNaN( parseDouble( "NaN" ) ) );
+        assertEquals( Double.POSITIVE_INFINITY, parseDouble( "inf" ), Double.MIN_VALUE );
+        assertEquals( Double.NEGATIVE_INFINITY, parseDouble( "-inf" ), Double.MIN_VALUE );
+        assertEquals( Double.POSITIVE_INFINITY, parseDouble( "Infinity" ), Double.MIN_VALUE );
+        assertEquals( Double.NEGATIVE_INFINITY, parseDouble( "-Infinity" ), Double.MIN_VALUE );
     }
 
     @Test

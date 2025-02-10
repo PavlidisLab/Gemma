@@ -176,7 +176,7 @@ public interface ExpressionDataFileService {
      */
     Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type, boolean exclusive ) throws IOException;
 
-    Optional<LockedPath> getMetadataFile(ExpressionExperiment ee, String filename, boolean exclusive) throws IOException;
+    Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, String filename, boolean exclusive ) throws IOException;
 
     /**
      * Copy a metadata file to the location of a given metadata type.
@@ -309,12 +309,13 @@ public interface ExpressionDataFileService {
      * Note: For compression, wrap a {@link java.util.zip.GZIPOutputStream} with a {@link java.io.OutputStreamWriter}.
      * To write to a string, consider using {@link java.io.StringWriter}.
      *
-     * @param ee     the expression experiment
-     * @param qt     a quantitation type to use
-     * @param writer the destination for the raw expression data
+     * @param ee        the expression experiment
+     * @param qt        a quantitation type to use
+     * @param scaleType a scale type to use or null to leave the data untransformed
+     * @param writer    the destination for the raw expression data
      * @throws IOException if operations with the writer fails
      */
-    int writeRawExpressionData( ExpressionExperiment ee, QuantitationType qt, Writer writer ) throws IOException;
+    int writeRawExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, Writer writer ) throws IOException;
 
     /**
      * Write processed expression data to a given writer for a given quantitation type.
@@ -326,7 +327,7 @@ public interface ExpressionDataFileService {
      * @param writer the destination for the raw expression data
      * @throws IOException if operations with the writer fails
      */
-    int writeProcessedExpressionData( ExpressionExperiment ee, boolean filtered, Writer writer ) throws FilteringException, IOException;
+    int writeProcessedExpressionData( ExpressionExperiment ee, boolean filtered, @Nullable ScaleType scaleType, Writer writer ) throws FilteringException, IOException;
 
     /**
      * Writes out the experimental design for the given experiment.

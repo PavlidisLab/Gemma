@@ -126,7 +126,7 @@ public class OptionsUtils {
         }
     }
 
-    public static void addEnumOption( Options options, String optionName, String longOption, String description, Class<? extends Enum> enumClass ) {
+    public static <T extends Enum<T>> void addEnumOption( Options options, String optionName, String longOption, String description, Class<? extends Enum<T>> enumClass ) {
         options.addOption( optionName, longOption, true, description + " Possible values are " + enumClass + "." );
     }
 
@@ -134,13 +134,30 @@ public class OptionsUtils {
      * Obtain the value of an enumerated option.
      */
     @Nullable
-    public static <T extends Enum> T getEnumOptionValue( CommandLine commandLine, String optionName, Class<T> enumClass, Predicate<CommandLine> predicate ) throws org.apache.commons.cli.ParseException {
+    public static <T extends Enum<T>> T getEnumOptionValue( CommandLine commandLine, String optionName, Class<T> enumClass ) throws org.apache.commons.cli.ParseException {
+        String value = commandLine.getOptionValue( optionName );
+        return parseEnumOption( optionName, value, enumClass );
+    }
+
+    /**
+     * Obtain the value of an enumerated option.
+     */
+    @Nullable
+    public static <T extends Enum<T>> T getEnumOptionValue( CommandLine commandLine, String optionName, Class<T> enumClass, Predicate<CommandLine> predicate ) throws org.apache.commons.cli.ParseException {
         String value = getOptionValue( commandLine, optionName, predicate );
+        return parseEnumOption( optionName, value, enumClass );
+    }
+
+    @Nullable
+    private static <T extends Enum<T>> T parseEnumOption( String optionName, @Nullable String value, Class<T> enumClass ) throws org.apache.commons.cli.ParseException {
         if ( value == null ) {
             return null;
         }
-        //noinspection unchecked
-        return ( T ) Enum.valueOf( enumClass, StringUtils.strip( value ).toUpperCase() );
+        try {
+            return Enum.valueOf( enumClass, StringUtils.strip( value ).toUpperCase() );
+        } catch ( IllegalArgumentException e ) {
+            throw new org.apache.commons.cli.ParseException( "Failed to parse enumerated option " + optionName + "." );
+        }
     }
 
     /**

@@ -311,7 +311,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                         CELL_TYPE_ASSIGNMENT_FILE_OPTION, ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION ) );
             }
         } else if ( dataType == SingleCellDataType.MEX ) {
-            mexDiscardEmptyCells = OptionsUtils.getAutoOptionValue( commandLine, MEX_DISCARD_EMPTY_CELLS_OPTION, MEX_KEEP_EMPTY_CELLS_OPTION );
+            mexDiscardEmptyCells = getAutoOptionValue( commandLine, MEX_DISCARD_EMPTY_CELLS_OPTION, MEX_KEEP_EMPTY_CELLS_OPTION );
             mexAllowMappingDesignElementsToGeneSymbols = commandLine.hasOption( MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION );
         }
     }

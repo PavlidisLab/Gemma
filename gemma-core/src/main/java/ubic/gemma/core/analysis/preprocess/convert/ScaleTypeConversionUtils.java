@@ -14,6 +14,29 @@ import javax.annotation.Nullable;
  */
 public class ScaleTypeConversionUtils {
 
+    private static final ThreadLocal<int[]> ONE_INT_VALUE = ThreadLocal.withInitial( () -> new int[1] );
+    private static final ThreadLocal<double[]> ONE_DOUBLE_VALUE = ThreadLocal.withInitial( () -> new double[1] );
+
+    /**
+     * Convert a single number.
+     */
+    public static Number convertScalar( Number val, QuantitationType qt, @Nullable ScaleType scaleType ) {
+        if ( scaleType == null || qt.getScale() == scaleType ) {
+            return val;
+        }
+        if ( val instanceof Double ) {
+            double[] vec = ONE_DOUBLE_VALUE.get();
+            vec[0] = val.doubleValue();
+            return convertVector( vec, qt, scaleType )[0];
+        } else if ( val instanceof Integer ) {
+            int[] vec = ONE_INT_VALUE.get();
+            vec[0] = val.intValue();
+            return convertVector( vec, scaleType )[0];
+        } else {
+            throw new UnsupportedOperationException( "Cannot convert " + val.getClass().getSimpleName() + " to " + scaleType + " scale." );
+        }
+    }
+
     /**
      * Convert a vector to the target scale.
      * @param scaleType the target scale, or null to keep the original scale

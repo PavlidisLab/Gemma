@@ -6,8 +6,15 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellDataVectorAggregatorUtils;
+import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataIntegerMatrix;
+import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -26,6 +33,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
+
+import static ubic.gemma.core.analysis.singleCell.aggregate.SingleCellDataVectorAggregatorUtils.aggregate;
+import static ubic.gemma.core.analysis.singleCell.aggregate.SingleCellDataVectorAggregatorUtils.createAggregator;
+import static ubic.gemma.core.util.OptionsUtils.*;
+import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.createStreamMonitor;
 
 @SuppressWarnings("unused")
 public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipulatingCli<SingleCellExpressionDataVector> {
@@ -49,6 +61,9 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
     @Autowired
     private ExpressionDataFileService expressionDataFileService;
 
+    @Autowired
+    private BuildInfo buildInfo;
+
     private MatrixFormat format;
     @Nullable
     private ScaleType scaleType;
@@ -58,6 +73,8 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
     private boolean standardLocation;
     @Nullable
     private Path outputFile;
+    @Nullable
+    private SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod aggregationMethod;
 
     @Nullable
     @Override
@@ -80,6 +97,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         options.addOption( Option.builder( "fetchSize" ).longOpt( "fetch-size" ).hasArg( true ).type( Integer.class ).desc( "Fetch size to use when retrieving vectors, incompatible with -noStreaming/--no-streaming." ).build() );
         options.addOption( "standardLocation", "standard-location", false, "Write the file to the standard location under, this is incompatible with -scaleType/--scale-type, -useEnsemblIds/--use-ensembl-ids and -o/--output." );
         options.addOption( Option.builder( "o" ).longOpt( "output" ).hasArg( true ).type( Path.class ).desc( "Destination for the matrix file, or a directory if -format is set to MEX." ).build() );
+        addEnumOption( options, "aggregate", "aggregate", "Aggregate the single-cell data by sample. This is incompatible with -format, -useEnsemblIds and -standardLocation.", SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.class );
         addForceOption( options );
     }
 
@@ -110,6 +128,9 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         if ( standardLocation && useEnsemblIds ) {
             throw new ParseException( "Data cannot be written to the standard location using Ensembl IDs." );
         }
+        aggregationMethod = getEnumOptionValue( commandLine, "aggregate",
+                SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.class,
+                requires( noneOf( toBeSet( "standardLocation" ), toBeSet( "format" ), toBeSet( "useEnsemblIds" ) ) ) );
     }
 
     @Override
@@ -123,6 +144,31 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
     @Override
     protected void processExpressionExperimentVectors( ExpressionExperiment ee, QuantitationType qt ) {
         try {
+            if ( aggregationMethod != null ) {
+                log.info( "Aggregating vectors for " + qt + " using " + aggregationMethod + "..." );
+                Collection<RawExpressionDataVector> vecs;
+                if ( useStreaming ) {
+                    vecs = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30 )
+                            .peek( createStreamMonitor( getClass().getName(), 10000 ) )
+                            .map( createAggregator( aggregationMethod ) )
+                            .limit( 50 )
+                            .collect( Collectors.toList() );
+                } else {
+                    vecs = aggregate( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ), aggregationMethod );
+                }
+                BulkExpressionDataMatrix<?> matrix;
+                if ( aggregationMethod == SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.COUNT || aggregationMethod == SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.COUNT_FAST ) {
+                    matrix = new ExpressionDataIntegerMatrix( vecs );
+                } else {
+                    matrix = new ExpressionDataDoubleMatrix( vecs );
+                }
+                try ( Writer writer = new OutputStreamWriter( openOutputFile( isForce() ), StandardCharsets.UTF_8 ) ) {
+                    MatrixWriter matrixWriter = new MatrixWriter( entityUrlBuilder, buildInfo );
+                    matrixWriter.setScaleType( scaleType );
+                    matrixWriter.write( matrix, writer );
+                }
+                return;
+            }
             switch ( format ) {
                 case TABULAR:
                     if ( standardLocation ) {

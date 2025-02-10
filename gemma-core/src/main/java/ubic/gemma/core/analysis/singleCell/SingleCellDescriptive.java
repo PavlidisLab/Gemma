@@ -37,7 +37,7 @@ public class SingleCellDescriptive {
     public static int[] count( SingleCellExpressionDataVector vector ) {
         switch ( vector.getQuantitationType().getRepresentation() ) {
             case DOUBLE:
-                return count( vector, vector.getDataAsDoubles() );
+                return count( vector, vector.getDataAsDoubles(), getDefaultValue( vector.getQuantitationType().getScale() ) );
             // these data types don't have a missing value indicator, so we can simply use (end - start) to count the
             // number of values
             case CHAR:
@@ -51,13 +51,31 @@ public class SingleCellDescriptive {
         }
     }
 
-    private static int[] count( SingleCellExpressionDataVector vector, double[] data ) {
+    /**
+     * Obtain the default value that would be encoded.
+     * @param scaleType
+     * @return
+     */
+    public static double getDefaultValue( ScaleType scaleType ) {
+        switch ( scaleType ) {
+            case LOG2:
+            case LN:
+            case LOG10:
+            case LOGBASEUNKNOWN:
+                return Double.NEGATIVE_INFINITY;
+            case LOG1P: // in log1p, 0 is mapped back to 0
+            default:
+                return 0;
+        }
+    }
+
+    private static int[] count( SingleCellExpressionDataVector vector, double[] data, double defaultValue ) {
         int[] d = new int[vector.getSingleCellDimension().getBioAssays().size()];
         for ( int i = 0; i < d.length; i++ ) {
             int start = getSampleStart( vector, i, 0 );
             int end = getSampleEnd( vector, i, start );
             for ( int j = start; j < end; j++ ) {
-                if ( Double.isNaN( data[j] ) ) {
+                if ( Double.isNaN( data[j] ) || data[j] == defaultValue ) {
                     continue;
                 }
                 d[i]++;
@@ -66,7 +84,12 @@ public class SingleCellDescriptive {
         return d;
     }
 
-    private static int[] countFast( SingleCellExpressionDataVector vector ) {
+    /**
+     * Quickly count the non-zeroes for each assay.
+     * <p>
+     * Note: this is not accurate if the single-cell vector contains {@code NaN}s or actual zeroes.
+     */
+    public static int[] countFast( SingleCellExpressionDataVector vector ) {
         int[] d = new int[vector.getSingleCellDimension().getBioAssays().size()];
         for ( int i = 0; i < d.length; i++ ) {
             int start = getSampleStart( vector, i, 0 );
@@ -78,6 +101,7 @@ public class SingleCellDescriptive {
 
     /**
      * Compute the number of cells expressed strictly above the given threshold.
+     * @param threshold a threshold value, assumed to be in the {@link ScaleType} of the vector
      */
     public static int[] countAboveThreshold( SingleCellExpressionDataVector vector, double threshold ) {
         int[] d = new int[vector.getSingleCellDimension().getBioAssays().size()];
@@ -102,6 +126,15 @@ public class SingleCellDescriptive {
                 vec.elements( data );
             }
             d[i] = func.applyAsDouble( vec );
+        }
+        return d;
+    }
+
+    public static double[] sum( SingleCellExpressionDataVector vector ) {
+        ScaleType scaleType = vector.getQuantitationType().getScale();
+        double[] d = new double[vector.getSingleCellDimension().getBioAssays().size()];
+        for ( int i = 0; i < d.length; i++ ) {
+            d[i] = DataVectorDescriptive.sum( getSampleDataAsDoubles( vector, i ), scaleType );
         }
         return d;
     }

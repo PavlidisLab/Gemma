@@ -3,6 +3,7 @@ package ubic.gemma.core.datastructure.matrix;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.apache.commons.lang.ArrayUtils;
 import org.springframework.util.Assert;
+import ubic.gemma.core.analysis.singleCell.SingleCellDescriptive;
 import ubic.gemma.core.datastructure.SparseRangeArrayList;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -71,17 +72,7 @@ public class SingleCellExpressionDataDoubleMatrix implements SingleCellExpressio
             }
             i++;
         }
-        switch ( quantitationType.getScale() ) {
-            case LOG2:
-            case LN:
-            case LOG10:
-            case LOGBASEUNKNOWN:
-                defaultValue = Double.NEGATIVE_INFINITY;
-                break;
-            case LOG1P: // in log1p, 0 is mapped back to 0
-            default:
-                defaultValue = 0;
-        }
+        defaultValue = SingleCellDescriptive.getDefaultValue( quantitationType.getScale() );
         bioAssays = new SparseRangeArrayList<>( singleCellDimension.getBioAssays(), singleCellDimension.getBioAssaysOffset(), singleCellDimension.getNumberOfCells() );
     }
 
