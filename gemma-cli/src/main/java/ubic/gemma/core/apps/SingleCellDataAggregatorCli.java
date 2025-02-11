@@ -9,16 +9,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentAggregatorService;
+import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentSplitService;
+import ubic.gemma.core.analysis.singleCell.aggregate.UnsupportedScaleTypeForAggregationException;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentAggregatorService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
-import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentSplitService;
-import ubic.gemma.core.analysis.singleCell.aggregate.UnsupportedScaleTypeForAggregationException;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import javax.annotation.Nullable;
@@ -46,6 +46,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
     @Nullable
     private String ctaName;
     private boolean makePreferred;
+    private boolean adjustLibrarySizes;
 
     public SingleCellDataAggregatorCli() {
         super( SingleCellExpressionDataVector.class );
@@ -68,12 +69,14 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
     protected void buildExperimentVectorsOptions( Options options ) {
         options.addOption( "cta", "cell-type-assignment", true, "Name of the cell type assignment to use (defaults to the preferred one)" );
         options.addOption( "p", "make-preferred", false, "Make the resulting aggregated data the preferred raw data for the experiment" );
+        options.addOption( "adjustLibrarySizes", false, "Adjust library sizes for the resulting aggregated assays." );
     }
 
     @Override
     protected void processExperimentVectorsOptions( CommandLine commandLine ) {
         ctaName = commandLine.getOptionValue( "cta" );
         makePreferred = commandLine.hasOption( "p" );
+        adjustLibrarySizes = commandLine.hasOption( "adjustLibrarySizes" );
     }
 
     @Override
@@ -93,7 +96,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
 
         QuantitationType newQt;
         try {
-            newQt = helperService.splitAndAggregate( expressionExperiment, qt, cta, makePreferred );
+            newQt = helperService.splitAndAggregate( expressionExperiment, qt, cta, makePreferred, adjustLibrarySizes );
             addSuccessObject( expressionExperiment, "Aggregated single-cell data into " + newQt + "." );
         } catch ( UnsupportedScaleTypeForAggregationException e ) {
             addErrorObject( expressionExperiment, String.format( "Aggregation is not support for data of scale type %s, change it first in the GUI %s.",
@@ -136,7 +139,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
         private EntityUrlBuilder entityUrlBuilder;
 
         @Transactional
-        public QuantitationType splitAndAggregate( ExpressionExperiment expressionExperiment, QuantitationType qt, CellTypeAssignment cta, boolean makePreferred ) {
+        public QuantitationType splitAndAggregate( ExpressionExperiment expressionExperiment, QuantitationType qt, CellTypeAssignment cta, boolean makePreferred, boolean adjustLibrarySizes ) {
             List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSplitService.splitByCellType( expressionExperiment, cta, true );
             int longestSubsetName = subsets.stream().map( ExpressionExperimentSubSet::getName ).mapToInt( String::length ).max().orElse( 0 );
             log.info( String.format( "Created %d subsets of %s for each cell type:\n\t%s", subsets.size(), expressionExperiment,
@@ -149,7 +152,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
                         .forEach( cellBAs::add );
             }
 
-            QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( expressionExperiment, qt, cellBAs, makePreferred );
+            QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( expressionExperiment, qt, cellBAs, makePreferred, adjustLibrarySizes );
             log.info( "Aggregated single-cell data for " + qt + " into pseudo-bulks with quantitation type " + newQt + "." );
             return newQt;
         }

@@ -78,7 +78,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.SingleCellDataAggregatorCli ' ]]; then
         if ! [[ "$current_option" =~ (--cell-type-assignment|--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--quantitation-type|--taxon|-batchFormat|-batchOutputFile|-cta|-e|-eeset|-f|-q|-qt|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--cell-type-assignment --eeListfile --excludeEEFile --experiment --expressionQuery --help --make-preferred --quantitation-type --taxon -all -batchFormat -batchOutputFile -cta -e -eeset -f -h -p -q -qt -t -x" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--cell-type-assignment --eeListfile --excludeEEFile --experiment --expressionQuery --help --make-preferred --quantitation-type --taxon -adjustLibrarySizes -all -batchFormat -batchOutputFile -cta -e -eeset -f -h -p -q -qt -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -86,7 +86,7 @@ function __gemma_cli_complete() {
     fi
     if [[ " $words " =~ ' aggregateSingleCellData ' ]]; then
         if ! [[ "$current_option" =~ (--cell-type-assignment|--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--quantitation-type|--taxon|-batchFormat|-batchOutputFile|-cta|-e|-eeset|-f|-q|-qt|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--cell-type-assignment --eeListfile --excludeEEFile --experiment --expressionQuery --help --make-preferred --quantitation-type --taxon -all -batchFormat -batchOutputFile -cta -e -eeset -f -h -p -q -qt -t -x" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--cell-type-assignment --eeListfile --excludeEEFile --experiment --expressionQuery --help --make-preferred --quantitation-type --taxon -adjustLibrarySizes -all -batchFormat -batchOutputFile -cta -e -eeset -f -h -p -q -qt -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")

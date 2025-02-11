@@ -60,7 +60,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
 
     @Override
     @Transactional
-    public QuantitationType aggregateVectors( ExpressionExperiment ee, QuantitationType quantitationType, List<BioAssay> cellBAs, boolean makePreferred ) {
+    public QuantitationType aggregateVectors( ExpressionExperiment ee, QuantitationType quantitationType, List<BioAssay> cellBAs, boolean makePreferred, boolean adjustLibrarySizes ) {
         // FIXME: this is needed because if EE is not in the session, getPreferredSingleCellDataVectors() will retrieve
         //        a distinct QT than that of ee.getQuantitationTypes()
         ee = expressionExperimentService.loadOrFail( ee.getId() );
@@ -156,7 +156,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
             // TODO: compute normalization factors from data
             normalizationFactor = new double[cellBAs.size()];
             Arrays.fill( normalizationFactor, 1.0 );
-            librarySize = computeLibrarySize( vectors, newBad, cta, sourceBioAssayMap, sourceSampleToIndex, sourceSampleLibrarySizeAdjustments, cellTypeIndices, method );
+            librarySize = computeLibrarySize( vectors, newBad, cta, sourceBioAssayMap, sourceSampleToIndex, sourceSampleLibrarySizeAdjustments, cellTypeIndices, method, adjustLibrarySizes );
             for ( int i = 0; i < librarySize.length; i++ ) {
                 if ( librarySize[i] == 0 ) {
                     log.warn( "Library size for " + cellBAs.get( i ) + " is zero, this will cause NaN values in the log2cpm transformation." );
@@ -302,7 +302,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
     /**
      * Compute the library size for each sample.
      */
-    private double[] computeLibrarySize( Collection<SingleCellExpressionDataVector> vectors, BioAssayDimension bad, CellTypeAssignment cta, Map<BioAssay, BioAssay> sourceBioAssayMap, Map<BioAssay, Integer> sourceSampleToIndex, Map<BioAssay, Double> sourceSampleLibrarySizeAdjustments, Map<BioAssay, Integer> cellTypeIndices, SingleCellExpressionAggregationMethod method ) throws IllegalStateException {
+    private double[] computeLibrarySize( Collection<SingleCellExpressionDataVector> vectors, BioAssayDimension bad, CellTypeAssignment cta, Map<BioAssay, BioAssay> sourceBioAssayMap, Map<BioAssay, Integer> sourceSampleToIndex, Map<BioAssay, Double> sourceSampleLibrarySizeAdjustments, Map<BioAssay, Integer> cellTypeIndices, SingleCellExpressionAggregationMethod method, boolean adjustLibrarySizes ) throws IllegalStateException {
         List<BioAssay> samples = bad.getBioAssays();
         int numSamples = samples.size();
         int numSourceSamples = sourceSampleToIndex.size();
@@ -340,30 +340,33 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
                 }
             }
         }
-        for ( Map.Entry<BioAssay, Integer> e : sourceSampleToIndex.entrySet() ) {
-            BioAssay sourceSample = e.getKey();
-            int sourceSampleIndex = e.getValue();
-            if ( sourceSample.getSequenceReadCount() == null )
-                continue;
-            if ( sourceSample.getSequenceReadCount() < sourceLibrarySize[sourceSampleIndex] ) {
-                throw new IllegalStateException(
-                        String.format( "The library size for %s (%.2f) exceeds the number of reads (%d).",
-                                sourceSample, sourceLibrarySize[sourceSampleIndex], sourceSample.getSequenceReadCount() ) );
+        if ( adjustLibrarySizes ) {
+            log.info( "Adjusting library sizes..." );
+            for ( Map.Entry<BioAssay, Integer> e : sourceSampleToIndex.entrySet() ) {
+                BioAssay sourceSample = e.getKey();
+                int sourceSampleIndex = e.getValue();
+                if ( sourceSample.getSequenceReadCount() == null )
+                    continue;
+                if ( sourceSample.getSequenceReadCount() < sourceLibrarySize[sourceSampleIndex] ) {
+                    throw new IllegalStateException(
+                            String.format( "The library size for %s (%.2f) exceeds the number of reads (%d).",
+                                    sourceSample, sourceLibrarySize[sourceSampleIndex], sourceSample.getSequenceReadCount() ) );
 
+                }
+                sourceSampleLibrarySizeAdjustments.put( sourceSample, sourceSample.getSequenceReadCount() / sourceLibrarySize[e.getValue()] );
             }
-            sourceSampleLibrarySizeAdjustments.put( sourceSample, sourceSample.getSequenceReadCount() / sourceLibrarySize[e.getValue()] );
-        }
-        // adjust library sizes
-        for ( int i = 0; i < librarySize.length; i++ ) {
-            BioAssay sample = bad.getBioAssays().get( i );
-            BioAssay sourceSample = sourceBioAssayMap.get( sample );
-            Double adjustment = sourceSampleLibrarySizeAdjustments.get( sourceSample );
-            if ( adjustment == null ) {
-                continue;
+            // adjust library sizes
+            for ( int i = 0; i < librarySize.length; i++ ) {
+                BioAssay sample = bad.getBioAssays().get( i );
+                BioAssay sourceSample = sourceBioAssayMap.get( sample );
+                Double adjustment = sourceSampleLibrarySizeAdjustments.get( sourceSample );
+                if ( adjustment == null ) {
+                    continue;
+                }
+                // this will scale the library size to the number of reads in the source sample instead of the number of
+                // reads that we recorded in the vectors
+                librarySize[i] *= adjustment;
             }
-            // this will scale the library size to the number of reads in the source sample instead of the number of
-            // reads that we recorded in the vectors
-            librarySize[i] *= adjustment;
         }
         return librarySize;
     }

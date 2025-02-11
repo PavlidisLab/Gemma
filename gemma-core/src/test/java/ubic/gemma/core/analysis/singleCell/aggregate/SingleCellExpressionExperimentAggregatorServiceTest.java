@@ -178,7 +178,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
                 .thenReturn( vectors );
 
-        QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true );
+        QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true, false );
         assertThat( newQt.getName() ).isEqualTo( "Counts aggregated by cell type (log2cpm)" );
         assertThat( newQt.getDescription() ).isEqualTo( "Expression data has been aggregated by cell type using SUM. The data was subsequently converted to log2cpm." );
         assertThat( newQt.getIsPreferred() ).isTrue();
@@ -262,7 +262,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
                 .thenReturn( vectors );
 
-        QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true );
+        QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true, true );
         assertThat( newQt.getName() ).isEqualTo( "Counts aggregated by cell type (log2cpm)" );
         assertThat( newQt.getDescription() ).isEqualTo( "Expression data has been aggregated by cell type using SUM. The data was subsequently converted to log2cpm." );
         assertThat( newQt.getIsPreferred() ).isTrue();
@@ -338,7 +338,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
                 .thenReturn( vectors );
 
-        QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true );
+        QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true, false );
         assertThat( newQt.getName() ).isEqualTo( "log2cpm aggregated by cell type (log2cpm)" );
         assertThat( newQt.getDescription() ).isEqualTo( "Expression data has been aggregated by cell type using LOG_SUM. The data was subsequently converted to log2cpm." );
         assertThat( newQt.getIsPreferred() ).isTrue();
@@ -386,7 +386,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
                 .thenReturn( vectors );
 
-        QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true );
+        QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true, false );
         assertThat( newQt.getName() ).isEqualTo( "log1p aggregated by cell type (log2cpm)" );
         assertThat( newQt.getDescription() ).isEqualTo( "Expression data has been aggregated by cell type using LOG1P_SUM. The data was subsequently converted to log2cpm." );
         assertThat( newQt.getIsPreferred() ).isTrue();
@@ -431,7 +431,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
                 .thenReturn( vectors );
 
-        QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, false );
+        QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, false, false );
         assertThat( newQt.getName() ).isEqualTo( "log1p aggregated by cell type (log2cpm)" );
         assertThat( newQt.getDescription() ).isEqualTo( "Expression data has been aggregated by cell type using LOG1P_SUM. The data was subsequently converted to log2cpm." );
         assertThat( newQt.getIsPreferred() ).isFalse();
@@ -479,7 +479,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
                 .thenReturn( vectors );
 
-        assertThatThrownBy( () -> singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true ) )
+        assertThatThrownBy( () -> singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true, false ) )
                 .isInstanceOf( UnsupportedOperationException.class )
                 .hasMessage( "Unsupported scale type for aggregation: PERCENT" );
 
@@ -517,7 +517,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
                 .thenReturn( vectors );
 
-        QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true );
+        QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true, false );
         assertThat( newQt.getName() ).isEqualTo( "Counts aggregated by cell type (log2cpm)" );
         assertThat( newQt.getDescription() ).isEqualTo( "Expression data has been aggregated by cell type using SUM. The data was subsequently converted to log2cpm." );
         assertThat( newQt.getIsPreferred() ).isTrue();
