@@ -64,7 +64,6 @@ import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.util.*;
 
@@ -885,16 +884,6 @@ public class ExpressionExperimentServiceImpl
     @Transactional(readOnly = true)
     public ExpressionExperiment loadAndThaw( Long id ) {
         ExpressionExperiment ee = load( id );
-        if ( ee != null ) {
-            this.expressionExperimentDao.thaw( ee );
-        }
-        return ee;
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ExpressionExperiment loadAndThawWithRefreshCacheMode( Long id ) {
-        ExpressionExperiment ee = expressionExperimentDao.load( id, CacheMode.REFRESH );
         if ( ee != null ) {
             this.expressionExperimentDao.thaw( ee );
         }

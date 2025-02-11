@@ -1902,21 +1902,19 @@ public class DatasetsWebService {
             })
     public Response refreshDataset(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Parameter(description = "Refresh raw and processed data vectors.") @QueryParam("refreshVectors") @DefaultValue("false") Boolean refreshVectors,
+            @Parameter(description = "Refresh processed data vectors.") @QueryParam("refreshVectors") @DefaultValue("false") Boolean refreshVectors,
             @Parameter(description = "Refresh experiment reports which include differential expression analyses and batch effects.") @QueryParam("refreshReports") @DefaultValue("false") Boolean refreshReports
     ) {
         Long id = datasetArgService.getEntityId( datasetArg );
         if ( id == null ) {
             throw new NotFoundException( "No dataset matches " + datasetArg );
         }
-        ExpressionExperiment ee;
-        if ( refreshVectors ) {
-            ee = expressionExperimentService.loadAndThawWithRefreshCacheMode( id );
-        } else {
-            ee = expressionExperimentService.loadAndThawLiteWithRefreshCacheMode( id );
-        }
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteWithRefreshCacheMode( id );
         if ( ee == null ) {
             throw new NotFoundException( "No dataset with ID " + id );
+        }
+        if ( refreshVectors ) {
+            processedExpressionDataVectorService.evictFromCache( ee );
         }
         if ( refreshReports ) {
             expressionExperimentReportService.evictFromCache( id );

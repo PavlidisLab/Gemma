@@ -242,13 +242,6 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      */
     @Nullable
     @Secured({ "GROUP_ADMIN", "AFTER_ACL_READ" })
-    ExpressionExperiment loadAndThawWithRefreshCacheMode( Long id );
-
-    /**
-     * A lightweight version of {@link #loadAndThawWithRefreshCacheMode(Long)} which thaws as per {@link #thawLite(ExpressionExperiment)}.
-     */
-    @Nullable
-    @Secured({ "GROUP_ADMIN", "AFTER_ACL_READ" })
     ExpressionExperiment loadAndThawLiteWithRefreshCacheMode( Long id );
 
     /**

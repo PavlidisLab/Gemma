@@ -273,6 +273,9 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @Autowired
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
 
+    @Autowired
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+
     private ExpressionExperiment ee;
 
     @Before
@@ -698,7 +701,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @WithMockUser
     public void testRefreshDataset() {
         ee.setId( 1L );
-        when( expressionExperimentService.loadAndThawWithRefreshCacheMode( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.loadAndThawLiteWithRefreshCacheMode( 1L ) ).thenReturn( ee );
         when( expressionExperimentService.loadValueObject( ee ) ).thenReturn( new ExpressionExperimentValueObject( ee ) );
         assertThat( target( "/datasets/1/refresh" )
                 .queryParam( "refreshVectors", true )
@@ -713,7 +716,8 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                             .endsWith( "/datasets/1" );
                 } )
                 .entity();
-        verify( expressionExperimentService ).loadAndThawWithRefreshCacheMode( 1L );
+        verify( expressionExperimentService ).loadAndThawLiteWithRefreshCacheMode( 1L );
+        verify( processedExpressionDataVectorService ).evictFromCache( ee );
         verify( expressionExperimentService ).loadValueObject( ee );
         verify( expressionExperimentReportService ).evictFromCache( 1L );
     }

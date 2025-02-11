@@ -342,6 +342,11 @@ public class ProcessedExpressionDataVectorServiceImpl
         return dedvs;
     }
 
+    @Override
+    public void evictFromCache( ExpressionExperiment ee ) {
+        cachedProcessedExpressionDataVectorService.evict( ee );
+    }
+
     /**
      * Creates an ExperimentExpressionLevelValueObject for the given experiment and collection of double vector VOs, and
      * adds it to the given vos collection.

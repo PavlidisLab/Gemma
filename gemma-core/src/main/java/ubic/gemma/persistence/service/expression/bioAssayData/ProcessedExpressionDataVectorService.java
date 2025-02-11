@@ -220,4 +220,6 @@ public interface ProcessedExpressionDataVectorService
             ProcessedExpressionDataVectorDao.RankMethod method );
 
     List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, double threshold, int maxNumberOfResults );
+
+    void evictFromCache( ExpressionExperiment ee );
 }

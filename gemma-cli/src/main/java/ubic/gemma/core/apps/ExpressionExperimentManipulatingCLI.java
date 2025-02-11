@@ -523,13 +523,14 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
 
     /**
      * Refresh a dataset for Gemma Web.
+     * @param refreshProcessedVectors if true, refresh processed vectors from the caches
      */
-    protected void refreshExpressionExperimentFromGemmaWeb( ExpressionExperiment ee, boolean refreshVectors, boolean refreshReports ) throws Exception {
+    protected void refreshExpressionExperimentFromGemmaWeb( ExpressionExperiment ee, boolean refreshProcessedVectors, boolean refreshReports ) throws Exception {
         StopWatch timer = StopWatch.createStarted();
         // using IDs here to prevent proxy initialization
         GemmaRestApiClient.Response response = gemmaRestApiClient
                 .perform( "/datasets/" + ee.getId() + "/refresh",
-                        "refreshVectors", refreshVectors,
+                        "refreshVectors", refreshProcessedVectors,
                         "refreshReports", refreshReports );
         if ( response instanceof GemmaRestApiClient.DataResponse ) {
             log.info( "Successfully refreshed dataset with ID " + ee.getId() + " from Gemma Web in " + timer.getTime() + " ms." );
