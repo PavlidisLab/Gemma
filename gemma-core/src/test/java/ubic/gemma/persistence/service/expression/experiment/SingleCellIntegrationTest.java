@@ -88,7 +88,7 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
         assertThat( singleCellExpressionExperimentService.getCellTypeFactor( ee ) )
                 .isNotNull();
 
-        List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSplitService.splitByCellType( ee, cta, false );
+        List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSplitService.splitByCellType( ee, cta, false, false );
 
         // one for each cell type and subject
         assertThat( subsets )

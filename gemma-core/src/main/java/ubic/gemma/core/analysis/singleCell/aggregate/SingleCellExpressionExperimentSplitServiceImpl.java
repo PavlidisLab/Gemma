@@ -44,17 +44,28 @@ public class SingleCellExpressionExperimentSplitServiceImpl implements SingleCel
 
     @Override
     @Transactional
-    public List<ExpressionExperimentSubSet> splitByCellType( ExpressionExperiment ee, CellTypeAssignment cta, boolean allowUnmappedFactorValues ) {
+    public List<ExpressionExperimentSubSet> splitByCellType( ExpressionExperiment ee, CellTypeAssignment cta, boolean allowUnmappedCellTypes, boolean allowUnmappedFactorValues ) {
         // the characteristics from the CTA have to be mapped with the statements from the factor values
         ExperimentalFactor cellTypeFactor = singleCellExpressionExperimentService.getCellTypeFactor( ee )
                 .orElseThrow( () -> new IllegalStateException( ee + " does not have a cell type factor." ) );
         Map<Characteristic, FactorValue> mappedCellTypeFactors = mapCellTypeAssignmentToCellTypeFactor( cta, cellTypeFactor );
+        Set<FactorValue> unmappedFactorValues = new HashSet<>( cellTypeFactor.getFactorValues() );
+        unmappedFactorValues.removeAll( mappedCellTypeFactors.values() );
+        if ( !unmappedFactorValues.isEmpty() ) {
+            if ( allowUnmappedFactorValues ) {
+                log.warn( String.format( "Not all factor values in %s are mapped to cell types in %s, subsets for the following factor values will not be created:\n\t%s",
+                        cellTypeFactor, cta, unmappedFactorValues.stream().map( FactorValue::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
+            } else {
+                throw new IllegalStateException( String.format( "Not all factor values in %s are mapped to cell types in %s. Remove these factor values or set allowUnmappedFactorValues to true:\n\t%s",
+                        cellTypeFactor, cta, unmappedFactorValues.stream().map( FactorValue::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
+            }
+        }
         List<ExpressionExperimentSubSet> results = new ArrayList<>( cta.getCellTypes().size() );
         // create sample by cell type populations
         for ( Characteristic cellType : cta.getCellTypes() ) {
             FactorValue factorValue = mappedCellTypeFactors.get( cellType );
             if ( factorValue == null ) {
-                if ( allowUnmappedFactorValues ) {
+                if ( allowUnmappedCellTypes ) {
                     log.warn( "No factor value found for " + cellType + " in " + cellTypeFactor + ", no subset will be created." );
                     continue;
                 } else {

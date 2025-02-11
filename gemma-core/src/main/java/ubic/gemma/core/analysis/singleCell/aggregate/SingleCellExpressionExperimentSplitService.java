@@ -24,8 +24,10 @@ public interface SingleCellExpressionExperimentSplitService {
      * <li>create corresponding {@link BioAssay}s for the sub-{@link BioMaterial}s</li>
      * <li>attach the {@link BioAssay}s to {@link ExpressionExperimentSubSet}</li>
      * </ul>
+     * @param allowUnmappedCellTypes    whether to allow unmapped cell types
+     * @param allowUnmappedFactorValues whether to allow unmapped factor values
      * @return a list of subsets representing subpopulations of cells
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    List<ExpressionExperimentSubSet> splitByCellType( ExpressionExperiment ee, CellTypeAssignment cta, boolean allowUnmappedFactorValues );
+    List<ExpressionExperimentSubSet> splitByCellType( ExpressionExperiment ee, CellTypeAssignment cta, boolean allowUnmappedCellTypes, boolean allowUnmappedFactorValues );
 }

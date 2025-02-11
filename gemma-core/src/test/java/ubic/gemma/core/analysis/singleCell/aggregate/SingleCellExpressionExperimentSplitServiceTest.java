@@ -116,7 +116,7 @@ public class SingleCellExpressionExperimentSplitServiceTest extends AbstractJUni
                 .thenReturn( Optional.of( cf ) );
         when( expressionExperimentSubSetService.create( any( ExpressionExperimentSubSet.class ) ) )
                 .thenAnswer( a -> a.getArgument( 0 ) );
-        List<ExpressionExperimentSubSet> subsets = service.splitByCellType( ee, cta, false );
+        List<ExpressionExperimentSubSet> subsets = service.splitByCellType( ee, cta, false, false );
         assertThat( subsets )
                 .hasSize( 10 )
                 .allSatisfy( subset -> {
@@ -196,7 +196,7 @@ public class SingleCellExpressionExperimentSplitServiceTest extends AbstractJUni
                 .thenReturn( Optional.of( cf ) );
         when( expressionExperimentSubSetService.create( any( ExpressionExperimentSubSet.class ) ) )
                 .thenAnswer( a -> a.getArgument( 0 ) );
-        List<ExpressionExperimentSubSet> subsets = service.splitByCellType( ee, cta, true );
+        List<ExpressionExperimentSubSet> subsets = service.splitByCellType( ee, cta, true, false );
         assertThat( subsets )
                 .hasSize( 5 )
                 .allSatisfy( subset -> {

@@ -46,6 +46,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
     @Nullable
     private String ctaName;
     private boolean makePreferred;
+    private boolean allowUnmappedFactorValues;
     private boolean adjustLibrarySizes;
 
     public SingleCellDataAggregatorCli() {
@@ -70,6 +71,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
         options.addOption( "cta", "cell-type-assignment", true, "Name of the cell type assignment to use (defaults to the preferred one)" );
         options.addOption( "p", "make-preferred", false, "Make the resulting aggregated data the preferred raw data for the experiment" );
         options.addOption( "adjustLibrarySizes", false, "Adjust library sizes for the resulting aggregated assays." );
+        options.addOption( "allowUnmappedFactorValues", false, "Allow unmapped factor values." );
     }
 
     @Override
@@ -77,6 +79,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
         ctaName = commandLine.getOptionValue( "cta" );
         makePreferred = commandLine.hasOption( "p" );
         adjustLibrarySizes = commandLine.hasOption( "adjustLibrarySizes" );
+        allowUnmappedFactorValues = commandLine.hasOption( "allowUnmappedFactorValues" );
     }
 
     @Override
@@ -96,7 +99,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
 
         QuantitationType newQt;
         try {
-            newQt = helperService.splitAndAggregate( expressionExperiment, qt, cta, makePreferred, adjustLibrarySizes );
+            newQt = helperService.splitAndAggregate( expressionExperiment, qt, cta, makePreferred, adjustLibrarySizes, allowUnmappedFactorValues );
             addSuccessObject( expressionExperiment, "Aggregated single-cell data into " + newQt + "." );
         } catch ( UnsupportedScaleTypeForAggregationException e ) {
             addErrorObject( expressionExperiment, String.format( "Aggregation is not support for data of scale type %s, change it first in the GUI %s.",
@@ -151,8 +154,8 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
         private EntityUrlBuilder entityUrlBuilder;
 
         @Transactional
-        public QuantitationType splitAndAggregate( ExpressionExperiment expressionExperiment, QuantitationType qt, CellTypeAssignment cta, boolean makePreferred, boolean adjustLibrarySizes ) {
-            List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSplitService.splitByCellType( expressionExperiment, cta, true );
+        public QuantitationType splitAndAggregate( ExpressionExperiment expressionExperiment, QuantitationType qt, CellTypeAssignment cta, boolean makePreferred, boolean adjustLibrarySizes, boolean allowUnmappedFactorValues ) {
+            List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSplitService.splitByCellType( expressionExperiment, cta, true, allowUnmappedFactorValues );
             int longestSubsetName = subsets.stream().map( ExpressionExperimentSubSet::getName ).mapToInt( String::length ).max().orElse( 0 );
             log.info( String.format( "Created %d subsets of %s for each cell type:\n\t%s", subsets.size(), expressionExperiment,
                     subsets.stream().map( subset -> StringUtils.rightPad( subset.getName(), longestSubsetName ) + "\t" + entityUrlBuilder.fromHostUrl().entity( subset ).web().toUri() ).collect( Collectors.joining( "\n\t" ) ) ) );
