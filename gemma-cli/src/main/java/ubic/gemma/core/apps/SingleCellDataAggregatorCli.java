@@ -105,6 +105,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
         }
 
         // create/recreate processed vectors
+        boolean refreshProcessedVectors = false;
         if ( newQt.getIsPreferred() ) {
             log.info( "Creating a data file for " + newQt + "..." );
             try ( ExpressionDataFileService.LockedPath lockedFile = expressionDataFileService.writeOrLocateRawExpressionDataFile( expressionExperiment, newQt, true ) ) {
@@ -119,7 +120,18 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
                 addSuccessObject( expressionExperiment, "Post-processed data from " + newQt + "." );
             } catch ( Exception e ) {
                 addErrorObject( expressionExperiment, "Failed to post-process the data from " + newQt + ".", e );
+            } finally {
+                // if process() fails, vector might or might not have been created, so we should evict the cache of
+                // Gemma Web regardless
+                refreshProcessedVectors = true;
             }
+        }
+
+        // refresh
+        try {
+            refreshExpressionExperimentFromGemmaWeb( expressionExperiment, refreshProcessedVectors, false );
+        } catch ( Exception e ) {
+            addErrorObject( expressionExperiment, "Failed to refresh the experiment from Gemma Web.", e );
         }
     }
 
