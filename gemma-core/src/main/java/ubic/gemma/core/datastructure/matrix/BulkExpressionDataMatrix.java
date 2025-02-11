@@ -58,6 +58,12 @@ public interface BulkExpressionDataMatrix<T> extends ExpressionDataMatrix<T> {
     Collection<QuantitationType> getQuantitationTypes();
 
     /**
+     * Obtain the single quantitation type for this matrix.
+     * @throws IllegalStateException if there is more than one quantitation type.
+     */
+    QuantitationType getQuantitationType();
+
+    /**
      * @return a {@link BioAssayDimension} that covers all the biomaterials in this matrix.
      * @throws IllegalStateException if there isn't a single bioassaydimension that encapsulates all the biomaterials
      *                               used in the experiment.
@@ -156,6 +162,14 @@ public interface BulkExpressionDataMatrix<T> extends ExpressionDataMatrix<T> {
      * used in the study.
      */
     Collection<BioAssay> getBioAssaysForColumn( int index );
+
+    /**
+     * Obtain a single assay for a column.
+     * @param index
+     * @return
+     * @throws IllegalStateException if there is more than one assay for the column.
+     */
+    BioAssay getBioAssayForColumn( int index );
 
     /**
      * Set a value in the matrix, by index

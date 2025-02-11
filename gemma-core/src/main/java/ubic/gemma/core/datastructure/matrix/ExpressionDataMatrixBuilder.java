@@ -822,7 +822,7 @@ public class ExpressionDataMatrixBuilder {
         for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
             CompositeSequence del = el.getDesignElement();
             for ( int i = 0; i < columns; i++ ) {
-                BioAssay bm = matrix.getBioAssaysForColumn( i ).iterator().next();
+                BioAssay bm = matrix.getBioAssayForColumn( i );
                 double valA = matrix.get( del, bm );
                 if ( valA <= 0 ) {
                     matrix.set( del, bm, Double.NaN );
@@ -861,7 +861,7 @@ public class ExpressionDataMatrixBuilder {
             }
 
             for ( int i = 0; i < columns; i++ ) {
-                BioAssay assay = a.getBioAssaysForColumn( i ).iterator().next();
+                BioAssay assay = a.getBioAssayForColumn( i );
                 double valA = a.get( del, assay );
                 double valB = b.get( del, assay );
                 a.set( rowNum, i, valA - valB );
@@ -895,7 +895,7 @@ public class ExpressionDataMatrixBuilder {
                 continue;
             }
             for ( int i = 0; i < columns; i++ ) {
-                BioAssay bm = a.getBioAssaysForColumn( i ).iterator().next();
+                BioAssay bm = a.getBioAssayForColumn( i );
                 double valA = a.get( del, bm );
                 double valB = b.get( del, bm );
                 a.set( del, bm, valA + valB );
@@ -916,7 +916,7 @@ public class ExpressionDataMatrixBuilder {
         for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
             CompositeSequence del = el.getDesignElement();
             for ( int i = 0; i < columns; i++ ) {
-                BioAssay bm = matrix.getBioAssaysForColumn( i ).iterator().next();
+                BioAssay bm = matrix.getBioAssayForColumn( i );
                 double valA = matrix.get( del, bm );
                 matrix.set( del, bm, valA / dividend );
 

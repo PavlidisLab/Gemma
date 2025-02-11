@@ -203,7 +203,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             // debugging
             if ( i == 0 ) {
                 for ( int j = 0; j < row.length; j++ ) {
-                    BioAssay ba = mat.getBioAssaysForColumn( j ).iterator().next();
+                    BioAssay ba = mat.getBioAssayForColumn( j );
                     System.err.println( ba.getName() );
                 }
             }
@@ -215,7 +215,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
             CompositeSequence el = mat.getDesignElementForRow( i );
             for ( int j = 0; j < row.length; j++ ) {
-                BioAssay ba = mat.getBioAssaysForColumn( j ).iterator().next();
+                BioAssay ba = mat.getBioAssayForColumn( j );
                 if ( ba.getName().matches( "PGA-MurLungHyper-Norm-1a[ABC]v2-s2" ) && (
                         el.getName().equals( "100001_at" ) || el.getName().equals( "100002_at" ) || el.getName()
                                 .equals( "100003_at" ) || el.getName().equals( "100004_at" ) || el.getName()

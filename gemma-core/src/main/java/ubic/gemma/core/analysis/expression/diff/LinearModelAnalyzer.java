@@ -526,9 +526,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         DoubleMatrix1D librarySize = new DenseDoubleMatrix1D( dmatrix.columns() );
         if ( config.isUseWeights() ) {
             for ( int i = 0; i < dmatrix.columns(); i++ ) {
-                Collection<BioAssay> bas = dmatrix.getBioAssaysForColumn( i );
-                assert bas.size() == 1;
-                BioAssay ba = bas.iterator().next();
+                BioAssay ba = dmatrix.getBioAssayForColumn( i );
 
                 Long sequenceReadCount = ba.getSequenceReadCount();
                 if ( !ba.getIsOutlier() && ( sequenceReadCount == null || sequenceReadCount == 0 ) ) {
@@ -656,7 +654,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
             throw new IllegalArgumentException( "Must have more samples than factors" );
         }
 
-        QuantitationType quantitationType = expressionData.getQuantitationTypes().iterator().next();
+        QuantitationType quantitationType = expressionData.getQuantitationType();
 
         if ( config.isUseWeights() ) {
             if ( quantitationType.getScale().equals( ScaleType.COUNT ) ) {
@@ -923,7 +921,7 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
 
         List<ExperimentalFactor> result = new ArrayList<>();
 
-        QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
+        QuantitationType quantitationType = dmatrix.getQuantitationType();
         ExperimentalFactor interceptFactor = this.determineInterceptFactor( factors, quantitationType );
 
         /*

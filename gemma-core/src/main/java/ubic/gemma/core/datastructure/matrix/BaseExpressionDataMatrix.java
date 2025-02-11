@@ -143,6 +143,15 @@ abstract public class BaseExpressionDataMatrix<T> implements BulkExpressionDataM
     }
 
     @Override
+    public BioAssay getBioAssayForColumn( int index ) {
+        Collection<BioAssay> assays = getBioAssaysForColumn( index );
+        if ( assays.size() > 1 ) {
+            throw new IllegalStateException( "More than one assay for column " + index );
+        }
+        return assays.iterator().next();
+    }
+
+    @Override
     public BioMaterial getBioMaterialForColumn( int index ) {
         if ( index >= columns() ) {
             throw new IndexOutOfBoundsException();
@@ -183,6 +192,14 @@ abstract public class BaseExpressionDataMatrix<T> implements BulkExpressionDataM
     @Override
     public Collection<QuantitationType> getQuantitationTypes() {
         return quantitationTypes;
+    }
+
+    @Override
+    public QuantitationType getQuantitationType() {
+        if ( quantitationTypes.size() > 1 ) {
+            throw new IllegalStateException( "More than one quantitation type in this matrix" );
+        }
+        return quantitationTypes.iterator().next();
     }
 
     @Override

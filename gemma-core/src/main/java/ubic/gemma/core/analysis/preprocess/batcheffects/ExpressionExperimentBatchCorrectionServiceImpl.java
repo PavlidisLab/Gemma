@@ -199,7 +199,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
 
         Set<Integer> outlierColumns = new HashSet<>();
         for ( int j = 0; j < originalDataMatrix.columns(); j++ ) {
-            if ( originalDataMatrix.getBioAssaysForColumn( j ).iterator().next().getIsOutlier() ) {
+            if ( originalDataMatrix.getBioAssayForColumn( j ).getIsOutlier() ) {
                 outlierColumns.add( j );
             }
         }

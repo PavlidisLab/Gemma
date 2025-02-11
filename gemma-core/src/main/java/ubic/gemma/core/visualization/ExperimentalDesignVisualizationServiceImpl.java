@@ -394,13 +394,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         for ( BioMaterial bm : bms ) { // this will be for all samples in the experiment, we don't know about subsets here
             int j = mat.getColumnIndex( bm );
 
-            Collection<BioAssay> bas = mat.getBioAssaysForColumn( j );
-
-            if ( bas.size() > 1 ) {
-                throw new UnsupportedOperationException( "Can't have more than one bioassay per sample" );
-            }
-
-            BioAssay ba = bas.iterator().next();
+            BioAssay ba = mat.getBioAssayForColumn( j );
 
             Collection<FactorValue> fvs = bm.getAllFactorValues();
 

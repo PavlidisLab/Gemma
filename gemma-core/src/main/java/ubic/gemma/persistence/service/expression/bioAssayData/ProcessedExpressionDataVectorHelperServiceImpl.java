@@ -357,12 +357,11 @@ class ProcessedExpressionDataVectorHelperServiceImpl
                 continue;
             }
             for ( int i = 0; i < columns; i++ ) {
-                BioAssay bm = matrix.getBioAssaysForColumn( i ).iterator().next();
+                BioAssay bm = matrix.getBioAssayForColumn( i );
                 boolean present = mask.get( del, bm );
                 if ( !present ) {
                     matrix.set( del, bm, Double.NaN );
                 }
-
             }
         }
     }
