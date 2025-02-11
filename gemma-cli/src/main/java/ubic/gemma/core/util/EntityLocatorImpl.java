@@ -198,7 +198,7 @@ public class EntityLocatorImpl implements EntityLocator {
         Collection<QuantitationType> possibleValues = quantitationTypeService.findByExpressionExperiment( ee, vectorTypes );
         throw new NullPointerException( String.format( "No quantitation type in %s for any of %s matching %s.%s",
                 ee, vectorTypes.stream().map( Class::getSimpleName ).collect( Collectors.joining( ", " ) ), qt,
-                !possibleValues.isEmpty() ? " Possible values are: " + possibleValues.stream().map( QuantitationType::getName ).collect( Collectors.joining( ", " ) ) : "" )
+                !possibleValues.isEmpty() ? " Possible values are:\n\t" + possibleValues.stream().map( QuantitationType::toString ).collect( Collectors.joining( "\n\t" ) ) : "" )
 
         );
     }
