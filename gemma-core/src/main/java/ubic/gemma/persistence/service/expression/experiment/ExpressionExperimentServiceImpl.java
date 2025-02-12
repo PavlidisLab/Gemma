@@ -328,7 +328,12 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional
     public int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt ) {
-        return expressionExperimentDao.removeRawDataVectors( ee, qt );
+        return expressionExperimentDao.removeRawDataVectors( ee, qt, false );
+    }
+
+    @Override
+    public int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt, boolean keepDimension ) {
+        return expressionExperimentDao.removeRawDataVectors( ee, qt, keepDimension );
     }
 
     @Override
@@ -1184,12 +1189,6 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt, Class<? extends BulkExpressionDataVector> dataVectorType ) {
-        return expressionExperimentDao.getBioAssayDimensions( ee, qt, dataVectorType );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
         Collection<BioAssayDimension> bioAssayDimensions = this.expressionExperimentDao
                 .getBioAssayDimensions( expressionExperiment );
@@ -1232,8 +1231,8 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public long getDesignElementDataVectorCount( final ExpressionExperiment ee ) {
-        return this.expressionExperimentDao.getDesignElementDataVectorCount( ee );
+    public long getRawDataVectorCount( final ExpressionExperiment ee ) {
+        return this.expressionExperimentDao.getRawDataVectorCount( ee );
     }
 
     @Override
@@ -1330,8 +1329,15 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment, BioAssayDimension dimension ) {
         return this.quantitationTypeService.findByExpressionExperimentAndDimension( expressionExperiment, dimension );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, Class<? extends BulkExpressionDataVector> dataVectorType ) {
+        return quantitationTypeService.findByExpressionExperimentAndDimension( expressionExperiment, dimension, Collections.singleton( dataVectorType ) );
     }
 
     @Override
@@ -1388,13 +1394,28 @@ public class ExpressionExperimentServiceImpl
         return getSubSetsByFactorValueInternal( expressionExperiment, dimension, getSubSets( expressionExperiment, dimension ) );
     }
 
-    @Nullable
     @Override
     @Transactional(readOnly = true)
     public Map<FactorValue, ExpressionExperimentSubSet> getSubSetsByFactorValue( ExpressionExperiment expressionExperiment, ExperimentalFactor experimentalFactor, BioAssayDimension dimension ) {
         // TODO: could this be made more efficient for a single factor?
         return getSubSetsByFactorValueInternal( expressionExperiment, dimension, getSubSets( expressionExperiment, dimension ) )
                 .get( experimentalFactor );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<FactorValue, ExpressionExperimentSubSet> getSubSetsByFactorValueWithCharacteristicsAndBioAssays( ExpressionExperiment expressionExperiment, ExperimentalFactor experimentalFactor, BioAssayDimension dimension ) {
+        Map<FactorValue, ExpressionExperimentSubSet> result;
+        result = getSubSetsByFactorValue( expressionExperiment, experimentalFactor, dimension );
+        if ( result != null ) {
+            for ( ExpressionExperimentSubSet subSet : result.values() ) {
+                Hibernate.initialize( subSet.getCharacteristics() );
+                for ( BioAssay ba : subSet.getBioAssays() ) {
+                    Thaws.thawBioAssay( ba );
+                }
+            }
+        }
+        return result;
     }
 
     private Map<ExperimentalFactor, Map<FactorValue, ExpressionExperimentSubSet>> getSubSetsByFactorValueInternal( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, Collection<ExpressionExperimentSubSet> subSets ) {

@@ -11,6 +11,7 @@ import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
@@ -18,6 +19,8 @@ import ubic.gemma.persistence.service.expression.experiment.SingleCellExpression
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -52,7 +55,7 @@ public abstract class ExpressionExperimentVectorsManipulatingCli<T extends DataV
      * <p>
      * This is incompatible with {@link #setUsePreferredQuantitationType()}.
      */
-    public void setQuantitationTypeIdentifierRequired() {
+    protected void setQuantitationTypeIdentifierRequired() {
         Assert.state( !this.quantitationTypeIdentifierRequired, "Quantitation type identifier is already required" );
         Assert.state( !this.usePreferredQuantitationType, "Preferred quantitation type is enabled, cannot require an identifier." );
         this.quantitationTypeIdentifierRequired = true;
@@ -63,7 +66,7 @@ public abstract class ExpressionExperimentVectorsManipulatingCli<T extends DataV
      * <p>
      * This is incompatible with {@link #setQuantitationTypeIdentifierRequired()}.
      */
-    public void setUsePreferredQuantitationType() {
+    protected void setUsePreferredQuantitationType() {
         Assert.state( !this.usePreferredQuantitationType, "Use preferred quantitation type is already set" );
         Assert.state( !this.quantitationTypeIdentifierRequired, "Quantitation type identifier is required, cannot default the the preferred one." );
         this.usePreferredQuantitationType = true;

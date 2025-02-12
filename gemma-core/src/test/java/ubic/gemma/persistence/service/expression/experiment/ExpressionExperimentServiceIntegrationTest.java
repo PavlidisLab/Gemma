@@ -219,9 +219,9 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
     }
 
     @Test
-    public void testGetDesignElementDataVectorCount() {
+    public void testGetRawDataVectorCount() {
         ExpressionExperiment ee = createExpressionExperiment();
-        assertEquals( 24, expressionExperimentService.getDesignElementDataVectorCount( ee ) );
+        assertEquals( 24, expressionExperimentService.getRawDataVectorCount( ee ) );
     }
 
     @Test

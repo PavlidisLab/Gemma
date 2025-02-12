@@ -155,10 +155,16 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     int removeAllRawDataVectors( ExpressionExperiment ee );
 
     /**
-     * @see ExpressionExperimentDao#removeRawDataVectors(ExpressionExperiment, QuantitationType)
+     * @see ExpressionExperimentDao#removeRawDataVectors(ExpressionExperiment, QuantitationType, boolean)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt );
+
+    /**
+     * @see ExpressionExperimentDao#removeRawDataVectors(ExpressionExperiment, QuantitationType, boolean)
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt, boolean keepDimension );
 
     /**
      * Create a new set of processed vectors for an experiment.
@@ -530,12 +536,6 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment );
 
-    /**
-     * @see ExpressionExperimentDao#getBioAssayDimensions(ExpressionExperiment, QuantitationType, Class)
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt, Class<? extends BulkExpressionDataVector> dataVectorType );
-
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt, Class<? extends BulkExpressionDataVector> dataVectorType );
@@ -562,7 +562,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     long getBioMaterialCount( ExpressionExperiment expressionExperiment );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    long getDesignElementDataVectorCount( ExpressionExperiment ee );
+    long getRawDataVectorCount( ExpressionExperiment ee );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> getExperimentsWithOutliers();
@@ -665,6 +665,9 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment, BioAssayDimension dimension );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, Class<? extends BulkExpressionDataVector> dataVectorType );
+
     /**
      * Load all {@link QuantitationType} associated to an expression experiment as VOs.
      * @see #getQuantitationTypes(ExpressionExperiment)
@@ -711,6 +714,15 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Map<FactorValue, ExpressionExperimentSubSet> getSubSetsByFactorValue(
             ExpressionExperiment expressionExperiment, ExperimentalFactor experimentalFactor, BioAssayDimension dimension );
+
+    /**
+     * Reconstitute the FV to subset mapping for a given experiment and factor.
+     * <p>
+     * Subsets characteristics are initialized and assays are thawed as per {@link ubic.gemma.persistence.util.Thaws#thawBioAssay(BioAssay)}.
+     */
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Map<FactorValue, ExpressionExperimentSubSet> getSubSetsByFactorValueWithCharacteristicsAndBioAssays( ExpressionExperiment expressionExperiment, ExperimentalFactor experimentalFactor, BioAssayDimension dimension );
 
     /**
      * Return the taxon for each of the given experiments (or subsets).

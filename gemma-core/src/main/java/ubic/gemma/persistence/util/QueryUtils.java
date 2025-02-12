@@ -2,6 +2,7 @@ package ubic.gemma.persistence.util;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.stream.Streams;
+import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Query;
 import org.springframework.util.Assert;
 import ubic.gemma.core.util.ListUtils;
@@ -31,6 +32,22 @@ public class QueryUtils {
      * Default fetch size to use when streaming results with {@link #stream(Query, int)}
      */
     public static final int DEFAULT_FETCH_SIZE = 30;
+
+    /**
+     * @see Query#list()
+     */
+    public static <T> List<T> list( Query query ) {
+        //noinspection unchecked
+        return ( List<T> ) query.list();
+    }
+
+    /**
+     * @see Query#uniqueResult()
+     */
+    public static <T> T uniqueResult( Query query ) {
+        //noinspection unchecked
+        return ( T ) query.uniqueResult();
+    }
 
     /**
      * Optimize a given parameter list by sorting, removing duplicates and padding to the next power of two.

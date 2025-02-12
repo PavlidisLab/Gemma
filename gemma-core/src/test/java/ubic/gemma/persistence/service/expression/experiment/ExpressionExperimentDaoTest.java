@@ -2,7 +2,6 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclService;
-import org.assertj.core.api.Assertions;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
@@ -40,6 +39,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 
 @ContextConfiguration
@@ -73,12 +73,12 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
 
     @Test
     public void loadTroubledIds() {
-        Assertions.assertThat( expressionExperimentDao.loadTroubledIds() ).isEmpty();
+        assertThat( expressionExperimentDao.loadTroubledIds() ).isEmpty();
     }
 
     @Test
     public void testGetFilterableProperties() {
-        Assertions.assertThat( expressionExperimentDao.getFilterableProperties() )
+        assertThat( expressionExperimentDao.getFilterableProperties() )
                 .contains( "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri" )
                 // those are hidden for now (see https://github.com/PavlidisLab/Gemma/pull/789)
                 .noneMatch( s -> s.startsWith( "experimentalDesign.experimentalFactors.factorValues.characteristics.predicate" ) )
@@ -183,7 +183,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     @WithMockUser(authorities = "GROUP_ADMIN")
     public void testGetCategoriesWithUsageFrequency() {
         Characteristic c = createCharacteristic( "foo", "foo", "bar", "bar" );
-        Assertions.assertThat( expressionExperimentDao.getCategoriesUsageFrequency( null, null, null, null, -1 ) )
+        assertThat( expressionExperimentDao.getCategoriesUsageFrequency( null, null, null, null, -1 ) )
                 .containsEntry( CharacteristicUtils.getCategory( c ), 1L );
     }
 
@@ -205,7 +205,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     @WithMockUser(authorities = "GROUP_ADMIN")
     public void testGetAnnotationUsageFrequency() {
         Characteristic c = createCharacteristic( "foo", "foo", "bar", "bar" );
-        Assertions.assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, null, null, null ) )
+        assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, null, null, null ) )
                 .containsEntry( c, 1L );
     }
 
@@ -220,7 +220,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     public void testGetAnnotationUsageFrequencyWithLargeBatch() {
         Characteristic c = createCharacteristic( "foo", "foo", "bar", "bar" );
         List<Long> ees = LongStream.range( 0, 10000 ).boxed().collect( Collectors.toList() );
-        Assertions.assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( ees, null, 10, 1, null, null, null, null ) )
+        assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( ees, null, 10, 1, null, null, null, null ) )
                 .containsEntry( c, 1L );
     }
 
@@ -229,7 +229,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     public void testGetAnnotationUsageFrequencyRetainMentionedTerm() {
         Characteristic c = createCharacteristic( "foo", "foo", "bar", "http://bar" );
         Characteristic c1 = createCharacteristic( "foo", "foo", "bar", "bar" );
-        Assertions.assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 2, null, null, null, Collections.singleton( "http://bar" ) ) )
+        assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 2, null, null, null, Collections.singleton( "http://bar" ) ) )
                 .containsEntry( c, 1L ) // bypasses the minimum frequency requirement
                 .doesNotContainKey( c1 );
     }
@@ -240,7 +240,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         Characteristic c = createCharacteristic( "foo", "foo", "bar", "bar" );
         Characteristic c1 = createCharacteristic( "foo", "foo", "bar", null );
         Map<Characteristic, Long> cs = expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, null, Collections.singleton( null ), null );
-        Assertions.assertThat( cs )
+        assertThat( cs )
                 .containsEntry( c, 1L )
                 .doesNotContainKey( c1 );
     }
@@ -251,7 +251,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         Characteristic c = createCharacteristic( "foo", "foo", "bar", "http://bar" );
         Characteristic c1 = createCharacteristic( "foo", null, "bar", null );
         Characteristic c2 = createCharacteristic( null, null, "bar", null );
-        Assertions.assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, Collections.singleton( null ), null, null ) )
+        assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, Collections.singleton( null ), null, null ) )
                 .containsEntry( c, 1L )
                 .doesNotContainKey( c1 )
                 .containsEntry( c2, 1L ); // uncategorized is not a free-text category
@@ -263,7 +263,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         Characteristic c = createCharacteristic( "foo", "foo", "bar", "http://bar" );
         Characteristic c1 = createCharacteristic( "bar", null, "bar", "http://bar" );
         Characteristic c2 = createCharacteristic( null, null, "bar", "http://bar" );
-        Assertions.assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, Collections.singleton( ExpressionExperimentDao.UNCATEGORIZED ), null, null ) )
+        assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, null, Collections.singleton( ExpressionExperimentDao.UNCATEGORIZED ), null, null ) )
                 .containsEntry( c, 1L )
                 .containsEntry( c1, 1L ) // free-text category is not uncategorized
                 .doesNotContainKey( c2 );
@@ -275,7 +275,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         Characteristic c = createCharacteristic( null, null, "bar", "bar" );
         Characteristic c1 = createCharacteristic( "foo", "foo", "bar", null );
         Characteristic c2 = createCharacteristic( "foo", null, "bar", null );
-        Assertions.assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, ExpressionExperimentDao.UNCATEGORIZED, null, null, null ) )
+        assertThat( expressionExperimentDao.getAnnotationsUsageFrequency( null, null, 10, 1, ExpressionExperimentDao.UNCATEGORIZED, null, null, null ) )
                 .containsEntry( c, 1L )
                 .doesNotContainKey( c1 )
                 .doesNotContainKey( c2 );
@@ -355,18 +355,18 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     @Test
     public void testSubquery() {
         Filter f = expressionExperimentDao.getFilter( "allCharacteristics.valueUri", Filter.Operator.in, Collections.singleton( "http://example.com" ) );
-        Assertions.assertThat( f.getOperator() )
+        assertThat( f.getOperator() )
                 .isEqualTo( Filter.Operator.inSubquery );
-        Assertions.assertThat( f.getRequiredValue() )
+        assertThat( f.getRequiredValue() )
                 .isNotNull()
                 .asInstanceOf( InstanceOfAssertFactories.type( Subquery.class ) )
                 .satisfies( s -> {
-                    Assertions.assertThat( s )
+                    assertThat( s )
                             .hasFieldOrPropertyWithValue( "entityName", "ubic.gemma.model.expression.experiment.ExpressionExperiment" )
                             .hasFieldOrPropertyWithValue( "propertyName", "id" );
-                    Assertions.assertThat( s.getAliases() )
+                    assertThat( s.getAliases() )
                             .contains( new Subquery.Alias( null, "allCharacteristics", "ac" ) );
-                    Assertions.assertThat( s.getFilter() )
+                    assertThat( s.getFilter() )
                             .hasFieldOrPropertyWithValue( "objectAlias", "ac" )
                             .hasFieldOrPropertyWithValue( "propertyName", "valueUri" )
                             .hasFieldOrPropertyWithValue( "operator", Filter.Operator.in )
@@ -379,21 +379,21 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     @Test
     public void testSubqueryWithMultipleJointures() {
         Filter f = expressionExperimentDao.getFilter( "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri", Filter.Operator.in, Collections.singleton( "http://example.com" ) );
-        Assertions.assertThat( f.getOperator() )
+        assertThat( f.getOperator() )
                 .isEqualTo( Filter.Operator.inSubquery );
-        Assertions.assertThat( f.getRequiredValue() )
+        assertThat( f.getRequiredValue() )
                 .isNotNull()
                 .asInstanceOf( InstanceOfAssertFactories.type( Subquery.class ) )
                 .satisfies( s -> {
-                    Assertions.assertThat( s )
+                    assertThat( s )
                             .hasFieldOrPropertyWithValue( "entityName", "ubic.gemma.model.expression.experiment.ExpressionExperiment" )
                             .hasFieldOrPropertyWithValue( "propertyName", "id" );
-                    Assertions.assertThat( s.getAliases() )
+                    assertThat( s.getAliases() )
                             .containsExactly( new Subquery.Alias( null, "experimentalDesign", "alias1" ),
                                     new Subquery.Alias( "alias1", "experimentalFactors", "alias2" ),
                                     new Subquery.Alias( "alias2", "factorValues", "alias3" ),
                                     new Subquery.Alias( "alias3", "characteristics", "fvc" ) );
-                    Assertions.assertThat( s.getFilter() )
+                    assertThat( s.getFilter() )
                             .hasFieldOrPropertyWithValue( "objectAlias", "fvc" )
                             .hasFieldOrPropertyWithValue( "propertyName", "valueUri" )
                             .hasFieldOrPropertyWithValue( "operator", Filter.Operator.in )
@@ -573,10 +573,10 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
                 vectors.add( v );
             }
             assertEquals( 10, expressionExperimentDao.addRawDataVectors( ee, qt, vectors ) );
-            Assertions.assertThat( ee.getQuantitationTypes() )
+            assertThat( ee.getQuantitationTypes() )
                     .hasSize( i + 1 )
                     .contains( qt );
-            Assertions.assertThat( ee.getRawExpressionDataVectors() )
+            assertThat( ee.getRawExpressionDataVectors() )
                     .hasSize( 10 * ( i + 1 ) );
         }
     }
@@ -584,14 +584,31 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     @Test
     public void testRemoveAllRawDataVectors() {
         ee = createExpressionExperimentWithRawVectors();
+        QuantitationType qt = ee.getQuantitationTypes().iterator().next();
+        BioAssayDimension bad = ee.getRawExpressionDataVectors().iterator().next().getBioAssayDimension();
         expressionExperimentDao.removeAllRawDataVectors( ee );
+        assertFalse( sessionFactory.getCurrentSession().contains( qt ) );
+        assertFalse( sessionFactory.getCurrentSession().contains( bad ) );
     }
 
     @Test
     public void testRemoveRawDataVectors() {
         ExpressionExperiment ee = createExpressionExperimentWithRawVectors();
         QuantitationType qt = ee.getQuantitationTypes().iterator().next();
-        assertEquals( 10, expressionExperimentDao.removeRawDataVectors( ee, qt ) );
+        BioAssayDimension bad = ee.getRawExpressionDataVectors().iterator().next().getBioAssayDimension();
+        assertEquals( 10, expressionExperimentDao.removeRawDataVectors( ee, qt, false ) );
+        assertFalse( sessionFactory.getCurrentSession().contains( qt ) );
+        assertFalse( sessionFactory.getCurrentSession().contains( bad ) );
+    }
+
+    @Test
+    public void testRemoveRawDataVectorsWithDimension() {
+        ExpressionExperiment ee = createExpressionExperimentWithRawVectors();
+        BioAssayDimension bad = ee.getRawExpressionDataVectors().iterator().next().getBioAssayDimension();
+        QuantitationType qt = ee.getQuantitationTypes().iterator().next();
+        assertEquals( 10, expressionExperimentDao.removeRawDataVectors( ee, qt, true ) );
+        assertFalse( sessionFactory.getCurrentSession().contains( qt ) );
+        assertTrue( sessionFactory.getCurrentSession().contains( bad ) );
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -603,13 +620,15 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         qt.setScale( ScaleType.LOG2 );
         qt.setRepresentation( PrimitiveType.DOUBLE );
         sessionFactory.getCurrentSession().persist( qt );
-        assertEquals( 10, expressionExperimentDao.removeRawDataVectors( ee, qt ) );
+        assertEquals( 10, expressionExperimentDao.removeRawDataVectors( ee, qt, false ) );
     }
 
     @Test
     public void testReplaceRawDataVectors() {
         ee = createExpressionExperimentWithRawVectors();
         Collection<RawExpressionDataVector> newVectors = new ArrayList<>();
+        QuantitationType previousQt = ee.getQuantitationTypes().iterator().next();
+        BioAssayDimension dimension = ee.getRawExpressionDataVectors().iterator().next().getBioAssayDimension();
         for ( RawExpressionDataVector v : ee.getRawExpressionDataVectors() ) {
             RawExpressionDataVector newVector = new RawExpressionDataVector();
             newVector.setDesignElement( v.getDesignElement() );
@@ -620,10 +639,39 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
             newVectors.add( newVector );
         }
         expressionExperimentDao.replaceRawDataVectors( ee, newVectors.iterator().next().getQuantitationType(), newVectors );
-        Assertions.assertThat( ee.getQuantitationTypes() )
+        assertThat( ee.getQuantitationTypes() )
                 .hasSize( 1 );
-        Assertions.assertThat( ee.getRawExpressionDataVectors() )
+        assertThat( ee.getRawExpressionDataVectors() )
                 .hasSize( 10 );
+        assertTrue( sessionFactory.getCurrentSession().contains( previousQt ) );
+        assertTrue( sessionFactory.getCurrentSession().contains( dimension ) );
+    }
+
+    @Test
+    public void testReplaceRawDataVectorsWithNewDimension() {
+        ee = createExpressionExperimentWithRawVectors();
+        Collection<RawExpressionDataVector> newVectors = new ArrayList<>();
+        QuantitationType previousQt = ee.getQuantitationTypes().iterator().next();
+        BioAssayDimension dimension = ee.getRawExpressionDataVectors().iterator().next().getBioAssayDimension();
+        BioAssayDimension dimension2 = new BioAssayDimension();
+        sessionFactory.getCurrentSession().persist( dimension2 );
+        for ( RawExpressionDataVector v : ee.getRawExpressionDataVectors() ) {
+            RawExpressionDataVector newVector = new RawExpressionDataVector();
+            newVector.setDesignElement( v.getDesignElement() );
+            newVector.setExpressionExperiment( ee );
+            newVector.setBioAssayDimension( dimension2 );
+            newVector.setQuantitationType( v.getQuantitationType() );
+            newVector.setData( new byte[0] );
+            newVectors.add( newVector );
+        }
+        expressionExperimentDao.replaceRawDataVectors( ee, newVectors.iterator().next().getQuantitationType(), newVectors );
+        assertThat( ee.getQuantitationTypes() )
+                .hasSize( 1 );
+        assertThat( ee.getRawExpressionDataVectors() )
+                .hasSize( 10 );
+        assertTrue( sessionFactory.getCurrentSession().contains( previousQt ) );
+        assertTrue( sessionFactory.getCurrentSession().contains( dimension2 ) );
+        assertFalse( sessionFactory.getCurrentSession().contains( dimension ) );
     }
 
     @Test
@@ -648,7 +696,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         expressionExperimentDao.createProcessedDataVectors( ee, newVectors );
         assertEquals( 10, ee.getNumberOfDataVectors().intValue() );
         assertNotNull( newQt.getId() );
-        Assertions.assertThat( ee.getQuantitationTypes() )
+        assertThat( ee.getQuantitationTypes() )
                 .hasSize( 2 )
                 .contains( newQt );
     }
@@ -675,7 +723,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         expressionExperimentDao.createProcessedDataVectors( ee, newVectors );
         assertEquals( 10, ee.getNumberOfDataVectors().intValue() );
         assertNotNull( newQt.getId() );
-        Assertions.assertThat( ee.getQuantitationTypes() )
+        assertThat( ee.getQuantitationTypes() )
                 .hasSize( 2 )
                 .contains( newQt );
     }
@@ -710,11 +758,11 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
             newVectors.add( newVector );
         }
         assertEquals( 10, ee.getNumberOfDataVectors().intValue() );
-        Assertions.assertThat( ee.getQuantitationTypes() )
+        assertThat( ee.getQuantitationTypes() )
                 .hasSize( 1 );
         assertEquals( 10, expressionExperimentDao.replaceProcessedDataVectors( ee, newVectors ) );
         assertNotNull( newQt.getId() );
-        Assertions.assertThat( ee.getQuantitationTypes() )
+        assertThat( ee.getQuantitationTypes() )
                 .hasSize( 1 )
                 .contains( newQt );
         assertEquals( 10, ee.getNumberOfDataVectors().intValue() );
@@ -769,7 +817,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     @Test
     public void testGetGenesUsedByProcessedVectors() {
         ExpressionExperiment ee = createExpressionExperimentWithProcessedVectors();
-        Assertions.assertThat( expressionExperimentDao.getGenesUsedByPreferredVectors( ee ) )
+        assertThat( expressionExperimentDao.getGenesUsedByPreferredVectors( ee ) )
                 .isEmpty();
     }
 
@@ -778,10 +826,10 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         ExpressionExperiment ee = createExpressionExperimentWithProcessedVectors();
         QuantitationType qt = ee.getQuantitationTypes().iterator().next();
         // EE does not have any sample
-        Assertions.assertThat( expressionExperimentDao.getArrayDesignsUsed( ee ) )
+        assertThat( expressionExperimentDao.getArrayDesignsUsed( ee ) )
                 .isEmpty();
         // but the vectors can be used to determine the platform
-        Assertions.assertThat( expressionExperimentDao.getArrayDesignsUsed( ee, qt, ProcessedExpressionDataVector.class ) )
+        assertThat( expressionExperimentDao.getArrayDesignsUsed( ee, qt, ProcessedExpressionDataVector.class ) )
                 .hasSize( 1 );
     }
 

@@ -185,7 +185,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         aclTestUtils.checkLacksAces( analysis );
         aclTestUtils.checkHasAclParent( analysis, ee );
 
-        long numVectors = expressionExperimentService.getDesignElementDataVectorCount( ee );
+        long numVectors = expressionExperimentService.getRawDataVectorCount( ee );
         assertEquals( 100L, numVectors );
 
         for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {

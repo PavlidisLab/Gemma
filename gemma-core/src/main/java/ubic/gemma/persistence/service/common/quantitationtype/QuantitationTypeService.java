@@ -22,6 +22,7 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseService;
@@ -90,6 +91,8 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
      * @see QuantitationTypeDao#findByExpressionExperimentAndDimension(ExpressionExperiment, BioAssayDimension)
      */
     Collection<QuantitationType> findByExpressionExperimentAndDimension( ExpressionExperiment expressionExperiment, BioAssayDimension dimension );
+
+    Collection<QuantitationType> findByExpressionExperimentAndDimension( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, Collection<Class<? extends BulkExpressionDataVector>> dataVectorTypes );
 
     @Override
     @Secured({ "GROUP_USER" })

@@ -400,7 +400,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         for ( int i = 0; i < ct.length; i++ ) {
             ct[i] = i < 75 ? "A" : "B";
         }
-        CellTypeAssignment newLabelling = scExpressionExperimentService.relabelCellTypes( ee, scd, Arrays.asList( ct ), null, null );
+        CellTypeAssignment newLabelling = scExpressionExperimentService.relabelCellTypes( ee, qt, scd, Arrays.asList( ct ), null, null );
         String newLabellingS = newLabelling.toString();
         ExperimentalFactor newCtf = scExpressionExperimentService.getCellTypeFactor( ee )
                 .orElseThrow( NullPointerException::new );

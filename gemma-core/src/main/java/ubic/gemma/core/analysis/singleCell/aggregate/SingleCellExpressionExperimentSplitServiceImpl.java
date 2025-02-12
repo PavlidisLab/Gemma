@@ -1,16 +1,19 @@
 package ubic.gemma.core.analysis.singleCell.aggregate;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SingleCellSubSetsCreatedEvent;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
@@ -21,6 +24,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.core.analysis.singleCell.aggregate.CellLevelCharacteristicsMappingUtils.createMappingByFactorValueCharacteristics;
+import static ubic.gemma.core.analysis.singleCell.aggregate.CellLevelCharacteristicsMappingUtils.printMapping;
 import static ubic.gemma.core.util.StringUtils.abbreviateWithSuffix;
 
 @Service
@@ -42,51 +47,60 @@ public class SingleCellExpressionExperimentSplitServiceImpl implements SingleCel
     @Autowired
     private AuditTrailService auditTrailService;
 
-    @Override
+
     @Transactional
-    public List<ExpressionExperimentSubSet> splitByCellType( ExpressionExperiment ee, CellTypeAssignment cta, boolean allowUnmappedCellTypes, boolean allowUnmappedFactorValues ) {
+    public List<ExpressionExperimentSubSet> splitByCellType( ExpressionExperiment ee, SplitConfig config ) {
         // the characteristics from the CTA have to be mapped with the statements from the factor values
+        CellTypeAssignment cta = singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee )
+                .orElseThrow( IllegalStateException::new );
         ExperimentalFactor cellTypeFactor = singleCellExpressionExperimentService.getCellTypeFactor( ee )
                 .orElseThrow( () -> new IllegalStateException( ee + " does not have a cell type factor." ) );
-        Map<Characteristic, FactorValue> mappedCellTypeFactors = mapCellTypeAssignmentToCellTypeFactor( cta, cellTypeFactor );
-        Set<FactorValue> unmappedFactorValues = new HashSet<>( cellTypeFactor.getFactorValues() );
+        Map<Characteristic, FactorValue> mappedCellTypeFactors = createMappingByFactorValueCharacteristics( cta, cellTypeFactor );
+        return split( ee, cta, cellTypeFactor, mappedCellTypeFactors, config );
+    }
+
+    @Override
+    @Transactional
+    public List<ExpressionExperimentSubSet> split( ExpressionExperiment ee, CellLevelCharacteristics clc, ExperimentalFactor factor, Map<Characteristic, FactorValue> mappedCellTypeFactors,
+            SplitConfig config ) {
+        Set<FactorValue> unmappedFactorValues = new HashSet<>( factor.getFactorValues() );
         unmappedFactorValues.removeAll( mappedCellTypeFactors.values() );
         if ( !unmappedFactorValues.isEmpty() ) {
-            if ( allowUnmappedFactorValues ) {
+            if ( config.isIgnoreUnmatchedFactorValues() ) {
                 log.warn( String.format( "Not all factor values in %s are mapped to cell types in %s, subsets for the following factor values will not be created:\n\t%s",
-                        cellTypeFactor, cta, unmappedFactorValues.stream().map( FactorValue::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
+                        factor, clc, unmappedFactorValues.stream().map( FactorValue::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
             } else {
                 throw new IllegalStateException( String.format( "Not all factor values in %s are mapped to cell types in %s. Remove these factor values or set allowUnmappedFactorValues to true:\n\t%s",
-                        cellTypeFactor, cta, unmappedFactorValues.stream().map( FactorValue::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
+                        factor, clc, unmappedFactorValues.stream().map( FactorValue::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
             }
         }
-        List<ExpressionExperimentSubSet> results = new ArrayList<>( cta.getCellTypes().size() );
+        List<ExpressionExperimentSubSet> results = new ArrayList<>( clc.getCharacteristics().size() );
         // create sample by cell type populations
-        for ( Characteristic cellType : cta.getCellTypes() ) {
-            FactorValue factorValue = mappedCellTypeFactors.get( cellType );
+        for ( Characteristic characteristic : clc.getCharacteristics() ) {
+            FactorValue factorValue = mappedCellTypeFactors.get( characteristic );
             if ( factorValue == null ) {
-                if ( allowUnmappedCellTypes ) {
-                    log.warn( "No factor value found for " + cellType + " in " + cellTypeFactor + ", no subset will be created." );
+                if ( config.isIgnoreUnmatchedCharacteristics() ) {
+                    log.warn( "No factor value found for " + characteristic + " in " + factor + ", no subset will be created." );
                     continue;
                 } else {
-                    throw new IllegalStateException( "No factor value found for " + cellType + " in " + cellTypeFactor + "." );
+                    throw new IllegalStateException( "No factor value found for " + characteristic + " in " + factor + "." );
                 }
             }
-            String cellTypeName = cellType.getValue();
+            String cellTypeName = characteristic.getValue();
             ExpressionExperimentSubSet subset = new ExpressionExperimentSubSet();
             subset.setName( abbreviateWithSuffix( ee.getName(), " - " + cellTypeName, "…", ExpressionExperiment.MAX_NAME_LENGTH, true, StandardCharsets.UTF_8 ) );
             subset.setSourceExperiment( ee );
-            subset.getCharacteristics().add( Characteristic.Factory.newInstance( cellType ) );
+            subset.getCharacteristics().add( Characteristic.Factory.newInstance( characteristic ) );
             for ( BioAssay sample : ee.getBioAssays() ) {
-                subset.getBioAssays().add( createBioAssayForCellPopulation( sample, factorValue, cellType, cellTypeName ) );
+                subset.getBioAssays().add( createBioAssayForCellPopulation( sample, factorValue, characteristic, cellTypeName ) );
             }
             results.add( expressionExperimentSubSetService.create( subset ) );
         }
-        String note = "Created " + results.size() + " aggregated single-cell subsets for " + cellTypeFactor;
+        String note = "Created " + results.size() + " aggregated single-cell subsets for " + factor;
         StringBuilder details = new StringBuilder();
         details.append( "Cell type assignment: " );
         boolean first = true;
-        for ( Characteristic ct : cta.getCellTypes() ) {
+        for ( Characteristic ct : clc.getCharacteristics() ) {
             if ( !first ) {
                 details.append( ", " );
             }
@@ -94,13 +108,9 @@ public class SingleCellExpressionExperimentSplitServiceImpl implements SingleCel
             details.append( formatCellType( ct ) );
         }
         details.append( "\n" );
-        details.append( "Cell type factor: " ).append( cellTypeFactor ).append( "\n" );
+        details.append( "Cell type factor: " ).append( factor ).append( "\n" );
         details.append( "Mapping of cell types to factor values:\n" );
-        int longestCellType = cta.getCellTypes().stream()
-                .mapToInt( ct -> formatCellType( ct ).length() )
-                .max()
-                .orElse( 0 );
-        mappedCellTypeFactors.forEach( ( k, v ) -> details.append( "\t" ).append( StringUtils.rightPad( formatCellType( k ), longestCellType ) ).append( " → " ).append( v ).append( "\n" ) );
+        details.append( printMapping( mappedCellTypeFactors ) );
         details.append( "Subsets:" );
         for ( ExpressionExperimentSubSet subset : results ) {
             details.append( "\n" ).append( "\t" ).append( subset );
@@ -108,31 +118,6 @@ public class SingleCellExpressionExperimentSplitServiceImpl implements SingleCel
         log.info( note + "\n" + details );
         auditTrailService.addUpdateEvent( ee, SingleCellSubSetsCreatedEvent.class, note, details.toString() );
         return results;
-    }
-
-    /**
-     * Map the cell types from a cell type assignment to factor values in a cell type factor.
-     * <p>
-     * There is a possibility that no factor value is found for a given cell type, in which case it is ignored.
-     * <p>
-     * TODO: this should be private, but we reuse the same logic for aggregating in {@link SingleCellExpressionExperimentAggregatorServiceImpl}.
-     * @throws IllegalStateException if there is more than one factor value mapping a given cell type
-     */
-    static Map<Characteristic, FactorValue> mapCellTypeAssignmentToCellTypeFactor( CellTypeAssignment cta, ExperimentalFactor cellTypeFactor ) {
-        Map<Characteristic, FactorValue> mappedCellTypeFactors = new HashMap<>();
-        for ( Characteristic cellType : cta.getCellTypes() ) {
-            Set<FactorValue> matchedFvs = cellTypeFactor.getFactorValues().stream()
-                    .filter( fv -> fv.getCharacteristics().stream().anyMatch( s -> StatementUtils.hasSubject( s, cellType ) ) )
-                    .collect( Collectors.toSet() );
-            if ( matchedFvs.isEmpty() ) {
-                log.debug( cellType + " matches no factor values in " + cellTypeFactor + ", ignoring..." );
-                continue;
-            } else if ( matchedFvs.size() > 1 ) {
-                throw new IllegalStateException( cellType + "matches more than one factor values in " + cellTypeFactor );
-            }
-            mappedCellTypeFactors.put( cellType, matchedFvs.iterator().next() );
-        }
-        return mappedCellTypeFactors;
     }
 
     private String formatCellType( Characteristic ct ) {

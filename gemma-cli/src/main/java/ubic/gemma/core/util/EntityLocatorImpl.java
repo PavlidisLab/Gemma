@@ -8,8 +8,10 @@ import org.springframework.util.Assert;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.protocol.ProtocolService;
@@ -20,8 +22,11 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -45,7 +50,7 @@ public class EntityLocatorImpl implements EntityLocator {
 
     @Override
     public Taxon locateTaxon( String identifier ) {
-        Assert.isTrue( StringUtils.isNotBlank( identifier ), "Taxon name must be be blank." );
+        Assert.isTrue( StringUtils.isNotBlank( identifier ), "Taxon identifier must not be blank." );
         identifier = StringUtils.strip( identifier );
         Taxon taxon;
         try {
@@ -75,7 +80,7 @@ public class EntityLocatorImpl implements EntityLocator {
 
     @Override
     public ArrayDesign locateArrayDesign( String identifier ) {
-        Assert.isTrue( StringUtils.isNotBlank( identifier ), "Platform name must not be blank." );
+        Assert.isTrue( StringUtils.isNotBlank( identifier ), "Platform identifier must not be blank." );
         identifier = StringUtils.strip( identifier );
         ArrayDesign arrayDesign;
         try {
@@ -143,6 +148,8 @@ public class EntityLocatorImpl implements EntityLocator {
 
     @Override
     public Protocol locateProtocol( String protocolName ) {
+        Assert.isTrue( StringUtils.isNotBlank( protocolName ), "Protocol identifier must not be blank." );
+        protocolName = StringUtils.strip( protocolName );
         try {
             long id = Long.parseLong( protocolName );
             return protocolService.load( id );
@@ -155,6 +162,8 @@ public class EntityLocatorImpl implements EntityLocator {
 
     @Override
     public <T extends DataVector> QuantitationType locateQuantitationType( ExpressionExperiment ee, String qt, Class<? extends T> vectorType ) {
+        Assert.isTrue( StringUtils.isNotBlank( qt ), "Quantitation type identifier must not be blank." );
+        qt = StringUtils.strip( qt );
         QuantitationType result;
         try {
             if ( ( result = quantitationTypeService.loadByIdAndVectorType( Long.parseLong( qt ), ee, vectorType ) ) != null ) {
@@ -178,6 +187,8 @@ public class EntityLocatorImpl implements EntityLocator {
 
     @Override
     public <T extends DataVector> QuantitationType locateQuantitationType( ExpressionExperiment ee, String qt, Collection<Class<? extends T>> vectorTypes ) {
+        Assert.isTrue( StringUtils.isNotBlank( qt ), "Quantitation type identifier must not be blank." );
+        qt = StringUtils.strip( qt );
         QuantitationType result;
         for ( Class<? extends T> vectorType : vectorTypes ) {
             try {
@@ -205,6 +216,8 @@ public class EntityLocatorImpl implements EntityLocator {
 
     @Override
     public CellTypeAssignment locateCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, String cta ) {
+        Assert.isTrue( StringUtils.isNotBlank( cta ), "Cell type assignment name must not be blank." );
+        cta = StringUtils.strip( cta );
         try {
             Optional<CellTypeAssignment> c = singleCellExpressionExperimentService.getCellTypeAssignment( expressionExperiment, qt, Long.parseLong( cta ) );
             if ( c.isPresent() ) {
@@ -213,7 +226,81 @@ public class EntityLocatorImpl implements EntityLocator {
         } catch ( NumberFormatException e ) {
             // ignore
         }
+        String finalCta = cta;
         return singleCellExpressionExperimentService.getCellTypeAssignment( expressionExperiment, qt, cta )
-                .orElseThrow( () -> new NullPointerException( "Could not locate any cell type assignment with identifier or name matching " + cta ) );
+                .orElseThrow( () -> new NullPointerException( "Could not locate any cell type assignment with identifier or name matching " + finalCta ) );
+    }
+
+    @Override
+    public CellLevelCharacteristics locateCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt, String clcIdentifier ) {
+        Assert.isTrue( StringUtils.isNotBlank( clcIdentifier ), "Cell level characteristics name must not be blank." );
+        clcIdentifier = StringUtils.strip( clcIdentifier );
+        return requireNonNull( singleCellExpressionExperimentService.getCellLevelCharacteristics( expressionExperiment, qt, Long.parseLong( clcIdentifier ) ) );
+    }
+
+    @Override
+    public ExperimentalFactor locateExperimentalFactor( ExpressionExperiment expressionExperiment, String identifier ) {
+        Assert.isTrue( StringUtils.isNotBlank( identifier ), "Experimental factor name must not be blank." );
+        identifier = StringUtils.strip( identifier );
+
+        expressionExperiment = eeService.thawLiter( expressionExperiment );
+
+        if ( expressionExperiment.getExperimentalDesign() == null || expressionExperiment.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+            throw new IllegalStateException( "Experimental design is not populated for " + expressionExperiment + "." );
+        }
+
+        ExperimentalFactor factor;
+        try {
+            Long efId = Long.parseLong( identifier );
+            if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getId().equals( efId ) ) ) != null ) {
+                return factor;
+            }
+        } catch ( NumberFormatException e ) {
+            // ignore
+        }
+
+        // exact match
+        String finalIdentifier = identifier;
+        if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getName().equalsIgnoreCase( finalIdentifier ) ) ) != null ) {
+            return factor;
+        }
+
+        // replacing space with underscores when matching the name
+        if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getName().replace( ' ', '_' ).equalsIgnoreCase( finalIdentifier ) ) ) != null ) {
+            return factor;
+        }
+
+        // match by category
+        if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getCategory() != null && ef.getCategory().getCategory().equalsIgnoreCase( finalIdentifier ) ) ) != null ) {
+            return factor;
+        }
+        if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getCategory() != null && ef.getCategory().getCategoryUri().equalsIgnoreCase( finalIdentifier ) ) ) != null ) {
+            return factor;
+        }
+        if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getCategory() != null && ef.getCategory().getValue().equalsIgnoreCase( finalIdentifier ) ) ) != null ) {
+            return factor;
+        }
+        if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getCategory() != null && ef.getCategory().getValueUri().equalsIgnoreCase( finalIdentifier ) ) ) != null ) {
+            return factor;
+        }
+
+        // TODO: print possible values
+        throw new NullPointerException( "Could not locate any experimental factor matching '" + identifier + "'." );
+    }
+
+    @Nullable
+    private ExperimentalFactor matchOneFactor( ExpressionExperiment ee, Predicate<ExperimentalFactor> predicate ) {
+        if ( ee.getExperimentalDesign() == null ) {
+            return null;
+        }
+        Set<ExperimentalFactor> matches = ee.getExperimentalDesign().getExperimentalFactors().stream()
+                .filter( predicate )
+                .collect( Collectors.toSet() );
+        if ( matches.size() == 1 ) {
+            return matches.iterator().next();
+        } else {
+            return null;
+        }
     }
 }
+

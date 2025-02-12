@@ -5,8 +5,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.analysis.singleCell.aggregate.AggregateConfig;
 import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentAggregatorService;
 import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentSplitService;
+import ubic.gemma.core.analysis.singleCell.aggregate.SplitConfig;
 import ubic.gemma.core.util.test.BaseIntegrationTest;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.model.common.description.Categories;
@@ -84,11 +86,11 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
         for ( int i = 0; i < 8000; i++ ) {
             labels.add( String.valueOf( "ABCD".charAt( RandomUtils.nextInt( 4 ) ) ) );
         }
-        CellTypeAssignment cta = singleCellExpressionExperimentService.relabelCellTypes( ee, scd, labels, null, null );
+        CellTypeAssignment cta = singleCellExpressionExperimentService.relabelCellTypes( ee, qt, scd, labels, null, null );
         assertThat( singleCellExpressionExperimentService.getCellTypeFactor( ee ) )
                 .isNotNull();
 
-        List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSplitService.splitByCellType( ee, cta, false, false );
+        List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSplitService.splitByCellType( ee, SplitConfig.builder().build() );
 
         // one for each cell type and subject
         assertThat( subsets )
@@ -108,7 +110,8 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
         for ( ExpressionExperimentSubSet subset : subsets ) {
             cellBAs.addAll( subset.getBioAssays() );
         }
-        QuantitationType aggregatedQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( ee, qt, cellBAs, true, false );
+        AggregateConfig config = AggregateConfig.builder().makePreferred( true ).build();
+        QuantitationType aggregatedQt = singleCellExpressionExperimentAggregatorService.aggregateVectorsByCellType( ee, cellBAs, config );
 
         assertThat( aggregatedQt.getName() ).isEqualTo( "counts aggregated by cell type (log2cpm)" );
         assertThat( aggregatedQt.getDescription() ).isEqualTo( "Expression data has been aggregated by cell type using SUM. The data was subsequently converted to log2cpm." );

@@ -2,7 +2,6 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
-import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -24,7 +23,7 @@ class RandomDataUtils {
     /**
      * Set the seed used to generate random single-cell vectors.
      */
-    public static void setSeed( int seed ) {
+    public static void setSeed( long seed ) {
         countDistribution.reseedRandomGenerator( seed );
         logNormalDistribution.reseedRandomGenerator( seed );
         uniform100Distribution.reseedRandomGenerator( seed );

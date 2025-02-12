@@ -229,18 +229,25 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
 
     @Override
     public Collection<QuantitationType> findByExpressionExperimentAndDimension( ExpressionExperiment expressionExperiment, BioAssayDimension dimension ) {
+        Set<Class<? extends BulkExpressionDataVector>> bulkVectorTypes = dataVectorTypes.stream()
+                .filter( BulkExpressionDataVector.class::isAssignableFrom )
+                .map( vt -> ( Class<? extends BulkExpressionDataVector> ) vt )
+                .collect( Collectors.toSet() );
+        return findByExpressionExperimentAndDimension( expressionExperiment, dimension, bulkVectorTypes );
+    }
+
+    @Override
+    public Collection<QuantitationType> findByExpressionExperimentAndDimension( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, Collection<Class<? extends BulkExpressionDataVector>> vectorTypes ) {
         Set<QuantitationType> qts = new HashSet<>();
-        for ( Class<? extends DataVector> vectorType : dataVectorTypes ) {
-            if ( BulkExpressionDataVector.class.isAssignableFrom( vectorType ) ) {
-                //noinspection unchecked
-                qts.addAll( load( ( List<Long> ) getSessionFactory().getCurrentSession()
-                        .createCriteria( vectorType )
-                        .add( Restrictions.eq( "expressionExperiment", expressionExperiment ) )
-                        .add( Restrictions.eq( "bioAssayDimension", dimension ) )
-                        .createCriteria( "quantitationType" )
-                        .setProjection( Projections.distinct( Projections.property( "id" ) ) )
-                        .list() ) );
-            }
+        for ( Class<? extends DataVector> vectorType : vectorTypes ) {
+            //noinspection unchecked
+            qts.addAll( load( ( List<Long> ) getSessionFactory().getCurrentSession()
+                    .createCriteria( vectorType )
+                    .add( Restrictions.eq( "expressionExperiment", expressionExperiment ) )
+                    .add( Restrictions.eq( "bioAssayDimension", dimension ) )
+                    .createCriteria( "quantitationType" )
+                    .setProjection( Projections.distinct( Projections.property( "id" ) ) )
+                    .list() ) );
         }
         return qts;
     }

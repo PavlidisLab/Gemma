@@ -169,10 +169,10 @@ public interface SingleCellExpressionExperimentService {
      * @return a new, preferred cell type labelling
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    CellTypeAssignment relabelCellTypes( ExpressionExperiment ee, SingleCellDimension dimension, List<String> newCellTypeLabels, @Nullable Protocol labellingProtocol, @Nullable String description );
+    CellTypeAssignment relabelCellTypes( ExpressionExperiment ee, QuantitationType qt, SingleCellDimension dimension, List<String> newCellTypeLabels, @Nullable Protocol labellingProtocol, @Nullable String description );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    CellTypeAssignment addCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment cellTypeAssignment );
+    CellTypeAssignment addCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt, SingleCellDimension dimension, CellTypeAssignment cellTypeAssignment );
 
     /**
      * Remove the given cell type assignment.
@@ -234,6 +234,10 @@ public interface SingleCellExpressionExperimentService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee, Category category );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    CellLevelCharacteristics getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt, Long id );
 
     /**
      * Obtain the cell types of a given single-cell dataset.

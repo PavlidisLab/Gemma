@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.common.quantitationtype;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
@@ -60,6 +61,16 @@ public interface QuantitationTypeDao extends FilteringVoEnabledDao<QuantitationT
      * This method will only consider vectors of type {@link ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector}.
      */
     Collection<QuantitationType> findByExpressionExperimentAndDimension( ExpressionExperiment expressionExperiment, BioAssayDimension dimension );
+
+    /**
+     * Retrieve all the QTs associated with the given experiment and dimension.
+     * @param expressionExperiment
+     * @param dimension
+     * @param vectorTypes
+     * @return
+     * @param <T>
+     */
+    Collection<QuantitationType> findByExpressionExperimentAndDimension( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, Collection<Class<? extends BulkExpressionDataVector>> vectorTypes );
 
     /**
      * Find a QT matching the given template as per {@link QuantitationType#equals(Object)}.

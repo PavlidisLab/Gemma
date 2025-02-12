@@ -122,6 +122,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     private boolean abortOnError = false;
 
     /**
+     * List of options only available when a single experiment is processed.
+     */
+    private final Set<String> singleExperimentOptions = new HashSet<>();
+
+    /**
      * Process all experiments.
      */
     private boolean all;
@@ -149,6 +154,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      * File containing experiments to exclude.
      */
     private Path excludeFile;
+    /**
+     * Subset of {@link #singleExperimentOptions} being used.
+     */
+    private final Set<String> singleExperimentOptionsUsed = new HashSet<>();
 
     protected ExpressionExperimentManipulatingCLI() {
         super( ExpressionExperiment.class );
@@ -158,6 +167,23 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.EXPERIMENT;
+    }
+
+    /**
+     * Add an option that is only available in single-experiment mode.
+     */
+    protected void addSingleExperimentOption( Options options, Option option ) {
+        option.setDescription( option.getDescription() + "\n" + "This option is not available when processing more than one experiment." );
+        options.addOption( option );
+        singleExperimentOptions.add( option.getOpt() );
+    }
+
+    /**
+     * Add an option that is only available in single-experiment mode.
+     */
+    protected void addSingleExperimentOption( Options options, String opt, String longOpt, boolean hasArg, String description ) {
+        options.addOption( opt, longOpt, hasArg, description + "\n" + "This option is not available when processing more than one experiment." );
+        singleExperimentOptions.add( opt );
     }
 
     @Override
@@ -232,6 +258,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         this.query = commandLine.getOptionValue( 'q' );
         this.taxonName = commandLine.getOptionValue( 't' );
         this.excludeFile = commandLine.getParsedOptionValue( 'x' );
+        for ( Option option : commandLine.getOptions() ) {
+            if ( singleExperimentOptions.contains( option.getOpt() ) ) {
+                singleExperimentOptionsUsed.add( option.getOpt() );
+            }
+        }
         processExperimentOptions( commandLine );
     }
 
@@ -312,6 +343,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
             log.info( "Final dataset: " + formatExperiment( ee ) );
             processBioAssaySet( expressionExperiments.iterator().next() );
         } else {
+            if ( !singleExperimentOptionsUsed.isEmpty() ) {
+                throw new IllegalStateException( String.format( "There are single-experiment options used: %s, but more than one experiments was found.",
+                        singleExperimentOptionsUsed.stream().map( o -> "-" + o ).collect( Collectors.joining( ", " ) ) ) );
+            }
             log.info( String.format( "Final list: %d expression experiments", expressionExperiments.size() ) );
             processBioAssaySets( expressionExperiments );
         }

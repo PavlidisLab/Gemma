@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
@@ -73,6 +74,12 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
     @Transactional(readOnly = true)
     public Collection<QuantitationType> findByExpressionExperimentAndDimension( ExpressionExperiment expressionExperiment, BioAssayDimension dimension ) {
         return quantitationTypeDao.findByExpressionExperimentAndDimension( expressionExperiment, dimension );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<QuantitationType> findByExpressionExperimentAndDimension( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, Collection<Class<? extends BulkExpressionDataVector>> vectorTypes ) {
+        return quantitationTypeDao.findByExpressionExperimentAndDimension( expressionExperiment, dimension, vectorTypes );
     }
 
     @Override

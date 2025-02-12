@@ -175,11 +175,6 @@ public interface ExpressionExperimentDao
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment );
 
     /**
-     * Retrieve all the {@link BioAssayDimension}s associated to an experiment, quantitation type and vector type.
-     */
-    Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment ee, QuantitationType qt, Class<? extends BulkExpressionDataVector> dataVectorType );
-
-    /**
      * @param dataVectorType the type of data vectors to consider, this is necessary because otherwise all the vector
      *                       tables would have to be looked at
      * @throws org.hibernate.NonUniqueResultException if there is more than one dimension for the given set of vectors
@@ -195,7 +190,7 @@ public interface ExpressionExperimentDao
 
     long getBioMaterialCount( ExpressionExperiment expressionExperiment );
 
-    long getDesignElementDataVectorCount( ExpressionExperiment ee );
+    long getRawDataVectorCount( ExpressionExperiment ee );
 
     Collection<ExpressionExperiment> getExperimentsWithOutliers();
 
@@ -432,9 +427,15 @@ public interface ExpressionExperimentDao
 
     /**
      * Remove raw data vectors for a given quantitation type.
+     * <p>
+     * Unused {@link BioAssayDimension} are removed unless keepDimension is set to {@code true}.
+     * @param keepDimension keep the {@link BioAssayDimension} if it is not used by any other vectors. Use this only if
+     *                      you intend to reuse the dimension for another set of vectors. Alternatively,
+     *                      {@link #replaceRawDataVectors(ExpressionExperiment, QuantitationType, Collection)} can be
+     *                      used.
      * @return the number of removed raw vectors
      */
-    int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt );
+    int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt, boolean keepDimension );
 
     /**
      * Replace raw data vectors for a given quantitation type.
@@ -557,6 +558,14 @@ public interface ExpressionExperimentDao
      * Obtain all cell-level characteristics from all single cell dimensions matching the given category.
      */
     List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee, Category category );
+
+    /**
+     * Obtain a specific cell-level characteristic by ID.
+     * <p>
+     * When using this method, no {@link CellTypeAssignment} can be returned as those are stored in a different table.
+     */
+    @Nullable
+    CellLevelCharacteristics getCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt, Long clcId );
 
     List<Characteristic> getCellTypes( ExpressionExperiment ee );
 

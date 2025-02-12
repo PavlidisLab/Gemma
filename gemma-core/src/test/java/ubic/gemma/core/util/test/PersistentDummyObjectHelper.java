@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.apache.commons.math3.distribution.TDistribution;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,17 +36,13 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisR
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
-import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
@@ -63,11 +60,10 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
+import ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils;
+import ubic.gemma.persistence.service.expression.experiment.*;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -87,6 +83,9 @@ public class PersistentDummyObjectHelper {
     private static final int NUM_EXPERIMENTAL_FACTORS = 2;
     private static final int NUM_FACTOR_VALUES = 2;
     private static final int NUM_QUANTITATION_TYPES = 2;
+    private static final int NUM_DESIGN_ELEMENTS = 100;
+    private static final int NUM_CELL_TYPES = 8;
+    private static final double PERCENT_UNASSIGNED = 0.1;
     private static final int RANDOM_STRING_LENGTH = 10;
 
     private ExternalDatabase genbank;
@@ -107,20 +106,33 @@ public class PersistentDummyObjectHelper {
     @Autowired
     private ArrayDesignService adService;
 
-    // setting seed globally does not guarantee reproducibliity always as methods could access
-    // different parts of the sequence if called in different orders, so callers should reset it using resetSeed()
-    private Random randomizer = new Random( 12345 );
-
-    // Tests can call this to ensure reproducibility
-    public void resetSeed() {
-        randomizer = new Random( 12345 );
-    }
+    @Autowired
+    private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
 
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
+
+    // setting seed globally does not guarantee reproducibliity always as methods could access
+    // different parts of the sequence if called in different orders, so callers should reset it using resetSeed()
+    private final Random randomizer = new Random( 12345 );
+
+    /**
+     * Set the seed to use to generate random data.
+     */
+    public void setSeed( long seed ) {
+        randomizer.setSeed( seed );
+        RandomSingleCellDataUtils.setSeed( seed );
+    }
+
+    /**
+     * Reset the seed to the default value.
+     */
+    public void resetSeed() {
+        setSeed( 12345 );
+    }
 
     public BioSequence getTestNonPersistentBioSequence( Taxon taxon ) {
         BioSequence bs = BioSequence.Factory.newInstance();
@@ -284,9 +296,9 @@ public class PersistentDummyObjectHelper {
         Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( prototype );
         Set<BioAssay> bioAssays = new HashSet<>();
 
-        Set<QuantitationType> quantitationTypes = this.addQuantitationTypes( new HashSet<>() );
+        Set<QuantitationType> quantitationTypes = this.getRawQuantitationTypes();
 
-        eeService.thaw( prototype );
+        prototype = eeService.thaw( prototype );
         Set<RawExpressionDataVector> vectors = new HashSet<>();
         arrayDesignsUsed = adService.thaw( arrayDesignsUsed );
         for ( ArrayDesign ad : arrayDesignsUsed ) {
@@ -349,9 +361,7 @@ public class PersistentDummyObjectHelper {
         log.debug( "expression experiment => design element data vectors" );
         Set<RawExpressionDataVector> vectors = new HashSet<>();
 
-        Set<QuantitationType> quantitationTypes = this.addQuantitationTypes( new HashSet<>() );
-
-        assert quantitationTypes.size() > 0;
+        Set<QuantitationType> quantitationTypes = this.getRawQuantitationTypes();
 
         vectors.addAll( this.getDesignElementDataVectors( ee, quantitationTypes, bioAssaysA, adA ) );
         vectors.addAll( this.getDesignElementDataVectors( ee, quantitationTypes, bioAssaysB, adB ) );
@@ -362,6 +372,44 @@ public class PersistentDummyObjectHelper {
 
         ArrayDesignsForExperimentCache c = persisterHelper.prepare( ee );
         ee = persisterHelper.persist( ee, c );
+
+        return ee;
+    }
+
+    public ExpressionExperiment getTestPersistentSingleCellExpressionExperiment() {
+        ArrayDesign ad = getTestPersistentArrayDesign( NUM_DESIGN_ELEMENTS, true, false );
+        ExpressionExperiment ee = getTestPersistentBasicExpressionExperiment( ad, false );
+        QuantitationType scQt = QuantitationType.Factory.newInstance();
+        scQt.setName( "counts" );
+        scQt.setGeneralType( GeneralType.QUANTITATIVE );
+        scQt.setType( StandardQuantitationType.COUNT );
+        scQt.setScale( ScaleType.COUNT );
+        scQt.setRepresentation( PrimitiveType.DOUBLE );
+        scQt.setIsSingleCellPreferred( true );
+        List<SingleCellExpressionDataVector> vectors = RandomSingleCellDataUtils.randomSingleCellVectors( ee, ad, scQt );
+        singleCellExpressionExperimentService.addSingleCellDataVectors( ee, scQt, vectors, null );
+
+        SingleCellDimension dimension = vectors.iterator().next().getSingleCellDimension();
+
+        CellTypeAssignment cta = new CellTypeAssignment();
+        for ( int i = 0; i < NUM_CELL_TYPES; i++ ) {
+            cta.getCellTypes().add( Characteristic.Factory.newInstance( Categories.CELL_TYPE, "ct" + i, null ) );
+        }
+        int[] indices = new int[dimension.getNumberOfCells()];
+        int assigned = 0;
+        for ( int i = 0; i < dimension.getNumberOfCells(); i++ ) {
+            if ( randomizer.nextDouble() < PERCENT_UNASSIGNED ) {
+                indices[i] = CellTypeAssignment.UNKNOWN_CELL_TYPE;
+            } else {
+                indices[i] = randomizer.nextInt( NUM_CELL_TYPES );
+                assigned++;
+            }
+        }
+        cta.setCellTypeIndices( indices );
+        cta.setNumberOfCellTypes( NUM_CELL_TYPES );
+        cta.setNumberOfAssignedCells( assigned );
+        cta.setPreferred( true );
+        singleCellExpressionExperimentService.addCellTypeAssignment( ee, scQt, dimension, cta );
 
         return ee;
     }
@@ -533,11 +581,16 @@ public class PersistentDummyObjectHelper {
         return this.getTestPersistentBasicExpressionExperiment( null );
     }
 
+    public ExpressionExperiment getTestPersistentBasicExpressionExperiment( ArrayDesign arrayDesign ) {
+        return getTestPersistentBasicExpressionExperiment( arrayDesign, true );
+    }
+
     /**
-     * @param  arrayDesign AD
+     * @param arrayDesign   platform to use, if null two random platforms are generated
+     * @param includeRawQts include two raw QTs (one being preferred)
      * @return A lighter-weight EE, with no data, and the ADs have no sequences.
      */
-    public ExpressionExperiment getTestPersistentBasicExpressionExperiment( ArrayDesign arrayDesign ) {
+    public ExpressionExperiment getTestPersistentBasicExpressionExperiment( @Nullable ArrayDesign arrayDesign, boolean includeRawQts ) {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setShortName( RandomStringUtils.randomNumeric( PersistentDummyObjectHelper.RANDOM_STRING_LENGTH ) );
         ee.setName( "Expression Experiment " + RandomStringUtils
@@ -569,10 +622,10 @@ public class PersistentDummyObjectHelper {
         ee.getBioAssays().addAll( bioAssays );
         ee.setTaxon( bioAssays.iterator().next().getSampleUsed().getSourceTaxon() );
 
-        Set<QuantitationType> quantitationTypes = this.addQuantitationTypes( new HashSet<>() );
+        if ( includeRawQts ) {
+            ee.setQuantitationTypes( this.getRawQuantitationTypes() );
+        }
 
-        assert quantitationTypes.size() > 0;
-        ee.setQuantitationTypes( quantitationTypes );
         ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
 
         return ee;
@@ -798,7 +851,7 @@ public class PersistentDummyObjectHelper {
         log.debug( "expression experiment => design element data vectors" );
         Set<RawExpressionDataVector> vectors = new HashSet<>();
 
-        Set<QuantitationType> quantitationTypes = this.addQuantitationTypes( new HashSet<>() );
+        Set<QuantitationType> quantitationTypes = this.getRawQuantitationTypes();
 
         assert quantitationTypes.size() > 0;
 
@@ -895,10 +948,16 @@ public class PersistentDummyObjectHelper {
         return s;
     }
 
-    private Set<QuantitationType> addQuantitationTypes( Set<QuantitationType> quantitationTypes ) {
+    /**
+     * Create raw quantitation types.
+     * <p>
+     * One of these will be marked as preferred.
+     */
+    private Set<QuantitationType> getRawQuantitationTypes() {
+        Set<QuantitationType> quantitationTypes = new HashSet<>();
         for ( int quantitationTypeNum = 0; quantitationTypeNum < PersistentDummyObjectHelper.NUM_QUANTITATION_TYPES; quantitationTypeNum++ ) {
             QuantitationType q = getTestNonPersistentQuantitationType();
-            if ( quantitationTypes.size() == 0 ) {
+            if ( quantitationTypeNum == 0 ) {
                 q.setIsPreferred( true );
             }
             quantitationTypes.add( q );

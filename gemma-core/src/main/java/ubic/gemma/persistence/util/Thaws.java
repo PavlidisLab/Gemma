@@ -40,7 +40,8 @@ public class Thaws {
             Hibernate.initialize( ba.getOriginalPlatform() );
             Hibernate.initialize( ba.getOriginalPlatform().getDesignProvider() );
         }
-        thawBioMaterial( ba.getSampleUsed() );
+        // also initialize the other side of the relationship since we're thawing assays
+        thawBioMaterial( ba.getSampleUsed(), true );
     }
 
     /**
@@ -52,11 +53,18 @@ public class Thaws {
      * and will result in a {@link IllegalStateException}.
      */
     public static void thawBioMaterial( BioMaterial bm2 ) {
+        thawBioMaterial( bm2, false );
+    }
+
+    private static void thawBioMaterial( BioMaterial bm2, boolean initializeBioAssaysUsedIn ) {
         visitBioMaterials( bm2, bm -> {
             Hibernate.initialize( bm.getSourceTaxon() );
             Hibernate.initialize( bm.getTreatments() );
             for ( FactorValue fv : bm.getFactorValues() ) {
                 Hibernate.initialize( fv.getExperimentalFactor() );
+            }
+            if ( initializeBioAssaysUsedIn ) {
+                Hibernate.initialize( bm.getBioAssaysUsedIn() );
             }
         } );
     }

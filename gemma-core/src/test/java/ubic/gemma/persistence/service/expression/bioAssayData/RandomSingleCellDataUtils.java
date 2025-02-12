@@ -31,7 +31,7 @@ public class RandomSingleCellDataUtils {
     /**
      * Set the seed used to generate random single-cell vectors.
      */
-    public static void setSeed( int seed ) {
+    public static void setSeed( long seed ) {
         RandomDataUtils.setSeed( seed );
         random.setSeed( seed );
     }

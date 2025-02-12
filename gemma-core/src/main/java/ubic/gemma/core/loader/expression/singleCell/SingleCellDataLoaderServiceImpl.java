@@ -102,12 +102,13 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     public Collection<CellTypeAssignment> loadCellTypeAssignments( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, config ) ) {
+            QuantitationType qt = getQuantitationType( ee, config );
             SingleCellDimension dimension = getSingleCellDimension( ee, true, config );
             Set<CellTypeAssignment> ctas = loader.getCellTypeAssignments( dimension );
             applyPreferredCellTypeAssignment( ctas, config );
             Set<CellTypeAssignment> set = new HashSet<>();
             for ( CellTypeAssignment cta : ctas ) {
-                CellTypeAssignment cellTypeAssignment = singleCellExpressionExperimentService.addCellTypeAssignment( ee, dimension, cta );
+                CellTypeAssignment cellTypeAssignment = singleCellExpressionExperimentService.addCellTypeAssignment( ee, qt, dimension, cta );
                 set.add( cellTypeAssignment );
             }
             return set;
@@ -121,12 +122,13 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     public Collection<CellTypeAssignment> loadCellTypeAssignments( ExpressionExperiment ee, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, dataType, config ) ) {
+            QuantitationType qt = getQuantitationType( ee, config );
             SingleCellDimension dimension = getSingleCellDimension( ee, true, config );
             Set<CellTypeAssignment> ctas = loader.getCellTypeAssignments( dimension );
             applyPreferredCellTypeAssignment( ctas, config );
             Set<CellTypeAssignment> set = new HashSet<>();
             for ( CellTypeAssignment cta : ctas ) {
-                CellTypeAssignment cellTypeAssignment = singleCellExpressionExperimentService.addCellTypeAssignment( ee, dimension, cta );
+                CellTypeAssignment cellTypeAssignment = singleCellExpressionExperimentService.addCellTypeAssignment( ee, qt, dimension, cta );
                 set.add( cellTypeAssignment );
             }
             return set;
@@ -164,6 +166,23 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
             return created;
         } catch ( IOException e ) {
             throw new RuntimeException( e );
+        }
+    }
+
+    private QuantitationType getQuantitationType( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
+        if ( config.getQuantitationTypeName() != null ) {
+            try {
+                QuantitationType qt = quantitationTypeService.findByNameAndVectorType( ee, config.getQuantitationTypeName(), SingleCellExpressionDataVector.class );
+                if ( qt == null ) {
+                    throw new IllegalArgumentException( "No quantitation type with name " + config.getQuantitationTypeName() + " for " + ee + "." );
+                }
+                return qt;
+            } catch ( NonUniqueQuantitationTypeByNameException e ) {
+                throw new RuntimeException( e );
+            }
+        } else {
+            return singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee )
+                    .orElseThrow( () -> new IllegalStateException( ee + " does not have a preferred single-cell dimension." ) );
         }
     }
 
