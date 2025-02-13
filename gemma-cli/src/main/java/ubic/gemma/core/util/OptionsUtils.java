@@ -16,6 +16,8 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static org.apache.commons.lang3.StringUtils.appendIfMissing;
+
 public class OptionsUtils {
 
     /**
@@ -127,7 +129,9 @@ public class OptionsUtils {
     }
 
     public static <T extends Enum<T>> void addEnumOption( Options options, String optionName, String longOption, String description, Class<? extends Enum<T>> enumClass ) {
-        options.addOption( optionName, longOption, true, description + " Possible values are " + enumClass + "." );
+        options.addOption( optionName, longOption, true, String.format( "%s Possible values are: %s.",
+                appendIfMissing( description, "." ),
+                Arrays.stream( enumClass.getEnumConstants() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) ) );
     }
 
     /**
