@@ -231,18 +231,18 @@ function __gemma_cli_staging_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.DifferentialExpressionAnalysisCli ' ]]; then
-        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-factors|-mdate|-q|-subset|-t|-type|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --ignore-failing-subsets --taxon -all -auto -batchFormat -batchOutputFile -delete -e -eeset -f -factors -force -h -ignoreFailingSubsets -mdate -nobayes -nodb -nofiles -q -redo -subset -t -type -usebatch -x" -- "$2")
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--factors|--subset|--taxon|--type|-batchFormat|-batchOutputFile|-e|-eeset|-f|-factors|-mdate|-q|-subset|-t|-type|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--delete --eeListfile --excludeEEFile --experiment --expressionQuery --factors --force --help --ignore-failing-subsets --no-bayes --no-db --no-files --redo --subset --taxon --type --use-batch-factor -all -auto -batchFormat -batchOutputFile -delete -e -eeset -f -factors -force -h -ignoreFailingSubsets -mdate -nobayes -nodb -nofiles -q -redo -subset -t -type -usebatch -x" -- "$2")
         fi
-        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-nofiles|-x) ]]; then
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--no-files|-batchOutputFile|-f|-nofiles|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' diffExAnalyze ' ]]; then
-        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--taxon|-batchFormat|-batchOutputFile|-e|-eeset|-f|-factors|-mdate|-q|-subset|-t|-type|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--eeListfile --excludeEEFile --experiment --expressionQuery --force --help --ignore-failing-subsets --taxon -all -auto -batchFormat -batchOutputFile -delete -e -eeset -f -factors -force -h -ignoreFailingSubsets -mdate -nobayes -nodb -nofiles -q -redo -subset -t -type -usebatch -x" -- "$2")
+        if ! [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--experiment|--expressionQuery|--factors|--subset|--taxon|--type|-batchFormat|-batchOutputFile|-e|-eeset|-f|-factors|-mdate|-q|-subset|-t|-type|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--delete --eeListfile --excludeEEFile --experiment --expressionQuery --factors --force --help --ignore-failing-subsets --no-bayes --no-db --no-files --redo --subset --taxon --type --use-batch-factor -all -auto -batchFormat -batchOutputFile -delete -e -eeset -f -factors -force -h -ignoreFailingSubsets -mdate -nobayes -nodb -nofiles -q -redo -subset -t -type -usebatch -x" -- "$2")
         fi
-        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|-batchOutputFile|-f|-nofiles|-x) ]]; then
+        if [[ "$current_option" =~ (--eeListfile|--excludeEEFile|--no-files|-batchOutputFile|-f|-nofiles|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
