@@ -113,13 +113,13 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         addAutoOption( options, DifferentialExpressionAnalysisEvent.class );
         addForceOption( options );
 
-        options.addOption( "factors", true, "ID numbers, categories or names of the factor(s) to use, comma-delimited, with spaces replaced by underscores" );
+        options.addOption( "factors", "factors", true, "ID numbers, categories or names of the factor(s) to use, comma-delimited, with spaces replaced by underscores" );
 
-        options.addOption( "subset", true,
+        options.addOption( "subset", "subset", true,
                 "ID number, category or name of the factor to use for subsetting the analysis; must also use with -factors. "
                         + "If the experiment already has subsets for the factor, those will be reused." );
 
-        options.addOption( "type", true,
+        options.addOption( "type", "type", true,
                 "Type of analysis to perform. If omitted, the system will try to guess based on the experimental design. "
                         + "Choices are : "
                         + Arrays.stream( AnalysisType.values() )
@@ -127,21 +127,21 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                         .collect( Collectors.joining( ", " ) )
                         + "; default: auto-detect" );
 
-        options.addOption( "usebatch", "If a 'batch' factor is available, use it. Otherwise, batch information can/will be ignored in the analysis." );
+        options.addOption( "usebatch", "use-batch-factor", false, "If a 'batch' factor is available, use it. Otherwise, batch information can/will be ignored in the analysis." );
 
-        options.addOption( "nodb", "Output files only to your gemma.appdata.home (unless you also set -nofiles) instead of persisting to the database" );
+        options.addOption( "nodb", "no-db", false, "Output files only to your gemma.appdata.home (unless you also set -nofiles) instead of persisting to the database" );
 
         options.addOption( "ignoreFailingSubsets", "ignore-failing-subsets", false, "Ignore failing subsets and continue processing other subsets." );
 
-        options.addOption( "redo",
+        options.addOption( "redo", "redo", false,
                 "If using automatic analysis try to base analysis on previous analysis's choice of statistical model. "
                         + "Will re-run all analyses for the experiment" );
 
-        options.addOption( "delete", "Instead of running the analysis on the given experiments, remove the old analyses. Use with care!" );
+        options.addOption( "delete", "delete", false, "Instead of running the analysis on the given experiments, remove the old analyses. Use with care!" );
 
-        options.addOption( "nobayes", "Do not apply empirical-Bayes moderated statistics. Default is to use eBayes." );
+        options.addOption( "nobayes", "no-bayes", false, "Do not apply empirical-Bayes moderated statistics. Default is to use eBayes." );
 
-        options.addOption( "nofiles", "Don't create archive files after analysis. Default is to make them." );
+        options.addOption( "nofiles", "no-files", false, "Don't create archive files after analysis. Default is to make them." );
 
     }
 
