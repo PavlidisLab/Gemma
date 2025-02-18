@@ -9,10 +9,12 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 
-import java.util.Calendar;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 
 import static org.junit.Assert.assertEquals;
@@ -46,7 +48,10 @@ public class BuildInfoTest extends AbstractJUnit4SpringContextTests {
     public void test() {
         assertEquals( "1.0.0", buildInfo.getVersion() );
         assertEquals( "1234", buildInfo.getGitHash() );
-        assertEquals( new Date( 2023 - 1900, Calendar.NOVEMBER, 8, 16, 26, 2 ), buildInfo.getTimestamp() );
+        Instant c = LocalDateTime.of( 2023, 11, 9, 0, 26, 2 )
+                .atZone( ZoneId.of( "UTC" ) )
+                .toInstant();
+        assertEquals( Date.from( c ), buildInfo.getTimestamp() );
     }
 
     @Test
@@ -64,6 +69,9 @@ public class BuildInfoTest extends AbstractJUnit4SpringContextTests {
         BuildInfo buildInfo = new BuildInfo( "1.0.0", "20240910-1218", "1234" );
         assertEquals( "1.0.0", buildInfo.getVersion() );
         assertEquals( "1234", buildInfo.getGitHash() );
-        assertEquals( new Date( 2024 - 1900, Calendar.SEPTEMBER, 10, 12, 18 ), buildInfo.getTimestamp() );
+        Instant c = LocalDateTime.of( 2024, 9, 10, 12, 18 )
+                .atZone( ZoneId.of( "America/Vancouver" ) )
+                .toInstant();
+        assertEquals( Date.from( c ), buildInfo.getTimestamp() );
     }
 }
