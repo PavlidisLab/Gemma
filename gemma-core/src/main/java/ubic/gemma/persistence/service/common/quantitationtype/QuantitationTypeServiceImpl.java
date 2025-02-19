@@ -141,6 +141,12 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public <T extends DataVector> Collection<QuantitationType> findAllByNameAndVectorType( ExpressionExperiment ee, String name, Class<? extends T> vectorType ) {
+        return quantitationTypeDao.findAllByNameAndVectorType( ee, name, vectorType );
+    }
+
+    @Override
     @Transactional
     public QuantitationType findOrCreate( QuantitationType quantitationType, Class<? extends DataVector> dataVectorType ) {
         return quantitationTypeDao.findOrCreate( quantitationType, dataVectorType );

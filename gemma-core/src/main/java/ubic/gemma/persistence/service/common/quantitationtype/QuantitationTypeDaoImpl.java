@@ -172,6 +172,19 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     }
 
     @Override
+    public <T extends DataVector> Collection<QuantitationType> findAllByNameAndVectorType( ExpressionExperiment ee, String name, Class<? extends T> vectorType ) {
+        //noinspection unchecked
+        List<Long> ids = getSessionFactory().getCurrentSession()
+                .createCriteria( vectorType )
+                .add( Restrictions.eq( "expressionExperiment", ee ) )
+                .createCriteria( "quantitationType" )
+                .add( Restrictions.eq( "name", name ) )
+                .setProjection( Projections.distinct( Projections.id() ) )
+                .list();
+        return load( ids );
+    }
+
+    @Override
     public QuantitationType findOrCreate( QuantitationType quantitationType, Class<? extends DataVector> dataVectorType ) {
         QuantitationType found = find( quantitationType, dataVectorType );
         if ( found != null ) {

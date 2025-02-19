@@ -5,6 +5,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
+import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -23,9 +25,7 @@ import ubic.gemma.persistence.service.expression.experiment.SingleCellExpression
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -75,7 +75,7 @@ public class EntityLocatorImpl implements EntityLocator {
             log.info( "Found " + taxon + " by scientific name." );
             return taxon;
         }
-        throw new NullPointerException( "Cannot find taxon with name " + identifier );
+        throw new NullPointerException( "Cannot find taxon with name " + identifier + "." + formatPossibleValues( taxonService.loadAll(), true ) );
     }
 
     @Override
@@ -106,7 +106,7 @@ public class EntityLocatorImpl implements EntityLocator {
             log.info( "Found " + arrayDesign + " by alternate name." );
             return arrayDesign;
         }
-        throw new NullPointerException( "No platform found with ID or name matching " + identifier );
+        throw new NullPointerException( "No platform found with ID or name matching " + identifier + "." );
     }
 
     /**
@@ -143,7 +143,7 @@ public class EntityLocatorImpl implements EntityLocator {
             log.debug( "Found " + ee + " by name" );
             return ee;
         }
-        throw new NullPointerException( "Could not locate any experiment with identifier or name matching " + identifier );
+        throw new NullPointerException( "Could not locate any experiment with identifier or name matching " + identifier + "." );
     }
 
     @Override
@@ -157,7 +157,7 @@ public class EntityLocatorImpl implements EntityLocator {
             // ignore
         }
         return requireNonNull( protocolService.findByName( protocolName ),
-                "Could not locate any protocol with identifier or name matching " + protocolName );
+                "Could not locate any protocol with identifier or name matching " + protocolName + "." );
     }
 
     @Override
@@ -177,12 +177,13 @@ public class EntityLocatorImpl implements EntityLocator {
                 return result;
             }
         } catch ( NonUniqueQuantitationTypeByNameException e ) {
-            throw new RuntimeException( e );
+            Collection<QuantitationType> possibleValues = quantitationTypeService.findAllByNameAndVectorType( ee, qt, vectorType );
+            throw new RuntimeException( String.format( "More than one quantitation type in %s for %s matching %s. You must use an ID to disambiguate.%s.",
+                    ee, vectorType.getSimpleName(), qt, formatPossibleValues( possibleValues, false ) ), e );
         }
         Collection<QuantitationType> possibleValues = quantitationTypeService.findByExpressionExperiment( ee, vectorType );
         throw new NullPointerException( String.format( "No quantitation type in %s for %s matching %s.%s",
-                ee, vectorType.getSimpleName(), qt,
-                !possibleValues.isEmpty() ? " Possible values are: " + possibleValues.stream().map( QuantitationType::getName ).collect( Collectors.joining( ", " ) ) : "" ) );
+                ee, vectorType.getSimpleName(), qt, formatPossibleValues( possibleValues, true ) ) );
     }
 
     @Override
@@ -203,15 +204,16 @@ public class EntityLocatorImpl implements EntityLocator {
                     return result;
                 }
             } catch ( NonUniqueQuantitationTypeByNameException e ) {
-                throw new RuntimeException( e );
+                Collection<QuantitationType> possibleValues = quantitationTypeService.findAllByNameAndVectorType( ee, qt, vectorType );
+                throw new RuntimeException( String.format( "More than one quantitation type in %s for any of %s matching %s. You must use an ID to disambiguate.%s.",
+                        ee, vectorTypes.stream().map( Class::getSimpleName ).collect( Collectors.joining( ", " ) ), qt,
+                        formatPossibleValues( possibleValues, false ) ), e );
             }
         }
         Collection<QuantitationType> possibleValues = quantitationTypeService.findByExpressionExperiment( ee, vectorTypes );
         throw new NullPointerException( String.format( "No quantitation type in %s for any of %s matching %s.%s",
                 ee, vectorTypes.stream().map( Class::getSimpleName ).collect( Collectors.joining( ", " ) ), qt,
-                !possibleValues.isEmpty() ? " Possible values are:\n\t" + possibleValues.stream().map( QuantitationType::toString ).collect( Collectors.joining( "\n\t" ) ) : "" )
-
-        );
+                formatPossibleValues( possibleValues, true ) ) );
     }
 
     @Override
@@ -227,15 +229,25 @@ public class EntityLocatorImpl implements EntityLocator {
             // ignore
         }
         String finalCta = cta;
+
         return singleCellExpressionExperimentService.getCellTypeAssignment( expressionExperiment, qt, cta )
-                .orElseThrow( () -> new NullPointerException( "Could not locate any cell type assignment with identifier or name matching " + finalCta ) );
+                .orElseThrow( () -> {
+                    List<CellTypeAssignment> possibleValues = singleCellExpressionExperimentService.getCellTypeAssignments( expressionExperiment, qt );
+                    return new NullPointerException( "Could not locate any cell type assignment with identifier or name matching " + finalCta + "." + formatPossibleValues( possibleValues, true ) );
+                } );
     }
 
     @Override
     public CellLevelCharacteristics locateCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt, String clcIdentifier ) {
         Assert.isTrue( StringUtils.isNotBlank( clcIdentifier ), "Cell level characteristics name must not be blank." );
         clcIdentifier = StringUtils.strip( clcIdentifier );
-        return requireNonNull( singleCellExpressionExperimentService.getCellLevelCharacteristics( expressionExperiment, qt, Long.parseLong( clcIdentifier ) ) );
+        CellLevelCharacteristics r = singleCellExpressionExperimentService.getCellLevelCharacteristics( expressionExperiment, qt, Long.parseLong( clcIdentifier ) );
+        if ( r != null ) {
+            return r;
+        } else {
+            List<CellLevelCharacteristics> possibleValues = singleCellExpressionExperimentService.getCellLevelCharacteristics( expressionExperiment, qt );
+            throw new NullPointerException( "Could not locate any cell level characteristics with identifier matching " + clcIdentifier + "." + formatPossibleValues( possibleValues, false ) );
+        }
     }
 
     @Override
@@ -271,21 +283,22 @@ public class EntityLocatorImpl implements EntityLocator {
         }
 
         // match by category
-        if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getCategory() != null && ef.getCategory().getCategory().equalsIgnoreCase( finalIdentifier ) ) ) != null ) {
+        if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getCategory() != null && StringUtils.equalsIgnoreCase( ef.getCategory().getCategory(), finalIdentifier ) ) ) != null ) {
             return factor;
         }
-        if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getCategory() != null && ef.getCategory().getCategoryUri().equalsIgnoreCase( finalIdentifier ) ) ) != null ) {
+        if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getCategory() != null && StringUtils.equalsIgnoreCase( ef.getCategory().getCategoryUri(), finalIdentifier ) ) ) != null ) {
             return factor;
         }
-        if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getCategory() != null && ef.getCategory().getValue().equalsIgnoreCase( finalIdentifier ) ) ) != null ) {
+        if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getCategory() != null && StringUtils.equalsIgnoreCase( ef.getCategory().getValue(), finalIdentifier ) ) ) != null ) {
             return factor;
         }
-        if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getCategory() != null && ef.getCategory().getValueUri().equalsIgnoreCase( finalIdentifier ) ) ) != null ) {
+        if ( ( factor = matchOneFactor( expressionExperiment, ef -> ef.getCategory() != null && StringUtils.equalsIgnoreCase( ef.getCategory().getValueUri(), finalIdentifier ) ) ) != null ) {
             return factor;
         }
 
         // TODO: print possible values
-        throw new NullPointerException( "Could not locate any experimental factor matching '" + identifier + "'." );
+        throw new NullPointerException( "Could not locate any experimental factor matching '" + identifier + "'."
+                + formatPossibleValues( expressionExperiment.getExperimentalDesign().getExperimentalFactors(), true ) );
     }
 
     @Nullable
@@ -301,6 +314,54 @@ public class EntityLocatorImpl implements EntityLocator {
         } else {
             return null;
         }
+    }
+
+    private String formatPossibleValues( Collection<? extends Identifiable> possibleValues, boolean allowAmbiguousIds ) {
+        if ( possibleValues.isEmpty() ) {
+            return "";
+        }
+        return String.format( " Possible values are:\n\t%s",
+                possibleValues.stream()
+                        .map( q -> formatPossibleValues( q, allowAmbiguousIds ) + " for " + q )
+                        .collect( Collectors.joining( "\n\t" ) ) );
+    }
+
+    private String formatPossibleValues( Identifiable q, boolean allowAmbiguousIds ) {
+        return getPossibleIdentifiers( q, allowAmbiguousIds ).stream()
+                .map( ShellUtils::quoteIfNecessary )
+                .collect( Collectors.joining( " or " ) );
+    }
+
+    private LinkedHashSet<String> getPossibleIdentifiers( Identifiable identifiable, boolean allowAmbiguousIds ) {
+        LinkedHashSet<String> candidates = new LinkedHashSet<>();
+        candidates.add( String.valueOf( identifiable.getId() ) );
+        if ( allowAmbiguousIds ) {
+            if ( identifiable instanceof Describable ) {
+                Describable d = ( Describable ) identifiable;
+                candidates.add( d.getName() );
+            }
+            if ( identifiable instanceof Taxon ) {
+                Taxon t = ( Taxon ) identifiable;
+                if ( t.getNcbiId() != null ) {
+                    candidates.add( String.valueOf( t.getNcbiId() ) );
+                }
+                candidates.add( t.getCommonName() );
+                candidates.add( t.getScientificName() );
+            }
+            if ( identifiable instanceof ExperimentalFactor ) {
+                ExperimentalFactor ef = ( ExperimentalFactor ) identifiable;
+                candidates.add( ef.getName().replace( ' ', '_' ) );
+                if ( ef.getCategory() != null ) {
+                    candidates.add( ef.getCategory().getCategory() );
+                    candidates.add( ef.getCategory().getCategoryUri() );
+                    candidates.add( ef.getCategory().getValue() );
+                    candidates.add( ef.getCategory().getValueUri() );
+                }
+            }
+        }
+        // drop nulls
+        candidates.removeIf( Objects::isNull );
+        return candidates;
     }
 }
 

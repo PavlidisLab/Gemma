@@ -2289,6 +2289,20 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public List<CellTypeAssignment> getCellTypeAssignments( ExpressionExperiment expressionExperiment, QuantitationType qt ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select cta from SingleCellExpressionDataVector scedv "
+                        + "join scedv.singleCellDimension scd "
+                        + "join scd.cellTypeAssignments cta "
+                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt "
+                        + "group by cta" )
+                .setParameter( "ee", expressionExperiment )
+                .setParameter( "qt", qt )
+                .list();
+    }
+
+    @Override
     public CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee ) {
         return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
                 .createQuery( "select cta from SingleCellExpressionDataVector scedv "
@@ -2368,6 +2382,19 @@ public class ExpressionExperimentDaoImpl
                 .setParameter( "ee", ee )
                 .setParameter( "clcId", clcId )
                 .uniqueResult();
+    }
+
+    @Override
+    public List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select clc from SingleCellExpressionDataVector scedv "
+                        + "join scedv.singleCellDimension scd "
+                        + "join scd.cellLevelCharacteristics clc join clc.characteristics c "
+                        + "where scedv.expressionExperiment = :ee "
+                        + "group by clc" )
+                .setParameter( "ee", expressionExperiment )
+                .list();
     }
 
     @Override

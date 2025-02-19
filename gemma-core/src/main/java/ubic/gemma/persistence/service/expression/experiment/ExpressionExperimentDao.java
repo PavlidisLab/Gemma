@@ -528,6 +528,8 @@ public interface ExpressionExperimentDao
 
     List<CellTypeAssignment> getCellTypeAssignments( ExpressionExperiment ee );
 
+    List<CellTypeAssignment> getCellTypeAssignments( ExpressionExperiment expressionExperiment, QuantitationType qt );
+
     /**
      * Obtain the preferred assignment of the preferred single-cell vectors.
      *
@@ -566,6 +568,8 @@ public interface ExpressionExperimentDao
      */
     @Nullable
     CellLevelCharacteristics getCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt, Long clcId );
+
+    List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt );
 
     List<Characteristic> getCellTypes( ExpressionExperiment ee );
 

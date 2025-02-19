@@ -72,6 +72,14 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
     QuantitationType findByNameAndVectorType( ExpressionExperiment ee, String name, Class<? extends DataVector> dataVectorType ) throws NonUniqueQuantitationTypeByNameException;
 
     /**
+     * Find all the QT associated to the given experiment, name and vector type.
+     * <p>
+     * This is useful if more than one QT with the same name have been created.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    <T extends DataVector> Collection<QuantitationType> findAllByNameAndVectorType( ExpressionExperiment ee, String name, Class<? extends T> vectorType );
+
+    /**
      * Find all the QT associated to the given experiment.
      * <p>
      * QTs are grouped by which vector type they are associated with. If no vector is found for a given QT, {@code null}

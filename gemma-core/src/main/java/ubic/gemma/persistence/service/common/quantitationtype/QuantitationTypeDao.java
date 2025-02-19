@@ -103,6 +103,8 @@ public interface QuantitationTypeDao extends FilteringVoEnabledDao<QuantitationT
     @Nullable
     QuantitationType findByNameAndVectorType( ExpressionExperiment ee, String name, Class<? extends DataVector> dataVectorType );
 
+    <T extends DataVector> Collection<QuantitationType> findAllByNameAndVectorType( ExpressionExperiment ee, String name, Class<? extends T> vectorType );
+
     /**
      * Find a QT as per {@link #find(QuantitationType, Class)} and if none is found, create a new one with {@link #create(QuantitationType, Class)}.
      */

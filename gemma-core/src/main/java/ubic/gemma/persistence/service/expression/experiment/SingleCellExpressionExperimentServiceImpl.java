@@ -647,6 +647,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
+    public List<CellTypeAssignment> getCellTypeAssignments( ExpressionExperiment expressionExperiment, QuantitationType qt ) {
+        return expressionExperimentDao.getCellTypeAssignments( expressionExperiment, qt );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<CellTypeAssignment> getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, Long ctaId ) {
         return Optional.ofNullable( expressionExperimentDao.getCellTypeAssignment( expressionExperiment, qt, ctaId ) );
     }
@@ -709,8 +715,15 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Nullable
     @Override
+    @Transactional(readOnly = true)
     public CellLevelCharacteristics getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt, Long id ) {
         return expressionExperimentDao.getCellLevelCharacteristics( expressionExperiment, qt, id );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt ) {
+        return expressionExperimentDao.getCellLevelCharacteristics( expressionExperiment, qt );
     }
 
     @Override
