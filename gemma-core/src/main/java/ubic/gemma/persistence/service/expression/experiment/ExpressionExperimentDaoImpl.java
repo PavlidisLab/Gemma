@@ -2237,9 +2237,8 @@ public class ExpressionExperimentDaoImpl
                     N++;
                 }
             }
-            Assert.isTrue( labelling.getNumberOfAssignedCells() == N,
+            Assert.isTrue( labelling.getNumberOfAssignedCells() == null || labelling.getNumberOfAssignedCells() == N,
                     "The number of assigned cells must match the number of assigned values in cellTypeIndices." );
-            ;
             for ( Characteristic c : labelling.getCellTypes() ) {
                 Assert.isTrue( CharacteristicUtils.hasCategory( c, Categories.CELL_TYPE ), "All cell types must have the " + Categories.CELL_TYPE + " category." );
             }
@@ -2265,7 +2264,7 @@ public class ExpressionExperimentDaoImpl
                     N++;
                 }
             }
-            Assert.isTrue( clc.getNumberOfAssignedCells() == N,
+            Assert.isTrue( clc.getNumberOfAssignedCells() == null || clc.getNumberOfAssignedCells() == N,
                     "The number of assigned cells must match the number of assigned values in indices." );
         }
     }
