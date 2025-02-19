@@ -5,7 +5,6 @@
     <option name="VM_PARAMETERS" value="-Dspring.profiles.active=dev -Dspring.security.strategy=MODE_INHERITABLETHREADLOCAL -Dlog4j.configuration=./gemma-cli/src/main/config/log4j-dev.properties" />
     <method v="2">
       <option name="Make" enabled="true" />
-      <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/pom.xml" goal="org.apache.maven.plugins:maven-antrun-plugin:run@version-file -pl gemma-core" />
     </method>
   </configuration>
 </component>
