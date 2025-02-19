@@ -235,8 +235,6 @@ public class AffyPowerToolsProbesetSummarize {
                             .size() + " samples on " + originalPlatform );
 
             BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
-            bad.setName( "For " + ee.getShortName() + " on " + targetPlatform );
-            bad.setDescription( "Generated from output of apt-probeset-summarize" );
 
             /*
              * Add them ... note we haven't switched platforms yet (and might not do that)

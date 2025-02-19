@@ -32,7 +32,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 import javax.annotation.Nullable;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+
+import static ubic.gemma.core.util.StringUtils.abbreviateInBytes;
 
 /**
  * Simple wrapper for a double[] that is derived from a DesignElementDataVector.
@@ -176,9 +179,6 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         List<BioAssayValueObject> dimToMatchBioAssays = sourceBioAssayDimension.getBioAssays();
 
         double[] expandedData = new double[dimToMatch.getBioAssays().size()];
-        BioAssayDimension expandedDim = BioAssayDimension.Factory.newInstance();
-        expandedDim.setDescription( "Expanded bioassay dimension based on " + this.getBioAssayDimension().getName() );
-        expandedDim.setName( "Expanded bioassay dimension based on " + this.getBioAssayDimension().getName() );
 
         Map<BioMaterialValueObject, BioAssayValueObject> bmap = new HashMap<>();
         ArrayDesignValueObject arrayDesign = null;

@@ -2061,7 +2061,7 @@ public class ExpressionExperimentDaoImpl
     public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee ) {
         //noinspection unchecked
         List<SingleCellDimension> results = getSessionFactory().getCurrentSession()
-                .createQuery( "select dimension.id as id, dimension.name as name, dimension.description as description, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
+                .createQuery( "select dimension.id as id, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension dimension "
                         + "where scedv.expressionExperiment = :ee "
                         + "group by dimension" )
@@ -2086,7 +2086,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt ) {
         SingleCellDimension result = ( SingleCellDimension ) getSessionFactory().getCurrentSession()
-                .createQuery( "select dimension.id as id, dimension.name as name, dimension.description as description, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
+                .createQuery( "select dimension.id as id, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension dimension "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt "
                         + "group by dimension" )
@@ -2103,7 +2103,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public SingleCellDimension getSingleCellDimensionWithCellLevelCharacteristicsWithoutCellIds( ExpressionExperiment ee, QuantitationType qt ) {
         SingleCellDimension result = ( SingleCellDimension ) getSessionFactory().getCurrentSession()
-                .createQuery( "select dimension.id as id, dimension.name as name, dimension.description as description, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
+                .createQuery( "select dimension.id as id, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension dimension "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt "
                         + "group by dimension" )
@@ -2141,7 +2141,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public SingleCellDimension getPreferredSingleCellDimensionWithoutCellIds( ExpressionExperiment ee ) {
         SingleCellDimension result = ( SingleCellDimension ) getSessionFactory().getCurrentSession()
-                .createQuery( "select dimension.id as id, dimension.name as name, dimension.description as description, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
+                .createQuery( "select dimension.id as id, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension dimension "
                         + "where scedv.quantitationType.isSingleCellPreferred = true and scedv.expressionExperiment = :ee "
                         + "group by dimension" )

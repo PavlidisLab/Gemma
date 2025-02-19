@@ -215,7 +215,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             }
 
             // here we're using the original bms; we'll replace them
-            BioAssayDimension newBAD = makeBioAssayDimension( bms, toSplit );
+            BioAssayDimension newBAD = makeBioAssayDimension( bms );
             // now replace the bms in the newBAD with the clones
             List<BioAssay> badBAs = newBAD.getBioAssays();
             List<BioAssay> replaceBAs = new ArrayList<>();
@@ -570,7 +570,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         return result;
     }
 
-    private BioAssayDimension makeBioAssayDimension( List<BioMaterial> samplesToUse, ExpressionExperiment ee ) {
+    private BioAssayDimension makeBioAssayDimension( List<BioMaterial> samplesToUse ) {
 
         List<BioAssay> bioAssays = new ArrayList<>();
         for ( BioMaterial bm : samplesToUse ) {
@@ -578,10 +578,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             bioAssays.add( ba );
         }
 
-        BioAssayDimension result = BioAssayDimension.Factory.newInstance();
-        result.getBioAssays().addAll( bioAssays );
-        result.setName( "For  " + bioAssays.size() + " bioAssays " );
-        result.setDescription( bioAssays.size() + " bioAssays extracted via split from source experiment " + ee.getShortName() );
+        BioAssayDimension result = BioAssayDimension.Factory.newInstance( bioAssays );
 
         assert result.getBioAssays().size() == samplesToUse.size();
         return result;

@@ -74,14 +74,6 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
         Criteria queryObject = this.getSessionFactory().getCurrentSession()
                 .createCriteria( BioAssayDimension.class );
 
-        if ( StringUtils.isNotBlank( bioAssayDimension.getName() ) ) {
-            queryObject.add( Restrictions.eq( "name", bioAssayDimension.getName() ) );
-        }
-
-        if ( StringUtils.isNotBlank( bioAssayDimension.getDescription() ) ) {
-            queryObject.add( Restrictions.eq( "description", bioAssayDimension.getDescription() ) );
-        }
-
         // same size and set of IDs, this is not guaranteeing the order though
         queryObject.add( Restrictions.sizeEq( "bioAssays", bioAssayDimension.getBioAssays().size() ) );
         if ( !bioAssayIds.isEmpty() ) {

@@ -126,6 +126,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         ad.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "cs1" ) );
         ee = new ExpressionExperiment();
         ee.setId( 1L );
+        ee.setShortName( "test" );
         ExperimentalDesign ed = new ExperimentalDesign();
         ee.setExperimentalDesign( ed );
         List<FactorValue> cellTypeFactors = new ArrayList<>();
@@ -234,8 +235,6 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                 } )
                 .anySatisfy( rawVec -> {
                     assertThat( rawVec.getDesignElement().getName() ).isEqualTo( "cs1" );
-                    assertThat( rawVec.getBioAssayDimension().getName() )
-                            .isEqualTo( "Bunch of test cells aggregated by cell type" );
                     assertThat( rawVec.getBioAssayDimension().getBioAssays() )
                             .hasSize( 4 * 4 );
                     assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
@@ -327,8 +326,6 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                 } )
                 .anySatisfy( rawVec -> {
                     assertThat( rawVec.getDesignElement().getName() ).isEqualTo( "cs1" );
-                    assertThat( rawVec.getBioAssayDimension().getName() )
-                            .isEqualTo( "Bunch of test cells aggregated by cell type" );
                     assertThat( rawVec.getBioAssayDimension().getBioAssays() )
                             .hasSize( 4 * 4 );
                     assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
@@ -373,8 +370,6 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                 .hasSameSizeAs( ad.getCompositeSequences() )
                 .anySatisfy( rawVec -> {
                     assertThat( rawVec.getDesignElement().getName() ).isEqualTo( "cs1" );
-                    assertThat( rawVec.getBioAssayDimension().getName() )
-                            .isEqualTo( "Bunch of test cells aggregated by cell type" );
                     assertThat( rawVec.getBioAssayDimension().getBioAssays() )
                             .hasSize( 4 * 4 );
                     assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
@@ -421,8 +416,6 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                 .hasSameSizeAs( ad.getCompositeSequences() )
                 .anySatisfy( rawVec -> {
                     assertThat( rawVec.getDesignElement().getName() ).isEqualTo( "cs1" );
-                    assertThat( rawVec.getBioAssayDimension().getName() )
-                            .isEqualTo( "Bunch of test cells aggregated by cell type" );
                     assertThat( rawVec.getBioAssayDimension().getBioAssays() )
                             .hasSize( 4 * 4 );
                     assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
@@ -471,8 +464,6 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                 .hasSameSizeAs( ad.getCompositeSequences() )
                 .anySatisfy( rawVec -> {
                     assertThat( rawVec.getDesignElement().getName() ).isEqualTo( "cs1" );
-                    assertThat( rawVec.getBioAssayDimension().getName() )
-                            .isEqualTo( "Bunch of test cells aggregated by cell type" );
                     assertThat( rawVec.getBioAssayDimension().getBioAssays() )
                             .hasSize( 4 * 4 );
                     assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
@@ -594,8 +585,6 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                 } )
                 .anySatisfy( rawVec -> {
                     assertThat( rawVec.getDesignElement().getName() ).isEqualTo( "cs1" );
-                    assertThat( rawVec.getBioAssayDimension().getName() )
-                            .isEqualTo( "Bunch of test cells aggregated by cell type" );
                     assertThat( rawVec.getBioAssayDimension().getBioAssays() )
                             .hasSize( 4 * 3 );
                     assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );

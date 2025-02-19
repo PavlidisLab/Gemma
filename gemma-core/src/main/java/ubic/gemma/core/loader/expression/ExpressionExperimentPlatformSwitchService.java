@@ -342,12 +342,10 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         }
 
         if ( maxBAD == null ) {
-            log.info( "Creating new bioassaydimension to accomodate merged data as no existing one was suitable" );
-            maxBAD = BioAssayDimension.Factory.newInstance( "For " + ee.getBioAssays().size() +
-                    " bioMaterials", "Created to accomodate platform switch", new ArrayList<>( ee.getBioAssays() ) );
+            log.info( "Creating new dimension to accommodate merged data as no existing one was suitable" );
+            maxBAD = BioAssayDimension.Factory.newInstance( new ArrayList<>( ee.getBioAssays() ) );
             maxBAD = bioAssayDimensionService.create( maxBAD );
         }
-
 
         return maxBAD;
     }

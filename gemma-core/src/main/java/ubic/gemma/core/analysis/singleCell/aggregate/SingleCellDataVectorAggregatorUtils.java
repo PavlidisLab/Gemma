@@ -38,7 +38,7 @@ public class SingleCellDataVectorAggregatorUtils {
             @Override
             public RawExpressionDataVector apply( SingleCellExpressionDataVector singleCellExpressionDataVector ) {
                 QuantitationType qt = qt2qt.computeIfAbsent( singleCellExpressionDataVector.getQuantitationType(), k -> createQt( k, method ) );
-                BioAssayDimension bad = scd2bad.computeIfAbsent( singleCellExpressionDataVector.getSingleCellDimension(), k -> createBad( k, method ) );
+                BioAssayDimension bad = scd2bad.computeIfAbsent( singleCellExpressionDataVector.getSingleCellDimension(), k -> createBad( k ) );
                 if ( method == SingleCellAggregationMethod.COUNT || method == SingleCellAggregationMethod.COUNT_FAST ) {
                     //noinspection unchecked
                     return aggregateToIntByDescriptive( singleCellExpressionDataVector, qt, bad, ( Function<SingleCellExpressionDataVector, int[]> ) func );
@@ -65,7 +65,7 @@ public class SingleCellDataVectorAggregatorUtils {
         ArrayList<RawExpressionDataVector> result = new ArrayList<>( vectors.size() );
         for ( SingleCellExpressionDataVector vec : vectors ) {
             QuantitationType qt = qt2qt.computeIfAbsent( vec.getQuantitationType(), k -> createQt( k, method ) );
-            BioAssayDimension bad = scd2bad.computeIfAbsent( vec.getSingleCellDimension(), k -> createBad( k, method ) );
+            BioAssayDimension bad = scd2bad.computeIfAbsent( vec.getSingleCellDimension(), k -> createBad( k ) );
             if ( method == SingleCellAggregationMethod.COUNT || method == SingleCellAggregationMethod.COUNT_FAST ) {
                 //noinspection unchecked
                 result.add( aggregateToIntByDescriptive( vec, qt, bad, ( Function<SingleCellExpressionDataVector, int[]> ) func ) );
@@ -84,12 +84,8 @@ public class SingleCellDataVectorAggregatorUtils {
         throw new UnsupportedOperationException( "Aggregating single-cell data matrices is not supported yet." );
     }
 
-    private static BioAssayDimension createBad( SingleCellDimension scDim, SingleCellAggregationMethod method ) {
-        BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
-        bad.setName( scDim + " aggregated by " + method );
-        bad.setDescription( scDim.getDescription() );
-        bad.getBioAssays().addAll( scDim.getBioAssays() );
-        return bad;
+    private static BioAssayDimension createBad( SingleCellDimension scDim ) {
+        return BioAssayDimension.Factory.newInstance( new ArrayList<>( scDim.getBioAssays() ) );
     }
 
     private static QuantitationType createQt( QuantitationType scQt, SingleCellAggregationMethod method ) {

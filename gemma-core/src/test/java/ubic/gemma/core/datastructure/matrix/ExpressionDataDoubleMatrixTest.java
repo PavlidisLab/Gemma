@@ -199,7 +199,6 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         qt.setIsMaskedPreferred( false );
         qt.setRepresentation( PrimitiveType.DOUBLE );
         BioAssayDimension bioAssayDimension = BioAssayDimension.Factory.newInstance();
-        bioAssayDimension.setName( "GSM15697, GSM15744" );
 
         List<BioAssay> assays = new ArrayList<>();
 

@@ -43,12 +43,7 @@ public class DiffExAnalyzerUtils {
         /*
          * fix the upper level column name maps.
          */
-        BioAssayDimension reorderedDim = BioAssayDimension.Factory.newInstance();
-        reorderedDim.setBioAssays( bioAssays );
-        reorderedDim.setName( "For analysis" );
-        reorderedDim.setDescription( bioAssays.size() + " bioAssays" );
-
-        return reorderedDim;
+        return BioAssayDimension.Factory.newInstance( bioAssays );
     }
 
     public static void populateFactorValuesFromBASet( BioAssaySet ee, ExperimentalFactor f,

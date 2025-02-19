@@ -1017,8 +1017,7 @@ public class PersistentDummyObjectHelper {
     private Collection<RawExpressionDataVector> getDesignElementDataVectors( ExpressionExperiment ee,
             Collection<QuantitationType> quantitationTypes, List<BioAssay> bioAssays, ArrayDesign ad ) {
 
-        BioAssayDimension baDim = BioAssayDimension.Factory
-                .newInstance( ee.getShortName() + "_" + RandomStringUtils.randomAlphanumeric( 20 ), null, bioAssays );
+        BioAssayDimension baDim = BioAssayDimension.Factory.newInstance(  bioAssays );
 
         Collection<RawExpressionDataVector> vectors = new HashSet<>();
         for ( QuantitationType quantType : quantitationTypes ) {

@@ -132,11 +132,8 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
             cellTypeFactorName = "cell type";
         }
 
-        // TODO: reuse an existing BAD with the same layout
-        BioAssayDimension newBad = new BioAssayDimension();
-        newBad.setName( scd.getName() + " aggregated by " + cellTypeFactorName );
-        newBad.setDescription( scd.getDescription() );
-        newBad.setBioAssays( cellBAs );
+        // this is aligned with how other dimensions are named
+        BioAssayDimension newBad = BioAssayDimension.Factory.newInstance( new ArrayList<>( cellBAs ) );
         newBad = bioAssayDimensionService.findOrCreate( newBad );
 
         boolean canLog2cpm = qt.getType() == StandardQuantitationType.COUNT

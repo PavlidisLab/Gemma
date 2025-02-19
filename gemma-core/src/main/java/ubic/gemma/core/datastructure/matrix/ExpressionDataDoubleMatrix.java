@@ -37,11 +37,8 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
-import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.util.*;
-
-import static ubic.gemma.core.util.StringUtils.abbreviateInBytes;
 
 /**
  * A data structure that holds a reference to the data for a given expression experiment. The data can be queried by row
@@ -204,9 +201,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         this.matrix = matrix;
         this.quantitationTypes.add( qt );
 
-        BioAssayDimension dim = BioAssayDimension.Factory.newInstance();
-
-        List<BioAssay> bioassays = new ArrayList<>();
+        List<BioAssay> bioassays = new ArrayList<>( matrix.columns() );
         for ( BioMaterial bm : matrix.getColNames() ) {
             Collection<BioAssay> bioAssaysUsedIn = bm.getBioAssaysUsedIn();
             if ( bioAssaysUsedIn.size() > 1 ) {
@@ -220,9 +215,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
             bioassays.add( bioAssay );
         }
 
-        dim.setBioAssays( bioassays );
-        dim.setDescription( "Built from matrix supplied to Constructor for " + ee + " from matrix" );
-        dim.setName( abbreviateInBytes( "For " + ee.getShortName() + " from matrix", "…", BioAssayDimension.MAX_NAME_LENGTH, true, StandardCharsets.UTF_8 ) );
+        BioAssayDimension dim = BioAssayDimension.Factory.newInstance( bioassays );
 
         assert !matrix.getRowNames().isEmpty();
         int i = 0;

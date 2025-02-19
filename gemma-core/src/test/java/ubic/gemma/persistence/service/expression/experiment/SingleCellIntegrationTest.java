@@ -122,8 +122,6 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
                 .hasSize( ad.getCompositeSequences().size() )
                 .allSatisfy( vec -> {
                     assertThat( vec.getExpressionExperiment().getId() ).isEqualTo( ee.getId() );
-                    assertThat( vec.getBioAssayDimension().getName() ).isEqualTo( "Bunch of test cells aggregated by cell type" );
-                    assertThat( vec.getBioAssayDimension().getDescription() ).isNull();
                     assertThat( vec.getBioAssayDimension().getBioAssays() ).isEqualTo( cellBAs );
                     assertThat( vec.getQuantitationType() ).isEqualTo( aggregatedQt );
                 } );

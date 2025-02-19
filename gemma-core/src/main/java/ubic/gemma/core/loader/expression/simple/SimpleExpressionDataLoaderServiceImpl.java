@@ -278,9 +278,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
     private BioAssayDimension convertBioAssayDimension( ExpressionExperiment ee, ArrayDesign arrayDesign, Taxon taxon,
             DoubleMatrix<String, String> matrix ) {
 
-        BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
-        bad.setName( "For " + ee.getShortName() );
-        bad.setDescription( "Generated from flat file" );
+        List<BioAssay> bioAssays = new ArrayList<>( matrix.columns() );
         for ( int i = 0; i < matrix.columns(); i++ ) {
             String columnName = matrix.getColName( i );
 
@@ -295,12 +293,12 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
             assay.setSampleUsed( bioMaterial );
             assay.setIsOutlier( false );
             assay.setSequencePairedReads( false );
-            bad.getBioAssays().add( assay );
+            bioAssays.add( assay );
         }
 
-        SimpleExpressionDataLoaderServiceImpl.log.info( "Generated " + bad.getBioAssays().size() + " bioAssays" );
+        SimpleExpressionDataLoaderServiceImpl.log.info( "Generated " + bioAssays.size() + " bioAssays" );
 
-        return bad;
+        return BioAssayDimension.Factory.newInstance( bioAssays );
     }
 
     private Collection<RawExpressionDataVector> convertDesignElementDataVectors(

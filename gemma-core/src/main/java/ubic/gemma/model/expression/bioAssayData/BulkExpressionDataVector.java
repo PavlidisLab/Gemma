@@ -35,7 +35,7 @@ public abstract class BulkExpressionDataVector extends DesignElementDataVector {
                 // the EE is lazily initialized, so only the ID is safe to use
                 this.getExpressionExperiment() != null ? " EE=" + this.getExpressionExperiment().getId() : "",
                 this.getQuantitationType() != null ? " QT=" + this.getQuantitationType().getName() : "",
-                this.getBioAssayDimension() != null ? " BAD=" + this.getBioAssayDimension().getName() : "",
+                this.getBioAssayDimension() != null ? " BAD=" + this.getBioAssayDimension().getId() : "",
                 this.getData() != null ? ", " + this.getData().length + " bytes" : "" );
     }
 }

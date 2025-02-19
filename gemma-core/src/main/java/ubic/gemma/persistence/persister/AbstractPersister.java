@@ -85,7 +85,10 @@ public abstract class AbstractPersister implements Persister {
          * Keys are custom hash codes.
          */
         Map<Integer, QuantitationType> quantitationTypeCache = new HashMap<>();
-        Map<String, BioAssayDimension> bioAssayDimensionCache = new HashMap<>();
+        /**
+         * Keys are custom hash codes.
+         */
+        Map<Integer, BioAssayDimension> bioAssayDimensionCache = new HashMap<>();
     }
 
     @Autowired

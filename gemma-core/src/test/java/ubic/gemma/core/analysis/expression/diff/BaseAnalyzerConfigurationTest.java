@@ -398,9 +398,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseTest {
         quantitationType.setIsRatio( false );
         expressionExperiment.getQuantitationTypes().add( quantitationType );
 
-        bioAssayDimension = BioAssayDimension.Factory.newInstance();
-        bioAssayDimension.setName( "test bioassay dimension" );
-        bioAssayDimension.setBioAssays( bioAssays );
+        bioAssayDimension = BioAssayDimension.Factory.newInstance( bioAssays );
 
         this.configureVectors( biomaterials, null );
     }

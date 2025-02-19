@@ -165,8 +165,6 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();
         ThrowingConsumer<SingleCellDimension> t = scd2 -> {
-            assertThat( scd2.getName() ).isEqualTo( scd.getName() );
-            assertThat( scd2.getDescription() ).isEqualTo( scd.getDescription() );
             assertThat( scd2.getCellIds() ).isNull();
             assertThat( scd2.getNumberOfCells() ).isEqualTo( 100 );
             assertThat( scd2.getBioAssays() ).containsExactlyElementsOf( scd.getBioAssays() );

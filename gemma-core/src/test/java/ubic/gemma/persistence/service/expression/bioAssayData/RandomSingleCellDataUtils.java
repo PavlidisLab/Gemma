@@ -134,7 +134,6 @@ public class RandomSingleCellDataUtils {
                 .collect( Collectors.toList() );
         int numCells = numCellsPerBioAssay * ee.getBioAssays().size();
         SingleCellDimension dimension = new SingleCellDimension();
-        dimension.setName( "Bunch of test cells" );
         dimension.setCellIds( IntStream.rangeClosed( 1, numCells ).mapToObj( Integer::toString ).collect( Collectors.toList() ) );
         dimension.setNumberOfCells( numCells );
         dimension.setBioAssays( samples );

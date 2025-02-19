@@ -3,7 +3,7 @@ package ubic.gemma.model.expression.bioAssayData;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.util.Assert;
-import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.persistence.hibernate.ByteArrayType;
@@ -22,7 +22,7 @@ import static ubic.gemma.core.util.ListUtils.getSparseRangeArrayElement;
  */
 @Getter
 @Setter
-public class SingleCellDimension extends AbstractDescribable implements Identifiable {
+public class SingleCellDimension extends AbstractIdentifiable implements Identifiable {
 
     private Long id;
 

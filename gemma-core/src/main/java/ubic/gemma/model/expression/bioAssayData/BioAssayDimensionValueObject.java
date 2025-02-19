@@ -14,6 +14,7 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -28,7 +29,10 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Paul
@@ -37,9 +41,13 @@ import java.util.*;
 public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAssayDimension> {
 
     private static final long serialVersionUID = -8686807689616396835L;
-    private final List<BioAssayValueObject> bioAssays = new LinkedList<>();
-    private String description;
+    @Deprecated
+    @Schema(description = "This field is deprecated and scheduled for removal. Favour the quantitation type name.", deprecated = true)
     private String name;
+    @Deprecated
+    @Schema(description = "This field is deprecated and scheduled for removal. Favour the quantitation type description.", deprecated = true)
+    private String description;
+    private final List<BioAssayValueObject> bioAssays = new LinkedList<>();
     private boolean isReordered = false;
     private boolean isSubset = false;
 
@@ -70,8 +78,6 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
      */
     public BioAssayDimensionValueObject( BioAssayDimension entity ) {
         super( entity );
-        this.name = entity.getName();
-        this.description = entity.getDescription();
         for ( BioAssay bv : entity.getBioAssays() ) {
             if ( bv == null ) {
                 throw new IllegalArgumentException( "Null bioassay in " + entity );
@@ -86,6 +92,26 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
                 + ", " + ( bioAssays != null ? "bioAssays=" + StringUtils.join( bioAssays, "," ) : "" ) + "]";
     }
 
+    @Deprecated
+    public String getName() {
+        return name;
+    }
+
+    @Deprecated
+    public void setName( String name ) {
+        this.name = name;
+    }
+
+    @Deprecated
+    public String getDescription() {
+        return description;
+    }
+
+    @Deprecated
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
     public List<BioAssayValueObject> getBioAssays() {
         return bioAssays;
     }
@@ -98,28 +124,12 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
         this.bioAssays.addAll( bvos );
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
     public boolean getIsSubset() {
         return isSubset;
     }
 
     public void setIsSubset( boolean isSubset ) {
         this.isSubset = isSubset;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
     }
 
     /**
@@ -176,8 +186,7 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
     private BioAssayDimension makeDummyBioAssayDimension() {
         assert this.id == null;
 
-        BioAssayDimension fakeBd = BioAssayDimension.Factory
-                .newInstance( "Placeholder representing: " + name, description, new ArrayList<BioAssay>() );
+        BioAssayDimension fakeBd = BioAssayDimension.Factory.newInstance();
 
         Map<Long, ExperimentalFactor> fakeEfs = new HashMap<>();
         for ( BioAssayValueObject bav : this.bioAssays ) {

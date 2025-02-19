@@ -15,7 +15,7 @@
     <security:authorize access="hasAuthority('GROUP_ADMIN')">
         <c:if test="${dimension != null}">
             <p>
-                Only displaying subsets from ${fn:escapeXml(dimension.name)}.
+                Only displaying subsets from dimension #${fn:escapeXml(dimension.id)}.
                 <a href="${pageContext.request.contextPath}/expressionExperiment/showAllExpressionExperimentSubSets.html?id=${expressionExperiment.id}">
                     Show all dimensions
                 </a>

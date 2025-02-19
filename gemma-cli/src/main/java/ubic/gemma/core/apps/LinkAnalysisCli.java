@@ -507,9 +507,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     }
 
     private BioAssayDimension makeBioAssayDimension( ArrayDesign arrayDesign, DoubleMatrix<String, String> matrix ) {
-        BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
-        bad.setName( "For " + this.dataFileName );
-        bad.setDescription( "Generated from flat file" );
+        List<BioAssay> bioAssays = new ArrayList<>( matrix.columns() );
         for ( int i = 0; i < matrix.columns(); i++ ) {
             Object columnName = matrix.getColName( i );
 
@@ -523,9 +521,9 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             assay.setSampleUsed( bioMaterial );
             assay.setIsOutlier( false );
             assay.setSequencePairedReads( false );
-            bad.getBioAssays().add( assay );
+            bioAssays.add( assay );
         }
-        return bad;
+        return BioAssayDimension.Factory.newInstance( bioAssays );
     }
 
     private QuantitationType makeQuantitationType() {

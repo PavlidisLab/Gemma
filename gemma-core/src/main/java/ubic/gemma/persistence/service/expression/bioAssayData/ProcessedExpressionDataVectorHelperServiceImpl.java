@@ -125,10 +125,7 @@ class ProcessedExpressionDataVectorHelperServiceImpl
             indexes[oldIndex] = newIndex;
         }
 
-        BioAssayDimension newBioAssayDimension = BioAssayDimension.Factory.newInstance();
-        newBioAssayDimension.setBioAssays( Arrays.asList( orderedBioAssays ) );
-        newBioAssayDimension.setName( "Processed data of ee " + ee.getShortName() + " ordered by design" );
-        newBioAssayDimension.setDescription( "Data was reordered based on the experimental design." );
+        BioAssayDimension newBioAssayDimension = BioAssayDimension.Factory.newInstance( Arrays.asList( orderedBioAssays ) );
         newBioAssayDimension = bioAssayDimensionService.create( newBioAssayDimension );
 
         for ( ProcessedExpressionDataVector v : processedDataVectors ) {

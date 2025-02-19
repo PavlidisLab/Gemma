@@ -61,11 +61,13 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static ubic.gemma.core.util.StringUtils.abbreviateInBytes;
 import static ubic.gemma.persistence.util.ByteArrayUtils.*;
 
 /**
@@ -1105,26 +1107,23 @@ public class GeoConverterImpl implements GeoConverter {
      * @return BioAssayDimension representing the samples.
      */
     private BioAssayDimension convertGeoSampleList( List<GeoSample> datasetSamples, ExpressionExperiment expExp ) {
-        BioAssayDimension resultBioAssayDimension = BioAssayDimension.Factory.newInstance();
-
-        StringBuilder bioAssayDimName = new StringBuilder();
+        StringBuilder dimName = new StringBuilder();
+        List<BioAssay> bioAssays = new ArrayList<>();
         Collections.sort( datasetSamples );
-        bioAssayDimName.append( expExp.getShortName() ).append( ": " );
+        dimName.append( expExp.getShortName() ).append( ": " );
         for ( GeoSample sample : datasetSamples ) {
             boolean found;
             String sampleAcc = sample.getGeoAccession();
-            bioAssayDimName.append( sampleAcc ).append( "," );
-            found = this.matchSampleToBioAssay( expExp, resultBioAssayDimension, sampleAcc );
+            dimName.append( sampleAcc ).append( "," );
+            found = this.matchSampleToBioAssay( expExp, bioAssays, sampleAcc );
             if ( !found ) {
                 // this is normal because not all headings are
                 // sample ids, and we may have skipped samples
                 GeoConverterImpl.log.warn( "No bioassay match for " + sampleAcc );
             }
         }
-        GeoConverterImpl.log.debug( resultBioAssayDimension.getBioAssays().size() + " Bioassays in biodimension" );
-        resultBioAssayDimension.setName( this.formatName( bioAssayDimName ) );
-        resultBioAssayDimension.setDescription( bioAssayDimName.toString() );
-        return resultBioAssayDimension;
+        GeoConverterImpl.log.debug( "Matched " + bioAssays.size() + " assays in dimension for " + expExp );
+        return BioAssayDimension.Factory.newInstance( bioAssays );
     }
 
     /**
@@ -2589,13 +2588,6 @@ public class GeoConverterImpl implements GeoConverter {
         return matchingFactorValue;
     }
 
-    /**
-     * Turn a rough-cut dimension name into something of reasonable length.
-     */
-    private String formatName( StringBuilder dimensionName ) {
-        return StringUtils.abbreviate( dimensionName.toString(), 100 );
-    }
-
     private String getBiomaterialPrefix( GeoSeries series, int i ) {
         return series.getGeoAccession() + GeoConverterImpl.BIOMATERIAL_NAME_TAG + i;
     }
@@ -2897,17 +2889,16 @@ public class GeoConverterImpl implements GeoConverter {
     }
 
     /**
-     * @param expExp            ExpressionExperiment to be searched for matching BioAssays
-     * @param bioAssayDimension BioAssayDimension to be added to
-     * @param sampleAcc         The GEO accession id for the sample. This is compared to the external accession recorded
-     *                          for the
-     *                          BioAssay
+     * @param expExp     ExpressionExperiment to be searched for matching BioAssays
+     * @param bioAssays  assays to be added to
+     * @param sampleAcc  The GEO accession id for the sample. This is compared to the external accession recorded for
+     *                   the BioAssay
      */
-    private boolean matchSampleToBioAssay( ExpressionExperiment expExp, BioAssayDimension bioAssayDimension, String sampleAcc ) {
+    private boolean matchSampleToBioAssay( ExpressionExperiment expExp, List<BioAssay> bioAssays, String sampleAcc ) {
 
         for ( BioAssay bioAssay : expExp.getBioAssays() ) {
             if ( sampleAcc.equals( bioAssay.getAccession().getAccession() ) ) {
-                bioAssayDimension.getBioAssays().add( bioAssay );
+                bioAssays.add( bioAssay );
                 GeoConverterImpl.log.debug( "Found sample match for bioAssay " + bioAssay.getAccession().getAccession() );
                 return true;
             }
