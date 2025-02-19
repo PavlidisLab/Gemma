@@ -32,8 +32,6 @@ import static ubic.gemma.persistence.service.expression.bioAssayData.RandomSingl
 public class SingleCellIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
-    private ArrayDesignService arrayDesignService;
-    @Autowired
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
@@ -56,12 +54,13 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
 
     @After
     public void tearDown() {
-        if ( ee != null ) {
-            expressionExperimentService.remove( ee );
-        }
-        if ( ad != null ) {
-            arrayDesignService.remove( ad );
-        }
+        // FIXME:
+        // if ( ee != null ) {
+        //     expressionExperimentService.remove( ee );
+        // }
+        // if ( ad != null ) {
+        //     arrayDesignService.remove( ad );
+        // }
     }
 
     @Test
@@ -87,6 +86,8 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
             labels.add( String.valueOf( "ABCD".charAt( RandomUtils.nextInt( 4 ) ) ) );
         }
         CellTypeAssignment cta = singleCellExpressionExperimentService.relabelCellTypes( ee, qt, scd, labels, null, null );
+        assertThat( cta.getNumberOfCellTypes() ).isEqualTo( 4 );
+        assertThat( cta.getNumberOfAssignedCells() ).isEqualTo( 8000 );
         assertThat( singleCellExpressionExperimentService.getCellTypeFactor( ee ) )
                 .isNotNull();
 
