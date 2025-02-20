@@ -5,6 +5,7 @@ import cern.jet.stat.Descriptive;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.singleCell.SingleCellDescriptive;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
 
 /**
@@ -14,6 +15,54 @@ import ubic.gemma.model.expression.bioAssayData.DataVector;
  * @see ubic.basecode.math.DescriptiveWithMissing
  */
 public class DataVectorDescriptive {
+
+    /**
+     * Count the number of missing values.
+     */
+    public static int countMissing( DataVector vector ) {
+        int missingValues = 0;
+        if ( vector.getQuantitationType().getType() == StandardQuantitationType.PRESENTABSENT ) {
+            for ( boolean b : vector.getDataAsBooleans() ) {
+                if ( !b ) {
+                    missingValues += 1;
+                }
+            }
+            return missingValues;
+        }
+        switch ( vector.getQuantitationType().getRepresentation() ) {
+            case BOOLEAN:
+                // unless the type is present/absent, we cannot treat it as a vector of missing values
+            case INT:
+            case LONG:
+                break;
+            case CHAR:
+                for ( char c : vector.getDataAsChars() ) {
+                    if ( c == '\0' ) {
+                        missingValues += 1;
+                    }
+                }
+                break;
+            case STRING:
+                // empty strings and null strings are stored the same and both indicate missing values
+                for ( String s : vector.getDataAsStrings() ) {
+                    if ( s == null || s.isEmpty() ) {
+                        missingValues += 1;
+                    }
+                }
+                break;
+            case DOUBLE:
+                // NaNs indicate missing values
+                for ( double d : vector.getDataAsDoubles() ) {
+                    if ( Double.isNaN( d ) ) {
+                        missingValues += 1;
+                    }
+                }
+                break;
+            default:
+                throw new UnsupportedOperationException( "Don't know how to count missing values from a " + vector.getQuantitationType().getRepresentation() + " vector." );
+        }
+        return missingValues;
+    }
 
     public static double sum( DataVector vector ) {
         return sum( vector.getDataAsDoubles(), vector.getQuantitationType().getScale() );

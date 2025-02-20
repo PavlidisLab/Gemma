@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 
 @ContextConfiguration
@@ -562,6 +563,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
             qt.setType( StandardQuantitationType.AMOUNT );
             qt.setScale( ScaleType.LOG2 );
             qt.setRepresentation( PrimitiveType.DOUBLE );
+            sessionFactory.getCurrentSession().persist( qt );
             Collection<RawExpressionDataVector> vectors = new ArrayList<>();
             for ( CompositeSequence cs : platform.getCompositeSequences() ) {
                 RawExpressionDataVector v = new RawExpressionDataVector();
@@ -684,6 +686,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         newQt.setScale( ScaleType.LOG2 );
         newQt.setRepresentation( PrimitiveType.DOUBLE );
         newQt.setIsMaskedPreferred( true );
+        sessionFactory.getCurrentSession().persist( newQt );
         for ( RawExpressionDataVector rawVector : ee.getRawExpressionDataVectors() ) {
             ProcessedExpressionDataVector newVector = new ProcessedExpressionDataVector();
             newVector.setExpressionExperiment( ee );
@@ -693,7 +696,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
             newVector.setData( new byte[0] );
             newVectors.add( newVector );
         }
-        expressionExperimentDao.createProcessedDataVectors( ee, newVectors );
+        assertEquals( 10, expressionExperimentDao.createProcessedDataVectors( ee, newVectors ) );
         assertEquals( 10, ee.getNumberOfDataVectors().intValue() );
         assertNotNull( newQt.getId() );
         assertThat( ee.getQuantitationTypes() )
@@ -702,7 +705,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     }
 
     @Test
-    public void testCreateProcessedDataVectorsWithPersistentQt() {
+    public void testCreateProcessedDataVectorsWithNonPersistentQt() {
         ee = createExpressionExperimentWithRawVectors();
         Collection<ProcessedExpressionDataVector> newVectors = new ArrayList<>();
         QuantitationType newQt = new QuantitationType();
@@ -720,12 +723,8 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
             newVector.setData( new byte[0] );
             newVectors.add( newVector );
         }
-        expressionExperimentDao.createProcessedDataVectors( ee, newVectors );
-        assertEquals( 10, ee.getNumberOfDataVectors().intValue() );
-        assertNotNull( newQt.getId() );
-        assertThat( ee.getQuantitationTypes() )
-                .hasSize( 2 )
-                .contains( newQt );
+        assertThatThrownBy( () -> expressionExperimentDao.createProcessedDataVectors( ee, newVectors ) )
+                .isInstanceOf( IllegalArgumentException.class );
     }
 
     @Test
@@ -748,6 +747,7 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
         newQt.setScale( ScaleType.LOG2 );
         newQt.setRepresentation( PrimitiveType.DOUBLE );
         newQt.setIsMaskedPreferred( true );
+        sessionFactory.getCurrentSession().persist( newQt );
         for ( ProcessedExpressionDataVector v : ee.getProcessedExpressionDataVectors() ) {
             ProcessedExpressionDataVector newVector = new ProcessedExpressionDataVector();
             newVector.setExpressionExperiment( ee );

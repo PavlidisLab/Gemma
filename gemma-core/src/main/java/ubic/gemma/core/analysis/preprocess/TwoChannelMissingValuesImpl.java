@@ -27,8 +27,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixRowElement;
+import ubic.gemma.core.datastructure.matrix.TwoChannelExpressionDataMatrixBuilder;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -107,7 +107,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
             double signalToNoiseThreshold, @Nullable Collection<Double> extraMissingValueIndicators ) {
 
         ee = expressionExperimentService.thawLite( ee );
-        Collection<QuantitationType> usefulQuantitationTypes = ExpressionDataMatrixBuilder
+        Collection<QuantitationType> usefulQuantitationTypes = TwoChannelExpressionDataMatrixBuilder
                 .getUsefulQuantitationTypes( ee );
 
         // check that we don't already have a missing value QT
@@ -136,7 +136,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         Collection<? extends BulkExpressionDataVector> builderVectors = new HashSet<>(
                 rawVectors.isEmpty() ? procVectors : rawVectors );
 
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( builderVectors );
+        TwoChannelExpressionDataMatrixBuilder builder = new TwoChannelExpressionDataMatrixBuilder( builderVectors );
         Collection<BioAssayDimension> dims = builder.getBioAssayDimensions();
 
         /*

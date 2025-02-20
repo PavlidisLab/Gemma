@@ -23,6 +23,8 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDao;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDaoImpl;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDaoImpl;
 
@@ -75,6 +77,11 @@ public class CachedProcessedExpressionDataVectorServiceTest extends BaseDatabase
         @Bean
         public BioAssayDimensionDao bioAssayDimensionDao( SessionFactory sessionFactory ) {
             return new BioAssayDimensionDaoImpl( sessionFactory );
+        }
+
+        @Bean
+        public QuantitationTypeDao quantitationTypeDao( SessionFactory sessionFactory ) {
+            return new QuantitationTypeDaoImpl( sessionFactory );
         }
     }
 

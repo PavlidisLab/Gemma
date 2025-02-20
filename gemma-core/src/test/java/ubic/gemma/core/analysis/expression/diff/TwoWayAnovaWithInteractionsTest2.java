@@ -75,7 +75,7 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
     @Category(SlowTest.class)
     public void test() {
 
-        ee = expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thaw( ee );
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 
         assertEquals( 2, factors.size() );
@@ -125,7 +125,7 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
 
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thaw( ee );
 
         Collection<ExperimentalFactor> toremove = new HashSet<>( ee.getExperimentalDesign().getExperimentalFactors() );
         for ( ExperimentalFactor ef : toremove ) {

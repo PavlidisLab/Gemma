@@ -23,7 +23,7 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataBooleanMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixBuilder;
+import ubic.gemma.core.datastructure.matrix.TwoChannelExpressionDataMatrixBuilder;
 import ubic.gemma.core.loader.expression.geo.*;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
@@ -49,7 +49,8 @@ import static org.junit.Assert.*;
  */
 public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
 
-    private GeoConverter gc = new GeoConverterImpl();
+    @Autowired
+    private GeoConverter gc;
 
     @Autowired
     private TwoChannelMissingValues tcmv;
@@ -134,7 +135,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         expExp = persisterHelper.persist( expExp, persisterHelper.prepare( expExp ) );
         Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
 
-        assertEquals( 30, calls.size() );
+        assertEquals( 20, calls.size() );
 
     }
 
@@ -180,7 +181,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
 
         assertTrue( hasNewQT );
 
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( calls );
+        TwoChannelExpressionDataMatrixBuilder builder = new TwoChannelExpressionDataMatrixBuilder( calls );
 
         ExpressionDataBooleanMatrix missingValues = builder.getMissingValueData();
         assertTrue( missingValues.getQuantitationTypes().iterator().next().getDescription()

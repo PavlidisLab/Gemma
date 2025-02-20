@@ -444,9 +444,7 @@ public interface ExpressionExperimentDao
     int replaceRawDataVectors( ExpressionExperiment ee, QuantitationType qt, Collection<RawExpressionDataVector> vectors );
 
     /**
-     * Create processed data vectors
-     * <p>
-     * The QT is created if it doesn't exist and is attached to the experiment.
+     * Add processed data vectors
      * <p>
      * The number of vectors {@link ExpressionExperiment#getNumberOfDataVectors()} is updated.
      * @return the number of created processed vectors
@@ -457,7 +455,7 @@ public interface ExpressionExperimentDao
      * Remove processed data vectors.
      * <p>
      * Their corresponding QT is detached from the experiment and removed. The number of vectors (i.e. {@link ExpressionExperiment#getNumberOfDataVectors()}
-     * is set to zero.
+     * is set to zero. Unused dimensions are removed.
      * @return the number of removed processed vectors
      */
     int removeProcessedDataVectors( ExpressionExperiment ee );
@@ -466,6 +464,7 @@ public interface ExpressionExperimentDao
      * Replace processed data vectors.
      * <p>
      * The QT is reused and the number of vectors {@link ExpressionExperiment#getNumberOfDataVectors()} is updated.
+     * Unused dimensions are removed.
      * @return the number of vectors replaced
      */
     int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors );

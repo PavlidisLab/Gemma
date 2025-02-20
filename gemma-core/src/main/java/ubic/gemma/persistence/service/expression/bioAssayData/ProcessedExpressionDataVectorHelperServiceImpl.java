@@ -31,7 +31,7 @@ import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixBuilder;
+import ubic.gemma.core.datastructure.matrix.TwoChannelExpressionDataMatrixBuilder;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -47,6 +47,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort.orderByExperimentalDesign;
 
@@ -192,25 +193,31 @@ class ProcessedExpressionDataVectorHelperServiceImpl
              * Get vectors needed to compute intensities.
              */
             Collection<QuantitationType> quantitationTypes = eeService.getQuantitationTypes( ee );
-            Collection<QuantitationType> usefulQuantitationTypes = ExpressionDataMatrixBuilder
+            Collection<QuantitationType> usefulQuantitationTypes = TwoChannelExpressionDataMatrixBuilder
                     .getUsefulQuantitationTypes( quantitationTypes );
 
             if ( usefulQuantitationTypes.isEmpty() ) {
                 throw new IllegalStateException( "No useful quantitation types for " + ee.getShortName() );
             }
 
-            Collection<? extends BulkExpressionDataVector> vectors = rawExpressionDataVectorService.findAndThaw( usefulQuantitationTypes );
+
+            Collection<? extends BulkExpressionDataVector> vectors = ee.getRawExpressionDataVectors().stream()
+                    .filter( v -> usefulQuantitationTypes.contains( v.getQuantitationType() ) )
+                    .collect( Collectors.toSet() );
             if ( vectors.isEmpty() ) {
-                vectors = processedExpressionDataVectorService.findAndThaw( usefulQuantitationTypes );
+                log.warn( "No raw vectors for useful quantitation types for " + ee + ", will look-up processed vectors instead." );
+                vectors = ee.getProcessedExpressionDataVectors().stream()
+                        .filter( v -> usefulQuantitationTypes.contains( v.getQuantitationType() ) )
+                        .collect( Collectors.toSet() );
             }
 
             if ( vectors.isEmpty() ) {
-                throw new IllegalStateException( "No vectors for useful quantitation types for " + ee.getShortName() );
+                throw new IllegalStateException( "No vectors for useful quantitation types for " + ee + "." );
             }
 
-            ProcessedExpressionDataVectorHelperServiceImpl.log.info( "Vectors loaded ..." );
+            ProcessedExpressionDataVectorHelperServiceImpl.log.info( vectors.size() + " vectors loaded." );
 
-            ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( processedVectors, vectors );
+            TwoChannelExpressionDataMatrixBuilder builder = new TwoChannelExpressionDataMatrixBuilder( processedVectors, vectors );
             intensities = builder.getIntensity();
 
             ExpressionDataBooleanMatrix missingValues = builder.getMissingValueData();

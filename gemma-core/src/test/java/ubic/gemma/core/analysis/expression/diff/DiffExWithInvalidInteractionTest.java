@@ -80,7 +80,7 @@ public class DiffExWithInvalidInteractionTest extends AbstractGeoServiceTest {
 
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thaw( ee );
 
         Collection<ExperimentalFactor> toremove = new HashSet<>( ee.getExperimentalDesign().getExperimentalFactors() );
         for ( ExperimentalFactor ef : toremove ) {
@@ -112,7 +112,7 @@ public class DiffExWithInvalidInteractionTest extends AbstractGeoServiceTest {
     @Category(SlowTest.class)
     public void test() {
 
-        ee = expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thaw( ee );
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 
         assertEquals( 3, factors.size() ); // includes batch

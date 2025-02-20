@@ -146,7 +146,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         rawMatrix.setRowNames( probes );
         rawMatrix.setColumnNames( bms );
 
-        QuantitationType qt = this.makeQt( true );
+        QuantitationType qt = this.makeRawQt( "qt1", true );
 
         ExpressionDataDoubleMatrix data = new ExpressionDataDoubleMatrix( ee, qt, rawMatrix );
 
@@ -189,7 +189,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         /*
          * Test adding data (non-preferred)
          */
-        qt = this.makeQt( false );
+        qt = this.makeRawQt( "qt2", false );
         ExpressionDataDoubleMatrix moreData = new ExpressionDataDoubleMatrix( ee, qt, rawMatrix );
         dataUpdater.addData( ee, targetArrayDesign, moreData );
 
@@ -384,9 +384,9 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
 
     }
 
-    private QuantitationType makeQt( boolean preferred ) {
+    private QuantitationType makeRawQt( String qtName, boolean preferred ) {
         QuantitationType qt = QuantitationType.Factory.newInstance();
-        qt.setName( "foo" );
+        qt.setName( qtName );
         qt.setDescription( "bar" );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setScale( ScaleType.LINEAR );
@@ -394,7 +394,6 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         qt.setIsRatio( false );
         qt.setIsBackgroundSubtracted( true );
         qt.setIsNormalized( true );
-        qt.setIsMaskedPreferred( true );
         qt.setIsPreferred( preferred );
         qt.setIsBatchCorrected( false );
         qt.setType( StandardQuantitationType.AMOUNT );

@@ -25,7 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentVectorManipulatingService;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixBuilder;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEvent;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -65,7 +64,6 @@ import static ubic.gemma.persistence.util.ByteArrayUtils.toBytes;
  * will be thrown, though this may leave things in a bad state requiring a reload of the data.
  *
  * @author pavlidis
- * @see ExpressionDataMatrixBuilder
  */
 @Service
 public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipulatingService

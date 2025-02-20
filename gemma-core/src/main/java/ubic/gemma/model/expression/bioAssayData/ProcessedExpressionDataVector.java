@@ -59,6 +59,11 @@ public class ProcessedExpressionDataVector extends BulkExpressionDataVector {
     private Double rankByMax;
 
     @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
     public boolean equals( Object object ) {
         if ( this == object )
             return true;

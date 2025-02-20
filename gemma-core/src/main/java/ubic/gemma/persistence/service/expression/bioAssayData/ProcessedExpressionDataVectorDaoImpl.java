@@ -41,6 +41,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.util.CommonQueries;
 
@@ -66,6 +67,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
+    @Autowired
+    private QuantitationTypeDao quantitationTypeDao;
 
     @Autowired
     public ProcessedExpressionDataVectorDaoImpl( SessionFactory sessionFactory ) {
@@ -167,7 +170,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
         int created = expressionExperimentDao.createProcessedDataVectors( expressionExperiment, newVectors );
 
-        this.getSessionFactory().getCurrentSession().update( expressionExperiment );
         assert expressionExperiment.getNumberOfDataVectors() != null;
 
         return created;
@@ -516,22 +518,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         present.setIsRatio( preferredQt.getIsRatio() );
         present.setType( preferredQt.getType() );
 
-        // use existing QT if possible 
-        for ( QuantitationType oldqt : ee.getQuantitationTypes() ) {
-            if ( oldqt.getName() != null && oldqt.getName().equals( present.getName() ) ) { // FIXME make this a more stringent check for a match
-                present = oldqt;
-                break;
-            }
-        }
-
-        if ( present.getId() == null ) {
-            Long id = ( Long ) this.getSessionFactory().getCurrentSession().save( present );
-            return ( QuantitationType ) this.getSessionFactory().getCurrentSession().load( QuantitationType.class, id );
-        }
-        return present;
-
+        return quantitationTypeDao.create( present, ProcessedExpressionDataVector.class );
     }
-
 
     /**
      * @param  expressionExperiment ee

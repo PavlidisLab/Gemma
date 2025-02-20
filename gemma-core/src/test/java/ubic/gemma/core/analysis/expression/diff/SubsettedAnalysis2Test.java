@@ -81,7 +81,7 @@ public class SubsettedAnalysis2Test extends AbstractGeoServiceTest {
 
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thaw( ee );
 
         Collection<ExperimentalFactor> toremove = new HashSet<>( ee.getExperimentalDesign().getExperimentalFactors() );
         for ( ExperimentalFactor ef : toremove ) {
@@ -109,7 +109,7 @@ public class SubsettedAnalysis2Test extends AbstractGeoServiceTest {
     @Category(SlowTest.class)
     public void test() {
 
-        ee = expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thaw( ee );
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 
         assertEquals( 4, factors.size() ); // includes batch

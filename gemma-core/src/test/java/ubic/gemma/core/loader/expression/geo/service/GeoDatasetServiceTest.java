@@ -25,12 +25,12 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
+import ubic.gemma.core.datastructure.matrix.TwoChannelExpressionDataMatrixBuilder;
 import ubic.gemma.core.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
@@ -162,7 +162,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         Collection<ProcessedExpressionDataVector> vecs = ee.getProcessedExpressionDataVectors();
         vecs = dataVectorService.thaw( vecs );
 
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vecs );
+        TwoChannelExpressionDataMatrixBuilder builder = new TwoChannelExpressionDataMatrixBuilder( vecs );
 
         ExpressionDataDoubleMatrix matrix = builder.getProcessedData();
         double a = matrix.getAsDouble( 0, 0 );
@@ -232,7 +232,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
         ee = eeService.load( ee.getId() );
         assertNotNull( ee );
-        ee = this.eeService.thawLite( ee );
+        ee = this.eeService.thaw( ee );
         qts = eeService.getQuantitationTypes( ee );
         assertEquals( 17, qts.size() ); // 16 that were imported plus the detection call we added.
 
@@ -269,6 +269,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
         // Mouse430A_2.
         ee = eeService.findByShortName( "GSE18707" );
+        ee = eeService.thaw( ee );
         aclTestUtils.checkEEAcls( ee );
         Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
 
@@ -336,7 +337,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
         vectors = rawExpressionDataVectorService.thaw( vectors );
 
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
+        TwoChannelExpressionDataMatrixBuilder builder = new TwoChannelExpressionDataMatrixBuilder( vectors );
 
         BulkExpressionDataMatrix<Double> matrix = builder.getPreferredData();
 

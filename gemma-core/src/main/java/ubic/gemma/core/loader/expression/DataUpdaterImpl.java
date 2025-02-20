@@ -1036,7 +1036,6 @@ public class DataUpdaterImpl implements DataUpdater {
         qt.setIsRatio( false );
         qt.setIsBackgroundSubtracted( true );
         qt.setIsNormalized( true );
-        qt.setIsMaskedPreferred( true );
         qt.setIsPreferred( preferred );
         qt.setIsBatchCorrected( false );
         qt.setType( StandardQuantitationType.AMOUNT );

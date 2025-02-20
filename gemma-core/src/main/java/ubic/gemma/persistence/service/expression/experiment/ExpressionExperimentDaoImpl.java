@@ -2861,15 +2861,12 @@ public class ExpressionExperimentDaoImpl
     @Override
     public int addRawDataVectors( ExpressionExperiment ee, QuantitationType newQt, Collection<RawExpressionDataVector> newVectors ) {
         Assert.notNull( ee.getId(), "ExpressionExperiment must be persistent." );
+        Assert.notNull( newQt.getId(), "Quantitation type must be persistent." );
         Assert.isTrue( !newVectors.isEmpty(), "At least one vectors must be provided, use removeAllRawDataVectors() to delete vectors instead." );
         // each set of raw vectors must have a *distinct* QT
         Assert.isTrue( !ee.getQuantitationTypes().contains( newQt ),
                 "ExpressionExperiment already has a quantitation like " + newQt );
         checkVectors( ee, newQt, newVectors );
-        if ( newQt.getId() == null ) {
-            log.info( "Creating " + newQt + "..." );
-            getSessionFactory().getCurrentSession().persist( newQt );
-        }
         if ( newQt.getIsPreferred() ) {
             for ( QuantitationType qt : ee.getQuantitationTypes() ) {
                 if ( !qt.equals( newQt ) ) {
@@ -2895,22 +2892,12 @@ public class ExpressionExperimentDaoImpl
 
     private int removeAllRawDataVectors( ExpressionExperiment ee, boolean keepDimensions ) {
         Assert.notNull( ee.getId(), "ExpressionExperiment must be persistent." );
-        // ensures the EE is in the session before we retrieve QTs to delete
-        update( ee );
-        //noinspection unchecked
-        List<QuantitationType> qtsToRemove = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select v.quantitationType from RawExpressionDataVector v "
-                        + "where v.expressionExperiment = :ee "
-                        + "group by v.quantitationType" )
-                .setParameter( "ee", ee )
-                .list();
-        //noinspection unchecked
-        List<BioAssayDimension> dimensions = getSessionFactory().getCurrentSession()
-                .createQuery( "select v.bioAssayDimension from RawExpressionDataVector v "
-                        + "where v.expressionExperiment = :ee "
-                        + "group by v.bioAssayDimension" )
-                .setParameter( "ee", ee )
-                .list();
+        Set<QuantitationType> qtsToRemove = ee.getRawExpressionDataVectors().stream()
+                .map( DataVector::getQuantitationType )
+                .collect( Collectors.toSet() );
+        Set<BioAssayDimension> dimensions = ee.getRawExpressionDataVectors().stream()
+                .map( BulkExpressionDataVector::getBioAssayDimension )
+                .collect( Collectors.toSet() );
         ee.getRawExpressionDataVectors().clear();
         int deletedVectors = getSessionFactory().getCurrentSession()
                 .createQuery( "delete from RawExpressionDataVector v where v.expressionExperiment = :ee" )
@@ -2918,6 +2905,7 @@ public class ExpressionExperimentDaoImpl
                 .executeUpdate();
         // remove QTs and unused dimensions
         removeQts( ee, qtsToRemove );
+        update( ee );
         if ( !keepDimensions ) {
             removeUnusedDimensions( ee, dimensions );
         }
@@ -2933,14 +2921,10 @@ public class ExpressionExperimentDaoImpl
         Assert.notNull( qt.getId(), "Quantitation type must be persistent" );
         Assert.isTrue( ee.getQuantitationTypes().contains( qt ) || ee.getRawExpressionDataVectors().stream().anyMatch( v -> v.getQuantitationType().equals( qt ) ),
                 "The provided quantitation type must belong to at least one raw vector of the experiment." );
-        //noinspection unchecked
-        List<BioAssayDimension> dimensions = getSessionFactory().getCurrentSession()
-                .createQuery( "select v.bioAssayDimension from RawExpressionDataVector v "
-                        + "where v.expressionExperiment = :ee and v.quantitationType = :qt "
-                        + "group by v.bioAssayDimension" )
-                .setParameter( "ee", ee )
-                .setParameter( "qt", qt )
-                .list();
+        Set<BioAssayDimension> dimensions = ee.getRawExpressionDataVectors().stream()
+                .filter( v -> v.getQuantitationType().equals( qt ) )
+                .map( BulkExpressionDataVector::getBioAssayDimension )
+                .collect( Collectors.toSet() );
         ee.getRawExpressionDataVectors().clear();
         int deletedVectors = getSessionFactory().getCurrentSession()
                 .createQuery( "delete from RawExpressionDataVector v where v.expressionExperiment = :ee and v.quantitationType = :qt" )
@@ -2948,6 +2932,7 @@ public class ExpressionExperimentDaoImpl
                 .setParameter( "qt", qt )
                 .executeUpdate();
         removeQts( ee, Collections.singleton( qt ) );
+        update( ee );
         if ( !keepDimension ) {
             removeUnusedDimensions( ee, dimensions );
         }
@@ -2964,14 +2949,10 @@ public class ExpressionExperimentDaoImpl
         Assert.isTrue( ee.getQuantitationTypes().contains( qt ) || ee.getRawExpressionDataVectors().stream().anyMatch( v -> v.getQuantitationType().equals( qt ) ),
                 "The provided quantitation type must belong to at least one vector of the experiment." );
         checkVectors( ee, qt, vectors );
-        //noinspection unchecked
-        List<BioAssayDimension> dimensions = getSessionFactory().getCurrentSession()
-                .createQuery( "select v.bioAssayDimension from RawExpressionDataVector v "
-                        + "where v.expressionExperiment = :ee and v.quantitationType = :qt "
-                        + "group by v.bioAssayDimension" )
-                .setParameter( "ee", ee )
-                .setParameter( "qt", qt )
-                .list();
+        Set<BioAssayDimension> dimensions = ee.getRawExpressionDataVectors().stream()
+                .filter( v -> v.getQuantitationType().equals( qt ) )
+                .map( BulkExpressionDataVector::getBioAssayDimension )
+                .collect( Collectors.toSet() );
         ee.getRawExpressionDataVectors().removeIf( v -> v.getQuantitationType().equals( qt ) );
         int deletedVectors = getSessionFactory().getCurrentSession()
                 .createQuery( "delete from RawExpressionDataVector v where v.expressionExperiment = :ee and v.quantitationType = :qt" )
@@ -2997,19 +2978,15 @@ public class ExpressionExperimentDaoImpl
         Assert.isTrue( ee.getProcessedExpressionDataVectors().isEmpty(), "ExpressionExperiment already has processed vectors, remove them before creating new ones or use replaceProcessedDataVectors()." );
         Assert.isTrue( !vectors.isEmpty(), "At least one vector must be provided." );
         QuantitationType qt = vectors.iterator().next().getQuantitationType();
+        Assert.notNull( qt.getId(), "Quantitation type must be persistent." );
         Assert.isTrue( qt.getIsMaskedPreferred(), "QuantitationType must be marked as masked preferred." );
         checkVectors( ee, qt, vectors );
-        if ( qt.getId() == null ) {
-            log.info( "Creating " + qt + "..." );
-            getSessionFactory().getCurrentSession().persist( qt );
-        }
         ee.getQuantitationTypes().add( qt );
         ee.getProcessedExpressionDataVectors().addAll( vectors );
         ee.setNumberOfDataVectors( vectors.size() );
         update( ee );
         return vectors.size();
     }
-
 
     @Override
     public int removeProcessedDataVectors( ExpressionExperiment ee ) {
@@ -3019,26 +2996,14 @@ public class ExpressionExperimentDaoImpl
     private int removeProcessedDataVectors( ExpressionExperiment ee, boolean keepDimensions ) {
         Assert.notNull( ee.getId(), "ExpressionExperiment must be persistent." );
 
-        // this is only necessary if EE is detached, in this case the QTs from the experiment will conflict with freshly
-        // retrieved QTs from the database
-        update( ee );
-
-        //noinspection unchecked
-        List<BioAssayDimension> dimensions = getSessionFactory().getCurrentSession()
-                .createQuery( "select v.bioAssayDimension from ProcessedExpressionDataVector v "
-                        + "where v.expressionExperiment = :ee "
-                        + "group by v.bioAssayDimension" )
-                .setParameter( "ee", ee )
-                .list();
+        Set<BioAssayDimension> dimensions = ee.getProcessedExpressionDataVectors().stream()
+                .map( BulkExpressionDataVector::getBioAssayDimension )
+                .collect( Collectors.toSet() );
 
         // obtain QTs to remove directly from the vectors
-        //noinspection unchecked
-        List<QuantitationType> qtsToRemove = this.getSessionFactory().getCurrentSession().createQuery(
-                        "select v.quantitationType from ProcessedExpressionDataVector v "
-                                + "where v.expressionExperiment = :ee "
-                                + "group by v.quantitationType" )
-                .setParameter( "ee", ee )
-                .list();
+        Set<QuantitationType> qtsToRemove = ee.getProcessedExpressionDataVectors().stream()
+                .map( BulkExpressionDataVector::getQuantitationType )
+                .collect( Collectors.toSet() );
 
         // this is not really allowed, but it might happen
         if ( qtsToRemove.size() > 1 ) {
@@ -3055,6 +3020,9 @@ public class ExpressionExperimentDaoImpl
 
         // remove QTs and unused dimensions
         removeQts( ee, qtsToRemove );
+
+        update( ee );
+
         if ( !keepDimensions ) {
             removeUnusedDimensions( ee, dimensions );
         }
@@ -3071,29 +3039,17 @@ public class ExpressionExperimentDaoImpl
         Assert.notNull( ee.getId(), "ExpressionExperiment must be persistent." );
         Assert.isTrue( !vectors.isEmpty(), "At least one vector must be provided when replacing data, use removeProcessedDataVectors() for removing vectors." );
         QuantitationType newQt = vectors.iterator().next().getQuantitationType();
+        Assert.notNull( newQt.getId(), "Quantitation type must be persistent." );
         Assert.isTrue( newQt.getIsMaskedPreferred(), "QuantitationType must be marked as masked preferred." );
         checkVectors( ee, newQt, vectors );
-        if ( newQt.getId() == null ) {
-            log.info( "Creating " + newQt + "..." );
-            getSessionFactory().getCurrentSession().persist( newQt );
-        }
-        // this is only necessary if EE is detached, in this case the QTs from the experiment will conflict with freshly
-        // retrieved QTs from the database
-        update( ee );
-        //noinspection unchecked
-        List<BioAssayDimension> dimensions = getSessionFactory().getCurrentSession()
-                .createQuery( "select v.bioAssayDimension from ProcessedExpressionDataVector v "
-                        + "where v.expressionExperiment = :ee "
-                        + "group by v.bioAssayDimension" )
-                .setParameter( "ee", ee )
-                .list();
-        //noinspection unchecked
-        List<QuantitationType> qtsToRemove = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select v.quantitationType from ProcessedExpressionDataVector v "
-                        + "where v.expressionExperiment = :ee "
-                        + "group by v.quantitationType" )
-                .setParameter( "ee", ee )
-                .list();
+        Set<BioAssayDimension> dimensions = ee.getProcessedExpressionDataVectors().stream()
+                .map( BulkExpressionDataVector::getBioAssayDimension )
+                .collect( Collectors.toSet() );
+
+        // obtain QTs to remove directly from the vectors
+        Set<QuantitationType> qtsToRemove = ee.getProcessedExpressionDataVectors().stream()
+                .map( BulkExpressionDataVector::getQuantitationType )
+                .collect( Collectors.toSet() );
         if ( qtsToRemove.remove( newQt ) ) {
             log.info( newQt + " is being reused, will not remove it." );
         }
@@ -3106,6 +3062,7 @@ public class ExpressionExperimentDaoImpl
         ee.setNumberOfDataVectors( vectors.size() );
         ee.getQuantitationTypes().add( newQt );
         removeQts( ee, qtsToRemove );
+        update( ee );
         // remove unused dimensions, if the dimension is reused for the replaced vectors, nothing will happen
         removeUnusedDimensions( ee, dimensions );
         if ( deletedVectors > 0 ) {

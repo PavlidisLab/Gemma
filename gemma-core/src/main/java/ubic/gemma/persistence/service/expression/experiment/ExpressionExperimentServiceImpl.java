@@ -259,30 +259,21 @@ public class ExpressionExperimentServiceImpl
     public int addRawDataVectors( ExpressionExperiment ee,
             QuantitationType quantitationType,
             Collection<RawExpressionDataVector> newVectors ) {
-        Collection<BioAssayDimension> BADs = new HashSet<>();
-        for ( RawExpressionDataVector vec : newVectors ) {
-            BADs.add( vec.getBioAssayDimension() );
-        }
-
-        if ( BADs.size() > 1 ) {
-            throw new IllegalArgumentException( "Vectors must share a common bioassay dimension" );
-        }
-
-        BioAssayDimension bad = BADs.iterator().next();
-        if ( bad.getId() == null ) {
-            log.info( "Creating " + bad + "..." );
-            bad = this.bioAssayDimensionService.findOrCreate( bad );
+        createDimensionIfNecessary( newVectors );
+        if ( quantitationType.getId() == null ) {
+            log.info( "Creating " + quantitationType + "..." );
+            quantitationType = quantitationTypeService.create( quantitationType, RawExpressionDataVector.class );
             for ( RawExpressionDataVector vector : newVectors ) {
-                vector.setBioAssayDimension( bad );
+                vector.setQuantitationType( quantitationType );
             }
         }
-
         return expressionExperimentDao.addRawDataVectors( ee, quantitationType, newVectors );
     }
 
     @Override
     @Transactional
     public int replaceRawDataVectors( ExpressionExperiment ee, QuantitationType qt, Collection<RawExpressionDataVector> vectors ) {
+        createDimensionIfNecessary( vectors );
         return expressionExperimentDao.replaceRawDataVectors( ee, qt, vectors );
     }
 
@@ -294,29 +285,41 @@ public class ExpressionExperimentServiceImpl
             throw new UnsupportedOperationException( "Only use this method for replacing vectors, not erasing them" );
         }
 
+        Set<QuantitationType> existingQts = ee.getRawExpressionDataVectors().stream()
+                .map( DataVector::getQuantitationType )
+                .collect( Collectors.toSet() );
+
         Set<QuantitationType> newQts = newVectors.stream()
                 .map( RawExpressionDataVector::getQuantitationType )
                 .collect( Collectors.toSet() );
 
-        Set<QuantitationType> preferredQts = newQts.stream().filter( QuantitationType::getIsPreferred ).collect( Collectors.toSet() );
-        if ( preferredQts.size() != 1 ) {
-            throw new IllegalArgumentException( String.format( "New vectors for %s must have exactly one preferred quantitation type.",
-                    ee ) );
+        Set<QuantitationType> preferredQts = newQts.stream()
+                .filter( QuantitationType::getIsPreferred )
+                .collect( Collectors.toSet() );
+        if ( preferredQts.size() > 1 ) {
+            throw new IllegalArgumentException( "There must be exactly one preferred quantitation type." );
         }
-
-        // remove the vectors
-        removeAllRawDataVectors( ee );
 
         // group the vectors up by QT
-        Map<QuantitationType, Set<RawExpressionDataVector>> BADs = newVectors.stream()
+        Map<QuantitationType, Set<RawExpressionDataVector>> vectorsByQt = newVectors.stream()
                 .collect( Collectors.groupingBy( RawExpressionDataVector::getQuantitationType, Collectors.toSet() ) );
 
-        int added = 0;
-        for ( Map.Entry<QuantitationType, Set<RawExpressionDataVector>> e : BADs.entrySet() ) {
-            added += this.addRawDataVectors( ee, e.getKey(), e.getValue() );
+        int replaced = 0;
+        for ( Map.Entry<QuantitationType, Set<RawExpressionDataVector>> e : vectorsByQt.entrySet() ) {
+            if ( existingQts.contains( e.getKey() ) ) {
+                replaced += replaceRawDataVectors( ee, e.getKey(), e.getValue() );
+            } else {
+                replaced += addRawDataVectors( ee, e.getKey(), e.getValue() );
+            }
         }
 
-        return added;
+        for ( QuantitationType qt : existingQts ) {
+            if ( !newQts.contains( qt ) ) {
+                removeRawDataVectors( ee, qt );
+            }
+        }
+
+        return replaced;
     }
 
     @Override
@@ -339,6 +342,7 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional
     public int createProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors ) {
+        createDimensionIfNecessary( vectors );
         return expressionExperimentDao.createProcessedDataVectors( ee, vectors );
     }
 
@@ -351,7 +355,25 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional
     public int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors ) {
+        createDimensionIfNecessary( vectors );
         return expressionExperimentDao.replaceProcessedDataVectors( ee, vectors );
+    }
+
+    private void createDimensionIfNecessary( Collection<? extends BulkExpressionDataVector> vectors ) {
+        Collection<BioAssayDimension> dimension = vectors.stream()
+                .map( BulkExpressionDataVector::getBioAssayDimension )
+                .collect( Collectors.toSet() );
+        if ( dimension.size() != 1 ) {
+            throw new IllegalArgumentException( "Vectors must share a common bioassay dimension" );
+        }
+        BioAssayDimension bad = dimension.iterator().next();
+        if ( bad.getId() == null ) {
+            log.info( "Creating " + bad + "..." );
+            bad = this.bioAssayDimensionService.findOrCreate( bad );
+            for ( BulkExpressionDataVector vector : vectors ) {
+                vector.setBioAssayDimension( bad );
+            }
+        }
     }
 
     @Override
@@ -1391,14 +1413,14 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public Map<ExperimentalFactor, Map<FactorValue, ExpressionExperimentSubSet>> getSubSetsByFactorValue( ExpressionExperiment expressionExperiment, BioAssayDimension dimension ) {
-        return getSubSetsByFactorValueInternal( expressionExperiment, dimension, getSubSets( expressionExperiment, dimension ) );
+        return getSubSetsByFactorValueInternal( getSubSets( expressionExperiment, dimension ) );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<FactorValue, ExpressionExperimentSubSet> getSubSetsByFactorValue( ExpressionExperiment expressionExperiment, ExperimentalFactor experimentalFactor, BioAssayDimension dimension ) {
         // TODO: could this be made more efficient for a single factor?
-        return getSubSetsByFactorValueInternal( expressionExperiment, dimension, getSubSets( expressionExperiment, dimension ) )
+        return getSubSetsByFactorValueInternal( getSubSets( expressionExperiment, dimension ) )
                 .get( experimentalFactor );
     }
 
@@ -1418,7 +1440,7 @@ public class ExpressionExperimentServiceImpl
         return result;
     }
 
-    private Map<ExperimentalFactor, Map<FactorValue, ExpressionExperimentSubSet>> getSubSetsByFactorValueInternal( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, Collection<ExpressionExperimentSubSet> subSets ) {
+    private Map<ExperimentalFactor, Map<FactorValue, ExpressionExperimentSubSet>> getSubSetsByFactorValueInternal( Collection<ExpressionExperimentSubSet> subSets ) {
         Map<ExperimentalFactor, Map<FactorValue, Set<ExpressionExperimentSubSet>>> result = new HashMap<>();
         for ( ExpressionExperimentSubSet subSet : subSets ) {
             for ( BioAssay ba : subSet.getBioAssays() ) {

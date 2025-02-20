@@ -90,6 +90,7 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
             return;
         }
         ExpressionExperiment expExp = expressionExperimentService.findByBioAssay( bioAssays.iterator().next() );
+        expExp = expressionExperimentService.thaw( expExp );
         auditTrailService.addUpdateEvent( expExp, SampleRemovalEvent.class,
                 bioAssays.size() + " flagged as outliers", StringUtils.join( bioAssays, "," ) );
 

@@ -103,7 +103,7 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
                 break;
             }
         }
-        newee = expressionExperimentService.thawLite( newee );
+        newee = expressionExperimentService.thaw( newee );
 
         processedExpressionDataVectorService.createProcessedDataVectors( newee, true );
 

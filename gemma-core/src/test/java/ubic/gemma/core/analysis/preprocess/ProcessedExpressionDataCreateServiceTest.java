@@ -183,7 +183,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             this.ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
         }
 
-        ee = this.eeService.thawLite( ee );
+        ee = this.eeService.thaw( ee );
 
         processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
         Collection<ProcessedExpressionDataVector> preferredVectors = this.processedExpressionDataVectorService
@@ -290,7 +290,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             this.ee = ( ExpressionExperiment ) e.getData();
         }
 
-        ee = this.eeService.thawLite( ee );
+        ee = this.eeService.thaw( ee );
         processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
 
         ExperimentalFactor factor = ExperimentalFactor.Factory.newInstance();

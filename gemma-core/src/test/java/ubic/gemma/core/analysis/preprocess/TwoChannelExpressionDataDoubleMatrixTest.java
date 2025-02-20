@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.datastructure.matrix;
+package ubic.gemma.core.analysis.preprocess;
 
 import org.junit.After;
 import org.junit.Before;
@@ -26,6 +26,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.OutlierFlaggingService;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.datastructure.matrix.TwoChannelExpressionDataMatrixBuilder;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -60,7 +62,7 @@ import static org.junit.Assert.*;
  * @author keshav
  * @author pavlidis
  */
-public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
+public class TwoChannelExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
     private SimpleExpressionExperimentMetaData metaData = null;
 
@@ -291,7 +293,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         Collection<RawExpressionDataVector> vectors = newee.getRawExpressionDataVectors();
         vectors = rawExpressionDataVectorService.thaw( vectors );
 
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( vectors );
+        TwoChannelExpressionDataMatrixBuilder builder = new TwoChannelExpressionDataMatrixBuilder( vectors );
         ExpressionDataDoubleMatrix matrix = builder.getPreferredData();
         assertFalse( Double.isNaN( matrix.get( 10, 0 ) ) );
         assertFalse( Double.isNaN( matrix.getAsDouble( 10, 0 ) ) );
@@ -331,7 +333,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
         assertFalse( vecs.isEmpty() );
 
-        ExpressionDataMatrixBuilder matrixBuilder = new ExpressionDataMatrixBuilder( vecs );
+        TwoChannelExpressionDataMatrixBuilder matrixBuilder = new TwoChannelExpressionDataMatrixBuilder( vecs );
         ExpressionDataDoubleMatrix data = matrixBuilder.getProcessedData();
 
         assertNotNull( data );
@@ -348,7 +350,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
         assertFalse( vecs.isEmpty() );
 
-        matrixBuilder = new ExpressionDataMatrixBuilder( vecs );
+        matrixBuilder = new TwoChannelExpressionDataMatrixBuilder( vecs );
         data = matrixBuilder.getProcessedData();
         assertFalse( tba.getIsOutlier() );
         assertFalse( Double.isNaN( data.getColumn( tba )[10] ) );

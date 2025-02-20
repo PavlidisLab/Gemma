@@ -27,6 +27,11 @@ import java.util.Objects;
 public class RawExpressionDataVector extends BulkExpressionDataVector {
 
     @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
     public boolean equals( Object object ) {
         if ( this == object )
             return true;

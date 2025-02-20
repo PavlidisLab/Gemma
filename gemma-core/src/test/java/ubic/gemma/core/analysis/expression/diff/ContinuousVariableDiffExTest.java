@@ -135,7 +135,7 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
             ee = ( ExpressionExperiment ) ( ( Collection<?> ) e.getData() ).iterator().next();
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thaw( ee );
 
         Collection<ExperimentalFactor> toremove = new HashSet<>( ee.getExperimentalDesign().getExperimentalFactors() );
         for ( ExperimentalFactor ef : toremove ) {

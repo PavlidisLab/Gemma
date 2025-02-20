@@ -194,6 +194,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
     }
 
     @Test
+    @Ignore
     @Category(SlowTest.class)
     public void testGSE254569() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE254569" );

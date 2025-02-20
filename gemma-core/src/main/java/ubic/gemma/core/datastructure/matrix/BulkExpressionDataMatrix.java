@@ -1,5 +1,7 @@
 package ubic.gemma.core.datastructure.matrix;
 
+import org.springframework.util.Assert;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -42,6 +44,29 @@ import java.util.List;
  * @see BulkExpressionDataVector
  */
 public interface BulkExpressionDataMatrix<T> extends ExpressionDataMatrix<T> {
+
+    /**
+     * Create a matrix using all the vectors, which are assumed to all be of the same quantitation type.
+     *
+     * @param vectors raw vectors
+     * @return matrix of appropriate type.
+     */
+    static BulkExpressionDataMatrix<?> getMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
+        Assert.isTrue( !vectors.isEmpty(), "No vectors." );
+        PrimitiveType representation = vectors.iterator().next().getQuantitationType().getRepresentation();
+        switch ( representation ) {
+            case DOUBLE:
+                return new ExpressionDataDoubleMatrix( vectors );
+            case STRING:
+                return new ExpressionDataStringMatrix( vectors );
+            case INT:
+                return new ExpressionDataIntegerMatrix( vectors );
+            case BOOLEAN:
+                return new ExpressionDataBooleanMatrix( vectors );
+            default:
+                throw new UnsupportedOperationException( "Don't know how to deal with matrices of " + representation + "." );
+        }
+    }
 
     /**
      * The experiment this matrix is associated with, if known.

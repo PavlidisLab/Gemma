@@ -22,7 +22,6 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.metadata.ClassMetadata;
-import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -32,7 +31,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.AbstractDao;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
 
 import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialUtils.visitBioMaterials;
 
@@ -61,61 +61,25 @@ public abstract class AbstractDesignElementDataVectorDao<T extends BulkExpressio
         return findByPropertyIn( "quantitationType", quantitationTypes );
     }
 
-
     @Override
-    public void thaw( Collection<T> designElementDataVectors ) {
-        if ( designElementDataVectors.isEmpty() ) {
-            return;
-        }
-
+    public void thaw( Collection<T> vectors ) {
         StopWatch timer = StopWatch.createStarted();
-        StopWatch vTimer = StopWatch.create(),
-                eeTimer = StopWatch.create(),
-                dimTimer = StopWatch.create();
-
-        // this is generally fast since vectors should be in the session already
-        vTimer.start();
-        Hibernate.initialize( designElementDataVectors );
-        vTimer.stop();
-
-        // collect all the entities to thaw
-        // using tree sets to avoid initializing via hashCode()
-        Set<ExpressionExperiment> ees = new TreeSet<>( Comparator.comparing( Identifiable::getId ) );
-        Set<BioAssayDimension> dims = new TreeSet<>( Comparator.comparing( Identifiable::getId ) );
-        for ( T vector : designElementDataVectors ) {
-            thawDesignElement( vector.getDesignElement() );
-            dims.add( vector.getBioAssayDimension() );
-            ees.add( vector.getExpressionExperiment() );
-        }
-
-        if ( !ees.isEmpty() ) {
-            eeTimer.start();
-            ees.forEach( Hibernate::initialize );
-            eeTimer.stop();
-        }
-
-        if ( !dims.isEmpty() ) {
-            dimTimer.start();
-            // recursively initialize biomaterials
-            dims.forEach( this::thawBioAssayDimension );
-            dimTimer.stop();
-        }
-
+        vectors.forEach( this::thaw );
         if ( timer.getTime() > 1000 ) {
-            log.warn( String.format( "Thawing %d %s took %d ms (vectors: %d ms, ee: %d ms, dims: %d ms)",
-                    designElementDataVectors.size(), getElementClass().getSimpleName(), timer.getTime(),
-                    vTimer.getTime(), eeTimer.getTime(), dimTimer.getTime() ) );
+            log.warn( String.format( "Thawing %d %s took %d ms",
+                    vectors.size(), getElementClass().getSimpleName(), timer.getTime() ) );
         }
     }
 
     @Override
-    public void thaw( T designElementDataVector ) {
-        Hibernate.initialize( designElementDataVector.getExpressionExperiment() );
-        thawDesignElement( designElementDataVector.getDesignElement() );
-        thawBioAssayDimension( designElementDataVector.getBioAssayDimension() );
+    public void thaw( T vector ) {
+        Hibernate.initialize( vector.getExpressionExperiment() );
+        thawDesignElement( vector.getDesignElement() );
+        thawBioAssayDimension( vector.getBioAssayDimension() );
     }
 
     private void thawDesignElement( CompositeSequence designElement ) {
+        Hibernate.initialize( designElement );
         Hibernate.initialize( designElement.getBiologicalCharacteristic() );
     }
 
@@ -123,7 +87,7 @@ public abstract class AbstractDesignElementDataVectorDao<T extends BulkExpressio
         dim.getBioAssays().forEach( this::thawBioAssay );
     }
 
-    private void thawBioAssay(BioAssay ba) {
+    private void thawBioAssay( BioAssay ba ) {
         Hibernate.initialize( ba.getArrayDesignUsed() );
         Hibernate.initialize( ba.getArrayDesignUsed().getDesignProvider() );
         if ( ba.getOriginalPlatform() != null ) {

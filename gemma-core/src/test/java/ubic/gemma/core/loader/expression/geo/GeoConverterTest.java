@@ -422,7 +422,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         ExpressionExperiment ee = ees.iterator().next();
         assertEquals( 133, ee.getBioAssays().size() );
         // used to be more but we reject mote qts now.
-        assertEquals( 480, ee.getRawExpressionDataVectors().size() );
+        assertEquals( 240, ee.getRawExpressionDataVectors().size() );
     }
 
     /*
@@ -444,7 +444,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertNotNull( result );
         Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
         assertEquals( 1, ees.size() );
-        assertEquals( 6, ees.iterator().next().getBioAssays().size() );
+        assertEquals( 18, ees.iterator().next().getBioAssays().size() );
     }
 
 

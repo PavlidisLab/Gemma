@@ -210,7 +210,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
 
         ee.setShortName( RandomStringUtils.randomAlphabetic( 12 ) );
         expressionExperimentService.update( ee );
-        ee = expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thaw( ee );
         processedDataVectorService.createProcessedDataVectors( ee, false );
         return ee;
     }

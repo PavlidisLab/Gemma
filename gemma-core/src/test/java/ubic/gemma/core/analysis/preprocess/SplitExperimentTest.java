@@ -36,17 +36,18 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.service.expression.experiment.BioAssaySetService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 import static org.junit.Assume.assumeNoException;
 
@@ -148,13 +149,12 @@ public class SplitExperimentTest extends BaseSpringContextTest {
                 assertFalse( bms.contains( ba.getSampleUsed() ) );
             }
 
-            assertEquals( 100, e.getNumberOfDataVectors().intValue() );
-
             Collection<RawExpressionDataVector> rvs = e.getRawExpressionDataVectors();
             assertEquals( 100, rvs.size() );
 
             Collection<ProcessedExpressionDataVector> pvs = e.getProcessedExpressionDataVectors();
             assertEquals( 100, pvs.size() );
+            assertEquals( 100, e.getNumberOfDataVectors().intValue() );
 
             RawExpressionDataVector rv = rvs.iterator().next();
             assertTrue( rv.getQuantitationType().getIsPreferred() );

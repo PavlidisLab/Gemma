@@ -390,7 +390,7 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
             for ( int i = 0; i < mat.columns(); i++ ) {
                 biomaterials.add( mat.getBioMaterialForColumn( i ) );
             }
-            orderedSamples = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( ( ExpressionDataDoubleMatrix ) biomaterials, retainedFactors );
+            ExpressionDataMatrixColumnSort.orderByExperimentalDesign( biomaterials, retainedFactors );
         }
         return buildDesignMatrix( retainedFactors, orderedSamples, true );
     }

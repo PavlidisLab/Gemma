@@ -27,9 +27,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixBuilder;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -98,9 +98,6 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
      */
     @Override
     public ExpressionExperimentSet split( ExpressionExperiment toSplit, ExperimentalFactor splitOn, boolean postProcess ) {
-
-        toSplit = eeService.thawLite( toSplit );
-
         if ( !toSplit.getOtherParts().isEmpty() ) {
             throw new IllegalArgumentException( "You cannot split an experiment that was already created by a split" );
         }
@@ -141,7 +138,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 }
                 log.info( vectors.size() + " vectors for " + qt + "; preferred=" + qt.getIsPreferred() );
 
-                qt2mat.put( qt, ExpressionDataMatrixBuilder.getMatrix( vectors ) );
+                qt2mat.put( qt, BulkExpressionDataMatrix.getMatrix( vectors ) );
             }
 
             if ( !foundPreferred ) {
@@ -300,17 +297,14 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
             split = ( ExpressionExperiment ) persister.persist( split );
 
-            split = eeService.thawLiter( split );
-
             // securityService.makePublic( split ); // temporary 
             result.add( split );
         }
 
         enforceOtherParts( result );
+        eeService.update( result );
 
         for ( ExpressionExperiment split : result ) {
-            eeService.update( split );
-
             // postprocess
             if ( foundPreferred && postProcess ) {
                 try {

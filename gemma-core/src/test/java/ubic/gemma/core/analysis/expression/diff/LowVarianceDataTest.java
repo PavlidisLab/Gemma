@@ -129,7 +129,7 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
 
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thaw( ee );
 
         Collection<ExperimentalFactor> toremove = new HashSet<>( ee.getExperimentalDesign().getExperimentalFactors() );
         experimentalFactorService.remove( toremove );
@@ -149,7 +149,7 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
     @Test
     @Category(SlowTest.class)
     public void test() {
-        ee = expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thaw( ee );
 
         AnalysisType aa = determineAnalysisType( ee, ee.getExperimentalDesign().getExperimentalFactors(), null, true );
 

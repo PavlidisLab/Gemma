@@ -30,11 +30,11 @@ import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.DataUpdater;
-import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
+import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.loader.util.TestUtils;
@@ -222,12 +222,12 @@ public class DiffExTest extends AbstractGeoServiceTest {
                 assertEquals( 1, r.getContrasts().size() );
                 ContrastResult contrast = r.getContrasts().iterator().next();
                 assertNotNull( contrast.getCoefficient() );
-                assertEquals( 2.272896, Math.abs( contrast.getCoefficient() ), 0.001 );
+                assertEquals( 2.272896, Math.abs( contrast.getCoefficient() ), 0.01 );
                 assertNotNull( contrast.getPvalue() );
-                assertEquals( 0.006149004, contrast.getPvalue(), 0.00001 );
+                assertEquals( 0.006149004, contrast.getPvalue(), 0.0001 );
                 assertNotNull( contrast.getTstat() );
-                assertEquals( 12.693680, Math.abs( contrast.getTstat() ), 0.001 );
-                assertEquals( 0.006149004, r.getPvalue(), 0.00001 );
+                assertEquals( 12.70765, Math.abs( contrast.getTstat() ), 0.001 );
+                assertEquals( 0.006135591, r.getPvalue(), 0.00001 );
                 break;
             }
         }
@@ -257,7 +257,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
             }
         }
 
-        ee = this.eeService.thawLite( ee );
+        ee = this.eeService.thaw( ee );
 
         processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
 

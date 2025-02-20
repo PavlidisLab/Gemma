@@ -31,7 +31,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
-import ubic.gemma.core.datastructure.matrix.*;
+import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
+import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
 import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
 import ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter;
@@ -868,7 +871,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             }
             try ( LockedPath lockedPath = f.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
                 Collection<BulkExpressionDataVector> vectors = helperService.getVectors( ee, type );
-                BulkExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( vectors );
+                BulkExpressionDataMatrix<?> expressionDataMatrix = BulkExpressionDataMatrix.getMatrix( vectors );
                 ExpressionDataFileServiceImpl.log.info( "Creating new JSON expression data file: " + lockedPath.getPath() );
                 int written = new MatrixWriter( entityUrlBuilder, buildInfo ).writeJSON( writer, expressionDataMatrix );
                 log.info( "Wrote " + written + " vectors for " + type + " to " + lockedPath.getPath() );

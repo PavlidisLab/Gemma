@@ -163,9 +163,9 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         assertNotNull( ds2 );
         assertNotNull( ds3 );
 
-        ds1 = experimentService.thawLite( ds1 );
-        ds2 = experimentService.thawLite( ds2 );
-        ds3 = experimentService.thawLite( ds3 );
+        ds1 = experimentService.thaw( ds1 );
+        ds2 = experimentService.thaw( ds2 );
+        ds3 = experimentService.thaw( ds3 );
 
         processedExpressionDataVectorService.createProcessedDataVectors( ds1, true );
         processedExpressionDataVectorService.createProcessedDataVectors( ds2, true );
@@ -346,7 +346,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
                 case "GUK1":
                     found[7] = true;
                     foundTests++;
-                    assertEquals( this.logComponentResults( r, gene ), 2.820089e-06, r.getMetaPvalue(), 1e-8 );
+                    assertEquals( this.logComponentResults( r, gene ), 1.65675107E-6, r.getMetaPvalue(), 1e-8 );
                     break;
                 case "KXD1":
                     foundTests++;

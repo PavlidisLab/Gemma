@@ -29,6 +29,8 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDao;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDaoImpl;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDaoImpl;
 
@@ -62,6 +64,11 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest {
         @Bean
         public ExpressionExperimentDao expressionExperimentDao( SessionFactory sessionFactory ) {
             return new ExpressionExperimentDaoImpl( sessionFactory );
+        }
+
+        @Bean
+        public QuantitationTypeDao quantitationTypeDao( SessionFactory sessionFactory ) {
+            return new QuantitationTypeDaoImpl( sessionFactory );
         }
     }
 
