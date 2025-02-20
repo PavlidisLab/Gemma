@@ -243,7 +243,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
     /**
      * Obtain a random sample of processed vectors for the given experiment.
      * @param  ee    ee
-     * @param  limit if >0, you will get a "random" set of vectors for the experiment
+     * @param  limit if {@code >0}, you will get a "random" set of vectors for the experiment
      * @return processed data vectors
      */
     @Override
