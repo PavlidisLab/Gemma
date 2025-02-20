@@ -55,12 +55,12 @@ echo "Deploying Gemma CLI to $build_dir_dest..."
 if [ -z "$deploy_server" ]; then
   if test -e "$build_dir"; then
     echo "There is already a build deployed at $build_dir_dest."
-    exit 1
+    exit 0
   fi
 else
   if ssh "$deploy_server" test -e "$build_dir" 2>/dev/null; then
     echo "There is already a build deployed at $build_dir_dest."
-    exit 1
+    exit 0
   fi
 fi
 
