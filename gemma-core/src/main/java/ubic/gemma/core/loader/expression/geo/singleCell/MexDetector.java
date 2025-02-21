@@ -256,7 +256,18 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
     public Path downloadSingleCellData( GeoSeries series, GeoSample sample ) throws NoSingleCellDataFoundException, IOException {
         Assert.notNull( series.getGeoAccession() );
         Assert.notNull( sample.getGeoAccession() );
-        downloadSingleCellData( sample.getGeoAccession(), mergeSupplementaryFiles( series, sample ) );
+        try {
+            // first try only with the sample-level files, ideally this is enough
+            downloadSingleCellData( sample.getGeoAccession(), sample.getSupplementaryFiles() );
+        } catch ( NoSingleCellDataFoundException e ) {
+            Set<String> mergedSupplementaryFiles = mergeSupplementaryFiles( series, sample );
+            if ( mergedSupplementaryFiles.size() > sample.getSupplementaryFiles().size() ) {
+                // retry with the series-level files merged
+                downloadSingleCellData( sample.getGeoAccession(), mergedSupplementaryFiles );
+            } else {
+                throw e;
+            }
+        }
         Path sampleDir = getDownloadDirectory().resolve( sample.getGeoAccession() );
         Path destDir = getDownloadDirectory()
                 .resolve( series.getGeoAccession() )

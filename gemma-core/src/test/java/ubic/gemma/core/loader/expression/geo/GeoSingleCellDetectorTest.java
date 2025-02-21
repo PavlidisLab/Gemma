@@ -751,6 +751,17 @@ public class GeoSingleCellDetectorTest extends BaseTest {
                 .hasMessage( "The matrix at 'raw/X' is stored as CSR and transposition is enabled; it must be converted to CSC for being loaded." );
     }
 
+    /**
+     * This series has complete MEX files at the sample-level, but also provide MEX files in the series.
+     */
+    @Test
+    public void testGSE184506() throws NoSingleCellDataFoundException, IOException {
+        GeoSeries series = readSeriesFromGeo( "GSE184506" );
+        assertThat( detector.hasSingleCellData( series ) )
+                .isTrue();
+        detector.downloadSingleCellData( series );
+    }
+
     private GeoSeries readSeriesFromGeo( String accession ) throws IOException {
         URL url = new URL( "ftp://ftp.ncbi.nlm.nih.gov/geo/series/" + accession.substring( 0, 6 ) + "nnn/" + accession + "/soft/" + accession + "_family.soft.gz" );
         try ( InputStream is = new GZIPInputStream( ftpClientFactory.openStream( url ) ) ) {
