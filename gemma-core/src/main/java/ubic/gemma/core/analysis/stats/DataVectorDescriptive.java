@@ -2,8 +2,11 @@ package ubic.gemma.core.analysis.stats;
 
 import cern.colt.list.DoubleArrayList;
 import cern.jet.stat.Descriptive;
+import org.springframework.util.Assert;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.singleCell.SingleCellDescriptive;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
@@ -17,49 +20,187 @@ import ubic.gemma.model.expression.bioAssayData.DataVector;
 public class DataVectorDescriptive {
 
     /**
-     * Count the number of missing values.
+     * Count the number of values in a vector.
      */
-    public static int countMissing( DataVector vector ) {
-        int missingValues = 0;
+    public static int count( DataVector vector ) {
         if ( vector.getQuantitationType().getType() == StandardQuantitationType.PRESENTABSENT ) {
-            for ( boolean b : vector.getDataAsBooleans() ) {
-                if ( !b ) {
-                    missingValues += 1;
-                }
+            return countPresentAbsent( vector.getDataAsBooleans() );
+        }
+        if ( vector.getQuantitationType().getType() == StandardQuantitationType.COUNT ) {
+            switch ( vector.getQuantitationType().getRepresentation() ) {
+                case INT:
+                    return countCount( vector.getDataAsInts() );
+                case LONG:
+                    return countCount( vector.getDataAsLongs() );
+                case DOUBLE:
+                    return countCount( vector.getDataAsDoubles(), getMissingCountValue( vector.getQuantitationType() ) );
+                default:
+                    throw new UnsupportedOperationException( "Counting data represented as " + vector.getQuantitationType().getRepresentation() + " is not supported." );
             }
-            return missingValues;
         }
         switch ( vector.getQuantitationType().getRepresentation() ) {
             case BOOLEAN:
                 // unless the type is present/absent, we cannot treat it as a vector of missing values
             case INT:
             case LONG:
-                break;
+                // fixed-length encoding, all the values are deemed to be present
+                return vector.getData().length / vector.getQuantitationType().getRepresentation().getSizeInBytes();
+            case DOUBLE:
+                return count( vector.getDataAsDoubles() );
             case CHAR:
-                for ( char c : vector.getDataAsChars() ) {
-                    if ( c == '\0' ) {
-                        missingValues += 1;
-                    }
-                }
-                break;
+                return count( vector.getDataAsChars() );
             case STRING:
-                // empty strings and null strings are stored the same and both indicate missing values
-                for ( String s : vector.getDataAsStrings() ) {
-                    if ( s == null || s.isEmpty() ) {
-                        missingValues += 1;
-                    }
-                }
-                break;
+                return count( vector.getDataAsStrings() );
+            default:
+                throw new UnsupportedOperationException( "Don't know how to count values from a " + vector.getQuantitationType().getRepresentation() + " vector." );
+        }
+    }
+
+    private static int countPresentAbsent( boolean[] data ) {
+        return data.length - countMissingPresentAbsent( data );
+    }
+
+    private static int count( char[] data ) {
+        return data.length - countMissing( data );
+    }
+
+    private static int count( String[] data ) {
+        return data.length - countMissing( data );
+    }
+
+    private static int count( double[] data ) {
+        return data.length - countMissing( data );
+    }
+
+    private static int countCount( long[] data ) {
+        return data.length - countCountMissing( data );
+    }
+
+    private static int countCount( int[] data ) {
+        return data.length - countCountMissing( data );
+    }
+
+    private static int countCount( double[] data, double missingValueForScaleType ) {
+        return data.length - countCountMissing( data, missingValueForScaleType );
+    }
+
+    /**
+     * Count the number of missing values.
+     */
+    public static int countMissing( DataVector vector ) {
+        if ( vector.getQuantitationType().getType() == StandardQuantitationType.PRESENTABSENT ) {
+            return countMissingPresentAbsent( vector.getDataAsBooleans() );
+        }
+        if ( vector.getQuantitationType().getType() == StandardQuantitationType.COUNT ) {
+            switch ( vector.getQuantitationType().getRepresentation() ) {
+                case INT:
+                    return countCountMissing( vector.getDataAsInts() );
+                case LONG:
+                    return countCountMissing( vector.getDataAsLongs() );
+                case DOUBLE:
+                    return countCountMissing( vector.getDataAsDoubles(), getMissingCountValue( vector.getQuantitationType() ) );
+                default:
+                    throw new UnsupportedOperationException( "Counting data represented as " + vector.getQuantitationType().getRepresentation() + " is not supported." );
+            }
+        }
+        switch ( vector.getQuantitationType().getRepresentation() ) {
+            case BOOLEAN:
+                // unless the type is present/absent, we cannot treat it as a vector of missing values
+            case INT:
+            case LONG:
+                return 0;
+            case CHAR:
+                return countMissing( vector.getDataAsChars() );
+            case STRING:
+                // empty strings indicate missing values, there is no way to encode it as null
+                return countMissing( vector.getDataAsStrings() );
             case DOUBLE:
                 // NaNs indicate missing values
-                for ( double d : vector.getDataAsDoubles() ) {
-                    if ( Double.isNaN( d ) ) {
-                        missingValues += 1;
-                    }
-                }
-                break;
+                return countMissing( vector.getDataAsDoubles() );
             default:
                 throw new UnsupportedOperationException( "Don't know how to count missing values from a " + vector.getQuantitationType().getRepresentation() + " vector." );
+        }
+    }
+
+    /**
+     * For present/absent data, missing values are counted as missing.
+     */
+    private static int countMissingPresentAbsent( boolean[] data ) {
+        int missingValues = 0;
+        for ( boolean b : data ) {
+            if ( !b ) {
+                missingValues += 1;
+            }
+        }
+        return missingValues;
+
+    }
+
+    /**
+     * A null char is always considered missing.
+     */
+    private static int countMissing( char[] data ) {
+        int missingValues = 0;
+        for ( long l : data ) {
+            if ( l == '\0' ) {
+                missingValues++;
+            }
+        }
+        return missingValues;
+    }
+
+    /**
+     * An empty string is always considered missing.
+     */
+    private static int countMissing( String[] data ) {
+        int missingValues = 0;
+        for ( String l : data ) {
+            if ( l.isEmpty() ) {
+                missingValues++;
+            }
+        }
+        return missingValues;
+    }
+
+    /**
+     * For doubles, {@link Double#NaN} is always considered missing.
+     */
+    private static int countMissing( double[] data ) {
+        int missingValues = 0;
+        for ( double d : data ) {
+            if ( Double.isNaN( d ) ) {
+                missingValues++;
+            }
+        }
+        return missingValues;
+    }
+
+    private static int countCountMissing( long[] data ) {
+        int missingValues = 0;
+        for ( long l : data ) {
+            if ( l == 0L ) {
+                missingValues++;
+            }
+        }
+        return missingValues;
+    }
+
+    private static int countCountMissing( int[] data ) {
+        int missingValues = 0;
+        for ( long l : data ) {
+            if ( l == 0 ) {
+                missingValues++;
+            }
+        }
+        return missingValues;
+    }
+
+    private static int countCountMissing( double[] data, double defaultValue ) {
+        int missingValues = 0;
+        for ( double d : data ) {
+            if ( Double.isNaN( d ) || d == defaultValue ) {
+                missingValues++;
+            }
         }
         return missingValues;
     }
@@ -206,6 +347,26 @@ public class DataVectorDescriptive {
             //     return Math.log1p( DescriptiveWithMissing.mean( vec.forEach( Math::expm1 ) ) );
             default:
                 throw new IllegalArgumentException( "Don't know how to calculate mean for scale type " + scaleType );
+        }
+    }
+
+    /**
+     * Obtain the value that indicates a missing value for counting data.
+     */
+    public static double getMissingCountValue( QuantitationType quantitationType ) {
+        Assert.isTrue( quantitationType.getType() == StandardQuantitationType.COUNT,
+                "Only counting data can be supplied." );
+        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.DOUBLE,
+                "Only double representation is supported." );
+        switch ( quantitationType.getScale() ) {
+            case LOG2:
+            case LN:
+            case LOG10:
+            case LOGBASEUNKNOWN:
+                return Double.NEGATIVE_INFINITY;
+            case LOG1P: // in log1p, 0 is mapped back to 0
+            default:
+                return 0;
         }
     }
 }

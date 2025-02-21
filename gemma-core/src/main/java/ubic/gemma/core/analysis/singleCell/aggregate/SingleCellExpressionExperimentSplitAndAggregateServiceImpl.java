@@ -86,19 +86,6 @@ public class SingleCellExpressionExperimentSplitAndAggregateServiceImpl implemen
     @Transactional
     public QuantitationType redoAggregateByCellType( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, @Nullable QuantitationType previousQt, AggregateConfig config ) {
         if ( previousQt != null ) {
-            singleCellExpressionExperimentAggregatorService.removeAggregatedVectors( expressionExperiment, previousQt, true );
-        }
-        dimension = bioAssayDimensionService.thaw( dimension );
-        List<BioAssay> cellBAs = dimension.getBioAssays();
-        QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectorsByCellType( expressionExperiment, cellBAs, config );
-        log.info( "Aggregated single-cell data for the preferred single-cell QT into pseudo-bulks with quantitation type " + newQt + "." );
-        return newQt;
-    }
-
-    @Override
-    @Transactional
-    public QuantitationType redoAggregate( ExpressionExperiment expressionExperiment, QuantitationType scQt, CellLevelCharacteristics clc, ExperimentalFactor cellTypeFactor, Map<Characteristic, FactorValue> c2f, BioAssayDimension dimension, @Nullable QuantitationType previousQt, AggregateConfig config ) {
-        if ( previousQt != null ) {
             // when removing a previous QT, check if we should keep its dimension for re-aggregating
             BioAssayDimension previousBad = expressionExperimentService.getBioAssayDimension( expressionExperiment, previousQt, RawExpressionDataVector.class );
             if ( previousBad == null ) {
@@ -110,6 +97,25 @@ public class SingleCellExpressionExperimentSplitAndAggregateServiceImpl implemen
         dimension = bioAssayDimensionService.thaw( dimension );
         List<BioAssay> cellBAs = dimension.getBioAssays();
         QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectorsByCellType( expressionExperiment, cellBAs, config );
+        log.info( "Aggregated single-cell data for the preferred single-cell QT into pseudo-bulks with quantitation type " + newQt + "." );
+        return newQt;
+    }
+
+    @Override
+    @Transactional
+    public QuantitationType redoAggregate( ExpressionExperiment expressionExperiment, QuantitationType scQt, CellLevelCharacteristics clc, ExperimentalFactor factor, Map<Characteristic, FactorValue> c2f, BioAssayDimension dimension, @Nullable QuantitationType previousQt, AggregateConfig config ) {
+        if ( previousQt != null ) {
+            // when removing a previous QT, check if we should keep its dimension for re-aggregating
+            BioAssayDimension previousBad = expressionExperimentService.getBioAssayDimension( expressionExperiment, previousQt, RawExpressionDataVector.class );
+            if ( previousBad == null ) {
+                log.warn( "No BioAssayDimension found for " + previousQt );
+            }
+            boolean keepDimension = previousBad != null && previousBad.equals( dimension );
+            singleCellExpressionExperimentAggregatorService.removeAggregatedVectors( expressionExperiment, previousQt, keepDimension );
+        }
+        dimension = bioAssayDimensionService.thaw( dimension );
+        List<BioAssay> cellBAs = dimension.getBioAssays();
+        QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectors( expressionExperiment, scQt, cellBAs, clc, factor, c2f, config );
         log.info( "Aggregated single-cell data for " + scQt + " into pseudo-bulks with quantitation type " + newQt + "." );
         return newQt;
     }

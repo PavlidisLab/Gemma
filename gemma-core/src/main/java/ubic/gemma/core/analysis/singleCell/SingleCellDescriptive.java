@@ -3,13 +3,16 @@ package ubic.gemma.core.analysis.singleCell;
 import cern.colt.list.DoubleArrayList;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.stats.DataVectorDescriptive;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 
 import java.util.Arrays;
 import java.util.function.ToDoubleFunction;
 
+import static ubic.gemma.core.analysis.stats.DataVectorDescriptive.getMissingCountValue;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.*;
 
 /**
@@ -35,41 +38,131 @@ public class SingleCellDescriptive {
      * Missing values are not counted.
      */
     public static int[] count( SingleCellExpressionDataVector vector ) {
+        if ( vector.getQuantitationType().getType() == StandardQuantitationType.PRESENTABSENT ) {
+            return countPresentAbsent( vector, vector.getDataAsBooleans() );
+        }
+        if ( vector.getQuantitationType().getType() == StandardQuantitationType.COUNT ) {
+            switch ( vector.getQuantitationType().getRepresentation() ) {
+                case INT:
+                    return countCount( vector, vector.getDataAsInts() );
+                case LONG:
+                    return countCount( vector, vector.getDataAsLongs() );
+                case DOUBLE:
+                    return countCount( vector, vector.getDataAsDoubles(), getMissingCountValue( vector.getQuantitationType() ) );
+                default:
+                    throw new UnsupportedOperationException( "Counting data represented as " + vector.getQuantitationType().getRepresentation() + " is not supported." );
+            }
+        }
         switch ( vector.getQuantitationType().getRepresentation() ) {
-            case DOUBLE:
-                return count( vector, vector.getDataAsDoubles(), getDefaultValue( vector.getQuantitationType().getScale() ) );
-            // these data types don't have a missing value indicator, so we can simply use (end - start) to count the
-            // number of values
-            case CHAR:
+            case BOOLEAN:
             case INT:
             case LONG:
-            case BOOLEAN:
-            case STRING: // note that for string, we cannot store "null" in a vector due to encoding limitations
+                // these data types don't have a missing value indicator, so we can simply use (end - start) to count the
+                // number of values
                 return countFast( vector );
+            case DOUBLE:
+                return count( vector, vector.getDataAsDoubles() );
+            case CHAR:
+                return count( vector, vector.getDataAsChars() );
+            case STRING:
+                // note that for string, we cannot store "null" in a vector due to encoding limitations
+                return count( vector, vector.getDataAsStrings() );
             default:
                 throw new UnsupportedOperationException( "Don't know how to count data of type " + vector.getQuantitationType().getRepresentation() + "." );
         }
     }
 
-    /**
-     * Obtain the default value that would be encoded.
-     * @param scaleType
-     * @return
-     */
-    public static double getDefaultValue( ScaleType scaleType ) {
-        switch ( scaleType ) {
-            case LOG2:
-            case LN:
-            case LOG10:
-            case LOGBASEUNKNOWN:
-                return Double.NEGATIVE_INFINITY;
-            case LOG1P: // in log1p, 0 is mapped back to 0
-            default:
-                return 0;
+    private static int[] countPresentAbsent( SingleCellExpressionDataVector vector, boolean[] data ) {
+        int[] d = new int[vector.getSingleCellDimension().getBioAssays().size()];
+        for ( int i = 0; i < d.length; i++ ) {
+            int start = getSampleStart( vector, i, 0 );
+            int end = getSampleEnd( vector, i, start );
+            for ( int j = start; j < end; j++ ) {
+                if ( !data[j] ) {
+                    continue;
+                }
+                d[i]++;
+            }
         }
+        return d;
     }
 
-    private static int[] count( SingleCellExpressionDataVector vector, double[] data, double defaultValue ) {
+    private static int[] count( SingleCellExpressionDataVector vector, String[] data ) {
+        int[] d = new int[vector.getSingleCellDimension().getBioAssays().size()];
+        for ( int i = 0; i < d.length; i++ ) {
+            int start = getSampleStart( vector, i, 0 );
+            int end = getSampleEnd( vector, i, start );
+            for ( int j = start; j < end; j++ ) {
+                if ( data[j].isEmpty() ) {
+                    continue;
+                }
+                d[i]++;
+            }
+        }
+        return d;
+    }
+
+    private static int[] count( SingleCellExpressionDataVector vector, char[] data ) {
+        int[] d = new int[vector.getSingleCellDimension().getBioAssays().size()];
+        for ( int i = 0; i < d.length; i++ ) {
+            int start = getSampleStart( vector, i, 0 );
+            int end = getSampleEnd( vector, i, start );
+            for ( int j = start; j < end; j++ ) {
+                if ( data[j] == '\0' ) {
+                    continue;
+                }
+                d[i]++;
+            }
+        }
+        return d;
+    }
+
+    private static int[] count( SingleCellExpressionDataVector vector, double[] data ) {
+        int[] d = new int[vector.getSingleCellDimension().getBioAssays().size()];
+        for ( int i = 0; i < d.length; i++ ) {
+            int start = getSampleStart( vector, i, 0 );
+            int end = getSampleEnd( vector, i, start );
+            for ( int j = start; j < end; j++ ) {
+                if ( Double.isNaN( data[j] ) ) {
+                    continue;
+                }
+                d[i]++;
+            }
+        }
+        return d;
+    }
+
+    private static int[] countCount( SingleCellExpressionDataVector vector, int[] data ) {
+        int[] d = new int[vector.getSingleCellDimension().getBioAssays().size()];
+        for ( int i = 0; i < d.length; i++ ) {
+            int start = getSampleStart( vector, i, 0 );
+            int end = getSampleEnd( vector, i, start );
+            for ( int j = start; j < end; j++ ) {
+                if ( data[j] == 0 ) {
+                    continue;
+                }
+                d[i]++;
+            }
+        }
+        return d;
+    }
+
+    private static int[] countCount( SingleCellExpressionDataVector vector, long[] data ) {
+        int[] d = new int[vector.getSingleCellDimension().getBioAssays().size()];
+        for ( int i = 0; i < d.length; i++ ) {
+            int start = getSampleStart( vector, i, 0 );
+            int end = getSampleEnd( vector, i, start );
+            for ( int j = start; j < end; j++ ) {
+                if ( data[j] == 0L ) {
+                    continue;
+                }
+                d[i]++;
+            }
+        }
+        return d;
+    }
+
+    private static int[] countCount( SingleCellExpressionDataVector vector, double[] data, double defaultValue ) {
         int[] d = new int[vector.getSingleCellDimension().getBioAssays().size()];
         for ( int i = 0; i < d.length; i++ ) {
             int start = getSampleStart( vector, i, 0 );
@@ -87,7 +180,8 @@ public class SingleCellDescriptive {
     /**
      * Quickly count the non-zeroes for each assay.
      * <p>
-     * Note: this is not accurate if the single-cell vector contains {@code NaN}s or actual zeroes.
+     * Note: this is not accurate if the single-cell vector contains {@code NaN}s or actual zeroes or missing values as
+     * per {@link DataVectorDescriptive#getMissingCountValue(QuantitationType)}}.
      */
     public static int[] countFast( SingleCellExpressionDataVector vector ) {
         int[] d = new int[vector.getSingleCellDimension().getBioAssays().size()];

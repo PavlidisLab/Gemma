@@ -70,6 +70,11 @@ public abstract class DataVector extends AbstractIdentifiable {
         return byteArrayToChars( data );
     }
 
+    public void setDataAsChars( char[] data ) {
+        ensureRepresentation( PrimitiveType.CHAR );
+        setData( charArrayToBytes( data ) );
+    }
+
     @Transient
     public int[] getDataAsInts() {
         ensureRepresentation( PrimitiveType.INT );
@@ -91,6 +96,11 @@ public abstract class DataVector extends AbstractIdentifiable {
     public String[] getDataAsStrings() {
         ensureRepresentation( PrimitiveType.STRING );
         return byteArrayToStrings( data );
+    }
+
+    public void setDataAsStrings( String[] data ) {
+        ensureRepresentation( PrimitiveType.STRING );
+        setData( stringsToByteArray( data ) );
     }
 
     @Transient

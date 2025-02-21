@@ -14,6 +14,8 @@ import java.util.Map;
 
 /**
  * High-level service for splitting and aggregating single-cell expression experiments.
+ * <p>
+ * This allows for splitting and aggregating single-cell data in a single transaction. It also support re-aggregation
  * @author poirigui
  * @see SingleCellExpressionExperimentSplitService
  * @see SingleCellExpressionExperimentSplitAndAggregateService
@@ -25,8 +27,14 @@ public interface SingleCellExpressionExperimentSplitAndAggregateService {
      * @see SingleCellExpressionExperimentSplitService#splitByCellType(ExpressionExperiment, SplitConfig)
      * @see SingleCellExpressionExperimentAggregatorService#aggregateVectorsByCellType(ExpressionExperiment, List, AggregateConfig)
      */
-    QuantitationType splitAndAggregateByCellType( ExpressionExperiment expressionExperiment, SplitConfig splitConfig, AggregateConfig config );
+    QuantitationType splitAndAggregateByCellType( ExpressionExperiment expressionExperiment, SplitConfig splitConfig,
+            AggregateConfig config );
 
+    /**
+     * Split and aggregate by any cell-level characteristics.
+     * @see SingleCellExpressionExperimentSplitService#split(ExpressionExperiment, CellLevelCharacteristics, ExperimentalFactor, Map, SplitConfig)
+     * @see SingleCellExpressionExperimentAggregatorService#aggregateVectors(ExpressionExperiment, QuantitationType, List, CellLevelCharacteristics, ExperimentalFactor, Map, AggregateConfig)
+     */
     QuantitationType splitAndAggregate( ExpressionExperiment expressionExperiment, QuantitationType scQt,
             CellLevelCharacteristics cta, ExperimentalFactor cellTypeFactor, Map<Characteristic, FactorValue> c2f,
             SplitConfig splitConfig,
@@ -34,21 +42,22 @@ public interface SingleCellExpressionExperimentSplitAndAggregateService {
 
     /**
      * Re-aggregate a dataset by cell type.
+     * @param dimension  a dimension to reuse for aggregating
+     * @param previousQt a previous quantitation type the re-aggregated one is replacing, it will be removed prior to
+     *                   the new one being added. Ignored if null.
      * @see SingleCellExpressionExperimentAggregatorService#aggregateVectorsByCellType(ExpressionExperiment, List, AggregateConfig)
      */
-    QuantitationType redoAggregateByCellType( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, @Nullable QuantitationType previousQt, AggregateConfig config );
+    QuantitationType redoAggregateByCellType( ExpressionExperiment expressionExperiment, BioAssayDimension dimension,
+            @Nullable QuantitationType previousQt, AggregateConfig config );
 
     /**
-     * Re-aggregate a dataset.
-     * @param expressionExperiment
-     * @param scQt                 a single-cell quantitation type containing data to aggregate
-     * @param cta                  a cell-level characteristics to aggregate by
-     * @param cellTypeFactor       a factor representing the cell type
-     * @param c2f                  a mapping of cell characteristics to factor values
-     * @param dimension            a dimension
-     * @param previousQt           a previous quantitation type the re-aggregated one is replacing, it will be removed
-     *                             prior to the new one being added. Ignored if null.
-     * @return
+     * Re-aggregate a dataset by any cell-level characteristics.
+     * @param dimension  a dimension to reuse for aggregating
+     * @param previousQt a previous quantitation type the re-aggregated one is replacing, it will be removed prior to
+     *                   the new one being added. Ignored if null.
+     * @see SingleCellExpressionExperimentAggregatorService#aggregateVectors(ExpressionExperiment, QuantitationType, List, CellLevelCharacteristics, ExperimentalFactor, Map, AggregateConfig)
      */
-    QuantitationType redoAggregate( ExpressionExperiment expressionExperiment, QuantitationType scQt, CellLevelCharacteristics cta, ExperimentalFactor cellTypeFactor, Map<Characteristic, FactorValue> c2f, BioAssayDimension dimension, @Nullable QuantitationType previousQt, AggregateConfig config );
+    QuantitationType redoAggregate( ExpressionExperiment expressionExperiment, QuantitationType scQt,
+            CellLevelCharacteristics clc, ExperimentalFactor factor, Map<Characteristic, FactorValue> c2f,
+            BioAssayDimension dimension, @Nullable QuantitationType previousQt, AggregateConfig config );
 }

@@ -2,6 +2,9 @@ package ubic.gemma.persistence.util;
 
 import ubic.basecode.io.ByteArrayConverter;
 
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+
 /**
  * Utilities for working with byte arrays.
  *
@@ -36,12 +39,25 @@ public class ByteArrayUtils {
         return byteArrayConverter.byteArrayToLongs( bytes );
     }
 
-    public static char[] byteArrayToChars( byte[] bytes ) {
-        return byteArrayConverter.byteArrayToChars( bytes );
+    public static char[] byteArrayToChars( byte[] barray ) {
+        // TODO: upstream the fix to baseCode
+        if ( barray == null ) return null;
+        CharBuffer buf = ByteBuffer.wrap( barray ).asCharBuffer();
+        char[] array = new char[buf.remaining()];
+        buf.get( array );
+        return array;
+    }
+
+    public static byte[] charArrayToBytes( char[] data ) {
+        return byteArrayConverter.charArrayToBytes( data );
     }
 
     public static String[] byteArrayToStrings( byte[] bytes ) {
         return byteArrayConverter.byteArrayToStrings( bytes );
+    }
+
+    public static byte[] stringsToByteArray( String[] data ) {
+        return byteArrayConverter.stringArrayToBytes( data );
     }
 
     public static String byteArrayToAsciiString( byte[] bytes ) {

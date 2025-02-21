@@ -3,10 +3,10 @@ package ubic.gemma.core.datastructure.matrix;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.apache.commons.lang.ArrayUtils;
 import org.springframework.util.Assert;
-import ubic.gemma.core.analysis.singleCell.SingleCellDescriptive;
 import ubic.gemma.core.datastructure.SparseRangeArrayList;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
@@ -16,6 +16,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.core.analysis.stats.DataVectorDescriptive.getMissingCountValue;
 
 /**
  * @author poirigui
@@ -32,13 +34,21 @@ public class SingleCellExpressionDataDoubleMatrix implements SingleCellExpressio
     private final List<CompositeSequence> designElements;
     private final List<BioAssay> bioAssays;
 
-    private final double defaultValue;
+    /**
+     * Indicate if this matrix is a count matrix.
+     */
+    private final boolean isCount;
+    /**
+     * Default value for a missing (or zero) count. This is only used if the matrix is a count matrix as indicated by
+     * {@link #isCount}.
+     */
+    private final double defaultCountValue;
 
     /**
      * Row elements, only computed on-demand.
      */
     @Nullable
-    private List<ExpressionDataMatrixRowElement> rowElements = null;
+    private List<ExpressionDataMatrixRowElement> rowElements;
 
     public SingleCellExpressionDataDoubleMatrix( Collection<SingleCellExpressionDataVector> vectors ) {
         Assert.isTrue( !vectors.isEmpty(), "At least one vector must be supplied. Use EmptyExpressionDataMatrix for empty data matrices instead." );
@@ -72,7 +82,13 @@ public class SingleCellExpressionDataDoubleMatrix implements SingleCellExpressio
             }
             i++;
         }
-        defaultValue = SingleCellDescriptive.getDefaultValue( quantitationType.getScale() );
+        if ( quantitationType.getType() == StandardQuantitationType.COUNT ) {
+            isCount = true;
+            defaultCountValue = getMissingCountValue( quantitationType );
+        } else {
+            isCount = false;
+            defaultCountValue = 0;
+        }
         bioAssays = new SparseRangeArrayList<>( singleCellDimension.getBioAssays(), singleCellDimension.getBioAssaysOffset(), singleCellDimension.getNumberOfCells() );
     }
 
@@ -101,10 +117,10 @@ public class SingleCellExpressionDataDoubleMatrix implements SingleCellExpressio
     @Override
     public double getAsDouble( int row, int column ) {
         double result = matrix.get( row, column );
-        if ( result == 0 && defaultValue != 0 ) {
+        if ( result == 0 && isCount && defaultCountValue != 0 ) {
             int j = Arrays.binarySearch( matrix.getColumnIndices(), matrix.getRowPointers()[row], matrix.getRowPointers()[row + 1], column );
             if ( j < 0 ) {
-                result = defaultValue;
+                result = defaultCountValue;
             }
         }
         return result;
@@ -182,7 +198,7 @@ public class SingleCellExpressionDataDoubleMatrix implements SingleCellExpressio
     @Override
     public double[] getRowAsDoubles( int index ) {
         double[] vec = new double[matrix.numColumns()];
-        Arrays.fill( vec, defaultValue );
+        Arrays.fill( vec, defaultCountValue );
         int[] rowptr = matrix.getRowPointers();
         int[] colind = matrix.getColumnIndices();
         double[] data = matrix.getData();
