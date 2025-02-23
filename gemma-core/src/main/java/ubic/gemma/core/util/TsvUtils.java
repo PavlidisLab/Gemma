@@ -116,7 +116,13 @@ public class TsvUtils {
     public static String format( @Nullable Double d ) {
         if ( d == null ) {
             return "";
-        } else if ( d == 0.0 ) {
+        } else {
+            return format( d.doubleValue() );
+        }
+    }
+
+    public static String format( double d ) {
+        if ( d == 0.0 ) {
             return "0.0";
         } else if ( Math.abs( d ) < 1e-4 ) {
             return smallNumberFormat.format( d );
@@ -131,16 +137,24 @@ public class TsvUtils {
         if ( i == null ) {
             return "";
         } else {
-            return String.valueOf( i.intValue() );
+            return format( i.intValue() );
         }
+    }
+
+    public static String format( int i ) {
+        return String.valueOf( i );
     }
 
     public static String format( @Nullable Long l ) {
         if ( l == null ) {
             return "";
         } else {
-            return String.valueOf( l.longValue() );
+            return format( l.longValue() );
         }
+    }
+
+    public static String format( long l ) {
+        return String.valueOf( l );
     }
 
     /**

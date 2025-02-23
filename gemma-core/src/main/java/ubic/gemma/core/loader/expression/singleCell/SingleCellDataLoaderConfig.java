@@ -84,4 +84,11 @@ public class SingleCellDataLoaderConfig extends SequencingDataLoaderConfig {
      */
     @Nullable
     private String preferredCellTypeAssignmentName;
+
+    /**
+     * Prefer single-precision for storage, even if the data is available with double-precision.
+     * <p>
+     * This reduces the size of vectors and thus the storage requirement.
+     */
+    private boolean preferSinglePrecision;
 }

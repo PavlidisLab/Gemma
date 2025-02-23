@@ -2,13 +2,13 @@ package ubic.gemma.core.analysis.singleCell;
 
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 
 import javax.annotation.Nullable;
-import java.nio.ByteBuffer;
-import java.nio.DoubleBuffer;
+import java.nio.*;
 import java.util.Collection;
 
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.getSampleEnd;
@@ -100,15 +100,30 @@ public class SingleCellSparsityMetrics {
     public void addExpressedCells( SingleCellExpressionDataVector vector, int sampleIndex, @Nullable CellLevelCharacteristics cellLevelCharacteristics, int characteristicIndex, boolean[] isExpressed ) {
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
-        DoubleBuffer buf = ByteBuffer.wrap( vector.getData() ).asDoubleBuffer();
+        Buffer buf = vector.getDataAsBuffer();
         for ( int i = start; i < end; i++ ) {
             int cellIndex = vector.getDataIndices()[i];
             if ( isExpressed[cellIndex] ) {
                 continue;
             }
-            if ( isExpressed( buf.get( i ), vector.getQuantitationType().getScale() ) && ( cellLevelCharacteristics == null || hasCharacteristic( cellIndex, cellLevelCharacteristics, characteristicIndex ) ) ) {
+            if ( isExpressed( getDouble( buf, i, vector.getQuantitationType().getRepresentation() ), vector.getQuantitationType().getScale() ) && ( cellLevelCharacteristics == null || hasCharacteristic( cellIndex, cellLevelCharacteristics, characteristicIndex ) ) ) {
                 isExpressed[cellIndex] = true;
             }
+        }
+    }
+
+    private double getDouble( Buffer buffer, int k, PrimitiveType representation ) {
+        switch ( representation ) {
+            case FLOAT:
+                return ( ( FloatBuffer ) buffer ).get( k );
+            case DOUBLE:
+                return ( ( DoubleBuffer ) buffer ).get( k );
+            case INT:
+                return ( ( IntBuffer ) buffer ).get( k );
+            case LONG:
+                return ( ( LongBuffer ) buffer ).get( k );
+            default:
+                throw new UnsupportedOperationException( "Unsupported representation " + representation );
         }
     }
 
@@ -126,10 +141,11 @@ public class SingleCellSparsityMetrics {
     public int getNumberOfDesignElements( SingleCellExpressionDataVector vector, int sampleIndex, @Nullable CellLevelCharacteristics characteristic, int characteristicIndex ) {
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
-        DoubleBuffer buf = ByteBuffer.wrap( vector.getData() ).asDoubleBuffer();
+        Buffer buf = vector.getDataAsBuffer();
+        PrimitiveType representation = vector.getQuantitationType().getRepresentation();
         for ( int i = start; i < end; i++ ) {
             int cellIndex = vector.getDataIndices()[i];
-            if ( isExpressed( buf.get( i ), vector.getQuantitationType().getScale() ) && ( characteristic == null || hasCharacteristic( cellIndex, characteristic, characteristicIndex ) ) ) {
+            if ( isExpressed( getDouble( buf, i, representation ), vector.getQuantitationType().getScale() ) && ( characteristic == null || hasCharacteristic( cellIndex, characteristic, characteristicIndex ) ) ) {
                 return 1;
             }
         }
@@ -151,10 +167,11 @@ public class SingleCellSparsityMetrics {
         int count = 0;
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
-        DoubleBuffer buf = ByteBuffer.wrap( vector.getData() ).asDoubleBuffer();
+        Buffer buf = vector.getDataAsBuffer();
+        PrimitiveType representation = vector.getQuantitationType().getRepresentation();
         for ( int i = start; i < end; i++ ) {
             int cellIndex = vector.getDataIndices()[i];
-            if ( isExpressed( buf.get( i ), vector.getQuantitationType().getScale() ) && ( cellLevelCharacteristics == null || hasCharacteristic( cellIndex, cellLevelCharacteristics, characteristicIndex ) ) ) {
+            if ( isExpressed( getDouble( buf, i, representation ), vector.getQuantitationType().getScale() ) && ( cellLevelCharacteristics == null || hasCharacteristic( cellIndex, cellLevelCharacteristics, characteristicIndex ) ) ) {
                 count++;
             }
         }

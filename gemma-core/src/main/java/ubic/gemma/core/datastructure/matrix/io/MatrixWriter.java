@@ -20,7 +20,6 @@ package ubic.gemma.core.datastructure.matrix.io;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.core.util.BuildInfo;
@@ -43,6 +42,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.clearScalarConversionThreadLocalStorage;
+import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.convertScalar;
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
 import static ubic.gemma.core.util.TsvUtils.SUB_DELIMITER;
 import static ubic.gemma.core.util.TsvUtils.format;
@@ -105,6 +106,10 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
                 writeValue( matrix.get( j, i ), qt, writer );
             }
             writer.append( "\n" );
+        }
+        if ( scaleType != null ) {
+            // avoid leakage when using convertScalar()
+            clearScalarConversionThreadLocalStorage();
         }
         log.debug( "Done writing" );
         return rows;
@@ -324,8 +329,8 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
     }
 
     private void writeValue( Object val, QuantitationType qt, Writer buf ) throws IOException {
-        if ( val instanceof Number ) {
-            buf.write( format( ScaleTypeConversionUtils.convertScalar( ( Number ) val, qt, scaleType ) ) );
+        if ( scaleType != null ) {
+            buf.write( format( convertScalar( ( Number ) val, qt, scaleType ) ) );
         } else {
             buf.write( format( val ) );
         }

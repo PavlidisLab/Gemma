@@ -22,6 +22,7 @@ package ubic.gemma.model.common.quantitationtype;
  * Primitive storage types for data vectors.
  */
 public enum PrimitiveType {
+    FLOAT( 4 ),
     DOUBLE( 8 ),
     INT( 4 ),
     LONG( 8 ),

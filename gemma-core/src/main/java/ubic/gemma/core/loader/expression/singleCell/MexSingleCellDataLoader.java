@@ -74,6 +74,12 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
      */
     private boolean allowMappingDesignElementsToGeneSymbols = false;
 
+    /**
+     * Use double precision (i.e. {@link PrimitiveType#DOUBLE} for real numbers and {@link PrimitiveType#LONG} for
+     * integers.
+     */
+    private boolean useDoublePrecision = false;
+
     public MexSingleCellDataLoader( List<String> sampleNames, List<Path> barcodeFiles, List<Path> genesFiles, List<Path> matrixFiles ) {
         Assert.isTrue( sampleNames.size() == barcodeFiles.size()
                         && barcodeFiles.size() == genesFiles.size()
@@ -166,13 +172,14 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
         if ( allCounts ) {
             qt.setType( StandardQuantitationType.COUNT );
             qt.setScale( ScaleType.COUNT );
+            qt.setRepresentation( useDoublePrecision ? PrimitiveType.LONG : PrimitiveType.INT );
         } else {
             qt.setType( StandardQuantitationType.AMOUNT );
             // TODO: detect scale type from data
             log.warn( "Scale type cannot be detected from non-counting data." );
             qt.setScale( ScaleType.OTHER );
+            qt.setRepresentation( useDoublePrecision ? PrimitiveType.DOUBLE : PrimitiveType.FLOAT );
         }
-        qt.setRepresentation( PrimitiveType.DOUBLE );
         return Collections.singleton( qt );
     }
 
@@ -338,7 +345,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
             try ( MatrixVectorReader mvr = readMatrixMarketFromPath( matrixFile ) ) {
                 log.info( "Reading " + matrixFile + "..." );
                 matrix = new CompRowMatrix( mvr );
-            } catch ( RuntimeException e ) {
+            } catch ( IOException e ) {
                 throw new RuntimeException( "Failed to read " + matrixFile + ": " + ExceptionUtils.getRootCauseMessage( e ), e );
             }
             log.info( String.format( "Loading %s took %d ms", matrixFile, timer.getTime() ) );
@@ -428,7 +435,22 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
                 }
                 offset += baNnz;
             }
-            vector.setDataAsDoubles( X );
+            switch ( quantitationType.getRepresentation() ) {
+                case INT:
+                    vector.setDataAsInts( double2int( X ) );
+                    break;
+                case LONG:
+                    vector.setDataAsLongs( double2long( X ) );
+                    break;
+                case FLOAT:
+                    vector.setDataAsFloats( double2float( X ) );
+                    break;
+                case DOUBLE:
+                    vector.setDataAsDoubles( X );
+                    break;
+                default:
+                    throw new UnsupportedOperationException( "Unsupported representation " + quantitationType.getRepresentation() + "." );
+            }
             vector.setDataIndices( IX );
             return vector;
         } );
@@ -482,5 +504,29 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
                     .distinct()
                     .toArray();
         }
+    }
+
+    public float[] double2float( double[] vec ) {
+        float[] vecAsFloats = new float[vec.length];
+        for ( int i = 0; i < vec.length; i++ ) {
+            vecAsFloats[i] = ( float ) vec[i];
+        }
+        return vecAsFloats;
+    }
+
+    public int[] double2int( double[] vec ) {
+        int[] vecAsInts = new int[vec.length];
+        for ( int i = 0; i < vec.length; i++ ) {
+            vecAsInts[i] = ( int ) Math.round( vec[i] );
+        }
+        return vecAsInts;
+    }
+
+    public long[] double2long( double[] vec ) {
+        long[] vecAsLongs = new long[vec.length];
+        for ( int i = 0; i < vec.length; i++ ) {
+            vecAsLongs[i] = Math.round( vec[i] );
+        }
+        return vecAsLongs;
     }
 }

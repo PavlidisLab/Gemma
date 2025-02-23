@@ -2,6 +2,8 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
+import org.springframework.util.Assert;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -29,7 +31,17 @@ class RandomDataUtils {
         uniform100Distribution.reseedRandomGenerator( seed );
     }
 
-    public static double sample( QuantitationType qt ) {
+    public static float sampleFloat( QuantitationType qt ) {
+        Assert.isTrue( qt.getRepresentation() == PrimitiveType.FLOAT );
+        return ( float ) sample( qt );
+    }
+
+    public static double sampleDouble( QuantitationType qt ) {
+        Assert.isTrue( qt.getRepresentation() == PrimitiveType.DOUBLE );
+        return sample( qt );
+    }
+
+    private static double sample( QuantitationType qt ) {
         if ( qt.getScale() == ScaleType.PERCENT ) {
             return uniform100Distribution.sample();
         } else if ( qt.getScale() == ScaleType.PERCENT1 ) {
@@ -49,7 +61,23 @@ class RandomDataUtils {
         }
     }
 
-    public static double[] sample( QuantitationType qt, int n ) {
+    public static float[] sampleFloats( QuantitationType qt, int n ) {
+        Assert.isTrue( qt.getRepresentation() == PrimitiveType.FLOAT );
+        double[] vec = sample( qt, n );
+        float[] vecAsFloats = new float[vec.length];
+        for ( int i = 0; i < vec.length; i++ ) {
+            vecAsFloats[i] = ( float ) vec[i];
+        }
+        return vecAsFloats;
+    }
+
+
+    public static double[] sampleDoubles( QuantitationType qt, int n ) {
+        Assert.isTrue( qt.getRepresentation() == PrimitiveType.DOUBLE );
+        return sample( qt, n );
+    }
+
+    private static double[] sample( QuantitationType qt, int n ) {
         if ( qt.getScale() == ScaleType.PERCENT ) {
             return uniform100Distribution.sample( n );
         } else if ( qt.getScale() == ScaleType.PERCENT1 ) {
@@ -69,5 +97,37 @@ class RandomDataUtils {
                 throw new IllegalArgumentException( "Don't know how to generate " + qt + " data." );
             }
         }
+    }
+
+    public static int sampleInt( QuantitationType qt ) {
+        Assert.isTrue( qt.getType() == StandardQuantitationType.COUNT );
+        Assert.isTrue( qt.getScale() == ScaleType.COUNT );
+        Assert.isTrue( qt.getRepresentation() == PrimitiveType.INT );
+        return countDistribution.sample();
+    }
+
+    public static int[] sampleInts( QuantitationType qt, int n ) {
+        Assert.isTrue( qt.getType() == StandardQuantitationType.COUNT );
+        Assert.isTrue( qt.getScale() == ScaleType.COUNT );
+        Assert.isTrue( qt.getRepresentation() == PrimitiveType.INT );
+        return countDistribution.sample( n );
+    }
+
+    public static long sampleLong( QuantitationType qt ) {
+        Assert.isTrue( qt.getType() == StandardQuantitationType.COUNT );
+        Assert.isTrue( qt.getScale() == ScaleType.COUNT );
+        Assert.isTrue( qt.getRepresentation() == PrimitiveType.LONG );
+        return countDistribution.sample();
+    }
+
+    public static long[] sampleLongs( QuantitationType qt, int n ) {
+        Assert.isTrue( qt.getScale() == ScaleType.COUNT );
+        Assert.isTrue( qt.getRepresentation() == PrimitiveType.LONG );
+        int[] vec = countDistribution.sample( n );
+        long[] vecAsLongs = new long[vec.length];
+        for ( int i = 0; i < vec.length; i++ ) {
+            vecAsLongs[i] = vec[i];
+        }
+        return vecAsLongs;
     }
 }

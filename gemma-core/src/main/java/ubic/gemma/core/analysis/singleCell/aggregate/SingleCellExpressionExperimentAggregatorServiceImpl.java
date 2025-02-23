@@ -24,8 +24,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
 import javax.annotation.Nullable;
-import java.nio.ByteBuffer;
-import java.nio.DoubleBuffer;
+import java.nio.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -93,8 +92,6 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
         Assert.isTrue( qt.getGeneralType().equals( GeneralType.QUANTITATIVE ), "Only quantitative data can be aggregated." );
         Assert.isTrue( qt.getType().equals( StandardQuantitationType.COUNT ) || qt.getType().equals( StandardQuantitationType.AMOUNT ),
                 "Only counts or amounts can be aggregated." );
-        Assert.isTrue( qt.getRepresentation().equals( PrimitiveType.DOUBLE ),
-                "Only vectors of doubles can be aggregated." );
         SingleCellExpressionAggregationMethod method;
         switch ( qt.getScale() ) {
             case LINEAR:
@@ -151,6 +148,8 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
                 + "Expression data has been aggregated by " + cellTypeFactorName + " using " + method + "."
                 + ( canLog2cpm ? " The data was subsequently converted to log2cpm." : "" ) );
         newQt.setIsPreferred( config.isMakePreferred() );
+        // we're always aggregating into doubles, regardless of the input representation
+        newQt.setRepresentation( PrimitiveType.DOUBLE );
 
         Map<BioAssay, Integer> sourceSampleToIndex = ListUtils.indexOfElements( vectors.iterator().next().getSingleCellDimension().getBioAssays() );
 
@@ -320,7 +319,8 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
         // library sizes of the source assays
         double[] sourceLibrarySize = new double[numSourceSamples];
         for ( SingleCellExpressionDataVector scv : vectors ) {
-            DoubleBuffer scrv = ByteBuffer.wrap( scv.getData() ).asDoubleBuffer();
+            PrimitiveType representation = scv.getQuantitationType().getRepresentation();
+            Buffer scrv = scv.getDataAsBuffer();
             for ( int i = 0; i < numSamples; i++ ) {
                 BioAssay sample = samples.get( i );
                 BioAssay sourceSample = sourceBioAssayMap.get( sample );
@@ -334,11 +334,11 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
                 for ( int k = start; k < end; k++ ) {
                     double unscaledValue;
                     if ( method == SingleCellExpressionAggregationMethod.SUM ) {
-                        unscaledValue = scrv.get( k );
+                        unscaledValue = getDouble( scrv, k, representation );
                     } else if ( method == SingleCellExpressionAggregationMethod.LOG_SUM ) {
-                        unscaledValue = Math.exp( scrv.get( k ) );
+                        unscaledValue = Math.exp( getDouble( scrv, k, representation ) );
                     } else if ( method == SingleCellExpressionAggregationMethod.LOG1P_SUM ) {
-                        unscaledValue = Math.expm1( scrv.get( k ) );
+                        unscaledValue = Math.expm1( getDouble( scrv, k, representation ) );
                     } else {
                         throw new UnsupportedOperationException( "Unsupported aggregation method: " + method );
                     }
@@ -405,7 +405,8 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
         List<BioAssay> samples = bad.getBioAssays();
         int numSamples = samples.size();
         double[] rv = new double[numSamples];
-        DoubleBuffer scrv = ByteBuffer.wrap( scv.getData() ).asDoubleBuffer();
+        Buffer scrv = scv.getDataAsBuffer();
+        PrimitiveType representation = scv.getQuantitationType().getRepresentation();
         for ( int i = 0; i < numSamples; i++ ) {
             BioAssay sample = samples.get( i );
             BioAssay sourceSample = sourceBioAssayMap.get( sample );
@@ -419,11 +420,11 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
             for ( int k = start; k < end; k++ ) {
                 if ( cellTypeIndex == cta.getIndices()[k] ) {
                     if ( method == SingleCellExpressionAggregationMethod.SUM ) {
-                        rv[i] += scrv.get( k );
+                        rv[i] += getDouble( scrv, k, representation );
                     } else if ( method == SingleCellExpressionAggregationMethod.LOG_SUM ) {
-                        rv[i] += Math.exp( scrv.get( k ) );
+                        rv[i] += Math.exp( getDouble( scrv, k, representation ) );
                     } else if ( method == SingleCellExpressionAggregationMethod.LOG1P_SUM ) {
-                        rv[i] += Math.expm1( scrv.get( k ) );
+                        rv[i] += Math.expm1( getDouble( scrv, k, representation ) );
                     } else {
                         throw new UnsupportedOperationException( "Unsupported aggregation method: " + method );
                     }
@@ -464,6 +465,21 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
         }
 
         return rv;
+    }
+
+    private double getDouble( Buffer buffer, int k, PrimitiveType representation ) {
+        switch ( representation ) {
+            case FLOAT:
+                return ( ( FloatBuffer ) buffer ).get( k );
+            case DOUBLE:
+                return ( ( DoubleBuffer ) buffer ).get( k );
+            case INT:
+                return ( ( IntBuffer ) buffer ).get( k );
+            case LONG:
+                return ( ( LongBuffer ) buffer ).get( k );
+            default:
+                throw new UnsupportedOperationException( "Unsupported representation " + representation );
+        }
     }
 
     @Override

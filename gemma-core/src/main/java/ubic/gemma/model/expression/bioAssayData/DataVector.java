@@ -26,6 +26,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.persistence.Transient;
+import java.nio.*;
 import java.util.Objects;
 
 import static ubic.gemma.persistence.util.ByteArrayUtils.*;
@@ -42,10 +43,57 @@ public abstract class DataVector extends AbstractIdentifiable {
     private QuantitationType quantitationType;
     private byte[] data;
 
+    /**
+     * Obtain the data as a generic {@link Buffer}.
+     */
+    @Transient
+    public Buffer getDataAsBuffer() {
+        switch ( quantitationType.getRepresentation() ) {
+            case FLOAT:
+                return getDataAsFloatBuffer();
+            case DOUBLE:
+                return getDataAsDoubleBuffer();
+            case INT:
+                return getDataAsIntBuffer();
+            case LONG:
+                return getDataAsLongBuffer();
+            default:
+                throw new UnsupportedOperationException( "Cannot create a buffer for data stored in "
+                        + quantitationType.getRepresentation() + "." );
+        }
+    }
+
+    @Transient
+    public float[] getDataAsFloats() {
+        ensureRepresentation( PrimitiveType.FLOAT );
+        return byteArrayToFloats( data );
+    }
+
+    public void setDataAsFloats( float[] data ) {
+        ensureRepresentation( PrimitiveType.FLOAT );
+        setData( floatArrayToBytes( data ) );
+    }
+
+    public FloatBuffer getDataAsFloatBuffer() {
+        ensureRepresentation( PrimitiveType.FLOAT );
+        return ByteBuffer.wrap( data ).asFloatBuffer();
+    }
+
     @Transient
     public double[] getDataAsDoubles() {
         ensureRepresentation( PrimitiveType.DOUBLE );
         return byteArrayToDoubles( data );
+    }
+
+    /**
+     * Obtain the data as a {@link DoubleBuffer}.
+     * <p>
+     * The underlying data is not copied, so this is the most efficient way to perform arbitrary access or slice parts
+     * of the vector.
+     */
+    public DoubleBuffer getDataAsDoubleBuffer() {
+        ensureRepresentation( PrimitiveType.DOUBLE );
+        return ByteBuffer.wrap( data ).asDoubleBuffer();
     }
 
     public void setDataAsDoubles( double[] data ) {
@@ -81,6 +129,12 @@ public abstract class DataVector extends AbstractIdentifiable {
         return byteArrayToInts( data );
     }
 
+    @Transient
+    public IntBuffer getDataAsIntBuffer() {
+        ensureRepresentation( PrimitiveType.INT );
+        return ByteBuffer.wrap( data ).asIntBuffer();
+    }
+
     public void setDataAsInts( int[] data ) {
         ensureRepresentation( PrimitiveType.INT );
         setData( intArrayToBytes( data ) );
@@ -90,6 +144,17 @@ public abstract class DataVector extends AbstractIdentifiable {
     public long[] getDataAsLongs() {
         ensureRepresentation( PrimitiveType.LONG );
         return byteArrayToLongs( data );
+    }
+
+    @Transient
+    public LongBuffer getDataAsLongBuffer() {
+        ensureRepresentation( PrimitiveType.LONG );
+        return ByteBuffer.wrap( data ).asLongBuffer();
+    }
+
+    public void setDataAsLongs( long[] data ) {
+        ensureRepresentation( PrimitiveType.LONG );
+        setData( longArrayToBytes( data ) );
     }
 
     @Transient

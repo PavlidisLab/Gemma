@@ -56,6 +56,7 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
         }
         if ( config instanceof MexSingleCellDataLoaderConfig ) {
             loader.setAllowMappingDesignElementsToGeneSymbols( ( ( MexSingleCellDataLoaderConfig ) config ).isAllowMappingDesignElementsToGeneSymbols() );
+            loader.setUseDoublePrecision( ( ( MexSingleCellDataLoaderConfig ) config ).isUseDoublePrecision() );
         }
         return loader;
     }

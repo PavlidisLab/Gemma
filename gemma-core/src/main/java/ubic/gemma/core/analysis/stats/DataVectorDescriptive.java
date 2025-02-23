@@ -32,6 +32,8 @@ public class DataVectorDescriptive {
                     return countCount( vector.getDataAsInts() );
                 case LONG:
                     return countCount( vector.getDataAsLongs() );
+                case FLOAT:
+                    return countCount( vector.getDataAsFloats(), getMissingFloatCountValue( vector.getQuantitationType() ) );
                 case DOUBLE:
                     return countCount( vector.getDataAsDoubles(), getMissingCountValue( vector.getQuantitationType() ) );
                 default:
@@ -45,6 +47,8 @@ public class DataVectorDescriptive {
             case LONG:
                 // fixed-length encoding, all the values are deemed to be present
                 return vector.getData().length / vector.getQuantitationType().getRepresentation().getSizeInBytes();
+            case FLOAT:
+                return count( vector.getDataAsFloats() );
             case DOUBLE:
                 return count( vector.getDataAsDoubles() );
             case CHAR:
@@ -68,6 +72,10 @@ public class DataVectorDescriptive {
         return data.length - countMissing( data );
     }
 
+    private static int count( float[] data ) {
+        return data.length - countMissing( data );
+    }
+
     private static int count( double[] data ) {
         return data.length - countMissing( data );
     }
@@ -78,6 +86,10 @@ public class DataVectorDescriptive {
 
     private static int countCount( int[] data ) {
         return data.length - countCountMissing( data );
+    }
+
+    private static int countCount( float[] data, float missingFloatCountValue ) {
+        return data.length - countCountMissing( data, missingFloatCountValue );
     }
 
     private static int countCount( double[] data, double missingValueForScaleType ) {
@@ -163,6 +175,19 @@ public class DataVectorDescriptive {
     }
 
     /**
+     * For floats, {@link Float#NaN} is always considered missing.
+     */
+    private static int countMissing( float[] data ) {
+        int missingValues = 0;
+        for ( float d : data ) {
+            if ( Float.isNaN( d ) ) {
+                missingValues++;
+            }
+        }
+        return missingValues;
+    }
+
+    /**
      * For doubles, {@link Double#NaN} is always considered missing.
      */
     private static int countMissing( double[] data ) {
@@ -195,6 +220,16 @@ public class DataVectorDescriptive {
         return missingValues;
     }
 
+    private static int countCountMissing( float[] data, float defaultValue ) {
+        int missingValues = 0;
+        for ( float d : data ) {
+            if ( Float.isNaN( d ) || d == defaultValue ) {
+                missingValues++;
+            }
+        }
+        return missingValues;
+    }
+
     private static int countCountMissing( double[] data, double defaultValue ) {
         int missingValues = 0;
         for ( double d : data ) {
@@ -206,7 +241,22 @@ public class DataVectorDescriptive {
     }
 
     public static double sum( DataVector vector ) {
-        return sum( vector.getDataAsDoubles(), vector.getQuantitationType().getScale() );
+        switch ( vector.getQuantitationType().getRepresentation() ) {
+            case FLOAT:
+                return sum( vector.getDataAsFloats(), vector.getQuantitationType().getScale() );
+            case DOUBLE:
+                return sum( vector.getDataAsDoubles(), vector.getQuantitationType().getScale() );
+            case INT:
+                return sum( vector.getDataAsInts(), vector.getQuantitationType().getScale() );
+            case LONG:
+                return sum( vector.getDataAsLongs(), vector.getQuantitationType().getScale() );
+            default:
+                throw new UnsupportedOperationException();
+        }
+    }
+
+    public static double sum( float[] data, ScaleType scaleType ) {
+        return sum( float2double( data ), scaleType );
     }
 
     public static double sum( double[] data, ScaleType scaleType ) {
@@ -239,6 +289,28 @@ public class DataVectorDescriptive {
             default:
                 throw new IllegalArgumentException( "Don't know how to calculate sum for scale type " + scaleType );
         }
+    }
+
+    public static int sum( int[] data, ScaleType scaleType ) {
+        Assert.isTrue( scaleType == ScaleType.COUNT );
+        int s = 0;
+        for ( int d : data ) {
+            s += d;
+        }
+        return s;
+    }
+
+    public static long sum( long[] data, ScaleType scaleType ) {
+        Assert.isTrue( scaleType == ScaleType.COUNT );
+        long s = 0;
+        for ( long d : data ) {
+            s += d;
+        }
+        return s;
+    }
+
+    public static double sumUnscaled( float[] data, ScaleType scaleType ) {
+        return sumUnscaled( float2double( data ), scaleType );
     }
 
     /**
@@ -276,6 +348,14 @@ public class DataVectorDescriptive {
         }
     }
 
+    public static double sumUnscaled( int[] data, ScaleType scaleType ) {
+        return sum( data, scaleType );
+    }
+
+    public static double sumUnscaled( long[] data, ScaleType scaleType ) {
+        return sum( data, scaleType );
+    }
+
     /**
      * Calculate the mean of the data in the vector.
      * <p>
@@ -283,6 +363,10 @@ public class DataVectorDescriptive {
      */
     public static double mean( DataVector vector ) {
         return mean( vector.getDataAsDoubles(), vector.getQuantitationType().getScale() );
+    }
+
+    public static double mean( float[] data, ScaleType scaleType ) {
+        return mean( float2double( data ), scaleType );
     }
 
     public static double mean( double[] data, ScaleType scaleType ) {
@@ -304,8 +388,33 @@ public class DataVectorDescriptive {
         }
     }
 
+    public static double mean( int[] data, ScaleType scaleType ) {
+        return ( double ) sum( data, scaleType ) / ( double ) data.length;
+    }
+
+    public static double mean( long[] data, ScaleType scaleType ) {
+        return ( double ) sum( data, scaleType ) / ( double ) data.length;
+    }
+
     public static double sampleStandardDeviation( DataVector vector ) {
-        return sampleStandardDeviation( vector.getDataAsDoubles(), vector.getQuantitationType().getScale() );
+        PrimitiveType representation = vector.getQuantitationType().getRepresentation();
+        switch ( representation ) {
+            case FLOAT:
+                return sampleStandardDeviation( vector.getDataAsFloats(), vector.getQuantitationType().getScale() );
+            case DOUBLE:
+                return sampleStandardDeviation( vector.getDataAsDoubles(), vector.getQuantitationType().getScale() );
+            case INT:
+                return sampleStandardDeviation( vector.getDataAsInts(), vector.getQuantitationType().getScale() );
+            case LONG:
+                return sampleStandardDeviation( vector.getDataAsLongs(), vector.getQuantitationType().getScale() );
+            default:
+                throw unsupportedRepresentation( representation, "sampleStandardDeviation" );
+        }
+    }
+
+    public static double sampleStandardDeviation( float[] data, ScaleType scaleType ) {
+        // FIXME: baseCode does not include the sample size correction
+        return Descriptive.sampleStandardDeviation( data.length, sampleVariance( data, scaleType ) );
     }
 
     public static double sampleStandardDeviation( double[] data, ScaleType scaleType ) {
@@ -313,8 +422,22 @@ public class DataVectorDescriptive {
         return Descriptive.sampleStandardDeviation( data.length, sampleVariance( data, scaleType ) );
     }
 
+    public static double sampleStandardDeviation( int[] data, ScaleType scaleType ) {
+        // FIXME: baseCode does not include the sample size correction
+        return Descriptive.sampleStandardDeviation( data.length, sampleVariance( data, scaleType ) );
+    }
+
+    public static double sampleStandardDeviation( long[] data, ScaleType scaleType ) {
+        // FIXME: baseCode does not include the sample size correction
+        return Descriptive.sampleStandardDeviation( data.length, sampleVariance( data, scaleType ) );
+    }
+
     public static double sampleVariance( DataVector vector ) {
         return sampleVariance( vector.getDataAsDoubles(), vector.getQuantitationType().getScale() );
+    }
+
+    public static double sampleVariance( float[] data, ScaleType scaleType ) {
+        return sampleVariance( float2double( data ), scaleType );
     }
 
     public static double sampleVariance( double[] data, ScaleType scaleType ) {
@@ -350,6 +473,40 @@ public class DataVectorDescriptive {
         }
     }
 
+    public static double sampleVariance( int[] data, ScaleType scaleType ) {
+        Assert.isTrue( scaleType == ScaleType.COUNT );
+        DoubleArrayList d = new DoubleArrayList( int2double( data ) );
+        // no need to use DescriptiveWithMissing for integer data
+        return Descriptive.sampleVariance( d, Descriptive.mean( d ) );
+    }
+
+    public static double sampleVariance( long[] data, ScaleType scaleType ) {
+        Assert.isTrue( scaleType == ScaleType.COUNT );
+        DoubleArrayList d = new DoubleArrayList( long2double( data ) );
+        // no need to use DescriptiveWithMissing for long data
+        return Descriptive.sampleVariance( d, Descriptive.mean( d ) );
+    }
+
+    /**
+     * Obtain the value that indicates a missing value for counting data.
+     */
+    public static float getMissingFloatCountValue( QuantitationType quantitationType ) {
+        Assert.isTrue( quantitationType.getType() == StandardQuantitationType.COUNT,
+                "Only counting data can be supplied." );
+        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.FLOAT,
+                "Only float representation is supported." );
+        switch ( quantitationType.getScale() ) {
+            case LOG2:
+            case LN:
+            case LOG10:
+            case LOGBASEUNKNOWN:
+                return Float.NEGATIVE_INFINITY;
+            case LOG1P: // in log1p, 0 is mapped back to 0
+            default:
+                return 0;
+        }
+    }
+
     /**
      * Obtain the value that indicates a missing value for counting data.
      */
@@ -368,5 +525,33 @@ public class DataVectorDescriptive {
             default:
                 return 0;
         }
+    }
+
+    private static double[] float2double( float[] data ) {
+        double[] dataAsDoubles = new double[data.length];
+        for ( int i = 0; i < data.length; i++ ) {
+            dataAsDoubles[i] = data[i];
+        }
+        return dataAsDoubles;
+    }
+
+    private static double[] int2double( int[] data ) {
+        double[] dataAsDoubles = new double[data.length];
+        for ( int i = 0; i < data.length; i++ ) {
+            dataAsDoubles[i] = data[i];
+        }
+        return dataAsDoubles;
+    }
+
+    private static double[] long2double( long[] data ) {
+        double[] dataAsDoubles = new double[data.length];
+        for ( int i = 0; i < data.length; i++ ) {
+            dataAsDoubles[i] = data[i];
+        }
+        return dataAsDoubles;
+    }
+
+    private static UnsupportedOperationException unsupportedRepresentation( PrimitiveType representation, String operation ) {
+        return new UnsupportedOperationException( "Unsupported representation " + representation + " for " + operation + "." );
     }
 }

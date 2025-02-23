@@ -88,7 +88,7 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
                     indices[w] = colind[k];
                     w++;
                 }
-                writeDoubleVector( cs, cs2gene, matrix.getSingleCellDimension(), vals, indices, writer );
+                writeVector( cs, cs2gene, matrix.getSingleCellDimension(), vals, PrimitiveType.DOUBLE, indices, writer );
                 written++;
             }
         }
@@ -139,13 +139,30 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
     }
 
     private void writeVector( SingleCellExpressionDataVector vector, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer pwriter ) throws IOException {
-        if ( vector.getQuantitationType().getRepresentation() != PrimitiveType.DOUBLE ) {
-            throw new UnsupportedOperationException( "Writing single-cell vectors of " + vector.getQuantitationType().getRepresentation() + " is not supported." );
+        if ( scaleType != null ) {
+            writeVector( vector.getDesignElement(), cs2gene, vector.getSingleCellDimension(), convertVector( vector, scaleType ), PrimitiveType.DOUBLE, vector.getDataIndices(), pwriter );
+        } else {
+            switch ( vector.getQuantitationType().getRepresentation() ) {
+                case FLOAT:
+                    writeVector( vector.getDesignElement(), cs2gene, vector.getSingleCellDimension(), vector.getDataAsFloats(), vector.getQuantitationType().getRepresentation(), vector.getDataIndices(), pwriter );
+                    break;
+                case DOUBLE:
+                    writeVector( vector.getDesignElement(), cs2gene, vector.getSingleCellDimension(), vector.getDataAsDoubles(), vector.getQuantitationType().getRepresentation(), vector.getDataIndices(), pwriter );
+                    break;
+                case INT:
+                    writeVector( vector.getDesignElement(), cs2gene, vector.getSingleCellDimension(), vector.getDataAsInts(), vector.getQuantitationType().getRepresentation(), vector.getDataIndices(), pwriter );
+                    break;
+                case LONG:
+                    writeVector( vector.getDesignElement(), cs2gene, vector.getSingleCellDimension(), vector.getDataAsLongs(), vector.getQuantitationType().getRepresentation(), vector.getDataIndices(), pwriter );
+                    break;
+                default:
+                    // TODO: implement int, float and long
+                    throw new UnsupportedOperationException( "Writing single-cell vectors of " + vector.getQuantitationType().getRepresentation() + " is not supported." );
+            }
         }
-        writeDoubleVector( vector.getDesignElement(), cs2gene, vector.getSingleCellDimension(), convertVector( vector.getDataAsDoubles(), vector.getQuantitationType(), scaleType ), vector.getDataIndices(), pwriter );
     }
 
-    private void writeDoubleVector( CompositeSequence cs, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, SingleCellDimension dimension, double[] vec, int[] indices, Writer pwriter ) throws IOException {
+    private void writeVector( CompositeSequence cs, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, SingleCellDimension dimension, Object vec, PrimitiveType representation, int[] indices, Writer pwriter ) throws IOException {
         Assert.notNull( dimension.getCellIds() );
         pwriter.append( format( cs.getId() ) )
                 .append( '\t' ).append( format( cs.getName() ) );
@@ -172,7 +189,22 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
                 int w = 0;
                 for ( int j = start; j < end; j++ ) {
                     cellIds[w] = format( dimension.getCellIds().get( indices[j] ) );
-                    vals[w] = format( vec[j] );
+                    switch ( representation ) {
+                        case FLOAT:
+                            vals[w] = format( ( ( float[] ) vec )[j] );
+                            break;
+                        case DOUBLE:
+                            vals[w] = format( ( ( double[] ) vec )[j] );
+                            break;
+                        case INT:
+                            vals[w] = format( ( ( int[] ) vec )[j] );
+                            break;
+                        case LONG:
+                            vals[w] = format( ( ( long[] ) vec )[j] );
+                            break;
+                        default:
+                            throw new UnsupportedOperationException( "Unsupported representation " + representation + " for writing tabular data." );
+                    }
                     w++;
                 }
                 pwriter

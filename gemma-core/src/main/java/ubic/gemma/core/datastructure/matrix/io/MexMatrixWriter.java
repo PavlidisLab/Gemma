@@ -13,7 +13,6 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.core.util.TsvUtils;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -176,16 +175,22 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
                 int numberOfCells = dimension.getNumberOfCellsBySample( i );
                 matrices[i] = new MatrixVectorWriter( new GZIPOutputStream( Files.newOutputStream( outputDir.resolve( getBioAssayDirName( ba ) ).resolve( "matrix.mtx.gz" ) ), 8192 ) );
                 MatrixInfo.MatrixField field;
-                switch ( firstVec.getQuantitationType().getRepresentation() ) {
-                    case DOUBLE:
-                        field = MatrixInfo.MatrixField.Real;
-                        break;
-                    case INT:
-                    case LONG:
-                        field = MatrixInfo.MatrixField.Integer;
-                        break;
-                    default:
-                        throw new UnsupportedOperationException( "Unsupported vector representation " + firstVec.getQuantitationType().getRepresentation() );
+                if ( scaleType != null ) {
+                    // if data is converted, we always produce doubles
+                    field = MatrixInfo.MatrixField.Real;
+                } else {
+                    switch ( firstVec.getQuantitationType().getRepresentation() ) {
+                        case FLOAT:
+                        case DOUBLE:
+                            field = MatrixInfo.MatrixField.Real;
+                            break;
+                        case INT:
+                        case LONG:
+                            field = MatrixInfo.MatrixField.Integer;
+                            break;
+                        default:
+                            throw new UnsupportedOperationException( "Unsupported vector representation " + firstVec.getQuantitationType().getRepresentation() );
+                    }
                 }
                 matrices[i].printMatrixInfo( new MatrixInfo( true, field, MatrixInfo.MatrixSymmetry.General ) );
                 matrices[i].printMatrixSize( new MatrixSize( numVecs, numberOfCells, nnzBySample.get( ba ).intValue() ) );
@@ -314,10 +319,55 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
     }
 
     private void writeVector( SingleCellExpressionDataVector vector, int row, MatrixVectorWriter[] writers ) {
-        if ( vector.getQuantitationType().getRepresentation() != PrimitiveType.DOUBLE ) {
-            throw new UnsupportedOperationException( "Unsupported vector representation type " + vector.getQuantitationType().getRepresentation() );
+        if ( scaleType != null ) {
+            writeDoubleVector( vector, convertVector( vector, scaleType ), row, writers );
+        } else {
+            switch ( vector.getQuantitationType().getRepresentation() ) {
+                case FLOAT:
+                    writeFloatVector( vector, vector.getDataAsFloats(), row, writers );
+                    break;
+                case DOUBLE:
+                    writeDoubleVector( vector, vector.getDataAsDoubles(), row, writers );
+                    break;
+                case INT:
+                    writeIntVector( vector, vector.getDataAsInts(), row, writers );
+                    break;
+                case LONG:
+                    writeLongVector( vector, vector.getDataAsLongs(), row, writers );
+                    break;
+                default:
+                    throw new UnsupportedOperationException( "Unsupported vector representation type " + vector.getQuantitationType().getRepresentation() );
+            }
         }
-        writeDoubleVector( vector, convertVector( vector.getDataAsDoubles(), vector.getQuantitationType(), scaleType ), row, writers );
+    }
+
+    private void writeFloatVector( SingleCellExpressionDataVector vector, float[] data, int row, MatrixVectorWriter[] writers ) {
+        int[] colind = vector.getDataIndices();
+        // the first sample always start at zero
+        int start = 0;
+        for ( int sampleIndex = 0; sampleIndex < vector.getSingleCellDimension().getBioAssays().size(); sampleIndex++ ) {
+            int end = getSampleEnd( vector, sampleIndex, start );
+            int sampleOffset = vector.getSingleCellDimension().getBioAssaysOffset()[sampleIndex];
+            int sampleNnz = end - start;
+
+            int[] sampleRows = new int[sampleNnz];
+            Arrays.fill( sampleRows, row + 1 );
+            int[] sampleCols = new int[sampleNnz];
+            float[] sampleData = new float[sampleNnz];
+
+            // populate
+            int l = 0;
+            for ( int i = start; i < end; i++ ) {
+                sampleCols[l] = colind[i] - sampleOffset + 1; // adjust the column index to start at zero
+                sampleData[l] = data[i];
+                l++;
+            }
+
+            writers[sampleIndex].printCoordinate( sampleRows, sampleCols, sampleData );
+
+            // use the end of the current sample as start for the next one
+            start = end;
+        }
     }
 
     private void writeDoubleVector( SingleCellExpressionDataVector vector, double[] data, int row, MatrixVectorWriter[] writers ) {
@@ -333,6 +383,64 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
             Arrays.fill( sampleRows, row + 1 );
             int[] sampleCols = new int[sampleNnz];
             double[] sampleData = new double[sampleNnz];
+
+            // populate
+            int l = 0;
+            for ( int i = start; i < end; i++ ) {
+                sampleCols[l] = colind[i] - sampleOffset + 1; // adjust the column index to start at zero
+                sampleData[l] = data[i];
+                l++;
+            }
+
+            writers[sampleIndex].printCoordinate( sampleRows, sampleCols, sampleData );
+
+            // use the end of the current sample as start for the next one
+            start = end;
+        }
+    }
+
+    private void writeIntVector( SingleCellExpressionDataVector vector, int[] data, int row, MatrixVectorWriter[] writers ) {
+        int[] colind = vector.getDataIndices();
+        // the first sample always start at zero
+        int start = 0;
+        for ( int sampleIndex = 0; sampleIndex < vector.getSingleCellDimension().getBioAssays().size(); sampleIndex++ ) {
+            int end = getSampleEnd( vector, sampleIndex, start );
+            int sampleOffset = vector.getSingleCellDimension().getBioAssaysOffset()[sampleIndex];
+            int sampleNnz = end - start;
+
+            int[] sampleRows = new int[sampleNnz];
+            Arrays.fill( sampleRows, row + 1 );
+            int[] sampleCols = new int[sampleNnz];
+            int[] sampleData = new int[sampleNnz];
+
+            // populate
+            int l = 0;
+            for ( int i = start; i < end; i++ ) {
+                sampleCols[l] = colind[i] - sampleOffset + 1; // adjust the column index to start at zero
+                sampleData[l] = data[i];
+                l++;
+            }
+
+            writers[sampleIndex].printCoordinate( sampleRows, sampleCols, sampleData );
+
+            // use the end of the current sample as start for the next one
+            start = end;
+        }
+    }
+
+    private void writeLongVector( SingleCellExpressionDataVector vector, long[] data, int row, MatrixVectorWriter[] writers ) {
+        int[] colind = vector.getDataIndices();
+        // the first sample always start at zero
+        int start = 0;
+        for ( int sampleIndex = 0; sampleIndex < vector.getSingleCellDimension().getBioAssays().size(); sampleIndex++ ) {
+            int end = getSampleEnd( vector, sampleIndex, start );
+            int sampleOffset = vector.getSingleCellDimension().getBioAssaysOffset()[sampleIndex];
+            int sampleNnz = end - start;
+
+            int[] sampleRows = new int[sampleNnz];
+            Arrays.fill( sampleRows, row + 1 );
+            int[] sampleCols = new int[sampleNnz];
+            long[] sampleData = new long[sampleNnz];
 
             // populate
             int l = 0;

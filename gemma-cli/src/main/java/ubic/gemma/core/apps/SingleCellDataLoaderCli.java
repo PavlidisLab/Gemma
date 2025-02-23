@@ -43,6 +43,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             QT_NEW_TYPE_OPTION = "qtNewType",
             QT_NEW_SCALE_TYPE_OPTION = "qtNewScaleType",
             PREFERRED_QT_OPTION = "preferredQt",
+            PREFER_SINGLE_PRECISION = "preferSinglePrecision",
             REPLACE_OPTION = "replace",
             RENAMING_FILE_OPTION = "renamingFile";
 
@@ -75,7 +76,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private static final String
             MEX_DISCARD_EMPTY_CELLS_OPTION = MEX_OPTION_PREFIX + "DiscardEmptyCells",
             MEX_KEEP_EMPTY_CELLS_OPTION = MEX_OPTION_PREFIX + "KeepEmptyCells",
-            MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION = MEX_OPTION_PREFIX + "AllowMappingDesignElementsToGeneSymbols";
+            MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION = MEX_OPTION_PREFIX + "AllowMappingDesignElementsToGeneSymbols",
+            MEX_USE_DOUBLE_PRECISION_OPTION = MEX_OPTION_PREFIX + "UseDoublePrecision";
 
     @Autowired
     private SingleCellDataLoaderService singleCellDataLoaderService;
@@ -110,6 +112,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private StandardQuantitationType newType;
     @Nullable
     private ScaleType newScaleType;
+    private boolean preferSinglePrecision;
     private boolean preferredQt;
     private boolean replaceQt;
 
@@ -152,6 +155,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     @Nullable
     private Boolean mexDiscardEmptyCells;
     private boolean mexAllowMappingDesignElementsToGeneSymbols;
+    private boolean mexUseDoublePrecision;
 
     @Nullable
     @Override
@@ -184,6 +188,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         options.addOption( QT_NEW_TYPE_OPTION, "quantitation-type-new-type", true, "New type to use for the imported quantitation type (optional, defaults to the data)" );
         options.addOption( QT_NEW_SCALE_TYPE_OPTION, "quantitation-type-new-scale-type", true, "New scale type to use for the imported quantitation type (optional, defaults to the data)" );
         options.addOption( PREFERRED_QT_OPTION, "preferred-quantitation-type", false, "Make the quantitation type the preferred one." );
+        options.addOption( PREFER_SINGLE_PRECISION, "prefer-single-precision", false, "Prefer single precision for storage, even if the data is available with double precision. This reduces the size of vectors and thus the storage requirement." );
         options.addOption( REPLACE_OPTION, "replace", false, "Replace an existing quantitation type." );
 
         // for all loaders
@@ -242,6 +247,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 MEX_DISCARD_EMPTY_CELLS_OPTION, "mex-discard-empty-cells", "Discard empty cells when loading MEX data.",
                 MEX_KEEP_EMPTY_CELLS_OPTION, "mex-keep-empty-cells", "Keep empty cells when loading MEX data." );
         options.addOption( MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION, "mex-allow-mapping-design-elements-to-gene-symbols", false, "Allow mapping probe names to gene symbols when loading MEX data (i.e. the second column in features.tsv.gz)." );
+        options.addOption( MEX_USE_DOUBLE_PRECISION_OPTION, "mex-use-double-precision", false, "Use double precision (i.e. double and long) for storing vectors" );
     }
 
     @Override
@@ -280,8 +286,9 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         } else {
             newScaleType = null;
         }
-        replaceQt = commandLine.hasOption( REPLACE_OPTION );
+        preferSinglePrecision = commandLine.hasOption( PREFER_SINGLE_PRECISION );
         preferredQt = commandLine.hasOption( PREFERRED_QT_OPTION );
+        replaceQt = commandLine.hasOption( REPLACE_OPTION );
         renamingFile = commandLine.getParsedOptionValue( RENAMING_FILE_OPTION );
 
         cellTypeAssignmentFile = commandLine.getParsedOptionValue( CELL_TYPE_ASSIGNMENT_FILE_OPTION );
@@ -313,6 +320,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         } else if ( dataType == SingleCellDataType.MEX ) {
             mexDiscardEmptyCells = getAutoOptionValue( commandLine, MEX_DISCARD_EMPTY_CELLS_OPTION, MEX_KEEP_EMPTY_CELLS_OPTION );
             mexAllowMappingDesignElementsToGeneSymbols = commandLine.hasOption( MEX_ALLOW_MAPPING_DESIGN_ELEMENTS_TO_GENE_SYMBOLS_OPTION );
+            mexUseDoublePrecision = commandLine.hasOption( MEX_USE_DOUBLE_PRECISION_OPTION );
         }
     }
 
@@ -431,7 +439,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         } else if ( dataType == SingleCellDataType.MEX ) {
             configBuilder = MexSingleCellDataLoaderConfig.builder()
                     .discardEmptyCells( mexDiscardEmptyCells )
-                    .allowMappingDesignElementsToGeneSymbols( mexAllowMappingDesignElementsToGeneSymbols );
+                    .allowMappingDesignElementsToGeneSymbols( mexAllowMappingDesignElementsToGeneSymbols )
+                    .useDoublePrecision( mexUseDoublePrecision );
         } else {
             configBuilder = SingleCellDataLoaderConfig.builder();
         }
@@ -447,6 +456,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .quantitationTypeNewName( newName )
                 .quantitationTypeNewType( newType )
                 .quantitationTypeNewScaleType( newScaleType )
+                .preferSinglePrecision( preferSinglePrecision )
                 .markQuantitationTypeAsPreferred( preferredQt );
         if ( renamingFile != null ) {
             configBuilder.renamingFile( renamingFile );

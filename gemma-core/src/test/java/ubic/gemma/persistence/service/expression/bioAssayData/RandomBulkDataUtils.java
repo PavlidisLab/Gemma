@@ -57,7 +57,22 @@ public class RandomBulkDataUtils {
             vector.setDesignElement( cs );
             vector.setBioAssayDimension( bad );
             vector.setQuantitationType( qt );
-            vector.setDataAsDoubles( RandomDataUtils.sample( qt, bad.getBioAssays().size() ) );
+            switch ( qt.getRepresentation() ) {
+                case FLOAT:
+                    vector.setDataAsFloats( RandomDataUtils.sampleFloats( qt, bad.getBioAssays().size() ) );
+                    break;
+                case DOUBLE:
+                    vector.setDataAsDoubles( RandomDataUtils.sampleDoubles( qt, bad.getBioAssays().size() ) );
+                    break;
+                case INT:
+                    vector.setDataAsInts( RandomDataUtils.sampleInts( qt, bad.getBioAssays().size() ) );
+                    break;
+                case LONG:
+                    vector.setDataAsLongs( RandomDataUtils.sampleLongs( qt, bad.getBioAssays().size() ) );
+                    break;
+                default:
+                    throw new UnsupportedOperationException( qt.getRepresentation() + " is not supported for sampling bulk vectors." );
+            }
             vectors.add( vector );
         }
         return vectors;

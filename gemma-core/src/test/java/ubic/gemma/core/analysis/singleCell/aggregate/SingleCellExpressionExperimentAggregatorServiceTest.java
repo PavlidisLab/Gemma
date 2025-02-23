@@ -171,6 +171,43 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
         qt.setType( StandardQuantitationType.COUNT );
         qt.setScale( ScaleType.COUNT );
         qt.setRepresentation( PrimitiveType.DOUBLE );
+        testCountsWithQt( qt );
+    }
+
+    @Test
+    public void testCountsAsFloats() {
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "Counts" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.COUNT );
+        qt.setScale( ScaleType.COUNT );
+        qt.setRepresentation( PrimitiveType.FLOAT );
+        testCountsWithQt( qt );
+    }
+
+    @Test
+    public void testCountsAsInts() {
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "Counts" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.COUNT );
+        qt.setScale( ScaleType.COUNT );
+        qt.setRepresentation( PrimitiveType.INT );
+        testCountsWithQt( qt );
+    }
+
+    @Test
+    public void testCountsAsLongs() {
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "Counts" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.COUNT );
+        qt.setScale( ScaleType.COUNT );
+        qt.setRepresentation( PrimitiveType.LONG );
+        testCountsWithQt( qt );
+    }
+
+    private void testCountsWithQt( QuantitationType qt ) {
         List<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( ee, ad, qt );
         SingleCellDimension dimension = vectors.iterator().next().getSingleCellDimension();
         // these are the actual library sizes, no adjustment is necessary

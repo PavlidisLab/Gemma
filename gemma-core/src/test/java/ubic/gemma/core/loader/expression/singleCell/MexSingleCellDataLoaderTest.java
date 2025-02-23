@@ -10,11 +10,11 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.config.SettingsConfig;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.expression.geo.GeoFamilyParser;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
 import ubic.gemma.core.loader.expression.geo.singleCell.NoSingleCellDataFoundException;
+import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPConfig;
 import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
@@ -44,6 +44,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static ubic.gemma.core.loader.expression.singleCell.MexTestUtils.createElementsMappingFromResourceFile;
 import static ubic.gemma.core.loader.expression.singleCell.MexTestUtils.createLoaderForResourceDir;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 @ContextConfiguration
 public class MexSingleCellDataLoaderTest extends BaseTest {
@@ -90,7 +91,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
         assertThat( qt.getGeneralType() ).isEqualTo( GeneralType.QUANTITATIVE );
         assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.COUNT );
         assertThat( qt.getScale() ).isEqualTo( ScaleType.COUNT );
-        assertThat( qt.getRepresentation() ).isEqualTo( PrimitiveType.DOUBLE );
+        assertThat( qt.getRepresentation() ).isEqualTo( PrimitiveType.INT );
         SingleCellDimension dimension = loader.getSingleCellDimension( bas );
         assertThat( dimension.getCellIds() ).isNotNull().hasSize( 10000 );
         assertThat( dimension.getNumberOfCells() ).isEqualTo( 10000 );
@@ -118,7 +119,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
         assertThat( vectors.stream().filter( v -> v.getDesignElement().getName().equals( "ENSMUSG00000074782" ) ).findFirst() )
                 .hasValueSatisfying( v -> {
                     assertThat( v.getOriginalDesignElement() ).isEqualTo( "ENSMUSG00000074782" );
-                    assertThat( v.getDataAsDoubles() )
+                    assertThat( v.getDataAsInts() )
                             .containsExactly( 1, 1, 1, 1, 1, 1, 1 );
                     assertThat( v.getDataIndices() )
                             .containsExactly( 38, 256, 382, 431, 788, 814, 942 );
@@ -127,7 +128,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
         assertThat( vectors.stream().filter( v -> v.getDesignElement().getName().equals( "ENSMUSG00000038206" ) ).findFirst() )
                 .hasValueSatisfying( v -> {
                     int lastSampleOffset = dimension.getBioAssaysOffset()[3];
-                    assertThat( v.getDataAsDoubles() )
+                    assertThat( v.getDataAsInts() )
                             .hasSize( 594 );
                     assertThat( v.getDataIndices() )
                             .hasSize( 594 )
@@ -172,7 +173,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
 
         assertThat( vectors.stream().filter( v -> v.getDesignElement().getName().equals( "ENSMUSG00000039108" ) ).findFirst() )
                 .hasValueSatisfying( v -> {
-                    assertThat( v.getDataAsDoubles() )
+                    assertThat( v.getDataAsInts() )
                             .hasSize( 155 )
                             .startsWith( 2, 1, 1, 1, 1 );
                     assertThat( v.getDataIndices() )
@@ -182,18 +183,18 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
 
         assertThat( vectors.stream().filter( v -> v.getDesignElement().getName().equals( "ENSMUSG00000027291" ) ).findFirst() )
                 .hasValueSatisfying( v -> {
-                    assertThat( v.getDataAsDoubles() )
-                            .containsExactly( 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                                    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0,
-                                    1.0, 1.0, 1.0, 1.0, 1.0, 3.0, 1.0, 2.0, 1.0, 1.0, 3.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                                    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                                    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0,
-                                    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 2.0, 1.0, 1.0,
-                                    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                                    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 2.0, 1.0, 2.0,
-                                    3.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0,
-                                    1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-                                    1.0, 1.0 );
+                    assertThat( v.getDataAsInts() )
+                            .containsExactly( 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1,
+                                    1, 1, 1, 1, 1, 3, 1, 2, 1, 1, 3, 1, 1, 1, 1, 1, 1,
+                                    1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1,
+                                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1,
+                                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1,
+                                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 2,
+                                    3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1,
+                                    1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                    1, 1 );
 
                     assertThat( v.getDataIndices() )
                             .containsExactly( 24, 30, 40, 59, 69, 94, 96, 105, 106, 113, 115, 126, 128, 132, 136,
@@ -244,7 +245,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
 
         assertThat( vectors.stream().filter( v -> v.getDesignElement().getName().equals( "ENSMUSG00000039108" ) ).findFirst() )
                 .hasValueSatisfying( v -> {
-                    assertThat( v.getDataAsDoubles() )
+                    assertThat( v.getDataAsInts() )
                             .hasSize( 155 )
                             .startsWith( 2, 1, 1, 1, 1 );
                     assertThat( v.getDataIndices() )
@@ -259,6 +260,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
     @Test
     @Category({ GeoTest.class, SlowTest.class })
     public void testGSE141552() throws IOException, NoSingleCellDataFoundException {
+        assumeThatResourceIsAvailable( "ftp://ftp.ncbi.nlm.nih.gov/geo/series/" );
         GeoSeries series = readSeriesFromGeo( "GSE141552" );
         detector.downloadSingleCellData( series );
         MexSingleCellDataLoader loader = ( MexSingleCellDataLoader ) detector.getSingleCellDataLoader( series );

@@ -13,4 +13,6 @@ public class MexSingleCellDataLoaderConfig extends SingleCellDataLoaderConfig {
     private Boolean discardEmptyCells;
 
     private boolean allowMappingDesignElementsToGeneSymbols;
+
+    private boolean useDoublePrecision;
 }

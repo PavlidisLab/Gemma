@@ -98,10 +98,31 @@ public class SingleCellExpressionDataVectorUtils {
     /**
      * Obtain the data of a sample.
      */
+    public static float[] getSampleDataAsFloats( SingleCellExpressionDataVector vector, int sampleIndex ) {
+        int start = getSampleStart( vector, sampleIndex, 0 );
+        int end = getSampleEnd( vector, sampleIndex, start );
+        return Arrays.copyOfRange( vector.getDataAsFloats(), start, end );
+    }
+
+    /**
+     * Obtain the data of a sample.
+     */
     public static double[] getSampleDataAsDoubles( SingleCellExpressionDataVector vector, int sampleIndex ) {
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
         return Arrays.copyOfRange( vector.getDataAsDoubles(), start, end );
+    }
+
+    public static int[] getSampleDataAsInts( SingleCellExpressionDataVector vector, int sampleIndex ) {
+        int start = getSampleStart( vector, sampleIndex, 0 );
+        int end = getSampleEnd( vector, sampleIndex, start );
+        return Arrays.copyOfRange( vector.getDataAsInts(), start, end );
+    }
+
+    public static long[] getSampleDataAsLongs( SingleCellExpressionDataVector vector, int sampleIndex ) {
+        int start = getSampleStart( vector, sampleIndex, 0 );
+        int end = getSampleEnd( vector, sampleIndex, start );
+        return Arrays.copyOfRange( vector.getDataAsLongs(), start, end );
     }
 
     public static Consumer<SingleCellExpressionDataVector> createStreamMonitor( String logCategory, long numVecs ) {

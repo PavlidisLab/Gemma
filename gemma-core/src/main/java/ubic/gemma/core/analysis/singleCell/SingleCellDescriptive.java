@@ -1,18 +1,20 @@
 package ubic.gemma.core.analysis.singleCell;
 
 import cern.colt.list.DoubleArrayList;
+import cern.jet.stat.Descriptive;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.stats.DataVectorDescriptive;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 
-import java.util.Arrays;
 import java.util.function.ToDoubleFunction;
 
 import static ubic.gemma.core.analysis.stats.DataVectorDescriptive.getMissingCountValue;
+import static ubic.gemma.core.analysis.stats.DataVectorDescriptive.getMissingFloatCountValue;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.*;
 
 /**
@@ -25,11 +27,11 @@ import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataV
 public class SingleCellDescriptive {
 
     public static double[] max( SingleCellExpressionDataVector vector ) {
-        return applyDescriptive( vector, DescriptiveWithMissing::max );
+        return applyDescriptive( vector, DescriptiveWithMissing::max, "max" );
     }
 
     public static double[] min( SingleCellExpressionDataVector vector ) {
-        return applyDescriptive( vector, DescriptiveWithMissing::min );
+        return applyDescriptive( vector, DescriptiveWithMissing::min, "min" );
     }
 
     /**
@@ -47,6 +49,8 @@ public class SingleCellDescriptive {
                     return countCount( vector, vector.getDataAsInts() );
                 case LONG:
                     return countCount( vector, vector.getDataAsLongs() );
+                case FLOAT:
+                    return countCount( vector, vector.getDataAsFloats(), getMissingFloatCountValue( vector.getQuantitationType() ) );
                 case DOUBLE:
                     return countCount( vector, vector.getDataAsDoubles(), getMissingCountValue( vector.getQuantitationType() ) );
                 default:
@@ -60,6 +64,8 @@ public class SingleCellDescriptive {
                 // these data types don't have a missing value indicator, so we can simply use (end - start) to count the
                 // number of values
                 return countFast( vector );
+            case FLOAT:
+                return count( vector, vector.getDataAsFloats() );
             case DOUBLE:
                 return count( vector, vector.getDataAsDoubles() );
             case CHAR:
@@ -117,6 +123,21 @@ public class SingleCellDescriptive {
         return d;
     }
 
+    private static int[] count( SingleCellExpressionDataVector vector, float[] data ) {
+        int[] d = new int[vector.getSingleCellDimension().getBioAssays().size()];
+        for ( int i = 0; i < d.length; i++ ) {
+            int start = getSampleStart( vector, i, 0 );
+            int end = getSampleEnd( vector, i, start );
+            for ( int j = start; j < end; j++ ) {
+                if ( Float.isNaN( data[j] ) ) {
+                    continue;
+                }
+                d[i]++;
+            }
+        }
+        return d;
+    }
+
     private static int[] count( SingleCellExpressionDataVector vector, double[] data ) {
         int[] d = new int[vector.getSingleCellDimension().getBioAssays().size()];
         for ( int i = 0; i < d.length; i++ ) {
@@ -154,6 +175,22 @@ public class SingleCellDescriptive {
             int end = getSampleEnd( vector, i, start );
             for ( int j = start; j < end; j++ ) {
                 if ( data[j] == 0L ) {
+                    continue;
+                }
+                d[i]++;
+            }
+        }
+        return d;
+    }
+
+
+    private static int[] countCount( SingleCellExpressionDataVector vector, float[] data, float defaultValue ) {
+        int[] d = new int[vector.getSingleCellDimension().getBioAssays().size()];
+        for ( int i = 0; i < d.length; i++ ) {
+            int start = getSampleStart( vector, i, 0 );
+            int end = getSampleEnd( vector, i, start );
+            for ( int j = start; j < end; j++ ) {
+                if ( Float.isNaN( data[j] ) || data[j] == defaultValue ) {
                     continue;
                 }
                 d[i]++;
@@ -200,16 +237,98 @@ public class SingleCellDescriptive {
     public static int[] countAboveThreshold( SingleCellExpressionDataVector vector, double threshold ) {
         int[] d = new int[vector.getSingleCellDimension().getBioAssays().size()];
         for ( int i = 0; i < d.length; i++ ) {
-            for ( double s : getSampleDataAsDoubles( vector, i ) ) {
-                if ( s > threshold ) {
-                    d[i]++;
-                }
+            switch ( vector.getQuantitationType().getRepresentation() ) {
+                case FLOAT:
+                    d[i] = countAboveThreshold( getSampleDataAsFloats( vector, i ), threshold );
+                    break;
+                case DOUBLE:
+                    d[i] = countAboveThreshold( getSampleDataAsDoubles( vector, i ), threshold );
+                    break;
+                case INT:
+                    d[i] = countAboveThreshold( getSampleDataAsInts( vector, i ), threshold );
+                    break;
+                case LONG:
+                    d[i] = countAboveThreshold( getSampleDataAsLongs( vector, i ), threshold );
+                    break;
+                default:
+                    throw new UnsupportedOperationException( "Unsupported representation " + vector.getQuantitationType().getRepresentation() );
+
             }
         }
         return d;
     }
 
-    private static double[] applyDescriptive( SingleCellExpressionDataVector vector, ToDoubleFunction<DoubleArrayList> func ) {
+    private static int countAboveThreshold( double[] data, double threshold ) {
+        int d = 0;
+        for ( double s : data ) {
+            if ( s > threshold ) {
+                d++;
+            }
+        }
+        return d;
+    }
+
+    private static int countAboveThreshold( float[] data, double threshold ) {
+        int d = 0;
+        for ( float s : data ) {
+            if ( s > threshold ) {
+                d++;
+            }
+        }
+        return d;
+    }
+
+    private static int countAboveThreshold( int[] data, double threshold ) {
+        int d = 0;
+        for ( int s : data ) {
+            if ( s > threshold ) {
+                d++;
+            }
+        }
+        return d;
+    }
+
+    private static int countAboveThreshold( long[] data, double threshold ) {
+        int d = 0;
+        for ( long s : data ) {
+            if ( s > threshold ) {
+                d++;
+            }
+        }
+        return d;
+    }
+
+    private static double[] applyDescriptive( SingleCellExpressionDataVector vector, ToDoubleFunction<DoubleArrayList> func, String operation ) {
+        switch ( vector.getQuantitationType().getRepresentation() ) {
+            case FLOAT:
+                return applyFloatDescriptive( vector, func );
+            case DOUBLE:
+                return applyDoubleDescriptive( vector, func );
+            case INT:
+                return applyIntDescriptive( vector, func );
+            case LONG:
+                return applyLongDescriptive( vector, func );
+            default:
+                throw unsupportedRepresentation( vector.getQuantitationType().getRepresentation(), operation );
+        }
+    }
+
+    private static double[] applyFloatDescriptive( SingleCellExpressionDataVector vector, ToDoubleFunction<DoubleArrayList> func ) {
+        DoubleArrayList vec = null;
+        double[] d = new double[vector.getSingleCellDimension().getBioAssays().size()];
+        for ( int i = 0; i < d.length; i++ ) {
+            double[] data = float2double( getSampleDataAsFloats( vector, i ) );
+            if ( vec == null ) {
+                vec = new DoubleArrayList( data );
+            } else {
+                vec.elements( data );
+            }
+            d[i] = func.applyAsDouble( vec );
+        }
+        return d;
+    }
+
+    private static double[] applyDoubleDescriptive( SingleCellExpressionDataVector vector, ToDoubleFunction<DoubleArrayList> func ) {
         DoubleArrayList vec = null;
         double[] d = new double[vector.getSingleCellDimension().getBioAssays().size()];
         for ( int i = 0; i < d.length; i++ ) {
@@ -224,20 +343,82 @@ public class SingleCellDescriptive {
         return d;
     }
 
-    public static double[] sum( SingleCellExpressionDataVector vector ) {
-        ScaleType scaleType = vector.getQuantitationType().getScale();
+    private static double[] applyIntDescriptive( SingleCellExpressionDataVector vector, ToDoubleFunction<DoubleArrayList> func ) {
+        DoubleArrayList vec = null;
         double[] d = new double[vector.getSingleCellDimension().getBioAssays().size()];
         for ( int i = 0; i < d.length; i++ ) {
-            d[i] = DataVectorDescriptive.sum( getSampleDataAsDoubles( vector, i ), scaleType );
+            double[] data = int2double( getSampleDataAsInts( vector, i ) );
+            if ( vec == null ) {
+                vec = new DoubleArrayList( data );
+            } else {
+                vec.elements( data );
+            }
+            d[i] = func.applyAsDouble( vec );
+        }
+        return d;
+    }
+
+    private static double[] applyLongDescriptive( SingleCellExpressionDataVector vector, ToDoubleFunction<DoubleArrayList> func ) {
+        DoubleArrayList vec = null;
+        double[] d = new double[vector.getSingleCellDimension().getBioAssays().size()];
+        for ( int i = 0; i < d.length; i++ ) {
+            double[] data = long2double( getSampleDataAsLongs( vector, i ) );
+            if ( vec == null ) {
+                vec = new DoubleArrayList( data );
+            } else {
+                vec.elements( data );
+            }
+            d[i] = func.applyAsDouble( vec );
+        }
+        return d;
+    }
+
+    public static double[] sum( SingleCellExpressionDataVector vector ) {
+        ScaleType scaleType = vector.getQuantitationType().getScale();
+        PrimitiveType representation = vector.getQuantitationType().getRepresentation();
+        double[] d = new double[vector.getSingleCellDimension().getBioAssays().size()];
+        for ( int i = 0; i < d.length; i++ ) {
+            switch ( representation ) {
+                case FLOAT:
+                    d[i] = DataVectorDescriptive.sum( getSampleDataAsFloats( vector, i ), scaleType );
+                    break;
+                case DOUBLE:
+                    d[i] = DataVectorDescriptive.sum( getSampleDataAsDoubles( vector, i ), scaleType );
+                    break;
+                case INT:
+                    d[i] = DataVectorDescriptive.sum( getSampleDataAsInts( vector, i ), scaleType );
+                    break;
+                case LONG:
+                    d[i] = DataVectorDescriptive.sum( getSampleDataAsLongs( vector, i ), scaleType );
+                    break;
+                default:
+                    throw unsupportedRepresentation( representation, "sum" );
+            }
         }
         return d;
     }
 
     public static double[] sumUnscaled( SingleCellExpressionDataVector vector ) {
         ScaleType scaleType = vector.getQuantitationType().getScale();
+        PrimitiveType representation = vector.getQuantitationType().getRepresentation();
         double[] d = new double[vector.getSingleCellDimension().getBioAssays().size()];
         for ( int i = 0; i < d.length; i++ ) {
-            d[i] = DataVectorDescriptive.sumUnscaled( getSampleDataAsDoubles( vector, i ), scaleType );
+            switch ( representation ) {
+                case FLOAT:
+                    d[i] = DataVectorDescriptive.sumUnscaled( getSampleDataAsFloats( vector, i ), scaleType );
+                    break;
+                case DOUBLE:
+                    d[i] = DataVectorDescriptive.sumUnscaled( getSampleDataAsDoubles( vector, i ), scaleType );
+                    break;
+                case INT:
+                    d[i] = DataVectorDescriptive.sumUnscaled( getSampleDataAsInts( vector, i ), scaleType );
+                    break;
+                case LONG:
+                    d[i] = DataVectorDescriptive.sumUnscaled( getSampleDataAsLongs( vector, i ), scaleType );
+                    break;
+                default:
+                    throw unsupportedRepresentation( representation, "sumUnscaled" );
+            }
         }
         return d;
     }
@@ -249,7 +430,22 @@ public class SingleCellDescriptive {
         ScaleType scaleType = vector.getQuantitationType().getScale();
         double[] d = new double[vector.getSingleCellDimension().getBioAssays().size()];
         for ( int i = 0; i < d.length; i++ ) {
-            d[i] = DataVectorDescriptive.mean( getSampleDataAsDoubles( vector, i ), scaleType );
+            switch ( vector.getQuantitationType().getRepresentation() ) {
+                case FLOAT:
+                    d[i] = DataVectorDescriptive.mean( getSampleDataAsFloats( vector, i ), scaleType );
+                    break;
+                case DOUBLE:
+                    d[i] = DataVectorDescriptive.mean( getSampleDataAsDoubles( vector, i ), scaleType );
+                    break;
+                case INT:
+                    d[i] = DataVectorDescriptive.mean( getSampleDataAsInts( vector, i ), scaleType );
+                    break;
+                case LONG:
+                    d[i] = DataVectorDescriptive.mean( getSampleDataAsLongs( vector, i ), scaleType );
+                    break;
+                default:
+                    throw unsupportedRepresentation( vector.getQuantitationType().getRepresentation(), "mean" );
+            }
         }
         return d;
     }
@@ -262,33 +458,83 @@ public class SingleCellDescriptive {
         if ( sampleIndex == -1 ) {
             throw new IllegalArgumentException( "Sample not found in vector" );
         }
-        return DataVectorDescriptive.mean( getSampleDataAsDoubles( vector, sampleIndex ), vector.getQuantitationType().getScale() );
+        switch ( vector.getQuantitationType().getRepresentation() ) {
+            case FLOAT:
+                return DataVectorDescriptive.mean( getSampleDataAsFloats( vector, sampleIndex ), vector.getQuantitationType().getScale() );
+            case DOUBLE:
+                return DataVectorDescriptive.mean( getSampleDataAsDoubles( vector, sampleIndex ), vector.getQuantitationType().getScale() );
+            case INT:
+                return DataVectorDescriptive.mean( getSampleDataAsInts( vector, sampleIndex ), vector.getQuantitationType().getScale() );
+            case LONG:
+                return DataVectorDescriptive.mean( getSampleDataAsLongs( vector, sampleIndex ), vector.getQuantitationType().getScale() );
+            default:
+                throw unsupportedRepresentation( vector.getQuantitationType().getRepresentation(), "mean" );
+        }
     }
 
     /**
      * Calculate the median of each assay for a given vector.
      */
     public static double[] median( SingleCellExpressionDataVector vector ) {
+        PrimitiveType representation = vector.getQuantitationType().getRepresentation();
         DoubleArrayList vec = null;
         double[] d = new double[vector.getSingleCellDimension().getBioAssays().size()];
         for ( int i = 0; i < d.length; i++ ) {
-            double[] data = getSampleDataAsDoubles( vector, i );
-            Arrays.sort( data );
+            double[] data;
+            switch ( representation ) {
+                case FLOAT:
+                    data = float2double( getSampleDataAsFloats( vector, i ) );
+                    break;
+                case DOUBLE:
+                    data = getSampleDataAsDoubles( vector, i );
+                    break;
+                case INT:
+                    data = int2double( getSampleDataAsInts( vector, i ) );
+                    break;
+                case LONG:
+                    data = long2double( getSampleDataAsLongs( vector, i ) );
+                    break;
+                default:
+                    throw unsupportedRepresentation( representation, "median" );
+            }
             if ( vec == null ) {
                 vec = new DoubleArrayList( data );
             } else {
                 vec.elements( data );
             }
-            d[i] = DescriptiveWithMissing.median( vec );
+            if ( representation == PrimitiveType.FLOAT || representation == PrimitiveType.DOUBLE ) {
+                // baseCode will sort it for us
+                d[i] = DescriptiveWithMissing.median( vec );
+            } else {
+                // colt does not sort data... :S
+                vec.sort();
+                d[i] = Descriptive.median( vec );
+            }
         }
         return d;
     }
 
     public static double[] sampleStandardDeviation( SingleCellExpressionDataVector vector ) {
         ScaleType scaleType = vector.getQuantitationType().getScale();
+        PrimitiveType representation = vector.getQuantitationType().getRepresentation();
         double[] d = new double[vector.getSingleCellDimension().getBioAssays().size()];
         for ( int i = 0; i < d.length; i++ ) {
-            d[i] = DataVectorDescriptive.sampleStandardDeviation( getSampleDataAsDoubles( vector, i ), scaleType );
+            switch ( representation ) {
+                case FLOAT:
+                    d[i] = DataVectorDescriptive.sampleStandardDeviation( getSampleDataAsFloats( vector, i ), scaleType );
+                    break;
+                case DOUBLE:
+                    d[i] = DataVectorDescriptive.sampleStandardDeviation( getSampleDataAsDoubles( vector, i ), scaleType );
+                    break;
+                case INT:
+                    d[i] = DataVectorDescriptive.sampleStandardDeviation( getSampleDataAsInts( vector, i ), scaleType );
+                    break;
+                case LONG:
+                    d[i] = DataVectorDescriptive.sampleStandardDeviation( getSampleDataAsLongs( vector, i ), scaleType );
+                    break;
+                default:
+                    throw unsupportedRepresentation( representation, "sampleStandardDeviation" );
+            }
         }
         return d;
     }
@@ -298,14 +544,42 @@ public class SingleCellDescriptive {
         if ( sampleIndex == -1 ) {
             throw new IllegalArgumentException( "Sample not found in vector" );
         }
-        return DataVectorDescriptive.sampleStandardDeviation( getSampleDataAsDoubles( vector, sampleIndex ), vector.getQuantitationType().getScale() );
+        PrimitiveType representation = vector.getQuantitationType().getRepresentation();
+        switch ( representation ) {
+            case FLOAT:
+                return DataVectorDescriptive.sampleStandardDeviation( getSampleDataAsFloats( vector, sampleIndex ), vector.getQuantitationType().getScale() );
+            case DOUBLE:
+                return DataVectorDescriptive.sampleStandardDeviation( getSampleDataAsDoubles( vector, sampleIndex ), vector.getQuantitationType().getScale() );
+            case INT:
+                return DataVectorDescriptive.sampleStandardDeviation( getSampleDataAsInts( vector, sampleIndex ), vector.getQuantitationType().getScale() );
+            case LONG:
+                return DataVectorDescriptive.sampleStandardDeviation( getSampleDataAsLongs( vector, sampleIndex ), vector.getQuantitationType().getScale() );
+            default:
+                throw unsupportedRepresentation( representation, "sampleStandardDeviation" );
+        }
     }
 
     public static double[] sampleVariance( SingleCellExpressionDataVector vector ) {
         ScaleType scaleType = vector.getQuantitationType().getScale();
+        PrimitiveType representation = vector.getQuantitationType().getRepresentation();
         double[] d = new double[vector.getSingleCellDimension().getBioAssays().size()];
         for ( int i = 0; i < d.length; i++ ) {
-            d[i] = DataVectorDescriptive.sampleVariance( getSampleDataAsDoubles( vector, i ), scaleType );
+            switch ( representation ) {
+                case FLOAT:
+                    d[i] = DataVectorDescriptive.sampleVariance( getSampleDataAsFloats( vector, i ), scaleType );
+                    break;
+                case DOUBLE:
+                    d[i] = DataVectorDescriptive.sampleVariance( getSampleDataAsDoubles( vector, i ), scaleType );
+                    break;
+                case INT:
+                    d[i] = DataVectorDescriptive.sampleVariance( getSampleDataAsInts( vector, i ), scaleType );
+                    break;
+                case LONG:
+                    d[i] = DataVectorDescriptive.sampleVariance( getSampleDataAsLongs( vector, i ), scaleType );
+                    break;
+                default:
+                    throw unsupportedRepresentation( representation, "sampleVariance" );
+            }
         }
         return d;
     }
@@ -318,6 +592,46 @@ public class SingleCellDescriptive {
         if ( sampleIndex == -1 ) {
             throw new IllegalArgumentException( "Sample not found in vector" );
         }
-        return DataVectorDescriptive.sampleVariance( getSampleDataAsDoubles( vector, sampleIndex ), vector.getQuantitationType().getScale() );
+        PrimitiveType representation = vector.getQuantitationType().getRepresentation();
+        switch ( representation ) {
+            case FLOAT:
+                return DataVectorDescriptive.sampleVariance( getSampleDataAsFloats( vector, sampleIndex ), vector.getQuantitationType().getScale() );
+            case DOUBLE:
+                return DataVectorDescriptive.sampleVariance( getSampleDataAsDoubles( vector, sampleIndex ), vector.getQuantitationType().getScale() );
+            case INT:
+                return DataVectorDescriptive.sampleVariance( getSampleDataAsInts( vector, sampleIndex ), vector.getQuantitationType().getScale() );
+            case LONG:
+                return DataVectorDescriptive.sampleVariance( getSampleDataAsLongs( vector, sampleIndex ), vector.getQuantitationType().getScale() );
+            default:
+                throw unsupportedRepresentation( representation, "sampleVariance" );
+        }
+    }
+
+    private static double[] float2double( float[] data ) {
+        double[] dataAsDoubles = new double[data.length];
+        for ( int i = 0; i < data.length; i++ ) {
+            dataAsDoubles[i] = data[i];
+        }
+        return dataAsDoubles;
+    }
+
+    private static double[] int2double( int[] data ) {
+        double[] dataAsDoubles = new double[data.length];
+        for ( int i = 0; i < data.length; i++ ) {
+            dataAsDoubles[i] = data[i];
+        }
+        return dataAsDoubles;
+    }
+
+    private static double[] long2double( long[] data ) {
+        double[] dataAsDoubles = new double[data.length];
+        for ( int i = 0; i < data.length; i++ ) {
+            dataAsDoubles[i] = data[i];
+        }
+        return dataAsDoubles;
+    }
+
+    private static UnsupportedOperationException unsupportedRepresentation( PrimitiveType representation, String operation ) {
+        return new UnsupportedOperationException( "Unsupported representation " + representation + " for " + operation + "." );
     }
 }

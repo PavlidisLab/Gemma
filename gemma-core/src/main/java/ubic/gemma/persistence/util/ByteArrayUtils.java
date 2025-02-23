@@ -4,6 +4,7 @@ import ubic.basecode.io.ByteArrayConverter;
 
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
+import java.nio.FloatBuffer;
 
 /**
  * Utilities for working with byte arrays.
@@ -14,6 +15,26 @@ import java.nio.CharBuffer;
 public class ByteArrayUtils {
 
     private static final ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
+
+    public static byte[] floatArrayToBytes( float[] darray ) {
+        if ( darray == null ) {
+            return null;
+        }
+        FloatBuffer.wrap( darray );
+        ByteBuffer buffer = ByteBuffer.allocate( 4 * darray.length );
+        for ( float d : darray ) {
+            buffer.putFloat( d );
+        }
+        return buffer.array();
+    }
+
+    public static float[] byteArrayToFloats( byte[] barray ) {
+        if ( barray == null ) return null;
+        FloatBuffer buf = ByteBuffer.wrap( barray ).asFloatBuffer();
+        float[] array = new float[buf.remaining()];
+        buf.get( array );
+        return array;
+    }
 
     public static byte[] doubleArrayToBytes( Double[] data ) {
         return byteArrayConverter.doubleArrayToBytes( data );
@@ -33,6 +54,10 @@ public class ByteArrayUtils {
 
     public static int[] byteArrayToInts( byte[] bytes ) {
         return byteArrayConverter.byteArrayToInts( bytes );
+    }
+
+    public static byte[] longArrayToBytes( long[] data ) {
+        return byteArrayConverter.longArrayToBytes( data );
     }
 
     public static long[] byteArrayToLongs( byte[] bytes ) {

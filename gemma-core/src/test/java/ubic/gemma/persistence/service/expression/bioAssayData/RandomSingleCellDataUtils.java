@@ -40,6 +40,21 @@ public class RandomSingleCellDataUtils {
         return randomSingleCellVectors( 100, 4, 1000, 0.9, ScaleType.COUNT );
     }
 
+    public static List<SingleCellExpressionDataVector> randomSingleCellVectors( QuantitationType quantitationType ) {
+        ArrayDesign arrayDesign = new ArrayDesign();
+        for ( int i = 0; i < 100; i++ ) {
+            arrayDesign.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "cs" + i ) );
+        }
+        ExpressionExperiment ee = new ExpressionExperiment();
+        for ( int i = 0; i < 4; i++ ) {
+            BioMaterial bm = BioMaterial.Factory.newInstance( "bm" + i );
+            BioAssay ba = BioAssay.Factory.newInstance( "ba" + i, arrayDesign, bm );
+            bm.getBioAssaysUsedIn().add( ba );
+            ee.getBioAssays().add( ba );
+        }
+        return randomSingleCellVectors( ee, arrayDesign, quantitationType, 1000, 0.9 );
+    }
+
     public static List<SingleCellExpressionDataVector> randomSingleCellVectors( int numDesignElements, int numSamples, int numCellsPerBioAssay, double sparsity, ScaleType scaleType ) {
         ArrayDesign arrayDesign = new ArrayDesign();
         for ( int i = 0; i < numDesignElements; i++ ) {
@@ -106,8 +121,6 @@ public class RandomSingleCellDataUtils {
                         || qt.getScale() == ScaleType.LOG2 || qt.getScale() == ScaleType.LOG1P
                         || qt.getScale() == ScaleType.PERCENT || qt.getScale() == ScaleType.PERCENT1,
                 "Unsupported scale type for random data vectors: " + qt.getScale() );
-        Assert.isTrue( qt.getRepresentation() == PrimitiveType.DOUBLE,
-                "Can only generate double vectors." );
         SingleCellExpressionDataVector vector = new SingleCellExpressionDataVector();
         vector.setExpressionExperiment( ee );
         vector.setDesignElement( compositeSequence );
@@ -115,16 +128,68 @@ public class RandomSingleCellDataUtils {
         vector.setSingleCellDimension( dimension );
         double density = 1.0 - sparsity;
         int N = ( int ) Math.ceil( density * dimension.getNumberOfCells() );
+        int step = ( int ) ( 1.0 / density );
+        switch ( qt.getRepresentation() ) {
+            case FLOAT:
+                setRandomFloatData( vector, qt, step, N );
+                break;
+            case DOUBLE:
+                setRandomDoubleData( vector, qt, step, N );
+                break;
+            case INT:
+                setRandomIntData( vector, qt, step, N );
+                break;
+            case LONG:
+                setRandomLongData( vector, qt, step, N );
+                break;
+            default:
+                throw new UnsupportedOperationException( "Sampling " + qt.getRepresentation() + " is not supported." );
+        }
+        return vector;
+    }
+
+    private static void setRandomFloatData( SingleCellExpressionDataVector vector, QuantitationType qt, int step, int N ) {
+        float[] X = new float[N];
+        int[] IX = new int[X.length];
+        for ( int i = 0; i < N; i++ ) {
+            X[i] = RandomDataUtils.sampleFloat( qt );
+            IX[i] = ( i * step ) + random.nextInt( step );
+        }
+        vector.setDataAsFloats( X );
+        vector.setDataIndices( IX );
+    }
+
+    private static void setRandomDoubleData( SingleCellExpressionDataVector vector, QuantitationType qt, int step, int N ) {
         double[] X = new double[N];
         int[] IX = new int[X.length];
-        int step = ( int ) ( 1.0 / density );
         for ( int i = 0; i < N; i++ ) {
-            X[i] = RandomDataUtils.sample( qt );
+            X[i] = RandomDataUtils.sampleDouble( qt );
             IX[i] = ( i * step ) + random.nextInt( step );
         }
         vector.setDataAsDoubles( X );
         vector.setDataIndices( IX );
-        return vector;
+    }
+
+    private static void setRandomIntData( SingleCellExpressionDataVector vector, QuantitationType qt, int step, int N ) {
+        int[] X = new int[N];
+        int[] IX = new int[X.length];
+        for ( int i = 0; i < N; i++ ) {
+            X[i] = RandomDataUtils.sampleInt( qt );
+            IX[i] = ( i * step ) + random.nextInt( step );
+        }
+        vector.setDataAsInts( X );
+        vector.setDataIndices( IX );
+    }
+
+    private static void setRandomLongData( SingleCellExpressionDataVector vector, QuantitationType qt, int step, int N ) {
+        long[] X = new long[N];
+        int[] IX = new int[X.length];
+        for ( int i = 0; i < N; i++ ) {
+            X[i] = RandomDataUtils.sampleLong( qt );
+            IX[i] = ( i * step ) + random.nextInt( step );
+        }
+        vector.setDataAsLongs( X );
+        vector.setDataIndices( IX );
     }
 
     private static SingleCellDimension createDimension( ExpressionExperiment ee, int numCellsPerBioAssay ) {

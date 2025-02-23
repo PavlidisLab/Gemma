@@ -8,6 +8,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.file.PathUtils;
 import org.junit.Test;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -93,6 +94,256 @@ public class MexMatrixWriterTest {
                         .asString( StandardCharsets.UTF_8 ).hasLineCount( 1000 );
                 try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "matrix.mtx.gz" ) ) ) ) ) ) {
                     MatrixInfo mi = mvr.readMatrixInfo();
+                    assertThat( mi.isReal() ).isTrue();
+                    MatrixSize size = mvr.readMatrixSize( mi );
+                    assertThat( size.numRows() ).isEqualTo( 100 );
+                    assertThat( size.numColumns() ).isEqualTo( 1000 );
+                    assertThat( size.numEntries() ).isEqualTo( 10000 );
+                    int[] rows = new int[size.numEntries()], cols = new int[size.numEntries()];
+                    double[] data = new double[size.numEntries()];
+                    mvr.readCoordinate( rows, cols, data );
+                    assertThat( data ).hasSize( 10000 );
+                }
+            }
+        } finally {
+            PathUtils.deleteDirectory( outDir );
+        }
+    }
+
+    @Test
+    public void testWriteFloatVectorsToDisk() throws IOException {
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "Counts" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.COUNT );
+        qt.setScale( ScaleType.COUNT );
+        qt.setRepresentation( PrimitiveType.FLOAT );
+        Collection<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( qt );
+        ExpressionExperiment ee = vectors.iterator().next().getExpressionExperiment();
+        Path outDir = Files.createTempDirectory( null ).resolve( "test" );
+        try {
+            Map<BioAssay, Long> nnzBySample = ee.getBioAssays().stream().collect( Collectors.toMap( ba -> ba, ba -> 100L * 100 ) );
+            writer.write( vectors.stream(), vectors.size(), nnzBySample, null, outDir );
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                assertThat( outDir )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/features.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/barcodes.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/matrix.mtx.gz" );
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "features.tsv.gz" ) ) ) )
+                        .asString( StandardCharsets.UTF_8 ).hasLineCount( 100 );
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "barcodes.tsv.gz" ) ) ) )
+                        .asString( StandardCharsets.UTF_8 ).hasLineCount( 1000 );
+                try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "matrix.mtx.gz" ) ) ) ) ) ) {
+                    MatrixInfo mi = mvr.readMatrixInfo();
+                    assertThat( mi.isReal() ).isTrue();
+                    MatrixSize size = mvr.readMatrixSize( mi );
+                    assertThat( size.numRows() ).isEqualTo( 100 );
+                    assertThat( size.numColumns() ).isEqualTo( 1000 );
+                    assertThat( size.numEntries() ).isEqualTo( 10000 );
+                    int[] rows = new int[size.numEntries()], cols = new int[size.numEntries()];
+                    double[] data = new double[size.numEntries()];
+                    mvr.readCoordinate( rows, cols, data );
+                    assertThat( data ).hasSize( 10000 );
+                }
+            }
+        } finally {
+            PathUtils.deleteDirectory( outDir );
+        }
+    }
+
+    @Test
+    public void testWriteConvertedFloatVectorsToDisk() throws IOException {
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "Counts" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.COUNT );
+        qt.setScale( ScaleType.COUNT );
+        qt.setRepresentation( PrimitiveType.FLOAT );
+        Collection<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( qt );
+        ExpressionExperiment ee = vectors.iterator().next().getExpressionExperiment();
+        Path outDir = Files.createTempDirectory( null ).resolve( "test" );
+        try {
+            Map<BioAssay, Long> nnzBySample = ee.getBioAssays().stream().collect( Collectors.toMap( ba -> ba, ba -> 100L * 100 ) );
+            writer.setScaleType( ScaleType.LOG1P );
+            writer.write( vectors.stream(), vectors.size(), nnzBySample, null, outDir );
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                assertThat( outDir )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/features.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/barcodes.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/matrix.mtx.gz" );
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "features.tsv.gz" ) ) ) )
+                        .asString( StandardCharsets.UTF_8 ).hasLineCount( 100 );
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "barcodes.tsv.gz" ) ) ) )
+                        .asString( StandardCharsets.UTF_8 ).hasLineCount( 1000 );
+                try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "matrix.mtx.gz" ) ) ) ) ) ) {
+                    MatrixInfo mi = mvr.readMatrixInfo();
+                    assertThat( mi.isReal() ).isTrue();
+                    MatrixSize size = mvr.readMatrixSize( mi );
+                    assertThat( size.numRows() ).isEqualTo( 100 );
+                    assertThat( size.numColumns() ).isEqualTo( 1000 );
+                    assertThat( size.numEntries() ).isEqualTo( 10000 );
+                    int[] rows = new int[size.numEntries()], cols = new int[size.numEntries()];
+                    double[] data = new double[size.numEntries()];
+                    mvr.readCoordinate( rows, cols, data );
+                    assertThat( data ).hasSize( 10000 );
+                }
+            }
+        } finally {
+            PathUtils.deleteDirectory( outDir );
+        }
+    }
+
+    @Test
+    public void testWriteIntVectorsToDisk() throws IOException {
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "Counts" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.COUNT );
+        qt.setScale( ScaleType.COUNT );
+        qt.setRepresentation( PrimitiveType.INT );
+        Collection<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( qt );
+        ExpressionExperiment ee = vectors.iterator().next().getExpressionExperiment();
+        Path outDir = Files.createTempDirectory( null ).resolve( "test" );
+        try {
+            Map<BioAssay, Long> nnzBySample = ee.getBioAssays().stream().collect( Collectors.toMap( ba -> ba, ba -> 100L * 100 ) );
+            writer.write( vectors.stream(), vectors.size(), nnzBySample, null, outDir );
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                assertThat( outDir )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/features.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/barcodes.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/matrix.mtx.gz" );
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "features.tsv.gz" ) ) ) )
+                        .asString( StandardCharsets.UTF_8 ).hasLineCount( 100 );
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "barcodes.tsv.gz" ) ) ) )
+                        .asString( StandardCharsets.UTF_8 ).hasLineCount( 1000 );
+                try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "matrix.mtx.gz" ) ) ) ) ) ) {
+                    MatrixInfo mi = mvr.readMatrixInfo();
+                    assertThat( mi.isInteger() ).isTrue();
+                    MatrixSize size = mvr.readMatrixSize( mi );
+                    assertThat( size.numRows() ).isEqualTo( 100 );
+                    assertThat( size.numColumns() ).isEqualTo( 1000 );
+                    assertThat( size.numEntries() ).isEqualTo( 10000 );
+                    int[] rows = new int[size.numEntries()], cols = new int[size.numEntries()];
+                    double[] data = new double[size.numEntries()];
+                    mvr.readCoordinate( rows, cols, data );
+                    assertThat( data ).hasSize( 10000 );
+                }
+            }
+        } finally {
+            PathUtils.deleteDirectory( outDir );
+        }
+    }
+
+    @Test
+    public void testWriteConvertedIntVectorsToDisk() throws IOException {
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "Counts" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.COUNT );
+        qt.setScale( ScaleType.COUNT );
+        qt.setRepresentation( PrimitiveType.INT );
+        Collection<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( qt );
+        ExpressionExperiment ee = vectors.iterator().next().getExpressionExperiment();
+        Path outDir = Files.createTempDirectory( null ).resolve( "test" );
+        try {
+            Map<BioAssay, Long> nnzBySample = ee.getBioAssays().stream().collect( Collectors.toMap( ba -> ba, ba -> 100L * 100 ) );
+            writer.setScaleType( ScaleType.LOG1P );
+            writer.write( vectors.stream(), vectors.size(), nnzBySample, null, outDir );
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                assertThat( outDir )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/features.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/barcodes.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/matrix.mtx.gz" );
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "features.tsv.gz" ) ) ) )
+                        .asString( StandardCharsets.UTF_8 ).hasLineCount( 100 );
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "barcodes.tsv.gz" ) ) ) )
+                        .asString( StandardCharsets.UTF_8 ).hasLineCount( 1000 );
+                try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "matrix.mtx.gz" ) ) ) ) ) ) {
+                    MatrixInfo mi = mvr.readMatrixInfo();
+                    assertThat( mi.isReal() ).isTrue();
+                    MatrixSize size = mvr.readMatrixSize( mi );
+                    assertThat( size.numRows() ).isEqualTo( 100 );
+                    assertThat( size.numColumns() ).isEqualTo( 1000 );
+                    assertThat( size.numEntries() ).isEqualTo( 10000 );
+                    int[] rows = new int[size.numEntries()], cols = new int[size.numEntries()];
+                    double[] data = new double[size.numEntries()];
+                    mvr.readCoordinate( rows, cols, data );
+                    assertThat( data ).hasSize( 10000 );
+                }
+            }
+        } finally {
+            PathUtils.deleteDirectory( outDir );
+        }
+    }
+
+    @Test
+    public void testWriteLongVectorsToDisk() throws IOException {
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "Counts" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.COUNT );
+        qt.setScale( ScaleType.COUNT );
+        qt.setRepresentation( PrimitiveType.LONG );
+        Collection<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( qt );
+        ExpressionExperiment ee = vectors.iterator().next().getExpressionExperiment();
+        Path outDir = Files.createTempDirectory( null ).resolve( "test" );
+        try {
+            Map<BioAssay, Long> nnzBySample = ee.getBioAssays().stream().collect( Collectors.toMap( ba -> ba, ba -> 100L * 100 ) );
+            writer.write( vectors.stream(), vectors.size(), nnzBySample, null, outDir );
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                assertThat( outDir )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/features.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/barcodes.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/matrix.mtx.gz" );
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "features.tsv.gz" ) ) ) )
+                        .asString( StandardCharsets.UTF_8 ).hasLineCount( 100 );
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "barcodes.tsv.gz" ) ) ) )
+                        .asString( StandardCharsets.UTF_8 ).hasLineCount( 1000 );
+                try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "matrix.mtx.gz" ) ) ) ) ) ) {
+                    MatrixInfo mi = mvr.readMatrixInfo();
+                    assertThat( mi.isInteger() ).isTrue();
+                    MatrixSize size = mvr.readMatrixSize( mi );
+                    assertThat( size.numRows() ).isEqualTo( 100 );
+                    assertThat( size.numColumns() ).isEqualTo( 1000 );
+                    assertThat( size.numEntries() ).isEqualTo( 10000 );
+                    int[] rows = new int[size.numEntries()], cols = new int[size.numEntries()];
+                    double[] data = new double[size.numEntries()];
+                    mvr.readCoordinate( rows, cols, data );
+                    assertThat( data ).hasSize( 10000 );
+                }
+            }
+        } finally {
+            PathUtils.deleteDirectory( outDir );
+        }
+    }
+
+    @Test
+    public void testConvertedLongVectorsToDisk() throws IOException {
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "Counts" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.COUNT );
+        qt.setScale( ScaleType.COUNT );
+        qt.setRepresentation( PrimitiveType.LONG );
+        Collection<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( qt );
+        ExpressionExperiment ee = vectors.iterator().next().getExpressionExperiment();
+        Path outDir = Files.createTempDirectory( null ).resolve( "test" );
+        try {
+            Map<BioAssay, Long> nnzBySample = ee.getBioAssays().stream().collect( Collectors.toMap( ba -> ba, ba -> 100L * 100 ) );
+            writer.setScaleType( ScaleType.LOG1P );
+            writer.write( vectors.stream(), vectors.size(), nnzBySample, null, outDir );
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                assertThat( outDir )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/features.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/barcodes.tsv.gz" )
+                        .isDirectoryRecursivelyContaining( "glob:**/" + ba.getId() + "_" + ba.getName() + "/matrix.mtx.gz" );
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "features.tsv.gz" ) ) ) )
+                        .asString( StandardCharsets.UTF_8 ).hasLineCount( 100 );
+                assertThat( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "barcodes.tsv.gz" ) ) ) )
+                        .asString( StandardCharsets.UTF_8 ).hasLineCount( 1000 );
+                try ( MatrixVectorReader mvr = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( outDir.resolve( ba.getId() + "_" + ba.getName() ).resolve( "matrix.mtx.gz" ) ) ) ) ) ) {
+                    MatrixInfo mi = mvr.readMatrixInfo();
+                    assertThat( mi.isReal() ).isTrue();
                     MatrixSize size = mvr.readMatrixSize( mi );
                     assertThat( size.numRows() ).isEqualTo( 100 );
                     assertThat( size.numColumns() ).isEqualTo( 1000 );

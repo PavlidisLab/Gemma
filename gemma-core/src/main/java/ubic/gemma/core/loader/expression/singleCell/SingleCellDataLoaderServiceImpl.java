@@ -12,6 +12,7 @@ import ubic.gemma.core.loader.util.mapper.*;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.ExternalDatabases;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -275,6 +276,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         } else {
             qt = qts.iterator().next();
         }
+
         // apply any overrides
         if ( config.getQuantitationTypeNewName() != null ) {
             log.info( "Overriding the name to " + config.getQuantitationTypeNewName() + " (was " + qt.getName() + ")." );
@@ -287,6 +289,30 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         if ( config.getQuantitationTypeNewScaleType() != null ) {
             log.info( "Overriding the scale type to " + config.getQuantitationTypeNewScaleType() + " (was " + qt.getScale() + ")." );
             qt.setScale( config.getQuantitationTypeNewScaleType() );
+        }
+        if ( config.isPreferSinglePrecision() ) {
+            log.info( "Single-precision is preferred, will adjust the quantitation type accordingly." );
+            switch ( qt.getRepresentation() ) {
+                case LONG:
+                    qt.setRepresentation( PrimitiveType.INT );
+                    log.info( "Will use INT instead of LONG for " + qt + "." );
+                    break;
+                case DOUBLE:
+                    qt.setRepresentation( PrimitiveType.FLOAT );
+                    log.info( "Will use FLOAT instead of DOUBLE for " + qt + "." );
+                    break;
+                case FLOAT:
+                case INT:
+                    log.info( "Already using single-precision for " + qt + "." );
+                    break;
+                default:
+                    log.warn( "The representation of " + qt + " is nether a long or double, will not change it." );
+                    break;
+            }
+        }
+        if ( config.isMarkQuantitationTypeAsPreferred() ) {
+            log.info( "Marking " + qt + " as preferred for single-cell." );
+            qt.setIsSingleCellPreferred( true );
         }
 
         if ( config.isReplaceExistingQuantitationType() ) {
@@ -317,10 +343,6 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
             }
             log.info( "Data will be added for " + qt + "..." );
 
-        }
-        if ( config.isMarkQuantitationTypeAsPreferred() ) {
-            log.info( "Marking " + qt + " as preferred for single-cell." );
-            qt.setIsSingleCellPreferred( true );
         }
         return qt;
     }

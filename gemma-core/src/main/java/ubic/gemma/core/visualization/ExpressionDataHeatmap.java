@@ -17,7 +17,6 @@ import ubic.gemma.persistence.util.Slice;
 
 import javax.annotation.Nullable;
 import java.awt.image.BufferedImage;
-import java.nio.ByteBuffer;
 import java.nio.DoubleBuffer;
 import java.util.Collection;
 import java.util.HashSet;
@@ -130,7 +129,7 @@ public class ExpressionDataHeatmap implements Heatmap {
         double[][] data = new double[samples.size()][vectors.size()];
         for ( int i = 0; i < vectors.size(); i++ ) {
             BulkExpressionDataVector vec = vectors.get( i );
-            DoubleBuffer buffer = ByteBuffer.wrap( vec.getData() ).asDoubleBuffer();
+            DoubleBuffer buffer = vec.getDataAsDoubleBuffer();
             for ( int j = 0; j < samples.size(); j++ ) {
                 data[j][i] = buffer.get( sampleIndex[j] );
                 if ( Double.isFinite( data[j][i] ) ) {

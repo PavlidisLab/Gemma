@@ -7,7 +7,11 @@ import static hdf.hdf5lib.H5.*;
 
 public class H5Type implements AutoCloseable {
 
-    public static final long IEEE_F64BE = HDF5Constants.H5T_IEEE_F64BE;
+    public static final long
+            IEEE_F32BE = HDF5Constants.H5T_IEEE_F32BE,
+            IEEE_F64BE = HDF5Constants.H5T_IEEE_F64BE,
+            STD_I32BE = HDF5Constants.H5T_STD_I32BE,
+            STD_I64BE = HDF5Constants.H5T_STD_I64BE;
 
     /**
      * Represents a UTF-8 variable-length string.

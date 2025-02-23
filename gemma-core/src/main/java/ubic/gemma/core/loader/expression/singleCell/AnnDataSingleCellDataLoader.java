@@ -248,7 +248,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             qt.setType( StandardQuantitationType.COUNT );
             qt.setScale( ScaleType.COUNT );
             // TODO: support integer QTs
-            qt.setRepresentation( PrimitiveType.DOUBLE );
+            qt.setRepresentation( PrimitiveType.INT );
         } else if ( fundamentalType.equals( H5FundamentalType.FLOAT ) ) {
             // detect various count encodings
             for ( ScaleType st : new ScaleType[] { ScaleType.COUNT, ScaleType.LOG2, ScaleType.LN, ScaleType.LOG10, ScaleType.LOG1P } ) {
@@ -941,7 +941,20 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         if ( m.isSimpleCase ) {
             // this is using the same storage strategy from ByteArrayConverter
             try ( H5Dataset data = matrix.getData() ) {
-                vector.setData( data.slice( matrix.getIndptr()[i], matrix.getIndptr()[i + 1] ).toByteVector( H5Type.IEEE_F64BE ) );
+                switch ( vector.getQuantitationType().getRepresentation() ) {
+                    case FLOAT:
+                        vector.setData( data.slice( matrix.getIndptr()[i], matrix.getIndptr()[i + 1] ).toByteVector( H5Type.IEEE_F32BE ) );
+                        break;
+                    case DOUBLE:
+                        vector.setData( data.slice( matrix.getIndptr()[i], matrix.getIndptr()[i + 1] ).toByteVector( H5Type.IEEE_F64BE ) );
+                        break;
+                    case INT:
+                        vector.setData( data.slice( matrix.getIndptr()[i], matrix.getIndptr()[i + 1] ).toByteVector( H5Type.STD_I32BE ) );
+                        break;
+                    case LONG:
+                        vector.setData( data.slice( matrix.getIndptr()[i], matrix.getIndptr()[i + 1] ).toByteVector( H5Type.STD_I64BE ) );
+                        break;
+                }
             }
             vector.setDataIndices( IX );
         } else {
@@ -987,7 +1000,21 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                     continue;
                 }
                 try ( H5Dataset data = matrix.getData() ) {
-                    data.slice( start, end ).toByteVector( vectorData, sampleOffsetInVector, sampleOffsetInVector + sampleNnz, H5Type.IEEE_F64BE );
+                    H5Dataset.H5Dataspace s = data.slice( start, end );
+                    switch ( vector.getQuantitationType().getRepresentation() ) {
+                        case FLOAT:
+                            s.toByteVector( vectorData, sampleOffsetInVector, sampleOffsetInVector + sampleNnz, H5Type.IEEE_F32BE );
+                            break;
+                        case DOUBLE:
+                            s.toByteVector( vectorData, sampleOffsetInVector, sampleOffsetInVector + sampleNnz, H5Type.IEEE_F64BE );
+                            break;
+                        case INT:
+                            s.toByteVector( vectorData, sampleOffsetInVector, sampleOffsetInVector + sampleNnz, H5Type.STD_I32BE );
+                            break;
+                        case LONG:
+                            s.toByteVector( vectorData, sampleOffsetInVector, sampleOffsetInVector + sampleNnz, H5Type.STD_I64BE );
+                            break;
+                    }
                 }
                 System.arraycopy( IX, start, vectorIndices, sampleOffsetInVector, sampleNnz );
                 // adjust indices to be relative to the BA offset
