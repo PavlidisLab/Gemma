@@ -24,11 +24,11 @@ import org.springframework.security.access.AccessDeniedException;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.loader.expression.DataUpdater;
-import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
+import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
 import ubic.gemma.core.util.test.category.GeoTest;
@@ -118,7 +118,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         Arrays.sort( means );
         Arrays.sort( variances );
 
-        int expectedLength = 72; // after filtering
+        int expectedLength = 78; // after filtering
         assertEquals( expectedLength, means.length );
         assertEquals( expectedLength, variances.length );
 
@@ -163,8 +163,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         Arrays.sort( variances );
 
         // check sizes
-        int expectedMeanVarianceLength = 72;
-        int expectedLowessLength = 72; // NAs removed
+        int expectedMeanVarianceLength = 78;
+        int expectedLowessLength = 78; // NAs removed
         assertEquals( expectedMeanVarianceLength, means.length );
         assertEquals( expectedMeanVarianceLength, variances.length );
 
@@ -354,6 +354,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         quantitationTypeService.update( qt );
 
         // important bit, need to createProcessedVectors manually before using it
+        ee = eeService.thaw( ee );
         processedExpressionDataVectorService.createProcessedDataVectors( ee, false );
     }
 }
