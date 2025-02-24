@@ -835,7 +835,7 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar,
          * @memberOf Gemma.EEReportGridToolbar
          */
         getBookmark: function () {
-            var url = Gemma.BASEURL + "/expressionExperiment/showAllExpressionExperimentLinkSummaries.html?";
+            var url = Gemma.HOST_URL + "/expressionExperiment/showAllExpressionExperimentLinkSummaries.html?";
             if (this.ids) {
                 url += "&ids=" + this.ids.join(",");
             }

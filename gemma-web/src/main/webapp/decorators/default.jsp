@@ -14,9 +14,10 @@
 <link rel="shortcut icon" href="${pageContext.request.contextPath}/favicon.ico" />
 <Gemma:style src="/bundles/gemma-all.css" />
 <script type="application/javascript">
-const ctxBasePath = "${pageContext.request.contextPath}";
-const recaptchaPublicKey = "${appConfig["gemma.recaptcha.publicKey"]}";
-const gemBrowUrl = "${appConfig["gemma.gemBrow.url"]}";
+window.gemmaHostUrl = "${appConfig["gemma.hosturl"]}";
+window.ctxBasePath = "${pageContext.request.contextPath}";
+window.recaptchaPublicKey = "${appConfig["gemma.recaptcha.publicKey"]}";
+window.gemBrowUrl = "${appConfig["gemma.gemBrow.url"]}";
 </script>
 <%-- for registration, possible from any page--%>
 <script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script>

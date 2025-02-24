@@ -77,7 +77,7 @@ Gemma.GenomeAlignmentsGrid = Ext.extend( Ext.grid.GridPanel, {
       var database = this.getDb( organism );
       if ( database ) {
          var link = UCSC_TRACKS + "?org=" + organism.commonName + "&pix=850&db=" + database + "&hgt.customText="
-            + Gemma.BASEURL + "/blatTrack.html?id=" + d.id;
+            + Gemma.HOST_URL + "/blatTrack.html?id=" + d.id;
          res = res + "&nbsp;<a title='Genome browser view (opens in new window)' target='_blank' href='" + link
             + "'><img src='" + Gemma.UCSC_ICON + "' /></a>";
       }
