@@ -248,6 +248,53 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
     }
 
     @Test
+    public void testAddSingleCellDataVectorsWithInteger() {
+        QuantitationType qt = new QuantitationType();
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.COUNT );
+        qt.setScale( ScaleType.COUNT );
+        qt.setRepresentation( PrimitiveType.INT );
+        qt.setIsSingleCellPreferred( true );
+        sessionFactory.getCurrentSession().persist( qt );
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( qt );
+
+        SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null );
+        sessionFactory.getCurrentSession().flush();
+        assertThat( ee.getQuantitationTypes() )
+                .contains( vectors.iterator().next().getQuantitationType() );
+        assertThat( ee.getSingleCellExpressionDataVectors() )
+                .hasSize( 10 )
+                .allSatisfy( v -> assertThat( v.getId() ).isNotNull() );
+
+        assertThat( scExpressionExperimentService.getSingleCellDimensions( ee ) )
+                .singleElement()
+                .satisfies( scd2 -> {
+                    CellTypeAssignment cta = scd2.getCellTypeAssignments().iterator().next();
+                    assertThat( cta.getCellType( 0 ) )
+                            .isNotNull()
+                            .satisfies( c -> assertThat( c.getValue() ).isEqualTo( "A" ) );
+                    assertThat( cta.getCellType( 50 ) )
+                            .isNotNull()
+                            .satisfies( c -> assertThat( c.getValue() ).isEqualTo( "B" ) );
+                } );
+
+        assertThat( scExpressionExperimentService.getSingleCellExpressionDataMatrix( ee, qt ) )
+                .satisfies( matrix -> {
+                    assertThat( matrix.getQuantitationType().getId() )
+                            .isNull();
+                    assertThat( matrix.getQuantitationType().getName() )
+                            .isEqualTo( qt.getName() );
+                    assertThat( matrix.getQuantitationType().getDescription() )
+                            .endsWith( "Data was converted from INT to DOUBLE." );
+                    assertThat( matrix.getQuantitationType().getRepresentation() )
+                            .isEqualTo( PrimitiveType.DOUBLE );
+                } );
+
+        verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " with dimension " + scd + ".", ( String ) null );
+    }
+
+    @Test
     public void testAddSingleCellDataVectorsTwice() {
         Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
         QuantitationType qt = vectors.iterator().next().getQuantitationType();

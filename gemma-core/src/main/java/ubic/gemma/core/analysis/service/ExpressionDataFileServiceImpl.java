@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
+import ubic.gemma.core.analysis.preprocess.convert.RepresentationConversionUtils;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -41,6 +42,7 @@ import ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter;
 import ubic.gemma.core.datastructure.matrix.io.TabularMatrixWriter;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -511,6 +513,10 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         log.info( "Will write MEX data for " + qt + " to a stream " + ( useEnsemblIds ? " using Ensembl IDs" : "" ) + "." );
         if ( scaleType != null && qt.getScale() != scaleType ) {
             log.info( "Data will be converted from " + qt.getScale() + " to " + scaleType + "." );
+        }
+        if ( qt.getRepresentation() != PrimitiveType.DOUBLE ) {
+            log.warn( "Data will be converted from " + qt.getRepresentation() + " to " + PrimitiveType.DOUBLE + "." );
+            vectors = RepresentationConversionUtils.convertVectors( vectors, PrimitiveType.DOUBLE, SingleCellExpressionDataVector.class );
         }
         SingleCellExpressionDataDoubleMatrix matrix = new SingleCellExpressionDataDoubleMatrix( vectors );
         MexMatrixWriter writer = new MexMatrixWriter();

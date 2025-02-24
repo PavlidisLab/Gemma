@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.core.analysis.preprocess.convert.RepresentationConversionUtils;
 import ubic.gemma.core.analysis.singleCell.SingleCellSparsityMetrics;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
@@ -123,9 +124,13 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional(readOnly = true)
     public SingleCellExpressionDataMatrix<Double> getSingleCellExpressionDataMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
-        List<SingleCellExpressionDataVector> vectors = expressionExperimentDao.getSingleCellDataVectors( expressionExperiment, quantitationType );
+        Collection<SingleCellExpressionDataVector> vectors = expressionExperimentDao.getSingleCellDataVectors( expressionExperiment, quantitationType );
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( "No vector for " + quantitationType + " in " + expressionExperiment );
+        }
+        if ( quantitationType.getRepresentation() != PrimitiveType.DOUBLE ) {
+            log.warn( "Data for " + quantitationType + " will be converted from " + quantitationType.getRepresentation() + " to " + PrimitiveType.DOUBLE + "." );
+            vectors = RepresentationConversionUtils.convertVectors( vectors, PrimitiveType.DOUBLE, SingleCellExpressionDataVector.class );
         }
         return new SingleCellExpressionDataDoubleMatrix( vectors );
     }
@@ -390,14 +395,15 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         Assert.isTrue( singleCellDimension.getBioAssays().stream().allMatch( ba -> ba.getArrayDesignUsed().equals( platform ) ),
                 "All the BioAssays must use a platform that match that of the vectors: " + platform );
         // we only support double for storage
-        // TODO: support counting data using integers too
-        Assert.isTrue( quantitationType.getRepresentation() == PrimitiveType.DOUBLE,
-                "Only double is supported for single-cell data vector storage." );
         int numCells = singleCellDimension.getNumberOfCells();
-        int maximumDataLength = 8 * numCells;
+        int sizeInBytes = quantitationType.getRepresentation().getSizeInBytes();
         for ( SingleCellExpressionDataVector vector : vectors ) {
-            Assert.isTrue( vector.getData().length <= maximumDataLength,
-                    String.format( "All vector must have at most %d bytes.", maximumDataLength ) );
+            if ( sizeInBytes != -1 ) {
+                Assert.isTrue( vector.getData().length == sizeInBytes * vector.getDataIndices().length );
+            } else {
+                // all our variable-length representations used at least 1 byte per element
+                Assert.isTrue( vector.getData().length >= vector.getDataIndices().length );
+            }
             // 1. monotonous, 2. distinct, 3. within the range of the cell IDs
             int lastI = -1;
             for ( int i : vector.getDataIndices() ) {
