@@ -45,12 +45,14 @@ public class DataDeleterServiceImpl implements DataDeleterService {
 
     @Override
     public void deleteRawData( ExpressionExperiment ee, QuantitationType qt ) {
+        ee = expressionExperimentService.thaw( ee );
         expressionExperimentService.removeRawDataVectors( ee, qt );
         expressionDataFileService.deleteAllDataFiles( ee, qt );
     }
 
     @Override
     public void deleteProcessedData( ExpressionExperiment ee ) {
+        ee = expressionExperimentService.thaw( ee );
         processedExpressionDataVectorService.removeProcessedDataVectors( ee );
         expressionDataFileService.deleteAllProcessedDataFiles( ee );
     }

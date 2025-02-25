@@ -331,10 +331,11 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional
     public int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt ) {
-        return expressionExperimentDao.removeRawDataVectors( ee, qt, false );
+        return removeRawDataVectors( ee, qt, false );
     }
 
     @Override
+    @Transactional
     public int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt, boolean keepDimension ) {
         return expressionExperimentDao.removeRawDataVectors( ee, qt, keepDimension );
     }
