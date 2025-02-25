@@ -16,6 +16,7 @@ package ubic.gemma.core.analysis.preprocess;
 
 import org.springframework.transaction.annotation.Propagation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 /**
  * Encapsulates steps that are done to expression data sets after they are loaded and experimental design curated.
@@ -68,7 +69,7 @@ public interface PreprocessorService {
     /**
      * Preprocess a dataset.
      *
-     * @param ee                         the expression experiment to process
+     * @param ee                         the expression experiment to process, it must be fully thawed with {@link ExpressionExperimentService#thaw(ExpressionExperiment)}
      * @param ignoreQuantitationMismatch ignore quantitation mismatch when generating processed EVs
      * @param ignoreDiagnosticFailure    simply warn if a diagnostic fails instead of interrupting the pre-processing
      *                                   and raising an exception
@@ -81,6 +82,7 @@ public interface PreprocessorService {
      * <p>
      * This is also done as part of {@link #process(ExpressionExperiment, boolean, boolean)} so should only be called if
      * only a refresh is needed.
+     * @param ee the expression experiment to process, it must be fully thawed with {@link ExpressionExperimentService#thaw(ExpressionExperiment)}
      */
     void processDiagnostics( ExpressionExperiment ee ) throws PreprocessingException;
 }

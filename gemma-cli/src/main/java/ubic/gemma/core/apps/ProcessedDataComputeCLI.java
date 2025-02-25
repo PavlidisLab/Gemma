@@ -93,7 +93,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
             return;
         }
         try {
-            ee = this.eeService.thawLite( ee );
+            ee = this.eeService.thaw( ee );
 
             if ( this.updateDiagnostics || this.updateRanks ) {
                 log.info( "Skipping processed data vector creation; only doing selected postprocessing steps" );

@@ -301,7 +301,8 @@ public class ExpressionExperimentEditController extends BaseController {
         if ( reprocess ) {
             taskExecutor.execute( new DelegatingSecurityContextRunnable( () -> {
                 try {
-                    preprocessorService.process( expressionExperiment );
+                    ExpressionExperiment thawedEe = expressionExperimentService.thaw( expressionExperiment );
+                    preprocessorService.process( thawedEe );
                 } catch ( PreprocessingException e ) {
                     log.error( "There was an error while updating the experiment after "
                             + "making changes to the quantitation types and/or biomaterial map.", e );

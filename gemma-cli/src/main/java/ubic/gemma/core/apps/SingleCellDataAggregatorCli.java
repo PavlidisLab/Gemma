@@ -309,6 +309,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
 
             log.info( "Reprocessing experiment since a new set of raw data vectors was added or replaced..." );
             try {
+                expressionExperiment = eeService.thaw( expressionExperiment );
                 preprocessorService.process( expressionExperiment );
                 addSuccessObject( expressionExperiment, "Post-processed data from " + newQt + "." );
             } catch ( Exception e ) {

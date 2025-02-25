@@ -151,7 +151,7 @@ public class DataUpdaterImpl implements DataUpdater {
 
         ArrayDesign originalPlatform = ads.iterator().next();
 
-        ee = experimentService.thawLite( ee );
+        ee = experimentService.thaw( ee );
 
         ArrayDesign targetPlatform = this.getAffymetrixTargetPlatform( originalPlatform );
         AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();

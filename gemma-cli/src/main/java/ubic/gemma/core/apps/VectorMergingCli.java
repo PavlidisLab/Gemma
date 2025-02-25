@@ -54,6 +54,7 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
 
     protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
         mergingService.mergeVectors( expressionExperiment );
+        expressionExperiment = eeService.thaw( expressionExperiment );
         preprocessorService.process( expressionExperiment );
     }
 }
