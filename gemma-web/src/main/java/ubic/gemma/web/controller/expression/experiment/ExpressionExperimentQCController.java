@@ -657,14 +657,14 @@ public class ExpressionExperimentQCController extends BaseController {
             CellTypeAssignment cta = requireNonNull( singleCellExpressionExperimentService.getCellTypeAssignment( ee, qt, ctaName ) );
             dataset.setCellLevelCharacteristics( cta );
             if ( focusedCharacteristicId != null ) {
-                dataset.setFocusedCellLevelCharacteristic( cta.getCellTypes().stream().filter( cl -> cl.getId().equals( focusedCharacteristicId ) ).findFirst().orElseThrow( IllegalArgumentException::new ) );
+                dataset.setFocusedCharacteristic( cta.getCellTypes().stream().filter( cl -> cl.getId().equals( focusedCharacteristicId ) ).findFirst().orElseThrow( IllegalArgumentException::new ) );
             }
         }
         if ( clcId != null ) {
             CellLevelCharacteristics clc = requireNonNull( singleCellExpressionExperimentService.getCellLevelCharacteristics( ee, qt, clcId ) );
             dataset.setCellLevelCharacteristics( clc );
             if ( focusedCharacteristicId != null ) {
-                dataset.setFocusedCellLevelCharacteristic( clc.getCharacteristics().stream().filter( cl -> cl.getId().equals( focusedCharacteristicId ) ).findFirst().orElseThrow( IllegalArgumentException::new ) );
+                dataset.setFocusedCharacteristic( clc.getCharacteristics().stream().filter( cl -> cl.getId().equals( focusedCharacteristicId ) ).findFirst().orElseThrow( IllegalArgumentException::new ) );
             }
         }
         JFreeChart chart = ChartFactory.createBoxAndWhiskerChart(

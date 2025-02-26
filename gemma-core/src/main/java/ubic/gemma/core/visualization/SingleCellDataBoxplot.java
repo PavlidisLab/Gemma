@@ -52,7 +52,7 @@ public class SingleCellDataBoxplot {
      * Must be one of {@link #cellLevelCharacteristics}.
      */
     @Nullable
-    private Characteristic focusedCellLevelCharacteristic;
+    private Characteristic focusedCharacteristic;
 
     /**
      * Whether to show the mean.
@@ -78,7 +78,7 @@ public class SingleCellDataBoxplot {
         Random random = new Random( 123L );
         int row;
         if ( cellLevelCharacteristics != null ) {
-            row = cellLevelCharacteristics.getCharacteristics().indexOf( focusedCellLevelCharacteristic );
+            row = cellLevelCharacteristics.getCharacteristics().indexOf( focusedCharacteristic );
         } else {
             row = 0;
         }
@@ -100,7 +100,7 @@ public class SingleCellDataBoxplot {
      */
     public int getNumberOfBoxplots() {
         int num = bioAssays.size();
-        if ( cellLevelCharacteristics != null && focusedCellLevelCharacteristic == null ) {
+        if ( cellLevelCharacteristics != null && focusedCharacteristic == null ) {
             num *= cellLevelCharacteristics.getCharacteristics().size();
         }
         return num;
@@ -118,10 +118,10 @@ public class SingleCellDataBoxplot {
         this.cellLevelCharacteristics = cellLevelCharacteristics;
     }
 
-    public void setFocusedCellLevelCharacteristic( @Nullable Characteristic focusedCellLevelCharacteristic ) {
-        Assert.isTrue( focusedCellLevelCharacteristic == null || ( cellLevelCharacteristics != null && cellLevelCharacteristics.getCharacteristics().contains( focusedCellLevelCharacteristic ) ),
+    public void setFocusedCharacteristic( @Nullable Characteristic focusedCharacteristic ) {
+        Assert.isTrue( focusedCharacteristic == null || ( cellLevelCharacteristics != null && cellLevelCharacteristics.getCharacteristics().contains( focusedCharacteristic ) ),
                 "If provided, the focused characteristic must be one of " + cellLevelCharacteristics + "." );
-        this.focusedCellLevelCharacteristic = focusedCellLevelCharacteristic;
+        this.focusedCharacteristic = focusedCharacteristic;
     }
 
     private class SingleCellBoxAndWhiskerCategoryDataset implements BoxAndWhiskerCategoryDataset {
@@ -142,9 +142,9 @@ public class SingleCellDataBoxplot {
                     .map( BioAssay::getName )
                     .collect( Collectors.toList() );
             if ( cellLevelCharacteristics != null ) {
-                if ( focusedCellLevelCharacteristic != null ) {
-                    rowIndex.put( focusedCellLevelCharacteristic.getValue(), 0 );
-                    rowKeys = Collections.singletonList( focusedCellLevelCharacteristic.getValue() );
+                if ( focusedCharacteristic != null ) {
+                    rowIndex.put( focusedCharacteristic.getValue(), 0 );
+                    rowKeys = Collections.singletonList( focusedCharacteristic.getValue() );
                 } else {
                     int j = 0;
                     for ( Characteristic c : cellLevelCharacteristics.getCharacteristics() ) {
