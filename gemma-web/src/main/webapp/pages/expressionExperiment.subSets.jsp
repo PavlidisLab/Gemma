@@ -52,17 +52,17 @@
                         <c:choose>
                             <c:when test="${dimension == null}">
                                 <a href="${pageContext.request.contextPath}/expressionExperiment/showAllExpressionExperimentSubSets.html?id=${expressionExperiment.id}&dimension=${e.key.id}">
-                                        ${fn:escapeXml(e.key.name)} (${e.key.bioAssays.size()} samples)
+                                        ${fn:escapeXml(e.key.id)} (${e.key.bioAssays.size()} samples)
                                 </a>
                             </c:when>
                             <c:otherwise>
-                                ${fn:escapeXml(e.key.name)} (${e.key.bioAssays.size()} samples)
+                                ${fn:escapeXml(e.key.id)} (${e.key.bioAssays.size()} samples)
                             </c:otherwise>
                         </c:choose>
                     </security:authorize>
                     <!-- regular users can only see the preferred BAD -->
                     <security:authorize access="not hasAuthority('GROUP_ADMIN')">
-                        ${fn:escapeXml(e.key.name)} (${e.key.bioAssays.size()} samples)
+                        ${fn:escapeXml(e.key.id)} (${e.key.bioAssays.size()} samples)
                     </security:authorize>
                 </td>
             </tr>

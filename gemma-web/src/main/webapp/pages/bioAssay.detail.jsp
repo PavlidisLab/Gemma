@@ -130,7 +130,7 @@
 
         <hr class="normal">
 
-        <h3>Hierarchy for dimension #${fn:escapeXml(dimension.id)}</h3>
+        <h3>Hierarchy for dimension ${fn:escapeXml(dimension.id)}</h3>
         <c:if test="${not empty parents}">
             <%-- Having more than one parent would be very unusual, but the data model allows it --%>
             <h4>${parents.size() > 1 ? 'Parents' : 'Parent'}:</h4>

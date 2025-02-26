@@ -102,7 +102,7 @@
 
         <hr class="normal">
 
-        <h3>Hierarchy for dimension #${fn:escapeXml(dimension.id)}</h3>
+        <h3>Hierarchy for dimension ${fn:escapeXml(dimension.id)}</h3>
         <ul>
             <li>
                 <c:if test="${parent != null}">

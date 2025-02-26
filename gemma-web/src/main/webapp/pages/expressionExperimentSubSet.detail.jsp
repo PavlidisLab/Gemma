@@ -84,11 +84,11 @@
                     <c:forEach items="${possibleDimensions}" var="pd">
                         <c:choose>
                             <c:when test="${pd == dimension}">
-                                ${fn:escapeXml(pd.name)} (${bioAssays.size()}/${pd.bioAssays.size()} samples)
+                                ${fn:escapeXml(pd.id)} (${bioAssays.size()}/${pd.bioAssays.size()} samples)
                             </c:when>
                             <c:otherwise>
                                 <Gemma:entityLink entity="${subSet}"
-                                        dimension="${pd}">${fn:escapeXml(pd.name)}</Gemma:entityLink>
+                                        dimension="${pd}">${fn:escapeXml(pd.id)}</Gemma:entityLink>
                                 (${bioAssays.size()}/${pd.bioAssays.size()} samples)
                             </c:otherwise>
                         </c:choose>
