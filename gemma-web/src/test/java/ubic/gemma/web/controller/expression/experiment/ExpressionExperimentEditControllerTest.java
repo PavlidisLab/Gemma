@@ -115,6 +115,7 @@ public class ExpressionExperimentEditControllerTest extends BaseWebTest {
         when( expressionExperimentService.loadAndThawLiteOrFail( eq( 1L ), any(), any() ) ).thenReturn( ee );
         when( expressionExperimentService.getQuantitationTypes( ee ) ).thenReturn( qts );
         when( expressionExperimentService.getQuantitationTypesByVectorType( ee ) ).thenReturn( Collections.singletonMap( RawExpressionDataVector.class, qts ) );
+        when( expressionExperimentService.thaw( ee ) ).thenReturn( ee );
     }
 
     @After

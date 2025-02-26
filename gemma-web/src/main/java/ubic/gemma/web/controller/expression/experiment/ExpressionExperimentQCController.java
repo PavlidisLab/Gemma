@@ -176,11 +176,11 @@ public class ExpressionExperimentQCController extends BaseController {
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
     @Autowired
     private CompositeSequenceService compositeSequenceService;
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
 
     @Value("${gemma.analysis.dir}")
     private Path analysisStoragePath;
-    @Autowired
-    private QuantitationTypeService quantitationTypeService;
 
     @RequestMapping(value = "/expressionExperiment/detailedFactorAnalysis.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void detailedFactorAnalysis( @RequestParam("id") Long id, HttpServletResponse response ) throws Exception {
