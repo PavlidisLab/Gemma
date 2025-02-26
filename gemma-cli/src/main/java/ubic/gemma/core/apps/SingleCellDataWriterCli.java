@@ -105,11 +105,11 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         options.addOption( Option.builder( "fetchSize" ).longOpt( "fetch-size" ).hasArg( true ).type( Integer.class ).desc( "Fetch size to use when retrieving vectors, incompatible with -noStreaming/--no-streaming." ).build() );
         options.addOption( "standardLocation", "standard-location", false, "Write the file to the standard location under, this is incompatible with -scaleType/--scale-type, -useEnsemblIds/--use-ensembl-ids and -o/--output." );
         options.addOption( Option.builder( "o" ).longOpt( "output" ).hasArg( true ).type( Path.class ).desc( "Destination for the matrix file, or a directory if -format is set to MEX." ).build() );
-        addEnumOption( options, "aggregateMethod", "aggregate-method", "Method to use to aggregate single-cell data. This is incompatible with -format, -useEnsemblIds and -standardLocation.", SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.class );
-        options.addOption( "aggregateByAssay", "aggregate-by-assay", false, "Aggregate by assay. Requires -aggregate to be set." );
-        options.addOption( "aggregateByPreferredCta", "aggregate-by-preferred-cell-type-assignment", false, "Cell type assignment to aggregate by." );
-        options.addOption( "aggregateByCta", "aggregate-by-cell-type-assignment", true, "Cell type assignment to aggregate by. Requires -aggregate and -aggregateByAssay to be set." );
-        options.addOption( "aggregateByClc", "aggregate-by-cell-level-characteristics", true, "Cell-level characteristics to aggregate by. Requires -aggregate and -aggregateByAssay to be set." );
+        options.addOption( "aggregateByAssay", "aggregate-by-assay", false, "Aggregate by assay." );
+        options.addOption( "aggregateByPreferredCta", "aggregate-by-preferred-cell-type-assignment", false, "Aggregate by the preferred cell type assignment. Requires -aggregateByAssay to be set." );
+        options.addOption( "aggregateByCta", "aggregate-by-cell-type-assignment", true, "Cell type assignment to aggregate by. Requires -aggregateByAssay to be set." );
+        options.addOption( "aggregateByClc", "aggregate-by-cell-level-characteristics", true, "Cell-level characteristics to aggregate by. Requires -aggregateByAssay to be set." );
+        addEnumOption( options, "aggregateMethod", "aggregate-method", "Method to use to aggregate single-cell data. Require at least one -aggregateBy option to be set. This is incompatible with -format, -useEnsemblIds and -standardLocation.", SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.class );
         addForceOption( options );
     }
 
@@ -140,16 +140,17 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         if ( standardLocation && useEnsemblIds ) {
             throw new ParseException( "Data cannot be written to the standard location using Ensembl IDs." );
         }
-        aggregationMethod = getEnumOptionValue( commandLine, "aggregate", SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.class,
-                requires( noneOf( toBeSet( "standardLocation" ), toBeSet( "format" ), toBeSet( "useEnsemblIds" ) ) ) );
         aggregateByAssay = hasOption( commandLine, "aggregateByAssay",
-                requires( noneOf( toBeSet( "standardLocation" ), toBeSet( "format" ), toBeSet( "useEnsemblIds" ) ) ) );
+                requires( allOf( toBeUnset( "standardLocation" ), toBeUnset( "format" ), toBeUnset( "useEnsemblIds" ) ) ) );
         aggregateByPreferredCellTypeAssignment = hasOption( commandLine, "aggregateByPreferredCta",
-                requires( noneOf( toBeSet( "standardLocation" ), toBeSet( "format" ), toBeSet( "useEnsemblIds" ) ) ) );
+                requires( allOf( toBeSet( "aggregateByAssay" ), toBeUnset( "standardLocation" ), toBeUnset( "format" ), toBeUnset( "useEnsemblIds" ) ) ) );
         aggregateByCellTypeAssignment = getOptionValue( commandLine, "aggregateByCta",
-                requires( noneOf( toBeSet( "standardLocation" ), toBeSet( "format" ), toBeSet( "useEnsemblIds" ) ) ) );
+                requires( allOf( toBeSet( "aggregateByAssay" ), toBeUnset( "standardLocation" ), toBeUnset( "format" ), toBeUnset( "useEnsemblIds" ) ) ) );
         aggregateByCellLevelCharacteristics = getOptionValue( commandLine, "aggregateByClc",
-                requires( noneOf( toBeSet( "standardLocation" ), toBeSet( "format" ), toBeSet( "useEnsemblIds" ) ) ) );
+                requires( allOf( toBeSet( "aggregateByAssay" ), toBeUnset( "standardLocation" ), toBeUnset( "format" ), toBeUnset( "useEnsemblIds" ) ) ) );
+        aggregationMethod = getEnumOptionValue( commandLine, "aggregateMethod", SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.class,
+                requires( allOf( anyOf( toBeSet( "aggregateByAssay" ), toBeSet( "aggregateByPreferredCellTypeAssignment" ), toBeSet( "aggregateByCellTypeAssignment" ), toBeSet( "aggregateByCellLevelCharacteristics" ) ),
+                        toBeUnset( "standardLocation" ), toBeUnset( "format" ), toBeUnset( "useEnsemblIds" ) ) ) );
     }
 
     @Override
@@ -178,13 +179,13 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                 } else {
                     cellLevelCharacteristics = null;
                 }
-                log.info( String.format( "Aggregating vectors for %s by assay %s using %s...", qt,
+                log.info( String.format( "Aggregating vectors for %s by assay%s using %s...", qt,
                         cellLevelCharacteristics != null ? ( " and " + cellLevelCharacteristics ) : "",
                         aggregationMethod ) );
                 Collection<RawExpressionDataVector> vecs;
                 if ( useStreaming ) {
                     long numberOfVectors = singleCellExpressionExperimentService.getNumberOfSingleCellDataVectors( ee, qt );
-                    vecs = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30 )
+                    vecs = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, fetchSize )
                             .peek( createStreamMonitor( getClass().getName(), numberOfVectors ) )
                             .map( createAggregator( aggregationMethod, cellLevelCharacteristics ) )
                             .collect( Collectors.toList() );
