@@ -8,6 +8,7 @@ import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
 
 import java.util.Collection;
+import java.util.function.Function;
 
 /**
  * Convert {@link DataVector} to different {@link ScaleType}.

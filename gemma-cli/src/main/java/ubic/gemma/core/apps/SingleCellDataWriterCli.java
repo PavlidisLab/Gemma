@@ -14,6 +14,7 @@ import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -73,8 +74,15 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
     private boolean standardLocation;
     @Nullable
     private Path outputFile;
+
     @Nullable
     private SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod aggregationMethod;
+    private boolean aggregateByAssay;
+    private boolean aggregateByPreferredCellTypeAssignment;
+    @Nullable
+    private String aggregateByCellTypeAssignment;
+    @Nullable
+    private String aggregateByCellLevelCharacteristics;
 
     @Nullable
     @Override
@@ -97,7 +105,11 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         options.addOption( Option.builder( "fetchSize" ).longOpt( "fetch-size" ).hasArg( true ).type( Integer.class ).desc( "Fetch size to use when retrieving vectors, incompatible with -noStreaming/--no-streaming." ).build() );
         options.addOption( "standardLocation", "standard-location", false, "Write the file to the standard location under, this is incompatible with -scaleType/--scale-type, -useEnsemblIds/--use-ensembl-ids and -o/--output." );
         options.addOption( Option.builder( "o" ).longOpt( "output" ).hasArg( true ).type( Path.class ).desc( "Destination for the matrix file, or a directory if -format is set to MEX." ).build() );
-        addEnumOption( options, "aggregate", "aggregate", "Aggregate the single-cell data by sample. This is incompatible with -format, -useEnsemblIds and -standardLocation.", SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.class );
+        addEnumOption( options, "aggregateMethod", "aggregate-method", "Method to use to aggregate single-cell data. This is incompatible with -format, -useEnsemblIds and -standardLocation.", SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.class );
+        options.addOption( "aggregateByAssay", "aggregate-by-assay", false, "Aggregate by assay. Requires -aggregate to be set." );
+        options.addOption( "aggregateByPreferredCta", "aggregate-by-preferred-cell-type-assignment", false, "Cell type assignment to aggregate by." );
+        options.addOption( "aggregateByCta", "aggregate-by-cell-type-assignment", true, "Cell type assignment to aggregate by. Requires -aggregate and -aggregateByAssay to be set." );
+        options.addOption( "aggregateByClc", "aggregate-by-cell-level-characteristics", true, "Cell-level characteristics to aggregate by. Requires -aggregate and -aggregateByAssay to be set." );
         addForceOption( options );
     }
 
@@ -110,12 +122,12 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         this.useStreaming = !commandLine.hasOption( "noStreaming" );
         this.fetchSize = commandLine.getParsedOptionValue( "fetchSize", 30 );
         if ( commandLine.hasOption( "format" ) ) {
-            this.format = MatrixFormat.valueOf( commandLine.getOptionValue( "format" ).toUpperCase() );
+            this.format = getEnumOptionValue( commandLine, commandLine.getOptionValue( "format" ).toUpperCase(), MatrixFormat.class );
         } else {
             this.format = MatrixFormat.TABULAR;
         }
         if ( commandLine.hasOption( "scaleType" ) ) {
-            this.scaleType = ScaleType.valueOf( commandLine.getOptionValue( "scaleType" ).toUpperCase() );
+            this.scaleType = getEnumOptionValue( commandLine, "scaleType", ScaleType.class );
         }
         this.standardLocation = commandLine.hasOption( "standardLocation" );
         this.outputFile = commandLine.getParsedOptionValue( "o" );
@@ -128,8 +140,15 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         if ( standardLocation && useEnsemblIds ) {
             throw new ParseException( "Data cannot be written to the standard location using Ensembl IDs." );
         }
-        aggregationMethod = getEnumOptionValue( commandLine, "aggregate",
-                SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.class,
+        aggregationMethod = getEnumOptionValue( commandLine, "aggregate", SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.class,
+                requires( noneOf( toBeSet( "standardLocation" ), toBeSet( "format" ), toBeSet( "useEnsemblIds" ) ) ) );
+        aggregateByAssay = hasOption( commandLine, "aggregateByAssay",
+                requires( noneOf( toBeSet( "standardLocation" ), toBeSet( "format" ), toBeSet( "useEnsemblIds" ) ) ) );
+        aggregateByPreferredCellTypeAssignment = hasOption( commandLine, "aggregateByPreferredCta",
+                requires( noneOf( toBeSet( "standardLocation" ), toBeSet( "format" ), toBeSet( "useEnsemblIds" ) ) ) );
+        aggregateByCellTypeAssignment = getOptionValue( commandLine, "aggregateByCta",
+                requires( noneOf( toBeSet( "standardLocation" ), toBeSet( "format" ), toBeSet( "useEnsemblIds" ) ) ) );
+        aggregateByCellLevelCharacteristics = getOptionValue( commandLine, "aggregateByClc",
                 requires( noneOf( toBeSet( "standardLocation" ), toBeSet( "format" ), toBeSet( "useEnsemblIds" ) ) ) );
     }
 
@@ -144,17 +163,32 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
     @Override
     protected void processExpressionExperimentVectors( ExpressionExperiment ee, QuantitationType qt ) {
         try {
-            if ( aggregationMethod != null ) {
-                log.info( "Aggregating vectors for " + qt + " using " + aggregationMethod + "..." );
+            if ( aggregateByAssay || aggregateByPreferredCellTypeAssignment || aggregateByCellTypeAssignment != null || aggregateByCellLevelCharacteristics != null ) {
+                if ( aggregationMethod == null ) {
+                    aggregationMethod = SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.SUM;
+                }
+                CellLevelCharacteristics cellLevelCharacteristics;
+                if ( aggregateByPreferredCellTypeAssignment ) {
+                    cellLevelCharacteristics = singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, qt )
+                            .orElseThrow( () -> new IllegalStateException( ee + " does not have a preferred cell type assignment." ) );
+                } else if ( aggregateByCellTypeAssignment != null ) {
+                    cellLevelCharacteristics = entityLocator.locateCellTypeAssignment( ee, qt, aggregateByCellTypeAssignment );
+                } else if ( aggregateByCellLevelCharacteristics != null ) {
+                    cellLevelCharacteristics = entityLocator.locateCellLevelCharacteristics( ee, qt, aggregateByCellLevelCharacteristics );
+                } else {
+                    cellLevelCharacteristics = null;
+                }
+                log.info( String.format( "Aggregating vectors for %s by assay %s using %s...", qt,
+                        cellLevelCharacteristics != null ? ( " and " + cellLevelCharacteristics ) : "",
+                        aggregationMethod ) );
                 Collection<RawExpressionDataVector> vecs;
                 if ( useStreaming ) {
                     vecs = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30 )
                             .peek( createStreamMonitor( getClass().getName(), 10000 ) )
-                            .map( createAggregator( aggregationMethod ) )
-                            .limit( 50 )
+                            .map( createAggregator( aggregationMethod, cellLevelCharacteristics ) )
                             .collect( Collectors.toList() );
                 } else {
-                    vecs = aggregate( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ), aggregationMethod );
+                    vecs = aggregate( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ), aggregationMethod, cellLevelCharacteristics );
                 }
                 BulkExpressionDataMatrix<?> matrix;
                 if ( aggregationMethod == SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.COUNT || aggregationMethod == SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.COUNT_FAST ) {

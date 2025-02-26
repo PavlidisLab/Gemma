@@ -36,6 +36,10 @@ public class SingleCellDescriptive {
         return applyDescriptive( vector, sampleIndex, DescriptiveWithMissing::max, "max" );
     }
 
+    public static double[][] max( SingleCellExpressionDataVector vector, CellLevelCharacteristics cellLevelCharacteristics ) {
+        return applyDescriptive( vector, cellLevelCharacteristics, DescriptiveWithMissing::max, "max" );
+    }
+
     public static double max( SingleCellExpressionDataVector vector, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
         return applyDescriptive( vector, sampleIndex, cellLevelCharacteristics, row, DescriptiveWithMissing::max, "max" );
     }
@@ -46,6 +50,10 @@ public class SingleCellDescriptive {
 
     public static double min( SingleCellExpressionDataVector vector, int sampleIndex ) {
         return applyDescriptive( vector, sampleIndex, DescriptiveWithMissing::min, "min" );
+    }
+
+    public static double[][] min( SingleCellExpressionDataVector vector, CellLevelCharacteristics cellLevelCharacteristics ) {
+        return applyDescriptive( vector, cellLevelCharacteristics, DescriptiveWithMissing::min, "min" );
     }
 
     public static double min( SingleCellExpressionDataVector vector, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
@@ -423,6 +431,16 @@ public class SingleCellDescriptive {
         }
     }
 
+    private static double[][] applyDescriptive( SingleCellExpressionDataVector vector, CellLevelCharacteristics cellLevelCharacteristics, ToDoubleFunction<DoubleArrayList> func, String operation ) {
+        double[][] result = new double[vector.getSingleCellDimension().getBioAssays().size()][cellLevelCharacteristics.getNumberOfCharacteristics()];
+        for ( int sampleIndex = 0; sampleIndex < vector.getSingleCellDimension().getBioAssays().size(); sampleIndex++ ) {
+            for ( int row = 0; row < cellLevelCharacteristics.getNumberOfCharacteristics(); row++ ) {
+                result[sampleIndex][row] = applyDescriptive( vector, sampleIndex, cellLevelCharacteristics, row, func, operation );
+            }
+        }
+        return result;
+    }
+
     private static double applyDescriptive( SingleCellExpressionDataVector vector, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row, ToDoubleFunction<DoubleArrayList> func, String operation ) {
         switch ( vector.getQuantitationType().getRepresentation() ) {
             case FLOAT:
@@ -458,6 +476,35 @@ public class SingleCellDescriptive {
                     break;
                 default:
                     throw unsupportedRepresentation( representation, "sum" );
+            }
+        }
+        return d;
+    }
+
+    public static double[][] sum( SingleCellExpressionDataVector vector, CellLevelCharacteristics cellLevelCharacteristics ) {
+        ScaleType scaleType = vector.getQuantitationType().getScale();
+        PrimitiveType representation = vector.getQuantitationType().getRepresentation();
+        int numAssays = vector.getSingleCellDimension().getBioAssays().size();
+        int numCharacteristics = cellLevelCharacteristics.getNumberOfCharacteristics();
+        double[][] d = new double[numAssays][numCharacteristics];
+        for ( int i = 0; i < d.length; i++ ) {
+            for ( int j = 0; j < d[i].length; j++ ) {
+                switch ( representation ) {
+                    case FLOAT:
+                        d[i][j] = DataVectorDescriptive.sum( getSampleDataAsFloats( vector, i, cellLevelCharacteristics, j ), scaleType );
+                        break;
+                    case DOUBLE:
+                        d[i][j] = DataVectorDescriptive.sum( getSampleDataAsDoubles( vector, i, cellLevelCharacteristics, j ), scaleType );
+                        break;
+                    case INT:
+                        d[i][j] = DataVectorDescriptive.sum( getSampleDataAsInts( vector, i, cellLevelCharacteristics, j ), scaleType );
+                        break;
+                    case LONG:
+                        d[i][j] = DataVectorDescriptive.sum( getSampleDataAsLongs( vector, i, cellLevelCharacteristics, j ), scaleType );
+                        break;
+                    default:
+                        throw unsupportedRepresentation( representation, "sum" );
+                }
             }
         }
         return d;
