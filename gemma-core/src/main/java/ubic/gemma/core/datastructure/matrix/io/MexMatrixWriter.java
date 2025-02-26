@@ -10,6 +10,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.springframework.util.Assert;
 import ubic.basecode.util.FileTools;
+import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.core.util.TsvUtils;
@@ -34,7 +35,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
-import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.convertVector;
+import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.convertData;
 import static ubic.gemma.core.util.TsvUtils.SUB_DELIMITER;
 import static ubic.gemma.core.util.TsvUtils.format;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.getSampleEnd;
@@ -320,7 +321,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
 
     private void writeVector( SingleCellExpressionDataVector vector, int row, MatrixVectorWriter[] writers ) {
         if ( scaleType != null ) {
-            writeDoubleVector( vector, convertVector( vector, scaleType ), row, writers );
+            writeDoubleVector( vector, ScaleTypeConversionUtils.convertData( vector, scaleType ), row, writers );
         } else {
             switch ( vector.getQuantitationType().getRepresentation() ) {
                 case FLOAT:

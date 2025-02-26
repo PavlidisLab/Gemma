@@ -1061,6 +1061,7 @@ public class ExpressionExperimentController {
                         .thenComparing( ( BioAssayDimension d ) -> quantitationTypesByDimension.get( d ).size(), Comparator.reverseOrder() )
                         .thenComparing( BioAssayDimension::getId ) ) )
                 .collect( Collectors.toMap( Map.Entry::getKey, e -> e.getValue().stream().sorted( Comparator.comparing( ExpressionExperimentSubSet::getName ) ).collect( Collectors.toList() ), ( a, b ) -> b, LinkedHashMap::new ) );
+        QuantitationType singleCellQt = singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ).orElse( null );
         int offset = 0, limit = 20;
         Map<BioAssayDimension, ExpressionDataHeatmap> heatmapsByDimension = new HashMap<>();
         Map<BioAssayDimension, Map<ExpressionExperimentSubSet, Map<ExperimentalFactor, FactorValue>>> subSetFactorsByDimension = new HashMap<>();
@@ -1075,7 +1076,16 @@ public class ExpressionExperimentController {
                 List<Gene> genes = designElements.stream()
                         .map( de -> cs2gene.getOrDefault( de, Collections.emptyList() ).stream().findAny().orElse( null ) )
                         .collect( Collectors.toList() );
-                heatmapsByDimension.put( dimension, ExpressionDataHeatmap.fromDesignElements( ee, dimension, designElements, genes ) );
+                ExpressionDataHeatmap heatmap = ExpressionDataHeatmap.fromDesignElements( ee, dimension, designElements, genes );
+                if ( singleCellQt != null ) {
+                    heatmap.setSingleCellQuantitationType( singleCellQt );
+                    singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, singleCellQt )
+                            .ifPresent( cta -> {
+                                heatmap.setCellLevelCharacteristics( cta );
+                                heatmap.setFocusedCellLevelCharacteristic( null );
+                            } );
+                }
+                heatmapsByDimension.put( dimension, heatmap );
             }
             // reorganize the mapping to be easier to display
             expressionExperimentService.getSubSetsByFactorValue( ee, dimension ).entrySet()
@@ -1146,6 +1156,19 @@ public class ExpressionExperimentController {
                         .map( de -> cs2gene.getOrDefault( de, Collections.emptyList() ).stream().findAny().orElse( null ) )
                         .collect( Collectors.toList() );
                 heatmap = ExpressionDataHeatmap.fromDesignElements( subset, dimension, designElements, genes );
+                singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( subset.getSourceExperiment() ).ifPresent( scQt -> {
+                    heatmap.setSingleCellQuantitationType( scQt );
+                    singleCellExpressionExperimentService.getPreferredCellTypeAssignment( subset.getSourceExperiment(), scQt ).ifPresent( cta -> {
+                        heatmap.setCellLevelCharacteristics( cta );
+                        // TODO: use the subset factor if available to determine the cell type we want to focus on
+                        cta.getCellTypes().stream()
+                                .filter( c -> subset.getCharacteristics().stream()
+                                        .filter( c2 -> CharacteristicUtils.hasCategory( c2, Categories.CELL_TYPE ) )
+                                        .anyMatch( c2 -> CharacteristicUtils.equals( c.getValue(), c.getValueUri(), c2.getValue(), c2.getValueUri() ) ) )
+                                .findAny()
+                                .ifPresent( heatmap::setFocusedCellLevelCharacteristic );
+                    } );
+                } );
                 heatmap.setTranspose( true );
             } else {
                 heatmap = null;

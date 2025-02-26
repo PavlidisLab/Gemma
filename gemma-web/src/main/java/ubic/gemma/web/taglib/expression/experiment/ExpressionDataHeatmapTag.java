@@ -112,6 +112,32 @@ public class ExpressionDataHeatmapTag extends AbstractHeatmapTag<ExpressionDataH
                     writer.writeAttribute( "href", entityUrlBuilder.fromContextPath().entity( gene ).toUriString() );
                     writer.appendValue( gene.getOfficialSymbol() );
                     writer.endTag(); // </a>
+                    if ( heatmap.getSingleCellQuantitationType() != null ) {
+                        CompositeSequence designElement;
+                        if ( heatmap.getVectors() != null ) {
+                            designElement = heatmap.getVectors().get( i ).getDesignElement();
+                        } else if ( heatmap.getDesignElements() != null ) {
+                            designElement = heatmap.getDesignElements().get( i );
+                        } else {
+                            throw new IllegalStateException( "An expression data heatmap must have either vectors or design elements populated." );
+                        }
+                        ExpressionExperiment ee;
+                        if ( heatmap.getBioAssaySet() instanceof ExpressionExperimentSubSet ) {
+                            ee = ( ( ExpressionExperimentSubSet ) heatmap.getBioAssaySet() ).getSourceExperiment();
+                        } else if ( heatmap.getBioAssaySet() instanceof ExpressionExperiment ) {
+                            ee = ( ExpressionExperiment ) heatmap.getBioAssaySet();
+                        } else {
+                            throw new IllegalStateException( "Unexpected BioAssaySet type in heatmap: " + heatmap.getBioAssaySet().getClass().getName() );
+                        }
+                        String boxplotUrl = entityUrlBuilder.fromContextPath().entity( ee )
+                                .web()
+                                .visualizeSingleCellBoxPlot( heatmap.getSingleCellQuantitationType(), designElement, heatmap.getCellLevelCharacteristics(), heatmap.getFocusedCellLevelCharacteristic() )
+                                .toUriString();
+                        writer.startTag( "a" );
+                        writer.writeAttribute( "href", boxplotUrl );
+                        writer.appendValue( " (view single-cell expression data)" );
+                        writer.endTag(); // </a>
+                    }
                 } else {
                     writer.startTag( "i" );
                     writer.appendValue( "Unmapped: " );

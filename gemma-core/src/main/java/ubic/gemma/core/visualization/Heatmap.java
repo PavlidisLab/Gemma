@@ -5,13 +5,14 @@ import org.jfree.chart.renderer.PaintScale;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.Serializable;
 import java.util.List;
 
 /**
  * Minimal interface for a labelled heatmap.
  * @author poirigui
  */
-public interface Heatmap {
+public interface Heatmap extends Serializable {
 
     /**
      * Borrowed from Heatmap.js

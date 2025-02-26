@@ -1,18 +1,16 @@
 package ubic.gemma.core.analysis.preprocess.convert;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
 
-import java.beans.PropertyDescriptor;
-import java.util.*;
+import java.util.Collection;
 
 import static ubic.gemma.persistence.util.ByteArrayUtils.doubleArrayToBytes;
 
 /**
- * Convert {@link ubic.gemma.model.expression.bioAssayData.DataVector} from different representations.
+ * Convert {@link DataVector} to different {@link PrimitiveType}.
  * @author poirigui
  */
 public class RepresentationConversionUtils {
@@ -21,51 +19,21 @@ public class RepresentationConversionUtils {
      * Convert a collection of vectors to a desired representation.
      */
     public static <T extends DataVector> Collection<T> convertVectors( Collection<T> vectors, PrimitiveType toRepresentation, Class<T> vectorType ) {
-        ArrayList<T> result = new ArrayList<>( vectors.size() );
-        Map<QuantitationType, QuantitationType> convertedQts = new HashMap<>();
-        List<String> ignoredPropertiesList = new ArrayList<>();
-        for ( PropertyDescriptor pd : BeanUtils.getPropertyDescriptors( vectorType ) ) {
-            if ( pd.getName().equals( "quantitationType" ) || ( pd.getName().startsWith( "data" ) && !pd.getName().equals( "dataIndices" ) ) ) {
-                ignoredPropertiesList.add( pd.getName() );
-            }
-        }
-        String[] ignoredProperties = ignoredPropertiesList.toArray( new String[0] );
-        for ( T vector : vectors ) {
-            QuantitationType qt = vector.getQuantitationType();
-            QuantitationType convertedQt = convertedQts.computeIfAbsent( qt, qt2 -> {
-                QuantitationType quantitationType = QuantitationType.Factory.newInstance( qt2 );
-                String description;
-                if ( StringUtils.isNotBlank( qt.getDescription() ) ) {
-                    description = StringUtils.appendIfMissing( StringUtils.strip( qt.getDescription() ), "." ) + " ";
-                } else {
-                    description = "";
-                }
-                description += "Data was converted from " + qt.getRepresentation() + " to " + toRepresentation + ".";
-                quantitationType.setDescription( description );
-                quantitationType.setRepresentation( toRepresentation );
-                return quantitationType;
-            } );
-            T convertedVector = BeanUtils.instantiate( vectorType );
-            BeanUtils.copyProperties( vector, convertedVector, ignoredProperties );
-            convertedVector.setQuantitationType( convertedQt );
-            convertedVector.setData( convertData( vector, toRepresentation ) );
-            result.add( convertedVector );
-        }
-        return result;
+        return QuantitationTypeConversionUtils.convertVectors( vectors, qt -> getConvertedQuantitationType( qt, toRepresentation ), ( vec, origVec ) -> vec.setData( convertData( origVec, toRepresentation ) ), vectorType );
     }
 
-    /**
-     * Convert a single vector to a desired representation.
-     */
-    public static <T extends DataVector> T convertVector( T vector, PrimitiveType toRepresentation, Class<T> vectorType ) {
-        QuantitationType qt = vector.getQuantitationType();
-        QuantitationType convertedQt = QuantitationType.Factory.newInstance( qt );
-        convertedQt.setRepresentation( toRepresentation );
-        T convertedVector = BeanUtils.instantiate( vectorType );
-        BeanUtils.copyProperties( vector, convertedVector );
-        convertedVector.setQuantitationType( convertedQt );
-        convertedVector.setData( convertData( vector, toRepresentation ) );
-        return convertedVector;
+    private static QuantitationType getConvertedQuantitationType( QuantitationType qt, PrimitiveType toRepresentation ) {
+        QuantitationType quantitationType = QuantitationType.Factory.newInstance( qt );
+        String description;
+        if ( StringUtils.isNotBlank( qt.getDescription() ) ) {
+            description = StringUtils.appendIfMissing( StringUtils.strip( qt.getDescription() ), "." ) + " ";
+        } else {
+            description = "";
+        }
+        description += "Data was converted from " + qt.getRepresentation() + " to " + toRepresentation + ".";
+        quantitationType.setDescription( description );
+        quantitationType.setRepresentation( toRepresentation );
+        return quantitationType;
     }
 
     private static byte[] convertData( DataVector vector, PrimitiveType to ) {

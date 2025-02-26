@@ -221,20 +221,19 @@ public class EntityLocatorImpl implements EntityLocator {
         Assert.isTrue( StringUtils.isNotBlank( cta ), "Cell type assignment name must not be blank." );
         cta = StringUtils.strip( cta );
         try {
-            Optional<CellTypeAssignment> c = singleCellExpressionExperimentService.getCellTypeAssignment( expressionExperiment, qt, Long.parseLong( cta ) );
-            if ( c.isPresent() ) {
-                return c.get();
+            CellTypeAssignment c = singleCellExpressionExperimentService.getCellTypeAssignment( expressionExperiment, qt, Long.parseLong( cta ) );
+            if ( c != null ) {
+                return c;
             }
         } catch ( NumberFormatException e ) {
             // ignore
         }
         String finalCta = cta;
 
-        return singleCellExpressionExperimentService.getCellTypeAssignment( expressionExperiment, qt, cta )
-                .orElseThrow( () -> {
-                    List<CellTypeAssignment> possibleValues = singleCellExpressionExperimentService.getCellTypeAssignments( expressionExperiment, qt );
-                    return new NullPointerException( "Could not locate any cell type assignment with identifier or name matching " + finalCta + "." + formatPossibleValues( possibleValues, true ) );
-                } );
+        return requireNonNull( singleCellExpressionExperimentService.getCellTypeAssignment( expressionExperiment, qt, cta ), () -> {
+            List<CellTypeAssignment> possibleValues = singleCellExpressionExperimentService.getCellTypeAssignments( expressionExperiment, qt );
+            return "Could not locate any cell type assignment with identifier or name matching " + finalCta + "." + formatPossibleValues( possibleValues, true );
+        } );
     }
 
     @Override

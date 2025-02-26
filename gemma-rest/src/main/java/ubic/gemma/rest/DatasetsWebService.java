@@ -1166,8 +1166,10 @@ public class DatasetsWebService {
         }
         CellTypeAssignment cta;
         if ( ctaName != null ) {
-            cta = singleCellExpressionExperimentService.getCellTypeAssignment( ee, qt, ctaName )
-                    .orElseThrow( () -> new NotFoundException( "No cell type assignment with name " + ctaName + " found for " + ee.getShortName() + " and " + qt.getName() + "." ) );
+            cta = singleCellExpressionExperimentService.getCellTypeAssignment( ee, qt, ctaName );
+            if ( cta == null ) {
+                throw new NotFoundException( "No cell type assignment with name " + ctaName + " found for " + ee.getShortName() + " and " + qt.getName() + "." );
+            }
         } else {
             cta = singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, qt )
                     .orElseThrow( () -> new NotFoundException( "No preferred cell type assignment found for " + ee.getShortName() + " and " + qt.getName() + "." ) );

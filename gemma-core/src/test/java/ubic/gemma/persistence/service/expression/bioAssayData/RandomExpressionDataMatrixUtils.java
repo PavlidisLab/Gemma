@@ -3,7 +3,6 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.math3.distribution.*;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
-import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -16,7 +15,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.convertVector;
+import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.convertData;
 
 /**
  * Utilities for generating random {@link ExpressionDataDoubleMatrix} following various random distributions.
@@ -62,7 +61,7 @@ public class RandomExpressionDataMatrixUtils {
         for ( int i = 0; i < matrix.rows(); i++ ) {
             for ( int j = 0; j < matrix.columns(); j++ ) {
                 double val = matrix.getAsDouble( i, j );
-                matrix.set( i, j, convertVector( new double[] { val }, StandardQuantitationType.COUNT, ScaleType.COUNT, scaleType )[0] );
+                matrix.set( i, j, convertData( new double[] { val }, StandardQuantitationType.COUNT, ScaleType.COUNT, scaleType )[0] );
             }
         }
         return matrix;

@@ -2457,6 +2457,24 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public SingleCellExpressionDataVector getSingleCellDataVectorWithoutCellIds( ExpressionExperiment ee, QuantitationType quantitationType, CompositeSequence designElement ) {
+        SingleCellExpressionDataVector vector = ( SingleCellExpressionDataVector ) getSessionFactory().getCurrentSession()
+                .createQuery( "select scedv.id as id, scedv.data as data, scedv.dataIndices as dataIndices, scedv.originalDesignElement as originalDesignElement from SingleCellExpressionDataVector scedv where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt and scedv.designElement = :de" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", quantitationType )
+                .setParameter( "de", designElement )
+                .setResultTransformer( aliasToBean( SingleCellExpressionDataVector.class ) )
+                .uniqueResult();
+        if ( vector != null ) {
+            vector.setExpressionExperiment( ee );
+            vector.setDesignElement( designElement );
+            vector.setQuantitationType( quantitationType );
+            vector.setSingleCellDimension( getSingleCellDimensionWithoutCellIds( ee, quantitationType ) );
+        }
+        return vector;
+    }
+
+    @Override
     public long getNumberOfSingleCellDataVectors( ExpressionExperiment ee, QuantitationType qt ) {
         return ( Long ) getSessionFactory().getCurrentSession().createQuery( "select count(scedv) from SingleCellExpressionDataVector scedv "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )

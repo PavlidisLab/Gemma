@@ -5,9 +5,12 @@ import lombok.Setter;
 import org.jfree.data.general.HeatMapDataset;
 import org.jfree.data.general.HeatMapUtils;
 import org.springframework.util.Assert;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -58,7 +61,7 @@ public class ExpressionDataHeatmap implements Heatmap {
     /**
      * Create a heatmap for a given set of design elements.
      * <p>
-     * in this mode, no image can be generated, but labels can are available.
+     * in this mode, no image can be generated, but labels are available.
      * @see #fromVectors(ExpressionExperiment, BioAssayDimension, Slice, List)
      */
     public static ExpressionDataHeatmap fromDesignElements( ExpressionExperiment ee, BioAssayDimension dimension, Slice<CompositeSequence> designElements, @Nullable List<Gene> genes ) {
@@ -82,8 +85,22 @@ public class ExpressionDataHeatmap implements Heatmap {
     private final Slice<? extends BulkExpressionDataVector> vectors;
     @Nullable
     private final Slice<CompositeSequence> designElements;
+    /**
+     * List of genes to use for display purposes.
+     */
     @Nullable
     private final List<Gene> genes;
+
+    /**
+     * Quantitation type of the single-cell data this heatmap was generated from, if applicable.
+     */
+    @Nullable
+    private QuantitationType singleCellQuantitationType;
+    @Nullable
+    private CellLevelCharacteristics cellLevelCharacteristics;
+    @Nullable
+    private Characteristic focusedCellLevelCharacteristic;
+
     private int cellSize = 16;
     private boolean transpose = false;
 

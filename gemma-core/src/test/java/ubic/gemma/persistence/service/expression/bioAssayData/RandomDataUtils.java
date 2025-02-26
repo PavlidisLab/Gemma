@@ -3,12 +3,13 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
 import org.springframework.util.Assert;
+import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 
-import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.convertVector;
+import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.convertData;
 
 /**
  * Shared utilities for generating random data.
@@ -50,11 +51,11 @@ class RandomDataUtils {
             if ( qt.getType() == StandardQuantitationType.AMOUNT ) {
                 double val = logNormalDistribution.sample();
                 ScaleType scale = qt.getScale();
-                return convertVector( new double[] { val }, StandardQuantitationType.AMOUNT, ScaleType.LINEAR, scale )[0];
+                return convertData( new double[] { val }, StandardQuantitationType.AMOUNT, ScaleType.LINEAR, scale )[0];
             } else if ( qt.getType() == StandardQuantitationType.COUNT ) {
                 int val = countDistribution.sample();
                 ScaleType scale = qt.getScale();
-                return convertVector( new int[] { val }, scale )[0];
+                return ScaleTypeConversionUtils.convertData( new int[] { val }, scale )[0];
             } else {
                 throw new IllegalArgumentException( "Don't know how to generate " + qt + " data." );
             }
@@ -89,10 +90,10 @@ class RandomDataUtils {
         } else {
             if ( qt.getType() == StandardQuantitationType.AMOUNT ) {
                 double[] val = logNormalDistribution.sample( n );
-                return convertVector( val, StandardQuantitationType.AMOUNT, ScaleType.LINEAR, qt.getScale() );
+                return convertData( val, StandardQuantitationType.AMOUNT, ScaleType.LINEAR, qt.getScale() );
             } else if ( qt.getType() == StandardQuantitationType.COUNT ) {
                 int[] val = countDistribution.sample( n );
-                return convertVector( val, qt.getScale() );
+                return ScaleTypeConversionUtils.convertData( val, qt.getScale() );
             } else {
                 throw new IllegalArgumentException( "Don't know how to generate " + qt + " data." );
             }

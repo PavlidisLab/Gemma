@@ -1,8 +1,13 @@
 package ubic.gemma.model.expression.bioAssayData;
 
+import cern.colt.list.DoubleArrayList;
+import cern.colt.list.FloatArrayList;
+import cern.colt.list.IntArrayList;
+import cern.colt.list.LongArrayList;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.util.Assert;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 import java.util.Arrays;
@@ -123,6 +128,68 @@ public class SingleCellExpressionDataVectorUtils {
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
         return Arrays.copyOfRange( vector.getDataAsLongs(), start, end );
+    }
+
+    /**
+     * Obtain the data of a sample.
+     */
+    public static float[] getSampleDataAsFloats( SingleCellExpressionDataVector vector, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
+        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() );
+        int start = getSampleStart( vector, sampleIndex, 0 );
+        int end = getSampleEnd( vector, sampleIndex, start );
+        float[] data = vector.getDataAsFloats();
+        FloatArrayList arr = new FloatArrayList();
+        for ( int i = start; i < end; i++ ) {
+            if ( cellLevelCharacteristics.getIndices()[i] == row ) {
+                arr.add( data[i] );
+            }
+        }
+        return arr.elements();
+    }
+
+    /**
+     * Obtain the data of a sample.
+     */
+    public static double[] getSampleDataAsDoubles( SingleCellExpressionDataVector vector, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
+        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() );
+        int start = getSampleStart( vector, sampleIndex, 0 );
+        int end = getSampleEnd( vector, sampleIndex, start );
+        double[] data = vector.getDataAsDoubles();
+        DoubleArrayList arr = new DoubleArrayList();
+        for ( int i = start; i < end; i++ ) {
+            if ( cellLevelCharacteristics.getIndices()[i] == row ) {
+                arr.add( data[i] );
+            }
+        }
+        return arr.elements();
+    }
+
+    public static int[] getSampleDataAsInts( SingleCellExpressionDataVector vector, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
+        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() );
+        int start = getSampleStart( vector, sampleIndex, 0 );
+        int end = getSampleEnd( vector, sampleIndex, start );
+        int[] data = vector.getDataAsInts();
+        IntArrayList arr = new IntArrayList();
+        for ( int i = start; i < end; i++ ) {
+            if ( cellLevelCharacteristics.getIndices()[i] == row ) {
+                arr.add( data[i] );
+            }
+        }
+        return arr.elements();
+    }
+
+    public static long[] getSampleDataAsLongs( SingleCellExpressionDataVector vector, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
+        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() );
+        int start = getSampleStart( vector, sampleIndex, 0 );
+        int end = getSampleEnd( vector, sampleIndex, start );
+        long[] data = vector.getDataAsLongs();
+        LongArrayList arr = new LongArrayList();
+        for ( int i = start; i < end; i++ ) {
+            if ( cellLevelCharacteristics.getIndices()[i] == row ) {
+                arr.add( data[i] );
+            }
+        }
+        return arr.elements();
     }
 
     public static Consumer<SingleCellExpressionDataVector> createStreamMonitor( String logCategory, long numVecs ) {

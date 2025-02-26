@@ -83,6 +83,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
+    public SingleCellExpressionDataVector getSingleCellDataVectorWithoutCellIds( ExpressionExperiment ee, QuantitationType quantitationType, CompositeSequence designElement ) {
+        return expressionExperimentDao.getSingleCellDataVectorWithoutCellIds( ee, quantitationType, designElement );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public long getNumberOfSingleCellDataVectors( ExpressionExperiment ee, QuantitationType qt ) {
         return expressionExperimentDao.getNumberOfSingleCellDataVectors( ee, qt );
     }
@@ -659,14 +665,14 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<CellTypeAssignment> getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, Long ctaId ) {
-        return Optional.ofNullable( expressionExperimentDao.getCellTypeAssignment( expressionExperiment, qt, ctaId ) );
+    public CellTypeAssignment getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, Long ctaId ) {
+        return expressionExperimentDao.getCellTypeAssignment( expressionExperiment, qt, ctaId );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<CellTypeAssignment> getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, String ctaName ) {
-        return Optional.ofNullable( expressionExperimentDao.getCellTypeAssignment( expressionExperiment, qt, ctaName ) );
+    public CellTypeAssignment getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, String ctaName ) {
+        return expressionExperimentDao.getCellTypeAssignment( expressionExperiment, qt, ctaName );
     }
 
     @Override

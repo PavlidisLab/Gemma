@@ -21,6 +21,7 @@ package ubic.gemma.core.analysis.preprocess.convert;
 import cern.colt.matrix.DoubleMatrix1D;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.BeanUtils;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.MatrixStats;
 import ubic.gemma.core.analysis.preprocess.detect.InferredQuantitationMismatchException;
@@ -30,11 +31,15 @@ import ubic.gemma.core.analysis.preprocess.detect.SuspiciousValuesForQuantitatio
 import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.*;
+import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import javax.annotation.CheckReturnValue;
-import java.util.List;
+import java.beans.PropertyDescriptor;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionUtils.detectSuspiciousValues;
@@ -278,4 +283,50 @@ public class QuantitationTypeConversionUtils {
         return false;
     }
 
+    /**
+     * Convert a collection of vectors.
+     * @param createQtFunc a function to create a converted {@link QuantitationType}
+     * @param doToVector   a consumer to post-process the created vector (first argument) given the original vector
+     *                     (second argument)
+     * @param vectorType   the type of vector to produce
+     */
+    public static <T extends DataVector> Collection<T> convertVectors( Collection<T> vectors, Function<QuantitationType, QuantitationType> createQtFunc, BiConsumer<T, T> doToVector, Class<T> vectorType ) {
+        ArrayList<T> result = new ArrayList<>( vectors.size() );
+        Map<QuantitationType, QuantitationType> convertedQts = new HashMap<>();
+        String[] ignoredProperties = getDataVectorIgnoredProperties( vectorType );
+        for ( T vector : vectors ) {
+            QuantitationType convertedQt = convertedQts.computeIfAbsent( vector.getQuantitationType(), createQtFunc );
+            result.add( createVector( vector, vectorType, convertedQt, doToVector, ignoredProperties ) );
+        }
+        return result;
+    }
+
+
+    /**
+     * Convert a single vector.
+     */
+    public static <T extends DataVector> T convertVector( T vector, Function<QuantitationType, QuantitationType> createQtFunc, BiConsumer<T, T> doToVector, Class<T> vectorType ) {
+        return createVector( vector, vectorType, createQtFunc.apply( vector.getQuantitationType() ), doToVector, getDataVectorIgnoredProperties( vectorType ) );
+    }
+
+    private static <T extends DataVector> T createVector( T vector, Class<T> vectorType, QuantitationType convertedQt, BiConsumer<T, T> doToVector, String[] ignoredProperties ) {
+        T convertedVector = BeanUtils.instantiate( vectorType );
+        BeanUtils.copyProperties( vector, convertedVector, ignoredProperties );
+        convertedVector.setQuantitationType( convertedQt );
+        doToVector.accept( convertedVector, vector );
+        return convertedVector;
+    }
+
+    /**
+     * List of properties to copy over when converting a vector to a different QT.
+     */
+    private static String[] getDataVectorIgnoredProperties( Class<? extends DataVector> vectorType ) {
+        List<String> ignoredPropertiesList = new ArrayList<>();
+        for ( PropertyDescriptor pd : BeanUtils.getPropertyDescriptors( vectorType ) ) {
+            if ( pd.getName().equals( "quantitationType" ) || ( pd.getName().startsWith( "data" ) && !pd.getName().equals( "dataIndices" ) ) ) {
+                ignoredPropertiesList.add( pd.getName() );
+            }
+        }
+        return ignoredPropertiesList.toArray( new String[0] );
+    }
 }

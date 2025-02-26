@@ -7,9 +7,13 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
+import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
@@ -17,6 +21,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
+import javax.annotation.Nullable;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -216,6 +221,7 @@ public class EntityUrlBuilder {
         private boolean byShortName = false;
 
         private String entityPath = "/expressionExperiment/showExpressionExperiment.html";
+        private String additionalQuery = "";
 
         private ExpressionExperimentWebUrl( String baseUrl, ExpressionExperiment entity ) {
             super( baseUrl, entity );
@@ -234,25 +240,43 @@ public class EntityUrlBuilder {
 
         public ExpressionExperimentWebUrl edit() {
             entityPath = "/expressionExperiment/editExpressionExperiment.html";
+            additionalQuery = "";
             return this;
         }
 
         public ExpressionExperimentWebUrl bioAssays() {
             entityPath = "/expressionExperiment/showBioAssaysFromExpressionExperiment.html";
+            additionalQuery = "";
             return this;
         }
 
         public ExpressionExperimentWebUrl bioMaterials() {
             entityPath = "/expressionExperiment/showBioMaterialsFromExpressionExperiment.html";
+            additionalQuery = "";
+            return this;
+        }
+
+        public ExpressionExperimentWebUrl visualizeSingleCellBoxPlot( QuantitationType quantitationType, CompositeSequence designElement, @Nullable CellLevelCharacteristics cellLevelCharacteristics, @Nullable Characteristic focusedCharacteristic ) {
+            Assert.state( !byShortName, "Single-cell box plots cannot be visualized by short name." );
+            entityPath = "/expressionExperiment/visualizeSingleCellDataBoxplot.html";
+            additionalQuery = "&quantitationType=" + quantitationType.getId() + "&designElement=" + designElement.getId();
+            if ( cellLevelCharacteristics instanceof CellTypeAssignment ) {
+                additionalQuery += "&cellTypeAssignment=" + urlEncode( ( ( CellTypeAssignment ) cellLevelCharacteristics ).getName() );
+            } else if ( cellLevelCharacteristics != null ) {
+                additionalQuery += "&cellLevelCharacteristics=" + cellLevelCharacteristics.getId();
+            }
+            if ( focusedCharacteristic != null ) {
+                additionalQuery += "&focusedCharacteristic=" + focusedCharacteristic.getId();
+            }
             return this;
         }
 
         @Override
         public URI toUri() {
             if ( byShortName ) {
-                return URI.create( baseUrl + entityPath + "?shortName=" + urlEncode( entity.getShortName() ) );
+                return URI.create( baseUrl + entityPath + "?shortName=" + urlEncode( entity.getShortName() ) + additionalQuery );
             } else {
-                return URI.create( baseUrl + entityPath + "?id=" + entity.getId() );
+                return URI.create( baseUrl + entityPath + "?id=" + entity.getId() + additionalQuery );
             }
         }
     }

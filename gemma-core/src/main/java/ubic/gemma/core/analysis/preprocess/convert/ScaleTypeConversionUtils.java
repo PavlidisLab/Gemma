@@ -1,14 +1,18 @@
 package ubic.gemma.core.analysis.preprocess.convert;
 
+import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
 
+import java.util.Collection;
+
 /**
- * Utilities for converting data vectors to different scales and representations.
+ * Convert {@link DataVector} to different {@link ScaleType}.
  * <p>
- * For now, all conversions produce doubles
+ * For now, all conversions produce {@link PrimitiveType#DOUBLE}.
  * @author poirigui
  */
 public class ScaleTypeConversionUtils {
@@ -17,6 +21,25 @@ public class ScaleTypeConversionUtils {
     private static final ThreadLocal<long[]> ONE_LONG_VALUE = ThreadLocal.withInitial( () -> new long[1] );
     private static final ThreadLocal<float[]> ONE_FLOAT_VALUE = ThreadLocal.withInitial( () -> new float[1] );
     private static final ThreadLocal<double[]> ONE_DOUBLE_VALUE = ThreadLocal.withInitial( () -> new double[1] );
+
+    public static <T extends DataVector> Collection<T> convertVectors( Collection<T> vectors, ScaleType toScale, Class<T> vectorType ) {
+        return QuantitationTypeConversionUtils.convertVectors( vectors, qt -> getConvertedQuantitationType( qt, toScale ), ( vec, origVec ) -> vec.setDataAsDoubles( convertData( origVec, toScale ) ), vectorType );
+    }
+
+    private static QuantitationType getConvertedQuantitationType( QuantitationType qt, ScaleType toScale ) {
+        QuantitationType quantitationType = QuantitationType.Factory.newInstance( qt );
+        String description;
+        if ( StringUtils.isNotBlank( qt.getDescription() ) ) {
+            description = StringUtils.appendIfMissing( StringUtils.strip( qt.getDescription() ), "." ) + " ";
+        } else {
+            description = "";
+        }
+        description += "Data was converted from " + qt.getScale() + " to " + toScale + ".";
+        quantitationType.setDescription( description );
+        quantitationType.setScale( toScale );
+        quantitationType.setRepresentation( PrimitiveType.DOUBLE );
+        return quantitationType;
+    }
 
     /**
      * Convert a single number.
@@ -31,19 +54,19 @@ public class ScaleTypeConversionUtils {
         if ( val instanceof Float ) {
             float[] vec = ONE_FLOAT_VALUE.get();
             vec[0] = val.floatValue();
-            return convertVector( vec, qt, scaleType )[0];
+            return convertData( vec, qt, scaleType )[0];
         } else if ( val instanceof Double ) {
             double[] vec = ONE_DOUBLE_VALUE.get();
             vec[0] = val.doubleValue();
-            return convertVector( vec, qt, scaleType )[0];
+            return convertData( vec, qt, scaleType )[0];
         } else if ( val instanceof Integer ) {
             int[] vec = ONE_INT_VALUE.get();
             vec[0] = val.intValue();
-            return convertVector( vec, scaleType )[0];
+            return convertData( vec, scaleType )[0];
         } else if ( val instanceof Long ) {
             long[] vec = ONE_LONG_VALUE.get();
             vec[0] = val.longValue();
-            return convertVector( vec, scaleType )[0];
+            return convertData( vec, scaleType )[0];
         } else {
             throw new UnsupportedOperationException( "Cannot convert " + val.getClass().getSimpleName() + " to " + scaleType + " scale." );
         }
@@ -65,16 +88,16 @@ public class ScaleTypeConversionUtils {
      * @throws IllegalArgumentException      if the conversion is not possible
      * @throws UnsupportedOperationException if the conversion is not supported
      */
-    public static double[] convertVector( DataVector vec, ScaleType scaleType ) {
+    public static double[] convertData( DataVector vec, ScaleType scaleType ) {
         switch ( vec.getQuantitationType().getRepresentation() ) {
             case FLOAT:
-                return convertVector( vec.getDataAsFloats(), vec.getQuantitationType(), scaleType );
+                return convertData( vec.getDataAsFloats(), vec.getQuantitationType(), scaleType );
             case DOUBLE:
-                return convertVector( vec.getDataAsDoubles(), vec.getQuantitationType(), scaleType );
+                return convertData( vec.getDataAsDoubles(), vec.getQuantitationType(), scaleType );
             case INT:
-                return convertVector( vec.getDataAsInts(), scaleType );
+                return convertData( vec.getDataAsInts(), scaleType );
             case LONG:
-                return convertVector( vec.getDataAsLongs(), scaleType );
+                return convertData( vec.getDataAsLongs(), scaleType );
             default:
                 throw new UnsupportedOperationException( "Conversion of " + vec.getQuantitationType().getRepresentation() + " is not supported." );
         }
@@ -83,15 +106,15 @@ public class ScaleTypeConversionUtils {
     /**
      * Convert a vector of float data to the target scale.
      */
-    public static double[] convertVector( float[] vec, QuantitationType quantitationType, ScaleType scaleType ) {
-        return convertVector( float2double( vec ), quantitationType.getType(), quantitationType.getScale(), scaleType );
+    public static double[] convertData( float[] vec, QuantitationType quantitationType, ScaleType scaleType ) {
+        return convertData( float2double( vec ), quantitationType.getType(), quantitationType.getScale(), scaleType );
     }
 
     /**
      * Convert a vector of double data to the target scale.
      */
-    public static double[] convertVector( double[] vec, QuantitationType quantitationType, ScaleType scaleType ) {
-        return convertVector( vec, quantitationType.getType(), quantitationType.getScale(), scaleType );
+    public static double[] convertData( double[] vec, QuantitationType quantitationType, ScaleType scaleType ) {
+        return convertData( vec, quantitationType.getType(), quantitationType.getScale(), scaleType );
     }
 
     /**
@@ -99,7 +122,7 @@ public class ScaleTypeConversionUtils {
      * <p>
      * The type and scale are assumed to be counts.
      */
-    public static double[] convertVector( int[] vec, ScaleType scaleType ) {
+    public static double[] convertData( int[] vec, ScaleType scaleType ) {
         if ( scaleType == ScaleType.LINEAR || scaleType == ScaleType.COUNT ) {
             return int2double( vec );
         }
@@ -129,7 +152,7 @@ public class ScaleTypeConversionUtils {
      * <p>
      * The type and scale are assumed to be counts.
      */
-    public static double[] convertVector( long[] vec, ScaleType scaleType ) {
+    public static double[] convertData( long[] vec, ScaleType scaleType ) {
         if ( scaleType == ScaleType.LINEAR || scaleType == ScaleType.COUNT ) {
             return long2double( vec );
         }
@@ -154,7 +177,7 @@ public class ScaleTypeConversionUtils {
         return result;
     }
 
-    public static double[] convertVector( double[] vec, StandardQuantitationType fromType, ScaleType fromScale, ScaleType scaleType ) {
+    public static double[] convertData( double[] vec, StandardQuantitationType fromType, ScaleType fromScale, ScaleType scaleType ) {
         if ( fromScale == scaleType ) {
             return vec;
         }

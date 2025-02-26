@@ -4,6 +4,7 @@ import lombok.Setter;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
+import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.core.util.BuildInfo;
@@ -28,7 +29,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.convertVector;
+import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.convertData;
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.constructSampleName;
 import static ubic.gemma.core.util.TsvUtils.SUB_DELIMITER;
@@ -140,7 +141,7 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
 
     private void writeVector( SingleCellExpressionDataVector vector, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer pwriter ) throws IOException {
         if ( scaleType != null ) {
-            writeVector( vector.getDesignElement(), cs2gene, vector.getSingleCellDimension(), convertVector( vector, scaleType ), PrimitiveType.DOUBLE, vector.getDataIndices(), pwriter );
+            writeVector( vector.getDesignElement(), cs2gene, vector.getSingleCellDimension(), ScaleTypeConversionUtils.convertData( vector, scaleType ), PrimitiveType.DOUBLE, vector.getDataIndices(), pwriter );
         } else {
             switch ( vector.getQuantitationType().getRepresentation() ) {
                 case FLOAT:

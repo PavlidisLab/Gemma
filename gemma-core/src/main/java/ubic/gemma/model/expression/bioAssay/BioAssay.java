@@ -137,6 +137,11 @@ public class BioAssay extends AbstractDescribable implements SecuredChild {
     private Integer numberOfCellsByDesignElements;
 
     @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
     public boolean equals( Object object ) {
         if ( this == object )
             return true;

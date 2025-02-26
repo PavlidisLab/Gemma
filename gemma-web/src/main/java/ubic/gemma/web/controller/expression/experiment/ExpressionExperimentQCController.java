@@ -72,27 +72,31 @@ import ubic.basecode.util.DateUtil;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationHelperServiceImpl;
+import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.visualization.ExpressionDataHeatmap;
+import ubic.gemma.core.visualization.SingleCellDataBoxplot;
 import ubic.gemma.core.visualization.SingleCellSparsityHeatmap;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
+import ubic.gemma.model.expression.bioAssayData.*;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
@@ -103,6 +107,7 @@ import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 import ubic.gemma.web.view.TextView;
 
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
@@ -113,7 +118,9 @@ import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.*;
+import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
 import static ubic.gemma.core.analysis.service.ExpressionDataFileUtils.*;
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
 
@@ -167,9 +174,13 @@ public class ExpressionExperimentQCController extends BaseController {
     private ExpressionExperimentSubSetService expressionExperimentSubSetService;
     @Autowired
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
+    @Autowired
+    private CompositeSequenceService compositeSequenceService;
 
     @Value("${gemma.analysis.dir}")
     private Path analysisStoragePath;
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
 
     @RequestMapping(value = "/expressionExperiment/detailedFactorAnalysis.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void detailedFactorAnalysis( @RequestParam("id") Long id, HttpServletResponse response ) throws Exception {
@@ -588,6 +599,85 @@ public class ExpressionExperimentQCController extends BaseController {
         BufferedImage image = heatmap.createImage();
         response.setContentType( MediaType.IMAGE_PNG_VALUE );
         ChartUtils.writeBufferedImageAsPNG( response.getOutputStream(), image );
+    }
+
+    @RequestMapping(value = "/expressionExperiment/visualizeSingleCellDataBoxplot.html", method = { RequestMethod.GET, RequestMethod.HEAD })
+    public void visualizeSingleCellDataBoxplot( @RequestParam("id") Long id,
+            @RequestParam(value = "quantitationType", required = false)
+            @Nullable Long quantitationTypeId,
+            @RequestParam("designElement") Long designElementId,
+            @RequestParam(value = "assays", required = false) Long[] assayIds,
+            @RequestParam(value = "cellTypeAssignment", required = false) String ctaName,
+            @RequestParam(value = "cellLevelCharacteristics", required = false) Long clcId,
+            @RequestParam(value = "focusedCharacteristic", required = false) Long focusedCharacteristicId,
+            HttpServletResponse response ) throws IOException {
+        if ( clcId != null && ctaName != null ) {
+            throw new IllegalArgumentException( "Cannot provide both 'cellTypeAssignment' and 'cellLevelCharacteristics' at the same time." );
+        }
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
+        QuantitationType qt;
+        if ( quantitationTypeId != null ) {
+            qt = quantitationTypeService.loadByIdAndVectorType( quantitationTypeId, ee, SingleCellExpressionDataVector.class );
+            if ( qt == null ) {
+                throw new EntityNotFoundException( ee + " does not have a quantitation type with ID " + quantitationTypeId + "." );
+            }
+        } else {
+            qt = singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee )
+                    .orElseThrow( () -> new EntityNotFoundException( ee + " does not have a preferred single-cell quantitation type." ) );
+        }
+        CompositeSequence designElement = compositeSequenceService.loadOrFail( designElementId, EntityNotFoundException::new );
+        Collection<Gene> genes;
+        genes = compositeSequenceService.getGenes( designElement );
+        Gene gene;
+        if ( genes.isEmpty() ) {
+            log.warn( "No gene mapped by " + designElement );
+            gene = null;
+        } else if ( genes.size() > 1 ) {
+            log.warn( "More than one gene mapped by " + designElement + "." );
+            gene = null;
+        } else {
+            gene = genes.iterator().next();
+        }
+        SingleCellExpressionDataVector vector = singleCellExpressionExperimentService.getSingleCellDataVectorWithoutCellIds( ee, qt, designElement );
+        if ( vector == null ) {
+            throw new EntityNotFoundException( "No vector for design element with ID " + designElementId + "." );
+        }
+        // TODO: cpm normalization
+        vector = ScaleTypeConversionUtils.convertVectors( Collections.singletonList( vector ), ScaleType.LOG10, SingleCellExpressionDataVector.class ).iterator().next();
+        SingleCellDataBoxplot dataset = new SingleCellDataBoxplot( vector );
+        dataset.setShowMean( false );
+        if ( assayIds != null ) {
+            Map<Long, BioAssay> baMap = IdentifiableUtils.getIdMap( vector.getSingleCellDimension().getBioAssays() );
+            List<BioAssay> assays = Arrays.stream( assayIds )
+                    .map( baId -> requireNonNull( baMap.get( baId ), "BioAssay with ID " + baId + " does not belong to " + ee.getShortName() + "." ) )
+                    .collect( Collectors.toList() );
+            dataset.setBioAssays( assays );
+        }
+        if ( ctaName != null ) {
+            CellTypeAssignment cta = requireNonNull( singleCellExpressionExperimentService.getCellTypeAssignment( ee, qt, ctaName ) );
+            dataset.setCellLevelCharacteristics( cta );
+            if ( focusedCharacteristicId != null ) {
+                dataset.setFocusedCellLevelCharacteristic( cta.getCellTypes().stream().filter( cl -> cl.getId().equals( focusedCharacteristicId ) ).findFirst().orElseThrow( IllegalArgumentException::new ) );
+            }
+        }
+        if ( clcId != null ) {
+            CellLevelCharacteristics clc = requireNonNull( singleCellExpressionExperimentService.getCellLevelCharacteristics( ee, qt, clcId ) );
+            dataset.setCellLevelCharacteristics( clc );
+            if ( focusedCharacteristicId != null ) {
+                dataset.setFocusedCellLevelCharacteristic( clc.getCharacteristics().stream().filter( cl -> cl.getId().equals( focusedCharacteristicId ) ).findFirst().orElseThrow( IllegalArgumentException::new ) );
+            }
+        }
+        JFreeChart chart = ChartFactory.createBoxAndWhiskerChart(
+                "Single-cell expression data for " + ( gene != null ? gene.getOfficialSymbol() : designElement.getName() ) + " in " + ee.getShortName(),
+                "Assay", "Expression data (log10)", dataset.createDataset(), ctaName != null || clcId != null );
+        if ( ( ctaName == null && clcId == null ) || focusedCharacteristicId != null ) {
+            // TODO: add per-row annotation, this does not appear to be supported by JFreeChart
+            dataset.createAnnotations().forEach( chart.getCategoryPlot()::addAnnotation );
+        }
+        response.setContentType( MediaType.IMAGE_PNG_VALUE );
+        ChartUtils.writeChartAsPNG( response.getOutputStream(), chart,
+                Math.min( Math.max( 50 * dataset.getNumberOfBoxplots(), DEFAULT_QC_IMAGE_SIZE_PX ), MAX_QC_IMAGE_SIZE_PX ),
+                DEFAULT_QC_IMAGE_SIZE_PX );
     }
 
     private void addChartToGraphics( JFreeChart chart, Graphics2D g2, double x, double y, double width,
