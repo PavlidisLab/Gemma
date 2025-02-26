@@ -183,8 +183,9 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                         aggregationMethod ) );
                 Collection<RawExpressionDataVector> vecs;
                 if ( useStreaming ) {
+                    long numberOfVectors = singleCellExpressionExperimentService.getNumberOfSingleCellDataVectors( ee, qt );
                     vecs = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30 )
-                            .peek( createStreamMonitor( getClass().getName(), 10000 ) )
+                            .peek( createStreamMonitor( getClass().getName(), numberOfVectors ) )
                             .map( createAggregator( aggregationMethod, cellLevelCharacteristics ) )
                             .collect( Collectors.toList() );
                 } else {
