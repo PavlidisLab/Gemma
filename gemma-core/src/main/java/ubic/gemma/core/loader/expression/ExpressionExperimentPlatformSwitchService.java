@@ -52,8 +52,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.persistence.util.ByteArrayUtils.toBytes;
-
 /**
  * Switch an expression experiment from one array design to another. This is valuable when the EE uses more than on AD,
  * and a merged AD exists. The following steps are needed:
@@ -657,8 +655,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
             newData.set( loc, oldData.get( j++ ) );
         }
 
-        byte[] newDataAr = toBytes( newData.toArray() );
-        vector.setData( newDataAr );
+        vector.setDataAsObjects( newData.toArray() );
         vector.setBioAssayDimension( bad );
     }
 }

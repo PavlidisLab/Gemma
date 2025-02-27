@@ -22,18 +22,27 @@ package ubic.gemma.model.common.quantitationtype;
  * Primitive storage types for data vectors.
  */
 public enum PrimitiveType {
-    FLOAT( 4 ),
-    DOUBLE( 8 ),
-    INT( 4 ),
-    LONG( 8 ),
-    CHAR( 2 ),
-    BOOLEAN( 1 ),
-    STRING( -1 );
+    FLOAT( Float.class, 4 ),
+    DOUBLE( Double.class, 8 ),
+    INT( Integer.class, 4 ),
+    LONG( Long.class, 8 ),
+    CHAR( Character.class, 2 ),
+    BOOLEAN( Boolean.class, 1 ),
+    STRING( String.class, -1 );
 
+    private final Class<?> javaClass;
     private final int sizeInBytes;
 
-    PrimitiveType( int sizeInBytes ) {
+    PrimitiveType( Class<?> javaClass, int sizeInBytes ) {
+        this.javaClass = javaClass;
         this.sizeInBytes = sizeInBytes;
+    }
+
+    /**
+     * Obtain the Java class that corresponds to this primitive type.
+     */
+    public Class<?> getJavaClass() {
+        return javaClass;
     }
 
     /**

@@ -61,13 +61,11 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static ubic.gemma.core.util.StringUtils.abbreviateInBytes;
 import static ubic.gemma.persistence.util.ByteArrayUtils.*;
 
 /**
@@ -404,7 +402,7 @@ public class GeoConverterImpl implements GeoConverter {
             return null;
         }
 
-        byte[] bytes = toBytes( toConvert.toArray() );
+        byte[] bytes = objectArrayToBytes( toConvert.toArray() );
 
         /*
          * Debugging - absolutely make sure we can convert the data back.

@@ -42,8 +42,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.util.*;
 
-import static ubic.gemma.persistence.util.ByteArrayUtils.toBytes;
-
 /**
  * Tackles the problem of concatenating DesignElementDataVectors for a single experiment. This is necessary When a study
  * uses two or more similar array designs without 'replication'. Typical of the genre is GSE60 ("Diffuse large B-cell
@@ -190,7 +188,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
                                     + ", got " + data.size() );
                 }
 
-                vector.setData( toBytes( data.toArray() ) );
+                vector.setDataAsObjects( data.toArray() );
 
                 newVectors.add( vector );
 

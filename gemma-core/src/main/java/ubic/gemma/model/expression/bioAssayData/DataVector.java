@@ -27,6 +27,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.persistence.Transient;
 import java.nio.*;
+import java.util.Arrays;
 import java.util.Objects;
 
 import static ubic.gemma.persistence.util.ByteArrayUtils.*;
@@ -169,9 +170,27 @@ public abstract class DataVector extends AbstractIdentifiable {
     }
 
     @Transient
-    public String getDataAsString() {
+    public String[] getDataAsTabbedStrings() {
         ensureRepresentation( PrimitiveType.STRING );
-        return byteArrayToAsciiString( data );
+        return byteArrayToTabbedStrings( data );
+    }
+
+    public void setDataAsTabbedStrings( String[] data ) {
+        ensureRepresentation( PrimitiveType.STRING );
+        setData( stringsToTabbedBytes( data ) );
+    }
+
+    public <T> T[] getDataAsObjects( Class<T> clazz ) {
+        ensureRepresentation( clazz );
+        return byteArrayToObjects( data, clazz );
+    }
+
+    public void setDataAsObjects( Object[] data ) {
+        if ( data.length > 0 ) {
+            // type does not matter if empty
+            ensureRepresentation( data[0].getClass() );
+        }
+        setData( objectArrayToBytes( data ) );
     }
 
     /**
@@ -188,6 +207,19 @@ public abstract class DataVector extends AbstractIdentifiable {
         if ( quantitationType.getRepresentation() != primitiveType ) {
             throw new IllegalStateException( String.format( "This vector stores data of type %s, but %s was requested.",
                     quantitationType.getRepresentation(), primitiveType ) );
+        }
+    }
+
+    private void ensureRepresentation( Class<?> clazz ) {
+        if ( !clazz.equals( quantitationType.getRepresentation().getJavaClass() ) ) {
+            // try to find a primitive type that matches the requested class
+            String requestedType = Arrays.stream( PrimitiveType.values() )
+                    .filter( p -> clazz.equals( p.getJavaClass() ) )
+                    .map( PrimitiveType::toString )
+                    .findFirst()
+                    .orElse( clazz.getName() );
+            throw new IllegalStateException( String.format( "This vector stores data of type %s, but %s was requested.",
+                    quantitationType.getRepresentation(), requestedType ) );
         }
     }
 }

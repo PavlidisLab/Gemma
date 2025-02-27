@@ -2,9 +2,7 @@ package ubic.gemma.persistence.util;
 
 import ubic.basecode.io.ByteArrayConverter;
 
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.FloatBuffer;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Utilities for working with byte arrays.
@@ -16,28 +14,12 @@ public class ByteArrayUtils {
 
     private static final ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
 
-    public static byte[] floatArrayToBytes( float[] darray ) {
-        if ( darray == null ) {
-            return null;
-        }
-        FloatBuffer.wrap( darray );
-        ByteBuffer buffer = ByteBuffer.allocate( 4 * darray.length );
-        for ( float d : darray ) {
-            buffer.putFloat( d );
-        }
-        return buffer.array();
+    public static byte[] floatArrayToBytes( float[] data ) {
+        return byteArrayConverter.floatArrayToBytes( data );
     }
 
-    public static float[] byteArrayToFloats( byte[] barray ) {
-        if ( barray == null ) return null;
-        FloatBuffer buf = ByteBuffer.wrap( barray ).asFloatBuffer();
-        float[] array = new float[buf.remaining()];
-        buf.get( array );
-        return array;
-    }
-
-    public static byte[] doubleArrayToBytes( Double[] data ) {
-        return byteArrayConverter.doubleArrayToBytes( data );
+    public static float[] byteArrayToFloats( byte[] bytes ) {
+        return byteArrayConverter.byteArrayToFloats( bytes );
     }
 
     public static byte[] doubleArrayToBytes( double[] data ) {
@@ -65,12 +47,7 @@ public class ByteArrayUtils {
     }
 
     public static char[] byteArrayToChars( byte[] barray ) {
-        // TODO: upstream the fix to baseCode
-        if ( barray == null ) return null;
-        CharBuffer buf = ByteBuffer.wrap( barray ).asCharBuffer();
-        char[] array = new char[buf.remaining()];
-        buf.get( array );
-        return array;
+        return byteArrayConverter.byteArrayToChars( barray );
     }
 
     public static byte[] charArrayToBytes( char[] data ) {
@@ -78,15 +55,19 @@ public class ByteArrayUtils {
     }
 
     public static String[] byteArrayToStrings( byte[] bytes ) {
-        return byteArrayConverter.byteArrayToStrings( bytes );
+        return byteArrayConverter.byteArrayToStrings( bytes, StandardCharsets.UTF_8 );
     }
 
     public static byte[] stringsToByteArray( String[] data ) {
-        return byteArrayConverter.stringArrayToBytes( data );
+        return byteArrayConverter.stringArrayToBytes( data, StandardCharsets.UTF_8 );
     }
 
-    public static String byteArrayToAsciiString( byte[] bytes ) {
-        return byteArrayConverter.byteArrayToAsciiString( bytes );
+    public static byte[] stringsToTabbedBytes( String[] data ) {
+        return byteArrayConverter.stringArrayToTabbedBytes( data, StandardCharsets.UTF_8 );
+    }
+
+    public static String[] byteArrayToTabbedStrings( byte[] bytes ) {
+        return byteArrayConverter.byteArrayToTabbedStrings( bytes, StandardCharsets.UTF_8 );
     }
 
     public static boolean[] byteArrayToBooleans( byte[] bytes ) {
@@ -105,7 +86,11 @@ public class ByteArrayUtils {
         return byteArrayConverter.byteArrayToDoubleMatrix( bytes, n );
     }
 
-    public static byte[] toBytes( Object[] objects ) {
-        return byteArrayConverter.toBytes( objects );
+    public static byte[] objectArrayToBytes( Object[] objects ) {
+        return byteArrayConverter.objectArrayToBytes( objects, StandardCharsets.UTF_8 );
+    }
+
+    public static <T> T[] byteArrayToObjects( byte[] bytes, Class<T> type ) {
+        return byteArrayConverter.byteArrayToObjects( bytes, type, StandardCharsets.UTF_8 );
     }
 }

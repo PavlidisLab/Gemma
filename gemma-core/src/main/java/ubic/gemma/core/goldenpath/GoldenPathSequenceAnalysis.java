@@ -39,6 +39,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
 
+import java.nio.charset.StandardCharsets;
 import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -802,9 +803,9 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                     Blob targetStarts = rs.getBlob( 3 );
                     Blob queryStarts = rs.getBlob( 4 );
 
-                    blatResult.setBlockSizes( SQLUtils.blobToString( blockSizes ) );
-                    blatResult.setTargetStarts( SQLUtils.blobToString( targetStarts ) );
-                    blatResult.setQueryStarts( SQLUtils.blobToString( queryStarts ) );
+                    blatResult.setBlockSizes( SQLUtils.blobToString( blockSizes, StandardCharsets.ISO_8859_1 ) );
+                    blatResult.setTargetStarts( SQLUtils.blobToString( targetStarts, StandardCharsets.ISO_8859_1 ) );
+                    blatResult.setQueryStarts( SQLUtils.blobToString( queryStarts, StandardCharsets.ISO_8859_1 ) );
 
                     blatResult.setStrand( rs.getString( 5 ) );
 
@@ -851,8 +852,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
             return exons;
         }
 
-        String exonStartLocations = SQLUtils.blobToString( exonStarts );
-        String exonEndLocations = SQLUtils.blobToString( exonEnds );
+        String exonStartLocations = SQLUtils.blobToString( exonStarts, StandardCharsets.ISO_8859_1 );
+        String exonEndLocations = SQLUtils.blobToString( exonEnds, StandardCharsets.ISO_8859_1 );
 
         int[] exonStartsInts = SequenceManipulation.blatLocationsToIntArray( exonStartLocations );
         int[] exonEndsInts = SequenceManipulation.blatLocationsToIntArray( exonEndLocations );
@@ -910,8 +911,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         if ( blockSizes == null || blockStarts == null )
             return;
 
-        String exonSizes = SQLUtils.blobToString( blockSizes );
-        String exonStarts = SQLUtils.blobToString( blockStarts );
+        String exonSizes = SQLUtils.blobToString( blockSizes, StandardCharsets.ISO_8859_1 );
+        String exonStarts = SQLUtils.blobToString( blockStarts, StandardCharsets.ISO_8859_1 );
 
         int[] exonSizeInts = SequenceManipulation.blatLocationsToIntArray( exonSizes );
         int[] exonStartInts = SequenceManipulation.blatLocationsToIntArray( exonStarts );

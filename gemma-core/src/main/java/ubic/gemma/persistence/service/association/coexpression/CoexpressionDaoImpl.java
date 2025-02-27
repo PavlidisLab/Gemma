@@ -910,7 +910,7 @@ public class CoexpressionDaoImpl implements CoexpressionDao {
             Long g, boolean positive ) {
         GeneCoexpressionNodeDegree nd = ( GeneCoexpressionNodeDegree ) sess.load( GeneCoexpressionNodeDegree.class, g );
 
-        byte[] r = doubleArrayToBytes( relRanks.toArray( new Double[] {} ) );
+        byte[] r = doubleArrayToBytes( ArrayUtils.toPrimitive( relRanks.toArray( new Double[0] ) ) );
 
         if ( positive ) {
             nd.setRelativeLinkRanksPositive( r );

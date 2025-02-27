@@ -20,7 +20,6 @@ package ubic.gemma.core.datastructure.matrix;
 
 import cern.colt.matrix.ObjectMatrix1D;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -252,8 +251,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
                 j++;
             }
         } else if ( vector.getQuantitationType().getRepresentation().equals( PrimitiveType.STRING ) ) {
-            String val = vector.getDataAsString();
-            String[] fields = StringUtils.split( val, '\t' );
+            String[] fields = vector.getDataAsTabbedStrings();
             vals = new boolean[fields.length];
             int j = 0;
             for ( String c : fields ) {
