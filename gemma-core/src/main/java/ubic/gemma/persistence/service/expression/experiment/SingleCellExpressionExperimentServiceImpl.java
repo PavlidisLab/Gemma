@@ -77,8 +77,26 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, boolean includeCellIds, boolean includeData, boolean includeDataIndices ) {
+        if ( includeCellIds && includeData && includeDataIndices ) {
+            return expressionExperimentDao.getSingleCellDataVectors( ee, quantitationType );
+        }
+        return expressionExperimentDao.getSingleCellDataVectors( ee, quantitationType, includeCellIds, includeData, includeDataIndices );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize ) {
         return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, true );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean includeCellIds, boolean includeData, boolean includeDataIndices ) {
+        if ( includeCellIds && includeData && includeDataIndices ) {
+            return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, true );
+        }
+        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, true, includeCellIds, includeData, includeDataIndices );
     }
 
     @Override

@@ -206,6 +206,28 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
     }
 
     @Test
+    public void testGetSingleCellDataVectors() {
+        RandomSingleCellDataUtils.setSeed( 123 );
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
+        QuantitationType qt = vectors.iterator().next().getQuantitationType();
+        SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null );
+        scExpressionExperimentService.getSingleCellDataVectors( ee, qt );
+        scExpressionExperimentService.getSingleCellDataVectors( ee, qt, true, true, true );
+        scExpressionExperimentService.getSingleCellDataVectors( ee, qt, true, true, false );
+        scExpressionExperimentService.getSingleCellDataVectors( ee, qt, true, false, true );
+        scExpressionExperimentService.getSingleCellDataVectors( ee, qt, false, true, true );
+        scExpressionExperimentService.getSingleCellDataVectors( ee, qt, false, false, false );
+
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30 ).collect( Collectors.toList() );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true, true, true ).collect( Collectors.toList() );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true, true, false ).collect( Collectors.toList() );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true, false, true ).collect( Collectors.toList() );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, false, true, true ).collect( Collectors.toList() );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, false, false, false ).collect( Collectors.toList() );
+    }
+
+    @Test
     public void testAddSingleCellDataVectors() {
         Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
 

@@ -584,6 +584,11 @@ public interface ExpressionExperimentDao
     List<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment expressionExperiment, QuantitationType quantitationType );
 
     /**
+     * Obtain a set of single-cell data vectors for the given quantitation type.
+     */
+    List<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, boolean includeCellIds, boolean includeData, boolean includeDataIndices );
+
+    /**
      * Obtain a stream over the vectors for a given QT.
      * <p>
      * @param fetchSize        number of vectors to fetch at once
@@ -593,6 +598,8 @@ public interface ExpressionExperimentDao
      * @see ubic.gemma.persistence.util.QueryUtils#stream(Query, int)
      */
     Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean createNewSession );
+
+    Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean createNewSession, boolean includeCellIds, boolean includeData, boolean includeDataIndices );
 
     SingleCellExpressionDataVector getSingleCellDataVectorWithoutCellIds( ExpressionExperiment ee, QuantitationType quantitationType, CompositeSequence designElement );
 

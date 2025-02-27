@@ -185,12 +185,20 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                 Collection<RawExpressionDataVector> vecs;
                 if ( useStreaming ) {
                     long numberOfVectors = singleCellExpressionExperimentService.getNumberOfSingleCellDataVectors( ee, qt );
-                    vecs = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, fetchSize )
+                    vecs = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, fetchSize,
+                                    false,
+                                    // COUNT_FAST does not even need the data!
+                                    aggregationMethod != SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.COUNT_FAST,
+                                    true )
                             .peek( createStreamMonitor( getClass().getName(), numberOfVectors ) )
                             .map( createAggregator( aggregationMethod, cellLevelCharacteristics ) )
                             .collect( Collectors.toList() );
                 } else {
-                    vecs = aggregate( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ), aggregationMethod, cellLevelCharacteristics );
+                    vecs = aggregate( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt, false,
+                                    // COUNT_FAST does not even need the data!
+                                    aggregationMethod != SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.COUNT_FAST,
+                                    true ),
+                            aggregationMethod, cellLevelCharacteristics );
                 }
                 BulkExpressionDataMatrix<?> matrix;
                 if ( aggregationMethod == SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.COUNT || aggregationMethod == SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.COUNT_FAST ) {
