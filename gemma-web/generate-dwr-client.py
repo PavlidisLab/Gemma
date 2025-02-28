@@ -6,12 +6,12 @@
 
 import os
 import re
+import requests
+import shutil
 import subprocess
+from bs4 import BeautifulSoup
 from getpass import getpass
 from os.path import dirname, join
-
-import requests
-from bs4 import BeautifulSoup
 
 gemma_host_url = os.getenv('GEMMA_HOST') or 'https://gemma.msl.ubc.ca'
 header = "/* this code is generated, see generate-dwr-client.py for details */"
@@ -21,7 +21,8 @@ username = os.getenv('GEMMA_USERNAME') or input('Supply your username: ')
 if os.getenv('GEMMA_PASSWORD'):
     password = os.getenv('GEMMA_PASSWORD')
 elif os.getenv('GEMMA_PASSWORD_CMD'):
-    password = subprocess.run(os.getenv('GEMMA_PASSWORD_CMD'), shell=True, check=True, stdout=subprocess.PIPE, text=True).stdout
+    password = subprocess.run(os.getenv('GEMMA_PASSWORD_CMD'), shell=True, check=True, stdout=subprocess.PIPE,
+                              text=True).stdout
     password = password.splitlines()[0]
 else:
     password = getpass('Supply your password: ')
@@ -70,6 +71,10 @@ with requests.Session() as session:
             f.write('export default dwr.util;\n')
         index.write("import './util'\n")
         print('Wrote util.js')
+
+        if os.path.exists(dwr_script_dir + '/interface'):
+            shutil.rmtree(dwr_script_dir + '/interface')
+        os.mkdir(dwr_script_dir + '/interface')
 
         wrote_models = False
         for controller in controllers:

@@ -587,12 +587,6 @@
         </dwr:remote>
     </bean>
 
-    <bean id="feedReader" class="ubic.gemma.web.feed.FeedReader">
-        <dwr:remote javascript="FeedReader">
-            <dwr:include method="getLatestNews"/>
-        </dwr:remote>
-    </bean>
-
     <bean id="userListController" class="ubic.gemma.web.controller.common.auditAndSecurity.UserListController">
         <dwr:remote javascript="UserListController">
             <dwr:include method="getUsers"/>
