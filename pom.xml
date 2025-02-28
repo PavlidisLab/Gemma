@@ -180,6 +180,12 @@
 			<artifactId>spring-aspects</artifactId>
 			<version>${spring.version}</version>
 			<scope>runtime</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.aspectj</groupId>
+					<artifactId>aspectjweaver</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.aspectj</groupId>
@@ -230,41 +236,37 @@
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>dom4j</groupId>
-					<artifactId>dom4j</artifactId>
-				</exclusion>
-			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate.common</groupId>
+			<artifactId>hibernate-commons-annotations</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.dom4j</groupId>
 			<artifactId>dom4j</artifactId>
-			<version>${dom4j.version}</version>
-			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-ehcache</artifactId>
-			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.logging</groupId>
+			<artifactId>jboss-logging</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.logging</groupId>
+			<artifactId>jboss-logging-annotations</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
 			<version>${mysql.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>com.google.protobuf</groupId>
-					<artifactId>protobuf-java</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<!-- used in dataSource.xml and testDataSource.xml -->
 		<dependency>
 			<groupId>com.zaxxer</groupId>
 			<artifactId>HikariCP</artifactId>
 			<version>5.1.0</version>
-			<scope>compile</scope>
 		</dependency>
 
 
@@ -310,7 +312,13 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-text</artifactId>
-			<version>1.12.0</version>
+			<version>1.13.0</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-lang3</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>commons-logging</groupId>
@@ -330,26 +338,57 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-configuration2</artifactId>
 			<version>2.11.0</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-text</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<version>2.17.0</version>
+			<version>2.18.0</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-fileupload</groupId>
 			<artifactId>commons-fileupload</artifactId>
 			<version>1.5</version>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-io</groupId>
+					<artifactId>commons-io</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-pool2</artifactId>
-			<version>2.12.0</version>
+			<version>2.12.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-compress</artifactId>
 			<version>1.27.1</version>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-io</groupId>
+					<artifactId>commons-io</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-lang3</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>commons-codec</groupId>
+					<artifactId>commons-codec</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.18.0</version>
 		</dependency>
 
 		<!-- Jackson, for JSON serialization -->
@@ -483,6 +522,7 @@
 									<!-- FIXME: remove the upper bound once we migrated to Spring 5 -->
 									<version>[11,19)</version>
 								</requireJavaVersion>
+								<dependencyConvergence/>
 							</rules>
 						</configuration>
 					</execution>
@@ -562,7 +602,7 @@
 			<plugin>
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
-				<version>11.1.0</version>
+				<version>12.1.0</version>
 				<configuration>
 					<assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
 				</configuration>
@@ -570,24 +610,27 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>versions-maven-plugin</artifactId>
-				<version>2.17.1</version>
+				<version>2.18.0</version>
 				<configuration>
 					<allowMajorUpdates>false</allowMajorUpdates>
 					<processDependencyManagement>false</processDependencyManagement>
 					<processPluginDependencies>false</processPluginDependencies>
 					<ignoredVersions>.*-a.*,.*-b.*,.*-M.*</ignoredVersions>
 					<dependencyExcludes>
+						<dependencyExclude>com.googlecode.javaewah:JavaEWAH:*</dependencyExclude>
+						<dependencyExclude>com.jayway.jsonpath:json-path:*</dependencyExclude>
+						<dependencyExclude>io.micrometer:*:*</dependencyExclude>
+						<dependencyExclude>javax.ws.rs:javax.ws.rs-api:*</dependencyExclude>
+						<dependencyExclude>net.sf.ehcache:ehcache-core:*</dependencyExclude>
+						<dependencyExclude>opensymphony:sitemesh:*</dependencyExclude>
+						<dependencyExclude>org.apache.commons:commons-lang3:*</dependencyExclude>
+						<dependencyExclude>org.glassfish.jersey.*:*:*</dependencyExclude>
 						<dependencyExclude>org.hibernate:hibernate-core:*</dependencyExclude>
 						<dependencyExclude>org.hibernate:hibernate-ehcache:*</dependencyExclude>
-						<dependencyExclude>net.sf.ehcache:ehcache-core:*</dependencyExclude>
-						<dependencyExclude>com.googlecode.javaewah:JavaEWAH:*</dependencyExclude>
+						<dependencyExclude>org.ocpsoft.prettytime:*:*</dependencyExclude>
 						<dependencyExclude>org.springframework.retry:spring-retry:*</dependencyExclude>
 						<dependencyExclude>org.springframework.social:spring-social-core:*</dependencyExclude>
 						<dependencyExclude>org.springframework.ws:spring-ws-core:*</dependencyExclude>
-						<dependencyExclude>org.glassfish.jersey.*:*:*</dependencyExclude>
-						<dependencyExclude>javax.ws.rs:javax.ws.rs-api:*</dependencyExclude>
-						<dependencyExclude>com.jayway.jsonpath:json-path:*</dependencyExclude>
-						<dependencyExclude>opensymphony:sitemesh:*</dependencyExclude>
 					</dependencyExcludes>
 				</configuration>
 			</plugin>
@@ -599,22 +642,22 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.13.0</version>
+					<version>3.14.0</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-clean-plugin</artifactId>
-					<version>3.4.0</version>
+					<version>3.4.1</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-deploy-plugin</artifactId>
-					<version>3.1.3</version>
+					<version>3.1.4</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-install-plugin</artifactId>
-					<version>3.1.3</version>
+					<version>3.1.4</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
@@ -624,7 +667,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-project-info-reports-plugin</artifactId>
-					<version>3.8.0</version>
+					<version>3.9.0</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
@@ -639,7 +682,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-javadoc-plugin</artifactId>
-					<version>3.11.1</version>
+					<version>3.11.2</version>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
@@ -740,12 +783,12 @@
 		<spring.version>3.2.18.RELEASE</spring.version>
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
 		<jersey.version>2.25.1</jersey.version>
-		<jackson.version>2.18.1</jackson.version>
-		<swagger.version>2.2.25</swagger.version>
+		<jackson.version>2.18.3</jackson.version>
+		<swagger.version>2.2.28</swagger.version>
 		<lucene.version>3.6.2</lucene.version>
-		<slack.version>1.44.1</slack.version>
-		<micrometer.version>1.13.6</micrometer.version>
-		<dom4j.version>2.1.4</dom4j.version>
+		<slack.version>1.45.3</slack.version>
+		<!-- I've been running into some issues with the 1.14 series, to be investigated... -->
+		<micrometer.version>1.13.11</micrometer.version>
 		<!-- HDF5 -->
 		<!-- You may override this in ~/.m2/settings.xml -->
 		<hdf5.version>1.12.1</hdf5.version>
@@ -754,13 +797,12 @@
 		<!-- full path to the HDF5 JAR -->
 		<hdf5.jarPath>/usr/lib/java/hdf5.jar</hdf5.jarPath>
 		<mysql.version>8.4.0</mysql.version>
-		<tomcat.version>9.0.96</tomcat.version>
-		<mockito.version>5.12.0</mockito.version>
+		<tomcat.version>9.0.100</tomcat.version>
 		<antlr4.version>4.13.2</antlr4.version>
 		<!-- 5.0.7.Final is broken due to https://github.com/ocpsoft/prettytime/issues/276 -->
 		<prettytime.version>5.0.6.Final</prettytime.version>
 		<!-- TODO: move that in pavlab-starter-parent -->
-		<mockito.version>5.14.2</mockito.version>
+		<mockito.version>5.15.2</mockito.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>
 		<!--suppress UnresolvedMavenProperty -->
