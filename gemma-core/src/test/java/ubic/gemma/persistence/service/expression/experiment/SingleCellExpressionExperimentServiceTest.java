@@ -1,6 +1,5 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.Hibernate;
 import org.hibernate.NonUniqueResultException;
@@ -551,8 +550,9 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         characteristics.add( Characteristic.Factory.newInstance( Categories.TREATMENT, "A", null ) );
         characteristics.add( Characteristic.Factory.newInstance( Categories.TREATMENT, "B", null ) );
         characteristics.add( Characteristic.Factory.newInstance( Categories.TREATMENT, "C", null ) );
+        Random random = new Random( 123L );
         for ( int i = 0; i < 100; i++ ) {
-            indices[i] = RandomUtils.nextInt( characteristics.size() + 1 ) - 1;
+            indices[i] = random.nextInt( characteristics.size() + 1 ) - 1;
         }
         CellLevelCharacteristics cellTreatments = CellLevelCharacteristics.Factory.newInstance( characteristics, indices );
         dimension.getCellLevelCharacteristics().add( cellTreatments );

@@ -1,6 +1,5 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.apache.commons.lang.math.RandomUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,11 +19,11 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils.randomSingleCellVectors;
@@ -65,6 +64,7 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
 
     @Test
     public void test() {
+        Random random = new Random( 123L );
         QuantitationType qt = new QuantitationType();
         qt.setName( "counts" );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
@@ -83,7 +83,7 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
         // at some point, we add single cell labels
         List<String> labels = new ArrayList<>( scd.getNumberOfCells() );
         for ( int i = 0; i < 8000; i++ ) {
-            labels.add( String.valueOf( "ABCD".charAt( RandomUtils.nextInt( 4 ) ) ) );
+            labels.add( String.valueOf( "ABCD".charAt( random.nextInt( 4 ) ) ) );
         }
         CellTypeAssignment cta = singleCellExpressionExperimentService.relabelCellTypes( ee, qt, scd, labels, null, null );
         assertThat( cta.getNumberOfCellTypes() ).isEqualTo( 4 );

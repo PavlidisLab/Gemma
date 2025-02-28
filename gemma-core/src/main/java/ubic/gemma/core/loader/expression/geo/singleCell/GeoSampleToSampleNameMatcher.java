@@ -1,7 +1,7 @@
 package ubic.gemma.core.loader.expression.geo.singleCell;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 
 import java.util.Collection;

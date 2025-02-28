@@ -18,7 +18,7 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.common.AbstractDescribable;
 
 import java.util.Objects;

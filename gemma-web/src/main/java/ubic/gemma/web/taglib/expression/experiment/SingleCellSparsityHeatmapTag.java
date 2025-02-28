@@ -1,7 +1,7 @@
 package ubic.gemma.web.taglib.expression.experiment;
 
 import lombok.Setter;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jfree.chart.ChartUtils;
 import org.springframework.util.Assert;
 import org.springframework.web.servlet.tags.form.TagWriter;

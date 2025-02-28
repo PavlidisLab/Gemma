@@ -19,7 +19,6 @@
 
 package ubic.gemma.core.analysis.service;
 
-import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -50,6 +49,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 import java.util.zip.GZIPInputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -94,9 +94,10 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
             goService.initialize( stream, false );
         }
 
+        Random random = new Random( 123L );
         testTaxon = taxonService.findOrCreate( Taxon.Factory
                 .newInstance( "foobly" + RandomStringUtils.randomAlphabetic( 2 ),
-                        "doobly" + RandomStringUtils.randomAlphabetic( 2 ), RandomUtils.nextInt( 5000 ), true ) );
+                        "doobly" + RandomStringUtils.randomAlphabetic( 2 ), random.nextInt( 5000 ), true ) );
 
         /*
          * Create genes

@@ -22,7 +22,6 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
@@ -31,6 +30,7 @@ import ubic.gemma.persistence.service.common.description.BibliographicReferenceS
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Random;
 
 /**
  * Refreshes the information in all the bibliographic references in the system.
@@ -41,6 +41,8 @@ public class BibRefUpdaterCli extends AbstractAuthenticatedCLI {
 
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
+
+    private final Random random = new Random();
 
     private String[] pmids;
 
@@ -107,7 +109,7 @@ public class BibRefUpdaterCli extends AbstractAuthenticatedCLI {
             } catch ( Exception e ) {
                 log.info( "Failed to update: " + bibref + " (" + e.getMessage() + ")" );
             }
-            Thread.sleep( RandomUtils.nextInt( 1000 ) );
+            Thread.sleep( random.nextInt( 1000 ) );
         }
     }
 

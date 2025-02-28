@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.apache.commons.lang.math.RandomUtils;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +27,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractDao;
 
 import javax.annotation.Nullable;
+import java.util.Random;
 
 /**
  * @see ubic.gemma.model.expression.experiment.ExperimentalDesign
@@ -87,7 +87,7 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
                 .createQuery( "select distinct ed from ExperimentalDesign ed join ed.experimentalFactors ef "
                         + "join ef.factorValues fv where ed.id != :edId and fv.needsAttention = true" )
                 .setParameter( "edId", excludedDesign.getId() )
-                .setFirstResult( RandomUtils.nextInt( numThatNeedsAttention.intValue() ) )
+                .setFirstResult( new Random().nextInt( numThatNeedsAttention.intValue() ) )
                 .setMaxResults( 1 )
                 .uniqueResult();
     }

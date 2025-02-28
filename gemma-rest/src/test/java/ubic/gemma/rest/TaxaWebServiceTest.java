@@ -1,15 +1,14 @@
 package ubic.gemma.rest;
 
-import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
 import ubic.gemma.rest.util.ResponseDataObject;
@@ -19,6 +18,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static ubic.gemma.rest.util.Assertions.assertThat;
@@ -40,15 +40,16 @@ public class TaxaWebServiceTest extends BaseJerseyIntegrationTest {
 
     @Before
     public void createFixtures() {
+        Random random = new Random();
         taxon = new Taxon();
-        taxon.setNcbiId( RandomUtils.nextInt() );
-        taxon.setCommonName( "common_name_" + RandomUtils.nextInt() );
+        taxon.setNcbiId( random.nextInt() );
+        taxon.setCommonName( "common_name_" + random.nextInt() );
         taxon.setScientificName( "scientific_name_" + RandomStringUtils.randomAlphabetic( 10 ) );
         taxon.setIsGenesUsable( false );
         taxon = taxonService.create( taxon );
         gene = new Gene();
         gene.setTaxon( taxon );
-        gene.setNcbiGeneId( RandomUtils.nextInt() );
+        gene.setNcbiGeneId( random.nextInt() );
         gene.setEnsemblId( "ensembl_id_" + RandomStringUtils.randomAlphabetic( 10 ) );
         gene.setOfficialSymbol( "official_symbol_" + RandomStringUtils.randomAlphabetic( 10 ) );
         gene = geneService.create( gene );

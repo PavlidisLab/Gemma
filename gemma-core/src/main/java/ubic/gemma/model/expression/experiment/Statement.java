@@ -1,6 +1,6 @@
 package ubic.gemma.model.expression.experiment;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.search.annotations.Analyze;
 import org.hibernate.search.annotations.Field;
 import ubic.gemma.model.common.description.Characteristic;
