@@ -334,45 +334,10 @@ public class QuantitationTypeConversionUtils {
     }
 
     /**
-     * Parse a raw string value as per a given quantitation type.
-     */
-    @Nullable
-    public static Object parseValue( String rawValue, QuantitationType quantitationType ) {
-        if ( StringUtils.isBlank( rawValue ) ) {
-            return null;
-        }
-        try {
-            switch ( quantitationType.getRepresentation() ) {
-                case DOUBLE:
-                    return Double.valueOf( rawValue );
-                case FLOAT:
-                    return Float.valueOf( rawValue );
-                case STRING:
-                    return rawValue;
-                case CHAR:
-                    if ( rawValue.length() != 1 ) {
-                        throw new IllegalStateException( "Attempt to cast a string of length " + rawValue.length() + " to a char: " + rawValue + "(quantitation type =" + quantitationType );
-                    }
-                    return rawValue.charAt( 0 );
-                case INT:
-                    return Integer.valueOf( rawValue );
-                case LONG:
-                    return Long.valueOf( rawValue );
-                case BOOLEAN:
-                    return Boolean.valueOf( rawValue );
-                default:
-                    throw new UnsupportedOperationException( "Parsing " + quantitationType.getRepresentation() + " data is not supported." );
-            }
-        } catch ( NumberFormatException e ) {
-            return null;
-        }
-    }
-
-    /**
-     * Obtain a "missing value" for a given quantitation type.
+     * Obtain the default to use for a given quantitation type if no value was provided.
      */
     @Nonnull
-    public static Object getMissingValue( QuantitationType quantitationType ) {
+    public static Object getDefaultValue( QuantitationType quantitationType ) {
         PrimitiveType pt = quantitationType.getRepresentation();
         switch ( pt ) {
             case DOUBLE:

@@ -43,7 +43,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.util.*;
 
-import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.getMissingValue;
+import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.getDefaultValue;
 
 /**
  * Tackles the problem of concatenating DesignElementDataVectors for a single experiment. This is necessary When a study
@@ -331,11 +331,11 @@ public class VectorMergingServiceImpl
      * @param type   type
      * @return The number of missing values which were added.
      */
-    private int fillMissingValues( List<Object> data, BioAssayDimension oldDim, QuantitationType type ) {
+    private int fillDefaultValue( List<Object> data, BioAssayDimension oldDim, QuantitationType type ) {
         int nullsNeeded = oldDim.getBioAssays().size();
-        Object missingValue = getMissingValue( type );
+        Object defaultValue = getDefaultValue( type );
         for ( int i = 0; i < nullsNeeded; i++ ) {
-            data.add( missingValue );
+            data.add( defaultValue );
         }
         return nullsNeeded;
     }
@@ -477,7 +477,7 @@ public class VectorMergingServiceImpl
                 }
             }
             if ( !found ) {
-                totalMissingInVector += this.fillMissingValues( mergedData, oldDim, type );
+                totalMissingInVector += this.fillDefaultValue( mergedData, oldDim, type );
             }
         }
         return totalMissingInVector;

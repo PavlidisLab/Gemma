@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +45,9 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
+import static ubic.gemma.core.loader.expression.geo.GeoConverterImpl.parseValue;
 import static ubic.gemma.persistence.util.ByteArrayUtils.*;
 
 /**
@@ -920,4 +923,40 @@ public class GeoConverterTest extends BaseSpringContextTest {
         return ok;
     }
 
+
+    @Test
+    public void testParseValue() {
+        Assertions.assertThat( parseValue( null, ( PrimitiveType.DOUBLE ) ) ).isNull();
+        Assertions.assertThat( parseValue( "", ( PrimitiveType.DOUBLE ) ) ).isNull();
+        Assertions.assertThat( parseValue( "  ", ( PrimitiveType.DOUBLE ) ) ).isNull();
+
+        Assertions.assertThat( parseValue( "4.0", ( PrimitiveType.DOUBLE ) ) ).isEqualTo( 4.0 );
+        Assertions.assertThat( parseValue( "4", ( PrimitiveType.DOUBLE ) ) ).isEqualTo( 4.0 );
+        Assertions.assertThat( parseValue( " 4 ", ( PrimitiveType.DOUBLE ) ) ).isEqualTo( 4.0 );
+        Assertions.assertThatThrownBy( () -> parseValue( "abc", ( PrimitiveType.DOUBLE ) ) )
+                .isInstanceOf( IllegalArgumentException.class );
+
+        Assertions.assertThat( parseValue( "4.0", ( PrimitiveType.FLOAT ) ) ).isEqualTo( 4.0f );
+        Assertions.assertThat( parseValue( "4", ( PrimitiveType.FLOAT ) ) ).isEqualTo( 4.0f );
+        Assertions.assertThat( parseValue( " 4 ", ( PrimitiveType.FLOAT ) ) ).isEqualTo( 4.0f );
+
+        assertThatThrownBy( () -> parseValue( "4.0", ( PrimitiveType.INT ) ) )
+                .isInstanceOf( IllegalArgumentException.class );
+        Assertions.assertThat( parseValue( "4", ( PrimitiveType.INT ) ) ).isEqualTo( 4 );
+        Assertions.assertThat( parseValue( " 4 ", ( PrimitiveType.INT ) ) ).isEqualTo( 4 );
+
+        Assertions.assertThat( parseValue( "a", ( PrimitiveType.CHAR ) ) ).isEqualTo( 'a' );
+        Assertions.assertThat( parseValue( " a ", ( PrimitiveType.CHAR ) ) ).isEqualTo( 'a' );
+        assertThatThrownBy( () -> parseValue( "ab", ( PrimitiveType.CHAR ) ) )
+                .isInstanceOf( IllegalArgumentException.class );
+
+        Assertions.assertThat( parseValue( "true", ( PrimitiveType.BOOLEAN ) ) ).isEqualTo( true );
+        Assertions.assertThat( parseValue( "1", ( PrimitiveType.BOOLEAN ) ) ).isEqualTo( true );
+        Assertions.assertThat( parseValue( "TRUE", ( PrimitiveType.BOOLEAN ) ) ).isEqualTo( true );
+        Assertions.assertThat( parseValue( "false", ( PrimitiveType.BOOLEAN ) ) ).isEqualTo( false );
+        Assertions.assertThat( parseValue( "FALSE", ( PrimitiveType.BOOLEAN ) ) ).isEqualTo( false );
+        Assertions.assertThat( parseValue( "0", ( PrimitiveType.BOOLEAN ) ) ).isEqualTo( false );
+        assertThatThrownBy( () -> parseValue( "ketchup", ( PrimitiveType.BOOLEAN ) ) )
+                .isInstanceOf( IllegalArgumentException.class );
+    }
 }

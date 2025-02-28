@@ -94,7 +94,6 @@ public class QuantitationTypeConversionUtilsTest {
                 .isInstanceOf( InferredQuantitationMismatchException.class );
     }
 
-
     private void basicBasicLog2MatrixChecks( ExpressionDataDoubleMatrix m ) {
         assertThat( m.getQuantitationTypes() )
                 .hasSize( 1 )

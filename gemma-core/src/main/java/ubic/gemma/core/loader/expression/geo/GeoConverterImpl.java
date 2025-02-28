@@ -40,6 +40,7 @@ import ubic.gemma.core.loader.util.parser.ExternalDatabaseUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.*;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -57,6 +58,8 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -64,9 +67,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.getMissingValue;
-import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.parseValue;
 
 /**
  * Convert GEO domain objects into Gemma objects.
@@ -359,19 +359,25 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         Object[] toConvert = new Object[vector.length];
-        Object missingValue = getMissingValue( qt );
+        Object defaultValue = getDefaultValue( qt );
         int numMissing = 0;
         for ( int i = 0; i < vector.length; i++ ) {
             if ( vector[i] != null ) {
-                Object parsedVal = parseValue( vector[i], qt );
-                if ( parsedVal != null ) {
-                    toConvert[i] = parsedVal;
-                } else {
-                    toConvert[i] = missingValue;
+                try {
+                    Object parsedVal = parseValue( vector[i], qt.getRepresentation() );
+                    if ( parsedVal != null ) {
+                        toConvert[i] = parsedVal;
+                    } else {
+                        toConvert[i] = defaultValue;
+                        numMissing++;
+                    }
+                } catch ( IllegalArgumentException e ) {
+                    log.warn( "Invalid value for " + qt + ", it will be stored as missing.", e );
+                    toConvert[i] = defaultValue;
                     numMissing++;
                 }
             } else {
-                toConvert[i] = missingValue;
+                toConvert[i] = defaultValue;
                 numMissing++;
             }
         }
@@ -381,6 +387,85 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         return toConvert;
+    }
+
+    /**
+     * Parse a raw string value as per a given quantitation type.
+     * @throws IllegalArgumentException on an invalid input
+     */
+    @Nullable
+    static Object parseValue( String rawValue, PrimitiveType representation ) throws IllegalArgumentException {
+        if ( StringUtils.isBlank( rawValue ) ) {
+            return null;
+        }
+
+        // keep strings untouched as much as possible
+        if ( representation == PrimitiveType.STRING ) {
+            return rawValue;
+        }
+
+        rawValue = StringUtils.strip( rawValue );
+
+        // these are various missing value indicators, not exhaustive
+        if ( rawValue.equalsIgnoreCase( "null" )
+                || rawValue.equalsIgnoreCase( "Undef" )
+                || rawValue.equalsIgnoreCase( "bad" ) ) {
+            return null;
+        }
+
+        if ( representation == PrimitiveType.CHAR ) {
+            if ( rawValue.length() != 1 ) {
+                throw new IllegalArgumentException( "Invalid char value: " + rawValue );
+            }
+            return rawValue.charAt( 0 );
+        }
+
+        switch ( representation ) {
+            case DOUBLE:
+                return Double.valueOf( rawValue );
+            case FLOAT:
+                return Float.valueOf( rawValue );
+            case INT:
+                return Integer.valueOf( rawValue );
+            case LONG:
+                return Long.valueOf( rawValue );
+            case BOOLEAN:
+                if ( rawValue.equalsIgnoreCase( "true" ) || rawValue.equals( "1" ) ) {
+                    return Boolean.TRUE;
+                } else if ( rawValue.equalsIgnoreCase( "false" ) || rawValue.equals( "0" ) ) {
+                    return Boolean.FALSE;
+                } else {
+                    throw new IllegalArgumentException( "Invalid boolean value: " + rawValue );
+                }
+            default:
+                throw new UnsupportedOperationException( "Parsing " + representation + " data is not supported." );
+        }
+    }
+
+    /**
+     * Obtain the default to use for a given quantitation type if no value was provided.
+     */
+    @Nonnull
+    public static Object getDefaultValue( QuantitationType quantitationType ) {
+        PrimitiveType pt = quantitationType.getRepresentation();
+        switch ( pt ) {
+            case DOUBLE:
+                return Double.NaN;
+            case FLOAT:
+                return Float.NaN;
+            case STRING:
+                return "";
+            case CHAR:
+                return ( char ) 0;
+            case INT:
+                return 0;
+            case LONG:
+                return 0L;
+            case BOOLEAN:
+                return false;
+            default:
+                throw new UnsupportedOperationException( "Missing values in data vectors of type " + quantitationType + " is not supported." );
+        }
     }
 
     @Override
