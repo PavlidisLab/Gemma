@@ -430,9 +430,9 @@ public class GeoConverterImpl implements GeoConverter {
             case LONG:
                 return Long.valueOf( rawValue );
             case BOOLEAN:
-                if ( rawValue.equalsIgnoreCase( "true" ) || rawValue.equals( "1" ) ) {
+                if ( rawValue.equalsIgnoreCase( "true" ) || rawValue.equals( "1" ) || rawValue.equals( "P" ) ) {
                     return Boolean.TRUE;
-                } else if ( rawValue.equalsIgnoreCase( "false" ) || rawValue.equals( "0" ) ) {
+                } else if ( rawValue.equalsIgnoreCase( "false" ) || rawValue.equals( "0" ) || rawValue.equals( "A" ) ) {
                     return Boolean.FALSE;
                 } else {
                     throw new IllegalArgumentException( "Invalid boolean value: " + rawValue );
