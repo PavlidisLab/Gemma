@@ -40,7 +40,6 @@ import ubic.gemma.core.loader.util.parser.ExternalDatabaseUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.*;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -66,7 +65,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static ubic.gemma.persistence.util.ByteArrayUtils.*;
+import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.getMissingValue;
+import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.parseValue;
 
 /**
  * Convert GEO domain objects into Gemma objects.
@@ -339,9 +339,9 @@ public class GeoConverterImpl implements GeoConverter {
      * @param qt     The quantitation type for the values to be converted.
      */
     @Override
-    public byte[] convertData( List<Object> vector, QuantitationType qt ) {
+    public Object[] convertData( String[] vector, QuantitationType qt ) {
 
-        if ( vector == null || vector.size() == 0 ) return null;
+        if ( vector == null || vector.length == 0 ) return null;
 
         boolean containsAtLeastOneNonNull = false;
         for ( Object string : vector ) {
@@ -353,78 +353,34 @@ public class GeoConverterImpl implements GeoConverter {
 
         if ( !containsAtLeastOneNonNull ) {
             if ( GeoConverterImpl.log.isDebugEnabled() ) {
-                GeoConverterImpl.log.debug( "No data for " + qt + " in vector of length " + vector.size() );
+                GeoConverterImpl.log.debug( "No data for " + qt + " in vector of length " + vector.length );
             }
             return null;
         }
 
-        List<Object> toConvert = new ArrayList<>();
-        PrimitiveType pt = qt.getRepresentation();
+        Object[] toConvert = new Object[vector.length];
+        Object missingValue = getMissingValue( qt );
         int numMissing = 0;
-        for ( Object rawValue : vector ) {
-            if ( rawValue == null ) {
+        for ( int i = 0; i < vector.length; i++ ) {
+            if ( vector[i] != null ) {
+                Object parsedVal = parseValue( vector[i], qt );
+                if ( parsedVal != null ) {
+                    toConvert[i] = parsedVal;
+                } else {
+                    toConvert[i] = missingValue;
+                    numMissing++;
+                }
+            } else {
+                toConvert[i] = missingValue;
                 numMissing++;
-                this.handleMissing( toConvert, pt );
-            } else if ( rawValue instanceof String ) { // needs to be coverted.
-                String valueString = ( String ) rawValue;
-                if ( StringUtils.isBlank( valueString ) ) {
-                    numMissing++;
-                    this.handleMissing( toConvert, pt );
-                    continue;
-                }
-                try {
-                    if ( pt.equals( PrimitiveType.DOUBLE ) ) {
-                        toConvert.add( Double.parseDouble( valueString ) );
-                    } else if ( pt.equals( PrimitiveType.STRING ) ) {
-                        toConvert.add( rawValue );
-                    } else if ( pt.equals( PrimitiveType.CHAR ) ) {
-                        if ( valueString.length() != 1 ) {
-                            throw new IllegalStateException( "Attempt to cast a string of length " + valueString.length() + " to a char: " + rawValue + "(quantitation type =" + qt );
-                        }
-                        toConvert.add( valueString.toCharArray()[0] );
-                    } else if ( pt.equals( PrimitiveType.INT ) ) {
-                        toConvert.add( Integer.parseInt( valueString ) );
-                    } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
-                        toConvert.add( Boolean.parseBoolean( valueString ) );
-                    } else {
-                        throw new UnsupportedOperationException( "Data vectors of type " + pt + " not supported" );
-                    }
-                } catch ( NumberFormatException e ) {
-                    numMissing++;
-                    this.handleMissing( toConvert, pt );
-                }
-            } else { // use as is.
-                toConvert.add( rawValue );
             }
         }
 
-        if ( numMissing == vector.size() ) {
+        if ( numMissing == vector.length ) {
             return null;
         }
 
-        byte[] bytes = objectArrayToBytes( toConvert.toArray() );
-
-        /*
-         * Debugging - absolutely make sure we can convert the data back.
-         */
-        if ( pt.equals( PrimitiveType.DOUBLE ) ) {
-            double[] doubles = byteArrayToDoubles( bytes );
-            if ( doubles.length != vector.size() ) {
-                throw new IllegalStateException( "Expected " + vector.size() + " got " + doubles.length + " doubles" );
-            }
-        } else if ( pt.equals( PrimitiveType.INT ) ) {
-            int[] ints = byteArrayToInts( bytes );
-            if ( ints.length != vector.size() ) {
-                throw new IllegalStateException( "Expected " + vector.size() + " got " + ints.length + " ints" );
-            }
-        } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
-            boolean[] booleans = byteArrayToBooleans( bytes );
-            if ( booleans.length != vector.size() ) {
-                throw new IllegalStateException( "Expected " + vector.size() + " got " + booleans.length + " booleans" );
-            }
-        }
-
-        return bytes;
+        return toConvert;
     }
 
     @Override
@@ -1026,22 +982,22 @@ public class GeoConverterImpl implements GeoConverter {
         }
     }
 
-    private RawExpressionDataVector convertDesignElementDataVector( GeoPlatform geoPlatform, ExpressionExperiment expExp, BioAssayDimension bioAssayDimension, String designElementName, List<Object> dataVector, QuantitationType qt ) {
+    private RawExpressionDataVector convertDesignElementDataVector( GeoPlatform geoPlatform, ExpressionExperiment expExp, BioAssayDimension bioAssayDimension, String designElementName, String[] dataVector, QuantitationType qt ) {
 
-        if ( dataVector == null || dataVector.size() == 0 ) return null;
+        if ( dataVector == null || dataVector.length == 0 ) return null;
 
         int numValuesExpected = bioAssayDimension.getBioAssays().size();
-        if ( dataVector.size() != numValuesExpected ) {
-            throw new IllegalArgumentException( "Expected " + numValuesExpected + " in bioassaydimension, data contains " + dataVector.size() );
+        if ( dataVector.length != numValuesExpected ) {
+            throw new IllegalArgumentException( "Expected " + numValuesExpected + " in bioassaydimension, data contains " + dataVector.length );
         }
-        byte[] blob = this.convertData( dataVector, qt );
+        Object[] blob = this.convertData( dataVector, qt );
         if ( blob == null ) { // all missing etc.
             if ( GeoConverterImpl.log.isDebugEnabled() )
                 GeoConverterImpl.log.debug( "All missing values for DE=" + designElementName + " QT=" + qt );
             return null;
         }
         if ( GeoConverterImpl.log.isDebugEnabled() ) {
-            GeoConverterImpl.log.debug( blob.length + " bytes for " + dataVector.size() + " raw elements" );
+            GeoConverterImpl.log.debug( blob.length + " objects for " + dataVector.length + " raw elements" );
         }
 
         ArrayDesign p = this.convertPlatform( geoPlatform );
@@ -1095,7 +1051,7 @@ public class GeoConverterImpl implements GeoConverter {
 
         vector.setBioAssayDimension( bioAssayDimension );
         vector.setQuantitationType( qt );
-        vector.setData( blob );
+        vector.setDataAsObjects( blob );
         return vector;
     }
 
@@ -2325,7 +2281,7 @@ public class GeoConverterImpl implements GeoConverter {
             int quantitationTypeIndex = values.getQuantitationTypeIndex( geoPlatform, quantitationType );
             GeoConverterImpl.log.debug( "Processing " + quantitationType + " (column=" + quantitationTypeIndex + " - according to sample, it's " + columnAccordingToSample + ")" );
 
-            Map<String, List<Object>> dataVectors = this.makeDataVectors( values, datasetSamples, quantitationTypeIndex );
+            Map<String, String[]> dataVectors = this.makeDataVectors( values, datasetSamples, quantitationTypeIndex );
 
             if ( dataVectors == null || dataVectors.size() == 0 ) {
                 GeoConverterImpl.log.debug( "No data for " + quantitationType + " (column=" + quantitationTypeIndex + ")" );
@@ -2333,7 +2289,7 @@ public class GeoConverterImpl implements GeoConverter {
             }
             GeoConverterImpl.log.info( dataVectors.size() + " data vectors for " + quantitationType );
 
-            Object exampleValue = dataVectors.values().iterator().next().iterator().next();
+            Object exampleValue = dataVectors.values().iterator().next()[0];
 
             QuantitationType qt = QuantitationType.Factory.newInstance();
             qt.setName( quantitationType );
@@ -2344,8 +2300,8 @@ public class GeoConverterImpl implements GeoConverter {
             int count = 0;
             int skipped = 0;
             for ( String designElementName : dataVectors.keySet() ) {
-                List<Object> dataVector = dataVectors.get( designElementName );
-                if ( dataVector == null || dataVector.size() == 0 ) continue;
+                String[] dataVector = dataVectors.get( designElementName );
+                if ( dataVector == null || dataVector.length == 0 ) continue;
 
                 RawExpressionDataVector vector = this.convertDesignElementDataVector( geoPlatform, expExp, bioAssayDimension, designElementName, dataVector, qt );
 
@@ -2357,7 +2313,7 @@ public class GeoConverterImpl implements GeoConverter {
                 }
 
                 if ( GeoConverterImpl.log.isTraceEnabled() ) {
-                    GeoConverterImpl.log.trace( designElementName + " " + qt.getName() + " " + qt.getRepresentation() + " " + dataVector.size() + " elements in vector" );
+                    GeoConverterImpl.log.trace( designElementName + " " + qt.getName() + " " + qt.getRepresentation() + " " + dataVector.length + " elements in vector" );
                 }
 
                 expExp.getRawExpressionDataVectors().add( vector );
@@ -2758,22 +2714,6 @@ public class GeoConverterImpl implements GeoConverter {
         return seriesSamples;
     }
 
-    /**
-     * Deal with missing values, identified by nulls or number format exceptions.
-     */
-    private void handleMissing( List<Object> toConvert, PrimitiveType pt ) {
-        if ( pt.equals( PrimitiveType.DOUBLE ) ) {
-            toConvert.add( Double.NaN );
-        } else if ( pt.equals( PrimitiveType.STRING ) ) {
-            toConvert.add( "" );
-        } else if ( pt.equals( PrimitiveType.INT ) ) {
-            toConvert.add( 0 );
-        } else if ( pt.equals( PrimitiveType.BOOLEAN ) ) {
-            toConvert.add( false );
-        } else {
-            throw new UnsupportedOperationException( "Missing values in data vectors of type " + pt + " not supported" );
-        }
-    }
 
     private void initGeoExternalDatabase() {
         if ( geoDatabase == null ) {
@@ -2798,9 +2738,9 @@ public class GeoConverterImpl implements GeoConverter {
      * Check to see if we got any data. If not, we should return null. This can happen if the quantitation type was
      * filtered during parsing.
      */
-    private boolean isPopulated( Map<String, List<Object>> dataVectors ) {
+    private boolean isPopulated( Map<String, String[]> dataVectors ) {
         boolean filledIn = false;
-        for ( List<Object> vector : dataVectors.values() ) {
+        for ( String[] vector : dataVectors.values() ) {
             for ( Object object : vector ) {
                 if ( object != null ) {
                     filledIn = true;
@@ -2836,8 +2776,8 @@ public class GeoConverterImpl implements GeoConverter {
      * @return A map of Strings (design element names) to Lists of Strings containing the data.
      * @throws IllegalArgumentException if the columnNumber is not valid
      */
-    private Map<String, List<Object>> makeDataVectors( GeoValues values, List<GeoSample> datasetSamples, Integer quantitationTypeIndex ) {
-        Map<String, List<Object>> dataVectors = new HashMap<>( GeoConverterImpl.INITIAL_VECTOR_CAPACITY );
+    private Map<String, String[]> makeDataVectors( GeoValues values, List<GeoSample> datasetSamples, Integer quantitationTypeIndex ) {
+        Map<String, String[]> dataVectors = new HashMap<>( GeoConverterImpl.INITIAL_VECTOR_CAPACITY );
         Collections.sort( datasetSamples );
         GeoPlatform platform = this.getPlatformForSamples( datasetSamples );
 
@@ -2860,9 +2800,9 @@ public class GeoConverterImpl implements GeoConverter {
              * Note: null data can happen if the platform has probes that aren't in the data, or if this is a
              * quantitation type that was filtered out during parsing, or absent from some samples.
              */
-            List<Object> ob = values.getValues( platform, quantitationTypeIndex, designElementName, indices );
-            if ( ob == null || ob.size() == 0 ) continue;
-            assert ob.size() == datasetSamples.size();
+            String[] ob = values.getValues( platform, quantitationTypeIndex, designElementName, indices );
+            if ( ob == null || ob.length == 0 ) continue;
+            assert ob.length == datasetSamples.size();
             dataVectors.put( designElementName, ob );
         }
 

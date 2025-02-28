@@ -24,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
-import ubic.gemma.core.analysis.service.ExpressionExperimentVectorManipulatingService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEvent;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -38,9 +37,13 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.*;
+
+import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.getMissingValue;
 
 /**
  * Tackles the problem of concatenating DesignElementDataVectors for a single experiment. This is necessary When a study
@@ -64,10 +67,11 @@ import java.util.*;
  * @author pavlidis
  */
 @Service
-public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipulatingService
+public class VectorMergingServiceImpl
         implements VectorMergingService {
 
     private static final Log log = LogFactory.getLog( VectorMergingServiceImpl.class.getName() );
+
     @Autowired
     private AnalysisUtilService analysisUtilService;
 
@@ -82,6 +86,12 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private RawExpressionDataVectorService rawExpressionDataVectorService;
+
+    @Autowired
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Override
     @Transactional
@@ -316,30 +326,16 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
     }
 
     /**
-     * @param de             de
-     * @param data           data
-     * @param oldDim         old dim
-     * @param representation representation
+     * @param data   data
+     * @param oldDim old dim
+     * @param type   type
      * @return The number of missing values which were added.
      */
-    private int fillMissingValues( CompositeSequence de, List<Object> data, BioAssayDimension oldDim,
-            PrimitiveType representation ) {
+    private int fillMissingValues( List<Object> data, BioAssayDimension oldDim, QuantitationType type ) {
         int nullsNeeded = oldDim.getBioAssays().size();
+        Object missingValue = getMissingValue( type );
         for ( int i = 0; i < nullsNeeded; i++ ) {
-            // this code taken from GeoConverter
-            if ( representation.equals( PrimitiveType.DOUBLE ) ) {
-                data.add( Double.NaN );
-            } else if ( representation.equals( PrimitiveType.STRING ) ) {
-                data.add( "" );
-            } else if ( representation.equals( PrimitiveType.INT ) ) {
-                data.add( 0 );
-            } else if ( representation.equals( PrimitiveType.BOOLEAN ) ) {
-                data.add( false );
-            } else {
-                throw new UnsupportedOperationException(
-                        "Missing values in data vectors of type " + representation + " not supported (when processing "
-                                + de );
-            }
+            data.add( missingValue );
         }
         return nullsNeeded;
     }
@@ -463,7 +459,6 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
             QuantitationType type, CompositeSequence de, Collection<RawExpressionDataVector> dedvs,
             List<Object> mergedData ) {
         int totalMissingInVector = 0;
-        PrimitiveType representation = type.getRepresentation();
 
         for ( BioAssayDimension oldDim : sortedOldDims ) {
             // careful, the 'new' bioAssayDimension might be one of the old ones that we're reusing.
@@ -477,13 +472,12 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
 
                 if ( oldV.getBioAssayDimension().equals( oldDim ) ) {
                     found = true;
-                    this.convertFromBytes( mergedData, representation, oldV );
+                    mergedData.addAll( Arrays.asList( oldV.getDataAsObjects() ) );
                     break;
                 }
             }
             if ( !found ) {
-                int missing = this.fillMissingValues( de, mergedData, oldDim, representation );
-                totalMissingInVector += missing;
+                totalMissingInVector += this.fillMissingValues( mergedData, oldDim, type );
             }
         }
         return totalMissingInVector;

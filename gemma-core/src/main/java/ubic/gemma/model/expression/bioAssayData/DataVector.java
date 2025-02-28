@@ -180,17 +180,18 @@ public abstract class DataVector extends AbstractIdentifiable {
         setData( stringsToTabbedBytes( data ) );
     }
 
-    public <T> T[] getDataAsObjects( Class<T> clazz ) {
-        ensureRepresentation( clazz );
-        return byteArrayToObjects( data, clazz );
+    @Transient
+    public Object[] getDataAsObjects() {
+        return byteArrayToObjects( data, quantitationType.getRepresentation().getJavaClass() );
     }
 
     public void setDataAsObjects( Object[] data ) {
         if ( data.length > 0 ) {
-            // type does not matter if empty
             ensureRepresentation( data[0].getClass() );
+            setData( objectArrayToBytes( data ) );
+        } else {
+            setData( new byte[0] );
         }
-        setData( objectArrayToBytes( data ) );
     }
 
     /**

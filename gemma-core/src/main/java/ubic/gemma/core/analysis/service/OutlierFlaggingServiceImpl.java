@@ -46,7 +46,7 @@ import java.util.Collection;
  * @author pavlidis
  */
 @Component
-public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipulatingService
+public class OutlierFlaggingServiceImpl
         implements OutlierFlaggingService {
 
     private static final Log log = LogFactory.getLog( OutlierFlaggingServiceImpl.class );

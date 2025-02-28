@@ -26,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
-import ubic.gemma.core.analysis.service.ExpressionExperimentVectorManipulatingService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -46,6 +45,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 
@@ -74,7 +74,7 @@ import java.util.stream.Collectors;
  */
 @Service
 
-public class ExpressionExperimentPlatformSwitchService extends ExpressionExperimentVectorManipulatingService {
+public class ExpressionExperimentPlatformSwitchService {
 
     /**
      * Used to identify design elements that have no sequence associated with them.
@@ -111,6 +111,9 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
     @Autowired
     private AuditTrailService auditTrailService;
+
+    @Autowired
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     /**
      * If you know the array designs are already in a merged state, you should use switchExperimentToMergedPlatform
@@ -632,30 +635,29 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                             + vector );
         }
 
-        List<Object> oldData = new ArrayList<>();
-        super.convertFromBytes( oldData, vector.getQuantitationType().getRepresentation(), vector );
+        Object[] oldData = vector.getDataAsObjects();
+        Object[] newData = new Object[desiredOrder.size()];
 
         /*
-         * Now data has the old data, so we need to rearrange it to match, inserting missings as necessary.
+         * Now data has the old data, so we need to rearrange it to match, inserting missing as necessary.
          */
         Map<BioMaterial, Integer> bm2loc = new HashMap<>();
-        int i = 0;
-        List<Object> newData = new ArrayList<>();
         // initialize
-        for ( BioAssay ba : desiredOrder ) {
+        for ( int i = 0; i < desiredOrder.size(); i++ ) {
+            BioAssay ba = desiredOrder.get( i );
             bm2loc.put( ba.getSampleUsed(), i++ );
-            newData.add( missingVal );
+            newData[i] = missingVal;
         }
 
         // Put data into new locations
-        int j = 0;
-        for ( BioAssay ba : currentOrder ) {
+        for ( int i = 0; i < currentOrder.size(); i++ ) {
+            BioAssay ba = currentOrder.get( i );
             Integer loc = bm2loc.get( ba.getSampleUsed() );
             assert loc != null;
-            newData.set( loc, oldData.get( j++ ) );
+            newData[loc] = oldData[i];
         }
 
-        vector.setDataAsObjects( newData.toArray() );
+        vector.setDataAsObjects( newData );
         vector.setBioAssayDimension( bad );
     }
 }

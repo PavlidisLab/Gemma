@@ -86,7 +86,7 @@ public class ByteArrayUtils {
         return byteArrayConverter.byteArrayToDoubleMatrix( bytes, n );
     }
 
-    public static byte[] objectArrayToBytes( Object[] objects ) {
+    public static <T> byte[] objectArrayToBytes( T[] objects ) {
         return byteArrayConverter.objectArrayToBytes( objects, StandardCharsets.UTF_8 );
     }
 

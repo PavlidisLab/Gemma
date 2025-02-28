@@ -45,8 +45,7 @@ import java.util.*;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.*;
-import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToDoubles;
-import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToInts;
+import static ubic.gemma.persistence.util.ByteArrayUtils.*;
 
 /**
  * Unit test for GeoConversion Added extension BaseSpringContextTest as want Taxon Service to be called
@@ -78,13 +77,13 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
     @Test
     public void testConvertDataDoubles() {
-        List<Object> testList = new ArrayList<>();
+        List<String> testList = new ArrayList<>();
         testList.add( "1.1" );
         testList.add( "2929202e-4" );
         testList.add( "-394949.44422" );
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setRepresentation( PrimitiveType.DOUBLE );
-        byte[] actualResult = gc.convertData( testList, qt );
+        byte[] actualResult = objectArrayToBytes( gc.convertData( testList.toArray( new String[0] ), qt ) );
         double[] revertedResult = byteArrayToDoubles( actualResult );
         assertEquals( revertedResult[0], 1.1, 0.00001 );
         assertEquals( revertedResult[1], 2929202e-4, 0.00001 );
@@ -93,17 +92,17 @@ public class GeoConverterTest extends BaseSpringContextTest {
 
     @Test
     public void testConvertDataIntegers() {
-        List<Object> testList = new ArrayList<>();
+        List<String> testList = new ArrayList<>();
         testList.add( "1" );
         testList.add( "2929202" );
         testList.add( "-394949" );
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setRepresentation( PrimitiveType.INT );
-        byte[] actualResult = gc.convertData( testList, qt );
+        byte[] actualResult = objectArrayToBytes( gc.convertData( testList.toArray( new String[0] ), qt ) );
         int[] revertedResult = byteArrayToInts( actualResult );
-        assertEquals( revertedResult[0], 1 );
-        assertEquals( revertedResult[1], 2929202 );
-        assertEquals( revertedResult[2], -394949 );
+        assertEquals( 1, revertedResult[0] );
+        assertEquals( 2929202, revertedResult[1] );
+        assertEquals( -394949, revertedResult[2] );
     }
 
     @Test

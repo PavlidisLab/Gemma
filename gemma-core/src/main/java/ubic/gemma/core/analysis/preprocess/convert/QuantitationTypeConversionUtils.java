@@ -19,6 +19,7 @@
 package ubic.gemma.core.analysis.preprocess.convert;
 
 import cern.colt.matrix.DoubleMatrix1D;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeanUtils;
@@ -36,6 +37,8 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.beans.PropertyDescriptor;
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -328,5 +331,66 @@ public class QuantitationTypeConversionUtils {
             }
         }
         return ignoredPropertiesList.toArray( new String[0] );
+    }
+
+    /**
+     * Parse a raw string value as per a given quantitation type.
+     */
+    @Nullable
+    public static Object parseValue( String rawValue, QuantitationType quantitationType ) {
+        if ( StringUtils.isBlank( rawValue ) ) {
+            return null;
+        }
+        try {
+            switch ( quantitationType.getRepresentation() ) {
+                case DOUBLE:
+                    return Double.valueOf( rawValue );
+                case FLOAT:
+                    return Float.valueOf( rawValue );
+                case STRING:
+                    return rawValue;
+                case CHAR:
+                    if ( rawValue.length() != 1 ) {
+                        throw new IllegalStateException( "Attempt to cast a string of length " + rawValue.length() + " to a char: " + rawValue + "(quantitation type =" + quantitationType );
+                    }
+                    return rawValue.charAt( 0 );
+                case INT:
+                    return Integer.valueOf( rawValue );
+                case LONG:
+                    return Long.valueOf( rawValue );
+                case BOOLEAN:
+                    return Boolean.valueOf( rawValue );
+                default:
+                    throw new UnsupportedOperationException( "Parsing " + quantitationType.getRepresentation() + " data is not supported." );
+            }
+        } catch ( NumberFormatException e ) {
+            return null;
+        }
+    }
+
+    /**
+     * Obtain a "missing value" for a given quantitation type.
+     */
+    @Nonnull
+    public static Object getMissingValue( QuantitationType quantitationType ) {
+        PrimitiveType pt = quantitationType.getRepresentation();
+        switch ( pt ) {
+            case DOUBLE:
+                return Double.NaN;
+            case FLOAT:
+                return Float.NaN;
+            case STRING:
+                return "";
+            case CHAR:
+                return ( char ) 0;
+            case INT:
+                return 0;
+            case LONG:
+                return 0L;
+            case BOOLEAN:
+                return false;
+            default:
+                throw new UnsupportedOperationException( "Missing values in data vectors of type " + quantitationType + " is not supported." );
+        }
     }
 }

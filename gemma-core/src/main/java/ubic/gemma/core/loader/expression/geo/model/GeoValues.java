@@ -49,8 +49,6 @@ public class GeoValues implements Serializable {
     private static final Log log = LogFactory.getLog( GeoValues.class.getName() );
     private static final Collection<String> skippableQuantitationTypes = new HashSet<>();
 
-    // private Map<Object, String> quantitationTypeMap = new HashMap<Object, String>();
-
     static {
 
         // Most of these are from GenePix files. In Stanford files they are named differently than described here:
@@ -228,7 +226,7 @@ public class GeoValues implements Serializable {
     /*
      * Map of platform --> quantitationtype -> designElement -> values; values in same order as sampleVector.
      */
-    private final Map<GeoPlatform, Map<Integer, Map<String, List<Object>>>> data = new HashMap<>();
+    private final Map<GeoPlatform, Map<Integer, Map<String, List<String>>>> data = new HashMap<>();
     private final Map<GeoPlatform, Map<Integer, Collection<String>>> quantitationTypeIndexMap = new HashMap<>();
     private final Map<GeoPlatform, Map<String, Integer>> quantitationTypeNameMap = new HashMap<>();
 
@@ -375,7 +373,7 @@ public class GeoValues implements Serializable {
      * @param designElement         design element
      * @param value                 The data point to be stored.
      */
-    public void addValue( GeoSample sample, Integer quantitationTypeIndex, String designElement, Object value ) {
+    public void addValue( GeoSample sample, Integer quantitationTypeIndex, String designElement, String value ) {
 
         // we really don't allow null values at this stage.
         if ( value == null ) {
@@ -390,12 +388,12 @@ public class GeoValues implements Serializable {
             data.put( platform, new HashMap<>() );
         }
 
-        Map<Integer, Map<String, List<Object>>> platformMap = data.get( platform );
+        Map<Integer, Map<String, List<String>>> platformMap = data.get( platform );
         if ( !platformMap.containsKey( quantitationTypeIndex ) ) {
             platformMap.put( quantitationTypeIndex, new HashMap<>() );
         }
 
-        Map<String, List<Object>> qtMap = platformMap.get( quantitationTypeIndex );
+        Map<String, List<String>> qtMap = platformMap.get( quantitationTypeIndex );
         if ( !qtMap.containsKey( designElement ) ) {
             qtMap.put( designElement, new ArrayList<>() );
         }
@@ -495,7 +493,7 @@ public class GeoValues implements Serializable {
     }
 
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public List<Object> getValues( GeoPlatform platform, Integer quantitationType, String designElement ) {
+    public List<String> getValues( GeoPlatform platform, Integer quantitationType, String designElement ) {
         return data.get( platform ).get( quantitationType ).get( designElement );
     }
 
@@ -506,23 +504,23 @@ public class GeoValues implements Serializable {
      * @param platform         platforms
      * @return a 'slice' of the data corresponding to the indices provided.
      */
-    public List<Object> getValues( GeoPlatform platform, Integer quantitationType, String designElement,
+    public String[] getValues( GeoPlatform platform, Integer quantitationType, String designElement,
             Integer[] indices ) {
-        List<Object> result = new ArrayList<>();
-        Map<Integer, Map<String, List<Object>>> map = data.get( platform );
+        Map<Integer, Map<String, List<String>>> map = data.get( platform );
         assert map != null : "No data for platform=" + platform;
-        Map<String, List<Object>> map2 = map.get( quantitationType );
+        Map<String, List<String>> map2 = map.get( quantitationType );
         assert map2 != null : "No data for qt " + quantitationType + " on " + platform;
-        List<Object> rawvals = map2.get( designElement );
+        List<String> rawvals = map2.get( designElement );
 
         // this can happen if the data doesn't contain that designElement.
         if ( rawvals == null )
             return null;
-        for ( Integer i : indices ) {
+        String[] result = new String[indices.length];
+        for ( int j = 0; j < indices.length; j++ ) {
+            Integer i = indices[j];
             if ( i == null ) {
-                result.add( null );
+                result[j] = null;
             } else {
-
                 /*
                  * There can be values missing if some data are missing for some samples. For example, on GSE1004,
                  * sample GSM15832 was run on HG-U95V1 while the rest are on HG-U95V2, so a few probes are missing data.
@@ -533,14 +531,14 @@ public class GeoValues implements Serializable {
                                     + " quant.type # " + quantitationType + ") - vector has only " + rawvals.size()
                                     + " values." );
                 }
-                Object value = rawvals.get( i );
+                String value = rawvals.get( i );
                 if ( value == null ) {
                     if ( GeoValues.log.isDebugEnabled() )
                         GeoValues.log.debug( "No data for index " + i + " (" + designElement + " on " + platform
                                 + " quant.type # " + quantitationType + ") - vector has " + rawvals.size()
                                 + " values." );
                 }
-                result.add( value );
+                result[j] = value;
             }
         }
         return result;
@@ -617,7 +615,7 @@ public class GeoValues implements Serializable {
 
                     if ( samples.contains( geoSample ) ) {
 
-                        Map<String, List<Object>> newmap = v.data.get( p ).get( o );
+                        Map<String, List<String>> newmap = v.data.get( p ).get( o );
                         for ( String probeId : newmap.keySet() ) {
                             newmap.get( probeId ).add( this.data.get( p ).get( o ).get( probeId ).get( i ) );
                         }
@@ -664,15 +662,15 @@ public class GeoValues implements Serializable {
                 }
                 buf.append( "\n" );
 
-                Map<String, List<Object>> map = data.get( platform ).get( qType );
+                Map<String, List<String>> map = data.get( platform ).get( qType );
                 assert map != null;
                 List<String> els = new ArrayList<>( map.keySet() );
                 Collections.sort( els );
                 for ( String dEl : els ) {
                     buf.append( dEl );
 
-                    for ( Object val : map.get( dEl ) ) {
-                        if ( val == null || StringUtils.isBlank( val.toString() ) ) {
+                    for ( String val : map.get( dEl ) ) {
+                        if ( val == null || StringUtils.isBlank( val ) ) {
                             val = ".";
                         }
                         buf.append( "\t" ).append( val );
@@ -697,7 +695,7 @@ public class GeoValues implements Serializable {
     public void validate() {
         for ( GeoPlatform platform : sampleDimensions.keySet() ) {
 
-            Map<Integer, Map<String, List<Object>>> d = data.get( platform );
+            Map<Integer, Map<String, List<String>>> d = data.get( platform );
 
             for ( Integer qType : sampleDimensions.get( platform ).keySet() ) {
 
@@ -719,11 +717,11 @@ public class GeoValues implements Serializable {
                 }
                 Collection<String> qtNames = qtMap.get( qType );
 
-                Map<String, List<Object>> q = d.get( qType );
+                Map<String, List<String>> q = d.get( qType );
                 boolean warned = false;
-                for ( Entry<String, List<Object>> e : q.entrySet() ) {
+                for ( Entry<String, List<String>> e : q.entrySet() ) {
                     String designElement = e.getKey();
-                    List<Object> vals = e.getValue();
+                    List<String> vals = e.getValue();
 
                     if ( vals.size() < numSamples ) {
                         int paddingAmount = numSamples - vals.size();
