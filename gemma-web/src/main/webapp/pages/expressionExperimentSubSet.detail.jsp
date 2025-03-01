@@ -3,7 +3,7 @@
 <jsp:useBean id="appConfig" scope="application" type="java.util.Map" />
 
 <head>
-<title>${subSet.name}</title>
+<title>${subSet.name} of ${subSet.sourceExperiment.shortName} - ${subSet.sourceExperiment.name}</title>
 <c:choose>
     <c:when test="${not empty subSet.description}">
         <meta name="description" content="${fn:escapeXml(fn:trim(subSet.description))}" />
@@ -19,7 +19,7 @@
     <h2>
         ${subSet.name}
         (subset of <Gemma:entityLink
-            entity="${subSet.sourceExperiment}">${subSet.sourceExperiment.shortName}</Gemma:entityLink>,
+            entity="${subSet.sourceExperiment}">${subSet.sourceExperiment.shortName}</Gemma:entityLink> - ${subSet.sourceExperiment.name},
         <a href="${pageContext.request.contextPath}/expressionExperiment/showAllExpressionExperimentSubSets.html?id=${subSet.sourceExperiment.id}&dimension=${dimension.id}">see all subsets</a>)
     </h2>
     <table>

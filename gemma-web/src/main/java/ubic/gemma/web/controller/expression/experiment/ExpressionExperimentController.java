@@ -1103,6 +1103,7 @@ public class ExpressionExperimentController {
                         }
                     } );
         }
+        subsetsByDimensionSorted.values().forEach( this::removeCommonNamePrefix );
         return new ModelAndView( "expressionExperiment.subSets" )
                 .addObject( "dimension", dim )
                 .addObject( "expressionExperiment", ee )
@@ -1112,6 +1113,13 @@ public class ExpressionExperimentController {
                 .addObject( "subSetFactorsByDimension", subSetFactorsByDimension )
                 .addObject( "vectorTypes", vectorTypes )
                 .addObject( "keywords", getKeywords( ee ) );
+    }
+
+    private void removeCommonNamePrefix( Collection<ExpressionExperimentSubSet> subSets ) {
+        String commonPrefix = StringUtils.getCommonPrefix( subSets.stream().map( ExpressionExperimentSubSet::getName ).toArray( String[]::new ) );
+        for ( ExpressionExperimentSubSet subSet : subSets ) {
+            subSet.setName( subSet.getName().substring( commonPrefix.length() ) );
+        }
     }
 
     /**
@@ -1178,6 +1186,10 @@ public class ExpressionExperimentController {
             bioAssays = Collections.emptyList();
             heatmap = null;
         }
+        List<ExpressionExperimentSubSet> subSets = new ArrayList<>( 1 + otherSubSets.size() );
+        subSets.add( subset );
+        subSets.addAll( otherSubSets );
+        removeCommonNamePrefix( subSets );
         Set<AnnotationValueObject> annotations = expressionExperimentService.getAnnotations( subset );
         return new ModelAndView( "expressionExperimentSubSet.detail" )
                 .addObject( "subSet", subset )
