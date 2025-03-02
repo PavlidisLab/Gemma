@@ -450,7 +450,7 @@ public class DataVectorDescriptive {
                 // this is the counterpart of the geometric mean
                 // it's been adapted to deal with missing values
                 double[] arr = vec.elements();
-                int len = arr.length;
+                int len = vec.size();
                 double var = 0;
                 for ( double v : arr ) {
                     if ( Double.isNaN( v ) ) {

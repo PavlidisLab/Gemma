@@ -894,7 +894,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
         CoexpCorrelationDistribution coexpd = CoexpCorrelationDistribution.Factory.newInstance();
         coexpd.setNumBins( counts.size() );
-        coexpd.setBinCounts( counts.elements() );
+        coexpd.setBinCounts( Arrays.copyOf( counts.elements(), counts.size() ) );
 
         try {
             coexpressionAnalysisService.addCoexpCorrelationDistribution( ee, coexpd );
@@ -1289,7 +1289,9 @@ public class ExpressionExperimentQCController extends BaseController {
                 .max( filteredVars )
                 + ")." );
 
+        filteredVars.trimToSize();
         ret.setVariances( filteredVars.elements() );
+        filteredMeans.trimToSize();
         ret.setMeans( filteredMeans.elements() );
 
         return ret;

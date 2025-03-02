@@ -140,7 +140,7 @@ public class LinkAnalysis {
 
         DoubleArrayList histogramArrayList = this.metricMatrix.getHistogramArrayList();
         result.setNumBins( histogramArrayList.size() );
-        result.setBinCounts( histogramArrayList.elements() );
+        result.setBinCounts( Arrays.copyOf( histogramArrayList.elements(), histogramArrayList.size() ) );
 
         return result;
     }

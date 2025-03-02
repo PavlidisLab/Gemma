@@ -144,6 +144,7 @@ public class SingleCellExpressionDataVectorUtils {
                 arr.add( data[i] );
             }
         }
+        arr.trimToSize();
         return arr.elements();
     }
 
@@ -161,6 +162,7 @@ public class SingleCellExpressionDataVectorUtils {
                 arr.add( data[i] );
             }
         }
+        arr.trimToSize();
         return arr.elements();
     }
 
@@ -175,6 +177,7 @@ public class SingleCellExpressionDataVectorUtils {
                 arr.add( data[i] );
             }
         }
+        arr.trimToSize();
         return arr.elements();
     }
 
@@ -189,6 +192,7 @@ public class SingleCellExpressionDataVectorUtils {
                 arr.add( data[i] );
             }
         }
+        arr.trimToSize();
         return arr.elements();
     }
 
