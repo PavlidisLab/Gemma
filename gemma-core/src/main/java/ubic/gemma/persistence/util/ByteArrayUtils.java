@@ -2,6 +2,7 @@ package ubic.gemma.persistence.util;
 
 import ubic.basecode.io.ByteArrayConverter;
 
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -55,19 +56,35 @@ public class ByteArrayUtils {
     }
 
     public static String[] byteArrayToStrings( byte[] bytes ) {
-        return byteArrayConverter.byteArrayToStrings( bytes, StandardCharsets.UTF_8 );
+        return byteArrayToStrings( bytes, StandardCharsets.UTF_8 );
+    }
+
+    public static String[] byteArrayToStrings( byte[] bytes, Charset charset ) {
+        return byteArrayConverter.byteArrayToStrings( bytes, charset );
     }
 
     public static byte[] stringsToByteArray( String[] data ) {
-        return byteArrayConverter.stringArrayToBytes( data, StandardCharsets.UTF_8 );
+        return stringsToByteArray( data, StandardCharsets.UTF_8 );
+    }
+
+    public static byte[] stringsToByteArray( String[] data, Charset charset ) {
+        return byteArrayConverter.stringArrayToBytes( data, charset );
     }
 
     public static byte[] stringsToTabbedBytes( String[] data ) {
-        return byteArrayConverter.stringArrayToTabbedBytes( data, StandardCharsets.UTF_8 );
+        return stringsToTabbedBytes( data, StandardCharsets.UTF_8 );
+    }
+
+    public static byte[] stringsToTabbedBytes( String[] data, Charset charset ) {
+        return byteArrayConverter.stringArrayToTabbedBytes( data, charset );
     }
 
     public static String[] byteArrayToTabbedStrings( byte[] bytes ) {
-        return byteArrayConverter.byteArrayToTabbedStrings( bytes, StandardCharsets.UTF_8 );
+        return byteArrayToTabbedStrings( bytes, StandardCharsets.UTF_8 );
+    }
+
+    public static String[] byteArrayToTabbedStrings( byte[] bytes, Charset charset ) {
+        return byteArrayConverter.byteArrayToTabbedStrings( bytes, charset );
     }
 
     public static boolean[] byteArrayToBooleans( byte[] bytes ) {

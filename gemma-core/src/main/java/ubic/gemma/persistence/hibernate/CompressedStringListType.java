@@ -10,6 +10,7 @@ import org.springframework.util.Assert;
 
 import javax.annotation.Nullable;
 import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -23,13 +24,23 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Type that transparently stores a {@link List} of {@link String} as gzip-compressed blob.
- * <p>
- * String are assumed to be encoded according to UTF-8.
  * @author poirigui
  */
 public class CompressedStringListType implements UserType, ParameterizedType {
 
-    private String delimiter = null;
+    /**
+     * Delimiter to use for separating strings in the list.
+     * <p>
+     * It is not allowed to have this delimiter in any of the strings.
+     */
+    private String delimiter;
+
+    /**
+     * Charset to use for encoding and decoding strings.
+     * <p>
+     * Defaults to {@link StandardCharsets#UTF_8}.
+     */
+    private Charset charset;
 
     @Override
     public int[] sqlTypes() {
@@ -111,6 +122,11 @@ public class CompressedStringListType implements UserType, ParameterizedType {
     public void setParameterValues( @Nullable Properties parameters ) {
         String m = "A non-null value must be used as delimiter.";
         this.delimiter = ( String ) requireNonNull( requireNonNull( parameters, m ).get( "delimiter" ), m );
+        if ( parameters.containsKey( "charset" ) ) {
+            this.charset = Charset.forName( parameters.getProperty( "charset" ) );
+        } else {
+            this.charset = StandardCharsets.UTF_8;
+        }
     }
 
     /**
@@ -133,7 +149,7 @@ public class CompressedStringListType implements UserType, ParameterizedType {
             throw new HibernateException( e );
         }
         new Thread( () -> {
-            try ( Writer w = new OutputStreamWriter( new GZIPOutputStream( out ) ) ) {
+            try ( Writer w = new OutputStreamWriter( new GZIPOutputStream( out ), charset ) ) {
                 boolean first = true;
                 for ( String s1 : s ) {
                     if ( !first ) {
