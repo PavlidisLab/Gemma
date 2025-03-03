@@ -93,7 +93,10 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
     private boolean hasSingleCellData = false;
     /**
      * Heatmap for single-cell data.
+     * <p>
+     * This heatmap might not be present if the experiment has not been aggregated.
      */
+    @Nullable
     private SingleCellSparsityHeatmap singleCellSparsityHeatmap;
 
     private Map<String, Object> dynamicAttributes = new LinkedHashMap<>();
@@ -341,17 +344,21 @@ public class ExperimentQCTag extends HtmlEscapingAwareTag implements DynamicAttr
         }
 
         if ( hasSingleCellData ) {
-            writer.startTag( "td" );
-            SingleCellSparsityHeatmapTag heatmapTag = new SingleCellSparsityHeatmapTag( contextPath, isHtmlEscape() );
-            heatmapTag.setHeatmap( singleCellSparsityHeatmap );
-            heatmapTag.setEntityUrlBuilder( entityUrlBuilder );
-            heatmapTag.setParent( this );
-            heatmapTag.setPageContext( pageContext );
-            heatmapTag.setAlt( "Heatmap of the number of cells with at least one expressed gene. The rows correspond to genes and columns to assays.", SingleCellSparsityHeatmap.SingleCellHeatmapType.CELL );
-            heatmapTag.setAlt( "Heatmap of the number of genes with at least one cell expressing it. The rows correspond to genes and columns to assays.", SingleCellSparsityHeatmap.SingleCellHeatmapType.GENE );
-            heatmapTag.setMaxHeight( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX );
-            heatmapTag.writeHeatmap( writer );
-            writer.endTag(); // </td>
+            if ( singleCellSparsityHeatmap != null ) {
+                writer.startTag( "td" );
+                SingleCellSparsityHeatmapTag heatmapTag = new SingleCellSparsityHeatmapTag( contextPath, isHtmlEscape() );
+                heatmapTag.setHeatmap( singleCellSparsityHeatmap );
+                heatmapTag.setEntityUrlBuilder( entityUrlBuilder );
+                heatmapTag.setParent( this );
+                heatmapTag.setPageContext( pageContext );
+                heatmapTag.setAlt( "Heatmap of the number of cells with at least one expressed gene. The rows correspond to genes and columns to assays.", SingleCellSparsityHeatmap.SingleCellHeatmapType.CELL );
+                heatmapTag.setAlt( "Heatmap of the number of genes with at least one cell expressing it. The rows correspond to genes and columns to assays.", SingleCellSparsityHeatmap.SingleCellHeatmapType.GENE );
+                heatmapTag.setMaxHeight( ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX );
+                heatmapTag.writeHeatmap( writer );
+                writer.endTag(); // </td>
+            } else {
+                writePlaceholder( writer );
+            }
         }
 
         writer.endTag(); // </tr>

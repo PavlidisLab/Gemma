@@ -66,10 +66,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DataVector;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
@@ -1512,11 +1509,17 @@ public class ExpressionExperimentController {
     }
 
     private SingleCellSparsityHeatmap getSingleCellSparsityHeatmap( ExpressionExperiment expressionExperiment, SingleCellDimension singleCellDimension, boolean transpose ) {
-        QuantitationType qt = expressionExperimentService.getProcessedQuantitationType( expressionExperiment );
-        if ( qt == null ) {
-            throw new EntityNotFoundException( "No processed quantitation type found for " + expressionExperiment.getShortName() + "." );
+        QuantitationType qt;
+        BioAssayDimension dimension;
+        if ( ( qt = expressionExperimentService.getProcessedQuantitationType( expressionExperiment ) ) != null ) {
+            dimension = expressionExperimentService.getBioAssayDimension( expressionExperiment, qt, ProcessedExpressionDataVector.class );
+        } else if ( ( qt = expressionExperimentService.getPreferredQuantitationType( expressionExperiment ) ) != null ) {
+            // try using the preferred raw vectors (i.e. if post-processing failed for instance)
+            dimension = expressionExperimentService.getBioAssayDimension( expressionExperiment, qt, RawExpressionDataVector.class );
+        } else {
+            log.warn( "No processed quantitation type nor preferred raw quantitation type found for " + expressionExperiment.getShortName() + ", will not generate single-cell sparsity heatmaps." );
+            return null;
         }
-        BioAssayDimension dimension = expressionExperimentService.getBioAssayDimension( expressionExperiment, qt, ProcessedExpressionDataVector.class );
         if ( dimension == null ) {
             throw new EntityNotFoundException( "No dimension found for " + qt + "." );
         }
