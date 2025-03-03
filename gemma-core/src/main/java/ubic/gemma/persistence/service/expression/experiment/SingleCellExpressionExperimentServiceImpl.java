@@ -654,10 +654,28 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     public void removeCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment cellTypeAssignment ) {
         Assert.notNull( ee.getId(), "Dataset must be persistent." );
         Assert.notNull( dimension.getId(), "Single-cell dimension must be persistent." );
+        Assert.notNull( cellTypeAssignment.getId(), "The cell type assignment must be persistent." );
         Assert.isTrue( ee.getBioAssays().containsAll( dimension.getBioAssays() ), "Single-cell dimension does not belong to the dataset." );
-        Assert.isTrue( dimension.getCellTypeAssignments().contains( cellTypeAssignment ),
-                "The supplied labelling does not belong to the dimension." );
         boolean alsoRemoveFactor = getPreferredCellTypeAssignment( ee ).map( cellTypeAssignment::equals ).orElse( false );
+        removeCellTypeAssignment( ee, dimension, cellTypeAssignment, alsoRemoveFactor );
+    }
+
+    @Override
+    @Transactional
+    public void removeCellTypeAssignment( ExpressionExperiment ee, QuantitationType qt, CellTypeAssignment cellTypeAssignment ) {
+        Assert.notNull( ee.getId(), "Dataset must be persistent." );
+        Assert.notNull( qt.getId(), "Quantitation type must be persistent." );
+        Assert.notNull( cellTypeAssignment.getId(), "The cell type assignment must be persistent." );
+        SingleCellDimension dim = getSingleCellDimension( ee, qt );
+        if ( dim == null ) {
+            throw new IllegalStateException( "There is no single-cell dimension for " + qt + " in " + ee + "." );
+        }
+        // since we have the QT, we can check if the labelling is preferred without querying the database
+        boolean alsoRemoveFactor = qt.getIsSingleCellPreferred() && cellTypeAssignment.isPreferred();
+        removeCellTypeAssignment( ee, dim, cellTypeAssignment, alsoRemoveFactor );
+    }
+
+    private void removeCellTypeAssignment( ExpressionExperiment ee, SingleCellDimension dimension, CellTypeAssignment cellTypeAssignment, boolean alsoRemoveFactor ) {
         if ( !dimension.getCellTypeAssignments().remove( cellTypeAssignment ) ) {
             throw new IllegalArgumentException( cellTypeAssignment + " is not associated to " + dimension );
         }
@@ -732,6 +750,16 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     }
 
     @Override
+    @Transactional
+    public void removeCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt, CellLevelCharacteristics clc ) {
+        SingleCellDimension dim = getSingleCellDimension( ee, qt );
+        if ( dim == null ) {
+            throw new IllegalStateException( "There is no single-cell dimension for " + qt + " in " + ee + "." );
+        }
+        removeCellLevelCharacteristics( ee, dim, clc );
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment ee ) {
         return expressionExperimentDao.getCellLevelCharacteristics( ee );
@@ -775,7 +803,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         if ( candidates.isEmpty() ) {
             return Optional.empty();
         } else if ( candidates.size() > 1 ) {
-            throw new IllegalStateException( "There is more than one cell type factor in " + ee + "." );
+            log.warn( "There is more than one cell type factor in " + ee + "." );
+            return Optional.empty();
         } else {
             return Optional.of( candidates.iterator().next() );
         }
