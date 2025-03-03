@@ -122,7 +122,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         this.useStreaming = !commandLine.hasOption( "noStreaming" );
         this.fetchSize = commandLine.getParsedOptionValue( "fetchSize", 30 );
         if ( commandLine.hasOption( "format" ) ) {
-            this.format = getEnumOptionValue( commandLine, commandLine.getOptionValue( "format" ).toUpperCase(), MatrixFormat.class );
+            this.format = getEnumOptionValue( commandLine, "format", MatrixFormat.class );
         } else {
             this.format = MatrixFormat.TABULAR;
         }
