@@ -36,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.tags.form.TagWriter;
 import org.springframework.web.servlet.view.RedirectView;
+import ubic.basecode.dataStructure.CountingMap;
 import ubic.gemma.core.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
@@ -87,6 +88,7 @@ import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.*;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.persistence.util.FactorValueVector;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
@@ -424,7 +426,35 @@ public class ExpressionExperimentController {
             throw new IllegalArgumentException( "A non-null experiment ID must be supplied." );
         }
         ExpressionExperiment ee = getExperimentById( e.getId(), true );
-        return DesignMatrixRowValueObject.Factory.getDesignMatrix( ee, true, true ); // ignore "batch" and continuous.
+
+        if ( ee.getExperimentalDesign() == null ) {
+            return Collections.emptyList();
+        }
+
+        // filter which factors we want to display
+        // ignore "batch", continuous and cell type factors
+        Collection<ExperimentalFactor> factors = ee
+                .getExperimentalDesign()
+                .getExperimentalFactors()
+                .stream()
+                .filter( factor -> !ExperimentalDesignUtils.isBatchFactor( factor )
+                        && factor.getType() != FactorType.CONTINUOUS
+                        // cell type factors apply to sub-biomaterials, so they don't make sense to display
+                        && ( factor.getCategory() == null || !CharacteristicUtils.hasCategory( factor.getCategory(), Categories.CELL_TYPE ) ) )
+                .collect( Collectors.toSet() );
+
+        CountingMap<FactorValueVector> assayCount = new CountingMap<>();
+        for ( BioAssay assay : ee.getBioAssays() ) {
+            BioMaterial sample = assay.getSampleUsed();
+            assayCount.increment( new FactorValueVector( factors, sample.getAllFactorValues() ) );
+        }
+
+        List<FactorValueVector> keys = assayCount.sortedKeyList( true );
+        Collection<DesignMatrixRowValueObject> matrix = new ArrayList<>( keys.size() );
+        for ( FactorValueVector key : keys ) {
+            matrix.add( new DesignMatrixRowValueObject( key, assayCount.get( key ) ) );
+        }
+        return matrix;
     }
 
     /**
