@@ -260,7 +260,7 @@ public class ExpressionExperimentController {
         ExpressionExperiment ee = getExperimentById( eeId, false );
         boolean userCanEditGroup;
         try {
-            userCanEditGroup = securityService.isEditable( ee );
+            userCanEditGroup = securityService.isEditableByCurrentUser( ee );
         } catch ( org.springframework.security.access.AccessDeniedException ade ) {
             return false;
         }

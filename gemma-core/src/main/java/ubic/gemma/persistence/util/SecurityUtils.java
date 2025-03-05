@@ -6,6 +6,7 @@ import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.util.SecurityUtil;
+import org.springframework.security.access.vote.AuthenticatedVoter;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.model.Sid;
 
@@ -54,7 +55,7 @@ public class SecurityUtils {
                 if ( sid instanceof AclGrantedAuthoritySid ) {
                     String grantedAuthority = ( ( AclGrantedAuthoritySid ) sid ).getGrantedAuthority();
 
-                    if ( grantedAuthority.equals( AuthorityConstants.IS_AUTHENTICATED_ANONYMOUSLY ) && ace
+                    if ( grantedAuthority.equals( AuthenticatedVoter.IS_AUTHENTICATED_ANONYMOUSLY ) && ace
                             .isGranting() ) {
                         isPublic = true;
                     }

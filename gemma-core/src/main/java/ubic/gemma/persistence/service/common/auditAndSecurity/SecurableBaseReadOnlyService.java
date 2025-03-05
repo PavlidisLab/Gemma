@@ -8,6 +8,7 @@ import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public interface SecurableBaseReadOnlyService<C extends Securable> extends BaseReadOnlyService<C> {
 
@@ -51,4 +52,12 @@ public interface SecurableBaseReadOnlyService<C extends Securable> extends BaseR
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<C> loadAll();
+
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_STREAM_READ" })
+    Stream<C> streamAll();
+
+    @Override
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_STREAM_READ" })
+    Stream<C> streamAll( boolean createNewSession );
 }

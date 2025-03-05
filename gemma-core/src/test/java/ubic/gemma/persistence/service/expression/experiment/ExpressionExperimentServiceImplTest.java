@@ -205,7 +205,7 @@ public class ExpressionExperimentServiceImplTest extends AbstractJUnit4SpringCon
 
         svc = new ExpressionExperimentServiceImpl( eeDao );
 
-        User nobody = User.Factory.newInstance();
+        User nobody = User.Factory.newInstance( "foo" );
 
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setDescription( "From test" );

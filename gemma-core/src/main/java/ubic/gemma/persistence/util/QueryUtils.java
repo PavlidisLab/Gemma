@@ -2,7 +2,7 @@ package ubic.gemma.persistence.util;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.stream.Streams;
-import org.hibernate.ObjectNotFoundException;
+import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.springframework.util.Assert;
 import ubic.gemma.core.util.ListUtils;
@@ -210,24 +210,33 @@ public class QueryUtils {
      * This uses offset/limit under the hood because MySQL JDBC does not support scrolling with {@link Query#scroll()}.
      */
     public static <T> Stream<T> stream( Query query, int fetchSize ) {
-        return Streams.of( new QueryIterator<>( query, fetchSize ) );
+        return Streams.of( new QueryOrCriteriaIterator<>( query, fetchSize ) );
     }
 
     public static <T> Stream<T> stream( Query query ) {
         return stream( query, DEFAULT_FETCH_SIZE );
     }
 
-    private static class QueryIterator<T> implements Iterator<T> {
+    public static <T> Stream<T> stream( Criteria criteria, int fetchSize ) {
+        return Streams.of( new QueryOrCriteriaIterator<>( criteria, fetchSize ) );
+    }
 
-        private final Query query;
+    public static <T> Stream<T> stream( Criteria criteria ) {
+        return stream( criteria, DEFAULT_FETCH_SIZE );
+    }
+
+    private static class QueryOrCriteriaIterator<T> implements Iterator<T> {
+
+        private final Object queryOrCriteria;
         private final int fetchSize;
 
         private int offset;
         private List<T> results;
 
-        public QueryIterator( Query query, int fetchSize ) {
+        public QueryOrCriteriaIterator( Object queryOrCriteria, int fetchSize ) {
+            Assert.isTrue( queryOrCriteria instanceof Query || queryOrCriteria instanceof Criteria );
             Assert.isTrue( fetchSize >= 1 );
-            this.query = query;
+            this.queryOrCriteria = queryOrCriteria;
             this.fetchSize = fetchSize;
         }
 
@@ -252,11 +261,19 @@ public class QueryUtils {
         private void fetchResultsIfNecessary() {
             // either at the first record, or at the end of the current batch
             if ( ( offset == 0 && results == null ) || ( offset > 0 && offset % fetchSize == 0 ) ) {
-                //noinspection unchecked
-                results = query
-                        .setFirstResult( offset )
-                        .setMaxResults( fetchSize )
-                        .list();
+                if ( queryOrCriteria instanceof Query ) {
+                    //noinspection unchecked
+                    results = ( ( Query ) queryOrCriteria )
+                            .setFirstResult( offset )
+                            .setMaxResults( fetchSize )
+                            .list();
+                } else {
+                    //noinspection unchecked
+                    results = ( ( Criteria ) queryOrCriteria )
+                            .setFirstResult( offset )
+                            .setMaxResults( fetchSize )
+                            .list();
+                }
             }
         }
     }

@@ -652,7 +652,7 @@ public class ExperimentalDesignController extends BaseController {
                 .addObject( "hasPopulatedDesign", !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() )
                 .addObject( "experimentalDesign", ee.getExperimentalDesign() )
                 .addObject( "expressionExperiment", ee )
-                .addObject( "currentUserCanEdit", securityService.isEditable( ee ) )
+                .addObject( "currentUserCanEdit", securityService.isEditableByCurrentUser( ee ) )
                 .addAllObjects( getNeedsAttentionDetails( ee.getExperimentalDesign() ) );
     }
 

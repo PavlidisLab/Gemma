@@ -20,14 +20,13 @@ package ubic.gemma.core.security.authentication;
 
 import gemma.gsec.authentication.ManualAuthenticationService;
 import gemma.gsec.authentication.UserDetailsImpl;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import ubic.gemma.core.util.test.BaseSpringContextTest;
 
 import java.util.Date;
 
@@ -65,7 +64,7 @@ public class ManualAuthenticationProcessingTest extends BaseSpringContextTest {
     @Test
     public void testAttemptAuthentication() {
         try {
-            manualAuthenticationService.attemptAuthentication( username, pwd );
+            manualAuthenticationService.authenticate( username, pwd );
         } catch ( BadCredentialsException expected ) {
             fail( "Should not have gotten a BadCredentialsException" );
         }
@@ -75,7 +74,7 @@ public class ManualAuthenticationProcessingTest extends BaseSpringContextTest {
     @Test
     public void testAttemptAuthenticationNonexistentUser() {
         try {
-            manualAuthenticationService.attemptAuthentication( "I don't exist", "wrong" );
+            manualAuthenticationService.authenticate( "I don't exist", "wrong" );
             fail( "Should have gotten a BadCredentialsException" );
         } catch ( BadCredentialsException expected ) {
             // expected.
@@ -85,7 +84,7 @@ public class ManualAuthenticationProcessingTest extends BaseSpringContextTest {
     @Test
     public void testAttemptAuthenticationWrongPassword() {
         try {
-            manualAuthenticationService.attemptAuthentication( username, "wrong" );
+            manualAuthenticationService.authenticate( username, "wrong" );
             fail( "Should have gotten a BadCredentialsException" );
         } catch ( BadCredentialsException expected ) {
             // expected.

@@ -29,7 +29,10 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.intercept.RunAsUserToken;
+import org.springframework.security.access.vote.AuthenticatedVoter;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.AuthenticationTrustResolver;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -64,13 +67,14 @@ public class UserManagerImpl implements UserManager {
 
     private boolean enableGroups = true;
 
-    private String rolePrefix = "GROUP_";
-
     @Autowired(required = false)
     private UserCache userCache = new NullUserCache();
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private AuthenticationTrustResolver authenticationTrustResolver;
 
     @Override
     @Transactional
@@ -129,20 +133,8 @@ public class UserManagerImpl implements UserManager {
 
     @Override
     @Transactional(readOnly = true)
-    public gemma.gsec.model.User findbyEmail( String emailAddress ) {
-        return findByEmail( emailAddress );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public User findByUserName( String userName ) {
         return this.userService.findByUserName( userName );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public UserGroup findGroupByName( String name ) {
-        return this.userService.findGroupByName( name );
     }
 
     @Override
@@ -173,30 +165,37 @@ public class UserManagerImpl implements UserManager {
     @Override
     @Transactional(readOnly = true)
     public User getCurrentUser() {
-        return this.getUserForUserName( this.getCurrentUsername() );
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if ( auth == null || !auth.isAuthenticated() ) {
+            throw new IllegalStateException( "Not authenticated!" );
+        }
+        if ( authenticationTrustResolver.isAnonymous( auth ) ) {
+            return null;
+        }
+        // check if we have an anonymous user running with elevated privileges (i.e. during registration)
+        if ( auth instanceof RunAsUserToken ) {
+            RunAsUserToken runAsAuth = ( RunAsUserToken ) auth;
+            if ( AnonymousAuthenticationToken.class.isAssignableFrom( runAsAuth.getOriginalAuthentication() ) ) {
+                return null;
+            }
+        }
+        return getUserForUserName( getUsernameFromAuth( auth ) );
     }
 
     @Override
     public String getCurrentUsername() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
         if ( auth == null || !auth.isAuthenticated() ) {
             throw new IllegalStateException( "Not authenticated!" );
         }
+        return getUsernameFromAuth( auth );
+    }
 
+    private String getUsernameFromAuth( Authentication auth ) {
         if ( auth.getPrincipal() instanceof UserDetails ) {
             return ( ( UserDetails ) auth.getPrincipal() ).getUsername();
         }
         return auth.getPrincipal().toString();
-    }
-
-    @Override
-    public String getRolePrefix() {
-        return rolePrefix;
-    }
-
-    public void setRolePrefix( String rolePrefix ) {
-        this.rolePrefix = rolePrefix;
     }
 
     @Override
@@ -216,9 +215,8 @@ public class UserManagerImpl implements UserManager {
 
     @Override
     public boolean loggedIn() {
-        Authentication currentUser = SecurityContextHolder.getContext().getAuthentication();
-        // TODO: use a AuthenticationTrustResolver instead.
-        return !( currentUser instanceof AnonymousAuthenticationToken );
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null && !authenticationTrustResolver.isAnonymous( authentication );
     }
 
     @Override
@@ -275,8 +273,7 @@ public class UserManagerImpl implements UserManager {
 
         this.validateUserName( user.getUsername() );
 
-        User u = ubic.gemma.model.common.auditAndSecurity.User.Factory.newInstance();
-        u.setUserName( user.getUsername() );
+        User u = ubic.gemma.model.common.auditAndSecurity.User.Factory.newInstance( user.getUsername() );
         u.setPassword( user.getPassword() );
         u.setEnabled( user.isEnabled() );
 
@@ -321,7 +318,7 @@ public class UserManagerImpl implements UserManager {
 
         userService.update( u );
 
-         userCache.removeUserFromCache( user.getUsername() );
+        userCache.removeUserFromCache( user.getUsername() );
     }
 
     @Override
@@ -402,7 +399,7 @@ public class UserManagerImpl implements UserManager {
 
         UserGroup group = this.loadGroup( groupName );
 
-        Collection<gemma.gsec.model.User> groupMembers = group.getGroupMembers();
+        Collection<User> groupMembers = group.getGroupMembers();
 
         List<String> result = new ArrayList<>();
         for ( gemma.gsec.model.User u : groupMembers ) {
@@ -471,8 +468,8 @@ public class UserManagerImpl implements UserManager {
     public List<GrantedAuthority> findGroupAuthorities( String groupName ) {
 
         String groupToSearch = groupName;
-        if ( groupName.startsWith( rolePrefix ) ) {
-            groupToSearch = groupToSearch.replaceFirst( rolePrefix, "" );
+        if ( groupName.startsWith( AuthorityConstants.ROLE_PREFIX ) ) {
+            groupToSearch = groupToSearch.replaceFirst( AuthorityConstants.ROLE_PREFIX, "" );
         }
 
         UserGroup group = this.loadGroup( groupToSearch );
@@ -588,7 +585,7 @@ public class UserManagerImpl implements UserManager {
 
         List<GrantedAuthority> result = new ArrayList<>();
         for ( gemma.gsec.model.GroupAuthority ga : authorities ) {
-            String roleName = this.getRolePrefix() + ga.getAuthority();
+            String roleName = AuthorityConstants.ROLE_PREFIX + ga.getAuthority();
             result.add( new SimpleGrantedAuthority( roleName ) );
         }
 
@@ -605,17 +602,10 @@ public class UserManagerImpl implements UserManager {
      * @throws UsernameNotFoundException if the user does not exist in the system
      */
     private User getUserForUserName( String username ) throws UsernameNotFoundException {
-
-        if ( AuthorityConstants.ANONYMOUS_USER_NAME.equals( username ) ) {
-            return null;
-        }
-
         User u = userService.findByUserName( username );
-
         if ( u == null ) {
             throw new UsernameNotFoundException( username + " not found" );
         }
-
         return u;
     }
 
@@ -638,32 +628,13 @@ public class UserManagerImpl implements UserManager {
     }
 
     private void validateUserName( String username ) {
-
-        boolean ok = StringUtils.isNotBlank( username );
-        if ( AuthorityConstants.ADMIN_GROUP_AUTHORITY.equals( username ) ) {
-            ok = false;
-        } else if ( AuthorityConstants.ADMIN_GROUP_NAME.equals( username ) ) {
-            ok = false;
-        } else if ( AuthorityConstants.AGENT_GROUP_AUTHORITY.equals( username ) ) {
-            ok = false;
-        } else if ( AuthorityConstants.AGENT_GROUP_NAME.equals( username ) ) {
-            ok = false;
-        } else if ( AuthorityConstants.IS_AUTHENTICATED_ANONYMOUSLY.equals( username ) ) {
-            ok = false;
-        } else if ( AuthorityConstants.RUN_AS_ADMIN_AUTHORITY.equals( username ) ) {
-            ok = false;
-        } else if ( AuthorityConstants.USER_GROUP_AUTHORITY.equals( username ) ) {
-            ok = false;
-        } else if ( AuthorityConstants.USER_GROUP_NAME.equals( username ) ) {
-            ok = false;
-        } else if ( username.toUpperCase().startsWith( this.getRolePrefix() ) ) {
-            ok = false;
-        }
-
-        if ( !ok ) {
+        if ( StringUtils.isBlank( username )
+                || username.startsWith( AuthorityConstants.ROLE_PREFIX )
+                || StringUtils.startsWithIgnoreCase( username, "admin" )
+                || StringUtils.startsWithIgnoreCase( username, "user" )
+                || StringUtils.startsWithIgnoreCase( username, "agent" )
+                || username.equals( AuthenticatedVoter.IS_AUTHENTICATED_ANONYMOUSLY ) ) {
             throw new IllegalArgumentException( "Username=" + username + " is not allowed" );
         }
-
     }
-
 }

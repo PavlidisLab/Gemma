@@ -178,7 +178,7 @@ public class RootWebService {
         public UserValueObject( User user, @Nullable String group ) {
             userName = user.getUserName();
             email = user.getEmail();
-            enabled = user.getEnabled();
+            enabled = user.isEnabled();
             this.group = group;
         }
     }

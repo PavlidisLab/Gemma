@@ -1658,7 +1658,7 @@ public class ExpressionExperimentServiceImpl
     public void remove( ExpressionExperiment ee ) {
         ee = ensureInSession( ee );
 
-        if ( !securityService.isEditable( ee ) ) {
+        if ( !securityService.isEditableByCurrentUser( ee ) ) {
             throw new SecurityException(
                     "Error performing 'ExpressionExperimentService.remove(ExpressionExperiment expressionExperiment)' --> "
                             + " You do not have permission to edit this experiment." );

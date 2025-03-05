@@ -92,7 +92,7 @@ public class ExternalDatabaseUpdaterCliTest extends BaseCliTest {
     @Test
     @WithMockUser
     public void test() throws MalformedURLException {
-        User user = User.Factory.newInstance();
+        User user = User.Factory.newInstance( "foo" );
         when( userManager.getCurrentUser() ).thenReturn( user );
         when( externalDatabaseService.findByNameWithAuditTrail( "test" ) ).thenReturn( ed );
         when( externalDatabaseService.findByNameWithExternalDatabases( "test2" ) ).thenReturn( ed2 );

@@ -143,7 +143,7 @@ public class GeneSetController {
         if ( gsvo instanceof DatabaseBackedGeneSetValueObject ) {
             groupIsDBBacked = true;
             try {
-                userCanEditGroup = securityService.isEditable( geneSetService.loadOrFail( gsvo.getId(), EntityNotFoundException::new, "No gene set with ID " + gsvo.getId() ) );
+                userCanEditGroup = securityService.isEditableByCurrentUser( geneSetService.loadOrFail( gsvo.getId(), EntityNotFoundException::new, "No gene set with ID " + gsvo.getId() ) );
             } catch ( org.springframework.security.access.AccessDeniedException ade ) {
                 return "{groupIsDBBacked:" + groupIsDBBacked + ",userCanEditGroup:" + false + "}";
             }

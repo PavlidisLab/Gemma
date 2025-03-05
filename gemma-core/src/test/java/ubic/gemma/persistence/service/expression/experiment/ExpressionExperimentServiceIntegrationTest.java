@@ -510,6 +510,34 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
     }
 
     @Test
+    public void testStreamExperiments() {
+        runAsUser( "bob" );
+        ExpressionExperiment bobExperiment = getTestPersistentBasicExpressionExperiment();
+        runAsUser( "joe" );
+        ExpressionExperiment joeExperiment = getTestPersistentBasicExpressionExperiment();
+
+        runAsAdmin();
+        assertThat( expressionExperimentService.streamAll( true ) )
+                .contains( bobExperiment, joeExperiment );
+
+        runAsUser( "bob" );
+        assertThat( expressionExperimentService.streamAll( true ) )
+                .contains( bobExperiment )
+                .doesNotContain( joeExperiment );
+
+        runAsUser( "joe" );
+        assertThat( expressionExperimentService.streamAll( true ) )
+                .contains( joeExperiment )
+                .doesNotContain( bobExperiment );
+
+        runAsAnonymous();
+        assertThat( expressionExperimentService.streamAll( true ) )
+                .doesNotContain( bobExperiment, joeExperiment );
+
+        runAsAdmin();
+    }
+
+    @Test
     public void testRemoveExperimentInSingletonSet() {
         ExpressionExperiment ee1 = createExpressionExperiment();
         ExpressionExperimentSet eeSet = new ExpressionExperimentSet();

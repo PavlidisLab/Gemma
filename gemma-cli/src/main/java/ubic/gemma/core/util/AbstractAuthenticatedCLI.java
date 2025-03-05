@@ -27,6 +27,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.concurrent.DelegatingSecurityContextExecutorService;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.security.authentication.CliAuthenticationAware;
 
@@ -133,24 +134,29 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
                 throw new IllegalArgumentException( "Not authenticated. You didn't enter a password" );
             }
 
-            boolean success = manAuthentication.validateRequest( username, password );
-            if ( success ) {
-                for ( CliAuthenticationAware comp : cliAuthenticationAwareComponents ) {
-                    comp.setAuthentication( new UsernamePasswordAuthenticationToken( username, password ) );
+            try {
+                SecurityContextHolder.getContext().setAuthentication( manAuthentication.authenticate( username, password ) );
+                if ( cliAuthenticationAwareComponents != null ) {
+                    for ( CliAuthenticationAware comp : cliAuthenticationAwareComponents ) {
+                        comp.setAuthentication( new UsernamePasswordAuthenticationToken( username, password ) );
+                    }
                 }
                 log.info( "Logged in as " + username );
-            } else {
-                for ( CliAuthenticationAware comp : cliAuthenticationAwareComponents ) {
-                    comp.setAuthentication( null );
+            } catch ( AuthenticationException e ) {
+                if ( cliAuthenticationAwareComponents != null ) {
+                    for ( CliAuthenticationAware comp : cliAuthenticationAwareComponents ) {
+                        comp.setAuthentication( null );
+                    }
                 }
-                throw new IllegalStateException( "Not authenticated. Make sure you entered a valid username (got '" + username
-                        + "') and/or password" );
+                throw e;
             }
         } else {
             log.info( "Logging in as anonymous guest with limited privileges" );
-            manAuthentication.authenticateAnonymously();
-            for ( CliAuthenticationAware comp : cliAuthenticationAwareComponents ) {
-                comp.setAuthentication( SecurityContextHolder.getContext().getAuthentication() );
+            SecurityContextHolder.getContext().setAuthentication( manAuthentication.authenticateAnonymously() );
+            if ( cliAuthenticationAwareComponents != null ) {
+                for ( CliAuthenticationAware comp : cliAuthenticationAwareComponents ) {
+                    comp.setAuthentication( SecurityContextHolder.getContext().getAuthentication() );
+                }
             }
         }
     }

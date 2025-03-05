@@ -26,7 +26,7 @@
                 <column name="LAST_NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
             </property>
             <subclass name="ubic.gemma.model.common.auditAndSecurity.User" discriminator-value="User" abstract="false">
-                <property name="userName" type="java.lang.String">
+                <property name="userName" type="java.lang.String" update="false">
                     <column name="USER_NAME" not-null="false" unique="true" sql-type="VARCHAR(255)"/>
                 </property>
                 <property name="password" type="java.lang.String">

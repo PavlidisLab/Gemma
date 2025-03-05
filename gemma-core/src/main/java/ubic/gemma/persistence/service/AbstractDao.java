@@ -21,23 +21,23 @@ package ubic.gemma.persistence.service;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Hibernate;
-import org.hibernate.ObjectNotFoundException;
-import org.hibernate.SessionFactory;
-import org.hibernate.WrongClassException;
+import org.hibernate.*;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.metadata.ClassMetadata;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.hibernate.HibernateUtils;
+import ubic.gemma.persistence.util.QueryUtils;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.persistence.util.QueryUtils.batchParameterList;
@@ -293,7 +293,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         List<T> results = entities.stream()
                 .map( this::reload )
                 .collect( Collectors.toList() );
-        if ( log.isTraceEnabled() ) {
+        if ( log.isDebugEnabled() ) {
             log.debug( String.format( "Reloaded %d %s entities in %d ms.", results.size(), elementClass.getSimpleName(), timer.getTime( TimeUnit.MILLISECONDS ) ) );
         }
         return results;
@@ -304,6 +304,64 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         return ( Long ) sessionFactory.getCurrentSession().createCriteria( elementClass )
                 .setProjection( Projections.rowCount() )
                 .uniqueResult();
+    }
+
+    @Override
+    public Stream<T> streamAll() {
+        return streamAll( false );
+    }
+
+    @Override
+    public Stream<T> streamAll( boolean createNewSession ) {
+        if ( createNewSession ) {
+            Session session = openSession();
+            try {
+                return QueryUtils.<T>stream( session.createCriteria( elementClass ), batchSize )
+                        .onClose( session::close );
+            } catch ( Exception e ) {
+                session.close();
+                throw e;
+            }
+        } else {
+            return QueryUtils.stream( sessionFactory.getCurrentSession().createCriteria( elementClass ), batchSize );
+        }
+    }
+
+    /**
+     * Produce a stream over a {@link Query} with a new session if desired.
+     * @param createNewSession if true, a new session is created and will be closed when the stream is closed. Be
+     *                         extremely careful with the resulting stream. Use a try-with-resources block to ensure
+     *                         the session is closed properly.
+     * @see QueryUtils#stream(Query, int)
+     */
+    protected <U> Stream<U> streamQuery( Function<Session, Query> queryCreator, boolean createNewSession ) {
+        if ( createNewSession ) {
+            Session session = openSession();
+            try {
+                return QueryUtils.<U>stream( queryCreator.apply( session ), batchSize )
+                        .onClose( session::close );
+            } catch ( Exception e ) {
+                session.close();
+                throw e;
+            }
+        } else {
+            return QueryUtils.stream( queryCreator.apply( sessionFactory.getCurrentSession() ), batchSize );
+        }
+    }
+
+    /**
+     * Open a session that inherits the current session's properties.
+     * <p>
+     * Be extremely careful when opening a new session because it is not managed by the session factory and will not be
+     * closed automatically.
+     */
+    private Session openSession() {
+        Session currentSession = sessionFactory.getCurrentSession();
+        Session session = sessionFactory.openSession();
+        session.setDefaultReadOnly( currentSession.isDefaultReadOnly() );
+        session.setCacheMode( currentSession.getCacheMode() );
+        session.setFlushMode( currentSession.getFlushMode() );
+        return session;
     }
 
     @Override

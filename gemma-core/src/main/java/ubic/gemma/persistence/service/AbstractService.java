@@ -12,6 +12,7 @@ import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
 
@@ -145,6 +146,18 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     @Transactional(readOnly = true)
     public long countAll() {
         return this.mainDao.countAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Stream<O> streamAll() {
+        return mainDao.streamAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Stream<O> streamAll( boolean createNewSession ) {
+        return mainDao.streamAll( createNewSession );
     }
 
     @Override

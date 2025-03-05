@@ -44,5 +44,4 @@ public class Person extends Contact {
     public void setLastName( String lastName ) {
         this.lastName = lastName;
     }
-
 }

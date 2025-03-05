@@ -18,7 +18,9 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -29,18 +31,17 @@ public class User extends Person implements gemma.gsec.model.User {
     private String userName;
     private String password;
     private String passwordHint;
-    private Boolean enabled;
+    private boolean enabled;
     private String signupToken;
     private java.util.Date signupTokenDatestamp;
     private Set<JobInfo> jobs = new java.util.HashSet<>();
     private Set<UserGroup> groups = new HashSet<>();
 
-    @Override
-    public Boolean getEnabled() {
+    public boolean isEnabled() {
         return this.enabled;
     }
 
-    public void setEnabled( Boolean enabled ) {
+    public void setEnabled( boolean enabled ) {
         this.enabled = enabled;
     }
 
@@ -52,7 +53,8 @@ public class User extends Person implements gemma.gsec.model.User {
         this.jobs = jobs;
     }
 
-    public Set<UserGroup> getGroups() {
+    @SuppressWarnings("JpaAttributeMemberSignatureInspection")
+    public Collection<UserGroup> getGroups() {
         return groups;
     }
 
@@ -101,16 +103,37 @@ public class User extends Person implements gemma.gsec.model.User {
         return this.userName;
     }
 
-    public void setUserName( String userName ) {
+    /**
+     * The username is immutable. See the {@code update="false"} field in the Hibernate mapping.
+     */
+    private void setUserName( String userName ) {
         this.userName = userName;
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof User ) ) {
+            return false;
+        }
+        User user = ( User ) object;
+        return Objects.equals( userName, user.userName );
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash( userName );
     }
 
     public static final class Factory {
 
-        public static User newInstance() {
-            return new User();
+        public static User newInstance( String userName ) {
+            User u = new User();
+            u.setUserName( userName );
+            return u;
         }
-
     }
 
 }

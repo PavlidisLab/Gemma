@@ -58,8 +58,8 @@ import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
-import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.Filter;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -2448,49 +2448,21 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean createNewSession ) {
-        Session session;
-        if ( createNewSession ) {
-            session = getSessionFactory().openSession();
-            // prevent any changes to the database from entities originating from this session, this should be a read-only
-            // thing unless stated otherwise
-            session.setDefaultReadOnly( true );
-        } else {
-            session = getSessionFactory().getCurrentSession();
-        }
-        Query query = session.createQuery( "select scedv from SingleCellExpressionDataVector scedv "
+        return streamQuery( session -> session.createQuery( "select scedv from SingleCellExpressionDataVector scedv "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
                 .setParameter( "ee", ee )
-                .setParameter( "qt", quantitationType );
-        Stream<SingleCellExpressionDataVector> stream = QueryUtils.stream( query, fetchSize );
-        if ( createNewSession ) {
-            return stream.onClose( session::close );
-        } else {
-            return stream;
-        }
+                .setParameter( "qt", quantitationType ), createNewSession );
     }
 
     @Override
     public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean createNewSession, boolean includeCellIds, boolean includeData, boolean includeDataIndices ) {
-        Session session;
-        if ( createNewSession ) {
-            session = getSessionFactory().openSession();
-            // prevent any changes to the database from entities originating from this session, this should be a read-only
-            // thing unless stated otherwise
-            session.setDefaultReadOnly( true );
-        } else {
-            session = getSessionFactory().getCurrentSession();
-        }
-        Query query = session.createQuery( createSelectSingleCellDataVector( true, includeData, includeDataIndices ) + " "
-                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
-                .setParameter( "ee", ee )
-                .setParameter( "qt", quantitationType )
-                .setResultTransformer( aliasToSingleCellDataVector( ee, quantitationType, null, includeCellIds ) );
-        Stream<SingleCellExpressionDataVector> stream = QueryUtils.stream( query, fetchSize );
-        if ( createNewSession ) {
-            return stream.onClose( session::close );
-        } else {
-            return stream;
-        }
+        return streamQuery( session ->
+                        session.createQuery( createSelectSingleCellDataVector( true, includeData, includeDataIndices ) + " "
+                                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
+                                .setParameter( "ee", ee )
+                                .setParameter( "qt", quantitationType )
+                                .setResultTransformer( aliasToSingleCellDataVector( ee, quantitationType, null, includeCellIds ) ),
+                createNewSession );
     }
 
     @Override
