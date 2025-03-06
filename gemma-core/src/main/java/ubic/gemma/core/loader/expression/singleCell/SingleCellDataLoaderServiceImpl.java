@@ -277,6 +277,48 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
             qt = qts.iterator().next();
         }
 
+        applyQuantitationTypeOverrides( qt, config );
+
+        if ( config.isReplaceExistingQuantitationType() ) {
+            // find the persistent QT matching the data
+            QuantitationType existingQt = quantitationTypeService.find( ee, qt, SingleCellExpressionDataVector.class );
+            if ( existingQt == null ) {
+                log.warn( "Could not find a QT matching " + qt + " in " + ee + ", will attempt to find one by name only." );
+                try {
+                    existingQt = quantitationTypeService.findByNameAndVectorType( ee, qt.getName(), SingleCellExpressionDataVector.class );
+                } catch ( NonUniqueQuantitationTypeByNameException e ) {
+                    throw new RuntimeException( e );
+                }
+            }
+            if ( existingQt != null ) {
+                log.info( "Data will be replaced for " + existingQt + "..." );
+                qt = existingQt;
+                // since we're retrieving it by name only, it might not have the desired overrides, so re-apply them
+                applyQuantitationTypeOverrides( qt, config );
+            } else {
+                availableQts = singleCellExpressionExperimentService.getSingleCellQuantitationTypes( ee );
+                throw new IllegalArgumentException( String.format( "%s does not match any existing single-cell quantitation type. Choose one among:\n\t%s",
+                        qt,
+                        availableQts.stream().map( QuantitationType::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
+            }
+        } else {
+            if ( ee.getQuantitationTypes().contains( qt ) ) {
+                // this check is also done in SingleCellExpressionExperimentService.addSingleCellDataVectors(), but
+                // after loading the vectors from disk which is time-consuming
+                throw new IllegalArgumentException( ee + " already has a quantitation type matching " + qt + ". Set replaceExistingQuantitationType to replace existing vectors instead or use a different name by setting quantitationTypeNewName." );
+            }
+            log.info( "Data will be added for " + qt + "..." );
+        }
+
+        if ( config.isMarkQuantitationTypeAsPreferred() ) {
+            log.info( "Marking " + qt + " as preferred for single-cell." );
+            qt.setIsSingleCellPreferred( true );
+        }
+
+        return qt;
+    }
+
+    private void applyQuantitationTypeOverrides( QuantitationType qt, SingleCellDataLoaderConfig config ) {
         // apply any overrides
         if ( config.getQuantitationTypeNewName() != null ) {
             log.info( "Overriding the name to " + config.getQuantitationTypeNewName() + " (was " + qt.getName() + ")." );
@@ -310,41 +352,6 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
                     break;
             }
         }
-        if ( config.isMarkQuantitationTypeAsPreferred() ) {
-            log.info( "Marking " + qt + " as preferred for single-cell." );
-            qt.setIsSingleCellPreferred( true );
-        }
-
-        if ( config.isReplaceExistingQuantitationType() ) {
-            // find the persistent QT matching the data
-            QuantitationType existingQt = quantitationTypeService.find( ee, qt, SingleCellExpressionDataVector.class );
-            if ( existingQt == null ) {
-                log.warn( "Could not find a QT matching " + qt + " in " + ee + ", will attempt to find one by name only." );
-                try {
-                    existingQt = quantitationTypeService.findByNameAndVectorType( ee, qt.getName(), SingleCellExpressionDataVector.class );
-                } catch ( NonUniqueQuantitationTypeByNameException e ) {
-                    throw new RuntimeException( e );
-                }
-            }
-            if ( existingQt != null ) {
-                qt = existingQt;
-                log.info( "Data will be replaced for " + existingQt + "..." );
-            } else {
-                availableQts = singleCellExpressionExperimentService.getSingleCellQuantitationTypes( ee );
-                throw new IllegalArgumentException( String.format( "%s does not match any existing single-cell quantitation type. Choose one among:\n\t%s",
-                        qt,
-                        availableQts.stream().map( QuantitationType::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
-            }
-        } else {
-            if ( ee.getQuantitationTypes().contains( qt ) ) {
-                // this check is also done in SingleCellExpressionExperimentService.addSingleCellDataVectors(), but
-                // after loading the vectors from disk which is time-consuming
-                throw new IllegalArgumentException( ee + " already has a quantitation type matching " + qt + ". Set replaceExistingQuantitationType to replace existing vectors instead or use a different name by setting quantitationTypeNewName." );
-            }
-            log.info( "Data will be added for " + qt + "..." );
-
-        }
-        return qt;
     }
 
     private void loadCellTypeAssignments( SingleCellDataLoader loader, SingleCellDimension dim, SingleCellDataLoaderConfig config ) {
