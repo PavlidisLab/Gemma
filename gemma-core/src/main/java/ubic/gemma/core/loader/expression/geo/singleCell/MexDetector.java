@@ -592,11 +592,11 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
     }
 
     @Override
-    public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series ) throws NoSingleCellDataFoundException {
+    public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series, SingleCellDataLoaderConfig config ) throws NoSingleCellDataFoundException {
         Assert.notNull( series.getGeoAccession() );
         Assert.notNull( getDownloadDirectory(), "A download directory must be set." );
         MexSingleCellDataLoader loader = new GeoMexSingleCellDataLoaderConfigurer( getDownloadDirectory(), series )
-                .configureLoader( SingleCellDataLoaderConfig.builder().build() );
+                .configureLoader( config );
         if ( loader.getSampleNames().isEmpty() ) {
             throw new NoSingleCellDataFoundException( "No single-cell data was found for " + series.getGeoAccession() );
         }

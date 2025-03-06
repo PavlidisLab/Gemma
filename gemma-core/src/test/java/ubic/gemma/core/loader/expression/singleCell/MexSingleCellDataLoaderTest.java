@@ -263,7 +263,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
         assumeThatResourceIsAvailable( "ftp://ftp.ncbi.nlm.nih.gov/geo/series/" );
         GeoSeries series = readSeriesFromGeo( "GSE141552" );
         detector.downloadSingleCellData( series );
-        MexSingleCellDataLoader loader = ( MexSingleCellDataLoader ) detector.getSingleCellDataLoader( series );
+        MexSingleCellDataLoader loader = ( MexSingleCellDataLoader ) detector.getSingleCellDataLoader( series, SingleCellDataLoaderConfig.builder().build() );
 
         QuantitationType qt = loader.getQuantitationTypes().iterator().next();
         Collection<CompositeSequence> de = Collections.singleton( CompositeSequence.Factory.newInstance( "ENSG00000223972.5" ) );

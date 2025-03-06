@@ -45,7 +45,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             PREFERRED_QT_OPTION = "preferredQt",
             PREFER_SINGLE_PRECISION = "preferSinglePrecision",
             REPLACE_OPTION = "replace",
-            RENAMING_FILE_OPTION = "renamingFile";
+            RENAMING_FILE_OPTION = "renamingFile",
+            IGNORE_SAMPLES_LACKING_DATA_OPTION = "ignoreSamplesLackingData";
 
     private static final String
             CELL_TYPE_ASSIGNMENT_FILE_OPTION = "ctaFile",
@@ -115,6 +116,8 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
     private boolean preferSinglePrecision;
     private boolean preferredQt;
     private boolean replaceQt;
+
+    private boolean ignoreSamplesLackingData;
 
     // cell type assignment and cell-level characteristics
     @Nullable
@@ -190,6 +193,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         options.addOption( PREFERRED_QT_OPTION, "preferred-quantitation-type", false, "Make the quantitation type the preferred one." );
         options.addOption( PREFER_SINGLE_PRECISION, "prefer-single-precision", false, "Prefer single precision for storage, even if the data is available with double precision. This reduces the size of vectors and thus the storage requirement." );
         options.addOption( REPLACE_OPTION, "replace", false, "Replace an existing quantitation type." );
+        options.addOption( IGNORE_SAMPLES_LACKING_DATA_OPTION, "ignore-samples-lacking-data", false, "Ignore samples that lack data. Those samples will not be included in the single-cell dimension." );
 
         // for all loaders
         options.addOption( Option.builder( RENAMING_FILE_OPTION )
@@ -290,6 +294,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         preferredQt = commandLine.hasOption( PREFERRED_QT_OPTION );
         replaceQt = commandLine.hasOption( REPLACE_OPTION );
         renamingFile = commandLine.getParsedOptionValue( RENAMING_FILE_OPTION );
+        ignoreSamplesLackingData = commandLine.hasOption( IGNORE_SAMPLES_LACKING_DATA_OPTION );
 
         cellTypeAssignmentFile = commandLine.getParsedOptionValue( CELL_TYPE_ASSIGNMENT_FILE_OPTION );
         cellTypeAssignmentName = getOptionValue( commandLine, CELL_TYPE_ASSIGNMENT_NAME_OPTION, requires( toBeSet( CELL_TYPE_ASSIGNMENT_FILE_OPTION ) ) );
@@ -452,6 +457,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                     .quantitationTypeName( qtName );
         }
         configBuilder
+                .ignoreSamplesLackingData( ignoreSamplesLackingData )
                 .replaceExistingQuantitationType( replaceQt )
                 .quantitationTypeNewName( newName )
                 .quantitationTypeNewType( newType )

@@ -19,6 +19,13 @@ import java.nio.file.Path;
 public class SingleCellDataLoaderConfig extends SequencingDataLoaderConfig {
 
     /**
+     * Ignore individual samples that lack or have incomplete data.
+     * <p>
+     * This is only implemented for MEX.
+     */
+    private boolean ignoreSamplesLackingData;
+
+    /**
      * A location where cell type can be found in a format covered by {@link GenericMetadataSingleCellDataLoader}.
      * <p>
      * If null, no cell type assignment will be imported. However, the loader might have other provisions for loading

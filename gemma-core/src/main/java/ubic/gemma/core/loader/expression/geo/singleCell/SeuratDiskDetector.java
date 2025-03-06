@@ -2,6 +2,7 @@ package ubic.gemma.core.loader.expression.geo.singleCell;
 
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
+import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
 
 public class SeuratDiskDetector extends AbstractSingleH5FileInSeriesSingleCellDetector {
 
@@ -15,7 +16,7 @@ public class SeuratDiskDetector extends AbstractSingleH5FileInSeriesSingleCellDe
     }
 
     @Override
-    public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series ) {
+    public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series, SingleCellDataLoaderConfig config ) {
         throw new UnsupportedOperationException( "Loading Seurat Disk data is not supported." );
     }
 }

@@ -17,10 +17,7 @@ import ubic.gemma.core.loader.expression.geo.singleCell.ArchiveBasedSingleCellDe
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoBioAssayMapper;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
 import ubic.gemma.core.loader.expression.geo.singleCell.NoSingleCellDataFoundException;
-import ubic.gemma.core.loader.expression.singleCell.AnnDataSingleCellDataLoader;
-import ubic.gemma.core.loader.expression.singleCell.MexSingleCellDataLoader;
-import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
-import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
+import ubic.gemma.core.loader.expression.singleCell.*;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPConfig;
 import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
@@ -40,6 +37,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 import static java.util.Objects.requireNonNull;
@@ -54,6 +52,8 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailabl
 @Category(GeoTest.class)
 @ContextConfiguration
 public class GeoSingleCellDetectorTest extends BaseTest {
+
+    private static final SingleCellDataLoaderConfig DEFAULT_SINGLE_CELL_DATA_LOADER_CONFIG = SingleCellDataLoaderConfig.builder().build();
 
     @Configuration
     @TestComponent
@@ -93,7 +93,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
         assertThat( detector.hasSingleCellData( sample ) ).isFalse();
         detector.downloadSingleCellData( series );
         // this segment covers some heuristics for detecting sample and cell type columns
-        SingleCellDataLoader loader = detector.getSingleCellDataLoader( series );
+        SingleCellDataLoader loader = detector.getSingleCellDataLoader( series, DEFAULT_SINGLE_CELL_DATA_LOADER_CONFIG );
         assertThat( loader ).isInstanceOf( AnnDataSingleCellDataLoader.class );
         assertThat( loader.getSampleNames() )
                 .containsExactlyInAnyOrder( "C-1262", "P-612", "C-1488", "P-1572", "C-1366", "C-13281",
@@ -130,7 +130,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
     public void testGSE221593() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE221593" );
         detector.downloadSingleCellData( series );
-        assertThat( detector.getSingleCellDataLoader( series ) )
+        assertThat( detector.getSingleCellDataLoader( series, DEFAULT_SINGLE_CELL_DATA_LOADER_CONFIG ) )
                 .isInstanceOf( AnnDataSingleCellDataLoader.class )
                 .satisfies( loader -> {
                     assertThatThrownBy( loader::getSampleNames )
@@ -174,7 +174,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
     public void testGSE221522() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE221522" );
         detector.downloadSingleCellData( series );
-        assertThat( detector.getSingleCellDataLoader( series ) )
+        assertThat( detector.getSingleCellDataLoader( series, DEFAULT_SINGLE_CELL_DATA_LOADER_CONFIG ) )
                 .asInstanceOf( type( AnnDataSingleCellDataLoader.class ) )
                 .satisfies( loader -> {
                     // the AnnData use abbreviated column name that simply cannot be matched against the GEO record
@@ -201,7 +201,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
     public void testGSE254569() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE254569" );
         detector.downloadSingleCellData( series );
-        detector.getSingleCellDataLoader( series );
+        detector.getSingleCellDataLoader( series, DEFAULT_SINGLE_CELL_DATA_LOADER_CONFIG );
     }
 
     /**
@@ -250,7 +250,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
                 .isDirectoryRecursivelyContaining( "glob:**/GSE201814/GSM6072067/matrix.mtx.gz" );
         // that should be a no-op
         detector.downloadSingleCellData( series, sample );
-        SingleCellDataLoader loader = detector.getSingleCellDataLoader( series );
+        SingleCellDataLoader loader = detector.getSingleCellDataLoader( series, DEFAULT_SINGLE_CELL_DATA_LOADER_CONFIG );
         assertThat( loader )
                 .isInstanceOf( MexSingleCellDataLoader.class );
         assertThat( loader.getSampleNames() ).contains( "GSM6072067" );
@@ -269,7 +269,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
                 .isDirectoryRecursivelyContaining( "glob:**/GSE201814/*/barcodes.tsv.gz" )
                 .isDirectoryRecursivelyContaining( "glob:**/GSE201814/*/features.tsv.gz" )
                 .isDirectoryRecursivelyContaining( "glob:**/GSE201814/*/matrix.mtx.gz" );
-        assertThat( detector.getSingleCellDataLoader( series ) )
+        assertThat( detector.getSingleCellDataLoader( series, DEFAULT_SINGLE_CELL_DATA_LOADER_CONFIG ) )
                 .isInstanceOf( MexSingleCellDataLoader.class );
     }
 
@@ -614,7 +614,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
         assertThat( detector.downloadSingleCellData( series ) ).exists();
         assertThat( downloadDir )
                 .isDirectoryRecursivelyContaining( "glob:**/GSE159416.loom" );
-        assertThatThrownBy( () -> detector.getSingleCellDataLoader( series ) )
+        assertThatThrownBy( () -> detector.getSingleCellDataLoader( series, DEFAULT_SINGLE_CELL_DATA_LOADER_CONFIG ) )
                 .isInstanceOf( UnsupportedOperationException.class );
     }
 
@@ -691,7 +691,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
                 .isDirectory()
                 .hasFileName( "GSM4282408" );
         List<BioAssay> samples = Collections.singletonList( BioAssay.Factory.newInstance( "GSM4282408" ) );
-        assertThatThrownBy( () -> detector.getSingleCellDataLoader( series ).getSingleCellDimension( samples ) )
+        assertThatThrownBy( () -> detector.getSingleCellDataLoader( series, DEFAULT_SINGLE_CELL_DATA_LOADER_CONFIG ).getSingleCellDimension( samples ) )
                 .isInstanceOf( IllegalArgumentException.class )
                 .hasMessage( "Sample GSM4282408 has duplicate cell IDs." );
     }
@@ -729,7 +729,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
     public void testGSE244451() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE244451" );
         detector.downloadSingleCellData( series );
-        SingleCellDataLoader loader = detector.getSingleCellDataLoader( series );
+        SingleCellDataLoader loader = detector.getSingleCellDataLoader( series, DEFAULT_SINGLE_CELL_DATA_LOADER_CONFIG );
         // FIXME: the GEO metadata are not suitable for detecting the sample column
         ( ( AnnDataSingleCellDataLoader ) loader ).setSampleFactorName( "sample_id" );
         BioAssay ba = BioAssay.Factory.newInstance( "PPG4", null, BioMaterial.Factory.newInstance( "PPG4" ) );
@@ -762,6 +762,35 @@ public class GeoSingleCellDetectorTest extends BaseTest {
         assertThat( detector.hasSingleCellData( series ) )
                 .isTrue();
         detector.downloadSingleCellData( series );
+    }
+
+    /**
+     * This series has samples lacking data.
+     * <p>
+     * Example: GSM3580744
+     */
+    @Test
+    public void testGSE125708() throws NoSingleCellDataFoundException, IOException {
+        GeoSeries series = readSeriesFromGeo( "GSE125708" );
+        assertThat( detector.hasSingleCellData( series ) )
+                .isTrue();
+        detector.downloadSingleCellData( series );
+        Collection<BioAssay> bas = series.getSamples().stream().
+                map( s -> BioAssay.Factory.newInstance( s.getGeoAccession(), null, BioMaterial.Factory.newInstance( s.getGeoAccession() ) ) )
+                .collect( Collectors.toList() );
+        assertThatThrownBy( () -> {
+            SingleCellDataLoader loader = detector.getSingleCellDataLoader( series, DEFAULT_SINGLE_CELL_DATA_LOADER_CONFIG );
+            SingleCellDimension dimension = loader.getSingleCellDimension( bas );
+        } )
+                .isInstanceOf( IllegalStateException.class )
+                .hasMessageMatching( "Sample directory .*GSM3580728 for GSM3580728 does not exist\\. You can set ignoreSamplesLackingData to ignore this error." );
+        SingleCellDataLoader loader = detector.getSingleCellDataLoader( series, MexSingleCellDataLoaderConfig.builder()
+                .ignoreSamplesLackingData( true ).build() );
+        SingleCellDimension dimension = loader.getSingleCellDimension( bas );
+        assertThat( dimension.getBioAssays() )
+                .extracting( BioAssay::getName )
+                .containsExactly( "GSM3580724", "GSM3580725", "GSM3580726", "GSM3580727", "GSM3580745", "GSM3580746" )
+                .doesNotContain( "GSM3580744" );
     }
 
     private GeoSeries readSeriesFromGeo( String accession ) throws IOException {

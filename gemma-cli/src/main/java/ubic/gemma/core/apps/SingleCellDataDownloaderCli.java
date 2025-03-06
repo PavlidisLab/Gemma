@@ -23,6 +23,7 @@ import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
+import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactoryImpl;
@@ -377,7 +378,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                                         .map( GeoSample::getGeoAccession )
                                         .map( s -> BioAssay.Factory.newInstance( s, platform, BioMaterial.Factory.newInstance( s ) ) )
                                         .collect( Collectors.toList() );
-                                try ( SingleCellDataLoader loader = detector.getSingleCellDataLoader( series ) ) {
+                                try ( SingleCellDataLoader loader = detector.getSingleCellDataLoader( series, SingleCellDataLoaderConfig.builder().ignoreSamplesLackingData( true ).build() ) ) {
                                     numberOfSamples = loader.getSampleNames().size();
                                     SingleCellDimension scd = loader.getSingleCellDimension( bas );
                                     numberOfCells = scd.getNumberOfCells();

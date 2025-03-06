@@ -39,11 +39,11 @@ public class AnnDataDetector extends AbstractSingleH5FileInSeriesSingleCellDetec
     }
 
     @Override
-    public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series ) throws NoSingleCellDataFoundException {
+    public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series, SingleCellDataLoaderConfig config ) throws NoSingleCellDataFoundException {
         Path annDataFile = getDest( series );
         if ( Files.exists( annDataFile ) ) {
             return new GeoAnnDataSingleCellDataLoaderConfigurer( annDataFile, series )
-                    .configureLoader( SingleCellDataLoaderConfig.builder().build() );
+                    .configureLoader( config );
         }
         throw new NoSingleCellDataFoundException( "Could not find " + annDataFile + " for " + series.getGeoAccession() );
     }

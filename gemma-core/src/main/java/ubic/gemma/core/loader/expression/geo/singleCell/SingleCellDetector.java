@@ -3,6 +3,7 @@ package ubic.gemma.core.loader.expression.geo.singleCell;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
+import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -60,5 +61,5 @@ public interface SingleCellDetector {
      * @throws UnsupportedOperationException if loading single cell data is not supported
      * @throws NoSingleCellDataFoundException if there is no single cell data for the given series
      */
-    SingleCellDataLoader getSingleCellDataLoader( GeoSeries series ) throws UnsupportedOperationException, NoSingleCellDataFoundException;
+    SingleCellDataLoader getSingleCellDataLoader( GeoSeries series, SingleCellDataLoaderConfig config ) throws UnsupportedOperationException, NoSingleCellDataFoundException;
 }

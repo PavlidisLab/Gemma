@@ -4,6 +4,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
+import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
 
 /**
  * Detects Loom files in series and samples.
@@ -19,7 +20,7 @@ public class LoomSingleCellDetector extends AbstractSingleFileInSeriesSingleCell
     }
 
     @Override
-    public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series ) {
+    public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series, SingleCellDataLoaderConfig config ) {
         throw new UnsupportedOperationException( "Loading Loom is not supported." );
     }
 

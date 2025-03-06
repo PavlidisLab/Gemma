@@ -9,6 +9,7 @@ import ubic.gemma.core.loader.expression.geo.model.GeoLibraryStrategy;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
+import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
@@ -523,11 +524,11 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
      * @throws UnsupportedOperationException if single-cell data was found, but cannot be loaded
      */
     @Override
-    public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series ) throws NoSingleCellDataFoundException {
+    public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series, SingleCellDataLoaderConfig config ) throws NoSingleCellDataFoundException {
         UnsupportedOperationException firstUnsupported = null;
         for ( SingleCellDetector detector : detectors ) {
             try {
-                SingleCellDataLoader loader = detector.getSingleCellDataLoader( series );
+                SingleCellDataLoader loader = detector.getSingleCellDataLoader( series, config );
                 loader.setBioAssayToSampleNameMapper( GEO_BIO_ASSAY_TO_SAMPLE_NAME_MATCHER );
                 return loader;
             } catch ( UnsupportedOperationException e ) {

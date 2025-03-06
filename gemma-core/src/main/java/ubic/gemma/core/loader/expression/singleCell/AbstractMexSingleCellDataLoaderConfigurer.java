@@ -21,25 +21,41 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
     @Override
     public MexSingleCellDataLoader configureLoader( SingleCellDataLoaderConfig config ) {
         List<String> sampleNames = getSampleNames();
+        List<String> usedSampleNames = new ArrayList<>();
         List<Path> barcodeFiles = new ArrayList<>();
         List<Path> genesFiles = new ArrayList<>();
         List<Path> matrixFiles = new ArrayList<>();
         List<Path> sampleDirs = getSampleDirs();
         for ( int i = 0; i < sampleDirs.size(); i++ ) {
+            String sampleName = sampleNames.get( i );
             Path sampleDir = sampleDirs.get( i );
             if ( !Files.exists( sampleDir ) ) {
-                throw new IllegalStateException( "Sample directory " + sampleDir + " for " + sampleNames.get( i ) + " does not exist." );
+                String m2 = "Sample directory " + sampleDir + " for " + sampleName + " does not exist.";
+                if ( config.isIgnoreSamplesLackingData() ) {
+                    log.warn( m2 );
+                    continue;
+                } else {
+                    throw new IllegalStateException( m2 + " You can set ignoreSamplesLackingData to ignore this error." );
+                }
             }
-            Path b = sampleDir.resolve( "barcodes.tsv.gz" ), f = sampleDir.resolve( "features.tsv.gz" ), m = sampleDir.resolve( "matrix.mtx.gz" );
+            Path b = sampleDir.resolve( "barcodes.tsv.gz" );
+            Path f = sampleDir.resolve( "features.tsv.gz" );
+            Path m = sampleDir.resolve( "matrix.mtx.gz" );
             if ( Files.exists( b ) && Files.exists( f ) && Files.exists( m ) ) {
+                usedSampleNames.add( sampleName );
                 barcodeFiles.add( b );
                 genesFiles.add( f );
                 matrixFiles.add( m );
             } else {
-                throw new IllegalStateException( "Expected MEX files are missing in " + sampleDir + "." );
+                String m2 = "Expected MEX files are missing in " + sampleDir + ".";
+                if ( config.isIgnoreSamplesLackingData() ) {
+                    log.warn( m2 );
+                } else {
+                    throw new IllegalStateException( m2 + " You can set ignoreSamplesLackingData to ignore this error." );
+                }
             }
         }
-        MexSingleCellDataLoader loader = new MexSingleCellDataLoader( sampleNames, barcodeFiles, genesFiles, matrixFiles );
+        MexSingleCellDataLoader loader = new MexSingleCellDataLoader( usedSampleNames, barcodeFiles, genesFiles, matrixFiles );
         try {
             configureDiscardEmptyCell( loader, matrixFiles, config );
         } catch ( Exception e ) {
@@ -55,8 +71,9 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
             }
         }
         if ( config instanceof MexSingleCellDataLoaderConfig ) {
-            loader.setAllowMappingDesignElementsToGeneSymbols( ( ( MexSingleCellDataLoaderConfig ) config ).isAllowMappingDesignElementsToGeneSymbols() );
-            loader.setUseDoublePrecision( ( ( MexSingleCellDataLoaderConfig ) config ).isUseDoublePrecision() );
+            MexSingleCellDataLoaderConfig mexConfig = ( MexSingleCellDataLoaderConfig ) config;
+            loader.setAllowMappingDesignElementsToGeneSymbols( mexConfig.isAllowMappingDesignElementsToGeneSymbols() );
+            loader.setUseDoublePrecision( ( mexConfig.isUseDoublePrecision() ) );
         }
         return loader;
     }
