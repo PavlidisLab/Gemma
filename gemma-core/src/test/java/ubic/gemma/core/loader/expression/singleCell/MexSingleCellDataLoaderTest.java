@@ -72,8 +72,39 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
     }
 
     @Test
+    public void testEmpty() throws IOException {
+        try ( MexSingleCellDataLoader loader = new MexSingleCellDataLoader( Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList() ) ) {
+            loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
+            assertThat( loader.getSampleNames() ).isEmpty();
+            assertThat( loader.getQuantitationTypes() ).singleElement()
+                    .satisfies( qt -> {
+                        assertThat( qt.getName() ).isEqualTo( "10x MEX" );
+                        assertThat( qt.getDescription() ).isEqualTo( "10x MEX data loaded from 0 sets of files (i.e. features.tsv.gz, barcodes.tsv.gz and matrix.mtx.gz)." );
+                        assertThat( qt.getGeneralType() ).isEqualTo( GeneralType.QUANTITATIVE );
+                        assertThat( qt.getType() ).isEqualTo( StandardQuantitationType.COUNT );
+                        assertThat( qt.getScale() ).isEqualTo( ScaleType.COUNT );
+                        assertThat( qt.getRepresentation() ).isEqualTo( PrimitiveType.INT );
+                    } );
+            BioAssay ba = BioAssay.Factory.newInstance( "test", null, BioMaterial.Factory.newInstance( "test" ) );
+            assertThat( loader.getSingleCellDimension( Collections.singleton( ba ) ) ).satisfies( dim -> {
+                assertThat( dim.getCellIds() ).isEmpty();
+                assertThat( dim.getBioAssays() ).isEmpty();
+                assertThat( dim.getNumberOfCells() ).isZero();
+            } );
+            SingleCellDimension dim = loader.getSingleCellDimension( Collections.singleton( ba ) );
+            QuantitationType qt = loader.getQuantitationTypes().iterator().next();
+            CompositeSequence de = CompositeSequence.Factory.newInstance( "test" );
+            loader.setDesignElementToGeneMapper( new SimpleDesignElementMapper( Collections.singleton( de ) ) );
+            assertThat( loader.getSequencingMetadata( dim ) )
+                    .isEmpty();
+            assertThat( loader.loadVectors( Collections.singleton( de ), dim, qt ) )
+                    .isEmpty();
+        }
+    }
+
+    @Test
     @Category(SlowTest.class)
-    public void test() throws IOException {
+    public void testGSE224438() throws IOException {
         // consider the first file for mapping to elements
         Map<String, CompositeSequence> elementsMapping = createElementsMappingFromResourceFile( "data/loader/expression/singleCell/GSE224438/GSM7022367_1_features.tsv.gz" );
 
