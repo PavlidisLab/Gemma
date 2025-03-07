@@ -41,6 +41,7 @@ import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
 import ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter;
 import ubic.gemma.core.datastructure.matrix.io.TabularMatrixWriter;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.ReadWriteFileLock;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -77,7 +78,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
@@ -953,17 +953,18 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     /**
      * Lock a given path.
-     * TODO: implement file-level locking with {@link java.nio.channels.FileChannel} and {@link java.nio.channels.FileLock}
-     *       to prevent other processes from writing to the same file.
      * @param exclusive make the lock exclusive for the purpose of creating of modifying the path
      */
     private synchronized LockedPathImpl acquirePathLock( Path path, boolean exclusive ) {
-        ReadWriteLock rwLock = fileLocks.computeIfAbsent( path, k -> new ReentrantReadWriteLock() );
+        ReadWriteLock rwLock = fileLocks.computeIfAbsent( path, this::createFileLock );
+        log.debug( "Acquiring " + ( exclusive ? "exclusive" : "shared" ) + " lock on " + path + "..." );
         if ( exclusive ) {
             rwLock.writeLock().lock();
+            log.debug( "Got exclusive lock on " + path + "." );
             return new LockedPathImpl( path, rwLock.writeLock(), false );
         } else {
             rwLock.readLock().lock();
+            log.debug( "Got shared lock on " + path + "." );
             return new LockedPathImpl( path, rwLock.readLock(), true );
         }
     }
@@ -972,19 +973,36 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * Attempt to lock a path.
      */
     private synchronized LockedPathImpl tryAcquirePathLock( Path path, boolean exclusive, long timeout, TimeUnit timeUnit ) throws TimeoutException, InterruptedException {
-        ReadWriteLock rwLock = fileLocks.computeIfAbsent( path, k -> new ReentrantReadWriteLock() );
+        ReadWriteLock rwLock = fileLocks.computeIfAbsent( path, this::createFileLock );
+        log.debug( "Acquiring " + ( exclusive ? "exclusive" : "shared" ) + " lock on " + path + "..." );
         if ( exclusive ) {
             if ( rwLock.writeLock().tryLock( timeout, timeUnit ) ) {
+                log.debug( "Got exclusive lock on " + path + "." );
                 return new LockedPathImpl( path, rwLock.writeLock(), false );
             } else {
-                throw new TimeoutException();
+                throw new TimeoutException( "Could not acquire exclusive lock on " + path + " within " + timeout + " " + timeUnit + "." );
             }
         } else {
             if ( rwLock.readLock().tryLock( timeout, timeUnit ) ) {
+                log.debug( "Got shared lock on " + path + "." );
                 return new LockedPathImpl( path, rwLock.readLock(), true );
             } else {
-                throw new TimeoutException();
+                throw new TimeoutException( "Could not acquire shared lock on " + path + " within " + timeout + " " + timeUnit + "." );
             }
+        }
+    }
+
+    /**
+     * Create a file lock for the given path.
+     * @param path        a path to open and lock
+     */
+    private ReadWriteLock createFileLock( Path path ) {
+        Path lockPath = path.resolveSibling( path.getFileName() + ".lock" );
+        try {
+            PathUtils.createParentDirectories( lockPath );
+            return ReadWriteFileLock.open( lockPath );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
         }
     }
 
