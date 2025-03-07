@@ -10,14 +10,15 @@ import org.springframework.util.Assert;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
-import ubic.gemma.model.expression.bioAssayData.*;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
+import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
@@ -374,7 +375,9 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
             // this works for both experiment, their subsets and also sub-bioassays
             Collection<BioAssayDimension> bioAssayDimensions = getBioAssayDimensions( ee );
 
-            if ( bioAssayDimensions.size() == 1 ) {
+            if ( bioAssayDimensions.isEmpty() ) {
+                continue;
+            } else if ( bioAssayDimensions.size() == 1 ) {
                 newResults.addAll( this.unpack( noncached ) );
             } else {
                 /*
@@ -508,11 +511,18 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
     private Collection<DoubleVectorValueObject> unpack( Collection<ProcessedExpressionDataVector> data,
             Map<ProcessedExpressionDataVector, Collection<Long>> vector2GeneMap ) {
         Collection<DoubleVectorValueObject> result = new ArrayList<>( data.size() );
-        Map<ExpressionExperiment, ExpressionExperimentValueObject> eeVos = createValueObjectCache( data, ProcessedExpressionDataVector::getExpressionExperiment, ExpressionExperimentValueObject::new );
-        Map<QuantitationType, QuantitationTypeValueObject> qtVos = createValueObjectCache( data, ProcessedExpressionDataVector::getQuantitationType, QuantitationTypeValueObject::new );
-        Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = createValueObjectCache( data, ProcessedExpressionDataVector::getBioAssayDimension, BioAssayDimensionValueObject::new );
+        Map<ExpressionExperiment, ExpressionExperimentValueObject> eeVos = createValueObjectCache( data,
+                ProcessedExpressionDataVector::getExpressionExperiment, ExpressionExperimentValueObject::new );
+        Map<QuantitationType, QuantitationTypeValueObject> qtVos = createValueObjectCache( data,
+                ProcessedExpressionDataVector::getQuantitationType, QuantitationTypeValueObject::new );
+        Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = createValueObjectCache( data,
+                ProcessedExpressionDataVector::getBioAssayDimension, BioAssayDimensionValueObject::new );
+        Map<ArrayDesign, ArrayDesignValueObject> adVos = createValueObjectCache( data,
+                vec -> vec.getDesignElement().getArrayDesign(), ArrayDesignValueObject::new );
         for ( ProcessedExpressionDataVector v : data ) {
-            result.add( new DoubleVectorValueObject( v, eeVos.get( v.getExpressionExperiment() ), qtVos.get( v.getQuantitationType() ), badVos.get( v.getBioAssayDimension() ), vector2GeneMap.get( v ) ) );
+            result.add( new DoubleVectorValueObject( v, eeVos.get( v.getExpressionExperiment() ),
+                    qtVos.get( v.getQuantitationType() ), badVos.get( v.getBioAssayDimension() ),
+                    adVos.get( v.getDesignElement().getArrayDesign() ), vector2GeneMap.get( v ) ) );
         }
         return result;
     }
@@ -520,34 +530,57 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
     private Collection<DoubleVectorValueObject> unpack( Collection<ProcessedExpressionDataVector> data,
             Map<ProcessedExpressionDataVector, Collection<Long>> vector2GeneMap, BioAssayDimension longestBad ) {
         Collection<DoubleVectorValueObject> result = new HashSet<>();
-        Map<ExpressionExperiment, ExpressionExperimentValueObject> eeVos = createValueObjectCache( data, ProcessedExpressionDataVector::getExpressionExperiment, ExpressionExperimentValueObject::new );
-        Map<QuantitationType, QuantitationTypeValueObject> qtVos = createValueObjectCache( data, ProcessedExpressionDataVector::getQuantitationType, QuantitationTypeValueObject::new );
-        Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = createValueObjectCache( data, ProcessedExpressionDataVector::getBioAssayDimension, BioAssayDimensionValueObject::new );
+        Map<ExpressionExperiment, ExpressionExperimentValueObject> eeVos = createValueObjectCache( data,
+                ProcessedExpressionDataVector::getExpressionExperiment, ExpressionExperimentValueObject::new );
+        Map<QuantitationType, QuantitationTypeValueObject> qtVos = createValueObjectCache( data,
+                ProcessedExpressionDataVector::getQuantitationType, QuantitationTypeValueObject::new );
+        Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = createValueObjectCache( data,
+                ProcessedExpressionDataVector::getBioAssayDimension, BioAssayDimensionValueObject::new );
+        Map<ArrayDesign, ArrayDesignValueObject> adVos = createValueObjectCache( data,
+                vec -> vec.getDesignElement().getArrayDesign(), ArrayDesignValueObject::new );
+        BioAssayDimensionValueObject dimToMatch = new BioAssayDimensionValueObject( longestBad );
         for ( ProcessedExpressionDataVector v : data ) {
-            result.add( new DoubleVectorValueObject( v, eeVos.get( v.getExpressionExperiment() ), qtVos.get( v.getQuantitationType() ), badVos.get( v.getBioAssayDimension() ),
-                    vector2GeneMap.get( v ), longestBad ) );
+            result.add( new DoubleVectorValueObject( v, eeVos.get( v.getExpressionExperiment() ),
+                    qtVos.get( v.getQuantitationType() ), badVos.get( v.getBioAssayDimension() ),
+                    adVos.get( v.getDesignElement().getArrayDesign() ), vector2GeneMap.get( v ), dimToMatch ) );
         }
         return result;
     }
 
     private Collection<DoubleVectorValueObject> unpack( Map<ProcessedExpressionDataVector, Collection<Long>> data ) {
         Collection<DoubleVectorValueObject> result = new ArrayList<>( data.size() );
-        Map<ExpressionExperiment, ExpressionExperimentValueObject> eeVos = createValueObjectCache( data.keySet(), ProcessedExpressionDataVector::getExpressionExperiment, ExpressionExperimentValueObject::new );
-        Map<QuantitationType, QuantitationTypeValueObject> qtVos = createValueObjectCache( data.keySet(), ProcessedExpressionDataVector::getQuantitationType, QuantitationTypeValueObject::new );
-        Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = createValueObjectCache( data.keySet(), ProcessedExpressionDataVector::getBioAssayDimension, BioAssayDimensionValueObject::new );
+        Map<ExpressionExperiment, ExpressionExperimentValueObject> eeVos = createValueObjectCache( data.keySet(),
+                ProcessedExpressionDataVector::getExpressionExperiment, ExpressionExperimentValueObject::new );
+        Map<QuantitationType, QuantitationTypeValueObject> qtVos = createValueObjectCache( data.keySet(),
+                ProcessedExpressionDataVector::getQuantitationType, QuantitationTypeValueObject::new );
+        Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = createValueObjectCache( data.keySet(),
+                ProcessedExpressionDataVector::getBioAssayDimension, BioAssayDimensionValueObject::new );
+        Map<ArrayDesign, ArrayDesignValueObject> adVos = createValueObjectCache( data.keySet(),
+                vec -> vec.getDesignElement().getArrayDesign(), ArrayDesignValueObject::new );
         for ( ProcessedExpressionDataVector v : data.keySet() ) {
-            result.add( new DoubleVectorValueObject( v, eeVos.get( v.getExpressionExperiment() ), qtVos.get( v.getQuantitationType() ), badVos.get( v.getBioAssayDimension() ), data.get( v ) ) );
+            result.add( new DoubleVectorValueObject( v, eeVos.get( v.getExpressionExperiment() ),
+                    qtVos.get( v.getQuantitationType() ), badVos.get( v.getBioAssayDimension() ),
+                    adVos.get( v.getDesignElement().getArrayDesign() ), data.get( v ) ) );
         }
         return result;
     }
 
-    private Collection<DoubleVectorValueObject> unpack( Map<ProcessedExpressionDataVector, Collection<Long>> data, BioAssayDimension longestBad ) {
+    private Collection<DoubleVectorValueObject> unpack( Map<ProcessedExpressionDataVector, Collection<Long>> data,
+            BioAssayDimension longestBad ) {
         Collection<DoubleVectorValueObject> result = new ArrayList<>( data.size() );
-        Map<ExpressionExperiment, ExpressionExperimentValueObject> eeVos = createValueObjectCache( data.keySet(), ProcessedExpressionDataVector::getExpressionExperiment, ExpressionExperimentValueObject::new );
-        Map<QuantitationType, QuantitationTypeValueObject> qtVos = createValueObjectCache( data.keySet(), ProcessedExpressionDataVector::getQuantitationType, QuantitationTypeValueObject::new );
-        Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = createValueObjectCache( data.keySet(), ProcessedExpressionDataVector::getBioAssayDimension, BioAssayDimensionValueObject::new );
+        Map<ExpressionExperiment, ExpressionExperimentValueObject> eeVos = createValueObjectCache( data.keySet(),
+                ProcessedExpressionDataVector::getExpressionExperiment, ExpressionExperimentValueObject::new );
+        Map<QuantitationType, QuantitationTypeValueObject> qtVos = createValueObjectCache( data.keySet(),
+                ProcessedExpressionDataVector::getQuantitationType, QuantitationTypeValueObject::new );
+        Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = createValueObjectCache( data.keySet(),
+                ProcessedExpressionDataVector::getBioAssayDimension, BioAssayDimensionValueObject::new );
+        Map<ArrayDesign, ArrayDesignValueObject> adVos = createValueObjectCache( data.keySet(),
+                vec -> vec.getDesignElement().getArrayDesign(), ArrayDesignValueObject::new );
+        BioAssayDimensionValueObject dimToMatch = new BioAssayDimensionValueObject( longestBad );
         for ( ProcessedExpressionDataVector v : data.keySet() ) {
-            result.add( new DoubleVectorValueObject( v, eeVos.get( v.getExpressionExperiment() ), qtVos.get( v.getQuantitationType() ), badVos.get( v.getBioAssayDimension() ), data.get( v ), longestBad ) );
+            result.add( new DoubleVectorValueObject( v, eeVos.get( v.getExpressionExperiment() ),
+                    qtVos.get( v.getQuantitationType() ), badVos.get( v.getBioAssayDimension() ),
+                    adVos.get( v.getDesignElement().getArrayDesign() ), data.get( v ), dimToMatch ) );
         }
         return result;
     }
@@ -621,9 +654,9 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
         }
 
         bad.addBioAssays( sliceBioAssays );
+        ExpressionExperimentSubsetValueObject eeVo = new ExpressionExperimentSubsetValueObject( ee );
         for ( DoubleVectorValueObject vec : obs ) {
-            SlicedDoubleVectorValueObject s = vec.slice( ee, bad );
-            sliced.add( s );
+            sliced.add( vec.slice( eeVo, bad ) );
         }
 
         return sliced;

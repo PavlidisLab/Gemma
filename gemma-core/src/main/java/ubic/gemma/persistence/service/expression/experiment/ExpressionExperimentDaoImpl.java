@@ -1117,6 +1117,17 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Collection<BioAssayDimension> getBioAssayDimensionsFromSubSets( ExpressionExperiment expressionExperiment ) {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession().createQuery( "select b from BioAssayDimension b, ExpressionExperimentSubSet eess "
+                        + "join b.bioAssays bba join eess.bioAssays eb "
+                        + "where eb = bba and eess.sourceExperiment = :ee "
+                        + "group by b" )
+                .setParameter( "ee", expressionExperiment )
+                .list();
+    }
+
+    @Override
     public BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt, Class<? extends BulkExpressionDataVector> dataVectorType ) {
         Long id = ( Long ) getSessionFactory().getCurrentSession()
                 .createCriteria( dataVectorType )

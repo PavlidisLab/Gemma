@@ -34,6 +34,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -671,23 +672,37 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
     private Map<CompositeSequence, DoubleVectorValueObject> unpack(
             Collection<? extends BulkExpressionDataVector> data ) {
         Map<CompositeSequence, DoubleVectorValueObject> result = new HashMap<>();
-        Map<ExpressionExperiment, ExpressionExperimentValueObject> eeVos = createValueObjectCache( data, BulkExpressionDataVector::getExpressionExperiment, ExpressionExperimentValueObject::new );
-        Map<QuantitationType, QuantitationTypeValueObject> qtVos = createValueObjectCache( data, BulkExpressionDataVector::getQuantitationType, QuantitationTypeValueObject::new );
-        Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = createValueObjectCache( data, BulkExpressionDataVector::getBioAssayDimension, BioAssayDimensionValueObject::new );
+        Map<ExpressionExperiment, ExpressionExperimentValueObject> eeVos = createValueObjectCache( data,
+                BulkExpressionDataVector::getExpressionExperiment, ExpressionExperimentValueObject::new );
+        Map<QuantitationType, QuantitationTypeValueObject> qtVos = createValueObjectCache( data,
+                BulkExpressionDataVector::getQuantitationType, QuantitationTypeValueObject::new );
+        Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = createValueObjectCache( data,
+                BulkExpressionDataVector::getBioAssayDimension, BioAssayDimensionValueObject::new );
+        Map<ArrayDesign, ArrayDesignValueObject> adVos = createValueObjectCache( data,
+                vec -> vec.getDesignElement().getArrayDesign(), ArrayDesignValueObject::new );
         for ( BulkExpressionDataVector v : data ) {
             result.put( v.getDesignElement(),
-                    new DoubleVectorValueObject( v, eeVos.get( v.getExpressionExperiment() ), qtVos.get( v.getQuantitationType() ), badVos.get( v.getBioAssayDimension() ), null ) );
+                    new DoubleVectorValueObject( v, eeVos.get( v.getExpressionExperiment() ),
+                            qtVos.get( v.getQuantitationType() ), badVos.get( v.getBioAssayDimension() ),
+                            adVos.get( v.getDesignElement().getArrayDesign() ), null ) );
         }
         return result;
     }
 
     private Collection<BooleanVectorValueObject> unpackBooleans( Collection<? extends BulkExpressionDataVector> data ) {
         Collection<BooleanVectorValueObject> result = new HashSet<>();
-        Map<ExpressionExperiment, ExpressionExperimentValueObject> eeVos = createValueObjectCache( data, BulkExpressionDataVector::getExpressionExperiment, ExpressionExperimentValueObject::new );
-        Map<QuantitationType, QuantitationTypeValueObject> qtVos = createValueObjectCache( data, BulkExpressionDataVector::getQuantitationType, QuantitationTypeValueObject::new );
-        Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = createValueObjectCache( data, BulkExpressionDataVector::getBioAssayDimension, BioAssayDimensionValueObject::new );
+        Map<ExpressionExperiment, ExpressionExperimentValueObject> eeVos = createValueObjectCache( data,
+                BulkExpressionDataVector::getExpressionExperiment, ExpressionExperimentValueObject::new );
+        Map<QuantitationType, QuantitationTypeValueObject> qtVos = createValueObjectCache( data,
+                BulkExpressionDataVector::getQuantitationType, QuantitationTypeValueObject::new );
+        Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = createValueObjectCache( data,
+                BulkExpressionDataVector::getBioAssayDimension, BioAssayDimensionValueObject::new );
+        Map<ArrayDesign, ArrayDesignValueObject> adVos = createValueObjectCache( data,
+                v -> v.getDesignElement().getArrayDesign(), ArrayDesignValueObject::new );
         for ( BulkExpressionDataVector v : data ) {
-            result.add( new BooleanVectorValueObject( v, eeVos.get( v.getExpressionExperiment() ), qtVos.get( v.getQuantitationType() ), badVos.get( v.getBioAssayDimension() ) ) );
+            result.add( new BooleanVectorValueObject( v, eeVos.get( v.getExpressionExperiment() ),
+                    qtVos.get( v.getQuantitationType() ), badVos.get( v.getBioAssayDimension() ),
+                    adVos.get( v.getDesignElement().getArrayDesign() ) ) );
         }
         return result;
     }
@@ -700,13 +715,11 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
      *              for
      *              details.
      */
-    private <S, T> Map<S, T> createValueObjectCache( Collection<? extends BulkExpressionDataVector> vectors, Function<BulkExpressionDataVector, S> keyExtractor, Function<S, T> valueExtractor ) {
+    private <S, T> Map<S, T> createValueObjectCache( Collection<? extends BulkExpressionDataVector> vectors,
+            Function<BulkExpressionDataVector, S> keyExtractor, Function<S, T> valueExtractor ) {
         Map<S, T> result = new HashMap<>();
         for ( BulkExpressionDataVector v : vectors ) {
-            S key = keyExtractor.apply( v );
-            if ( !result.containsKey( key ) ) {
-                result.put( key, valueExtractor.apply( key ) );
-            }
+            result.computeIfAbsent( keyExtractor.apply( v ), valueExtractor );
         }
         return result;
     }

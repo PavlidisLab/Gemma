@@ -4,6 +4,7 @@ import org.hibernate.Hibernate;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
@@ -26,6 +27,10 @@ public class Thaws {
         Hibernate.initialize( br.getMeshTerms() );
         Hibernate.initialize( br.getKeywords() );
         Hibernate.initialize( br.getChemicals() );
+    }
+
+    public static void thawBioAssayDimension( BioAssayDimension bioAssayDimension ) {
+        bioAssayDimension.getBioAssays().forEach( Thaws::thawBioAssay );
     }
 
     /**

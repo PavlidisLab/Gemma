@@ -21,24 +21,24 @@ package ubic.gemma.model.expression.bioAssayData;
 import lombok.Data;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 import java.util.Arrays;
 
 /**
+ * Value object for a {@link BulkExpressionDataVector} containing booleans.
+ * <p>
  * This is used to represent missing value data.
- *
  * @author paul
  */
 @Data
 public class BooleanVectorValueObject extends DataVectorValueObject {
 
-    private static final long serialVersionUID = 1L;
-
     private boolean[] data;
 
-    public BooleanVectorValueObject( BulkExpressionDataVector dedv, ExpressionExperimentValueObject eevo, QuantitationTypeValueObject qtvo, BioAssayDimensionValueObject badvo ) {
-        super( dedv, eevo, qtvo, badvo, null );
+    public BooleanVectorValueObject( BulkExpressionDataVector dedv, ExpressionExperimentValueObject eevo, QuantitationTypeValueObject qtvo, BioAssayDimensionValueObject badvo, ArrayDesignValueObject advo ) {
+        super( dedv, eevo, qtvo, badvo, advo, null );
         if ( !dedv.getQuantitationType().getRepresentation().equals( PrimitiveType.BOOLEAN ) ) {
             throw new IllegalArgumentException( "Can only store boolean vectors, got " + dedv.getQuantitationType() );
         }

@@ -26,7 +26,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
 import ubic.basecode.graphics.ColorMap;
@@ -53,13 +53,15 @@ import java.io.IOException;
 import java.util.List;
 import java.util.*;
 
+import static ubic.gemma.model.expression.experiment.ExperimentalDesignUtils.measurement2double;
+
 /**
  * Tools for visualizing experimental designs. The idea is to generate an overview of the design that can be put over
  * heat maps or line graphs.
  *
  * @author paul
  */
-@Component
+@Service
 public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalDesignVisualizationService {
 
     @Value
@@ -70,12 +72,9 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
     }
 
     private final Log log = LogFactory.getLog( this.getClass().getName() );
-    private final ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    public ExperimentalDesignVisualizationServiceImpl( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
+    private ExpressionExperimentService expressionExperimentService;
 
     @Override
     public Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> sortVectorDataByDesign(
@@ -354,7 +353,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         // This is the place the actual sort order is determined.
         List<BioMaterial> bms = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( mat, primaryFactor );
 
-        Map<Long, Double> fvV = new HashMap<>();
+        Map<FactorValue, Double> fvV = new HashMap<>();
 
         if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             // Case of no experimental design; just put in a dummy factor.
@@ -382,9 +381,21 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
                 // this can happen if the design isn't complete.
                 continue;
             }
-            for ( FactorValue fv : ef.getFactorValues() ) {
-                // the id is just used as a convenience.
-                fvV.put( fv.getId(), new Double( fv.getId() ) );
+            if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
+                for ( FactorValue fv : ef.getFactorValues() ) {
+                    double value;
+                    if ( fv.getMeasurement() != null ) {
+                        value = measurement2double( fv.getMeasurement() );
+                    } else {
+                        log.warn( fv + " is continuous, but lacking a measurement, will use NaN." );
+                        value = Double.NaN;
+                    }
+                    fvV.put( fv, value );
+                }
+            } else {
+                for ( FactorValue fv : ef.getFactorValues() ) {
+                    fvV.put( fv, fv.getId().doubleValue() );
+                }
             }
         }
 
@@ -403,20 +414,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
             result.put( baVo, new LinkedHashMap<>( fvs.size() ) );
             for ( FactorValue fv : fvs ) {
                 ExperimentalFactor ef = fv.getExperimentalFactor();
-                Double value;
-                if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
-                    if ( fv.getMeasurement() != null && fv.getMeasurement().getValue() != null ) {
-                        try {
-                            value = Double.parseDouble( fv.getMeasurement().getValue() );
-                        } catch ( NumberFormatException e ) {
-                            value = Double.NaN;
-                        }
-                    } else {
-                        value = Double.NaN;
-                    }
-                } else {
-                    value = fvV.get( fv.getId() ); // we use IDs to stratify the groups.
-                }
+                Double value = fvV.get( fv ); // we use IDs to stratify the groups.
                 result.get( baVo ).put( ef, value );
             }
         }
@@ -428,12 +426,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
      */
     private ExpressionExperiment getExperimentForVector( DoubleVectorValueObject vec, Map<Long, ExpressionExperiment> eeCache ) {
         Long eeId = getExperimentIdForVector( vec );
-        ExpressionExperiment ee = eeCache.get( eeId );
-        if ( ee == null ) {
-            ee = expressionExperimentService.loadAndThawLiteOrFail( eeId, NullPointerException::new, "No ExpressionExperiment with ID " + eeId + "." );
-            eeCache.put( eeId, ee );
-        }
-        return ee;
+        return eeCache.computeIfAbsent( eeId, eeId2 -> expressionExperimentService.loadAndThawLiteOrFail( eeId2, NullPointerException::new, "No ExpressionExperiment with ID " + eeId + "." ) );
     }
 
     private Long getExperimentIdForVector( DoubleVectorValueObject vec ) {
@@ -450,13 +443,15 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         return eeId;
     }
 
+    /**
+     * Retrieve all the BADs for the experiment, including those from subsets.
+     */
     private Collection<BioAssayDimension> getBioAssayDimensionsForExperiment( ExpressionExperiment ee, Map<ExpressionExperiment, Collection<BioAssayDimension>> bdsCache ) {
-        Collection<BioAssayDimension> bds = bdsCache.get( ee );
-        if ( bds == null ) {
-            bds = expressionExperimentService.getBioAssayDimensions( ee );
-            bdsCache.put( ee, bds );
-        }
-        return bds;
+        return bdsCache.computeIfAbsent( ee, expressionExperiment -> {
+            HashSet<BioAssayDimension> dimensions = new HashSet<>( expressionExperimentService.getBioAssayDimensions( expressionExperiment ) );
+            dimensions.addAll( expressionExperimentService.getBioAssayDimensionsFromSubSets( expressionExperiment ) );
+            return dimensions;
+        } );
     }
 
     /**
@@ -502,6 +497,10 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
             ExpressionExperiment ee = this.getExperimentForVector( vec, eeCache );
             Collection<BioAssayDimension> bioAssayDimensions = getBioAssayDimensionsForExperiment( ee, bdsCache );
+
+            if ( bioAssayDimensions.isEmpty() ) {
+                throw new IllegalStateException( "There are no BADs for " + ee );
+            }
 
             boolean isSubset = vec.getExpressionExperiment() instanceof ExpressionExperimentSubsetValueObject;
 

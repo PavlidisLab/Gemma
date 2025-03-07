@@ -18,6 +18,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -39,6 +40,6 @@ public interface ExperimentalDesignVisualizationService {
      * @return Map of EE ids to "layouts", which are Maps of BioAssays to map of experimental factors to doubles.
      */
     Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> sortVectorDataByDesign(
-            Collection<DoubleVectorValueObject> dedVs, ExperimentalFactor primaryFactor );
+            Collection<DoubleVectorValueObject> dedVs, @Nullable ExperimentalFactor primaryFactor );
 
 }

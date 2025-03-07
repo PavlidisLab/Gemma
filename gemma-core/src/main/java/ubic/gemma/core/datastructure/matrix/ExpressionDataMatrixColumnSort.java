@@ -24,7 +24,6 @@ import org.springframework.util.Assert;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
@@ -592,7 +591,7 @@ public class ExpressionDataMatrixColumnSort {
      * Organize by id, because the order we got the samples in the first place is a reasonable fallback.
      */
     private static void sortBioMaterials( List<BioMaterial> biomaterials ) {
-        biomaterials.sort( Comparator.comparing( BioMaterial::getId ) );
+        biomaterials.sort( Comparator.comparing( BioMaterial::getName ) );
     }
 
     /**
@@ -620,20 +619,6 @@ public class ExpressionDataMatrixColumnSort {
      */
     private static void sortIfMeasurement( List<FactorValue> factorValues ) {
         ExpressionDataMatrixColumnSort.log.debug( "Sorting measurements" );
-        factorValues.sort( Comparator.comparing( FactorValue::getMeasurement,
-                Comparator.nullsLast( Comparator.comparing( Measurement::getValue,
-                        Comparator.nullsLast( ( v1, v2 ) -> {
-                            try {
-                                double d1 = Double.parseDouble( v1 );
-                                double d2 = Double.parseDouble( v2 );
-                                if ( d1 < d2 )
-                                    return -1;
-                                else if ( d1 > d2 )
-                                    return 1;
-                                return 0;
-                            } catch ( NumberFormatException e ) {
-                                return v1.compareTo( v2 );
-                            }
-                        } ) ) ) ) );
+        factorValues.sort( Comparator.comparing( FactorValue::getMeasurement, Comparator.nullsLast( Comparator.comparingDouble( ExperimentalDesignUtils::measurement2double ) ) ) );
     }
 }

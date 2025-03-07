@@ -1222,10 +1222,17 @@ public class ExpressionExperimentServiceImpl
         Collection<BioAssayDimension> bioAssayDimensions = this.expressionExperimentDao
                 .getBioAssayDimensions( expressionExperiment );
         Collection<BioAssayDimension> thawedBioAssayDimensions = new HashSet<>();
-        for ( BioAssayDimension bioAssayDimension : bioAssayDimensions ) {
-            thawedBioAssayDimensions.add( this.bioAssayDimensionService.thaw( bioAssayDimension ) );
-        }
-        return thawedBioAssayDimensions;
+        bioAssayDimensions.forEach( Thaws::thawBioAssayDimension );
+        return bioAssayDimensions;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<BioAssayDimension> getBioAssayDimensionsFromSubSets( ExpressionExperiment expressionExperiment ) {
+        Collection<BioAssayDimension> bioAssayDimensions = this.expressionExperimentDao
+                .getBioAssayDimensionsFromSubSets( expressionExperiment );
+        bioAssayDimensions.forEach( Thaws::thawBioAssayDimension );
+        return bioAssayDimensions;
     }
 
     @Override

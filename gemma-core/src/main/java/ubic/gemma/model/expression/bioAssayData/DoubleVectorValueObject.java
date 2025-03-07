@@ -28,44 +28,54 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubsetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 import javax.annotation.Nullable;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import static ubic.gemma.core.util.StringUtils.abbreviateInBytes;
-
 /**
- * Simple wrapper for a double[] that is derived from a DesignElementDataVector.
+ * Value object for a {@link BulkExpressionDataVector} containing doubles.
  *
  * @author paul
  */
 @Data
 public class DoubleVectorValueObject extends DataVectorValueObject {
 
-    private static final long serialVersionUID = -5116242513725297615L;
-
-    private double[] data = null;
-    private boolean masked = false;
+    /**
+     * The data of this vector.
+     */
+    private double[] data;
+    /**
+     * Indicate if this vector is "masked", i.e. it is processed.
+     */
+    private boolean masked;
     /**
      * True if the data has been rearranged relative to the bioassay dimension (as a matter of practice the
      * bioassay dimension should be set to null if it is not valid; this boolean is an additional check)
      */
-    private boolean reorganized = false;
-    private Double pvalue;
+    private boolean reorganized;
+
     private Double rank;
     private Double rankByMax;
     private Double rankByMean;
+
+    /**
+     * If this vector is associated to a statistical test (i.e. from a DE analysis), this is the P-value.
+     */
+    @Nullable
+    private Double pvalue;
 
     public DoubleVectorValueObject() {
 
     }
 
+    /**
+     * @see #DoubleVectorValueObject(BulkExpressionDataVector, ExpressionExperimentValueObject, QuantitationTypeValueObject, BioAssayDimensionValueObject, ArrayDesignValueObject, Collection)
+     */
     public DoubleVectorValueObject( BulkExpressionDataVector dedv, ExpressionExperimentValueObject eevo,
-            QuantitationTypeValueObject qtvo, BioAssayDimensionValueObject badVo, @Nullable Collection<Long> genes ) {
-        super( dedv, eevo, qtvo, badVo, genes );
+            QuantitationTypeValueObject qtvo, BioAssayDimensionValueObject badVo, ArrayDesignValueObject advo, @Nullable Collection<Long> genes ) {
+        super( dedv, eevo, qtvo, badVo, advo, genes );
         QuantitationType qt = dedv.getQuantitationType();
         if ( !qt.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
             throw new IllegalArgumentException(
@@ -94,12 +104,20 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      *
      * @param dimToMatch ensure that the vector missing values to match the locations of any bioassays in dimToMatch
      *        that aren't in the dedv's bioAssayDimension.
-     * @param genes genes
      * @param dedv dedv
+     * @param eevo         a VO for the experiment
+     * @param qtvo         a VO for the quantitation type
      * @param vectorsBadVo BA dimension vo
+     * @param genes        a collection of gene IDs that correspond to the design element of this vector, or null to
+     *                     ignore
+     * @param dimToMatch   a dimension that the data should be aligned with, this will result in "gaps" where the
+     *                     provided vector is lacking assays
      */
-    public DoubleVectorValueObject( BulkExpressionDataVector dedv, ExpressionExperimentValueObject eevo, QuantitationTypeValueObject qtvo, BioAssayDimensionValueObject vectorsBadVo, @Nullable Collection<Long> genes, BioAssayDimension dimToMatch ) {
-        this( dedv, eevo, qtvo, vectorsBadVo, genes );
+    public DoubleVectorValueObject( BulkExpressionDataVector dedv, ExpressionExperimentValueObject eevo,
+            QuantitationTypeValueObject qtvo, BioAssayDimensionValueObject vectorsBadVo,
+            ArrayDesignValueObject advo, @Nullable Collection<Long> genes,
+            BioAssayDimensionValueObject dimToMatch ) {
+        this( dedv, eevo, qtvo, vectorsBadVo, advo, genes );
         if ( dimToMatch.getBioAssays().size() != this.data.length ) {
             this.addGaps( dimToMatch );
         }
@@ -147,15 +165,14 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
 
     /**
      * Crate a vector that is a slice of this one.
+     * <p>
      * Create a vector that is a slice of another one. The bioassays chosen are as given in the supplied
      * bioassay dimension.
      *
      * @param subset a subset by which we are slicing
      * @param bad all we nee is the id, the name and the list of bioassays from this.S
-     * @param vec VO
      */
-    public SlicedDoubleVectorValueObject slice( ExpressionExperimentSubSet subset, BioAssayDimensionValueObject bad ) {
-        Assert.isTrue( subset.getSourceExperiment().getId().equals( getExpressionExperiment().getId() ), "The subset must belong to " + getExpressionExperiment() + "." );
+    public SlicedDoubleVectorValueObject slice( ExpressionExperimentSubsetValueObject subset, BioAssayDimensionValueObject bad ) {
         return new SlicedDoubleVectorValueObject( this, subset, bad );
     }
 
@@ -174,11 +191,10 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         return copy;
     }
 
-    private void addGaps( BioAssayDimension dimToMatch ) {
-        BioAssayDimensionValueObject sourceBioAssayDimension = new BioAssayDimensionValueObject( dimToMatch );
+    private void addGaps( BioAssayDimensionValueObject sourceBioAssayDimension ) {
         List<BioAssayValueObject> dimToMatchBioAssays = sourceBioAssayDimension.getBioAssays();
 
-        double[] expandedData = new double[dimToMatch.getBioAssays().size()];
+        double[] expandedData = new double[sourceBioAssayDimension.getBioAssays().size()];
 
         Map<BioMaterialValueObject, BioAssayValueObject> bmap = new HashMap<>();
         ArrayDesignValueObject arrayDesign = null;

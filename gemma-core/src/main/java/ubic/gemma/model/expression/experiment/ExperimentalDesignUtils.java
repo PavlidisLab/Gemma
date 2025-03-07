@@ -24,7 +24,6 @@ import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.measurement.Measurement;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 import javax.annotation.Nullable;
@@ -234,7 +233,7 @@ public class ExperimentalDesignUtils {
                         continue;
                     }
 
-                    Double v = Double.parseDouble( fv.getMeasurement().getValue() );
+                    double v = measurement2double( fv.getMeasurement() );
                     sortedVals.put( v, fv );
                 }
 
@@ -316,6 +315,28 @@ public class ExperimentalDesignUtils {
         }
 
         return result;
+    }
+
+    /**
+     * Convert a measurement to a double. Missing values are treated as NaNs.
+     * @throws UnsupportedOperationException if the measurement representation is not supported
+     */
+    public static double measurement2double( Measurement measurement ) {
+        if ( measurement.getValue() == null ) {
+            return Double.NaN;
+        }
+        switch ( measurement.getRepresentation() ) {
+            case FLOAT:
+                return measurement.getValueAsFloat();
+            case DOUBLE:
+                return measurement.getValueAsDouble();
+            case INT:
+                return measurement.getValueAsInt();
+            case LONG:
+                return measurement.getValueAsLong();
+            default:
+                throw new UnsupportedOperationException( "Unsupported measurement type: " + measurement.getRepresentation() );
+        }
     }
 
     /**
@@ -434,32 +455,13 @@ public class ExperimentalDesignUtils {
             if ( factorValue.getMeasurement() == null ) {
                 throw new IllegalStateException( "Measurement is null for continuous factor value " + factorValue + "." );
             }
-            return extractMeasurement( factorValue.getMeasurement() );
+            return measurement2double( factorValue.getMeasurement() );
         } else {
             /*
              * We always use a dummy value. It's not as human-readable but at least we're sure it is unique and
              * R-compliant. (assuming the fv is persistent!)
              */
             return nameForR( factorValue, isBaseline );
-        }
-    }
-
-    /**
-     * Extract the value of a measurement.
-     */
-    private static double extractMeasurement( Measurement measurement ) {
-        Assert.isTrue( measurement.getRepresentation() == PrimitiveType.DOUBLE,
-                "Only double is supported as representation for measurements." );
-        if ( measurement.getValue() == null ) {
-            // NaN cannot be stored in the database, so we use null to indicate it
-            return Double.NaN;
-        } else {
-            try {
-                return Double.parseDouble( measurement.getValue() );
-            } catch ( NumberFormatException e ) {
-                log.error( "Could not parse value from " + measurement + ", it will be treated as NaN.", e );
-                return Double.NaN;
-            }
         }
     }
 }

@@ -58,7 +58,7 @@ public class RandomSingleCellDataUtils {
     public static List<SingleCellExpressionDataVector> randomSingleCellVectors( int numDesignElements, int numSamples, int numCellsPerBioAssay, double sparsity, ScaleType scaleType ) {
         ArrayDesign arrayDesign = new ArrayDesign();
         for ( int i = 0; i < numDesignElements; i++ ) {
-            arrayDesign.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "cs" + i ) );
+            arrayDesign.getCompositeSequences().add( CompositeSequence.Factory.newInstance( "cs" + i, arrayDesign ) );
         }
         ExpressionExperiment ee = new ExpressionExperiment();
         for ( int i = 0; i < numSamples; i++ ) {

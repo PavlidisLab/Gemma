@@ -70,8 +70,7 @@ public class BioAssayDimensionServiceImpl
     @Transactional(readOnly = true)
     public BioAssayDimension thaw( BioAssayDimension bioAssayDimension ) {
         bioAssayDimension = loadOrFail( bioAssayDimension.getId() );
-        Hibernate.initialize( bioAssayDimension );
-        bioAssayDimension.getBioAssays().forEach( Thaws::thawBioAssay );
+        Thaws.thawBioAssayDimension( bioAssayDimension );
         return bioAssayDimension;
     }
 

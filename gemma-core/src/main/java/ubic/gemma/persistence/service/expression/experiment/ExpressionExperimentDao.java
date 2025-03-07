@@ -176,6 +176,14 @@ public interface ExpressionExperimentDao
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment );
 
     /**
+     * Retrieve {@link BioAssayDimension} that are used by subsets of a given {@link ExpressionExperiment}.
+     * <p>
+     * This covers cases where BAs in a subset are not the same as the BAs in the experiment such as for single-cell
+     * data where we use sub-assays.
+     */
+    Collection<BioAssayDimension> getBioAssayDimensionsFromSubSets( ExpressionExperiment expressionExperiment );
+
+    /**
      * @param dataVectorType the type of data vectors to consider, this is necessary because otherwise all the vector
      *                       tables would have to be looked at
      * @throws org.hibernate.NonUniqueResultException if there is more than one dimension for the given set of vectors

@@ -22,6 +22,7 @@ import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 
 import javax.annotation.Nullable;
+import javax.persistence.Transient;
 import java.util.Objects;
 
 public class Measurement extends AbstractIdentifiable {
@@ -87,6 +88,47 @@ public class Measurement extends AbstractIdentifiable {
     public void setValue( @Nullable String value ) {
         this.value = value;
     }
+
+    @Transient
+    public int getValueAsInt() {
+        ensureRepresentation( PrimitiveType.INT );
+        return value != null ? Integer.parseInt( value ) : 0;
+    }
+
+    @Transient
+    public long getValueAsLong() {
+        ensureRepresentation( PrimitiveType.LONG );
+        return value != null ? Long.parseLong( value ) : 0L;
+    }
+
+    @Transient
+    public float getValueAsFloat() {
+        ensureRepresentation( PrimitiveType.FLOAT );
+        return value != null ? Float.parseFloat( value ) : Float.NaN;
+    }
+
+    /**
+     * Retrieve the value of this measurement as a double.
+     * <p>
+     * Any missing value (i.e. null) will be returned as a {@link Double#NaN}.
+     */
+    @Transient
+    public double getValueAsDouble() {
+        ensureRepresentation( PrimitiveType.DOUBLE );
+        return value != null ? Double.parseDouble( value ) : Double.NaN;
+    }
+
+    public void setValueAsDouble( double value ) {
+        ensureRepresentation( PrimitiveType.DOUBLE );
+        this.value = String.valueOf( value );
+    }
+
+    private void ensureRepresentation( PrimitiveType representation ) {
+        if ( this.representation != representation ) {
+            throw new IllegalStateException( "THis measurement stores values of type " + this.representation + ", but " + representation + " was requested." );
+        }
+    }
+
 
     @Override
     public int hashCode() {

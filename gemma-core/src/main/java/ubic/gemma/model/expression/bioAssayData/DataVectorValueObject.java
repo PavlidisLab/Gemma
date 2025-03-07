@@ -21,6 +21,7 @@ package ubic.gemma.model.expression.bioAssayData;
 import lombok.Data;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySetValueObject;
@@ -32,12 +33,11 @@ import java.util.List;
 import java.util.Objects;
 
 /**
+ * Base class for value objects of {@link BulkExpressionDataVector}.
  * @author paul
  */
 @Data
 public abstract class DataVectorValueObject extends IdentifiableValueObject<DataVector> {
-
-    private static final long serialVersionUID = 4291090102921066018L;
 
     private BioAssaySetValueObject expressionExperiment;
     private CompositeSequenceValueObject designElement;
@@ -57,11 +57,11 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
         super( id );
     }
 
-    protected DataVectorValueObject( BulkExpressionDataVector dedv, ExpressionExperimentValueObject eevo, QuantitationTypeValueObject qtVo, BioAssayDimensionValueObject badvo, @Nullable Collection<Long> genes ) {
+    protected DataVectorValueObject( BulkExpressionDataVector dedv, ExpressionExperimentValueObject eevo, QuantitationTypeValueObject qtVo, BioAssayDimensionValueObject badvo, ArrayDesignValueObject advo, @Nullable Collection<Long> genes ) {
         super( dedv );
         this.bioAssayDimension = badvo;
         this.quantitationType = qtVo;
-        this.designElement = new CompositeSequenceValueObject( dedv.getDesignElement() );
+        this.designElement = new CompositeSequenceValueObject( dedv.getDesignElement(), advo );
         this.expressionExperiment = eevo;
         this.genes = genes;
     }

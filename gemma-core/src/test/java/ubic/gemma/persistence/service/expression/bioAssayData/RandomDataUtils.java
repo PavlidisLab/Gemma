@@ -79,6 +79,9 @@ class RandomDataUtils {
     }
 
     private static double[] sample( QuantitationType qt, int n ) {
+        if ( n == 0 ) {
+            return new double[0];
+        }
         if ( qt.getScale() == ScaleType.PERCENT ) {
             return uniform100Distribution.sample( n );
         } else if ( qt.getScale() == ScaleType.PERCENT1 ) {

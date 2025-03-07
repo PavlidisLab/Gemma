@@ -48,6 +48,8 @@ import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
 
+import static ubic.gemma.model.expression.experiment.ExperimentalDesignUtils.measurement2double;
+
 /**
  * Perform SVD on expression data and store the results.
  *
@@ -99,27 +101,11 @@ public class SVDServiceImpl implements SVDService {
         for ( FactorValue fv : bm.getAllFactorValues() ) {
             ExperimentalFactor experimentalFactor = fv.getExperimentalFactor();
             double valueToStore;
-            if ( experimentalFactor.getType().equals( FactorType.CONTINUOUS ) ) {
-                if ( fv.getMeasurement() != null && fv.getMeasurement().getValue() != null ) { // continuous
-                    try {
-                        switch ( fv.getMeasurement().getRepresentation() ) {
-                            case INT:
-                                valueToStore = Integer.parseInt( fv.getMeasurement().getValue() );
-                                break;
-                            case LONG:
-                                valueToStore = Long.parseLong( fv.getMeasurement().getValue() );
-                                break;
-                            case DOUBLE:
-                                valueToStore = Double.parseDouble( fv.getMeasurement().getValue() );
-                                break;
-                            default:
-                                // non-numerical measurement can be treated as categorical
-                                valueToStore = fv.getId().doubleValue();
-                        }
-                    } catch ( NumberFormatException e ) {
-                        valueToStore = Double.NaN; // due to a missing value
-                    }
+            if ( experimentalFactor.getType() == FactorType.CONTINUOUS ) {
+                if ( fv.getMeasurement() != null ) { // continuous
+                    valueToStore = measurement2double( fv.getMeasurement() );
                 } else {
+                    log.warn( fv + " is continuous, but lacking a measurement, will use NaN." );
                     valueToStore = Double.NaN;
                 }
             } else {
