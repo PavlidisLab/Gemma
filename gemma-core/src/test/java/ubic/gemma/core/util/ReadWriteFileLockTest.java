@@ -3,9 +3,11 @@ package ubic.gemma.core.util;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.channels.OverlappingFileLockException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -15,18 +17,33 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 public class ReadWriteFileLockTest {
 
     @Test
-    public void test() throws IOException {
+    public void test() throws IOException, InterruptedException {
         Path tempDir = Files.createTempDirectory( "test" );
         ReadWriteFileLock lock = ReadWriteFileLock.open( tempDir.resolve( "test.txt" ) );
 
+        assertThat( tryLockInSubprocess( tempDir.resolve( "test.txt" ), true ) )
+                .isTrue();
+
         lock.writeLock().lock();
+        assertThatPosixLockExists( tempDir.resolve( "test.txt" ), false );
+        assertThat( tryLockInSubprocess( tempDir.resolve( "test.txt" ), true ) )
+                .isFalse();
         Files.write( lock.getPath(), Collections.singleton( "Hello world!" ), StandardCharsets.UTF_8 );
         lock.writeLock().unlock();
+        assertThatPosixLockDoesNotExist( tempDir.resolve( "test.txt" ), true );
 
         lock.readLock().lock();
+        assertThatPosixLockExists( tempDir.resolve( "test.txt" ), true );
+        assertThat( tryLockInSubprocess( tempDir.resolve( "test.txt" ), true ) )
+                .isTrue();
+        assertThat( tryLockInSubprocess( tempDir.resolve( "test.txt" ), false ) )
+                .isFalse();
         assertThat( Files.readAllLines( lock.getPath(), StandardCharsets.UTF_8 ) )
                 .containsExactly( "Hello world!" );
         lock.readLock().unlock();
+        assertThatPosixLockDoesNotExist( tempDir.resolve( "test.txt" ), true );
+        assertThat( tryLockInSubprocess( tempDir.resolve( "test.txt" ), false ) )
+                .isTrue();
 
         // make sure the write lock is re-usable
         lock.writeLock().lock();
@@ -38,6 +55,25 @@ public class ReadWriteFileLockTest {
         assertThat( Files.readAllLines( lock.getPath(), StandardCharsets.UTF_8 ) )
                 .containsExactly( "Hello world!" );
         lock.readLock().unlock();
+    }
+
+    /**
+     * Locks are not allowed to overlap within the same JVM.
+     */
+    @Test
+    public void testOverlappingLocks() throws IOException {
+        Path tempDir = Files.createTempDirectory( "test" );
+        ReadWriteFileLock lock = ReadWriteFileLock.open( tempDir.resolve( "test.txt" ) );
+        lock.readLock().lock();
+
+        ReadWriteFileLock lock2 = ReadWriteFileLock.open( tempDir.resolve( "test.txt" ) );
+        assertThatThrownBy( () -> lock2.readLock().lock() )
+                .isInstanceOf( OverlappingFileLockException.class );
+
+        lock.readLock().unlock();
+
+        lock2.readLock().lock();
+        lock2.readLock().unlock();
     }
 
     @Test
@@ -132,5 +168,43 @@ public class ReadWriteFileLockTest {
         lock.readLock().unlock();
         assertThatThrownBy( () -> lock.readLock().unlock() )
                 .isInstanceOf( IllegalMonitorStateException.class );
+    }
+
+    /**
+     * Try locking a given path in a subprocess.
+     * @return true if the lock was acquired, false otherwise
+     */
+    private boolean tryLockInSubprocess( Path path, boolean shared ) throws IOException, InterruptedException {
+        int ret = new ProcessBuilder()
+                .command( "java", "src/test/java/ubic/gemma/core/util/ReadWriteFileLockTestScript.java", path.toString(), shared ? "shared" : "exclusive" )
+                .inheritIO()
+                .start()
+                .waitFor();
+        switch ( ret ) {
+            case 0:
+                return true;
+            case 2:
+                return false;
+            default:
+                throw new RuntimeException( "LockFile failed with exit code " + ret + "." );
+        }
+    }
+
+    private void assertThatPosixLockExists( Path path, boolean shared ) throws IOException {
+        // TODO: get the PID, Java 9 has an API for that
+        String pid = "\\d+";
+        Long inode = ( Long ) Files.getAttribute( path, "unix:ino" );
+        assertThat( Paths.get( "/proc/locks" ) )
+                .content( StandardCharsets.UTF_8 )
+                .containsPattern( ".*: POSIX  ADVISORY  " + ( shared ? "READ" : "WRITE" ) + " " + pid + " .+:.+:" + inode + " 0 EOF" );
+    }
+
+    private void assertThatPosixLockDoesNotExist( Path path, boolean shared ) throws IOException {
+        // TODO: get the PID, Java 9 has an API for that
+        String pid = "\\d+";
+        Long inode = ( Long ) Files.getAttribute( path, "unix:ino" );
+        assertThat( Paths.get( "/proc/locks" ) )
+                .content( StandardCharsets.UTF_8 )
+                .doesNotContainPattern( ".*: POSIX  ADVISORY  " + ( shared ? "READ" : "WRITE" ) + " " + pid + " .+:.+:" + inode + " 0 EOF" );
     }
 }
