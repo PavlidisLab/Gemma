@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static ubic.gemma.core.util.test.TestProcessUtils.startJavaProcess;
 
 public class ReadWriteFileLockTest {
 
@@ -175,11 +176,7 @@ public class ReadWriteFileLockTest {
      * @return true if the lock was acquired, false otherwise
      */
     private boolean tryLockInSubprocess( Path path, boolean shared ) throws IOException, InterruptedException {
-        int ret = new ProcessBuilder()
-                .command( "java", "src/test/java/ubic/gemma/core/util/ReadWriteFileLockTestScript.java", path.toString(), shared ? "shared" : "exclusive" )
-                .inheritIO()
-                .start()
-                .waitFor();
+        int ret = startJavaProcess( ReadWriteFileLockTestScript.class, path.toString(), shared ? "shared" : "exclusive" ).waitFor();
         switch ( ret ) {
             case 0:
                 return true;
