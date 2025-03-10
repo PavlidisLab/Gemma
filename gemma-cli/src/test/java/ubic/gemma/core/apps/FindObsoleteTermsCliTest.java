@@ -14,6 +14,7 @@ import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.util.GemmaRestApiClient;
+import ubic.gemma.core.util.TestCliContext;
 import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 
@@ -80,7 +81,7 @@ public class FindObsoleteTermsCliTest extends BaseCliTest {
     @Test
     @WithMockUser
     public void test() throws TimeoutException {
-        assertEquals( 0, findObsoleteTermsCli.executeCommand() );
+        assertEquals( 0, findObsoleteTermsCli.executeCommand( new TestCliContext( null, new String[0] ) ) );
         verify( ontology1 ).setSearchEnabled( false );
         verify( ontology1 ).setInferenceMode( ubic.basecode.ontology.providers.OntologyService.InferenceMode.NONE );
         verify( ontology1 ).initialize( true, false );

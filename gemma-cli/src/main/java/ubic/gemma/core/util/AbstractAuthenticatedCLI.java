@@ -121,7 +121,7 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if ( authentication != null && authentication.isAuthenticated() ) {
             log.info( String.format( "Logged in as %s", authentication.getPrincipal() ) );
-        } else if ( requireLogin || System.getenv().containsKey( usernameEnv ) ) {
+        } else if ( requireLogin || getCliContext().getEnvironment().containsKey( usernameEnv ) ) {
             String username = getUsername();
             String password = getPassword();
 
@@ -156,23 +156,23 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
     }
 
     private String getUsername() {
-        if ( System.getenv().containsKey( usernameEnv ) ) {
-            return System.getenv().get( usernameEnv );
-        } else if ( System.console() != null ) {
+        if ( getCliContext().getEnvironment().containsKey( usernameEnv ) ) {
+            return getCliContext().getEnvironment().get( usernameEnv );
+        } else if ( getCliContext().getConsole() != null ) {
             log.warn( "The " + usernameEnv + " environment variable is not set, consider setting it to skip this prompt." );
-            return System.console().readLine( "Username: " );
+            return getCliContext().getConsole().readLine( "Username: " );
         } else {
             throw new RuntimeException( String.format( "Could not read the username from the console. Please run Gemma CLI from an interactive shell or provide the %s environment variable.", usernameEnv ) );
         }
     }
 
     private String getPassword() {
-        if ( System.getenv().containsKey( passwordEnv ) ) {
-            return System.getenv().get( passwordEnv );
+        if ( getCliContext().getEnvironment().containsKey( passwordEnv ) ) {
+            return getCliContext().getEnvironment().get( passwordEnv );
         }
 
-        if ( System.getenv().containsKey( passwordCmdEnv ) ) {
-            String passwordCommand = System.getenv().get( passwordCmdEnv );
+        if ( getCliContext().getEnvironment().containsKey( passwordCmdEnv ) ) {
+            String passwordCommand = getCliContext().getEnvironment().get( passwordCmdEnv );
             try {
                 Process proc = Runtime.getRuntime().exec( passwordCommand );
                 if ( proc.waitFor() == 0 ) {
@@ -189,9 +189,9 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
         }
 
         // prompt the user for his password
-        if ( System.console() != null ) {
+        if ( getCliContext().getConsole() != null ) {
             log.warn( "Neither " + passwordEnv + " nor " + passwordCmdEnv + " environment variables are set, consider setting one of those to skip this prompt." );
-            return String.valueOf( System.console().readPassword( "Password: " ) );
+            return String.valueOf( getCliContext().getConsole().readPassword( "Password: " ) );
         } else {
             throw new IllegalArgumentException( String.format( "Could not read the password from the console. Please run Gemma CLI from an interactive shell or provide either the %s or %s environment variables.",
                     passwordEnv, passwordCmdEnv ) );

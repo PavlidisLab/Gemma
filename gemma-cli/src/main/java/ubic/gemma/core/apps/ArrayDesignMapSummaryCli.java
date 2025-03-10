@@ -58,9 +58,9 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
         Collection<ArrayDesign> ads = getArrayDesignService().thaw( getArrayDesignsToProcess() );
         for ( ArrayDesign thawed : ads ) {
             Collection<CompositeSequenceMapSummary> results = arrayDesignMapResultService.summarizeMapResults( thawed );
-            System.out.println( CompositeSequenceMapSummary.HEADER );
+            getCliContext().getOutputStream().println( CompositeSequenceMapSummary.HEADER );
             for ( CompositeSequenceMapSummary summary : results ) {
-                System.out.println( summary );
+                getCliContext().getOutputStream().println( summary );
             }
         }
     }

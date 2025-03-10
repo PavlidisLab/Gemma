@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.mockito.Mockito.*;
+import static ubic.gemma.core.util.test.Assertions.assertThat;
 
 @Deprecated
 @ContextConfiguration
@@ -118,9 +119,11 @@ public class FactorValueMigratorCLITest extends BaseCliTest {
     @Test
     @WithMockUser
     public void testMigrateFactorValues() throws IOException {
-        cli.executeCommand(
-                "-migrationFile", new ClassPathResource( "ubic/gemma/core/apps/factor-value-migration.tsv" ).getFile().getAbsolutePath(),
-                "-batchFormat", "suppress" );
+        assertThat( cli )
+                .withArguments(
+                        "-migrationFile", new ClassPathResource( "ubic/gemma/core/apps/factor-value-migration.tsv" ).getFile().getAbsolutePath(),
+                        "-batchFormat", "suppress" )
+                .succeeds();
         verify( factorValueService, times( 8 ) ).loadWithOldStyleCharacteristics( any(), eq( false ) );
         verify( factorValueService ).saveStatementIgnoreAcl( any(), eq( createStatement( getCategory( 1L, 1L ), "Pax6", "has_modifier", getObject( 1L, 2L ), "has_modifier", getObject( 1L, 3L ) ) ) );
         verify( factorValueService ).saveStatementIgnoreAcl( any(), eq( createStatement( "Gene", "Pax6" ) ) );

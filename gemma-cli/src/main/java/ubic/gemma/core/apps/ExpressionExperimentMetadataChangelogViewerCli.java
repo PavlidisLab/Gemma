@@ -31,7 +31,7 @@ public class ExpressionExperimentMetadataChangelogViewerCli extends ExpressionEx
     @Override
     protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
         try {
-            System.out.print( expressionMetadataChangelogFileService.readChangelog( expressionExperiment ) );
+            getCliContext().getOutputStream().print( expressionMetadataChangelogFileService.readChangelog( expressionExperiment ) );
         } catch ( IOException e ) {
             addErrorObject( expressionExperiment, e );
         }

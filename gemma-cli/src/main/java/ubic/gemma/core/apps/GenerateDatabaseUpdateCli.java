@@ -115,6 +115,6 @@ public class GenerateDatabaseUpdateCli extends AbstractCLI {
     }
 
     public PrintWriter getWriter() throws IOException {
-        return outputFile != null ? new PrintWriter( Files.newBufferedWriter( outputFile ) ) : new PrintWriter( System.out );
+        return outputFile != null ? new PrintWriter( Files.newBufferedWriter( outputFile ) ) : new PrintWriter( getCliContext().getOutputStream() );
     }
 }

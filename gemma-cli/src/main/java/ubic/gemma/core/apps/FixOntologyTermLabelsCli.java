@@ -103,9 +103,9 @@ public class FixOntologyTermLabelsCli extends AbstractAuthenticatedCLI {
 
         Map<String, OntologyTerm> mismatches = ontologyService.fixOntologyTermLabels( dryRun, 4, TimeUnit.HOURS );
 
-        System.out.println( "Wrong_label\tCorrect_Label\tURI" );
+        getCliContext().getOutputStream().println( "Wrong_label\tCorrect_Label\tURI" );
         for ( Map.Entry<String, OntologyTerm> entry : mismatches.entrySet() ) {
-            System.out.println( entry.getKey() + "\t" + entry.getValue().getLabel() + "\t" + entry.getValue().getUri() );
+            getCliContext().getOutputStream().println( entry.getKey() + "\t" + entry.getValue().getLabel() + "\t" + entry.getValue().getUri() );
         }
 
 

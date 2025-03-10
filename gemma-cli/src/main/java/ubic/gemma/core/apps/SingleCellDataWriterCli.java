@@ -262,7 +262,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                 return Files.newOutputStream( outputFile );
             }
         } else {
-            return System.out;
+            return getCliContext().getOutputStream();
         }
     }
 }

@@ -98,20 +98,20 @@ public class ExternalFileGeneLoaderCLI extends AbstractAuthenticatedCLI {
      * Main entry point to service class which reads a gene file and persists the genes in that file.
      */
     @Override
-    protected void doAuthenticatedWork() throws Exception {
+    protected void doAuthenticatedWork( ) throws Exception {
         try {
             int count = loader.load( directGeneInputFileName, taxonName );
-            System.out.println( count + " genes loaded successfully " );
+            getCliContext().getOutputStream().println( count + " genes loaded successfully " );
         } catch ( IOException e ) {
-            System.out.println( "File could not be read: " + e.getMessage() );
+            getCliContext().getOutputStream().println( "File could not be read: " + e.getMessage() );
             throw new RuntimeException( e );
         } catch ( IllegalArgumentException e ) {
-            System.out.println(
+            getCliContext().getOutputStream().println(
                     "One of the programme arguments were incorrect check gene file is in specified location and taxon is in system."
                             + e.getMessage() );
             throw new RuntimeException( e );
         } catch ( Exception e ) {
-            System.out.println( "Gene file persisting error: " + e.getMessage() );
+            getCliContext().getOutputStream().println( "Gene file persisting error: " + e.getMessage() );
             throw new RuntimeException( e );
         }
     }

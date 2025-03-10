@@ -33,6 +33,7 @@ class BatchTaskExecutorService extends AbstractDelegatingExecutorService {
 
     private final BatchFormat batchFormat;
     private final Path batchOutputFile;
+    private final CliContext cliContext;
 
     private final AtomicInteger batchTaskCounter = new AtomicInteger( 0 );
     private final AtomicInteger completedBatchTasks = new AtomicInteger( 0 );
@@ -44,10 +45,11 @@ class BatchTaskExecutorService extends AbstractDelegatingExecutorService {
     private final List<BatchProcessingResult> batchProcessingResults = Collections.synchronizedList( new ArrayList<>() );
     private boolean hasErrorObjects = false;
 
-    public BatchTaskExecutorService( ExecutorService delegate, BatchFormat batchFormat, @Nullable Path batchOutputFile ) {
+    public BatchTaskExecutorService( ExecutorService delegate, BatchFormat batchFormat, @Nullable Path batchOutputFile, CliContext cliContext ) {
         super( delegate );
         this.batchFormat = batchFormat;
         this.batchOutputFile = batchOutputFile;
+        this.cliContext = cliContext;
     }
 
     private final ThreadLocal<Boolean> wasSuccessObjectAdded = ThreadLocal.withInitial( () -> false );
@@ -228,10 +230,10 @@ class BatchTaskExecutorService extends AbstractDelegatingExecutorService {
         try ( Writer dest = batchOutputFile != null ? Files.newBufferedWriter( batchOutputFile ) : null ) {
             switch ( batchFormat ) {
                 case TEXT:
-                    summarizeBatchProcessingToText( dest != null ? dest : System.out );
+                    summarizeBatchProcessingToText( dest != null ? dest : cliContext.getOutputStream() );
                     break;
                 case TSV:
-                    summarizeBatchProcessingToTsv( dest != null ? dest : System.out );
+                    summarizeBatchProcessingToTsv( dest != null ? dest : cliContext.getOutputStream() );
                     break;
                 case SUPPRESS:
                     break;

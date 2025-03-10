@@ -385,7 +385,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 //            log.info( "File contained " + genes.size() + " potential gene symbols" );
 //
 //            int numProcessed = arrayDesignAnnotationService
-//                    .generateAnnotationFile( new PrintWriter( System.out ), genes );
+//                    .generateAnnotationFile( new PrintWriter( getCliContext().getOutputStream() ), genes );
 //            log.info( "Processed " + numProcessed + " genes that were found" );
 //        }
 //    }
@@ -399,7 +399,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         Collection<Gene> genes = geneService.loadAll( taxon );
         log.info( "Taxon has " + genes.size() + " 'known' genes" );
         int numProcessed = arrayDesignAnnotationService
-                .generateAnnotationFile( new PrintWriter( System.out ), genes, useGO );
+                .generateAnnotationFile( new PrintWriter( getCliContext().getOutputStream() ), genes, useGO );
         log.info( "Processed " + numProcessed + " genes that were found" );
     }
 

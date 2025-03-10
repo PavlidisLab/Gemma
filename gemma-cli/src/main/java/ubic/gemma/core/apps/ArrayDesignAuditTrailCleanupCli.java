@@ -83,10 +83,10 @@ public class ArrayDesignAuditTrailCleanupCli extends ArrayDesignSequenceManipula
 
                 List<AuditEvent> evs = eventsByType.get( k );
 
-                System.err.println( "------------------------" );
-                System.err.println( k );
+                getCliContext().getErrorStream().println( "------------------------" );
+                getCliContext().getErrorStream().println( k );
                 for ( AuditEvent ae : evs ) {
-                    System.err.println( ae.getDate() + " " + ae.getNote() );
+                    getCliContext().getErrorStream().println( ae.getDate() + " " + ae.getNote() );
                 }
 
                 // possibly keep subsumption and merge events no matter what. ArrayDesignSubsumeCheckEvent ArrayDesignMergeEvent

@@ -96,9 +96,9 @@ public class FindObsoleteTermsCli extends AbstractAuthenticatedCLI {
 
         log.info( "Obsolete term check finished, printing ..." );
 
-        System.out.println( "Value\tValueUri\tCount" );
+        getCliContext().getOutputStream().println( "Value\tValueUri\tCount" );
         for ( Map.Entry<OntologyTerm, Long> vo : vos.entrySet() ) {
-            System.out.println( vo.getKey().getLabel() + "\t" + vo.getKey().getUri() + "\t" + vo.getValue() );
+            getCliContext().getOutputStream().println( vo.getKey().getLabel() + "\t" + vo.getKey().getUri() + "\t" + vo.getValue() );
         }
     }
 }

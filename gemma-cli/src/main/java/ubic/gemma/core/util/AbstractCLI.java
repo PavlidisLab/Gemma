@@ -23,6 +23,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.ocpsoft.prettytime.shade.edu.emory.mathcs.backport.java.util.Collections;
 import org.springframework.util.Assert;
 
 import javax.annotation.Nullable;
@@ -59,11 +60,11 @@ public abstract class AbstractCLI implements CLI {
     /**
      * Exit code used for a successful doWork execution that resulted in failed error objects.
      */
-    protected static final int FAILURE_FROM_ERROR_OBJECTS = 1;
+    protected static final int FAILURE_FROM_ERROR_OBJECTS = 2;
     /**
      * Exit code used when a {@link #doWork()} is aborted.
      */
-    protected static final int ABORTED = 2;
+    protected static final int ABORTED = 3;
 
     private static final String THREADS_OPTION = "threads";
     private static final String HELP_OPTION = "h";
@@ -71,6 +72,11 @@ public abstract class AbstractCLI implements CLI {
     private static final String BATCH_FORMAT_OPTION = "batchFormat";
     private static final String BATCH_OUTPUT_FILE_OPTION = "batchOutputFile";
 
+    /**
+     * CLI context.
+     */
+    @Nullable
+    private CliContext cliContext;
     /**
      * Indicate if this CLI allows positional arguments.
      */
@@ -99,6 +105,27 @@ public abstract class AbstractCLI implements CLI {
     private BatchTaskExecutorService executorService;
 
     @Override
+    public String getCommandName() {
+        return null;
+    }
+
+    @Override
+    public List<String> getCommandAliases() {
+        //noinspection unchecked
+        return Collections.emptyList();
+    }
+
+    @Override
+    public String getShortDesc() {
+        return null;
+    }
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.MISC;
+    }
+
+    @Override
     public Options getOptions() {
         Options options = new Options();
         buildStandardOptions( options );
@@ -121,14 +148,27 @@ public abstract class AbstractCLI implements CLI {
      * objects will result in a value of {@link #FAILURE_FROM_ERROR_OBJECTS}.
      */
     @Override
-    public int executeCommand( String... args ) {
+    public final int executeCommand( CliContext cliContext ) {
+        Assert.state( this.cliContext == null, "There is already a CLI context." );
+        try {
+            this.cliContext = cliContext;
+            return executeCommandWithCliContext();
+        } finally {
+            this.cliContext = null;
+        }
+    }
+
+    /**
+     * Execute a command with a {@link CliContext} set.
+     */
+    private int executeCommandWithCliContext() {
         Options options = getOptions();
         try {
             DefaultParser parser = new DefaultParser();
-            CommandLine commandLine = parser.parse( options, args );
+            CommandLine commandLine = parser.parse( options, getCliContext().getArguments() );
             // check if -h/--help is provided before pursuing option processing
             if ( commandLine.hasOption( HELP_OPTION ) ) {
-                printHelp( options, new PrintWriter( System.out, true ) );
+                printHelp( options, new PrintWriter( getCliContext().getOutputStream(), true ) );
                 return SUCCESS;
             }
             if ( !allowPositionalArguments && !commandLine.getArgList().isEmpty() ) {
@@ -139,21 +179,21 @@ public abstract class AbstractCLI implements CLI {
         } catch ( ParseException e ) {
             if ( e instanceof MissingOptionException ) {
                 // check if -h/--help was passed alongside a required argument
-                if ( ArrayUtils.contains( args, "-h" ) || ArrayUtils.contains( args, "--help" ) ) {
-                    printHelp( options, new PrintWriter( System.out, true ) );
+                if ( ArrayUtils.contains( getCliContext().getArguments(), "-h" ) || ArrayUtils.contains( getCliContext().getArguments(), "--help" ) ) {
+                    printHelp( options, new PrintWriter( getCliContext().getOutputStream(), true ) );
                     return SUCCESS;
                 }
-                System.err.println( "Required option(s) were not supplied: " + e.getMessage() );
+                getCliContext().getErrorStream().println( "Required option(s) were not supplied: " + e.getMessage() );
             } else if ( e instanceof AlreadySelectedException ) {
-                System.err.println( "The option(s) " + e.getMessage() + " were already selected" );
+                getCliContext().getErrorStream().println( "The option(s) " + e.getMessage() + " were already selected" );
             } else if ( e instanceof MissingArgumentException ) {
-                System.err.println( "Missing argument: " + e.getMessage() );
+                getCliContext().getErrorStream().println( "Missing argument: " + e.getMessage() );
             } else if ( e instanceof UnrecognizedOptionException ) {
-                System.err.println( "Unrecognized option: " + e.getMessage() );
+                getCliContext().getErrorStream().println( "Unrecognized option: " + e.getMessage() );
             } else {
-                System.err.println( e.getMessage() );
+                getCliContext().getErrorStream().println( e.getMessage() );
             }
-            printHelp( options, new PrintWriter( System.err, true ) );
+            printHelp( options, new PrintWriter( getCliContext().getErrorStream(), true ) );
             return FAILURE;
         }
         try {
@@ -181,6 +221,16 @@ public abstract class AbstractCLI implements CLI {
                 executorService = null;
             }
         }
+    }
+
+    /**
+     * Obtain the CLI context.
+     * <p>
+     * This is only valid for the duration of the {@link #executeCommand(CliContext)} method.
+     */
+    protected final CliContext getCliContext() {
+        Assert.state( cliContext != null, "The CLI context can only be obtained during the execution of the command." );
+        return cliContext;
     }
 
     private void printHelp( Options options, PrintWriter writer ) {
@@ -212,7 +262,7 @@ public abstract class AbstractCLI implements CLI {
      * <p>
      * You may also use {@link #getNumThreads()} to retrieve the number of threads to use.
      */
-    protected void addThreadsOption( Options options ) {
+    protected final void addThreadsOption( Options options ) {
         Assert.state( !options.hasOption( THREADS_OPTION ), "The -" + THREADS_OPTION + " option was already added." );
         options.addOption( Option.builder( THREADS_OPTION )
                 .longOpt( "threads" )
@@ -227,7 +277,7 @@ public abstract class AbstractCLI implements CLI {
      * <p>
      * These options allow the user to control how and where batch processing results are summarized.
      */
-    protected void addBatchOption( Options options ) {
+    protected final void addBatchOption( Options options ) {
         Assert.state( !options.hasOption( BATCH_FORMAT_OPTION ), "The -" + BATCH_FORMAT_OPTION + " option was already added." );
         options.addOption( BATCH_FORMAT_OPTION, true, "Format to use to the batch summary" );
         options.addOption( Option.builder( BATCH_OUTPUT_FILE_OPTION ).hasArg().type( Path.class ).desc( "Output file to use for the batch summary (default is standard output)" ).build() );
@@ -239,11 +289,11 @@ public abstract class AbstractCLI implements CLI {
      * <p>
      * Those arguments can be retrieved in {@link #processOptions(CommandLine)} by using {@link CommandLine#getArgList()}.
      */
-    protected void setAllowPositionalArguments() {
+    protected final void setAllowPositionalArguments() {
         this.allowPositionalArguments = true;
     }
 
-    protected int getNumThreads() {
+    protected final int getNumThreads() {
         return numThreads;
     }
 
@@ -258,7 +308,9 @@ public abstract class AbstractCLI implements CLI {
      * <p>
      * This is called right after {@link #buildStandardOptions(Options)} so the options will be added after standard options.
      */
-    protected abstract void buildOptions( Options options );
+    protected void buildOptions( Options options ) {
+
+    }
 
     /**
      * Somewhat annoying: This causes subclasses to be unable to safely use 'h', 'p', 'u' and 'P' etc. for their own
@@ -295,7 +347,8 @@ public abstract class AbstractCLI implements CLI {
      * @throws ParseException in case of unrecoverable failure (i.e. missing option or invalid value), an exception can
      *                        be raised and will result in an exit code of {@link #FAILURE}.
      */
-    protected abstract void processOptions( CommandLine commandLine ) throws ParseException;
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
+    }
 
     /**
      * Default workflow of a CLI.
@@ -325,20 +378,29 @@ public abstract class AbstractCLI implements CLI {
     /**
      * Prompt the user for a confirmation or raise an exception to abort the {@link #doWork()} method.
      */
-    protected void promptConfirmationOrAbort( String message ) throws Exception {
-        if ( System.console() == null ) {
+    protected final void promptConfirmationOrAbort( String confirmationMessage ) throws Exception {
+        if ( getCliContext().getConsole() == null ) {
             throw new IllegalStateException( "A console must be available for prompting confirmation." );
         }
-        String line = System.console().readLine( "WARNING: %s\nWARNING: Enter YES to continue: ",
-                message.replaceAll( "\n", "\nWARNING: " ) );
+        String line = getCliContext().getConsole().readLine( "WARNING: %s\nWARNING: Enter YES to continue: ",
+                confirmationMessage.replaceAll( "\n", "\nWARNING: " ) );
         if ( "YES".equals( line.trim() ) ) {
             return;
         }
-        throw new WorkAbortedException( "Confirmation failed, the command cannot proceed." );
+        abort( "Confirmation failed, the command cannot proceed." );
     }
 
     /**
-     * Exception raised when a {@link #doWork()} aborted by the user.
+     * Abort the execution of the CLI with the given message.
+     * <p>
+     * The CLI will exit with the {@link #ABORTED} exit code as a result.
+     */
+    protected final void abort( String message ) throws Exception {
+        throw new WorkAbortedException( message );
+    }
+
+    /**
+     * Exception raised when a {@link AbstractCLI#doWork()} aborted by the user.
      */
     private static class WorkAbortedException extends Exception {
 
@@ -352,14 +414,14 @@ public abstract class AbstractCLI implements CLI {
      * @param successObject object that was processed
      * @param message       success message
      */
-    protected void addSuccessObject( Object successObject, String message ) {
+    protected final void addSuccessObject( Object successObject, String message ) {
         getBatchTaskExecutorInternal().addSuccessObject( successObject, message );
     }
 
     /**
      * @see #addSuccessObject(Object, String)
      */
-    protected void addSuccessObject( Object successObject ) {
+    protected final void addSuccessObject( Object successObject ) {
         getBatchTaskExecutorInternal().addSuccessObject( successObject );
     }
 
@@ -372,7 +434,7 @@ public abstract class AbstractCLI implements CLI {
      * @param message     error message
      * @param throwable   throwable to produce a stacktrace
      */
-    protected void addErrorObject( @Nullable Object errorObject, String message, Throwable throwable ) {
+    protected final void addErrorObject( @Nullable Object errorObject, String message, Throwable throwable ) {
         getBatchTaskExecutorInternal().addErrorObject( errorObject, message, throwable );
         log.error( "Error while processing " + ( errorObject != null ? errorObject : "unknown object" ) + ":\n\t" + message, throwable );
     }
@@ -382,7 +444,7 @@ public abstract class AbstractCLI implements CLI {
      *
      * @see #addErrorObject(Object, String)
      */
-    protected void addErrorObject( @Nullable Object errorObject, String message ) {
+    protected final void addErrorObject( @Nullable Object errorObject, String message ) {
         getBatchTaskExecutorInternal().addErrorObject( errorObject, message );
         log.error( "Error while processing " + ( errorObject != null ? errorObject : "unknown object" ) + ":\n\t" + message );
     }
@@ -392,7 +454,7 @@ public abstract class AbstractCLI implements CLI {
      *
      * @see #addErrorObject(Object, String, Throwable)
      */
-    protected void addErrorObject( @Nullable Object errorObject, Exception exception ) {
+    protected final void addErrorObject( @Nullable Object errorObject, Exception exception ) {
         getBatchTaskExecutorInternal().addErrorObject( errorObject, exception );
         log.error( "Error while processing " + ( errorObject != null ? errorObject : "unknown object" ), exception );
     }
@@ -414,9 +476,9 @@ public abstract class AbstractCLI implements CLI {
      * Internal batch task executor, because {@link BatchTaskExecutorService} is package-private.
      */
     private BatchTaskExecutorService getBatchTaskExecutorInternal() {
-        Assert.isTrue( insideDoWork, "Batch tasks can only be submitted in doWork()." );
+        Assert.state( insideDoWork, "Batch tasks can only be submitted in doWork()." );
         if ( executorService == null ) {
-            executorService = new BatchTaskExecutorService( createBatchTaskExecutorService(), batchFormat, batchOutputFile );
+            executorService = new BatchTaskExecutorService( createBatchTaskExecutorService(), batchFormat, batchOutputFile, getCliContext() );
         }
         return executorService;
     }
@@ -437,7 +499,7 @@ public abstract class AbstractCLI implements CLI {
     /**
      * Await the completion of all batch tasks.
      */
-    protected void awaitBatchExecutorService() throws InterruptedException {
+    protected final void awaitBatchExecutorService() throws InterruptedException {
         if ( executorService == null ) {
             return;
         }

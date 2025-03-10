@@ -453,7 +453,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
                     if ( !this.useDB ) {
                         log.info( "**** Writing to STDOUT instead of the database ***" );
-                        System.out.print( config );
+                        getCliContext().getOutputStream().print( config );
                     }
 
                     try {

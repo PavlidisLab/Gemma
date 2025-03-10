@@ -42,6 +42,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static ubic.gemma.core.util.test.Assertions.assertThat;
 
 @ContextConfiguration
 @TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
@@ -174,7 +175,9 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
     @Test
     @WithMockUser
     public void testPaired() {
-        cli.executeCommand( "-e", "GSE000001", "-rpkm", rpkmFile, "-a", "test", "-rlen", "36:paired" );
+        assertThat( cli )
+                .withArguments( "-e", "GSE000001", "-rpkm", rpkmFile, "-a", "test", "-rlen", "36:paired" )
+                .succeeds();
         ArgumentCaptor<Map<BioAssay, SequencingMetadata>> captor = ArgumentCaptor.captor();
         verify( dataUpdater ).addCountData( same( ee ), same( ad ), isNull(), any(), captor.capture(), eq( false ) );
         assertThat( captor.getValue() )
@@ -190,7 +193,9 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
     @Test
     @WithMockUser
     public void testUnpaired() {
-        cli.executeCommand( "-e", "GSE000001", "-rpkm", rpkmFile, "-a", "test", "-rlen", "36:unpaired" );
+        assertThat( cli )
+                .withArguments( "-e", "GSE000001", "-rpkm", rpkmFile, "-a", "test", "-rlen", "36:unpaired" )
+                .succeeds();
         ArgumentCaptor<Map<BioAssay, SequencingMetadata>> captor = ArgumentCaptor.captor();
         verify( dataUpdater ).addCountData( same( ee ), same( ad ), isNull(), any(), captor.capture(), eq( false ) );
         assertThat( captor.getValue() )
@@ -206,7 +211,9 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
     @Test
     @WithMockUser
     public void testWhenPairednessIsUnknown() {
-        cli.executeCommand( "-e", "GSE000001", "-rpkm", rpkmFile, "-a", "test", "-rlen", "36" );
+        assertThat( cli )
+                .withArguments( "-e", "GSE000001", "-rpkm", rpkmFile, "-a", "test", "-rlen", "36" )
+                .succeeds();
         ArgumentCaptor<Map<BioAssay, SequencingMetadata>> captor = ArgumentCaptor.captor();
         verify( dataUpdater ).addCountData( same( ee ), same( ad ), isNull(), any(), captor.capture(), eq( false ) );
         assertThat( captor.getValue() )

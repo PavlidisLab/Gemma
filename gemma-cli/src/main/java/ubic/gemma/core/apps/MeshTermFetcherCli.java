@@ -132,7 +132,7 @@ public class MeshTermFetcherCli extends AbstractCLI {
         Collection<BibliographicReference> refs = fetcher.retrieveByHTTP( ids );
 
         for ( BibliographicReference r : refs ) {
-            System.out.print( r.getPubAccession().getAccession() + "\t" );
+            getCliContext().getOutputStream().print( r.getPubAccession().getAccession() + "\t" );
             Collection<MedicalSubjectHeading> meshTerms = r.getMeshTerms();
             List<String> t = new ArrayList<>();
             for ( MedicalSubjectHeading mesh : meshTerms ) {
@@ -143,9 +143,9 @@ public class MeshTermFetcherCli extends AbstractCLI {
             }
 
             Collections.sort( t );
-            System.out.print( StringUtils.join( t, "|" ) );
+            getCliContext().getOutputStream().print( StringUtils.join( t, "|" ) );
 
-            System.out.print( "\n" );
+            getCliContext().getOutputStream().print( "\n" );
         }
     }
 

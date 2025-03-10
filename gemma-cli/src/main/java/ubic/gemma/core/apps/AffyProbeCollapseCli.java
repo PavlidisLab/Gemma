@@ -89,7 +89,7 @@ public class AffyProbeCollapseCli extends ArrayDesignSequenceManipulatingCli {
 
             BioSequence collapsed = SequenceManipulation.collapse( apr.get( newCompositeSequence ) );
             String sequenceName = newCompositeSequence.getName() + "_collapsed";
-            System.out.println( ">" + newCompositeSequence.getName() + "\t" + sequenceName + "\n" + collapsed.getSequence() + "\n" );
+            getCliContext().getOutputStream().println( ">" + newCompositeSequence.getName() + "\t" + sequenceName + "\n" + collapsed.getSequence() + "\n" );
         }
     }
 

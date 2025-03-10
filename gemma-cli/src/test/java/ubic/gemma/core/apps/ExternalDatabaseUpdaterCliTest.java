@@ -26,6 +26,7 @@ import java.net.URL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
+import static ubic.gemma.core.util.test.Assertions.assertThat;
 
 @ContextConfiguration
 @TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
@@ -95,7 +96,9 @@ public class ExternalDatabaseUpdaterCliTest extends BaseCliTest {
         when( userManager.getCurrentUser() ).thenReturn( user );
         when( externalDatabaseService.findByNameWithAuditTrail( "test" ) ).thenReturn( ed );
         when( externalDatabaseService.findByNameWithExternalDatabases( "test2" ) ).thenReturn( ed2 );
-        externalDatabaseUpdaterCli.executeCommand( new String[] { "--name", "test", "--description", "Youpi!", "--release", "--release-note", "Yep", "--release-version", "123", "--release-url", "http://example.com/test", "--parent-database", "test2" } );
+        assertThat( externalDatabaseUpdaterCli )
+                .withArguments( "--name", "test", "--description", "Youpi!", "--release", "--release-note", "Yep", "--release-version", "123", "--release-url", "http://example.com/test", "--parent-database", "test2" )
+                .succeeds();
         verify( externalDatabaseService ).findByNameWithExternalDatabases( "test2" );
         verify( externalDatabaseService ).findByNameWithAuditTrail( "test" );
         assertThat( ed.getDescription() ).isEqualTo( "Youpi!" );

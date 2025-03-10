@@ -667,8 +667,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      * @param defaultText a default text to be shown in the editor, or null to keep the file empty
      */
     protected String readChangelogEntryFromConsole( ExpressionExperiment expressionExperiment, @Nullable String defaultText ) throws IOException, InterruptedException {
-        Assert.notNull( System.console(), "An interactive console is required to read the changelog entry." );
-        String editorBin = System.getenv( "EDITOR" );
+        Assert.notNull( getCliContext().getConsole(), "An interactive console is required to read the changelog entry." );
+        String editorBin = getCliContext().getEnvironment().get( "EDITOR" );
         if ( editorBin == null ) {
             editorBin = "nano";
         }

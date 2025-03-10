@@ -19,13 +19,13 @@ public class ListQuantitationTypesCli extends ExpressionExperimentVectorsManipul
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        System.out.println( formatExperiment( expressionExperiment ) );
+        getCliContext().getOutputStream().println( formatExperiment( expressionExperiment ) );
         super.processExpressionExperiment( expressionExperiment );
     }
 
     @Override
     protected void processExpressionExperimentVectors( ExpressionExperiment ee, QuantitationType qt ) {
-        System.out.println( "\t" + qt );
+        getCliContext().getOutputStream().println( "\t" + qt );
     }
 
     @Nullable

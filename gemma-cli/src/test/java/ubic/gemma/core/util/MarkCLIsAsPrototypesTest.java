@@ -2,6 +2,7 @@ package ubic.gemma.core.util;
 
 import org.apache.commons.cli.Options;
 import org.junit.Test;
+import org.ocpsoft.prettytime.shade.edu.emory.mathcs.backport.java.util.Collections;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -11,6 +12,7 @@ import ubic.gemma.core.apps.TestCli;
 import ubic.gemma.core.util.test.BaseCliIntegrationTest;
 
 import javax.annotation.Nullable;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
@@ -77,6 +79,11 @@ public class MarkCLIsAsPrototypesTest extends BaseCliIntegrationTest {
             return "";
         }
 
+        @Override
+        public List<String> getCommandAliases() {
+            return Collections.emptyList();
+        }
+
         @Nullable
         @Override
         public String getShortDesc() {
@@ -99,7 +106,7 @@ public class MarkCLIsAsPrototypesTest extends BaseCliIntegrationTest {
         }
 
         @Override
-        public int executeCommand( String... args ) {
+        public int executeCommand( CliContext ctx ) {
             return 0;
         }
     }

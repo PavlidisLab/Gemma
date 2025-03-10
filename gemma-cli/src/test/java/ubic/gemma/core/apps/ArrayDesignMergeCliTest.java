@@ -25,8 +25,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
+import static ubic.gemma.core.util.test.Assertions.assertThat;
 
 @ContextConfiguration
 @TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
@@ -111,8 +111,9 @@ public class ArrayDesignMergeCliTest extends BaseCliTest {
         when( arrayDesignService.thaw( any( ArrayDesign.class ) ) ).thenAnswer( args -> args.getArgument( 0 ) );
         when( arrayDesignService.thaw( anyCollection() ) ).thenAnswer( args -> args.getArgument( 0 ) );
         Collection<ArrayDesign> otherPlatforms = new HashSet<>( Arrays.asList( b, c ) );
-        assertThat( arrayDesignMergeCli.executeCommand( "-a", "1", "-o", "2,3", "-s", "4", "-n", "four is better than one" ) )
-                .isEqualTo( 0 );
+        assertThat( arrayDesignMergeCli )
+                .withArguments( "-a", "1", "-o", "2,3", "-s", "4", "-n", "four is better than one" )
+                .succeeds();
         verify( arrayDesignMergeService ).merge( a, otherPlatforms, "four is better than one", "4", false );
     }
 }

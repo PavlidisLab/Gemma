@@ -31,7 +31,7 @@ public class SingleCellDataDownloaderCliTest extends BaseCliTest {
     @Test
     public void test() {
         assertThat( singleCellDataDownloaderCli )
-                .withCommand( "-e", "GSE1234" )
+                .withArguments( "-e", "GSE1234" )
                 .succeeds();
     }
 }

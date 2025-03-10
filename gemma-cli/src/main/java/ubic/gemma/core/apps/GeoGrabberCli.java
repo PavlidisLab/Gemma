@@ -451,7 +451,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
             }
             return Files.newBufferedWriter( outputFileName );
         } else {
-            return System.out;
+            return getCliContext().getOutputStream();
         }
     }
 

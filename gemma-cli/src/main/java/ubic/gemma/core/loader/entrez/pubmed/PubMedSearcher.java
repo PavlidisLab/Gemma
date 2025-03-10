@@ -75,7 +75,7 @@ public class PubMedSearcher extends AbstractAuthenticatedCLI {
         Collection<BibliographicReference> refs = pubMedSearcher
                 .searchAndRetrieveByHTTP( this.args );
 
-        System.out.println( refs.size() + " references found" );
+        getCliContext().getOutputStream().println( refs.size() + " references found" );
 
         if ( this.persist ) {
             persisterHelper.persist( refs );

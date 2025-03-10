@@ -4,6 +4,7 @@ import org.apache.commons.cli.Options;
 import ubic.gemma.core.apps.GemmaCLI;
 
 import javax.annotation.Nullable;
+import java.util.List;
 
 /**
  * Interface for CLI tools.
@@ -21,6 +22,11 @@ public interface CLI {
      */
     @Nullable
     String getCommandName();
+
+    /**
+     * A list of aliases for the command that can be used to locate this class.
+     */
+    List<String> getCommandAliases();
 
     /**
      * Obtain a short description for this command explaining what it does.
@@ -47,7 +53,7 @@ public interface CLI {
      * Execute the given command given CLI arguments.
      * @return an exit code
      */
-    int executeCommand( String... args );
+    int executeCommand( CliContext ctx );
 
     // order here is significant.
     enum CommandGroup {
