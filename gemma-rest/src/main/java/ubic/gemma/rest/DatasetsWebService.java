@@ -1445,7 +1445,7 @@ public class DatasetsWebService {
                 throw new ServiceUnavailableException( "MEX single-cell data for " + qt + " is still being generated.", 30L, e );
             } catch ( RejectedExecutionException e ) {
                 throw new ServiceUnavailableException( "Too many file generation tasks are being processed at this time.", 30L, e );
-            } catch ( InterruptedException e ) {
+            } catch ( IOException | InterruptedException e ) {
                 throw new InternalServerErrorException( e );
             }
         } else {
@@ -1469,7 +1469,7 @@ public class DatasetsWebService {
             } catch ( RejectedExecutionException e ) {
                 log.warn( "Too many file generation tasks are being executed, will stream the single-cell data instead.", e );
                 return streamTabularDatasetSingleCellExpression( ee, qt, download );
-            } catch ( InterruptedException e ) {
+            } catch ( IOException | InterruptedException e ) {
                 throw new InternalServerErrorException( e );
             }
         }

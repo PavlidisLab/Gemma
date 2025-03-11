@@ -301,6 +301,14 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
+    public Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, String filename, boolean exclusive, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException {
+        try ( LockedPath lock = fileLockManager.tryAcquirePathLock( metadataDir.resolve( getEEFolderName( ee ) ).resolve( filename ), exclusive, timeout, timeUnit ) ) {
+            // lock will be managed by the LockedFile
+            return Optional.of( lock.steal() );
+        }
+    }
+
+    @Override
     public Path copyMetadataFile( ExpressionExperiment ee, Path existingFile, ExpressionExperimentMetaFileType type, boolean forceWrite ) throws IOException {
         Assert.isTrue( !type.isDirectory(), "Copy metadata file to a directory is not supported." );
         Assert.isTrue( Files.isReadable( existingFile ), existingFile + " must be readable." );
@@ -350,13 +358,18 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public LockedPath getDataFile( String filename ) {
-        return getOutputFile( filename );
+    public LockedPath getDataFile( String filename, boolean exclusive ) throws IOException {
+        return getOutputFile( filename, exclusive );
     }
 
     @Override
-    public LockedPath getDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException {
-        return getOutputFile( getDataOutputFilename( ee, qt, requireNonNull( getDataSuffix( qt, type ), "Couldn't determine filename suffix for " + qt + " and " + type + "." ) ), timeout, timeUnit );
+    public LockedPath getDataFile( String filename, boolean exclusive, long timeout, TimeUnit timeUnit ) throws IOException, InterruptedException, TimeoutException {
+        return getOutputFile( filename, exclusive, timeout, timeUnit );
+    }
+
+    @Override
+    public LockedPath getDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException, IOException {
+        return getOutputFile( getDataOutputFilename( ee, qt, requireNonNull( getDataSuffix( qt, type ), "Couldn't determine filename suffix for " + qt + " and " + type + "." ) ), false, timeout, timeUnit );
     }
 
     @Nullable
@@ -464,7 +477,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public LockedPath writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) throws IOException {
-        try ( LockedPath dest = getOutputFile( getDataOutputFilename( ee, qt, TABULAR_SC_DATA_SUFFIX ) ) ) {
+        try ( LockedPath dest = getOutputFile( getDataOutputFilename( ee, qt, TABULAR_SC_DATA_SUFFIX ), false ) ) {
             if ( !forceWrite && Files.exists( dest.getPath() ) ) {
                 return dest.steal();
             }
@@ -566,7 +579,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public LockedPath writeOrLocateMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) throws IOException {
-        try ( LockedPath dest = getOutputFile( getDataOutputFilename( ee, qt, MEX_SC_DATA_SUFFIX ) ) ) {
+        try ( LockedPath dest = getOutputFile( getDataOutputFilename( ee, qt, MEX_SC_DATA_SUFFIX ), false ) ) {
             if ( !forceWrite && Files.exists( dest.getPath() ) ) {
                 return dest.steal();
             }
@@ -616,7 +629,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public LockedPath writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite ) throws IOException {
-        try ( LockedPath f = this.getOutputFile( getCoexpressionDataFilename( ee ) ) ) {
+        try ( LockedPath f = this.getOutputFile( getCoexpressionDataFilename( ee ), false ) ) {
             if ( !forceWrite && Files.exists( f.getPath() ) ) {
                 ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
                 return f.steal();
@@ -644,7 +657,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         } else {
             result = getDataOutputFilename( ee, false, TABULAR_BULK_DATA_FILE_SUFFIX );
         }
-        try ( LockedPath f = this.getOutputFile( result ) ) {
+        try ( LockedPath f = this.getOutputFile( result, false ) ) {
             Date check = expressionExperimentService.getLastArrayDesignUpdate( ee );
 
             if ( this.checkFileOkToReturn( forceWrite, f.getPath(), check ) ) {
@@ -676,7 +689,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         } else {
             result = getDataOutputFilename( ee, false, TABULAR_BULK_DATA_FILE_SUFFIX );
         }
-        try ( LockedPath f = this.getOutputFile( result, timeout, timeUnit ) ) {
+        try ( LockedPath f = this.getOutputFile( result, false, timeout, timeUnit ) ) {
             Date check = expressionExperimentService.getLastArrayDesignUpdate( ee );
 
             if ( this.checkFileOkToReturn( forceWrite, f.getPath(), check ) ) {
@@ -701,7 +714,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public LockedPath writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException {
-        try ( LockedPath f = this.getOutputFile( getDataOutputFilename( ee, type, TABULAR_BULK_DATA_FILE_SUFFIX ) ) ) {
+        try ( LockedPath f = this.getOutputFile( getDataOutputFilename( ee, type, TABULAR_BULK_DATA_FILE_SUFFIX ), false ) ) {
             if ( !forceWrite && Files.exists( f.getPath() ) ) {
                 ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
                 return f.steal();
@@ -720,7 +733,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public LockedPath writeOrLocateRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite, long timeout, TimeUnit timeUnit ) throws TimeoutException, IOException, InterruptedException {
-        try ( LockedPath f = this.getOutputFile( getDataOutputFilename( ee, type, TABULAR_BULK_DATA_FILE_SUFFIX ), timeout, timeUnit ) ) {
+        try ( LockedPath f = this.getOutputFile( getDataOutputFilename( ee, type, TABULAR_BULK_DATA_FILE_SUFFIX ), false, timeout, timeUnit ) ) {
             if ( !forceWrite && Files.exists( f.getPath() ) ) {
                 ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
                 return f.steal();
@@ -745,7 +758,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             return Optional.empty();
         }
-        try ( LockedPath f = this.getOutputFile( getDesignFileName( ee ) ) ) {
+        try ( LockedPath f = this.getOutputFile( getDesignFileName( ee ), false ) ) {
             Date check = ee.getCurationDetails().getLastUpdated();
             if ( check != null && this.checkFileOkToReturn( forceWrite, f.getPath(), check ) ) {
                 return Optional.of( f.steal() );
@@ -767,7 +780,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             return Optional.empty();
         }
-        try ( LockedPath f = this.getOutputFile( getDesignFileName( ee ), timeout, timeUnit ) ) {
+        try ( LockedPath f = this.getOutputFile( getDesignFileName( ee ), false, timeout, timeUnit ) ) {
             Date check = ee.getCurationDetails().getLastUpdated();
             if ( check != null && this.checkFileOkToReturn( forceWrite, f.getPath(), check ) ) {
                 return Optional.of( f.steal() );
@@ -801,7 +814,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     private LockedPath writeOrLocateDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, boolean forceCreate ) throws IOException {
         String filename = getDiffExArchiveFileName( analysis );
-        try ( LockedPath f = this.getOutputFile( filename ) ) {
+        try ( LockedPath f = this.getOutputFile( filename, false ) ) {
             // Force create if file is older than one year
             if ( !forceCreate && Files.exists( f.getPath() ) ) {
                 Date d = new Date( f.getPath().toFile().lastModified() );
@@ -847,7 +860,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Override
     public Optional<LockedPath> writeOrLocateJSONProcessedExpressionDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered ) throws FilteringException, IOException {
         // randomize file name if temporary in case of access by more than one user at once
-        try ( LockedPath f = this.getOutputFile( getDataOutputFilename( ee, filtered, JSON_BULK_DATA_FILE_SUFFIX ) ) ) {
+        try ( LockedPath f = this.getOutputFile( getDataOutputFilename( ee, filtered, JSON_BULK_DATA_FILE_SUFFIX ), false ) ) {
             if ( !forceWrite && Files.exists( f.getPath() ) ) {
                 ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
                 return Optional.of( f.steal() );
@@ -871,7 +884,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public LockedPath writeOrLocateJSONRawExpressionDataFile( ExpressionExperiment ee, QuantitationType type, boolean forceWrite ) throws IOException {
-        try ( LockedPath f = getOutputFile( getDataOutputFilename( ee, type, JSON_BULK_DATA_FILE_SUFFIX ) ) ) {
+        try ( LockedPath f = getOutputFile( getDataOutputFilename( ee, type, JSON_BULK_DATA_FILE_SUFFIX ), false ) ) {
             if ( !forceWrite && Files.exists( f.getPath() ) ) {
                 ExpressionDataFileServiceImpl.log.info( f + " exists, not regenerating" );
                 return f.steal();
@@ -927,12 +940,12 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * @param filename without the path - that is, just the name of the file
      * @return File, with location in the appropriate target directory.
      */
-    private LockedPath getOutputFile( String filename ) {
-        return fileLockManager.acquirePathLock( dataDir.resolve( filename ), false );
+    private LockedPath getOutputFile( String filename, boolean exclusive ) throws IOException {
+        return fileLockManager.acquirePathLock( dataDir.resolve( filename ), exclusive );
     }
 
-    private LockedPath getOutputFile( String filename, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException {
-        return fileLockManager.tryAcquirePathLock( dataDir.resolve( filename ), false, timeout, timeUnit );
+    private LockedPath getOutputFile( String filename, boolean exclusive, long timeout, TimeUnit timeUnit ) throws IOException, InterruptedException, TimeoutException {
+        return fileLockManager.tryAcquirePathLock( dataDir.resolve( filename ), exclusive, timeout, timeUnit );
     }
 
     /**

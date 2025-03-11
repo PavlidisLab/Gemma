@@ -92,7 +92,7 @@ public class ExpressionExperimentDataFetchController {
         }
         // exclude any paths leading to the filename
         filename = FilenameUtils.getName( filename );
-        try ( LockedPath file = expressionDataFileService.getDataFile( filename ) ) {
+        try ( LockedPath file = expressionDataFileService.getDataFile( filename, false ) ) {
             if ( !Files.exists( file.getPath() ) ) {
                 throw new EntityNotFoundException( "There is not data file named " + filename + " available for download." );
             }

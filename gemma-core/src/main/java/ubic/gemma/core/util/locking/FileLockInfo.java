@@ -3,6 +3,7 @@ package ubic.gemma.core.util.locking;
 import lombok.Value;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -37,4 +38,22 @@ public class FileLockInfo {
      * When that number goes down to zero, the channel is closed.
      */
     int channelHoldCount;
+    /**
+     * Process-level information about the file lock.
+     */
+    List<ProcessInfo> procInfo;
+
+    /**
+     * Process-level information about the file lock.
+     */
+    @Value
+    public static class ProcessInfo {
+        boolean exclusive;
+        int pid;
+        String majorDevice;
+        String minorDevice;
+        long inode;
+        long start;
+        long length;
+    }
 }

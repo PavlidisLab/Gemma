@@ -114,6 +114,8 @@ public interface ExpressionDataFileService {
 
     Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, String filename, boolean exclusive ) throws IOException;
 
+    Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, String filename, boolean exclusive, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException;
+
     /**
      * Copy a metadata file to the location of a given metadata type.
      * <p>
@@ -150,11 +152,13 @@ public interface ExpressionDataFileService {
     /**
      * Locate any data file in the data directory.
      * <p>
-     * A shared lock is acquired on the path and must be released when reading is done.
+     * @param exclusive if true, acquire an exclusive lock on the file
      */
-    LockedPath getDataFile( String filename );
+    LockedPath getDataFile( String filename, boolean exclusive ) throws IOException;
 
-    LockedPath getDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException;
+    LockedPath getDataFile( String filename, boolean exclusive, long timeout, TimeUnit timeUnit ) throws IOException, InterruptedException, TimeoutException;
+
+    LockedPath getDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type, long timeout, TimeUnit timeUnit ) throws IOException, InterruptedException, TimeoutException;
 
     /**
      * Delete a raw or single-cell data file if it exists.

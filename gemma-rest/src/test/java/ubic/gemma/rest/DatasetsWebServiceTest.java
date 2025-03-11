@@ -724,7 +724,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetSingleCellData() throws InterruptedException, TimeoutException, URISyntaxException {
+    public void testGetDatasetSingleCellData() throws InterruptedException, TimeoutException, URISyntaxException, IOException {
         QuantitationType qt = new QuantitationType();
         when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
                 .thenReturn( Optional.of( qt ) );
@@ -739,7 +739,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetSingleCellDataAsDownload() throws InterruptedException, TimeoutException, URISyntaxException {
+    public void testGetDatasetSingleCellDataAsDownload() throws InterruptedException, TimeoutException, URISyntaxException, IOException {
         QuantitationType qt = new QuantitationType();
         when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
                 .thenReturn( Optional.of( qt ) );
@@ -754,7 +754,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetSingleCellDataAsMex() throws InterruptedException, TimeoutException, URISyntaxException {
+    public void testGetDatasetSingleCellDataAsMex() throws InterruptedException, TimeoutException, URISyntaxException, IOException {
         QuantitationType qt = new QuantitationType();
         when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
                 .thenReturn( Optional.of( qt ) );
