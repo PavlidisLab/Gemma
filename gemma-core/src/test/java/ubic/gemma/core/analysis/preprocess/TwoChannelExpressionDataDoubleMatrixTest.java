@@ -34,6 +34,7 @@ import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -308,7 +309,7 @@ public class TwoChannelExpressionDataDoubleMatrixTest extends AbstractGeoService
 
         Path f1 = expressionDataFileService
                 .writeOrLocateProcessedDataFile( expressionExperimentService.load( newee.getId() ), true, true )
-                .map( ExpressionDataFileService.LockedPath::closeAndGetPath )
+                .map( LockedPath::closeAndGetPath )
                 .orElse( null );
         assertNotNull( f1 );
         assertTrue( Files.exists( f1 ) );

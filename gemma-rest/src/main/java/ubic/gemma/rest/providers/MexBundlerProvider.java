@@ -1,8 +1,8 @@
 package ubic.gemma.rest.providers;
 
 import lombok.extern.apachecommons.CommonsLog;
-import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.io.MexMatrixBundler;
+import ubic.gemma.core.util.locking.LockedPath;
 
 import javax.inject.Singleton;
 import javax.ws.rs.Produces;
@@ -23,18 +23,18 @@ import static ubic.gemma.rest.DatasetsWebService.APPLICATION_10X_MEX_TYPE;
 @Produces(APPLICATION_10X_MEX)
 @Singleton
 @CommonsLog
-public class MexBundlerProvider implements MessageBodyWriter<ExpressionDataFileService.LockedPath> {
+public class MexBundlerProvider implements MessageBodyWriter<LockedPath> {
 
     private final MexMatrixBundler bundler = new MexMatrixBundler();
 
     @Override
     public boolean isWriteable( Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType ) {
-        return ExpressionDataFileService.LockedPath.class.isAssignableFrom( type )
+        return LockedPath.class.isAssignableFrom( type )
                 && APPLICATION_10X_MEX_TYPE.isCompatible( mediaType );
     }
 
     @Override
-    public long getSize( ExpressionDataFileService.LockedPath lockedPath, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType ) {
+    public long getSize( LockedPath lockedPath, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType ) {
         try {
             return bundler.calculateSize( lockedPath.getPath() );
         } catch ( IOException e ) {
@@ -44,7 +44,7 @@ public class MexBundlerProvider implements MessageBodyWriter<ExpressionDataFileS
     }
 
     @Override
-    public void writeTo( ExpressionDataFileService.LockedPath lockedPath, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream ) throws IOException, WebApplicationException {
+    public void writeTo( LockedPath lockedPath, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream ) throws IOException, WebApplicationException {
         try {
             bundler.bundle( lockedPath.getPath(), entityStream );
         } finally {

@@ -27,6 +27,7 @@ import org.springframework.stereotype.Component;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -226,7 +227,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         // we do this here because now we have IDs for everything.
         if ( config.isMakeArchiveFile() ) {
-            try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeDiffExAnalysisArchiveFile( analysis, config ) ) {
+            try ( LockedPath lockedPath = expressionDataFileService.writeDiffExAnalysisArchiveFile( analysis, config ) ) {
                 log.info( "Create archive file at " + lockedPath.getPath() );
             } catch ( IOException e ) {
                 DifferentialExpressionAnalyzerServiceImpl.log

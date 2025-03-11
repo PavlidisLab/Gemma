@@ -12,6 +12,7 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataIntegerMatrix;
 import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
@@ -216,7 +217,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
             switch ( format ) {
                 case TABULAR:
                     if ( standardLocation ) {
-                        try ( ExpressionDataFileService.LockedPath path = expressionDataFileService.writeOrLocateTabularSingleCellExpressionData( ee, qt, useStreaming, fetchSize, isForce() ) ) {
+                        try ( LockedPath path = expressionDataFileService.writeOrLocateTabularSingleCellExpressionData( ee, qt, useStreaming, fetchSize, isForce() ) ) {
                             addSuccessObject( ee, "Written vectors for " + qt + " to " + path.getPath() + "." );
                         }
                     } else {
@@ -228,7 +229,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                     break;
                 case MEX:
                     if ( standardLocation ) {
-                        try ( ExpressionDataFileService.LockedPath path = expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, useStreaming, fetchSize, isForce() ) ) {
+                        try ( LockedPath path = expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, useStreaming, fetchSize, isForce() ) ) {
                             addSuccessObject( ee, "Successfully written vectors for " + qt + " to " + path.getPath() + "." );
                         }
                     } else if ( outputFile == null || outputFile.toString().endsWith( ".tar" ) || outputFile.toString().endsWith( ".tar.gz" ) ) {

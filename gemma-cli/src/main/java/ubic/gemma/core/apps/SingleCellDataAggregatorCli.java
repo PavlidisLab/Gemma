@@ -12,6 +12,7 @@ import ubic.gemma.core.analysis.singleCell.aggregate.AggregateConfig;
 import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentSplitAndAggregateService;
 import ubic.gemma.core.analysis.singleCell.aggregate.SplitConfig;
 import ubic.gemma.core.analysis.singleCell.aggregate.UnsupportedScaleTypeForAggregationException;
+import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -301,7 +302,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
         boolean refreshProcessedVectors = false;
         if ( newQt.getIsPreferred() ) {
             log.info( "Creating a data file for " + newQt + "..." );
-            try ( ExpressionDataFileService.LockedPath lockedFile = expressionDataFileService.writeOrLocateRawExpressionDataFile( expressionExperiment, newQt, true ) ) {
+            try ( LockedPath lockedFile = expressionDataFileService.writeOrLocateRawExpressionDataFile( expressionExperiment, newQt, true ) ) {
                 addSuccessObject( expressionExperiment, "Created a data file for " + newQt + ": " + lockedFile.getPath() );
             } catch ( IOException e ) {
                 addErrorObject( expressionExperiment, "Failed to generate a data file for " + newQt + ".", e );

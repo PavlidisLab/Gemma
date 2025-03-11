@@ -1,4 +1,4 @@
-package ubic.gemma.core.util;
+package ubic.gemma.core.util.locking;
 
 import org.junit.Test;
 

@@ -41,7 +41,8 @@ import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
 import ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter;
 import ubic.gemma.core.datastructure.matrix.io.TabularMatrixWriter;
 import ubic.gemma.core.util.BuildInfo;
-import ubic.gemma.core.util.ReadWriteFileLock;
+import ubic.gemma.core.util.locking.FileLockManager;
+import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -76,8 +77,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
@@ -118,6 +117,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Autowired
     @Qualifier("expressionDataFileTaskExecutor")
     private AsyncTaskExecutor expressionDataFileTaskExecutor;
+    @Autowired
+    private FileLockManager fileLockManager;
 
     @Value("${gemma.appdata.home}/metadata")
     private Path metadataDir;
@@ -251,7 +252,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     private boolean deleteAndLog( Path path ) {
-        try ( LockedPath lockedPath = acquirePathLock( path, true ) ) {
+        try ( LockedPath lockedPath = fileLockManager.acquirePathLock( path, true ) ) {
             if ( Files.deleteIfExists( lockedPath.getPath() ) ) {
                 ExpressionDataFileServiceImpl.log.info( "Deleted: " + lockedPath.getPath() );
                 return true;
@@ -264,7 +265,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type, boolean exclusive ) throws IOException {
-        try ( LockedPathImpl lock = acquirePathLock( metadataDir.resolve( getEEFolderName( ee ) ).resolve( type.getFileName( ee ) ), exclusive ) ) {
+        try ( LockedPath lock = fileLockManager.acquirePathLock( metadataDir.resolve( getEEFolderName( ee ) ).resolve( type.getFileName( ee ) ), exclusive ) ) {
             if ( type.isDirectory() ) {
                 if ( !Files.exists( lock.getPath() ) ) {
                     return Optional.empty();
@@ -292,8 +293,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, String filename, boolean exclusive ) throws IOException {
-        try ( LockedPathImpl lock = acquirePathLock( metadataDir.resolve( getEEFolderName( ee ) ).resolve( filename ), exclusive ) ) {
+    public Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, String filename, boolean exclusive ) {
+        try ( LockedPath lock = fileLockManager.acquirePathLock( metadataDir.resolve( getEEFolderName( ee ) ).resolve( filename ), exclusive ) ) {
             // lock will be managed by the LockedFile
             return Optional.of( lock.steal() );
         }
@@ -324,7 +325,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         if ( !forceWrite && Files.exists( destinationFile ) ) {
             throw new RuntimeException( "Metadata file already exists, use forceWrite is not override." );
         }
-        try ( LockedPath ignored = acquirePathLock( destinationFile, true ) ) {
+        try ( LockedPath ignored = fileLockManager.acquirePathLock( destinationFile, true ) ) {
             PathUtils.createParentDirectories( destinationFile );
             log.info( "Copying metadata file: " + existingFile + " to " + destinationFile + "." );
             Files.copy( existingFile, destinationFile, StandardCopyOption.REPLACE_EXISTING );
@@ -338,7 +339,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Override
     public boolean deleteMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type ) throws IOException {
         Path destinationFile = metadataDir.resolve( getEEFolderName( ee ) ).resolve( type.getFileName( ee ) );
-        try ( LockedPath ignored = acquirePathLock( destinationFile, true ) ) {
+        try ( LockedPath ignored = fileLockManager.acquirePathLock( destinationFile, true ) ) {
             if ( Files.exists( destinationFile ) ) {
                 log.info( "Deleting metadata file: " + destinationFile + "." );
                 PathUtils.delete( destinationFile );
@@ -430,7 +431,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     private boolean deleteDataFileInternal( ExpressionExperiment ee, QuantitationType qt, String suffix ) throws IOException {
-        try ( LockedPath ignored = acquirePathLock( dataDir.resolve( getDataOutputFilename( ee, qt, suffix ) ), true ) ) {
+        try ( LockedPath ignored = fileLockManager.acquirePathLock( dataDir.resolve( getDataOutputFilename( ee, qt, suffix ) ), true ) ) {
             if ( Files.exists( ignored.getPath() ) ) {
                 PathUtils.delete( ignored.getPath() );
                 log.info( "Deleted raw data file: " + ignored.getPath() );
@@ -444,7 +445,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Override
     public boolean deleteDataFile( ExpressionExperiment ee, boolean filtered, ExpressionExperimentDataFileType type ) throws IOException {
         // we still want to delete the file even if there are no processed vectors
-        try ( LockedPath ignored = acquirePathLock( getDataFileInternal( ee, filtered, type ), true ) ) {
+        try ( LockedPath ignored = fileLockManager.acquirePathLock( getDataFileInternal( ee, filtered, type ), true ) ) {
             if ( Files.exists( ignored.getPath() ) ) {
                 PathUtils.delete( ignored.getPath() );
                 log.info( "Deleted processed data file: " + ignored.getPath() + "." );
@@ -530,7 +531,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         if ( !forceWrite && Files.exists( destDir ) ) {
             throw new IllegalArgumentException( "Output directory " + destDir + " already exists." );
         }
-        try ( LockedPath ignored = acquirePathLock( destDir, true ) ) {
+        try ( LockedPath ignored = fileLockManager.acquirePathLock( destDir, true ) ) {
             Map<CompositeSequence, Set<Gene>> cs2gene = new HashMap<>();
             MexMatrixWriter writer = new MexMatrixWriter();
             writer.setScaleType( scaleType );
@@ -827,7 +828,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public LockedPath writeDiffExAnalysisArchiveFile( DifferentialExpressionAnalysis analysis, @Nullable DifferentialExpressionAnalysisConfig config ) throws IOException {
-        try ( LockedPath lockedPath = acquirePathLock( dataDir.resolve( getDiffExArchiveFileName( analysis ) ), true );
+        try ( LockedPath lockedPath = fileLockManager.acquirePathLock( dataDir.resolve( getDiffExArchiveFileName( analysis ) ), true );
                 OutputStream stream = Files.newOutputStream( lockedPath.getPath() ) ) {
             log.info( "Creating differential expression analysis archive file: " + lockedPath.getPath() );
             writeDiffExArchive( analysis, stream );
@@ -927,11 +928,11 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * @return File, with location in the appropriate target directory.
      */
     private LockedPath getOutputFile( String filename ) {
-        return acquirePathLock( dataDir.resolve( filename ), false );
+        return fileLockManager.acquirePathLock( dataDir.resolve( filename ), false );
     }
 
     private LockedPath getOutputFile( String filename, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException {
-        return tryAcquirePathLock( dataDir.resolve( filename ), false, timeout, timeUnit );
+        return fileLockManager.tryAcquirePathLock( dataDir.resolve( filename ), false, timeout, timeUnit );
     }
 
     /**
@@ -947,172 +948,5 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     private OutputStream openFile( Path file ) throws IOException {
         PathUtils.createParentDirectories( file );
         return Files.newOutputStream( file );
-    }
-
-    private final Map<Path, ReadWriteLock> fileLocks = new WeakHashMap<>();
-
-    /**
-     * Lock a given path.
-     * @param exclusive make the lock exclusive for the purpose of creating of modifying the path
-     */
-    private synchronized LockedPathImpl acquirePathLock( Path path, boolean exclusive ) {
-        ReadWriteLock rwLock = fileLocks.computeIfAbsent( path, this::createFileLock );
-        log.debug( "Acquiring " + ( exclusive ? "exclusive" : "shared" ) + " lock on " + path + "..." );
-        if ( exclusive ) {
-            rwLock.writeLock().lock();
-            log.debug( "Got exclusive lock on " + path + "." );
-            return new LockedPathImpl( path, rwLock.writeLock(), false );
-        } else {
-            rwLock.readLock().lock();
-            log.debug( "Got shared lock on " + path + "." );
-            return new LockedPathImpl( path, rwLock.readLock(), true );
-        }
-    }
-
-    /**
-     * Attempt to lock a path.
-     */
-    private synchronized LockedPathImpl tryAcquirePathLock( Path path, boolean exclusive, long timeout, TimeUnit timeUnit ) throws TimeoutException, InterruptedException {
-        ReadWriteLock rwLock = fileLocks.computeIfAbsent( path, this::createFileLock );
-        log.debug( "Acquiring " + ( exclusive ? "exclusive" : "shared" ) + " lock on " + path + "..." );
-        if ( exclusive ) {
-            if ( rwLock.writeLock().tryLock( timeout, timeUnit ) ) {
-                log.debug( "Got exclusive lock on " + path + "." );
-                return new LockedPathImpl( path, rwLock.writeLock(), false );
-            } else {
-                throw new TimeoutException( "Could not acquire exclusive lock on " + path + " within " + timeout + " " + timeUnit + "." );
-            }
-        } else {
-            if ( rwLock.readLock().tryLock( timeout, timeUnit ) ) {
-                log.debug( "Got shared lock on " + path + "." );
-                return new LockedPathImpl( path, rwLock.readLock(), true );
-            } else {
-                throw new TimeoutException( "Could not acquire shared lock on " + path + " within " + timeout + " " + timeUnit + "." );
-            }
-        }
-    }
-
-    /**
-     * Create a file lock for the given path.
-     * @param path        a path to open and lock
-     */
-    private ReadWriteLock createFileLock( Path path ) {
-        Path lockPath = path.resolveSibling( path.getFileName() + ".lock" );
-        try {
-            PathUtils.createParentDirectories( lockPath );
-            return ReadWriteFileLock.open( lockPath );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    private class LockedPathImpl implements LockedPath {
-
-        private final Path path;
-        private final Lock lock;
-        private final boolean shared;
-
-        /**
-         * Indicate if this lock was stolen and thus not to be closed.
-         */
-        private boolean stolen = false;
-
-        /**
-         * Indicate if this lock was converted (ether shared -> exclusive or exclusive -> shared) and thus already
-         * closed.
-         */
-        private boolean converted = false;
-
-        public LockedPathImpl( Path path, Lock lock, boolean shared ) {
-            this.path = path;
-            this.lock = lock;
-            this.shared = shared;
-        }
-
-        @Override
-        public Path getPath() {
-            return path;
-        }
-
-        @Override
-        public boolean isShared() {
-            return shared;
-        }
-
-        @Override
-        public void close() {
-            if ( !stolen && !converted ) {
-                lock.unlock();
-            }
-        }
-
-        @Override
-        public Path closeAndGetPath() {
-            close();
-            return path;
-        }
-
-        @Override
-        public LockedPath toExclusive() {
-            Assert.state( shared, "This lock is already exclusive." );
-            Assert.state( !converted, "This lock was already converted to an exclusive lock." );
-            Assert.state( !stolen, "This lock was stolen." );
-            try {
-                return acquirePathLock( closeAndGetPath(), true );
-            } finally {
-                converted = true;
-            }
-        }
-
-        @Override
-        public LockedPath toExclusive( long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException {
-            Assert.state( shared, "This lock is already exclusive." );
-            Assert.state( !converted, "This lock was already converted to an exclusive lock." );
-            Assert.state( !stolen, "This lock was stolen." );
-            try {
-                return tryAcquirePathLock( closeAndGetPath(), true, timeout, timeUnit );
-            } finally {
-                converted = true;
-            }
-        }
-
-        @Override
-        public LockedPath toShared() {
-            Assert.state( !shared, "This lock is already shared." );
-            Assert.state( !converted, "This lock was already converted to a shared lock." );
-            Assert.state( !stolen, "This lock was stolen." );
-            try {
-                return acquirePathLock( closeAndGetPath(), false );
-            } finally {
-                converted = true;
-            }
-        }
-
-        @Override
-        public LockedPath steal() {
-            Assert.state( !stolen, "This lock was already stolen." );
-            try {
-                return new LockedPathImpl( path, lock, shared );
-            } finally {
-                stolen = true;
-            }
-        }
-
-        /**
-         * Steal this lock with a different path.
-         */
-        public LockedPathImpl stealWithPath( Path file ) {
-            Assert.state( !stolen, "This lock was already stolen." );
-            try {
-                return new LockedPathImpl( file, lock, shared );
-            } finally {
-                stolen = true;
-            }
-        }
-
-        @Override
-        public String toString() {
-            return path + " " + ( shared ? "[shared]" : "[exclusive]" );
-        }
     }
 }

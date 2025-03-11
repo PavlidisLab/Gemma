@@ -17,6 +17,7 @@ package ubic.gemma.core.analysis.service;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.datastructure.matrix.io.MatrixWriter;
+import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -24,7 +25,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 
 import javax.annotation.Nullable;
-import javax.annotation.WillClose;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
@@ -40,70 +40,6 @@ import java.util.concurrent.TimeoutException;
  * @author paul
  */
 public interface ExpressionDataFileService {
-
-    /**
-     * A locked path.
-     */
-    interface LockedPath extends AutoCloseable {
-
-        /**
-         * Retrieve the path being locked.
-         */
-        Path getPath();
-
-        /**
-         * Indicate if the lock is shared.
-         */
-        boolean isShared();
-
-        /**
-         * Release the lock.
-         */
-        @Override
-        void close();
-
-        /**
-         * Release the lock and obtain the underlying {@link Path} object.
-         */
-        @WillClose
-        Path closeAndGetPath();
-
-        /**
-         * Convert this lock to an exclusive lock.
-         * <p>
-         * This lock will be closed as a result.
-         * @throws IllegalStateException if this lock is already exclusive
-         */
-        @WillClose
-        LockedPath toExclusive();
-
-        /**
-         * Try to convert this lock to an exclusive lock.
-         * <p>
-         * This lock will be closed as a result.
-         * @throws IllegalStateException if this lock is already exclusive
-         */
-        @WillClose
-        LockedPath toExclusive( long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException;
-
-        /**
-         * Convert this lock to a shared lock.
-         * <p>
-         * This lock will be closed as a result.
-         * @throws IllegalStateException if this lock is already shared
-         */
-        @WillClose
-        LockedPath toShared();
-
-        /**
-         * Steal this lock.
-         * <p>
-         * Once stolen, this lock will no-longer be released when closed.
-         * @throws IllegalStateException if this lock is already stolen
-         */
-        @WillClose
-        LockedPath steal();
-    }
 
     /**
      * Delete any existing design, coexpression, data, or differential expression data files.

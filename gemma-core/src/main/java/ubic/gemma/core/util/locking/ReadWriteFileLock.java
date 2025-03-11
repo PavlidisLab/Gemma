@@ -1,4 +1,4 @@
-package ubic.gemma.core.util;
+package ubic.gemma.core.util.locking;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -22,7 +22,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Only one {@link ReadWriteFileLock} may be used for a given file at a time throughout the JVM.
  * @author poirigui
  */
-public class ReadWriteFileLock implements ReadWriteLock {
+class ReadWriteFileLock implements ReadWriteLock {
 
     /**
      * Open a read/write file lock.
@@ -33,8 +33,8 @@ public class ReadWriteFileLock implements ReadWriteLock {
     }
 
     private final Path path;
-    private final Lock readLock;
-    private final Lock writeLock;
+    private final FileLock readLock;
+    private final FileLock writeLock;
 
     @Nullable
     private volatile FileChannel channel;
@@ -45,7 +45,7 @@ public class ReadWriteFileLock implements ReadWriteLock {
      */
     private final AtomicInteger channelHolders = new AtomicInteger( 0 );
 
-    private ReadWriteFileLock( ReadWriteLock rwLock, Path path ) {
+    private ReadWriteFileLock( ReentrantReadWriteLock rwLock, Path path ) {
         this.path = path;
         this.readLock = new FileLock( rwLock.readLock(), true );
         this.writeLock = new FileLock( rwLock.writeLock(), false );
@@ -72,6 +72,26 @@ public class ReadWriteFileLock implements ReadWriteLock {
     @Override
     public Lock writeLock() {
         return writeLock;
+    }
+
+    public int getReadHoldCount() {
+        return readLock.holders.get();
+    }
+
+    public int getReadLockCount() {
+        return readLock.fileLockHolders.get();
+    }
+
+    public int getWriteHoldCount() {
+        return writeLock.fileLockHolders.get();
+    }
+
+    public boolean isWriteLocked() {
+        return writeLock.fileLockHolders.get() > 0;
+    }
+
+    public int getChannelHoldCount() {
+        return channelHolders.get();
     }
 
     private class FileLock implements Lock {

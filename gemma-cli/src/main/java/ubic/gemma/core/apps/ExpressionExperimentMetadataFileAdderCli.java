@@ -6,6 +6,7 @@ import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionMetadataChangelogFileService;
+import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
@@ -71,7 +72,7 @@ public class ExpressionExperimentMetadataFileAdderCli extends ExpressionExperime
                 buf = changelogEntry;
             } else {
                 String defaultText;
-                Optional<ExpressionDataFileService.LockedPath> mf = expressionDataFileService.getMetadataFile( expressionExperiment, filename.getFileName().toString(), false );
+                Optional<LockedPath> mf = expressionDataFileService.getMetadataFile( expressionExperiment, filename.getFileName().toString(), false );
                 if ( mf.isPresent() ) {
                     defaultText = "Replace an existing metadata file " + filename.getFileName().toString() + ".";
                     mf.get().close();

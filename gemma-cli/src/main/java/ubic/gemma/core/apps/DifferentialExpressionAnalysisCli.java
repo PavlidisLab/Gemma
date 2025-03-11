@@ -29,6 +29,7 @@ import ubic.gemma.core.analysis.expression.diff.AnalysisType;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -363,7 +364,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         } else {
             log.info( "Writing results to disk" );
             for ( DifferentialExpressionAnalysis r : results ) {
-                try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeDiffExAnalysisArchiveFile( r, config ) ) {
+                try ( LockedPath lockedPath = expressionDataFileService.writeDiffExAnalysisArchiveFile( r, config ) ) {
                     log.info( "Wrote to " + lockedPath.getPath() );
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );

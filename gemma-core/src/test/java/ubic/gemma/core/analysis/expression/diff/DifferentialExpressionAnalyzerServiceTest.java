@@ -33,6 +33,7 @@ import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
+import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
@@ -200,7 +201,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         for ( ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
             this.arrayDesignAnnotationService.deleteExistingFiles( ad );
         }
-        Collection<ExpressionDataFileService.LockedPath> outputLocations = expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, true );
+        Collection<LockedPath> outputLocations = expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, true );
 
         assertEquals( 1, outputLocations.size() );
 
@@ -386,7 +387,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assertFalse( analyses.isEmpty() );
 
         // this triggers an error?
-        try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeDiffExAnalysisArchiveFile( analyses.iterator().next(), config ) ) {
+        try ( LockedPath lockedPath = expressionDataFileService.writeDiffExAnalysisArchiveFile( analyses.iterator().next(), config ) ) {
             assertNotNull( lockedPath.getPath() );
         }
     }

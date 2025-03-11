@@ -35,6 +35,7 @@ import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
+import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
@@ -253,7 +254,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         qts = eeService.getQuantitationTypes( ee );
         assertEquals( 18, qts.size() );
         Path f = dataFileService.writeOrLocateProcessedDataFile( ee, true, true )
-                .map( ExpressionDataFileService.LockedPath::closeAndGetPath )
+                .map( LockedPath::closeAndGetPath )
                 .orElse( null );
         assertNotNull( f );
         assertTrue( Files.exists( f ) );

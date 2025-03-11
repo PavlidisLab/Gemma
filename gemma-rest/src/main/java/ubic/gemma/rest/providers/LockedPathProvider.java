@@ -1,6 +1,6 @@
 package ubic.gemma.rest.providers;
 
-import ubic.gemma.core.analysis.service.ExpressionDataFileService.LockedPath;
+import ubic.gemma.core.util.locking.LockedPath;
 
 import javax.inject.Singleton;
 import javax.ws.rs.Produces;

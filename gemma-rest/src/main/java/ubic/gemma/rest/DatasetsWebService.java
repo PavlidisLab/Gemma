@@ -57,6 +57,7 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
+import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -1305,7 +1306,7 @@ public class DatasetsWebService {
         if ( !expressionExperimentService.hasProcessedExpressionData( ee ) ) {
             throw new NotFoundException( ee.getShortName() + " does not have any processed vectors." );
         }
-        try ( ExpressionDataFileService.LockedPath p = expressionDataFileService.writeOrLocateProcessedDataFile( ee, filtered, force, 5, TimeUnit.SECONDS )
+        try ( LockedPath p = expressionDataFileService.writeOrLocateProcessedDataFile( ee, filtered, force, 5, TimeUnit.SECONDS )
                 .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have any processed vectors." ) ) ) {
             String filename = download ? p.getPath().getFileName().toString() : FilenameUtils.removeExtension( p.getPath().getFileName().toString() );
             return Response.ok( p.steal() )
@@ -1374,7 +1375,7 @@ public class DatasetsWebService {
                 throw new NotFoundException( String.format( "No preferred quantitation type could be found for raw expression data data of %s.", ee ) );
             }
         }
-        try ( ExpressionDataFileService.LockedPath p = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, force, 5, TimeUnit.SECONDS ) ) {
+        try ( LockedPath p = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, force, 5, TimeUnit.SECONDS ) ) {
             String filename = download ? p.getPath().getFileName().toString() : FilenameUtils.removeExtension( p.getPath().getFileName().toString() );
             return Response.ok( p.steal() )
                     .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
@@ -1430,7 +1431,7 @@ public class DatasetsWebService {
                     .orElseThrow( () -> new NotFoundException( "No preferred single-cell quantitation type could be found for " + ee + "." ) );
         }
         if ( mediaType.equals( APPLICATION_10X_MEX_TYPE ) ) {
-            try ( ExpressionDataFileService.LockedPath p = expressionDataFileService.getDataFile( ee, qt, ExpressionExperimentDataFileType.MEX, 5, TimeUnit.SECONDS ) ) {
+            try ( LockedPath p = expressionDataFileService.getDataFile( ee, qt, ExpressionExperimentDataFileType.MEX, 5, TimeUnit.SECONDS ) ) {
                 if ( Files.exists( p.getPath() ) ) {
                     return Response.ok( p.steal() )
                             .type( APPLICATION_10X_MEX_TYPE )
@@ -1448,7 +1449,7 @@ public class DatasetsWebService {
                 throw new InternalServerErrorException( e );
             }
         } else {
-            try ( ExpressionDataFileService.LockedPath p = expressionDataFileService.getDataFile( ee, qt, ExpressionExperimentDataFileType.TABULAR, 5, TimeUnit.SECONDS ) ) {
+            try ( LockedPath p = expressionDataFileService.getDataFile( ee, qt, ExpressionExperimentDataFileType.TABULAR, 5, TimeUnit.SECONDS ) ) {
                 if ( !force && Files.exists( p.getPath() ) ) {
                     return Response.ok( p.steal() )
                             .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
@@ -1506,7 +1507,7 @@ public class DatasetsWebService {
             checkIsAdmin();
         }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        try ( ExpressionDataFileService.LockedPath file = expressionDataFileService.writeOrLocateDesignFile( ee, force, 5, TimeUnit.SECONDS )
+        try ( LockedPath file = expressionDataFileService.writeOrLocateDesignFile( ee, force, 5, TimeUnit.SECONDS )
                 .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have an experimental design." ) ) ) {
             String filename = file.getPath().getFileName().toString();
             return Response.ok( file.steal() )

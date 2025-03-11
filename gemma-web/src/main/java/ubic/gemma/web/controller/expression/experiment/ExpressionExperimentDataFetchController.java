@@ -39,6 +39,7 @@ import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.TaskRunningService;
+import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
@@ -91,7 +92,7 @@ public class ExpressionExperimentDataFetchController {
         }
         // exclude any paths leading to the filename
         filename = FilenameUtils.getName( filename );
-        try ( ExpressionDataFileService.LockedPath file = expressionDataFileService.getDataFile( filename ) ) {
+        try ( LockedPath file = expressionDataFileService.getDataFile( filename ) ) {
             if ( !Files.exists( file.getPath() ) ) {
                 throw new EntityNotFoundException( "There is not data file named " + filename + " available for download." );
             }
@@ -107,7 +108,7 @@ public class ExpressionExperimentDataFetchController {
             throw new IllegalArgumentException( "The experiment ID and file type ID parameters must be valid identifiers." );
         }
         String missingMessage = ee.getShortName() + " does not have metadata of type " + type + ".";
-        try ( ExpressionDataFileService.LockedPath file = expressionDataFileService.getMetadataFile( ee, type, true )
+        try ( LockedPath file = expressionDataFileService.getMetadataFile( ee, type, true )
                 // only happens for metadata files organized as directories
                 .orElseThrow( () -> new EntityNotFoundException( missingMessage ) ) ) {
             if ( !Files.exists( file.getPath() ) ) {
@@ -130,7 +131,7 @@ public class ExpressionExperimentDataFetchController {
         for ( ExpressionExperimentMetaFileType type : ExpressionExperimentMetaFileType.values() ) {
             // Some files are prefixed with the experiments accession
             expressionDataFileService.getMetadataFile( ee, type, false )
-                    .map( ExpressionDataFileService.LockedPath::closeAndGetPath )
+                    .map( LockedPath::closeAndGetPath )
                     .filter( Files::isReadable )
                     .map( f -> new MetaFile( type.getId(), type.getDisplayName() ) )
                     .ifPresent( metaFiles::add );
@@ -236,7 +237,7 @@ public class ExpressionExperimentDataFetchController {
             }
 
             Path f;
-            try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, false ) ) {
+            try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, false ) ) {
                 f = lockedPath.getPath();
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
@@ -332,7 +333,7 @@ public class ExpressionExperimentDataFetchController {
                 /* the design file */
                 if ( eedId != null ) {
                     ExpressionExperiment finalEe = ee;
-                    try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeOrLocateDesignFile( ee, false )
+                    try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateDesignFile( ee, false )
                             .orElseThrow( () -> new IllegalStateException( finalEe + " does not have an experimental design" ) ) ) {
                         f = lockedPath.getPath();
                     } catch ( IOException e ) {
@@ -343,14 +344,14 @@ public class ExpressionExperimentDataFetchController {
                 else {
                     if ( qType != null ) {
                         log.debug( "Using quantitation type to create matrix." );
-                        try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qType, false ) ) {
+                        try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qType, false ) ) {
                             f = lockedPath.getPath();
                         } catch ( IOException e ) {
                             throw new RuntimeException( e );
                         }
                     } else {
                         ExpressionExperiment finalEe1 = ee;
-                        try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeOrLocateProcessedDataFile( ee, filtered, false )
+                        try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateProcessedDataFile( ee, filtered, false )
                                 .orElseThrow( () -> new IllegalStateException( finalEe1 + " does not have an experimental design" ) ) ) {
                             f = lockedPath.getPath();
                         } catch ( FilteringException e ) {
@@ -366,14 +367,14 @@ public class ExpressionExperimentDataFetchController {
             /* json format */
             else {
                 if ( qType != null ) {
-                    try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeOrLocateJSONRawExpressionDataFile( ee, qType, false ) ) {
+                    try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateJSONRawExpressionDataFile( ee, qType, false ) ) {
                         f = lockedPath.getPath();
                     } catch ( IOException e ) {
                         throw new RuntimeException( e );
                     }
                 } else {
                     ExpressionExperiment finalEe2 = ee;
-                    try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeOrLocateJSONProcessedExpressionDataFile( ee, false, filtered )
+                    try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateJSONProcessedExpressionDataFile( ee, false, filtered )
                             .orElseThrow( () -> new IllegalStateException( finalEe2 + " does not have processed vectors." ) ) ) {
                         f = lockedPath.getPath();
                     } catch ( FilteringException e ) {
@@ -418,7 +419,7 @@ public class ExpressionExperimentDataFetchController {
             if ( this.taskCommand.getAnalysisId() != null ) {
 
                 Path f;
-                try ( ExpressionDataFileService.LockedPath lockedPath = expressionDataFileService.writeOrLocateDiffExArchiveFile( taskCommand.getAnalysisId(), taskCommand.isForceRewrite() ) ) {
+                try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateDiffExArchiveFile( taskCommand.getAnalysisId(), taskCommand.isForceRewrite() ) ) {
                     f = lockedPath.getPath();
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );
