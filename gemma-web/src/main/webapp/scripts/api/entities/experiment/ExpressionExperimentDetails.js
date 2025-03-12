@@ -391,7 +391,8 @@ Gemma.ExpressionExperimentDetails = Ext
                     data: {
                         pubAvailable: (currentPrimaryCitation) ? 'true' : 'false',
                         primaryCitationStr: (currentPrimaryCitation) ? currentPrimaryCitation.citation : '',
-                        pubmedURL: (currentPrimaryCitation) ? currentPrimaryCitation.pubmedURL : ''
+                        pubmedURL: (currentPrimaryCitation) ? currentPrimaryCitation.pubmedURL : '',
+                        PMID: (currentPrimaryCitation) ? currentPrimaryCitation.pubmedAccession : ''
                     },
                     listeners: {
                         'toggleEditMode': function (editOn) {
@@ -539,7 +540,8 @@ Gemma.ExpressionExperimentDetails = Ext
                         pubMedDisplay.update({
                             pubAvailable: (data.pubmedId) ? 'true' : 'false',
                             primaryCitation: (data.primaryCitation) ? data.primaryCitation.citation : '',
-                            pubmedURL: (data.primaryCitation) ? data.primaryCitation.pubmedURL : ''
+                            pubmedURL: (data.primaryCitation) ? data.primaryCitation.pubmedURL : '',
+                            PMID: (data.primaryCitation) ? currentPrimaryCitation.pubmedAccession : ''
                         });
 
                         currentShortName = data.shortName;
