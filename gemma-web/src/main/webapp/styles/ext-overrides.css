@@ -189,11 +189,13 @@
     background: #f4f4f4;
 }
 
-.x-form-item:nth-child(odd) *:not(textarea):not(.ee-status-badge):not(.fa):not(.security-link) {
+.x-form-item:nth-child(odd) *:not(textarea):not(.ee-status-badge):not(.fa):not(.security-link):not(.pp_comm *) {
     background: #f4f4f4;
 }
+
 
 .x-form-textarea {
     font: normal 12px tahoma, arial, helvetica, sans-serif;
 }
+
 
