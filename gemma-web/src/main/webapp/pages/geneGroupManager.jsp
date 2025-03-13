@@ -3,7 +3,6 @@
 
 <head>
 <title>Manage Gene Groups</title>
-<Gemma:script src='/scripts/api/entities/gene/GeneGroupManager.js' />
 </head>
 
 <input type="hidden" id="reloadOnLogout" value="true">

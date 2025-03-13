@@ -2,7 +2,6 @@
 
 <head>
 <title>Widget tests</title>
-<Gemma:style src="/styles/font-awesome.css" />
 <style type="text/css">
     .widget {
         padding: 10px;

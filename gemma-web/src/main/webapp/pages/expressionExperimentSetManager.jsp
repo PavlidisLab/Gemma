@@ -2,7 +2,6 @@
 
 <head>
 <title>Dataset Group Manager</title>
-<Gemma:script src='/scripts/api/entities/DatasetGroupEditor.js' />
 </head>
 
 <body>

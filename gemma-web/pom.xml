@@ -38,7 +38,7 @@
 							<arguments>
 								<argument>--prefix</argument>
 								<argument>${project.basedir}/src/main/webapp</argument>
-								<argument>ci</argument>
+								<argument>${webpackInstallCommand}</argument>
 							</arguments>
 							<skip>${skipWebpack}</skip>
 						</configuration>
@@ -72,6 +72,20 @@
 							<targetPath>resources/restapidocs</targetPath>
 						</resource>
 					</webResources>
+					<warSourceExcludes>
+						fonts/**,
+						<!-- TODO: exclude images too, but many of them are not resolved with Webpack -->
+						<!-- images/**, -->
+						node_modules/**,
+						package-lock.json,
+						package.json,
+						scripts/api/**,
+						<!-- TODO: exclude app too, but we need to bundle them with Webpack first -->
+						<!-- scripts/app/**, -->
+						scripts/lib/**,
+						styles/**,
+						webpack.config.js
+					</warSourceExcludes>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -246,6 +260,7 @@
 
 	<properties>
 		<skipWebpack>false</skipWebpack>
+		<webpackInstallCommand>install</webpackInstallCommand>
 		<webpackBuildCommand>devbuild</webpackBuildCommand>
 	</properties>
 
@@ -253,6 +268,7 @@
 		<profile>
 			<id>release</id>
 			<properties>
+				<webpackInstallCommand>ci</webpackInstallCommand>
 				<webpackBuildCommand>build</webpackBuildCommand>
 			</properties>
 		</profile>
