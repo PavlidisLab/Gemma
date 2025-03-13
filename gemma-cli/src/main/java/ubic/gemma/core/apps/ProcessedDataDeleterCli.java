@@ -8,6 +8,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
 
+/**
+ * @author poirigui
+ */
 public class ProcessedDataDeleterCli extends ExpressionExperimentVectorsManipulatingCli<ProcessedExpressionDataVector> {
 
     @Autowired

@@ -31,6 +31,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.security.authentication.CliAuthenticationAware;
 
+import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -73,6 +74,7 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
     /**
      * List of components that should receive the authentication token.
      */
+    @Nullable
     @Autowired(required = false)
     private List<CliAuthenticationAware> cliAuthenticationAwareComponents;
 

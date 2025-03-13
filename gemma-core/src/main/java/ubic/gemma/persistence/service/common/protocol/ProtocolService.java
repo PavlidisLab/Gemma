@@ -20,43 +20,20 @@ package ubic.gemma.persistence.service.common.protocol;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.protocol.Protocol;
-import ubic.gemma.persistence.service.BaseImmutableService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseImmutableService;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Collection;
+import java.util.List;
 
 /**
  * @author kelsey
  */
-public interface ProtocolService extends BaseImmutableService<Protocol> {
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    Protocol find( Protocol protocol );
+public interface ProtocolService extends SecurableBaseImmutableService<Protocol> {
 
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     Protocol findByName( String protocolName );
 
-    @Override
-    @Nonnull
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    Protocol findOrFail( Protocol protocol );
-
-    @Override
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    Protocol findOrCreate( Protocol protocol );
-
-    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<Protocol> loadAll();
-
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void remove( Long id );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void remove( Protocol protocol );
+    List<Protocol> loadAllUniqueByName();
 }

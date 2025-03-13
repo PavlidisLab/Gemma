@@ -23,6 +23,8 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.persistence.service.BaseDao;
 
+import java.util.List;
+
 /**
  * @see ubic.gemma.model.common.protocol.Protocol
  */
@@ -31,4 +33,9 @@ public interface ProtocolDao extends BaseDao<Protocol> {
 
     @Nullable
     Protocol findByName( String protocolName );
+
+    /**
+     * Load all protocols that are unique by name.
+     */
+    List<Protocol> loadAllUniqueByName();
 }

@@ -102,4 +102,12 @@ public class CliAssert extends AbstractAssert<CliAssert, CLI> {
     public void succeeds() {
         objects.assertEqual( info, actual.executeCommand( cliContext ), 0 );
     }
+
+    public void failsWith( int exitStatus ) {
+        objects.assertEqual( info, actual.executeCommand( cliContext ), exitStatus );
+    }
+
+    public void fails() {
+        objects.assertNotEqual( info, actual.executeCommand( cliContext ), 0 );
+    }
 }

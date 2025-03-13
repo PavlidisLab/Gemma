@@ -20,10 +20,11 @@ package ubic.gemma.persistence.service.common.protocol;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.persistence.service.AbstractService;
 
-import javax.annotation.Nullable;
+import java.util.List;
 
 /**
  * @author keshav
@@ -41,9 +42,15 @@ public class ProtocolServiceImpl extends AbstractService<Protocol> implements Pr
         this.protocolDao = protocolDao;
     }
 
-    @Nullable
     @Override
+    @Transactional(readOnly = true)
     public Protocol findByName( String protocolName ) {
         return protocolDao.findByName( protocolName );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Protocol> loadAllUniqueByName() {
+        return protocolDao.loadAllUniqueByName();
     }
 }

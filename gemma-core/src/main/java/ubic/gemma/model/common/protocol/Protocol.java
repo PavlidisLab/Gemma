@@ -20,24 +20,8 @@ package ubic.gemma.model.common.protocol;
 
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
-import ubic.gemma.model.common.description.Characteristic;
-
-import java.util.Set;
 
 public class Protocol extends AbstractDescribable implements Securable {
-
-    /**
-     * Characteristics describing the protocol.
-     */
-    private Set<Characteristic> characteristics;
-
-    public Set<Characteristic> getCharacteristics() {
-        return characteristics;
-    }
-
-    public void setCharacteristics( Set<Characteristic> characteristics ) {
-        this.characteristics = characteristics;
-    }
 
     @Override
     public boolean equals( Object object ) {
