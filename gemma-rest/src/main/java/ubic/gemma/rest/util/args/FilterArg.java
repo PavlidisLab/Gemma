@@ -39,7 +39,7 @@ import static ubic.gemma.rest.util.ArgUtils.decodeCompressedArg;
  * <p>
  * Filtering is done by constructing predicates in the {@code property operator requiredValue} form. Properties,
  * operators and required values must be delimited by spaces.
- * <h3>Properties</h3>
+ * <h2>Properties</h2>
  * Filtering can be done on any property or nested property of an entity managed by a {@link FilteringService}. E.g:
  * 'curationDetails' or 'curationDetails.lastTroubledEvent.date'.
  * <p>
@@ -65,7 +65,7 @@ import static ubic.gemma.rest.util.ArgUtils.decodeCompressedArg;
  * Example: {@code (1,2,3,4)}
  * </dd>
  * </dl>
- * <h3>Operators</h3>
+ * <h2>Operators</h2>
  * Accepted operator keywords are:
  * <dl>
  * <dt>=</dt>
@@ -93,7 +93,7 @@ import static ubic.gemma.rest.util.ArgUtils.decodeCompressedArg;
  * <dd>Required value not in the given collection with the semantic of '=' equality operator (only for Collection types)</dd>
  * </dl>
  * See {@link ubic.gemma.persistence.util.Filter.Operator} for more details on the available operators.
- * <h3>Quantifiers</h3>
+ * <h2>Quantifiers</h2>
  * If the property refers to a collection of entities, an quantifier can be used to indicate the desired behavior:
  * <dl>
  * <dt>any(predicate)</dt>
@@ -104,7 +104,7 @@ import static ubic.gemma.rest.util.ArgUtils.decodeCompressedArg;
  * <dd>True if no element of the collection satisfies the predicate. Note that this is true for an empty collection.</dd>
  * </dl>
  * By default, {@code any(predicate)} is used.
- * <h3>Logical expressions</h3>
+ * <h2>Logical expressions</h2>
  * Multiple filters can be chained using conjunctions (i.e. {@code AND, and}) or disjunctions (i.e. {@code OR, or, ','}) keywords.
  * Example:<br>
  * {@code property1 < value1 AND property2 like value2}
