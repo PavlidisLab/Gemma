@@ -29,7 +29,7 @@ public class FileLockManagerImpl implements FileLockManager {
     private static final Map<Path, ReadWriteFileLock> fileLocks = Collections.synchronizedMap( new WeakHashMap<>() );
 
     @Override
-    public Map<Path, FileLockInfo> getAllLockInfos() {
+    public Map<Path, FileLockInfo> getAllLockInfos() throws IOException {
         Map<Long, List<FileLockInfo.ProcessInfo>> lockMetadata = readLocksMetadata().stream()
                 .collect( Collectors.groupingBy( FileLockInfo.ProcessInfo::getInode, Collectors.toList() ) );
         return fileLocks.entrySet().stream()
@@ -40,7 +40,7 @@ public class FileLockManagerImpl implements FileLockManager {
     }
 
     @Override
-    public FileLockInfo getLockInfo( Path path ) {
+    public FileLockInfo getLockInfo( Path path ) throws IOException {
         Map<Long, List<FileLockInfo.ProcessInfo>> lockMetadata = readLocksMetadata().stream()
                 .collect( Collectors.groupingBy( FileLockInfo.ProcessInfo::getInode, Collectors.toList() ) );
         return createLockInfo( path, fileLocks.get( path ), lockMetadata );
@@ -63,27 +63,37 @@ public class FileLockManagerImpl implements FileLockManager {
                 lock.isWriteLocked(), lock.getChannelHoldCount(), procInfosForInode );
     }
 
-    private List<FileLockInfo.ProcessInfo> readLocksMetadata() {
-        try {
-            List<FileLockInfo.ProcessInfo> result = new ArrayList<>();
-            for ( String line : Files.readAllLines( Paths.get( "/proc/locks" ) ) ) {
-                Matcher matcher = Pattern.compile( "^(.+): POSIX  ADVISORY  (READ|WRITE) (\\d+) (.+):(.+):(\\d+) (\\d+) (\\d+|EOF)$" ).matcher( line );
-                if ( !matcher.matches() )
-                    continue;
-                boolean exclusive = "WRITE".equals( matcher.group( 2 ) );
-                int pid = Integer.parseInt( matcher.group( 3 ) );
-                String majorDevice = matcher.group( 4 );
-                String minorDevice = matcher.group( 5 );
-                long inode = Long.parseLong( matcher.group( 6 ) );
-                long start = Long.parseLong( matcher.group( 7 ) );
-                long length = "EOF".equals( matcher.group( 8 ) ) ? Long.MAX_VALUE : ( Long.parseLong( matcher.group( 8 ) ) - start );
-                result.add( new FileLockInfo.ProcessInfo( exclusive, pid, majorDevice, minorDevice, inode, start, length ) );
-            }
-            return result;
-        } catch ( IOException e ) {
-            log.warn( "Failed to read content of /proc/locks, will return an empty list.", e );
+    private static final Path PROC_LOCKS_FILE = Paths.get( "/proc/locks" );
+    // we only care about POSIX locks
+    private static final Pattern PROC_LOCS_PATTERN = Pattern.compile( "^(.+): POSIX  (ADVISORY|MANDATORY)  (READ|WRITE) (\\d+) (.+):(.+):(\\d+) (\\d+) (\\d+|EOF)$" );
+
+    /**
+     * Read system-wide lock metadata from /proc/locks.
+     * <p>
+     * This implementation has been tested on Fedora 41 and Rocky Linux 9.
+     */
+    private List<FileLockInfo.ProcessInfo> readLocksMetadata() throws IOException {
+        if ( !Files.exists( PROC_LOCKS_FILE ) ) {
+            log.warn( "No /proc/locks file found, returning empty list." );
             return Collections.emptyList();
         }
+        List<FileLockInfo.ProcessInfo> result = new ArrayList<>();
+        for ( String line : Files.readAllLines( PROC_LOCKS_FILE ) ) {
+            Matcher matcher = PROC_LOCS_PATTERN.matcher( line );
+            if ( !matcher.matches() )
+                continue;
+            String id = matcher.group( 1 );
+            boolean mandatory = "MANDATORY".equals( matcher.group( 2 ) );
+            boolean exclusive = "WRITE".equals( matcher.group( 3 ) );
+            int pid = Integer.parseInt( matcher.group( 4 ) );
+            String majorDevice = matcher.group( 5 );
+            String minorDevice = matcher.group( 6 );
+            long inode = Long.parseLong( matcher.group( 7 ) );
+            long start = Long.parseLong( matcher.group( 8 ) );
+            long length = "EOF".equals( matcher.group( 9 ) ) ? Long.MAX_VALUE : ( Long.parseLong( matcher.group( 9 ) ) - start + 1 );
+            result.add( new FileLockInfo.ProcessInfo( id, mandatory, exclusive, pid, majorDevice, minorDevice, inode, start, length ) );
+        }
+        return result;
     }
 
     @Override

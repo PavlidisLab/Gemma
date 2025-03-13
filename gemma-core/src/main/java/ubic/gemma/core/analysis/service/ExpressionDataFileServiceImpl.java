@@ -293,7 +293,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, String filename, boolean exclusive ) {
+    public Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, String filename, boolean exclusive ) throws IOException {
         try ( LockedPath lock = fileLockManager.acquirePathLock( metadataDir.resolve( getEEFolderName( ee ) ).resolve( filename ), exclusive ) ) {
             // lock will be managed by the LockedFile
             return Optional.of( lock.steal() );
@@ -301,7 +301,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, String filename, boolean exclusive, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException {
+    public Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, String filename, boolean exclusive, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException, IOException {
         try ( LockedPath lock = fileLockManager.tryAcquirePathLock( metadataDir.resolve( getEEFolderName( ee ) ).resolve( filename ), exclusive, timeout, timeUnit ) ) {
             // lock will be managed by the LockedFile
             return Optional.of( lock.steal() );
@@ -368,8 +368,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public LockedPath getDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException, IOException {
-        return getOutputFile( getDataOutputFilename( ee, qt, requireNonNull( getDataSuffix( qt, type ), "Couldn't determine filename suffix for " + qt + " and " + type + "." ) ), false, timeout, timeUnit );
+    public LockedPath getDataFile( ExpressionExperiment ee, QuantitationType qt, ExpressionExperimentDataFileType type, boolean exclusive, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException, IOException {
+        return getOutputFile( getDataOutputFilename( ee, qt, requireNonNull( getDataSuffix( qt, type ), "Couldn't determine filename suffix for " + qt + " and " + type + "." ) ), exclusive, timeout, timeUnit );
     }
 
     @Nullable
@@ -934,11 +934,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     /**
-     * Resolve a filename in the {@link #dataDir} directory.
-     * <p>
-     * If the file is locked for writing, this method will wait until the lock is released.
-     * @param filename without the path - that is, just the name of the file
-     * @return File, with location in the appropriate target directory.
+     * Resolve a filename in the {@link #dataDir} and acquire a shared lock on it for reading.
      */
     private LockedPath getOutputFile( String filename, boolean exclusive ) throws IOException {
         return fileLockManager.acquirePathLock( dataDir.resolve( filename ), exclusive );

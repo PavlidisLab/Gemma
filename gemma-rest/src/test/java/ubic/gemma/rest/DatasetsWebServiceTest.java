@@ -728,7 +728,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         QuantitationType qt = new QuantitationType();
         when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
                 .thenReturn( Optional.of( qt ) );
-        when( expressionDataFileService.getDataFile( eq( ee ), eq( qt ), eq( ExpressionExperimentDataFileType.TABULAR ), anyLong(), any() ) )
+        when( expressionDataFileService.getDataFile( eq( ee ), eq( qt ), eq( ExpressionExperimentDataFileType.TABULAR ), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( new DummyLockedPath( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ), true ) );
         assertThat( target( "/datasets/1/data/singleCell" ).request()
                 .accept( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ).get() )
@@ -743,7 +743,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         QuantitationType qt = new QuantitationType();
         when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
                 .thenReturn( Optional.of( qt ) );
-        when( expressionDataFileService.getDataFile( eq( ee ), eq( qt ), eq( ExpressionExperimentDataFileType.TABULAR ), anyLong(), any() ) )
+        when( expressionDataFileService.getDataFile( eq( ee ), eq( qt ), eq( ExpressionExperimentDataFileType.TABULAR ), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( new DummyLockedPath( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ), true ) );
         assertThat( target( "/datasets/1/data/singleCell" ).queryParam( "download", "true" ).request()
                 .accept( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ).get() )
@@ -758,7 +758,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         QuantitationType qt = new QuantitationType();
         when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
                 .thenReturn( Optional.of( qt ) );
-        when( expressionDataFileService.getDataFile( eq( ee ), eq( qt ), eq( ExpressionExperimentDataFileType.MEX ), anyLong(), any() ) )
+        when( expressionDataFileService.getDataFile( eq( ee ), eq( qt ), eq( ExpressionExperimentDataFileType.MEX ), anyBoolean(), anyLong(), any() ) )
                 .thenReturn( new DummyLockedPath( Paths.get( requireNonNull( getClass().getResource( "/data.mex" ) ).toURI() ), true ) );
         assertThat( target( "/datasets/1/data/singleCell" ).request()
                 .accept( DatasetsWebService.APPLICATION_10X_MEX_TYPE ).get() )

@@ -18,8 +18,39 @@ public class FileLockManagerTest {
     private final FileLockManager fileLockManager = new FileLockManagerImpl();
 
     @After
-    public void tearDown() {
+    public void tearDown() throws IOException {
         assertThat( fileLockManager.getAllLockInfos() ).isEmpty();
+    }
+
+    @Test
+    public void testGetLockInfo() throws IOException {
+        Path dir = Files.createTempDirectory( "test" );
+        try ( LockedPath lock = fileLockManager.acquirePathLock( dir.resolve( "foo" ), false ) ) {
+            assertThat( fileLockManager.getLockInfo( lock.getPath() ) )
+                    .satisfies( lockInfo -> {
+                        assertThat( lockInfo.getProcInfo() )
+                                .singleElement()
+                                .satisfies( procInfo -> {
+                                    assertThat( procInfo.isMandatory() ).isFalse();
+                                    assertThat( procInfo.isExclusive() ).isFalse();
+                                    assertThat( procInfo.getStart() ).isEqualTo( 0 );
+                                    assertThat( procInfo.getLength() ).isEqualTo( Long.MAX_VALUE );
+                                } );
+                    } );
+        }
+        try ( LockedPath lock = fileLockManager.acquirePathLock( dir.resolve( "foo" ), true ) ) {
+            assertThat( fileLockManager.getLockInfo( lock.getPath() ) )
+                    .satisfies( lockInfo -> {
+                        assertThat( lockInfo.getProcInfo() )
+                                .singleElement()
+                                .satisfies( procInfo -> {
+                                    assertThat( procInfo.isMandatory() ).isFalse();
+                                    assertThat( procInfo.isExclusive() ).isTrue();
+                                    assertThat( procInfo.getStart() ).isEqualTo( 0 );
+                                    assertThat( procInfo.getLength() ).isEqualTo( Long.MAX_VALUE );
+                                } );
+                    } );
+        }
     }
 
     @Test
@@ -118,7 +149,7 @@ public class FileLockManagerTest {
             Thread t = new Thread( () -> {
                 try ( LockedPath lock2 = fileLockManager.tryAcquirePathLock( dir, false, 0, TimeUnit.MILLISECONDS ) ) {
                     assertThat( lock2.isValid() ).isTrue();
-                } catch ( InterruptedException | TimeoutException e ) {
+                } catch ( IOException | InterruptedException | TimeoutException e ) {
                     throw new RuntimeException( e );
                 }
             } );

@@ -98,22 +98,27 @@ public class LockExpressionDataFileCli extends ExpressionExperimentManipulatingC
         } else {
             p = dataDir.resolve( filename );
         }
-        FileLockInfo lockInfo = fileLockManager.getLockInfo( p );
-        StringBuilder message = new StringBuilder();
-        message.append( "Lock status for " ).append( lockInfo.getPath() ).append( "\n" )
-                .append( "Number of readers:\t" ).append( lockInfo.getReadLockCount() ).append( "\n" )
-                .append( "Write locked:\t" ).append( lockInfo.isWriteLocked() ? "yes" : "no" );
-        if ( !lockInfo.getProcInfo().isEmpty() ) {
-            message.append( "\nProcess info:" );
-            for ( FileLockInfo.ProcessInfo processInfo : lockInfo.getProcInfo() ) {
-                message.append( "\n\t" )
-                        .append( "PID: " ).append( processInfo.getPid() ).append( ", " )
-                        .append( "Exclusive: " ).append( processInfo.isExclusive() ? "yes" : "no" ).append( ", " )
-                        .append( "Start: " ).append( processInfo.getStart() ).append( ", " )
-                        .append( "Length: " ).append( processInfo.getLength() );
+        try {
+            FileLockInfo lockInfo = fileLockManager.getLockInfo( p );
+            StringBuilder message = new StringBuilder();
+            message.append( "Lock status for " ).append( lockInfo.getPath() ).append( "\n" )
+                    .append( "Number of readers:\t" ).append( lockInfo.getReadLockCount() ).append( "\n" )
+                    .append( "Write locked:\t" ).append( lockInfo.isWriteLocked() ? "yes" : "no" );
+            if ( !lockInfo.getProcInfo().isEmpty() ) {
+                message.append( "\nProcess info:" );
+                for ( FileLockInfo.ProcessInfo processInfo : lockInfo.getProcInfo() ) {
+                    message.append( "\n\t" )
+                            .append( "PID: " ).append( processInfo.getPid() ).append( ", " )
+                            .append( "Mandatory: " ).append( processInfo.isMandatory() ? "yes" : "no" ).append( ", " )
+                            .append( "Exclusive: " ).append( processInfo.isExclusive() ? "yes" : "no" ).append( ", " )
+                            .append( "Start: " ).append( processInfo.getStart() ).append( ", " )
+                            .append( "Length: " ).append( processInfo.getLength() );
+                }
             }
+            log.info( message );
+        } catch ( IOException e ) {
+            log.warn( "Failed to get lock info for " + p, e );
         }
-        log.info( message );
     }
 
     private LockedPath getLock( ExpressionExperiment ee, String filename, boolean exclusive ) throws IOException, InterruptedException, TimeoutException {

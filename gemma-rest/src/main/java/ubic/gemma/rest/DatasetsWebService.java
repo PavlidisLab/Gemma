@@ -1431,7 +1431,7 @@ public class DatasetsWebService {
                     .orElseThrow( () -> new NotFoundException( "No preferred single-cell quantitation type could be found for " + ee + "." ) );
         }
         if ( mediaType.equals( APPLICATION_10X_MEX_TYPE ) ) {
-            try ( LockedPath p = expressionDataFileService.getDataFile( ee, qt, ExpressionExperimentDataFileType.MEX, 5, TimeUnit.SECONDS ) ) {
+            try ( LockedPath p = expressionDataFileService.getDataFile( ee, qt, ExpressionExperimentDataFileType.MEX, false, 5, TimeUnit.SECONDS ) ) {
                 if ( Files.exists( p.getPath() ) ) {
                     return Response.ok( p.steal() )
                             .type( APPLICATION_10X_MEX_TYPE )
@@ -1449,7 +1449,7 @@ public class DatasetsWebService {
                 throw new InternalServerErrorException( e );
             }
         } else {
-            try ( LockedPath p = expressionDataFileService.getDataFile( ee, qt, ExpressionExperimentDataFileType.TABULAR, 5, TimeUnit.SECONDS ) ) {
+            try ( LockedPath p = expressionDataFileService.getDataFile( ee, qt, ExpressionExperimentDataFileType.TABULAR, false, 5, TimeUnit.SECONDS ) ) {
                 if ( !force && Files.exists( p.getPath() ) ) {
                     return Response.ok( p.steal() )
                             .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )

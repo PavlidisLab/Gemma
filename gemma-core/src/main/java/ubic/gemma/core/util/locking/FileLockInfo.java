@@ -48,6 +48,8 @@ public class FileLockInfo {
      */
     @Value
     public static class ProcessInfo {
+        String id;
+        boolean mandatory;
         boolean exclusive;
         int pid;
         String majorDevice;
