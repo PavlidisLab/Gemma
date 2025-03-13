@@ -52,5 +52,8 @@ module.exports = {
          'Access-Control-Allow-Origin' : 'http://localhost:8080',
          'Access-Control-Allow-Methods' : 'GET'
       }
+   },
+   cache: {
+      type: 'filesystem'
    }
 }
