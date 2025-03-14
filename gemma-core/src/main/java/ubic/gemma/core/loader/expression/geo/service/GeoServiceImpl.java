@@ -327,9 +327,10 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
             BibliographicReference primaryPublication = freshFromGEO.getPrimaryPublication();
 
             // update the experiment in Gemma:
-            // 1) publication
-            // 2) BioMaterial Characteristics (mostly for backporting)
-            // 3) Original platform (this is for backporting, and may be removed in the future)
+            // 1) experiment-level tags
+            // 2) publication
+            // 3) BioMaterial Characteristics (mostly for backporting)
+            // 4) Original platform (this is for backporting, and may be removed in the future)
             for ( ExpressionExperiment ee : ees ) { // because it could be a split by us.
 
                 /*
@@ -342,6 +343,15 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
                 boolean pubUpdate = false;
 
                 ee = expressionExperimentService.thawLite( ee );
+
+                // EE tags are often manually curated, so we don't want to overwrite them. Fortunately, the
+                // Characteristic.equals definition has really neat behavior for this
+                for ( Characteristic newEeTag : freshFromGEO.getCharacteristics() ) {
+                    if ( ee.getCharacteristics().add( newEeTag ) ) {
+                        log.info( "Found a new experiment-level tag for " + geoAccession + ": " + newEeTag );
+                        numNewCharacteristics++;
+                    }
+                }
 
                 if ( ee.getPrimaryPublication() == null && primaryPublication != null ) {
                     log.info( "Found new primary publication for " + geoAccession + ": " + primaryPublication.getPubAccession() );

@@ -39,7 +39,7 @@ public class GeoSeries extends GeoData {
     private String platformId;
     // use a LinkedHashSet for samples to preserve order
     private final Collection<GeoSample> samples = new LinkedHashSet<>();
-    private final Collection<SeriesType> seriesTypes = new HashSet<>();
+    private final Collection<GeoSeriesType> seriesTypes = new HashSet<>();
     private final Collection<String> subSeries = new HashSet<>();
     private final Map<Integer, GeoVariable> variables = new HashMap<>();
     private Collection<GeoContact> contributers = new HashSet<>();
@@ -56,64 +56,6 @@ public class GeoSeries extends GeoData {
     private final Collection<String> supplementaryFiles = new LinkedHashSet<>();
     private GeoValues values = new GeoValues();
     private Collection<String> webLinks = new HashSet<>();
-
-    /**
-     * See also GeoDataset.convertStringToExperimentType
-     *
-     * @param  string series type string
-     * @return series type object
-     */
-    public static SeriesType convertStringToSeriesType( String string ) {
-        if ( string.equalsIgnoreCase( "Expression profiling by array" ) ) {
-            return SeriesType.geneExpressionByArray;
-        } else if ( string.equalsIgnoreCase( "Methylation profiling by high throughput sequencing" ) ) {
-            return SeriesType.methylationArraybased;
-        } else if ( string.equalsIgnoreCase( "Genome binding/occupancy profiling by high throughput sequencing" ) ) {
-            return SeriesType.genomeBindingBySequencing;
-        } else if ( string.equalsIgnoreCase( "Expression profiling by high throughput sequencing" ) ) {
-            return SeriesType.geneExpressionBySequencing;
-        } else if ( string.equalsIgnoreCase( "Non-coding RNA profiling by array" ) ) {
-            return SeriesType.nonCodingRNAProfilingArraybased;
-        } else if ( string.equals( "Other" ) ) {
-            return SeriesType.other;
-        } else if ( string.equalsIgnoreCase( "Third-party reanalysis" ) ) {
-            return SeriesType.thirdPartyReanalysis;
-        } else if ( string.equalsIgnoreCase( "Genome binding/occupancy profiling by genome tiling array" ) ) {
-            return SeriesType.genomeBindingByArray;
-        } else if ( string.equalsIgnoreCase( "Genome variation profiling by array" ) ) {
-            return SeriesType.genomeVariationByArray;
-        } else if ( string.equalsIgnoreCase( "Non-coding RNA profiling by high throughput sequencing" ) ) {
-            return SeriesType.nonCodingRNAProfilingBySequencing;
-        } else if ( string.equalsIgnoreCase( "Methylation profiling by genome tiling array" ) ) {
-            return SeriesType.methylationByGenomeTiling;
-        } else if ( string.equalsIgnoreCase( "Genome variation profiling by genome tiling array" ) ) {
-            return SeriesType.genomeVariationByGenomeTiling;
-        } else if ( string.equalsIgnoreCase( "different tissues" ) || string
-                .equalsIgnoreCase( "cell_type_comparison_design" ) ) {
-            return SeriesType.other;
-        } else if ( string.equals( "other" ) || string.equalsIgnoreCase( "different tissues" ) || string
-                .equalsIgnoreCase( "cell_type_comparison_design; disease state; cell line; tissue type" )
-                || string
-                .equalsIgnoreCase( "time-course" )
-                || string.equalsIgnoreCase( "Dual-label cDNA microarray" ) || string
-                .equalsIgnoreCase( "SuperSeries" )
-                || string.equalsIgnoreCase( "Logical set" ) || string
-                .equalsIgnoreCase( "DNA Oligonucleotide Array" )
-                || string
-                .equalsIgnoreCase( "expression profiling; time course analysis; infection response" ) ) {
-            // these are possibilities that linger in tests. A pesky one is 'other', since that used to mean something
-            // different than 'Other' (note capitalization). The old meaning is still expression arrays.
-            return SeriesType.geneExpressionByArray;
-        } else if ( string.equalsIgnoreCase( "Expression profiling by SAGE" ) ) {
-            return SeriesType.geneExpressionBySAGE;
-        } else {
-            // there are too many hanging around, it's actually not so bad to guess.
-            log.warn( "Unknown series type '" + string + "', assuming is expression arrays" );
-            return SeriesType.geneExpressionByArray;
-            //
-            // throw new IllegalArgumentException( "Unknown series type '" + string + "'" );
-        }
-    }
 
     public void addContributer( GeoContact contributer ) {
         this.contributers.add( contributer );
@@ -155,7 +97,7 @@ public class GeoSeries extends GeoData {
         assert this.pubmedIds.size() > 0;
     }
 
-    public void addToSeriesTypes( SeriesType type ) {
+    public void addToSeriesTypes( GeoSeriesType type ) {
         this.seriesTypes.add( type );
     }
 
@@ -326,7 +268,7 @@ public class GeoSeries extends GeoData {
         return this.samples;
     }
 
-    public Collection<SeriesType> getSeriesTypes() {
+    public Collection<GeoSeriesType> getSeriesTypes() {
         return seriesTypes;
     }
 
@@ -450,10 +392,6 @@ public class GeoSeries extends GeoData {
      */
     public void setIsSuperSeries( boolean isSuperSeries ) {
         this.isSuperSeries = isSuperSeries;
-    }
-
-    public enum SeriesType {
-        geneExpressionByArray, geneExpressionBySAGE, geneExpressionBySequencing, genomeBindingByArray, genomeBindingBySequencing, genomeVariationByArray, genomeVariationByGenomeTiling, methylationArraybased, methylationByGenomeTiling, nonCodingRNAProfilingArraybased, nonCodingRNAProfilingBySequencing, other, thirdPartyReanalysis,
     }
 
 }

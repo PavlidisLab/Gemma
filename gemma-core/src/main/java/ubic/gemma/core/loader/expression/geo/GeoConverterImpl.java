@@ -32,7 +32,6 @@ import ubic.gemma.core.loader.expression.geo.model.*;
 import ubic.gemma.core.loader.expression.geo.model.GeoDataset.ExperimentType;
 import ubic.gemma.core.loader.expression.geo.model.GeoDataset.PlatformType;
 import ubic.gemma.core.loader.expression.geo.model.GeoReplication.ReplicationType;
-import ubic.gemma.core.loader.expression.geo.model.GeoSeries.SeriesType;
 import ubic.gemma.core.loader.expression.geo.model.GeoVariable.VariableType;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
 import ubic.gemma.core.loader.expression.geo.util.GeoConstants;
@@ -67,6 +66,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static ubic.gemma.core.loader.expression.geo.model.GeoSeriesType.EXPRESSION_PROFILING_BY_ARRAY;
 
 /**
  * Convert GEO domain objects into Gemma objects.
@@ -125,6 +126,7 @@ public class GeoConverterImpl implements GeoConverter {
     private ExternalDatabaseService externalDatabaseService;
     @Autowired
     private TaxonService taxonService;
+
     private final GeoSingleCellDetector singleCellDetector = new GeoSingleCellDetector();
 
     /**
@@ -592,26 +594,26 @@ public class GeoConverterImpl implements GeoConverter {
                 continue;
             }
 
-            // RNA-Seq
-            // FIXME: are we really seeing MPSS out there?
-            // some MPSS might not have libSource filled in. Other possibilities we know about for type are 'other', 'SAGE' and 'mixed';
-            else if ( sample.getType().equals( GeoSampleType.MPSS ) || sample.getType().equals( GeoSampleType.SRA ) ) {
-                // bulk RNA-Seq
-                if ( sample.getLibSource() != null && sample.getLibSource().equals( GeoLibrarySource.TRANSCRIPTOMIC ) ) {
-                    // have to drill down.
-                    if ( sample.getLibStrategy() != null && ( sample.getLibStrategy().equals( GeoLibraryStrategy.RNA_SEQ )
-                            || sample.getLibStrategy().equals( GeoLibraryStrategy.SSRNA_SEQ )
-                            || sample.getLibStrategy().equals( GeoLibraryStrategy.OTHER ) ) ) {
+            // bulk RNA-Seq
+            if ( Objects.equals( sample.getLibSource(), GeoLibrarySource.TRANSCRIPTOMIC ) ) {
+                // have to drill down.
+                if ( Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.RNA_SEQ )
+                        || Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.SSRNA_SEQ )
+                        || Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.OTHER ) ) {
+                    // check if there is data in SRA or MPSS
+                    // FIXME: are we really seeing MPSS out there?
+                    // some MPSS might not have libSource filled in. Other possibilities we know about for type are 'other', 'SAGE' and 'mixed';
+                    if ( sample.getType().equals( GeoSampleType.MPSS ) || sample.getType().equals( GeoSampleType.SRA ) ) {
                         // I've added "other" to be allowed just to avoid being too strict, but removed miRNA and ncRNA.
                         continue;
                     } else {
-                        reason = "Unsupported transcriptomic library strategy.";
+                        reason = "Unsupported sample type.";
                     }
                 } else {
-                    reason = "Unsupported library source.";
+                    reason = "Unsupported transcriptomic library strategy.";
                 }
             } else {
-                reason = "Unsupported sample type.";
+                reason = "Unsupported library source.";
             }
 
             // single-cell RNA-Seq
@@ -1873,6 +1875,9 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         ExpressionExperiment expExp = ExpressionExperiment.Factory.newInstance();
+
+        this.convertCharacteristics( series, expExp );
+
         expExp.setDescription( "" );
 
         expExp.setDescription( series.getSummaries() + ( series.getSummaries().endsWith( "\n" ) ? "" : "\n" ) );
@@ -2032,6 +2037,59 @@ public class GeoConverterImpl implements GeoConverter {
         }
 
         return expExp;
+    }
+
+    /**
+     * Add various experiment-level tags.
+     */
+    private void convertCharacteristics( GeoSeries series, ExpressionExperiment expExp ) {
+        Characteristic assayType = detectAssayType( series );
+        if ( assayType != null ) {
+            log.info( expExp + " will be tagged with " + assayType + "." );
+            expExp.getCharacteristics().add( assayType );
+        } else {
+            log.warn( "Could not detect an assay type for " + expExp + "." );
+        }
+    }
+
+    /**
+     * Detect the most specific assay type that we can.
+     */
+    @Nullable
+    private Characteristic detectAssayType( GeoSeries series ) {
+        for ( GeoSeriesType seriesType : series.getSeriesTypes() ) {
+            switch ( seriesType ) {
+                case EXPRESSION_PROFILING_BY_RT_PRC:
+                    return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by RT-PCR", "http://www.ebi.ac.uk/efo/EFO_0002943" );
+                case EXPRESSION_PROFILING_BY_MPSS:
+                    return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by MPSS", "http://www.ebi.ac.uk/efo/EFO_0002942" );
+                case EXPRESSION_PROFILING_BY_TILING_ARRAY:
+                    return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by tiling array", "http://www.ebi.ac.uk/efo/EFO_0002769" );
+                case EXPRESSION_PROFILING_BY_ARRAY:
+                case EXPRESSION_PROFILING_BY_SNP_ARRAY:
+                case NON_CODING_RNA_PROFILING_BY_ARRAY:
+                    return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by array", "http://www.ebi.ac.uk/efo/EFO_0002768" );
+                case METHYLATION_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING:
+                    return Characteristic.Factory.newInstance( Categories.ASSAY, "methylation profiling by high throughput sequencing", "http://www.ebi.ac.uk/efo/EFO_0002761" );
+                case METHYLATION_PROFILING_BY_GENOME_TILING_ARRAY:
+                    return Characteristic.Factory.newInstance( Categories.ASSAY, "methylation profiling by array", "http://www.ebi.ac.uk/efo/EFO_0002759" );
+                case EXPRESSION_PROFILING_BY_SAGE:
+                    return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by SAGE", "http://www.ebi.ac.uk/efo/EFO_0002941" );
+                case NON_CODING_RNA_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING:
+                    return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of non coding RNA", "http://www.ebi.ac.uk/efo/EFO_0003737" );
+                case EXPRESSION_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING:
+                    boolean hasSingleCellDataInSeries = singleCellDetector.hasSingleCellDataInSeries( series );
+                    for ( GeoSample sample : series.getSamples() ) {
+                        if ( singleCellDetector.isSingleNuclei( sample, hasSingleCellDataInSeries ) ) {
+                            return Characteristic.Factory.newInstance( Categories.ASSAY, "single nucleus RNA sequencing", "http://www.ebi.ac.uk/efo/EFO_0009809" );
+                        } else if ( singleCellDetector.isSingleCell( sample, hasSingleCellDataInSeries ) ) {
+                            return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of coding RNA from single cells", "http://www.ebi.ac.uk/efo/EFO_0005684" );
+                        }
+                    }
+                    return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of coding RNA", "http://www.ebi.ac.uk/efo/EFO_0003738" );
+            }
+        }
+        return null;
     }
 
     private void convertSpeciesSpecific( GeoSeries series, Collection<ExpressionExperiment> converted, Map<String, Collection<GeoData>> organismDatasetMap, int i, String organism ) {
@@ -2848,7 +2906,7 @@ public class GeoConverterImpl implements GeoConverter {
      */
     private boolean isUsable( GeoSeries series ) {
 
-        return series.getSeriesTypes().contains( SeriesType.geneExpressionByArray ) || series.getSeriesTypes().contains( SeriesType.geneExpressionBySequencing );
+        return series.getSeriesTypes().contains( EXPRESSION_PROFILING_BY_ARRAY ) || series.getSeriesTypes().contains( GeoSeriesType.EXPRESSION_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING );
 
     }
 

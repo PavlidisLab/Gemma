@@ -793,6 +793,14 @@ public class GeoSingleCellDetectorTest extends BaseTest {
                 .doesNotContain( "GSM3580744" );
     }
 
+    @Test
+    public void testIsSingleNuclei() throws IOException {
+        GeoSeries series = readSeriesFromGeo( "GSE141552" );
+        assertThat( series.getSamples() )
+                .hasSize( 8 )
+                .allSatisfy( sample -> detector.isSingleNuclei( sample, false ) );
+    }
+
     private GeoSeries readSeriesFromGeo( String accession ) throws IOException {
         URL url = new URL( "ftp://ftp.ncbi.nlm.nih.gov/geo/series/" + accession.substring( 0, 6 ) + "nnn/" + accession + "/soft/" + accession + "_family.soft.gz" );
         try ( InputStream is = new GZIPInputStream( ftpClientFactory.openStream( url ) ) ) {

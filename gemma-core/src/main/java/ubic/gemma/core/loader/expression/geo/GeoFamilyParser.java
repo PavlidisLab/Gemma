@@ -1458,6 +1458,10 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
         GeoSample sample = results.getSampleMap().get( accession );
         if ( string.equalsIgnoreCase( "RNA-Seq" ) ) {
             sample.setLibStrategy( GeoLibraryStrategy.RNA_SEQ );
+        } else if ( string.equalsIgnoreCase( "scRNA-Seq" ) ) {
+            sample.setLibStrategy( GeoLibraryStrategy.SCRNA_SEQ );
+        } else if ( string.equalsIgnoreCase( "snRNA-Seq" ) ) {
+            sample.setLibStrategy( GeoLibraryStrategy.SNRNA_SEQ );
         } else if ( string.equalsIgnoreCase( "Bisulfite-Seq" ) ) {
             sample.setLibStrategy( GeoLibraryStrategy.BISULFITE_SEQ );
         } else if ( string.equalsIgnoreCase( "DNase-Hypersensitivity" ) ) {
@@ -1555,7 +1559,7 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
             /*
              * Series can have multiple types if it has mixtures of samples.
              */
-            this.seriesAddTo( currentSeriesAccession, GeoSeries::addToSeriesTypes, GeoSeries.convertStringToSeriesType( value ) );
+            this.seriesAddTo( currentSeriesAccession, GeoSeries::addToSeriesTypes, convertStringToSeriesType( value ) );
 
         } else if ( this.startsWithIgnoreCase( line, "!Series_contributor" ) ) {
             GeoContact contributer = new GeoContact();
@@ -1632,6 +1636,41 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
         } else {
             GeoFamilyParser.log.error( "Unknown flag in series: " + line );
         }
+    }
+
+    /**
+     * See also GeoDataset.convertStringToExperimentType
+     *
+     * @param  string series type string
+     * @return series type object
+     */
+    public static GeoSeriesType convertStringToSeriesType( String string ) {
+        // these are possibilities that linger in tests. A pesky one is 'other', since that used to mean something
+        // different than 'Other' (note capitalization). The old meaning is still expression arrays.
+        if ( string.equals( "other" ) ) {
+            return GeoSeriesType.EXPRESSION_PROFILING_BY_ARRAY;
+        }
+
+        for ( GeoSeriesType seriesType : GeoSeriesType.values() ) {
+            if ( string.equalsIgnoreCase( seriesType.getIdentifier() ) ) {
+                return seriesType;
+            }
+        }
+
+        if ( string.equalsIgnoreCase( "different tissues" ) || string.equalsIgnoreCase( "cell_type_comparison_design" ) ) {
+            return GeoSeriesType.OTHER;
+        }
+
+        if ( StringUtils.equalsAnyIgnoreCase( string,
+                "cell_type_comparison_design; disease state; cell line; tissue type", "time-course",
+                "Dual-label cDNA microarray", "SuperSeries", "Logical set", "DNA Oligonucleotide Array",
+                "expression profiling; time course analysis; infection response" ) ) {
+            return GeoSeriesType.EXPRESSION_PROFILING_BY_ARRAY;
+        }
+
+        // there are too many hanging around, it's actually not so bad to guess.
+        GeoFamilyParser.log.warn( "Unknown series type '" + string + "', assuming is expression arrays" );
+        return GeoSeriesType.EXPRESSION_PROFILING_BY_ARRAY;
     }
 
     private void parseSeriesVariableRepeatsSampleListLine( String line, String value ) {

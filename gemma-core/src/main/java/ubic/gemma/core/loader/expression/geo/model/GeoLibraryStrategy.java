@@ -17,5 +17,7 @@ public enum GeoLibraryStrategy {
     OTHER,
     RIP_SEQ,
     RNA_SEQ,
+    SCRNA_SEQ,
+    SNRNA_SEQ,
     SSRNA_SEQ
 }

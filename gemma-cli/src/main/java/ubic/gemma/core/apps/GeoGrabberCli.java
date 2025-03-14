@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.core.loader.expression.geo.model.GeoSeriesType;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.SimpleRetry;
@@ -44,6 +45,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Scans GEO for experiments that are not in Gemma, subject to some filtering criteria, outputs to a file for further
@@ -72,14 +74,14 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
     private static final int NCBI_CHUNK_SIZE = 100;
     private static final DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd", Locale.ENGLISH );
 
-    private static final String[] SERIES_TYPES = new String[] {
-            "Expression profiling by MPSS",
-            "Expression profiling by RT-PCR",
-            "Expression profiling by SAGE",
-            "Expression profiling by SNP array",
-            "Expression profiling by array",
-            "Expression profiling by genome tiling array",
-            "Expression profiling by high throughput sequencing"
+    private static final GeoSeriesType[] SERIES_TYPES = new GeoSeriesType[] {
+            GeoSeriesType.EXPRESSION_PROFILING_BY_ARRAY,
+            GeoSeriesType.EXPRESSION_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING,
+            GeoSeriesType.EXPRESSION_PROFILING_BY_MPSS,
+            GeoSeriesType.EXPRESSION_PROFILING_BY_RT_PRC,
+            GeoSeriesType.EXPRESSION_PROFILING_BY_SAGE,
+            GeoSeriesType.EXPRESSION_PROFILING_BY_SNP_ARRAY,
+            GeoSeriesType.EXPRESSION_PROFILING_BY_TILING_ARRAY
     };
 
     // operating mode
@@ -288,7 +290,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         }
     }
 
-    private void browseDatasets( @Nullable String startFrom, @Nullable String gseLimit, @Nullable Date startDate, @Nullable Date dateLimit, @Nullable Collection<String> limitPlatform, Collection<String> seriesTypes ) throws IOException {
+    private void browseDatasets( @Nullable String startFrom, @Nullable String gseLimit, @Nullable Date startDate, @Nullable Date dateLimit, @Nullable Collection<String> limitPlatform, Collection<GeoSeriesType> seriesTypes ) throws IOException {
         Set<String> seen = new HashSet<>();
         Map<String, ArrayDesign> seenArrayDesigns = new HashMap<>();
         Collection<String> allowedTaxa = getAllowedTaxa();
@@ -298,7 +300,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         if ( limitPlatform != null ) {
             searchMessage += "\n\t" + "Platforms: " + String.join( ", ", limitPlatform );
         }
-        searchMessage += "\n\tSeries Types: " + String.join( ", ", seriesTypes );
+        searchMessage += "\n\tSeries Types: " + seriesTypes.stream().map( GeoSeriesType::getIdentifier ).collect( Collectors.joining( ", " ) );
         log.info( searchMessage );
 
         int start = seekRewindPoint( startFrom, gseLimit, startDate, dateLimit, limitPlatform, allowedTaxa, seriesTypes );
@@ -383,7 +385,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
      * TODO: use a binary search for date-based rewinding
      * @return the rewind point if found, otherwise -1
      */
-    private int seekRewindPoint( @Nullable String startFrom, @Nullable String gseLimit, @Nullable Date startDate, @Nullable Date dateLimit, @Nullable Collection<String> limitPlatform, Collection<String> allowedTaxa, Collection<String> seriesTypes ) throws IOException {
+    private int seekRewindPoint( @Nullable String startFrom, @Nullable String gseLimit, @Nullable Date startDate, @Nullable Date dateLimit, @Nullable Collection<String> limitPlatform, Collection<String> allowedTaxa, Collection<GeoSeriesType> seriesTypes ) throws IOException {
         if ( startFrom == null && startDate == null ) {
             return 0;
         } else if ( startFrom != null ) {
@@ -439,7 +441,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         return a != null && ( a.equals( b ) || a.before( b ) );
     }
 
-    private Slice<GeoRecord> getGeoRecords( int start, int chunkSize, Collection<String> allowedTaxa, boolean fetchDetails, @Nullable Collection<String> limitPlatform, Collection<String> seriesTypes ) throws IOException {
+    private Slice<GeoRecord> getGeoRecords( int start, int chunkSize, Collection<String> allowedTaxa, boolean fetchDetails, @Nullable Collection<String> limitPlatform, Collection<GeoSeriesType> seriesTypes ) throws IOException {
         return retryTemplate.execute( ( attempt, lastAttempt ) -> gbs.searchGeoRecords( null, null, allowedTaxa, limitPlatform, seriesTypes, start, chunkSize, fetchDetails ), "fetching GEO records" );
     }
 

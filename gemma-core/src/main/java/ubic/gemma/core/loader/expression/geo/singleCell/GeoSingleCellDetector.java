@@ -2,6 +2,7 @@ package ubic.gemma.core.loader.expression.geo.singleCell;
 
 import lombok.SneakyThrows;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.geo.GeoLibrarySource;
@@ -41,9 +42,22 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
     public static final int DEFAULT_NUMBER_OF_FETCH_THREADS = 4;
 
     /**
-     * Keywords to look for to determine if a sample is single-cell.
+     * Keywords to look for to determine if a sample is single-nuclei.
      */
-    private static final String[] SINGLE_CELL_KEYWORDS = { "single-cell", "single cell", "scRNA" };
+    private static final String[] SINGLE_NUCLEI_KEYWORDS = { "nuclei", "snRNA" };
+
+    /**
+     * Keywords in the extraction protocol that suggests the sample is single-nuclei.
+     */
+    private static final String[] SINGLE_NUCLEI_EXTRACTION_KEYWORD = new String[] { "nuclei", "frozen", "thaw" };
+
+    /**
+     * Keywords to look for to determine if a sample is single-cell.
+     * <p>
+     * In Gemma, we consider single-nuclei to be a subset of single-cell, but in practice those two things are
+     * different.
+     */
+    private static final String[] SINGLE_CELL_KEYWORDS = ArrayUtils.addAll( SINGLE_NUCLEI_KEYWORDS, "single-cell", "single cell", "scRNA" );
 
     private static final String[] SINGLE_CELL_DATA_PROCESSING_KEYWORDS = { "cellranger" };
 
@@ -613,12 +627,26 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
      */
     public boolean isSingleCell( GeoSample sample, boolean hasSingleCellDataInSeries ) {
         if ( Objects.equals( sample.getLibSource(), GeoLibrarySource.SINGLE_CELL_TRANSCRIPTOMIC )
-                && Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.RNA_SEQ ) ) {
+                && ( Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.RNA_SEQ )
+                || Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.SCRNA_SEQ )
+                || Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.SNRNA_SEQ )
+                || Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.OTHER ) ) ) {
             return true;
         }
-        // older datasets do not use the 'single cell transcriptomic' library source, rely on some heuristics
+
+        // older datasets do not use the 'single cell transcriptomic' library source
+
+        // I'm not sure these library strategies are used, but they are mentioned in https://www.ncbi.nlm.nih.gov/geo/info/validation.html
+        if ( Objects.equals( sample.getLibSource(), GeoLibrarySource.TRANSCRIPTOMIC ) &&
+                ( Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.SCRNA_SEQ )
+                        || Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.SNRNA_SEQ ) ) ) {
+            return true;
+        }
+
+        // now we're down to heuristics
         if ( Objects.equals( sample.getLibSource(), GeoLibrarySource.TRANSCRIPTOMIC )
-                && Objects.requireNonNull( sample.getLibStrategy() ).equals( GeoLibraryStrategy.RNA_SEQ ) ) {
+                && Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.RNA_SEQ )
+                || Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.OTHER ) ) {
             if ( StringUtils.containsAnyIgnoreCase( sample.getTitle(), SINGLE_CELL_KEYWORDS )
                     || StringUtils.containsAnyIgnoreCase( sample.getDescription(), SINGLE_CELL_KEYWORDS ) ) {
                 log.warn( sample.getGeoAccession() + ": does not use the 'single cell transcriptomics' library source, but keywords in its description indicate it is single-cell." );
@@ -640,6 +668,26 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
             if ( hasSingleCellDataInSeries ) {
                 // FIXME: there's no guarantee that this particular sample has data in the series supplementary material
                 log.warn( sample.getGeoAccession() + ": does not use the 'single cell transcriptomics' library source, but has single-cell data in the supplementary files of its series." );
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check if a GEO sample is single-nuclei by looking up its metadata.
+     */
+    public boolean isSingleNuclei( GeoSample sample, boolean hasSingleCellDataInSeries ) {
+        if ( isSingleCell( sample, hasSingleCellDataInSeries ) ) {
+            if ( Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.SNRNA_SEQ ) ) {
+                return true;
+            }
+            if ( StringUtils.containsAnyIgnoreCase( sample.getDescription(), SINGLE_NUCLEI_KEYWORDS ) ) {
+                log.warn( sample.getGeoAccession() + ": does not use 'snRNA-Seq' library strategy, but keywords in its description indicate it is single-nuclei." );
+                return true;
+            }
+            if ( sample.getChannels().stream().anyMatch( channel -> StringUtils.containsAnyIgnoreCase( channel.getExtractProtocol(), SINGLE_NUCLEI_EXTRACTION_KEYWORD ) ) ) {
+                log.warn( sample.getGeoAccession() + ": does not use 'snRNA-Seq' library strategy, but keywords in its extraction protocol indicate it is single-nuclei." );
                 return true;
             }
         }
