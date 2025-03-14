@@ -25,12 +25,12 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
-import ubic.gemma.core.datastructure.matrix.TwoChannelExpressionDataMatrixBuilder;
 import ubic.gemma.core.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.datastructure.matrix.TwoChannelExpressionDataMatrixBuilder;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
@@ -380,7 +380,11 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         }
         eeService.update( ee );
 
-        geoService.updateFromGEO( "GSE30521" );
+        geoService.updateFromGEO( "GSE30521", GeoService.GeoUpdateConfig.builder()
+                .experimentTags( true )
+                .sampleCharacteristics( true )
+                .publications( true )
+                .build() );
         ee = eeService.load( ee.getId() );
         assertNotNull( ee );
         ee = this.eeService.thawLite( ee );

@@ -244,7 +244,11 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
 
             log.info( " ***** Starting processing of " + accession + " *****" );
             if ( updateOnly ) {
-                geoService.updateFromGEO( accession );
+                geoService.updateFromGEO( accession, GeoService.GeoUpdateConfig.builder()
+                        .experimentTags( true )
+                        .sampleCharacteristics( true )
+                        .publications( true )
+                        .build() );
                 addSuccessObject( accession, "Updated" );
                 return;
             }
