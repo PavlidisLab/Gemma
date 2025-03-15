@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project>
+<site xmlns="http://maven.apache.org/SITE/2.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://maven.apache.org/SITE/2.0.0 https://maven.apache.org/xsd/site-2.0.0.xsd">
     <skin>
         <groupId>org.apache.maven.skins</groupId>
         <artifactId>maven-fluido-skin</artifactId>
-        <version>2.0.0-M11</version>
+        <version>2.1.0</version>
     </skin>
-    <bannerLeft>
-        <src>/images/gemma-headerlogo.png</src>
-        <href>https://gemma.msl.ubc.ca</href>
+    <bannerLeft href="https://gemma.msl.ubc.ca">
+        <image src="/images/gemma-headerlogo.png"/>
     </bannerLeft>
-    <bannerRight>
-        <src>/images/ubc-logo-2018-crest-blue-rgb72.jpg</src>
-        <href>https://www.ubc.ca/</href>
+    <bannerRight href="https://www.ubc.ca/">
+        <image src="/images/ubc-logo-2018-crest-blue-rgb72.jpg"/>
     </bannerRight>
     <body>
         <menu name="Overview" inherit="top">
@@ -25,4 +24,4 @@
         <menu ref="modules" inherit="top"/>
         <menu ref="reports" inherit="top"/>
     </body>
-</project>
+</site>
