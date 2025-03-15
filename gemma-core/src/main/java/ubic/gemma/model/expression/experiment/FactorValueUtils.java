@@ -31,18 +31,7 @@ public class FactorValueUtils {
         } else if ( !fv.getCharacteristics().isEmpty() ) {
             for ( Iterator<Statement> iter = fv.getCharacteristics().iterator(); iter.hasNext(); ) {
                 Statement c = iter.next();
-                buf.append( defaultIfBlank( c.getSubject(), "?" ) );
-                if ( c.getObject() != null ) {
-                    buf.append( " " ).append( defaultIfBlank( c.getPredicate(), "?" ) );
-                    buf.append( " " ).append( defaultIfBlank( c.getObject(), "?" ) );
-                }
-                if ( c.getSecondObject() != null ) {
-                    if ( c.getObject() != null ) {
-                        buf.append( " and" );
-                    }
-                    buf.append( " " ).append( defaultIfBlank( c.getSecondPredicate(), "?" ) );
-                    buf.append( " " ).append( defaultIfBlank( c.getSecondObject(), "?" ) );
-                }
+                buf.append( StatementUtils.formatStatement( c ) );
                 if ( iter.hasNext() )
                     buf.append( statementDelimiter );
             }

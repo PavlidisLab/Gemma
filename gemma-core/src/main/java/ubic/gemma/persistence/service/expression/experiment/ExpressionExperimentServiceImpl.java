@@ -78,6 +78,7 @@ import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.model.common.description.CharacteristicUtils.*;
+import static ubic.gemma.model.expression.experiment.StatementUtils.formatStatement;
 import static ubic.gemma.persistence.util.SubqueryUtils.guessAliases;
 
 /**
@@ -694,24 +695,14 @@ public class ExpressionExperimentServiceImpl
      *       non-batch, non-redundant with tags). This is tricky because they are so specific...
      */
     private Collection<? extends AnnotationValueObject> getAnnotationsByFactorValues( ExpressionExperiment ee ) {
-        return this.expressionExperimentDao.getAnnotationsByFactorValues( ee ).stream()
+        String[] ignoredPredicates = new String[] {
+                "http://gemma.msl.ubc.ca/ont/TGEMO_00166", // duration
+                "http://gemma.msl.ubc.ca/ont/TGEMO_00167", // dose
+                "http://gemma.msl.ubc.ca/ont/TGEMO_00168"  // development stage
+        };
+        return expressionExperimentDao.getAnnotationsByFactorValues( ee ).stream()
                 .filter( this::filterFactorValueAnnotation )
-                .flatMap( c -> {
-                    List<AnnotationValueObject> results = new ArrayList<>( 3 );
-                    // ignore free text values
-                    if ( c.getSubjectUri() != null ) {
-                        results.add( new AnnotationValueObject( c, FactorValue.class ) );
-                    }
-
-                    if ( c.getObject() != null && c.getObjectUri() != null ) {
-                        results.add( new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getObjectUri(), c.getObject(), FactorValue.class ) );
-                    }
-
-                    if ( c.getSecondObject() != null && c.getSecondObjectUri() != null ) {
-                        results.add( new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getSecondObjectUri(), c.getSecondObject(), FactorValue.class ) );
-                    }
-                    return results.stream();
-                } )
+                .map( c -> new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getSubjectUri(), formatStatement( c, ignoredPredicates ), FactorValue.class ) )
                 .collect( Collectors.toSet() );
     }
 
