@@ -83,6 +83,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.model.expression.experiment.StatementUtils.formatStatement;
 import static ubic.gemma.persistence.util.SubqueryUtils.guessAliases;
 
 /**
@@ -551,22 +552,15 @@ public class ExpressionExperimentServiceImpl
                 .map( c -> new AnnotationValueObject( c, ExpressionExperiment.class ) )
                 .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
 
+        String[] ignoredPredicates = new String[] {
+                "http://gemma.msl.ubc.ca/ont/TGEMO_00166", // duration
+                "http://gemma.msl.ubc.ca/ont/TGEMO_00167", // dose
+                "http://gemma.msl.ubc.ca/ont/TGEMO_00168"  // development stage
+        };
         expressionExperimentDao.getFactorValueAnnotations( expressionExperiment ).stream()
                 .filter( this::filterFactorValueAnnotation )
-                .forEach( c -> {
-                    // ignore free text values
-                    if ( c.getSubject() != null ) {
-                        addIfNovel( annotations, new AnnotationValueObject( c, FactorValue.class ), seenTerms );
-                    }
-
-                    if ( c.getPredicate() != null && c.getObject() != null && filterStatementObject( c, true ) ) {
-                        addIfNovel( annotations, new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getObjectUri(), c.getObject(), FactorValue.class ), seenTerms );
-                    }
-
-                    if ( c.getSecondPredicate() != null && c.getSecondObject() != null && filterStatementObject( c, false ) ) {
-                        addIfNovel( annotations, new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getSecondObjectUri(), c.getSecondObject(), FactorValue.class ), seenTerms );
-                    }
-                } );
+                .map( c -> new AnnotationValueObject( c.getCategoryUri(), c.getCategory(), c.getSubjectUri(), formatStatement( c, ignoredPredicates ), FactorValue.class ) )
+                .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
 
         expressionExperimentDao.getBioMaterialAnnotations( expressionExperiment, false ).stream()
                 .filter( this::filterBioMaterialAnnotation )
