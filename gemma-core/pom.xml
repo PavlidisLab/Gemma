@@ -46,10 +46,11 @@
                             <goal>test-jar</goal>
                         </goals>
                         <configuration>
-                            <excludes>
-                                <!-- this file conflicts with dependent modules' ability to configure test logging -->
-                                <exclude>log4j-test.properties</exclude>
-                            </excludes>
+                            <!-- only include test classes that are meant to be re-used -->
+                            <includes>
+                                <include>org/springframework/security/test/**/*.class</include>
+                                <include>ubic/gemma/core/util/test/**/*.class</include>
+                            </includes>
                         </configuration>
                     </execution>
                 </executions>

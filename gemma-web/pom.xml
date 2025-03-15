@@ -32,6 +32,10 @@
 							<targetPath>resources/restapidocs</targetPath>
 						</resource>
 					</webResources>
+					<warSourceExcludes>
+						bundles/**,
+						node_modules/**
+					</warSourceExcludes>
 				</configuration>
 			</plugin>
 		</plugins>
