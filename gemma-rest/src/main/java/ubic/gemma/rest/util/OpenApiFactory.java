@@ -3,6 +3,7 @@ package ubic.gemma.rest.util;
 import io.swagger.v3.core.converter.ModelConverter;
 import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder;
 import io.swagger.v3.oas.integration.OpenApiContextLocator;
+import io.swagger.v3.oas.integration.api.OpenAPIConfiguration;
 import io.swagger.v3.oas.integration.api.OpenApiContext;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.servers.Server;
@@ -61,6 +62,8 @@ public class OpenApiFactory implements FactoryBean<OpenAPI>, ServletConfigAware,
     private BeanFactory beanFactory;
 
     private OpenApiContext ctx = null;
+
+    private OpenAPIConfiguration config;
 
     public OpenApiFactory( String contextId ) {
         this.contextId = contextId;

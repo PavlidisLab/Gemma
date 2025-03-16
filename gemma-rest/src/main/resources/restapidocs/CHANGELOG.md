@@ -1,5 +1,9 @@
 ## Updates
 
+### Update 2.8.5
+
+Use 200 as a default response code.
+
 ### Update 2.8.4
 
 - when ordering by a column, null values are always displayed last
