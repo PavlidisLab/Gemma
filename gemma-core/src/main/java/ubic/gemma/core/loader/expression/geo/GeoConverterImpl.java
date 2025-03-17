@@ -66,6 +66,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static ubic.gemma.core.loader.expression.geo.model.GeoSeriesType.EXPRESSION_PROFILING_BY_ARRAY;
 
@@ -1876,7 +1877,7 @@ public class GeoConverterImpl implements GeoConverter {
 
         ExpressionExperiment expExp = ExpressionExperiment.Factory.newInstance();
 
-        this.convertCharacteristics( series, expExp );
+        this.convertSeriesTypes( series, expExp );
 
         expExp.setDescription( "" );
 
@@ -2040,13 +2041,16 @@ public class GeoConverterImpl implements GeoConverter {
     }
 
     /**
-     * Add various experiment-level tags.
+     * Convert all the GEO Series Types into assay characteristics.
      */
-    private void convertCharacteristics( GeoSeries series, ExpressionExperiment expExp ) {
-        Characteristic assayType = detectAssayType( series );
-        if ( assayType != null ) {
-            log.info( expExp + " will be tagged with " + assayType + "." );
-            expExp.getCharacteristics().add( assayType );
+    private void convertSeriesTypes( GeoSeries series, ExpressionExperiment expExp ) {
+        Set<Characteristic> assayTypes = series.getSeriesTypes().stream()
+                .map( st -> convertSeriesType( series, st ) )
+                .collect( Collectors.toSet() );
+        if ( !assayTypes.isEmpty() ) {
+            log.info( String.format( "%s will be tagged with the following assay types: %s.", expExp,
+                    assayTypes.stream().map( Characteristic::getValue ).collect( Collectors.joining( ", " ) ) ) );
+            expExp.getCharacteristics().addAll( assayTypes );
         } else {
             log.warn( "Could not detect an assay type for " + expExp + "." );
         }
@@ -2055,41 +2059,37 @@ public class GeoConverterImpl implements GeoConverter {
     /**
      * Detect the most specific assay type that we can.
      */
-    @Nullable
-    private Characteristic detectAssayType( GeoSeries series ) {
-        for ( GeoSeriesType seriesType : series.getSeriesTypes() ) {
-            switch ( seriesType ) {
-                case EXPRESSION_PROFILING_BY_RT_PRC:
-                    return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by RT-PCR", "http://www.ebi.ac.uk/efo/EFO_0002943" );
-                case EXPRESSION_PROFILING_BY_MPSS:
-                    return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by MPSS", "http://www.ebi.ac.uk/efo/EFO_0002942" );
-                case EXPRESSION_PROFILING_BY_TILING_ARRAY:
-                    return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by tiling array", "http://www.ebi.ac.uk/efo/EFO_0002769" );
-                case EXPRESSION_PROFILING_BY_ARRAY:
-                case EXPRESSION_PROFILING_BY_SNP_ARRAY:
-                case NON_CODING_RNA_PROFILING_BY_ARRAY:
-                    return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by array", "http://www.ebi.ac.uk/efo/EFO_0002768" );
-                case METHYLATION_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING:
-                    return Characteristic.Factory.newInstance( Categories.ASSAY, "methylation profiling by high throughput sequencing", "http://www.ebi.ac.uk/efo/EFO_0002761" );
-                case METHYLATION_PROFILING_BY_GENOME_TILING_ARRAY:
-                    return Characteristic.Factory.newInstance( Categories.ASSAY, "methylation profiling by array", "http://www.ebi.ac.uk/efo/EFO_0002759" );
-                case EXPRESSION_PROFILING_BY_SAGE:
-                    return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by SAGE", "http://www.ebi.ac.uk/efo/EFO_0002941" );
-                case NON_CODING_RNA_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING:
-                    return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of non coding RNA", "http://www.ebi.ac.uk/efo/EFO_0003737" );
-                case EXPRESSION_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING:
-                    boolean hasSingleCellDataInSeries = singleCellDetector.hasSingleCellDataInSeries( series );
-                    for ( GeoSample sample : series.getSamples() ) {
-                        if ( singleCellDetector.isSingleNuclei( sample, hasSingleCellDataInSeries ) ) {
-                            return Characteristic.Factory.newInstance( Categories.ASSAY, "single nucleus RNA sequencing", "http://www.ebi.ac.uk/efo/EFO_0009809" );
-                        } else if ( singleCellDetector.isSingleCell( sample, hasSingleCellDataInSeries ) ) {
-                            return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of coding RNA from single cells", "http://www.ebi.ac.uk/efo/EFO_0005684" );
-                        }
+    private Characteristic convertSeriesType( GeoSeries series, GeoSeriesType seriesType ) {
+        switch ( seriesType ) {
+            case EXPRESSION_PROFILING_BY_RT_PRC:
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by RT-PCR", "http://www.ebi.ac.uk/efo/EFO_0002943" );
+            case EXPRESSION_PROFILING_BY_MPSS:
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by MPSS", "http://www.ebi.ac.uk/efo/EFO_0002942" );
+            case EXPRESSION_PROFILING_BY_TILING_ARRAY:
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by tiling array", "http://www.ebi.ac.uk/efo/EFO_0002769" );
+            case EXPRESSION_PROFILING_BY_ARRAY:
+            case EXPRESSION_PROFILING_BY_SNP_ARRAY:
+            case NON_CODING_RNA_PROFILING_BY_ARRAY:
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by array", "http://www.ebi.ac.uk/efo/EFO_0002768" );
+            case METHYLATION_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING:
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "methylation profiling by high throughput sequencing", "http://www.ebi.ac.uk/efo/EFO_0002761" );
+            case METHYLATION_PROFILING_BY_GENOME_TILING_ARRAY:
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "methylation profiling by array", "http://www.ebi.ac.uk/efo/EFO_0002759" );
+            case EXPRESSION_PROFILING_BY_SAGE:
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by SAGE", "http://www.ebi.ac.uk/efo/EFO_0002941" );
+            case NON_CODING_RNA_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING:
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of non coding RNA", "http://www.ebi.ac.uk/efo/EFO_0003737" );
+            case EXPRESSION_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING:
+                boolean hasSingleCellDataInSeries = singleCellDetector.hasSingleCellDataInSeries( series );
+                for ( GeoSample sample : series.getSamples() ) {
+                    if ( singleCellDetector.isSingleNuclei( sample, hasSingleCellDataInSeries ) ) {
+                        return Characteristic.Factory.newInstance( Categories.ASSAY, "single nucleus RNA sequencing", "http://www.ebi.ac.uk/efo/EFO_0009809" );
+                    } else if ( singleCellDetector.isSingleCell( sample, hasSingleCellDataInSeries ) ) {
+                        return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of coding RNA from single cells", "http://www.ebi.ac.uk/efo/EFO_0005684" );
                     }
-                    return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of coding RNA", "http://www.ebi.ac.uk/efo/EFO_0003738" );
-            }
+                }
+                return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of coding RNA", "http://www.ebi.ac.uk/efo/EFO_0003738" );
         }
-        return null;
     }
 
     private void convertSpeciesSpecific( GeoSeries series, Collection<ExpressionExperiment> converted, Map<String, Collection<GeoData>> organismDatasetMap, int i, String organism ) {
