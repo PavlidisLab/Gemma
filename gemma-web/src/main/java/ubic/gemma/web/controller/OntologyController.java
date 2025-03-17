@@ -7,8 +7,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
-import org.springframework.web.util.UriComponentsBuilder;
+import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -16,15 +17,14 @@ import ubic.gemma.core.ontology.FactorValueOntologyService;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.util.ServiceUnavailableException;
-import ubic.basecode.ontology.model.AnnotationProperty;
 
 import javax.servlet.ServletContext;
 import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-import java.util.Arrays;
 
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 
@@ -56,7 +56,7 @@ public class OntologyController {
     @Autowired
     private ServletContext servletContext;
 
-    @RequestMapping(value = {"/TGEMO","/TGEMO.OWL"}, method = { RequestMethod.GET, RequestMethod.HEAD })
+    @RequestMapping(value = { "/TGEMO", "/TGEMO.OWL" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public RedirectView getOntology() {
         String gemmaOntologyUrl = gemmaOntologyService.getOntologyUrl();
         RedirectView redirectView = new RedirectView( gemmaOntologyUrl );
@@ -65,7 +65,7 @@ public class OntologyController {
     }
 
     @ResponseBody
-    @RequestMapping(value = "/{termId:TGEMO_.*}", method = { RequestMethod.GET, RequestMethod.HEAD }, produces = { MediaType.TEXT_HTML_VALUE, "application/rdf+xml" })
+    @RequestMapping(value = "/{termId:TGEMO_.*}", method = { RequestMethod.GET, RequestMethod.HEAD })
     public String getTerm( @PathVariable("termId") String termId ) {
         if ( !gemmaOntologyService.isOntologyLoaded() ) {
             throw new ServiceUnavailableException( "TGEMO is not loaded." );
@@ -80,17 +80,16 @@ public class OntologyController {
                 "<div class=\"padded\"><ul style=\"padding-bottom:0.5em\">" +
                 String.format( "<h2 style=\"padding-bottom:0.5em\">%s: %s</h2>",
                         escapeHtml4( term.getLocalName() ),
-                        escapeHtml4( term.getLabel() ) ));
-                if ( term.getUri() != null) {
-                    s.append(String.format( "<li><a href=%s>%s</a></li>",
-                            escapeHtml4(term.getUri()
-                                    .replaceFirst( "^" + Pattern.quote( TGEMO_URI_PREFIX ), servletContext.getContextPath() + "/ont/" ) ) ,
-                            escapeHtml4( TGEMO_URI_PREFIX + term.getLocalName() ) ) );
-                }
+                        escapeHtml4( term.getLabel() ) ) );
+        if ( term.getUri() != null ) {
+            s.append( String.format( "<li><a href=%s>%s</a></li>",
+                    escapeHtml4( term.getUri()
+                            .replaceFirst( "^" + Pattern.quote( TGEMO_URI_PREFIX ), servletContext.getContextPath() + "/ont/" ) ),
+                    escapeHtml4( TGEMO_URI_PREFIX + term.getLocalName() ) ) );
+        }
 
-
-        for (AnnotationProperty annot: term.getAnnotations()) {
-            if (Arrays.asList("hasDefinition","definition").contains(annot.getProperty()) ){
+        for ( AnnotationProperty annot : term.getAnnotations() ) {
+            if ( Arrays.asList( "hasDefinition", "definition" ).contains( annot.getProperty() ) ) {
                 s.append( "<li>" )
                         .append( annot.getContents() )
                         .append( "</li>" );
@@ -99,7 +98,7 @@ public class OntologyController {
 
 
         s.append( "</ul>" );
-        s.append( String.format("<p>Ontology IRI: <a href=%s>%s</a></p>",
+        s.append( String.format( "<p>Ontology IRI: <a href=%s>%s</a></p>",
                 servletContext.getContextPath() + "/ont/TGEMO",
                 TGEMO_URI_PREFIX + "TGEMO" ) );
         s.append( "</div>" );
