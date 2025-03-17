@@ -2087,14 +2087,53 @@ public class GeoConverterImpl implements GeoConverter {
                     if ( singleCellDetector.isSingleNuclei( sample, hasSingleCellDataInSeries ) ) {
                         return Characteristic.Factory.newInstance( Categories.ASSAY, "single nucleus RNA sequencing", "http://www.ebi.ac.uk/efo/EFO_0009809" );
                     } else if ( singleCellDetector.isSingleCell( sample, hasSingleCellDataInSeries ) ) {
-                        return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of coding RNA from single cells", "http://www.ebi.ac.uk/efo/EFO_0005684" );
+                        // check for evidence of conding RNA
+                        if ( isCodingRNA( series ) ) {
+                            return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of coding RNA from single cells", "http://www.ebi.ac.uk/efo/EFO_0005684" );
+                        } else if ( isNonCodingRNA( series ) ) {
+                            return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of non coding RNA from single cells", "http://www.ebi.ac.uk/efo/EFO_0005685" );
+                        } else {
+                            return Characteristic.Factory.newInstance( Categories.ASSAY, "single-cell RNA sequencing", "http://www.ebi.ac.uk/efo/EFO_0008913" );
+                        }
                     }
                 }
-                return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of coding RNA", "http://www.ebi.ac.uk/efo/EFO_0003738" );
+                if ( isTotalRNA( series ) ) {
+                    return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of total RNA", "http://www.ebi.ac.uk/efo/EFO_0009653" );
+                } else if ( isCodingRNA( series ) ) {
+                    return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of coding RNA", "http://www.ebi.ac.uk/efo/EFO_0003738" );
+                } else if ( isNonCodingRNA( series ) ) {
+                    return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of non coding RNA", "http://www.ebi.ac.uk/efo/EFO_0003737" );
+                } else {
+                    return Characteristic.Factory.newInstance( Categories.ASSAY, "transcription profiling by high throughput sequencing", "http://www.ebi.ac.uk/efo/EFO_0002770" );
+                }
             default:
                 log.warn( "Cannot convert " + seriesType + " to an assay type." );
                 return null;
         }
+    }
+
+    /**
+     * Check if a series is focused on total RNAs.
+     */
+    private boolean isTotalRNA( GeoSeries series ) {
+        // TODO: see https://github.com/PavlidisLab/Gemma/issues/1343
+        return false;
+    }
+
+    /**
+     * Check if a series is focused on coding RNAs.
+     */
+    private boolean isCodingRNA( GeoSeries series ) {
+        // TODO: see https://github.com/PavlidisLab/Gemma/issues/1343
+        return false;
+    }
+
+    /**
+     * Check if a series is focused on non coding RNAs.
+     */
+    private boolean isNonCodingRNA( GeoSeries series ) {
+        // TODO: see https://github.com/PavlidisLab/Gemma/issues/1343
+        return false;
     }
 
     private void convertSpeciesSpecific( GeoSeries series, Collection<ExpressionExperiment> converted, Map<String, Collection<GeoData>> organismDatasetMap, int i, String organism ) {
