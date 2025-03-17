@@ -118,55 +118,25 @@ public class GeoFamilyParser implements Parser<Object> {
             GeoFamilyParser.log.debug( "Parsing...." );
 
             final ExecutorService executor = Executors.newSingleThreadExecutor();
-
-            FutureTask<Exception> future = new FutureTask<>( new Callable<Exception>() {
-                @Override
-                public Exception call() {
-                    try {
-                        GeoFamilyParser.this.doParse( dis );
-                        dis.close();
-                        return null;
-                    } catch ( Exception e ) {
-                        GeoFamilyParser.log.error( e, e );
-                        return e;
-                    }
-                }
-            } );
-
-            executor.execute( future );
+            Future<?> future = executor.submit( () -> doParse( dis ) );
             executor.shutdown();
 
-            while ( !future.isDone() && !future.isCancelled() ) {
+            while ( !future.isDone() ) {
                 try {
-                    TimeUnit.SECONDS.sleep( 5L );
-                } catch ( InterruptedException e ) {
-                    // probably cancelled.
-                    dis.close();
-                    return;
+                    future.get( 5, TimeUnit.SECONDS );
+                } catch ( TimeoutException e ) {
+                    GeoFamilyParser.log.debug( parsedLines + " lines parsed." );
                 }
-                GeoFamilyParser.log.info( parsedLines + " lines parsed." );
             }
 
-            try {
-                Exception e = future.get();
-                if ( e != null ) {
-                    GeoFamilyParser.log.error( e.getMessage() );
-                    throw new RuntimeException( e.getCause() );
-                }
-            } catch ( ExecutionException e ) {
-                throw new RuntimeException( "Parse failed", e.getCause() );
-            } catch ( java.util.concurrent.CancellationException e ) {
-                throw new RuntimeException( "Parse was cancelled", e.getCause() );
-            } catch ( InterruptedException e ) {
-                throw new RuntimeException( "Parse was interrupted", e.getCause() );
-            }
-
-            executor.shutdownNow();
-
-            assert future.isDone();
-            // assert executor.isTerminated();
-
-            GeoFamilyParser.log.info( "Done parsing." );
+            GeoFamilyParser.log.debug( "Done parsing." );
+        } catch ( InterruptedException e ) {
+            // probably cancelled
+            throw new RuntimeException( "Parse was interrupted", e.getCause() );
+        } catch ( ExecutionException e ) {
+            throw new RuntimeException( "Parse failed", e.getCause() );
+        } catch ( CancellationException e ) {
+            throw new RuntimeException( "Parse was cancelled", e.getCause() );
         }
     }
 

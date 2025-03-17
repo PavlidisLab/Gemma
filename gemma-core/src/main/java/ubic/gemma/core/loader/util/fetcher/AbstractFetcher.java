@@ -26,20 +26,15 @@ import ubic.gemma.model.common.description.LocalFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 /**
  * @author pavlidis
  */
-@SuppressWarnings({ "WeakerAccess", "unused" }) // Possible external use
 public abstract class AbstractFetcher implements Fetcher {
 
     protected static final int INFO_UPDATE_INTERVAL = 10000;
@@ -206,51 +201,22 @@ public abstract class AbstractFetcher implements Fetcher {
     }
 
     /**
-     * @param future future task
-     * @return true if it finished normally, false if it was cancelled.
-     */
-    protected boolean waitForDownload( FutureTask<Boolean> future ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-        long lastTime = timer.getTime();
-        while ( !future.isDone() && !future.isCancelled() ) {
-            try {
-                Thread.sleep( AbstractFetcher.INFO_UPDATE_INTERVAL );
-            } catch ( InterruptedException ie ) {
-                AbstractFetcher.log.info( "Cancelling download" );
-                boolean cancelled = future.cancel( true );
-                if ( cancelled ) {
-                    AbstractFetcher.log.info( "Download stopped successfully." );
-                    return false;
-                }
-                throw new RuntimeException( "Cancellation failed." );
-
-            }
-
-            if ( AbstractFetcher.log.isInfoEnabled() && timer.getTime() > ( lastTime + 2000L ) ) {
-                AbstractFetcher.log.info( "Waiting ... " + timer.getTime() + "ms elapsed...." );
-            }
-        }
-        return true;
-    }
-
-    /**
      * @param future       future task
      * @param expectedSize expected size
      * @param outputFile   output file
      * @return true if it finished normally, false if it was cancelled.
      */
-    protected boolean waitForDownload( FutureTask<Boolean> future, long expectedSize, File outputFile ) {
+    protected boolean waitForDownload( Future<Boolean> future, long expectedSize, File outputFile ) {
         int i = 0;
         long previousSize = 0;
         StopWatch idleTimer = new StopWatch();
-        while ( !future.isDone() ) {
+        while ( true ) {
             try {
-                future.get( AbstractFetcher.INFO_UPDATE_INTERVAL, TimeUnit.MILLISECONDS );
-            } catch ( InterruptedException ie ) {
-                AbstractFetcher.log.warn( "Current thread was interrupted, cancelling download...", ie );
-                future.cancel( true );
-                return false;
+                if ( future.get( AbstractFetcher.INFO_UPDATE_INTERVAL, TimeUnit.MILLISECONDS ) ) {
+                    return true;
+                } else {
+                    throw new RuntimeException( "Downloaded returned false." );
+                }
             } catch ( TimeoutException e ) {
                 if ( previousSize == outputFile.length() ) {
                     /*
@@ -270,25 +236,22 @@ public abstract class AbstractFetcher implements Fetcher {
                 //            if ( outputFile.length() >= expectedSize ) {
                 //                // no special action, it will finish soon enough.
                 //            }
-                reportProgress( outputFile, previousSize, expectedSize, i );
+                reportProgress( outputFile, expectedSize, i );
                 previousSize = outputFile.length();
                 i++;
+            } catch ( CancellationException e ) {
+                return false;
+            } catch ( InterruptedException ie ) {
+                AbstractFetcher.log.warn( "Current thread was interrupted, cancelling download...", ie );
+                future.cancel( true );
+                return false;
             } catch ( ExecutionException e ) {
                 throw new RuntimeException( e );
             }
         }
-
-        if ( future.isCancelled() ) {
-            AbstractFetcher.log.warn( "Download was cancelled." );
-            return false;
-        }
-
-        AbstractFetcher.log.info( "File with size " + outputFile.length() + " bytes." );
-
-        return true;
     }
 
-    private void reportProgress( File outputFile, long previousSize, long expectedSize, int i ) {
+    private void reportProgress( File outputFile, long expectedSize, int i ) {
         /*
          * Avoid logging too much. If we're waiting for a long download, reduce frequency of updates.
          */

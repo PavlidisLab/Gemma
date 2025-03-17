@@ -34,7 +34,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.concurrent.FutureTask;
+import java.util.concurrent.Callable;
 
 /**
  * Retrieve and unpack the raw data files for GEO series. These are the CEL and other files (RPT, EXP and maybe DAT) for
@@ -99,7 +99,7 @@ public class RawDataFetcher extends FtpArchiveFetcher {
                 throw new IOException( "Lost FTP connection" );
             }
             long expectedSize = this.getExpectedSize( seekFile );
-            FutureTask<Boolean> future = this.defineTask( outputFileName, seekFile );
+            Callable<Boolean> future = this.defineTask( outputFileName, seekFile );
             Collection<LocalFile> result = this.doTask( future, expectedSize, seekFile, outputFileName );
 
             if ( result == null || result.isEmpty() ) {
