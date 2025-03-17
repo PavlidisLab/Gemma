@@ -31,7 +31,10 @@ import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author pavlidis
@@ -241,56 +244,21 @@ public abstract class AbstractFetcher implements Fetcher {
         int i = 0;
         long previousSize = 0;
         StopWatch idleTimer = new StopWatch();
-        while ( !future.isDone() && !future.isCancelled() ) {
+        while ( !future.isDone() ) {
             try {
-                Thread.sleep( AbstractFetcher.INFO_UPDATE_INTERVAL );
+                future.get( AbstractFetcher.INFO_UPDATE_INTERVAL, TimeUnit.MILLISECONDS );
             } catch ( InterruptedException ie ) {
-                if ( AbstractFetcher.log != null ) {
-                    AbstractFetcher.log.info( "Cancelling download" );
-                }
-                boolean cancelled = future.cancel( true );
-                if ( cancelled ) {
-                    return false;
-                }
-
-                // double check...
-                if ( future.isCancelled() || future.isDone() ) {
-                    return false;
-                }
-
-                if ( AbstractFetcher.log != null ) {
-                    AbstractFetcher.log
-                            .error( "Cancellation of actual download might not have happened? Task says it was not cancelled: "
-                                    + future );
-                }
-
+                AbstractFetcher.log.warn( "Current thread was interrupted, cancelling download...", ie );
+                future.cancel( true );
                 return false;
-
-            }
-
-            /*
-             * Avoid logging too much. If we're waiting for a long download, reduce frequency of updates.
-             */
-            if ( outputFile.length() < expectedSize && (
-                    i < AbstractFetcher.NUMBER_OF_TIMES_TO_LOG_WAITING_BEFORE_REDUCING_VERBOSITY
-                            || i % AbstractFetcher.NUMBER_OF_TIMES_TO_LOG_WAITING_BEFORE_REDUCING_VERBOSITY == 0 ) ) {
-
-                double percent = 100.00 * outputFile.length() / expectedSize;
-
-                // can cause npe error, breaking hot deploy
-                if ( AbstractFetcher.log != null && AbstractFetcher.log.isInfoEnabled() ) {
-                    AbstractFetcher.log.info( ( outputFile.length() + ( expectedSize > 0 ? "/" + expectedSize : "" )
-                            + " bytes read (" + String.format( "%.1f", percent ) + "%)" ) );
-                }
-
+            } catch ( TimeoutException e ) {
                 if ( previousSize == outputFile.length() ) {
                     /*
                      * Possibly consider bailing after a while.
                      */
                     if ( idleTimer.getTime() > AbstractFetcher.STALLED_BAIL_TIME_LIMIT ) {
-                        if ( AbstractFetcher.log != null ) {
-                            AbstractFetcher.log.warn( "Download does not seem to be happening, bailing" );
-                        }
+                        AbstractFetcher.log.warn( "Download does not seem to be happening, bailing" );
+                        future.cancel( true );
                         return false;
                     }
                     if ( idleTimer.getTime() == 0 )
@@ -299,21 +267,42 @@ public abstract class AbstractFetcher implements Fetcher {
                     idleTimer.reset();
                     idleTimer.start();
                 }
+                //            if ( outputFile.length() >= expectedSize ) {
+                //                // no special action, it will finish soon enough.
+                //            }
+                reportProgress( outputFile, previousSize, expectedSize, i );
+                previousSize = outputFile.length();
+                i++;
+            } catch ( ExecutionException e ) {
+                throw new RuntimeException( e );
             }
-
-            //            if ( outputFile.length() >= expectedSize ) {
-            //                // no special action, it will finish soon enough.
-            //            }
-
-            previousSize = outputFile.length();
-
-            i++;
         }
-        if ( i == 0 )
-            if ( AbstractFetcher.log != null ) {
-                AbstractFetcher.log.info( "File with size " + outputFile.length() + " bytes." );
-            }
+
+        if ( future.isCancelled() ) {
+            AbstractFetcher.log.warn( "Download was cancelled." );
+            return false;
+        }
+
+        AbstractFetcher.log.info( "File with size " + outputFile.length() + " bytes." );
+
         return true;
     }
 
+    private void reportProgress( File outputFile, long previousSize, long expectedSize, int i ) {
+        /*
+         * Avoid logging too much. If we're waiting for a long download, reduce frequency of updates.
+         */
+        if ( outputFile.length() < expectedSize && (
+                i < AbstractFetcher.NUMBER_OF_TIMES_TO_LOG_WAITING_BEFORE_REDUCING_VERBOSITY
+                        || i % AbstractFetcher.NUMBER_OF_TIMES_TO_LOG_WAITING_BEFORE_REDUCING_VERBOSITY == 0 ) ) {
+
+            double percent = 100.00 * outputFile.length() / expectedSize;
+
+            // can cause npe error, breaking hot deploy
+            if ( AbstractFetcher.log.isInfoEnabled() ) {
+                AbstractFetcher.log.info( ( outputFile.length() + ( expectedSize > 0 ? "/" + expectedSize : "" )
+                        + " bytes read (" + String.format( "%.1f", percent ) + "%)" ) );
+            }
+        }
+    }
 }
