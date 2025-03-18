@@ -51,7 +51,11 @@ public class ExpressionExperimentDataUpdaterCli extends ExpressionExperimentMani
     }
 
     @Override
-    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) throws Exception {
+        getBatchTaskExecutor().execute( () -> processExpressionExperimentInternal( expressionExperiment ) );
+    }
+
+    private void processExpressionExperimentInternal( ExpressionExperiment expressionExperiment ) {
         GeoService.GeoUpdateConfig updateConfig = GeoService.GeoUpdateConfig.builder()
                 .experimentTags( updateExperimentTags )
                 .sampleCharacteristics( updateSampleCharacteristics )
@@ -63,12 +67,12 @@ public class ExpressionExperimentDataUpdaterCli extends ExpressionExperimentMani
             log.warn( "Ignoring " + expressionExperiment + " because it is not from GEO." );
             return;
         }
+        geoService.updateFromGEO( expressionExperiment, updateConfig );
+        addSuccessObject( expressionExperiment, "Updated" );
         try {
-            geoService.updateFromGEO( expressionExperiment, updateConfig );
             refreshExpressionExperimentFromGemmaWeb( expressionExperiment, false, false );
-            addSuccessObject( expressionExperiment, "Updated" );
         } catch ( Exception e ) {
-            addErrorObject( expressionExperiment, e );
+            addWarningObject( expressionExperiment, "Could not refresh experiment from from Gemma Web.", e );
         }
     }
 }

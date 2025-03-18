@@ -19,6 +19,7 @@
 package ubic.gemma.core.util;
 
 import org.apache.commons.cli.*;
+import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
@@ -27,7 +28,9 @@ import org.ocpsoft.prettytime.shade.edu.emory.mathcs.backport.java.util.Collecti
 import org.springframework.util.Assert;
 
 import javax.annotation.Nullable;
-import java.io.PrintWriter;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -71,6 +74,7 @@ public abstract class AbstractCLI implements CLI {
 
     private static final String BATCH_FORMAT_OPTION = "batchFormat";
     private static final String BATCH_OUTPUT_FILE_OPTION = "batchOutputFile";
+    private static final String BATCH_REPORT_FREQUENCY_OPTION = "batchReportFrequency";
 
     /**
      * CLI context.
@@ -89,12 +93,17 @@ public abstract class AbstractCLI implements CLI {
     /**
      * Format to use to summarize batch processing.
      */
-    private BatchTaskExecutorService.BatchFormat batchFormat;
+    private BatchFormat batchFormat;
     /**
      * Destination for batch processing summary.
      */
     @Nullable
     private Path batchOutputFile;
+    /**
+     * Frequency at which to report batch processing progress.
+     */
+    @Nullable
+    private Integer batchReportFrequencySeconds;
 
     /**
      * Indicate if we are "inside" {@link #doWork()}.
@@ -103,6 +112,8 @@ public abstract class AbstractCLI implements CLI {
 
     @Nullable
     private BatchTaskExecutorService executorService;
+    @Nullable
+    private BatchTaskProgressReporter progressReporter;
 
     @Override
     public String getCommandName() {
@@ -199,7 +210,7 @@ public abstract class AbstractCLI implements CLI {
         try {
             work();
             awaitBatchExecutorService();
-            return executorService != null && executorService.hasErrorObjects() ? FAILURE_FROM_ERROR_OBJECTS : SUCCESS;
+            return progressReporter != null && progressReporter.hasErrorObjects() ? FAILURE_FROM_ERROR_OBJECTS : SUCCESS;
         } catch ( Exception e ) {
             if ( executorService != null ) {
                 List<Runnable> stillRunning = executorService.shutdownNow();
@@ -216,11 +227,33 @@ public abstract class AbstractCLI implements CLI {
             }
         } finally {
             if ( executorService != null ) {
-                // always summarize processing, even if an error is thrown
-                executorService.summarizeBatchProcessing();
                 executorService = null;
             }
+            if ( progressReporter != null ) {
+                // always summarize processing, even if an error is thrown
+                try {
+                    progressReporter.close();
+                } catch ( IOException e ) {
+                    log.error( "Failed to close batch task executor.", e );
+                }
+                progressReporter = null;
+            }
         }
+    }
+
+    /**
+     * Obtain the application context.
+     * <p>
+     * Beans in a CLI context are usually lazily-initialized as using {@link ubic.gemma.core.context.LazyInitByDefaultPostProcessor},
+     * so using the context to create beans ensures that only the necessary beans are created.
+     */
+    public final ApplicationContext getApplicationContext() {
+        return applicationContext;
+    }
+
+    @Override
+    public final void setApplicationContext( ApplicationContext applicationContext ) {
+        this.applicationContext = applicationContext;
     }
 
     /**
@@ -243,7 +276,11 @@ public abstract class AbstractCLI implements CLI {
      * This will be included in the 'Usage: ...' error message when the CLI is misused.
      */
     protected String getUsage() {
-        return "gemma-cli [options] " + this.getCommandName() + " [commandOptions]" + ( allowPositionalArguments ? " [files]" : "" );
+        String commandName = this.getCliContext().getCommandNameOrAliasUsed();
+        if ( commandName == null ) {
+            commandName = getClass().getName();
+        }
+        return "gemma-cli [options] " + commandName + " [commandOptions]" + ( allowPositionalArguments ? " [files]" : "" );
     }
 
     /**
@@ -279,8 +316,16 @@ public abstract class AbstractCLI implements CLI {
      */
     protected final void addBatchOption( Options options ) {
         Assert.state( !options.hasOption( BATCH_FORMAT_OPTION ), "The -" + BATCH_FORMAT_OPTION + " option was already added." );
-        options.addOption( BATCH_FORMAT_OPTION, true, "Format to use to the batch summary" );
-        options.addOption( Option.builder( BATCH_OUTPUT_FILE_OPTION ).hasArg().type( Path.class ).desc( "Output file to use for the batch summary (default is standard output)" ).build() );
+        OptionsUtils.addEnumOption( options, BATCH_FORMAT_OPTION, "batch-format",
+                "Format to use to the batch summary (default to TEXT or TSV if a file is specified via -" + BATCH_OUTPUT_FILE_OPTION + ")",
+                BatchFormat.class );
+        options.addOption( Option.builder( BATCH_OUTPUT_FILE_OPTION )
+                .longOpt( "batch-output-file" ).hasArg().type( Path.class )
+                .desc( "Output file to use for the batch summary (default is standard output)" ).build() );
+        options.addOption( Option.builder( BATCH_REPORT_FREQUENCY_OPTION ).longOpt( "batch-report-frequency" )
+                .hasArg().type( Integer.class )
+                .desc( "Frequency at which to report batch task progress in seconds (default is every 30 seconds)" )
+                .build() );
     }
 
     /**
@@ -327,15 +372,12 @@ public abstract class AbstractCLI implements CLI {
         }
 
         if ( commandLine.hasOption( BATCH_FORMAT_OPTION ) ) {
-            try {
-                this.batchFormat = BatchTaskExecutorService.BatchFormat.valueOf( commandLine.getOptionValue( BATCH_FORMAT_OPTION ).toUpperCase() );
-            } catch ( IllegalArgumentException e ) {
-                throw new ParseException( String.format( "Unsupported batch format: %s.", commandLine.getOptionValue( BATCH_FORMAT_OPTION ) ) );
-            }
+            this.batchFormat = OptionsUtils.getEnumOptionValue( commandLine, BATCH_FORMAT_OPTION, BatchFormat.class );
         } else {
-            this.batchFormat = commandLine.hasOption( BATCH_OUTPUT_FILE_OPTION ) ? BatchTaskExecutorService.BatchFormat.TSV : BatchTaskExecutorService.BatchFormat.TEXT;
+            this.batchFormat = commandLine.hasOption( BATCH_OUTPUT_FILE_OPTION ) ? BatchFormat.TSV : BatchFormat.TEXT;
         }
         this.batchOutputFile = commandLine.getParsedOptionValue( BATCH_OUTPUT_FILE_OPTION );
+        this.batchReportFrequencySeconds = commandLine.getParsedOptionValue( BATCH_REPORT_FREQUENCY_OPTION );
     }
 
     /**
@@ -399,6 +441,13 @@ public abstract class AbstractCLI implements CLI {
         throw new WorkAbortedException( message );
     }
 
+    enum BatchFormat {
+        TEXT,
+        TSV,
+        LOG,
+        SUPPRESS
+    }
+
     /**
      * Exception raised when a {@link AbstractCLI#doWork()} aborted by the user.
      */
@@ -415,14 +464,32 @@ public abstract class AbstractCLI implements CLI {
      * @param message       success message
      */
     protected final void addSuccessObject( Object successObject, String message ) {
-        getBatchTaskExecutorInternal().addSuccessObject( successObject, message );
+        getBatchTaskProgressReporter().addSuccessObject( successObject, message );
     }
 
     /**
      * @see #addSuccessObject(Object, String)
      */
     protected final void addSuccessObject( Object successObject ) {
-        getBatchTaskExecutorInternal().addSuccessObject( successObject );
+        getBatchTaskProgressReporter().addSuccessObject( successObject );
+    }
+
+    /**
+     * @see #addWarningObject(Object, String, Throwable)
+     */
+    protected final void addWarningObject( @Nullable Object warningObject, String message ) {
+        getBatchTaskProgressReporter().addWarningObject( warningObject, message );
+    }
+
+    /**
+     * Add a warning object with a stacktrace to indicate a recoverable failure in a batch processing.
+     *
+     * @param warningObject that was processed
+     * @param message       error message
+     * @param throwable     throwable to produce a stacktrace
+     */
+    protected final void addWarningObject( @Nullable Object warningObject, String message, Throwable throwable ) {
+        getBatchTaskProgressReporter().addWarningObject( warningObject, message, throwable );
     }
 
     /**
@@ -435,8 +502,7 @@ public abstract class AbstractCLI implements CLI {
      * @param throwable   throwable to produce a stacktrace
      */
     protected final void addErrorObject( @Nullable Object errorObject, String message, Throwable throwable ) {
-        getBatchTaskExecutorInternal().addErrorObject( errorObject, message, throwable );
-        log.error( "Error while processing " + ( errorObject != null ? errorObject : "unknown object" ) + ":\n\t" + message, throwable );
+        getBatchTaskProgressReporter().addErrorObject( errorObject, message, throwable );
     }
 
     /**
@@ -445,8 +511,7 @@ public abstract class AbstractCLI implements CLI {
      * @see #addErrorObject(Object, String)
      */
     protected final void addErrorObject( @Nullable Object errorObject, String message ) {
-        getBatchTaskExecutorInternal().addErrorObject( errorObject, message );
-        log.error( "Error while processing " + ( errorObject != null ? errorObject : "unknown object" ) + ":\n\t" + message );
+        getBatchTaskProgressReporter().addErrorObject( errorObject, message );
     }
 
     /**
@@ -455,8 +520,7 @@ public abstract class AbstractCLI implements CLI {
      * @see #addErrorObject(Object, String, Throwable)
      */
     protected final void addErrorObject( @Nullable Object errorObject, Exception exception ) {
-        getBatchTaskExecutorInternal().addErrorObject( errorObject, exception );
-        log.error( "Error while processing " + ( errorObject != null ? errorObject : "unknown object" ), exception );
+        getBatchTaskProgressReporter().addErrorObject( errorObject, exception );
     }
 
     /**
@@ -475,12 +539,62 @@ public abstract class AbstractCLI implements CLI {
     /**
      * Internal batch task executor, because {@link BatchTaskExecutorService} is package-private.
      */
-    private BatchTaskExecutorService getBatchTaskExecutorInternal() {
+    private synchronized BatchTaskExecutorService getBatchTaskExecutorInternal() {
         Assert.state( insideDoWork, "Batch tasks can only be submitted in doWork()." );
         if ( executorService == null ) {
-            executorService = new BatchTaskExecutorService( createBatchTaskExecutorService(), batchFormat, batchOutputFile, getCliContext() );
+            executorService = new BatchTaskExecutorService( createBatchTaskExecutorService(), getBatchTaskProgressReporter() );
         }
         return executorService;
+    }
+
+    /**
+     * This needs to be synchronized because multiple threads might try to report progress at the same time.
+     */
+    private synchronized BatchTaskProgressReporter getBatchTaskProgressReporter() {
+        if ( progressReporter == null ) {
+            BatchTaskSummaryWriter summaryWriter;
+            switch ( batchFormat ) {
+                case TEXT:
+                    try {
+                        summaryWriter = new TextBatchTaskSummaryWriter( openBatchTaskSummaryDestination() );
+                    } catch ( IOException e ) {
+                        throw new RuntimeException( "Failed to open destination for writing batch task results.", e );
+                    }
+                    break;
+                case TSV:
+                    try {
+                        summaryWriter = new TsvBatchTaskSummaryWriter( openBatchTaskSummaryDestination() );
+                    } catch ( IOException e ) {
+                        throw new RuntimeException( "Failed to open destination for writing batch task results.", e );
+                    }
+                    break;
+                case LOG:
+                    summaryWriter = new LoggingBatchTaskSummaryWriter();
+                    break;
+                case SUPPRESS:
+                    summaryWriter = new SuppressBatchTaskSummaryWriter();
+                    break;
+                default:
+                    throw new IllegalStateException( "Unsupported batch format " + batchFormat );
+            }
+            progressReporter = new BatchTaskProgressReporter( summaryWriter );
+            if ( batchReportFrequencySeconds != null ) {
+                progressReporter.setReportFrequencyMillis( batchReportFrequencySeconds * 1000 );
+            }
+        }
+        return progressReporter;
+    }
+
+    private Writer openBatchTaskSummaryDestination() throws IOException {
+        if ( batchOutputFile != null ) {
+            log.info( String.format( "Batch processing summary will be written to %s", batchOutputFile ) );
+            // always produce UTF-8 files
+            return Files.newBufferedWriter( batchOutputFile, StandardCharsets.UTF_8 );
+        } else {
+            // prevent closing the standard output stream
+            // use the standard charset since we're printing to the console
+            return new OutputStreamWriter( CloseShieldOutputStream.wrap( getCliContext().getOutputStream() ) );
+        }
     }
 
     /**
@@ -497,7 +611,26 @@ public abstract class AbstractCLI implements CLI {
     }
 
     /**
+     * Set the frequency at which the batch task executor should report progress.
+     * <p>
+     * The default is to report progress every 30 seconds. It may be overwritten by the {@code -batchReportFrequency}
+     * option.
+     */
+    protected void setReportFrequencyMillis( int reportFrequencyMillis ) {
+        getBatchTaskProgressReporter().setReportFrequencyMillis( reportFrequencyMillis );
+    }
+
+    /**
+     * Set the estimated maximum number of batch tasks to be processed.
+     */
+    protected void setEstimatedMaxTasks( int estimatedMaxTasks ) {
+        getBatchTaskProgressReporter().setEstimatedMaxTasks( estimatedMaxTasks );
+    }
+
+    /**
      * Await the completion of all batch tasks.
+     * <p>
+     * The batch task executor will be shutdown, preventing any new tasks from being submitted.
      */
     protected final void awaitBatchExecutorService() throws InterruptedException {
         if ( executorService == null ) {
@@ -507,9 +640,13 @@ public abstract class AbstractCLI implements CLI {
         if ( executorService.isTerminated() ) {
             return;
         }
-        log.info( String.format( "Awaiting for %d/%d batch tasks to finish...", executorService.getSubmittedTasks() - executorService.getCompletedTasks(), executorService.getSubmittedTasks() ) );
-        while ( !executorService.awaitTermination( 30, TimeUnit.SECONDS ) ) {
-            log.info( String.format( "Completed %d/%d batch tasks.", executorService.getCompletedTasks(), executorService.getSubmittedTasks() ) );
+        int remainingTasks = executorService.getRemainingTasks();
+        if ( remainingTasks > 0 ) {
+            log.info( String.format( "Awaiting for %d batch tasks to finish...", remainingTasks ) );
+        }
+        getBatchTaskProgressReporter().setEstimatedMaxTasks( getBatchTaskProgressReporter().getCompletedTasks() + remainingTasks );
+        while ( !executorService.awaitTermination( 100, TimeUnit.MILLISECONDS ) ) {
+            getBatchTaskProgressReporter().reportProgress();
         }
     }
 }

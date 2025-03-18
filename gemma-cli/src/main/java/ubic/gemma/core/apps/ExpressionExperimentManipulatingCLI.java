@@ -365,14 +365,14 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      * This only called if more than one experiment was found.
      */
     protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
+        setEstimatedMaxTasks( expressionExperiments.size() );
         for ( BioAssaySet bas : expressionExperiments ) {
             try {
                 processBioAssaySet( bas );
             } catch ( Exception e ) {
+                addErrorObject( bas, e );
                 if ( abortOnError ) {
-                    throw e;
-                } else {
-                    addErrorObject( bas, e );
+                    throw new RuntimeException( "Aborted processing due to error.", e );
                 }
             }
         }
@@ -383,8 +383,9 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      * <p>
      * This method delegates to one of {@link #processExpressionExperiment(ExpressionExperiment)},
      * {@link #processExpressionExperimentSubSet(ExpressionExperimentSubSet)} or {@link #processOtherBioAssaySet(BioAssaySet)}.
+     * @throws Exception if an error occurs, it will be collected via {@link #addErrorObject(Object, String, Throwable)}
      */
-    protected void processBioAssaySet( BioAssaySet bas ) {
+    protected void processBioAssaySet( BioAssaySet bas ) throws Exception {
         Assert.notNull( bas, "Cannot process a null BioAssaySet." );
         if ( bas instanceof ExpressionExperiment ) {
             processExpressionExperiment( ( ExpressionExperiment ) bas );
@@ -398,21 +399,21 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     /**
      * Process an {@link ExpressionExperiment}.
      */
-    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) throws Exception {
         throw new UnsupportedOperationException( "This command line does support experiments." );
     }
 
     /**
      * Process an {@link ExpressionExperimentSubSet}.
      */
-    protected void processExpressionExperimentSubSet( @SuppressWarnings("unused") ExpressionExperimentSubSet expressionExperimentSubSet ) {
+    protected void processExpressionExperimentSubSet( @SuppressWarnings("unused") ExpressionExperimentSubSet expressionExperimentSubSet ) throws Exception {
         throw new UnsupportedOperationException( "This command line does support experiment subsets." );
     }
 
     /**
      * Process other kinds of {@link BioAssaySet} that are neither experiment nor subset.
      */
-    protected void processOtherBioAssaySet( @SuppressWarnings("unused") BioAssaySet bas ) {
+    protected void processOtherBioAssaySet( @SuppressWarnings("unused") BioAssaySet bas ) throws Exception {
         throw new UnsupportedOperationException( "This command line does support other kinds of BioAssaySet." );
     }
 
@@ -554,7 +555,6 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
                     removedTroubledExperiments.get(), expressionExperiments.size(), FORCE_OPTION ) );
         }
     }
-
 
     /**
      * Refresh a dataset for Gemma Web.

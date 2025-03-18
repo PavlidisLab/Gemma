@@ -5,10 +5,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.util.GemmaRestApiClient;
 
-import javax.annotation.Nullable;
-
 @Component
-public class GemmaRestApiClientAuthenticator implements CliAuthenticationAware {
+public class GemmaRestApiClientAuthenticator implements CLIAuthenticationAware {
 
     private final GemmaRestApiClient gemmaRestApiClient;
 
@@ -18,11 +16,12 @@ public class GemmaRestApiClientAuthenticator implements CliAuthenticationAware {
     }
 
     @Override
-    public void setAuthentication( @Nullable Authentication authentication ) {
-        if ( authentication != null ) {
-            this.gemmaRestApiClient.setAuthentication( authentication );
-        } else {
-            this.gemmaRestApiClient.clearAuthentication();
-        }
+    public void setAuthentication( Authentication authentication ) {
+        this.gemmaRestApiClient.setAuthentication( authentication );
+    }
+
+    @Override
+    public void clearAuthentication() {
+        this.gemmaRestApiClient.clearAuthentication();
     }
 }

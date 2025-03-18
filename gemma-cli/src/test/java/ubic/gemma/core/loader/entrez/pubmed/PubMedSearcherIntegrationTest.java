@@ -21,6 +21,7 @@ package ubic.gemma.core.loader.entrez.pubmed;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.util.CliContext;
 import ubic.gemma.core.util.test.BaseCliIntegrationTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 
@@ -41,7 +42,7 @@ public class PubMedSearcherIntegrationTest extends BaseCliIntegrationTest {
     private PubMedSearcher p;
 
     /**
-     * Test method for {@link ubic.gemma.core.loader.entrez.pubmed.PubMedSearcher#executeCommand(ubic.gemma.core.util.CliContext)}.
+     * Test method for {@link ubic.gemma.core.loader.entrez.pubmed.PubMedSearcher#executeCommand(CliContext)}.
      */
     @Test
     @Category(SlowTest.class)

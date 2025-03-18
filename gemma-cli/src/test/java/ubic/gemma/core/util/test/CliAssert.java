@@ -3,6 +3,7 @@ package ubic.gemma.core.util.test;
 import org.apache.commons.io.input.TeeInputStream;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.assertj.core.api.AbstractAssert;
+import org.assertj.core.api.ByteArrayAssert;
 import org.assertj.core.description.Description;
 import org.assertj.core.internal.Failures;
 import ubic.gemma.core.util.CLI;
@@ -16,8 +17,6 @@ import java.util.stream.Collectors;
 
 public class CliAssert extends AbstractAssert<CliAssert, CLI> {
 
-    private final Failures failures = Failures.instance();
-
     private final TestCliContext cliContext = new TestCliContext( null, new String[0] );
     private final ByteArrayOutputStream in = new ByteArrayOutputStream();
     private final ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -25,8 +24,6 @@ public class CliAssert extends AbstractAssert<CliAssert, CLI> {
 
     public CliAssert( CLI cli ) {
         super( cli, CliAssert.class );
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        ByteArrayOutputStream eos = new ByteArrayOutputStream();
         cliContext.setOutputStream( new PrintStream( out, true ) );
         cliContext.setErrorStream( new PrintStream( err, true ) );
         this.info.description( new Description() {
@@ -40,10 +37,6 @@ public class CliAssert extends AbstractAssert<CliAssert, CLI> {
                         in, out, err );
             }
         } );
-    }
-
-    private String streamToString( OutputStream stream ) {
-        return stream.toString().trim();
     }
 
     /**
@@ -99,15 +92,26 @@ public class CliAssert extends AbstractAssert<CliAssert, CLI> {
     /**
      * Asserts that the command succeeds with a zero exit status.
      */
-    public void succeeds() {
+    public CliAssert succeeds() {
         objects.assertEqual( info, actual.executeCommand( cliContext ), 0 );
+        return myself;
     }
 
-    public void failsWith( int exitStatus ) {
+    public CliAssert failsWith( int exitStatus ) {
         objects.assertEqual( info, actual.executeCommand( cliContext ), exitStatus );
+        return myself;
     }
 
-    public void fails() {
+    public CliAssert fails() {
         objects.assertNotEqual( info, actual.executeCommand( cliContext ), 0 );
+        return myself;
+    }
+
+    public ByteArrayAssert standardOutput() {
+        return new ByteArrayAssert( out.toByteArray() );
+    }
+
+    public ByteArrayAssert standardError() {
+        return new ByteArrayAssert( out.toByteArray() );
     }
 }

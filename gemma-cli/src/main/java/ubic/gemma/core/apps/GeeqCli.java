@@ -83,7 +83,7 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
         try {
             refreshExpressionExperimentFromGemmaWeb( ee, false, true );
         } catch ( Exception e ) {
-            log.warn( "Failed to refresh " + ee + " from Gemma Web", e );
+            addWarningObject( ee, "Failed to refresh " + ee + " from Gemma Web", e );
         }
     }
 }

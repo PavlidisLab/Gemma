@@ -57,7 +57,7 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
         try {
             refreshExpressionExperimentFromGemmaWeb( ee, true, true );
         } catch ( Exception e ) {
-            log.error( "Failed to refresh " + ee + " from Gemma Web.", e );
+            addWarningObject( ee, "Could not refresh experiment from from Gemma Web.", e );
         }
     }
 }

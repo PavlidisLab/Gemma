@@ -23,8 +23,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
-import org.springframework.context.MessageSourceAware;
 import ubic.gemma.core.analysis.expression.diff.AnalysisType;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
@@ -48,7 +46,7 @@ import java.util.stream.Collectors;
  *
  * @author keshav
  */
-public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManipulatingCLI implements MessageSourceAware {
+public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
     @Autowired
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
@@ -56,12 +54,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     @Autowired
     private ExpressionDataFileService expressionDataFileService;
-    // cannot be autowired because we use it for generating options
-    private MessageSource messageSource;
-
-    public void setMessageSource( MessageSource messageSource ) {
-        this.messageSource = messageSource;
-    }
 
     /**
      * Indicate the type of analysis to perform.
@@ -124,7 +116,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 "Type of analysis to perform. If omitted, the system will try to guess based on the experimental design. "
                         + "Choices are : "
                         + Arrays.stream( AnalysisType.values() )
-                        .map( e -> messageSource.getMessage( "AnalysisType." + e.name() + ".shortDesc", new Object[] { e }, e.name(), Locale.getDefault() ) )
+                        .map( e -> getApplicationContext().getMessage( "AnalysisType." + e.name() + ".shortDesc", new Object[] { e }, e.name(), Locale.getDefault() ) )
                         .collect( Collectors.joining( ", " ) )
                         + "; default: auto-detect" );
 
@@ -359,7 +351,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             try {
                 refreshExpressionExperimentFromGemmaWeb( ee, false, true );
             } catch ( Exception e ) {
-                log.error( "Failed to refresh " + ee + " from Gemma Web.", e );
+                addWarningObject( ee, "Failed to refresh " + ee + " from Gemma Web.", e );
             }
         } else {
             log.info( "Writing results to disk" );

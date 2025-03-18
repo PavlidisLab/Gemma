@@ -139,9 +139,13 @@ public class SingleCellDataTransformCli extends AbstractCLI {
      */
     @Override
     protected String getUsage() {
+        String commandName = this.getCliContext().getCommandNameOrAliasUsed();
+        if ( commandName == null ) {
+            commandName = getClass().getName();
+        }
         StringBuilder usage = new StringBuilder();
         usage.append( "gemma-cli [options] " )
-                .append( getCommandName() )
+                .append( commandName )
                 .append( " [commandOptions]" );
         if ( operation != null ) {
             usage.append( " " ).append( operation );

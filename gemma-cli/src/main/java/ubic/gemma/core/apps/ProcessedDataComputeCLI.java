@@ -115,7 +115,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
             try {
                 refreshExpressionExperimentFromGemmaWeb( ee, true, false );
             } catch ( Exception e ) {
-                log.error( "Failed to refresh " + ee + " from Gemma Web.", e );
+                addWarningObject( ee, "Failed to refresh experiment from Gemma Web.", e );
             }
 
             // Note the auditing is done by the service.

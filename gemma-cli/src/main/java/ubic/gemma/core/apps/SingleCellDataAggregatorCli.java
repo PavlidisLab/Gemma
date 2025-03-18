@@ -326,7 +326,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
         try {
             refreshExpressionExperimentFromGemmaWeb( expressionExperiment, refreshProcessedVectors, false );
         } catch ( Exception e ) {
-            addErrorObject( expressionExperiment, "Failed to refresh the experiment from Gemma Web.", e );
+            addWarningObject( expressionExperiment, "Failed to refresh the experiment from Gemma Web.", e );
         }
     }
 }

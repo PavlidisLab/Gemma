@@ -81,7 +81,7 @@ public class FindObsoleteTermsCliTest extends BaseCliTest {
     @Test
     @WithMockUser
     public void test() throws TimeoutException {
-        assertEquals( 0, findObsoleteTermsCli.executeCommand( new TestCliContext( null, new String[0] ) ) );
+        assertEquals( 0, findObsoleteTermsCli.executeCommand( new TestCliContext( null, new String[] {} ) ) );
         verify( ontology1 ).setSearchEnabled( false );
         verify( ontology1 ).setInferenceMode( ubic.basecode.ontology.providers.OntologyService.InferenceMode.NONE );
         verify( ontology1 ).initialize( true, false );
