@@ -25,10 +25,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.BeanInstantiationException;
 import org.springframework.beans.BeanUtils;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.EnvironmentAware;
-import org.springframework.context.MessageSourceAware;
+import org.springframework.context.*;
 import ubic.gemma.core.completion.BashCompletionGenerator;
 import ubic.gemma.core.completion.CompletionGenerator;
 import ubic.gemma.core.completion.FishCompletionGenerator;
@@ -198,6 +195,9 @@ public class GemmaCLI {
             try {
                 cliInstance = ( CLI ) BeanUtils.instantiate( beanClass );
                 // provide some useful context for the CLI that they can use for generating options
+                if ( cliInstance instanceof ApplicationContextAware ) {
+                    ( ( ApplicationContextAware ) cliInstance ).setApplicationContext( ctx );
+                }
                 if ( cliInstance instanceof EnvironmentAware ) {
                     ( ( EnvironmentAware ) cliInstance ).setEnvironment( ctx.getEnvironment() );
                 }

@@ -25,6 +25,8 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.ocpsoft.prettytime.shade.edu.emory.mathcs.backport.java.util.Collections;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.Assert;
 
 import javax.annotation.Nullable;
@@ -48,7 +50,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author pavlidis
  */
-public abstract class AbstractCLI implements CLI {
+public abstract class AbstractCLI implements CLI, ApplicationContextAware {
 
     protected final Log log = LogFactory.getLog( getClass() );
 
@@ -75,6 +77,11 @@ public abstract class AbstractCLI implements CLI {
     private static final String BATCH_FORMAT_OPTION = "batchFormat";
     private static final String BATCH_OUTPUT_FILE_OPTION = "batchOutputFile";
     private static final String BATCH_REPORT_FREQUENCY_OPTION = "batchReportFrequency";
+
+    /**
+     * Application context
+     */
+    private ApplicationContext applicationContext;
 
     /**
      * CLI context.

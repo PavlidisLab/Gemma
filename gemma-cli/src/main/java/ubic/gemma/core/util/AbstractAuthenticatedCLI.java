@@ -22,21 +22,21 @@ import gemma.gsec.authentication.ManualAuthenticationService;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.EnvironmentAware;
 import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.concurrent.DelegatingSecurityContextExecutorService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import ubic.gemma.core.security.authentication.CliAuthenticationAware;
+import ubic.gemma.core.security.authentication.CLIAuthenticationAware;
 
-import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
+import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -51,7 +51,7 @@ import java.util.concurrent.ExecutorService;
  * will be looked up instead.
  * @author pavlidis
  */
-public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements InitializingBean {
+public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements InitializingBean, EnvironmentAware {
 
     /**
      * Environment variable used to store the username (if not passed directly to the CLI).
@@ -68,19 +68,6 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
      */
     private static final String PASSWORD_CMD_ENV = "GEMMA_PASSWORD_CMD";
 
-    @Autowired
-    private ManualAuthenticationService manAuthentication;
-
-    /**
-     * List of components that should receive the authentication token.
-     */
-    @Nullable
-    @Autowired(required = false)
-    private List<CliAuthenticationAware> cliAuthenticationAwareComponents;
-
-    @Autowired
-    private Environment env;
-
     private String
             usernameEnv = USERNAME_ENV,
             passwordEnv = PASSWORD_ENV,
@@ -88,14 +75,21 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
 
     private boolean requireLogin = false;
 
+    private Environment environment;
+
     @Override
     public void afterPropertiesSet() throws Exception {
-        if ( env.acceptsProfiles( "test", "testdb" ) ) {
+        if ( environment.acceptsProfiles( "test", "testdb" ) ) {
             log.info( "The test or testdb profile is active, using test credentials from environment variables starting with 'GEMMA_TESTDB_'." );
             usernameEnv = "GEMMA_TESTDB_USERNAME";
             passwordEnv = "GEMMA_TESTDB_PASSWORD";
             passwordCmdEnv = "GEMMA_TESTDB_PASSWORD_CMD";
         }
+    }
+
+    @Override
+    public void setEnvironment( Environment environment ) {
+        this.environment = environment;
     }
 
     /**
@@ -107,23 +101,29 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
 
     @Override
     protected final void doWork() throws Exception {
+        SecurityContext previousContext = SecurityContextHolder.getContext();
         try {
-            authenticate();
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication( authenticate() );
+            SecurityContextHolder.setContext( context );
             doAuthenticatedWork();
         } finally {
             SecurityContextHolder.clearContext();
+            SecurityContextHolder.setContext( previousContext );
         }
     }
 
     protected abstract void doAuthenticatedWork() throws Exception;
 
     /**
-     * check username and password.
+     * Perform authentication from the CLI.
      */
-    private void authenticate() {
+    private Authentication authenticate() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if ( authentication != null && authentication.isAuthenticated() ) {
+            setAuth( authentication );
             log.info( String.format( "Logged in as %s", authentication.getPrincipal() ) );
+            return authentication;
         } else if ( requireLogin || getCliContext().getEnvironment().containsKey( usernameEnv ) ) {
             String username = getUsername();
             String password = getPassword();
@@ -137,29 +137,39 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
             }
 
             try {
-                SecurityContextHolder.getContext().setAuthentication( manAuthentication.authenticate( username, password ) );
-                if ( cliAuthenticationAwareComponents != null ) {
-                    for ( CliAuthenticationAware comp : cliAuthenticationAwareComponents ) {
-                        comp.setAuthentication( new UsernamePasswordAuthenticationToken( username, password ) );
-                    }
-                }
+                Authentication auth = getApplicationContext()
+                        .getBean( ManualAuthenticationService.class )
+                        .authenticate( username, password );
+                // the authentication manager erases credentials, so we need to create it again
+                setAuth( new UsernamePasswordAuthenticationToken( username, password ) );
                 log.info( "Logged in as " + username );
+                return auth;
             } catch ( AuthenticationException e ) {
-                if ( cliAuthenticationAwareComponents != null ) {
-                    for ( CliAuthenticationAware comp : cliAuthenticationAwareComponents ) {
-                        comp.setAuthentication( null );
-                    }
-                }
+                clearAuth();
                 throw e;
             }
         } else {
-            log.info( "Logging in as anonymous guest with limited privileges" );
-            SecurityContextHolder.getContext().setAuthentication( manAuthentication.authenticateAnonymously() );
-            if ( cliAuthenticationAwareComponents != null ) {
-                for ( CliAuthenticationAware comp : cliAuthenticationAwareComponents ) {
-                    comp.setAuthentication( SecurityContextHolder.getContext().getAuthentication() );
-                }
-            }
+            Authentication anonymousAuthentication = getApplicationContext()
+                    .getBean( ManualAuthenticationService.class ).authenticateAnonymously();
+            setAuth( anonymousAuthentication );
+            log.info( "Logged in as anonymous guest with limited privileges" );
+            return anonymousAuthentication;
+        }
+    }
+
+    private void setAuth( Authentication authentication ) {
+        Collection<CLIAuthenticationAware> cliAuthenticationAwareComponents = getApplicationContext()
+                .getBeansOfType( CLIAuthenticationAware.class ).values();
+        for ( CLIAuthenticationAware comp : cliAuthenticationAwareComponents ) {
+            comp.setAuthentication( authentication );
+        }
+    }
+
+    private void clearAuth() {
+        Collection<CLIAuthenticationAware> cliAuthenticationAwareComponents = getApplicationContext()
+                .getBeansOfType( CLIAuthenticationAware.class ).values();
+        for ( CLIAuthenticationAware comp : cliAuthenticationAwareComponents ) {
+            comp.clearAuthentication();
         }
     }
 

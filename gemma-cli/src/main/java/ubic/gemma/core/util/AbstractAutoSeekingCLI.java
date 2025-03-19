@@ -4,7 +4,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
@@ -32,9 +31,6 @@ public abstract class AbstractAutoSeekingCLI<T extends Auditable> extends Abstra
     private static final String AUTO_OPTION_NAME = "auto";
     private static final String LIMITING_DATE_OPTION = "mdate";
     protected static final String FORCE_OPTION = "force";
-
-    @Autowired
-    private AuditEventService auditEventService;
 
     private final Class<T> entityClass;
 
@@ -176,7 +172,9 @@ public abstract class AbstractAutoSeekingCLI<T extends Auditable> extends Abstra
         }
 
         Date skipIfLastRunLaterThan = this.getLimitingDate();
-        List<AuditEvent> events = this.auditEventService.getEvents( auditable );
+        List<AuditEvent> events = getApplicationContext()
+                .getBean( AuditEventService.class )
+                .getEvents( auditable );
 
         // figure out if we need to run it by date; or if there is no event of the given class; "Fail" type events don't
         // count.
