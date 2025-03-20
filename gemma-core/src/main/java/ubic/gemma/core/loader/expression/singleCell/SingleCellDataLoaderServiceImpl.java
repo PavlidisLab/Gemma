@@ -9,8 +9,6 @@ import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoBioAssayMapper;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.util.mapper.*;
-import ubic.gemma.model.common.description.Categories;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -223,7 +221,6 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         ee = requireNonNull( singleCellExpressionExperimentService.loadWithSingleCellVectors( ee.getId() ) );
         Assert.isTrue( platform.getPrimaryTaxon().equals( expressionExperimentService.getTaxon( ee ) ),
                 "Platform primary taxon does not match dataset." );
-        addSingleCellAnnotations( ee );
         SingleCellDimension dim = loadSingleCellDimension( loader, ee.getBioAssays() );
         QuantitationType qt = loadQuantitationType( loader, ee, config );
         loadCellTypeAssignments( loader, dim, config );
@@ -231,17 +228,6 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         loadSequencingMetadata( loader, dim );
         loadVectors( loader, ee, dim, qt, platform, config );
         return qt;
-    }
-
-    /**
-     * Add all the relevant single-cell annotations to the experiment.
-     */
-    private void addSingleCellAnnotations( ExpressionExperiment ee ) {
-        Characteristic singleCell = Characteristic.Factory.newInstance( Categories.ASSAY, "single cell RNA sequencing", "http://www.ebi.ac.uk/efo/EFO_0008913" );
-        if ( !ee.getCharacteristics().contains( singleCell ) ) {
-            log.info( "Adding missing annotation " + singleCell + " to " + ee + "..." );
-            expressionExperimentService.addCharacteristic( ee, singleCell );
-        }
     }
 
     private SingleCellDimension loadSingleCellDimension( SingleCellDataLoader loader, Set<BioAssay> bioAssays ) {
