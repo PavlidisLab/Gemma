@@ -111,7 +111,7 @@ public class SettingsConfig {
 
         MutablePropertySources result = new MutablePropertySources();
 
-        result.addLast( new PropertiesPropertySource( "system", filteredSystemProperties() ) );
+        result.addLast( new PropertiesPropertySource( "system", filterSystemProperties( System.getProperties() ) ) );
 
         boolean userConfigLoaded = false;
 
@@ -178,29 +178,25 @@ public class SettingsConfig {
     /**
      * Filter system properties that are declared in the default locations.
      */
-    private static Properties filteredSystemProperties() throws IOException {
+    static Properties filterSystemProperties( Properties allProperties ) throws IOException {
         Properties props = new Properties();
         for ( String loc : DEFAULT_CONFIGURATIONS ) {
             try ( InputStream is = new ClassPathResource( loc ).getInputStream() ) {
                 Properties defaultProperties = new Properties();
                 defaultProperties.load( is );
                 for ( String key : defaultProperties.stringPropertyNames() ) {
-                    String val;
-                    if ( key.startsWith( SYSTEM_PROPERTY_PREFIX ) ) {
-                        val = System.getProperty( key );
-                    } else {
-                        val = System.getProperty( SYSTEM_PROPERTY_PREFIX + key );
-                        if ( val == null ) {
+                    if ( props.containsKey( key ) ) {
+                        continue;
+                    }
+                    if ( allProperties.containsKey( SYSTEM_PROPERTY_PREFIX + key ) ) {
+                        props.setProperty( key, allProperties.getProperty( SYSTEM_PROPERTY_PREFIX + key ) );
+                    } else if ( allProperties.containsKey( key ) ) {
+                        if ( !key.startsWith( SYSTEM_PROPERTY_PREFIX ) ) {
                             // allow un-prefixed keys for backward-compatibility
                             // TODO: remove this as per https://github.com/PavlidisLab/Gemma/issues/1110
-                            val = System.getProperty( key );
-                            if ( val != null ) {
-                                log.warn( String.format( "System property %s should be prefixed with '%s'.", key, SYSTEM_PROPERTY_PREFIX ) );
-                            }
+                            log.warn( String.format( "System property %s should be prefixed with '%s'.", key, SYSTEM_PROPERTY_PREFIX ) );
                         }
-                    }
-                    if ( val != null ) {
-                        props.setProperty( key, val );
+                        props.setProperty( key, allProperties.getProperty( key ) );
                     }
                 }
             }
