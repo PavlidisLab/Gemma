@@ -189,12 +189,14 @@ public class SettingsConfig {
                     if ( key.startsWith( SYSTEM_PROPERTY_PREFIX ) ) {
                         val = System.getProperty( key );
                     } else {
-                        val = System.getProperty( key );
-                        if ( val != null ) {
-                            // allow unprefixed keys for backward-compatibility
-                            log.warn( String.format( "System property %s should be prefixed with '%s'.", key, SYSTEM_PROPERTY_PREFIX ) );
-                        } else {
-                            val = System.getProperty( SYSTEM_PROPERTY_PREFIX + key );
+                        val = System.getProperty( SYSTEM_PROPERTY_PREFIX + key );
+                        if ( val == null ) {
+                            // allow un-prefixed keys for backward-compatibility
+                            // TODO: remove this as per https://github.com/PavlidisLab/Gemma/issues/1110
+                            val = System.getProperty( key );
+                            if ( val != null ) {
+                                log.warn( String.format( "System property %s should be prefixed with '%s'.", key, SYSTEM_PROPERTY_PREFIX ) );
+                            }
                         }
                     }
                     if ( val != null ) {
