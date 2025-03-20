@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.common.description;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.Hibernate;
 import org.hibernate.QueryException;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,11 +34,10 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
-import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
-import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
+import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 
 import java.util.*;
 
@@ -93,6 +93,14 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
         fvService.update( fv );
 
         tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+    }
+
+    @After
+    public void tearDown() {
+        if ( ee != null ) {
+            runAsAdmin();
+            eeService.remove( ee );
+        }
     }
 
     @Test

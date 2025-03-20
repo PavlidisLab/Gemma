@@ -757,6 +757,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This series has complete MEX files at the sample-level, but also provide MEX files in the series.
      */
     @Test
+    @Category(SlowTest.class)
     public void testGSE184506() throws NoSingleCellDataFoundException, IOException {
         GeoSeries series = readSeriesFromGeo( "GSE184506" );
         assertThat( detector.hasSingleCellData( series ) )
