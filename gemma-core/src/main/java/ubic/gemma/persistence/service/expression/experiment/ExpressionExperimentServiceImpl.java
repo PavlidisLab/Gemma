@@ -612,15 +612,13 @@ public class ExpressionExperimentServiceImpl
         Set<AnnotationValueObject> annotations = new HashSet<>();
         Collection<String> seenTerms = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
 
-        for ( Characteristic c : ee.getCharacteristics() ) {
-            AnnotationValueObject annotationValue = new AnnotationValueObject( c, ExpressionExperiment.class );
+        for ( AnnotationValueObject annotationValue : filterExperimentAnnotations( ee.getCharacteristics() ) ) {
             if ( seenTerms.add( annotationValue.getTermName() ) ) {
                 annotations.add( annotationValue );
             }
         }
 
-        for ( Characteristic c : expressionExperimentDao.getAnnotationsBySubSets( ee ) ) {
-            AnnotationValueObject annotationValue = new AnnotationValueObject( c, ExpressionExperimentSubSet.class );
+        for ( AnnotationValueObject annotationValue : filterSubSetAnnotations( expressionExperimentDao.getAnnotationsBySubSets( ee ) ) ) {
             if ( seenTerms.add( annotationValue.getTermName() ) ) {
                 annotations.add( annotationValue );
             }
@@ -648,16 +646,14 @@ public class ExpressionExperimentServiceImpl
         Collection<String> seenTerms = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
 
         // inherited from the EE
-        for ( Characteristic c : ee.getSourceExperiment().getCharacteristics() ) {
-            AnnotationValueObject annotationValue = new AnnotationValueObject( c, ExpressionExperiment.class );
+        for ( AnnotationValueObject annotationValue : filterExperimentAnnotations( ee.getSourceExperiment().getCharacteristics() ) ) {
             if ( seenTerms.add( annotationValue.getTermName() ) ) {
                 annotations.add( annotationValue );
             }
         }
 
         // specifically for the subset
-        for ( Characteristic c : ee.getCharacteristics() ) {
-            AnnotationValueObject annotationValue = new AnnotationValueObject( c, ExpressionExperimentSubSet.class );
+        for ( AnnotationValueObject annotationValue : filterSubSetAnnotations( ee.getCharacteristics() ) ) {
             if ( seenTerms.add( annotationValue.getTermName() ) ) {
                 annotations.add( annotationValue );
             }
@@ -679,6 +675,19 @@ public class ExpressionExperimentServiceImpl
         return annotations;
     }
 
+    private Collection<AnnotationValueObject> filterExperimentAnnotations( Collection<Characteristic> c ) {
+        return c.stream()
+                .filter( this::filterAnnotation )
+                .map( c2 -> new AnnotationValueObject( c2, ExpressionExperiment.class ) )
+                .collect( Collectors.toSet() );
+    }
+
+    private Collection<AnnotationValueObject> filterSubSetAnnotations( Collection<Characteristic> c ) {
+        return c.stream()
+                .filter( this::filterAnnotation )
+                .map( c2 -> new AnnotationValueObject( c2, ExpressionExperimentSubSet.class ) )
+                .collect( Collectors.toSet() );
+    }
 
     /**
      * TODO: If can be done without much slowdown, add: certain characteristics from factor values? (non-baseline,
@@ -758,11 +767,7 @@ public class ExpressionExperimentServiceImpl
      */
     private boolean filterBioMaterialAnnotation( Characteristic c ) {
         // filter. Could include this in the query if it isn't too complicated.
-        if ( isUncategorized( c ) || isFreeTextCategory( c ) ) {
-            return false;
-        }
-
-        if ( isFreeText( c ) ) {
+        if ( !filterAnnotation( c ) ) {
             return false;
         }
 
@@ -779,6 +784,16 @@ public class ExpressionExperimentServiceImpl
         return true;
     }
 
+    private boolean filterAnnotation( Characteristic c ) {
+        if ( isUncategorized( c ) || isFreeTextCategory( c ) ) {
+            return false;
+        }
+
+        if ( isFreeText( c ) ) {
+            return false;
+        }
+        return true;
+    }
 
     /**
      * Only the mention of these properties will result in inferred term expansion.
