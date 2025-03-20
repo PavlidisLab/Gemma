@@ -915,7 +915,7 @@ Non-Small-Cell Lung Cancer	non-small cell lung carcinoma	http://purl.obolibrary.
 none (control)	reference substance role	http://purl.obolibrary.org/obo/OBI_0000025	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 none (untreated control)	reference substance role	http://purl.obolibrary.org/obo/OBI_0000025	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 normal	reference subject role	http://purl.obolibrary.org/obo/OBI_0000220	disease	http://www.ebi.ac.uk/efo/EFO_0000408
-normal airway epithelial cells	respiratory epithelial cell	http://purl.obolibrary.org/obo/CL_0002368	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
+normal airway epithelial cells	respiratory tract epithelial cell	http://purl.obolibrary.org/obo/CL_0002368	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 normal breast	breast	http://purl.obolibrary.org/obo/UBERON_0000310	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 normal chow	reference substance role	http://purl.obolibrary.org/obo/OBI_0000025	diet	http://www.ebi.ac.uk/efo/EFO_0002755
 normal colon	colon	http://purl.obolibrary.org/obo/UBERON_0001155	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
