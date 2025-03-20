@@ -30,11 +30,6 @@ import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 public abstract class CurationDetailsEvent extends AuditEventType {
 
     /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 6621758826080039878L;
-
-    /**
      * This method should be overloaded in all of the extensions of this class to do the specific actions they wre designed for.
      *
      * @param curatable  the curatable object to do the curation action on.

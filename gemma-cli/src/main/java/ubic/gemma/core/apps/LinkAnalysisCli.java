@@ -25,7 +25,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisConfig;
 import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisConfig.NormalizationMethod;
@@ -49,7 +48,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -100,9 +99,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
-
+    protected void buildExperimentOptions( Options options ) {
         super.addLimitingDateOption( options );
 
         Option nodeDegreeUpdate = Option.builder( "n" ).desc( "Update the node degree for taxon given by -t option. All other options ignored." )
@@ -210,12 +207,10 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
-
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( "delete" ) ) {
             this.deleteAnalyses = true;
-            this.force = true;
+            setForce();
             return;
         } else if ( commandLine.hasOption( "init" ) ) {
             initializeFromOldData = true;
@@ -329,18 +324,15 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
+    protected void doAuthenticatedWork() throws Exception {
         if ( initializeFromOldData ) {
             log.info( "Initializing links from old data for " + taxon );
             linkAnalysisPersister.initializeLinksFromOldData( taxon );
-            return;
         } else if ( updateNodeDegree ) {
             // we waste some time here getting the experiments.
             this.loadTaxon();
             coexpressionService.updateNodeDegrees( taxon );
-        }
-
-        if ( this.dataFileName != null ) {
+        } else if ( this.dataFileName != null ) {
             /*
              * Read vectors from file. Could provide as a matrix, but it's easier to provide vectors (less mess in later
              * code)
@@ -363,7 +355,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
             QuantitationType qtype = this.makeQuantitationType();
 
-            ByteArrayConverter bArrayConverter = new ByteArrayConverter();
             try ( InputStream data = Files.newInputStream( this.dataFileName ) ) {
 
                 DoubleMatrix<String, String> matrix = simpleExpressionDataLoaderService.parse( data );
@@ -371,10 +362,9 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 BioAssayDimension bad = this.makeBioAssayDimension( arrayDesign, matrix );
 
                 for ( int i = 0; i < matrix.rows(); i++ ) {
-                    byte[] bData = bArrayConverter.doubleArrayToBytes( matrix.getRow( i ) );
 
                     ProcessedExpressionDataVector vector = ProcessedExpressionDataVector.Factory.newInstance();
-                    vector.setData( bData );
+                    vector.setDataAsDoubles( matrix.getRow( i ) );
 
                     CompositeSequence cs = csMap.get( matrix.getRowName( i ) );
                     if ( cs == null ) {
@@ -396,40 +386,74 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
             this.linkAnalysisService.processVectors( taxon, dataVectors, filterConfig, linkAnalysisConfig );
         } else {
-
-            /*
-             * Do in decreasing order of size, to help capture more links earlier - reduces fragmentation.
-             */
-            List<BioAssaySet> sees = new ArrayList<>( expressionExperiments );
-
-            if ( expressionExperiments.size() > 1 ) {
-                log.info( "Sorting data sets by number of samples, doing large data sets first." );
-
-                Collection<ExpressionExperimentValueObject> vos = eeService
-                        .loadValueObjectsByIds( EntityUtils.getIds( expressionExperiments ), true );
-                final Map<Long, ExpressionExperimentValueObject> idMap = EntityUtils.getIdMap( vos );
-
-                sees.sort( ( o1, o2 ) -> {
-
-                    ExpressionExperimentValueObject e1 = idMap.get( o1.getId() );
-                    ExpressionExperimentValueObject e2 = idMap.get( o2.getId() );
-
-                    assert e1 != null : "No valueobject: " + e2;
-                    assert e2 != null : "No valueobject: " + e1;
-
-                    return -e1.getBioMaterialCount().compareTo( e2.getBioMaterialCount() );
-
-                } );
-            }
-
-            for ( BioAssaySet ee : sees ) {
-                if ( ee instanceof ExpressionExperiment ) {
-                    this.processExperiment( ( ExpressionExperiment ) ee );
-                } else {
-                    throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
-                }
-            }
+            super.doAuthenticatedWork();
         }
+    }
+
+    @Override
+    protected Collection<BioAssaySet> preprocessBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
+        /*
+         * Do in decreasing order of size, to help capture more links earlier - reduces fragmentation.
+         */
+        List<BioAssaySet> sees = new ArrayList<>( expressionExperiments );
+
+        if ( expressionExperiments.size() > 1 ) {
+            log.info( "Sorting data sets by number of samples, doing large data sets first." );
+
+            Collection<ExpressionExperimentValueObject> vos = eeService
+                    .loadValueObjectsByIds( IdentifiableUtils.getIds( expressionExperiments ), true );
+            final Map<Long, ExpressionExperimentValueObject> idMap = IdentifiableUtils.getIdMap( vos );
+
+            sees.sort( ( o1, o2 ) -> {
+
+                ExpressionExperimentValueObject e1 = idMap.get( o1.getId() );
+                ExpressionExperimentValueObject e2 = idMap.get( o2.getId() );
+
+                assert e1 != null : "No valueobject: " + e2;
+                assert e2 != null : "No valueobject: " + e1;
+
+                return -e1.getBioMaterialCount().compareTo( e2.getBioMaterialCount() );
+
+            } );
+        }
+
+        return sees;
+    }
+
+    @Override
+    protected void processExpressionExperiment( ExpressionExperiment ee ) {
+        ee = eeService.thaw( ee );
+
+        if ( this.deleteAnalyses ) {
+            log.info( "======= Deleting coexpression analysis (if any) for: " + ee );
+            if ( !linkAnalysisPersister.deleteAnalyses( ee ) ) {
+                throw new RuntimeException( "Seems to not have any eligible link analysis to remove" );
+            }
+            return;
+        }
+
+        /*
+         * If we're not using the database, always run it.
+         */
+        if ( linkAnalysisConfig.isUseDb() && this.noNeedToRun( ee, LinkAnalysisEvent.class ) ) {
+            return;
+        }
+
+        /*
+         * Note that auditing is handled by the service.
+         */
+        StopWatch sw = new StopWatch();
+        sw.start();
+
+        if ( linkAnalysisConfig.isTextOut() ) {
+            linkAnalysisConfig.setOutputFile( new File( FileTools.cleanForFileName( ee.getShortName() ) + "-links.txt" ) );
+        }
+
+        log.info( "==== Starting: [" + ee.getShortName() + "] ======" );
+
+        linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
+        log.info( "==== Done: [" + ee.getShortName() + "] ======" );
+        log.info( "Time elapsed: " + String.format( "%.2f", sw.getTime() / 1000.0 / 60.0 ) + " minutes" );
     }
 
     private void buildFilterConfigOptions( Options options ) {
@@ -483,9 +507,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     }
 
     private BioAssayDimension makeBioAssayDimension( ArrayDesign arrayDesign, DoubleMatrix<String, String> matrix ) {
-        BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
-        bad.setName( "For " + this.dataFileName );
-        bad.setDescription( "Generated from flat file" );
+        List<BioAssay> bioAssays = new ArrayList<>( matrix.columns() );
         for ( int i = 0; i < matrix.columns(); i++ ) {
             Object columnName = matrix.getColName( i );
 
@@ -499,9 +521,9 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             assay.setSampleUsed( bioMaterial );
             assay.setIsOutlier( false );
             assay.setSequencePairedReads( false );
-            bad.getBioAssays().add( assay );
+            bioAssays.add( assay );
         }
-        return bad;
+        return BioAssayDimension.Factory.newInstance( bioAssays );
     }
 
     private QuantitationType makeQuantitationType() {
@@ -520,42 +542,4 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         qtype.setIsRatio( false ); // this shouldn't get used, just filled in to keep everybody happy.
         return qtype;
     }
-
-    private void processExperiment( ExpressionExperiment ee ) {
-        ee = eeService.thaw( ee );
-
-        if ( this.deleteAnalyses ) {
-            log.info( "======= Deleting coexpression analysis (if any) for: " + ee );
-            if ( !linkAnalysisPersister.deleteAnalyses( ee ) ) {
-                throw new RuntimeException( "Seems to not have any eligible link analysis to remove" );
-            }
-            return;
-        }
-
-        /*
-         * If we're not using the database, always run it.
-         */
-        if ( linkAnalysisConfig.isUseDb() && !force && this.noNeedToRun( ee, LinkAnalysisEvent.class ) ) {
-            log.info( "Can't or Don't need to run " + ee );
-            return;
-        }
-
-        /*
-         * Note that auditing is handled by the service.
-         */
-        StopWatch sw = new StopWatch();
-        sw.start();
-
-        if ( linkAnalysisConfig.isTextOut() ) {
-            linkAnalysisConfig.setOutputFile( new File( FileTools.cleanForFileName( ee.getShortName() ) + "-links.txt" ) );
-        }
-
-        log.info( "==== Starting: [" + ee.getShortName() + "] ======" );
-
-        linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
-        log.info( "==== Done: [" + ee.getShortName() + "] ======" );
-        log.info( "Time elapsed: " + String.format( "%.2f", sw.getTime() / 1000.0 / 60.0 ) + " minutes" );
-
-    }
-
 }

@@ -21,34 +21,18 @@ package ubic.gemma.model.expression.arrayDesign;
 import org.hibernate.search.annotations.DocumentId;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
+import ubic.gemma.model.common.AbstractIdentifiable;
+
+import java.util.Objects;
 
 @Indexed
-public class AlternateName implements java.io.Serializable {
+public class AlternateName extends AbstractIdentifiable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -1208836332065611893L;
     private String name;
-    private Long id;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    @SuppressWarnings("WeakerAccess") // Required by Spring
-    public AlternateName() {
-    }
 
     @DocumentId
     public Long getId() {
-        return this.id;
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public void setId( Long id ) {
-        this.id = id;
+        return super.getId();
     }
 
     @Field
@@ -56,17 +40,13 @@ public class AlternateName implements java.io.Serializable {
         return this.name;
     }
 
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public void setName( String name ) {
         this.name = name;
     }
 
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
+        return Objects.hash( name );
     }
 
     @Override
@@ -78,7 +58,11 @@ public class AlternateName implements java.io.Serializable {
             return false;
         }
         final AlternateName that = ( AlternateName ) object;
-        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+        if ( this.getId() != null && that.getId() != null ) {
+            return this.getId().equals( that.getId() );
+        } else {
+            return Objects.equals( getName(), that.getName() );
+        }
     }
 
     public static final class Factory {

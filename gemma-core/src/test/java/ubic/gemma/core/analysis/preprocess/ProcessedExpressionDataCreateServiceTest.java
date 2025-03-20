@@ -25,7 +25,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchService;
@@ -137,7 +136,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         expressionExperimentPlatformSwitchService.switchExperimentToMergedPlatform( ee );
         ee = this.eeService.thawLite( ee ); // essential.
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
         Collection<ProcessedExpressionDataVector> preferredVectors = this.processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
         ee = eeService.loadOrFail( ee.getId() );
@@ -158,7 +157,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         assertNotNull( s );
         assertEquals( ee.getNumberOfDataVectors(), s.getProcessedExpressionVectorCount() );
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
         // repeat, make sure deleted old QTs.
         ee = eeService.load( ee.getId() );
         assertNotNull( ee );
@@ -184,9 +183,9 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             this.ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
         }
 
-        ee = this.eeService.thawLite( ee );
+        ee = this.eeService.thaw( ee );
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
         Collection<ProcessedExpressionDataVector> preferredVectors = this.processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
         ee = eeService.load( ee.getId() );
@@ -199,24 +198,24 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
         boolean found = false;
         for ( int i = 0; i < mat.rows(); i++ ) {
-            Double[] row = mat.getRow( i );
+            double[] row = mat.getRowAsDoubles( i );
 
             // debugging
             if ( i == 0 ) {
                 for ( int j = 0; j < row.length; j++ ) {
-                    BioAssay ba = mat.getBioAssaysForColumn( j ).iterator().next();
+                    BioAssay ba = mat.getBioAssayForColumn( j );
                     System.err.println( ba.getName() );
                 }
             }
             System.err.print( mat.getRowElement( i ).getDesignElement().getName() + "\t" );
             for ( double d : row ) {
-                System.err.print( String.format( "%4.2f\t", d ) );
+                System.err.printf( "%4.2f\t", d );
             }
             System.err.print( "\n" );
 
             CompositeSequence el = mat.getDesignElementForRow( i );
             for ( int j = 0; j < row.length; j++ ) {
-                BioAssay ba = mat.getBioAssaysForColumn( j ).iterator().next();
+                BioAssay ba = mat.getBioAssayForColumn( j );
                 if ( ba.getName().matches( "PGA-MurLungHyper-Norm-1a[ABC]v2-s2" ) && (
                         el.getName().equals( "100001_at" ) || el.getName().equals( "100002_at" ) || el.getName()
                                 .equals( "100003_at" ) || el.getName().equals( "100004_at" ) || el.getName()
@@ -291,8 +290,8 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             this.ee = ( ExpressionExperiment ) e.getData();
         }
 
-        ee = this.eeService.thawLite( ee );
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        ee = this.eeService.thaw( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
 
         ExperimentalFactor factor = ExperimentalFactor.Factory.newInstance();
         factor.setType( FactorType.CATEGORICAL );
@@ -402,8 +401,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
              */
             if ( vector.getDesignElement().getName().equals( "40" ) ) {
                 foundVector = true;
-                ByteArrayConverter conv = new ByteArrayConverter();
-                Double[] d = ArrayUtils.toObject( conv.byteArrayToDoubles( vector.getData() ) );
+                Double[] d = ArrayUtils.toObject( vector.getDataAsDoubles() );
                 assertEquals( 20, d.length );
                 assertEquals( Double.NaN, d[1], 0.001 );
                 assertEquals( -1.152, d[10], 0.001 );

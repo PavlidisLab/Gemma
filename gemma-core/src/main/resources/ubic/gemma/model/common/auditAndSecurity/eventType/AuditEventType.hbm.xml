@@ -130,6 +130,10 @@
                 <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.CellLevelCharacteristicsRemovedEvent"
                           discriminator-value="CellLevelCharacteristicsRemovedEvent"/>
             </subclass>
+
+            <!-- when cell-level data is aggregated in subsets -->
+            <subclass name="ubic.gemma.model.common.auditAndSecurity.eventType.SingleCellSubSetsCreatedEvent"
+                      discriminator-value="SingleCellSubSetsCreatedEvent"/>
         </subclass>
         <subclass abstract="false" discriminator-value="CommentedEvent"
                   name="ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent"/>

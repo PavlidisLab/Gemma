@@ -21,12 +21,6 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * Indicates that the data set had too few samples or probes to be analyzed (after filtering), and was skipped
  */
-public class TooSmallDatasetLinkAnalysisEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 3051344049635374788L;
+public class TooSmallDatasetLinkAnalysisEvent extends LinkAnalysisEvent {
 
 }

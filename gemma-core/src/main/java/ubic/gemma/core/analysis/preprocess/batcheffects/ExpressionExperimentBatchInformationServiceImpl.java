@@ -10,6 +10,7 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
@@ -75,7 +76,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
     @Override
     @Transactional(readOnly = true)
     public boolean hasSignificantBatchConfound( ExpressionExperiment ee ) {
-        ee = expressionExperimentService.thawBioAssays( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         if ( !this.checkHasUsableBatchInfo( ee ) ) {
             log.warn( ee + " has no usable batch information, cannot check for confound: " + ee );
@@ -104,7 +105,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
     @Override
     @Transactional(readOnly = true)
     public List<BatchConfound> getSignificantBatchConfounds( ExpressionExperiment ee ) {
-        ee = expressionExperimentService.thawBioAssays( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         if ( !this.checkHasUsableBatchInfo( ee ) ) {
             log.warn( ee + " has no usable batch information, cannot check for confounds." );
@@ -133,7 +134,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
     @Override
     @Transactional(readOnly = true)
     public Map<ExpressionExperimentSubSet, List<BatchConfound>> getSignificantBatchConfoundsForSubsets( ExpressionExperiment ee ) {
-        ee = expressionExperimentService.thawBioAssays( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         if ( !this.checkHasUsableBatchInfo( ee ) ) {
             log.info( ee + " has no usable batch information, cannot check for confounds for subsets." );
@@ -217,7 +218,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
 
         ExperimentalFactor ef = ee.getExperimentalDesign().getExperimentalFactors()
                 .stream()
-                .filter( BatchInfoPopulationServiceImpl::isBatchFactor )
+                .filter( ef1 -> ExperimentalDesignUtils.isBatchFactor( ef1 ) )
                 .findFirst()
                 .orElse( null );
 
@@ -226,7 +227,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
             return details;
         }
 
-        SVDValueObject svd = svdService.getSvdFactorAnalysis( ee.getId() );
+        SVDValueObject svd = svdService.svdFactorAnalysis( ee );
         if ( svd == null ) {
             log.warn( "SVD was null for " + ef + ", can't compute batch effect statistics." );
             return details;
@@ -306,7 +307,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
         ee = expressionExperimentService.thawLiter( ee );
         if ( ee.getExperimentalDesign() != null ) {
             for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-                if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
+                if ( ExperimentalDesignUtils.isBatchFactor( ef ) ) {
                     return true;
                 }
             }

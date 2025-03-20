@@ -16,6 +16,7 @@ package ubic.gemma.rest;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -34,7 +35,10 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDecisionManager;
+import org.springframework.security.access.SecurityConfig;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchConfound;
@@ -47,10 +51,14 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.DifferentialExpressionAnalysisResultListFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
+import ubic.gemma.core.loader.expression.singleCell.metadata.CellLevelCharacteristicsWriter;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.DefaultHighlighter;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.lucene.SimpleMarkdownFormatter;
+import ubic.gemma.core.util.locking.LockedPath;
+import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
@@ -61,8 +69,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
-import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -73,6 +80,7 @@ import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysi
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
@@ -86,19 +94,23 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.getBatchEffectType;
+import static ubic.gemma.core.analysis.service.ExpressionDataFileUtils.*;
 import static ubic.gemma.persistence.util.IdentifiableUtils.toIdentifiableSet;
+import static ubic.gemma.rest.util.MediaTypeUtils.negotiate;
+import static ubic.gemma.rest.util.MediaTypeUtils.withQuality;
 import static ubic.gemma.rest.util.Responders.respond;
 
 /**
@@ -111,13 +123,23 @@ import static ubic.gemma.rest.util.Responders.respond;
 @CommonsLog
 public class DatasetsWebService {
 
-    private static final String ERROR_DATA_FILE_NOT_AVAILABLE = "Data file for experiment %s can not be created.";
-    private static final String ERROR_DESIGN_FILE_NOT_AVAILABLE = "Design file for experiment %s can not be created.";
+    public static final String TEXT_TAB_SEPARATED_VALUES_UTF8 = "text/tab-separated-values; charset=UTF-8";
+    public static final MediaType TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE = new MediaType( "text", "tab-separated-values", "UTF-8" );
+
+    /**
+     * <a href="https://www.10xgenomics.com/support/software/cell-ranger/latest/analysis/outputs/cr-outputs-mex-matrices">Cell Ranger Feature Barcode Matrices (MEX Format)</a>
+     */
+    public static final String APPLICATION_10X_MEX = "application/vnd.10xgenomics.mex";
+    public static final MediaType APPLICATION_10X_MEX_TYPE = new MediaType( "application", "vnd.10xgenomics.mex" );
 
     private static final String SEARCH_TIMEOUT_DESCRIPTION = "The search has timed out. This can only occur if the `search` parameter is provided. It can generally be resolved by reattempting the search 30 seconds later. Lookup the `Retry-After` header for the recommended delay.";
 
     private static final int MAX_DATASETS_CATEGORIES = 200;
     private static final int MAX_DATASETS_ANNOTATIONS = 5000;
+
+    // fields allowed to be excluded
+    private static final Set<String> SCD_ALLOWED_EXCLUDE_FIELDS = new HashSet<>( Arrays.asList( "cellIds", "bioAssayIds", "cellTypeAssignments.cellTypeIds", "cellLevelCharacteristics.characteristicIds" ) );
+    private static final Set<String> ANNOTATION_ALLOWED_EXCLUDE_FIELDS = Collections.singleton( "parentTerms" );
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -153,6 +175,10 @@ public class DatasetsWebService {
     private DifferentialExpressionAnalysisResultListFileService differentialExpressionAnalysisResultListFileService;
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
+    @Autowired
+    private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
+    @Autowired
+    private AccessDecisionManager accessDecisionManager;
 
     @Context
     private UriInfo uriInfo;
@@ -212,7 +238,7 @@ public class DatasetsWebService {
         int offset = offsetArg.getValue();
         int limit = limitArg.getValue();
         Slice<ExpressionExperimentWithSearchResultValueObject> payload;
-        LinkedHashSet<Throwable> warnings = new LinkedHashSet<Throwable>();
+        LinkedHashSet<Throwable> warnings = new LinkedHashSet<>();
         if ( query != null ) {
             List<Long> ids;
             Sort sort;
@@ -285,7 +311,7 @@ public class DatasetsWebService {
     ) {
         Filters filters = datasetArgService.getFilters( filter );
         Set<Long> extraIds;
-        LinkedHashSet<Throwable> warnings = new LinkedHashSet<Throwable>();
+        LinkedHashSet<Throwable> warnings = new LinkedHashSet<>();
         if ( query != null ) {
             extraIds = datasetArgService.getIdsForSearchQuery( query, warnings );
         } else {
@@ -317,7 +343,7 @@ public class DatasetsWebService {
     ) {
         Collection<OntologyTerm> inferredTerms = new HashSet<>();
         Filters filters = datasetArgService.getFilters( filter, null, inferredTerms );
-        LinkedHashSet<Throwable> warnings = new LinkedHashSet<Throwable>();
+        LinkedHashSet<Throwable> warnings = new LinkedHashSet<>();
         Set<Long> extraIds;
         if ( query != null ) {
             extraIds = datasetArgService.getIdsForSearchQuery( query, warnings );
@@ -393,7 +419,7 @@ public class DatasetsWebService {
         Collection<OntologyTerm> mentionedTerms = retainMentionedTerms ? new HashSet<>() : null;
         Collection<OntologyTerm> inferredTerms = new HashSet<>();
         Filters filters = datasetArgService.getFilters( filter, mentionedTerms, inferredTerms );
-        LinkedHashSet<Throwable> warnings = new LinkedHashSet<Throwable>();
+        LinkedHashSet<Throwable> warnings = new LinkedHashSet<>();
         Set<Long> extraIds;
         if ( query != null ) {
             extraIds = datasetArgService.getIdsForSearchQuery( query, warnings );
@@ -431,8 +457,6 @@ public class DatasetsWebService {
         }
     }
 
-    private static final Set<String> ALLOWED_FIELDS = Collections.singleton( "parentTerms" );
-
     @GET
     @GZIP
     @CacheControl(maxAge = 1200)
@@ -459,7 +483,7 @@ public class DatasetsWebService {
             @Parameter(description = "Exclude uncategorized terms.", hidden = true) @QueryParam("excludeUncategorizedTerms") @DefaultValue("false") Boolean excludeUncategorizedTerms,
             @Parameter(description = "Retain terms mentioned in the `filter` parameter even if they don't meet the `minFrequency` threshold or are excluded via `excludedCategories` or `excludedTerms`.", hidden = true) @QueryParam("retainMentionedTerms") @DefaultValue("false") Boolean retainMentionedTerms
     ) {
-        boolean excludeParentTerms = getExcludedFields( exclude ).contains( "parentTerms" );
+        boolean excludeParentTerms = exclude != null && exclude.getValue( ANNOTATION_ALLOWED_EXCLUDE_FIELDS ).contains( "parentTerms" );
         // if a minFrequency is requested, use the hard cap, otherwise use 100 as a reasonable default
         int limit = limitArg != null ? limitArg.getValue( MAX_DATASETS_ANNOTATIONS ) : minFrequency != null ? MAX_DATASETS_ANNOTATIONS : 100;
         if ( minFrequency != null && minFrequency < 0 ) {
@@ -525,17 +549,6 @@ public class DatasetsWebService {
                 Sort.by( null, "numberOfExpressionExperiments", Sort.Direction.DESC, Sort.NullMode.LAST, "numberOfExpressionExperiments" ),
                 limit, inferredTerms )
                 .addWarnings( queryWarnings, "query", LocationType.QUERY );
-    }
-
-    private Set<String> getExcludedFields( @Nullable ExcludeArg<AnnotationWithUsageStatisticsValueObject> exclude ) {
-        if ( exclude == null ) {
-            return Collections.emptySet();
-        }
-        if ( !ALLOWED_FIELDS.containsAll( exclude.getValue() ) ) {
-            throw new BadRequestException( String.format( "Only the following fields can be excluded: %s.",
-                    String.join( ", ", ALLOWED_FIELDS ) ) );
-        }
-        return new HashSet<>( exclude.getValue() );
     }
 
     private Set<OntologyTermValueObject> getParentTerms( OntologyTerm c, Map<OntologyTerm, Set<OntologyTermValueObject>> visited, long timeoutMs ) throws TimeoutException {
@@ -649,7 +662,7 @@ public class DatasetsWebService {
     ) {
         Collection<OntologyTerm> inferredTerms = new HashSet<>();
         Filters filters = datasetArgService.getFilters( filterArg, null, inferredTerms );
-        LinkedHashSet<Throwable> warnings = new LinkedHashSet<Throwable>();
+        LinkedHashSet<Throwable> warnings = new LinkedHashSet<>();
         Set<Long> extraIds;
         if ( query != null ) {
             extraIds = datasetArgService.getIdsForSearchQuery( query, warnings );
@@ -834,14 +847,14 @@ public class DatasetsWebService {
     @GET
     @GZIP
     @Path("/analyses/differential/results/genes/{gene}")
-    @Produces({ MediaType.APPLICATION_JSON, MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8 })
+    @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 + "; q=0.9" })
     @Operation(
             summary = "Retrieve the differential expression results for a given gene among datasets matching the provided query and filter",
             description = GET_DATASETS_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION,
             responses = {
                     @ApiResponse(content = {
                             @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectDifferentialExpressionAnalysisResultByGeneValueObject.class)),
-                            @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string", format = "binary"))
+                            @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8 + "; q=0.9", schema = @Schema(type = "string", format = "binary"))
                     })
             })
     public Object getDatasetsDifferentialExpressionAnalysisResultsForGene(
@@ -854,7 +867,7 @@ public class DatasetsWebService {
             @Context HttpHeaders headers
     ) {
         Gene gene = geneArgService.getEntity( geneArg );
-        MediaType accepted = MediaTypeUtils.negotiate( headers, MediaType.APPLICATION_JSON_TYPE, MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+        MediaType accepted = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, withQuality( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE, 0.9 ) );
         if ( accepted.equals( MediaType.APPLICATION_JSON_TYPE ) ) {
             return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( gene, query, filter, offsetArg, limitArg, threshold );
         } else {
@@ -871,14 +884,14 @@ public class DatasetsWebService {
     @GET
     @GZIP
     @Path("/analyses/differential/results/taxa/{taxon}/genes/{gene}")
-    @Produces({ MediaType.APPLICATION_JSON, MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8 })
+    @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @Operation(
             summary = "Retrieve the differential expression results for a given gene and taxa among datasets matching the provided query and filter",
             description = GET_DATASETS_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION,
             responses = {
                     @ApiResponse(content = {
                             @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectDifferentialExpressionAnalysisResultByGeneValueObject.class)),
-                            @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string", format = "binary"))
+                            @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string", format = "binary"))
                     })
             })
     public Object getDatasetsDifferentialExpressionAnalysisResultsForGeneInTaxon(
@@ -893,7 +906,7 @@ public class DatasetsWebService {
     ) {
         Taxon taxon = taxonArgService.getEntity( taxonArg );
         Gene gene = geneArgService.getEntityWithTaxon( geneArg, taxon );
-        MediaType accepted = MediaTypeUtils.negotiate( headers, MediaType.APPLICATION_JSON_TYPE, MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+        MediaType accepted = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
         if ( accepted.equals( MediaType.APPLICATION_JSON_TYPE ) ) {
             return getDatasetsDifferentialExpressionAnalysisResultsForGeneInternal( gene, query, filter, offsetArg, limitArg, threshold );
         } else {
@@ -909,7 +922,7 @@ public class DatasetsWebService {
         int limit = limitArg != null ? limitArg.getValue() : GET_DATASETS_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DEFAULT_LIMIT;
         Collection<OntologyTerm> inferredTerms = new HashSet<>();
         Filters filters = datasetArgService.getFilters( filter, null, inferredTerms );
-        LinkedHashSet<Throwable> warnings = new LinkedHashSet<Throwable>();
+        LinkedHashSet<Throwable> warnings = new LinkedHashSet<>();
         if ( threshold < 0 || threshold > 1 ) {
             throw new BadRequestException( "The threshold must be in the [0, 1] interval." );
         }
@@ -1062,6 +1075,157 @@ public class DatasetsWebService {
         return respond( datasetArgService.getQuantitationTypes( datasetArg ) );
     }
 
+    /**
+     * Retrieve the single-cell dimension for a given quantitation type.
+     */
+    @GET
+    @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
+    @Path("/{dataset}/singleCellDimension")
+    @Operation(summary = "Retrieve a single-cell dimension of a single-cell dataset", responses = {
+            @ApiResponse(content = {
+                    @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectSingleCellDimensionValueObject.class)),
+                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-single-cell-dimension.tsv") })
+            })
+    })
+    public Object getDatasetSingleCellDimension(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
+            @Parameter(description = "Exclude cell IDs from the output") @QueryParam("exclude") ExcludeArg<SingleCellDimensionValueObject> excludeArg,
+            @Parameter(description = "Use numerical BioAssay identifier", hidden = true) @QueryParam("useBioAssayId") @DefaultValue("false") Boolean useBioAssayId,
+            @Context HttpHeaders headers
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        QuantitationType qt;
+        if ( qtArg == null ) {
+            qt = singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee )
+                    .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have a preferred single-cell quantitation type." ) );
+        } else {
+            qt = quantitationTypeArgService.getEntity( qtArg, ee, SingleCellExpressionDataVector.class );
+        }
+        MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+        if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
+            if ( excludeArg != null ) {
+                throw new BadRequestException( "The 'exclude' query parameter cannot be used with the TSV output." );
+            }
+            SingleCellDimension dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristics( ee, qt );
+            if ( dimension == null ) {
+                throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
+            }
+            return ( StreamingOutput ) output -> {
+                CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
+                writer.setUseBioAssayId( useBioAssayId );
+                writer.write( dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
+            };
+        } else {
+            SingleCellDimension dimension;
+            Set<String> excludedFields;
+            if ( excludeArg == null ) {
+                excludedFields = Collections.emptySet();
+            } else {
+                excludedFields = excludeArg.getValue( SCD_ALLOWED_EXCLUDE_FIELDS );
+            }
+            if ( excludedFields.contains( "cellIds" ) ) {
+                dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristicsWithoutCellIds( ee, qt );
+            } else {
+                dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristics( ee, qt );
+            }
+            if ( dimension == null ) {
+                throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
+            }
+            return respond( new SingleCellDimensionValueObject( dimension, excludedFields.contains( "bioAssayIds" ), excludedFields.contains( "cellTypeAssignments.cellTypeIds" ), excludedFields.contains( "cellLevelCharacteristics.characteristicIds" ) ) );
+        }
+    }
+
+    @GET
+    @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
+    @Path("/{dataset}/cellTypeAssignment")
+    @Operation(summary = "Retrieve a cell-type assignment of a single-cell dataset", responses = {
+            @ApiResponse(content = {
+                    @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectCellTypeAssignmentValueObject.class)),
+                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-cell-type-assignment.tsv") })
+            })
+    })
+    public Object getDatasetCellTypeAssignment(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
+            // TODO: implement CellTypeAssignmentArg
+            @QueryParam("cellTypeAssignment") String ctaName,
+            @Parameter(description = "Use numerical BioAssay identifier", hidden = true) @QueryParam("useBioAssayId") @DefaultValue("false") Boolean useBioAssayId,
+            @Context HttpHeaders headers
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        QuantitationType qt;
+        if ( qtArg == null ) {
+            qt = singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee )
+                    .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have a preferred single-cell quantitation type." ) );
+        } else {
+            qt = quantitationTypeArgService.getEntity( qtArg, ee, SingleCellExpressionDataVector.class );
+        }
+        SingleCellDimension dimension = singleCellExpressionExperimentService.getSingleCellDimension( ee, qt );
+        if ( dimension == null ) {
+            throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
+        }
+        CellTypeAssignment cta;
+        if ( ctaName != null ) {
+            cta = singleCellExpressionExperimentService.getCellTypeAssignment( ee, qt, ctaName );
+            if ( cta == null ) {
+                throw new NotFoundException( "No cell type assignment with name " + ctaName + " found for " + ee.getShortName() + " and " + qt.getName() + "." );
+            }
+        } else {
+            cta = singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, qt )
+                    .orElseThrow( () -> new NotFoundException( "No preferred cell type assignment found for " + ee.getShortName() + " and " + qt.getName() + "." ) );
+        }
+        MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+        if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
+            return ( StreamingOutput ) output -> {
+                CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
+                writer.setUseBioAssayId( useBioAssayId );
+                writer.write( cta, dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
+            };
+        } else {
+            return respond( new CellTypeAssignmentValueObject( cta, false ) );
+        }
+    }
+
+    @GET
+    @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
+    @Path("/{dataset}/cellLevelCharacteristics")
+    @Operation(summary = "Retrieve all other cell-level characteristics of a single-cell dataset", responses = {
+            @ApiResponse(content = {
+                    @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectListCellLevelCharacteristicsValueObject.class)),
+                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-cell-level-characteristics.tsv") })
+            })
+    })
+    public Object getDatasetCellLevelCharacteristics(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("quantitationType") QuantitationTypeArg<?> qtArg,
+            @Context HttpHeaders headers
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        QuantitationType qt;
+        if ( qtArg == null ) {
+            qt = singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee )
+                    .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have a preferred single-cell quantitation type." ) );
+        } else {
+            qt = quantitationTypeArgService.getEntity( qtArg, ee, SingleCellExpressionDataVector.class );
+        }
+        SingleCellDimension dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristics( ee, qt );
+        if ( dimension == null ) {
+            throw new NotFoundException( "No single-cell dimension found for " + ee.getShortName() + " and " + qt.getName() + "." );
+        }
+        MediaType negotiate = negotiate( headers, MediaType.APPLICATION_JSON_TYPE, TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE );
+        if ( negotiate.equals( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ) ) {
+            return ( StreamingOutput ) output -> {
+                CellLevelCharacteristicsWriter writer = new CellLevelCharacteristicsWriter();
+                writer.write( dimension.getCellLevelCharacteristics(), dimension, new OutputStreamWriter( output, StandardCharsets.UTF_8 ) );
+            };
+        } else {
+            return respond( dimension.getCellLevelCharacteristics().stream()
+                    .map( clc -> new CellLevelCharacteristicsValueObject( clc, false ) )
+                    .collect( Collectors.toList() ) );
+        }
+    }
+
     private static final String DATA_TSV_OUTPUT_DESCRIPTION = "The following columns are available: Probe, Sequence, GeneSymbol, GeneName, GemmaId, NCBIid followed by one column per sample. GeneSymbol, GeneName, GemmaId and NCBIid are optional.";
 
     /**
@@ -1087,13 +1251,14 @@ public class DatasetsWebService {
      *                   is more efficient. Only datasets that user has access to will be available.
      * @param filterData return filtered the expression data.
      */
+    @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
     @GET
     @Path("/{dataset}/data")
-    @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
+    @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8)
     @Operation(summary = "Retrieve processed expression data of a dataset",
             description = "This endpoint is deprecated and getDatasetProcessedExpression() should be used instead. " + DATA_TSV_OUTPUT_DESCRIPTION,
             responses = {
-                    @ApiResponse(content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
+                    @ApiResponse(content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8,
                             schema = @Schema(type = "string", format = "binary"),
                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-data.tsv") })),
                     @ApiResponse(responseCode = "204", description = "The dataset expression matrix is empty."),
@@ -1102,23 +1267,11 @@ public class DatasetsWebService {
             deprecated = true)
     public Response getDatasetExpression( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg, // Required
-            @QueryParam("filter") @DefaultValue("false") Boolean filterData // Optional, default false
+            @QueryParam("filter") @DefaultValue("false") Boolean filterData, // Optional, default false
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
     ) {
-        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        try {
-            ee = expressionExperimentService.thawLite( ee );
-            File file = expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, filterData ).orElse( null );
-            if ( file == null || !file.exists() ) {
-                throw new NotFoundException( String.format( DatasetsWebService.ERROR_DATA_FILE_NOT_AVAILABLE, ee.getShortName() ) );
-            }
-            return this.outputFile( file );
-        } catch ( NoRowsLeftAfterFilteringException e ) {
-            return Response.noContent().build();
-        } catch ( FilteringException e ) {
-            throw new InternalServerErrorException( String.format( "Filtering of dataset %s failed.", ee.getShortName() ), e );
-        } catch ( IOException e ) {
-            throw new InternalServerErrorException( e );
-        }
+        return getDatasetProcessedExpression( datasetArg, filterData, download, force );
     }
 
     /**
@@ -1127,27 +1280,62 @@ public class DatasetsWebService {
      * The payload is transparently compressed via a <code>Content-Encoding</code> header and streamed to avoid dumping
      * the whole payload in memory.
      */
-    @GZIP
+    @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
     @GET
     @Path("/{dataset}/data/processed")
-    @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
+    @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8)
     @Operation(summary = "Retrieve processed expression data of a dataset",
             description = DATA_TSV_OUTPUT_DESCRIPTION,
             responses = {
-                    @ApiResponse(content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
+                    @ApiResponse(content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8,
                             schema = @Schema(type = "string", format = "binary"),
                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-processed-data.tsv") })),
-                    @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
+                    @ApiResponse(responseCode = "204", description = "The dataset expression matrix is empty. Only applicable if filter is set to true."),
+                    @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public Response getDatasetProcessedExpression( @PathParam("dataset") DatasetArg<?> datasetArg ) {
+    public Response getDatasetProcessedExpression(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("filter") @DefaultValue("false") Boolean filtered,
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
+    ) {
+        if ( force ) {
+            checkIsAdmin();
+        }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         if ( !expressionExperimentService.hasProcessedExpressionData( ee ) ) {
-            throw new NotFoundException( String.format( "No preferred quantitation type could be for found processed expression data data of %s.", ee ) );
+            throw new NotFoundException( ee.getShortName() + " does not have any processed vectors." );
         }
-        StreamingOutput stream = ( output ) -> expressionDataFileService.writeProcessedExpressionData( ee, new OutputStreamWriter( output ) );
-        return Response.ok( stream )
-                .header( "Content-Disposition", String.format( "attachment; filename=%d_%s_expmat.unfilt.data.txt", ee.getId(), ee.getShortName() ) )
-                .build();
+        try ( LockedPath p = expressionDataFileService.writeOrLocateProcessedDataFile( ee, filtered, force, 5, TimeUnit.SECONDS )
+                .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have any processed vectors." ) ) ) {
+            String filename = download ? p.getPath().getFileName().toString() : FilenameUtils.removeExtension( p.getPath().getFileName().toString() );
+            return Response.ok( p.steal() )
+                    .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                    .header( "Content-Disposition", "attachment; filename=\"" + filename + "\"" )
+                    .build();
+        } catch ( TimeoutException e ) {
+            throw new ServiceUnavailableException( "Processed data for " + ee.getShortName() + " is still being generated.", 30L, e );
+        } catch ( IOException e ) {
+            log.error( "Failed to create processed expression data for " + ee + ", will have to stream it as a fallback.", e );
+            String filename = download ? getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ) : FilenameUtils.removeExtension( getDataOutputFilename( ee, filtered, TABULAR_BULK_DATA_FILE_SUFFIX ) );
+            return Response.ok( ( StreamingOutput ) output -> {
+                        try {
+                            expressionDataFileService.writeProcessedExpressionData( ee, filtered, null, new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ) );
+                        } catch ( FilteringException ex ) {
+                            // this is a bit unfortunate, because it's too late for producing a 204 error
+                            throw new RuntimeException( ex );
+                        }
+                    } )
+                    .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                    .header( "Content-Disposition", "attachment; filename=\"" + filename + "\"" )
+                    .build();
+        } catch ( InterruptedException e ) {
+            throw new InternalServerErrorException( e );
+        } catch ( NoRowsLeftAfterFilteringException e ) {
+            return Response.noContent().build();
+        } catch ( FilteringException e ) {
+            throw new InternalServerErrorException( String.format( "Filtering of dataset %s failed.", ee.getShortName() ), e );
+        }
     }
 
     /**
@@ -1156,20 +1344,27 @@ public class DatasetsWebService {
      * The payload is transparently compressed via a <code>Content-Encoding</code> header and streamed to avoid dumping
      * the whole payload in memory.
      */
-    @GZIP
+    @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
     @GET
     @Path("/{dataset}/data/raw")
-    @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
+    @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8)
     @Operation(summary = "Retrieve raw expression data of a dataset",
             description = DATA_TSV_OUTPUT_DESCRIPTION,
             responses = {
-                    @ApiResponse(content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
+                    @ApiResponse(content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8,
                             schema = @Schema(type = "string", format = "binary"),
                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-raw-data.tsv") })),
                     @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
-    public Response getDatasetRawExpression( @PathParam("dataset") DatasetArg<?> datasetArg,
-            @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg ) {
+    public Response getDatasetRawExpression(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
+    ) {
+        if ( force ) {
+            checkIsAdmin();
+        }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
         QuantitationType qt;
         if ( quantitationTypeArg != null ) {
@@ -1180,9 +1375,111 @@ public class DatasetsWebService {
                 throw new NotFoundException( String.format( "No preferred quantitation type could be found for raw expression data data of %s.", ee ) );
             }
         }
-        StreamingOutput stream = ( output ) -> expressionDataFileService.writeRawExpressionData( ee, qt, new OutputStreamWriter( output ) );
-        return Response.ok( stream )
-                .header( "Content-Disposition", String.format( "attachment; filename=%d_%s_expmat.unfilt.raw.data.txt", ee.getId(), ee.getShortName() ) )
+        try ( LockedPath p = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, force, 5, TimeUnit.SECONDS ) ) {
+            String filename = download ? p.getPath().getFileName().toString() : FilenameUtils.removeExtension( p.getPath().getFileName().toString() );
+            return Response.ok( p.steal() )
+                    .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                    .header( "Content-Disposition", "attachment; filename=\"" + filename + "\"" )
+                    .build();
+        } catch ( TimeoutException e ) {
+            // file is being written, recommend to the user to wait a lils.copy( is, entityStittle bit
+            throw new ServiceUnavailableException( "Raw data for " + qt + " is still being generated.", 30L, e );
+        } catch ( IOException e ) {
+            log.error( "Failed to write raw expression data for " + qt + " to disk, will resort to stream it.", e );
+            String filename = getDataOutputFilename( ee, qt, TABULAR_BULK_DATA_FILE_SUFFIX );
+            return Response.ok( ( StreamingOutput ) output -> expressionDataFileService.writeRawExpressionData( ee, qt, null, new OutputStreamWriter( new GZIPOutputStream( output ), StandardCharsets.UTF_8 ) ) )
+                    .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                    .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
+                    .build();
+        } catch ( InterruptedException e ) {
+            throw new InternalServerErrorException( e );
+        }
+    }
+
+    @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
+    @GET
+    @Path("/{dataset}/data/singleCell")
+    @Produces({ APPLICATION_10X_MEX, TEXT_TAB_SEPARATED_VALUES_UTF8 + ";q=0.9" })
+    @Operation(summary = "Retrieve single-cell expression data of a dataset",
+            responses = {
+                    @ApiResponse(
+                            content = {
+                                    @Content(mediaType = APPLICATION_10X_MEX, schema = @Schema(description = "Sample files are bundled in a TAR archive according to the 10x MEX format.", type = "string", format = "binary", externalDocs = @ExternalDocumentation(url = "https://www.10xgenomics.com/support/software/cell-ranger/latest/analysis/outputs/cr-outputs-mex-matrices")),
+                                            examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-single-cell-data.mex") }),
+                                    @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8 + "; q=0.9", schema = @Schema(type = "string", format = "binary"),
+                                            examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-single-cell-data.tsv") })
+                            }),
+                    @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response getDatasetSingleCellExpression(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force,
+            @Context HttpHeaders headers
+    ) {
+        if ( force ) {
+            checkIsAdmin();
+        }
+        MediaType mediaType = negotiate( headers, APPLICATION_10X_MEX_TYPE, withQuality( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE, 0.9 ) );
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        QuantitationType qt;
+        if ( quantitationTypeArg != null ) {
+            qt = quantitationTypeArgService.getEntity( quantitationTypeArg, ee, SingleCellExpressionDataVector.class );
+        } else {
+            qt = singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee )
+                    .orElseThrow( () -> new NotFoundException( "No preferred single-cell quantitation type could be found for " + ee + "." ) );
+        }
+        if ( mediaType.equals( APPLICATION_10X_MEX_TYPE ) ) {
+            try ( LockedPath p = expressionDataFileService.getDataFile( ee, qt, ExpressionExperimentDataFileType.MEX, false, 5, TimeUnit.SECONDS ) ) {
+                if ( Files.exists( p.getPath() ) ) {
+                    return Response.ok( p.steal() )
+                            .type( APPLICATION_10X_MEX_TYPE )
+                            .header( "Content-Disposition", "attachment; filename=\"" + p.getPath().getFileName() + ".tar\"" )
+                            .build();
+                } else {
+                    expressionDataFileService.writeOrLocateMexSingleCellExpressionDataAsync( ee, qt, true, 30, false );
+                    throw new ServiceUnavailableException( "MEX single-cell data for " + qt + " is still being generated.", 30L );
+                }
+            } catch ( TimeoutException e ) {
+                throw new ServiceUnavailableException( "MEX single-cell data for " + qt + " is still being generated.", 30L, e );
+            } catch ( RejectedExecutionException e ) {
+                throw new ServiceUnavailableException( "Too many file generation tasks are being processed at this time.", 30L, e );
+            } catch ( IOException | InterruptedException e ) {
+                throw new InternalServerErrorException( e );
+            }
+        } else {
+            try ( LockedPath p = expressionDataFileService.getDataFile( ee, qt, ExpressionExperimentDataFileType.TABULAR, false, 5, TimeUnit.SECONDS ) ) {
+                if ( !force && Files.exists( p.getPath() ) ) {
+                    return Response.ok( p.steal() )
+                            .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                            .header( "Content-Disposition", "attachment; filename=\"" + ( download ? p.getPath().getFileName().toString() : FilenameUtils.removeExtension( p.getPath().getFileName().toString() ) ) + "\"" )
+                            .build();
+                } else {
+                    // generate the file in the background and stream it
+                    // TODO: limit the number of threads writing SC data to disk to not overwhelm the short-lived task pool
+                    log.info( "Single-cell data for " + qt + " is not available, will generate it in the background and stream it in the meantime." );
+                    expressionDataFileService.writeOrLocateTabularSingleCellExpressionDataAsync( ee, qt, true, 30, force );
+                    return streamTabularDatasetSingleCellExpression( ee, qt, download );
+                }
+            } catch ( TimeoutException e ) {
+                // file is being written, recommend to the user to wait a little bit, stacktrace is superfluous
+                log.warn( "Single-cell data for " + qt + " is still being generated, it will be streamed in the meantime." );
+                return streamTabularDatasetSingleCellExpression( ee, qt, download );
+            } catch ( RejectedExecutionException e ) {
+                log.warn( "Too many file generation tasks are being executed, will stream the single-cell data instead.", e );
+                return streamTabularDatasetSingleCellExpression( ee, qt, download );
+            } catch ( IOException | InterruptedException e ) {
+                throw new InternalServerErrorException( e );
+            }
+        }
+    }
+
+    private Response streamTabularDatasetSingleCellExpression( ExpressionExperiment ee, QuantitationType qt, Boolean download ) {
+        String filename = getDataOutputFilename( ee, qt, TABULAR_SC_DATA_SUFFIX );
+        return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, null, true, 30, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ) ) )
+                .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
                 .build();
     }
 
@@ -1192,27 +1489,42 @@ public class DatasetsWebService {
      * @param datasetArg can either be the ExpressionExperiment ID or its short name (e.g. GSE1234). Retrieval by ID
      *                   is more efficient. Only datasets that user has access to will be available.
      */
+    @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
     @GET
     @Path("/{dataset}/design")
-    @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
+    @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8)
     @Operation(summary = "Retrieve the design of a dataset", responses = {
-            @ApiResponse(content = @Content(mediaType = MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8,
-                    schema = @Schema(type = "string", format = "binary"))),
+            @ApiResponse(content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string", format = "binary"),
+                    examples = @ExampleObject("classpath:/restapidocs/examples/dataset-design.tsv"))),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getDatasetDesign( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg // Required
+            @PathParam("dataset") DatasetArg<?> datasetArg, // Required
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
     ) {
+        if ( force ) {
+            checkIsAdmin();
+        }
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        try {
-            ee = expressionExperimentService.thawLite( ee );
-            File file = expressionDataFileService.writeOrLocateDesignFile( ee, false );
-            if ( file == null || !file.exists() ) {
-                throw new NotFoundException( String.format( DatasetsWebService.ERROR_DESIGN_FILE_NOT_AVAILABLE, ee.getShortName() ) );
-            }
-            return this.outputFile( file );
+        try ( LockedPath file = expressionDataFileService.writeOrLocateDesignFile( ee, force, 5, TimeUnit.SECONDS )
+                .orElseThrow( () -> new NotFoundException( ee.getShortName() + " does not have an experimental design." ) ) ) {
+            String filename = file.getPath().getFileName().toString();
+            return Response.ok( file.steal() )
+                    .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                    .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
+                    .build();
+        } catch ( TimeoutException e ) {
+            throw new ServiceUnavailableException( "Experimental design for " + ee.getShortName() + " is still being generated.", 30L, e );
         } catch ( IOException e ) {
-            throw new InternalServerErrorException( e.getMessage(), e );
+            log.error( "Failed to write design for " + ee + " to disk, will resort to stream it.", e );
+            String filename = getDesignFileName( ee );
+            return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeDesignMatrix( ee, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ) ) )
+                    .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                    .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
+                    .build();
+        } catch ( InterruptedException e ) {
+            throw new InternalServerErrorException( e );
         }
     }
 
@@ -1340,14 +1652,17 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the singular value decomposition (SVD) of a dataset expression data", responses = {
             @ApiResponse(useReturnTypeSchema = true, content = @Content()),
-            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist or does not have an SVD.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<SimpleSVDValueObject> getDatasetSvd( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
-        SVDValueObject svd = svdService.getSvd( datasetArgService.getEntity( datasetArg ).getId() );
-        return respond( svd == null ? null : new SimpleSVDValueObject( Arrays.asList( svd.getBioMaterialIds() ), svd.getVariances(), svd.getvMatrix().getRawMatrix() )
-        );
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        SVDValueObject svd = svdService.retrieveSvd( ee );
+        if ( svd == null ) {
+            throw new NotFoundException( ee.getShortName() + " does not have an SVD." );
+        }
+        return respond( new SimpleSVDValueObject( Arrays.asList( svd.getBioMaterialIds() ), svd.getVariances(), svd.getvMatrix().getRawMatrix() ) );
     }
 
     /**
@@ -1396,7 +1711,7 @@ public class DatasetsWebService {
         Filters filter = datasetArgService.getFilters( filterArg, null, inferredTerms );
         Sort sort = datasetArgService.getSort( SortArg.valueOf( "+id" ) );
         List<Long> datasetIds = expressionExperimentService.loadIdsWithCache( filter, sort );
-        LinkedHashSet<Throwable> warnings = new LinkedHashSet<Throwable>();
+        LinkedHashSet<Throwable> warnings = new LinkedHashSet<>();
         if ( queryArg != null ) {
             datasetIds.retainAll( datasetArgService.getIdsForSearchQuery( queryArg, warnings ) );
         }
@@ -1590,21 +1905,19 @@ public class DatasetsWebService {
             })
     public Response refreshDataset(
             @PathParam("dataset") DatasetArg<?> datasetArg,
-            @Parameter(description = "Refresh raw and processed data vectors.") @QueryParam("refreshVectors") @DefaultValue("false") Boolean refreshVectors,
+            @Parameter(description = "Refresh processed data vectors.") @QueryParam("refreshVectors") @DefaultValue("false") Boolean refreshVectors,
             @Parameter(description = "Refresh experiment reports which include differential expression analyses and batch effects.") @QueryParam("refreshReports") @DefaultValue("false") Boolean refreshReports
     ) {
         Long id = datasetArgService.getEntityId( datasetArg );
         if ( id == null ) {
             throw new NotFoundException( "No dataset matches " + datasetArg );
         }
-        ExpressionExperiment ee;
-        if ( refreshVectors ) {
-            ee = expressionExperimentService.loadAndThawWithRefreshCacheMode( id );
-        } else {
-            ee = expressionExperimentService.loadAndThawLiteWithRefreshCacheMode( id );
-        }
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteWithRefreshCacheMode( id );
         if ( ee == null ) {
             throw new NotFoundException( "No dataset with ID " + id );
+        }
+        if ( refreshVectors ) {
+            processedExpressionDataVectorService.evictFromCache( ee );
         }
         if ( refreshReports ) {
             expressionExperimentReportService.evictFromCache( id );
@@ -1619,14 +1932,6 @@ public class DatasetsWebService {
         public ResponseDataObjectExpressionExperimentValueObject( ExpressionExperimentValueObject payload ) {
             super( payload );
         }
-    }
-
-    private Response outputFile( File file ) throws IOException {
-        // we remove the .gz extension because we use HTTP Content-Encoding
-        return Response.ok( new GZIPInputStream( Files.newInputStream( file.toPath() ) ) )
-                .header( "Content-Encoding", "gzip" )
-                .header( "Content-Disposition", "attachment; filename=" + FilenameUtils.removeExtension( file.getName() ) )
-                .build();
     }
 
     @Value
@@ -1715,11 +2020,36 @@ public class DatasetsWebService {
         }
     }
 
+    private void checkIsAdmin() {
+        accessDecisionManager.decide( SecurityContextHolder.getContext().getAuthentication(), null, Collections.singletonList( new SecurityConfig( "GROUP_ADMIN" ) ) );
+    }
+
     private List<Long> sliceIds( List<Long> ids, int offset, int limit ) {
         if ( offset < ids.size() ) {
             return ids.subList( offset, Math.min( offset + limit, ids.size() ) );
         } else {
             return Collections.emptyList();
+        }
+    }
+
+    public static class ResponseDataObjectCellTypeAssignmentValueObject extends ResponseDataObject<CellTypeAssignmentValueObject> {
+
+        public ResponseDataObjectCellTypeAssignmentValueObject( CellTypeAssignmentValueObject payload ) {
+            super( payload );
+        }
+    }
+
+    public static class ResponseDataObjectListCellLevelCharacteristicsValueObject extends ResponseDataObject<List<CellLevelCharacteristicsValueObject>> {
+
+        public ResponseDataObjectListCellLevelCharacteristicsValueObject( List<CellLevelCharacteristicsValueObject> payload ) {
+            super( payload );
+        }
+    }
+
+    public static class ResponseDataObjectSingleCellDimensionValueObject extends ResponseDataObject<SingleCellDimensionValueObject> {
+
+        public ResponseDataObjectSingleCellDimensionValueObject( SingleCellDimensionValueObject payload ) {
+            super( payload );
         }
     }
 }

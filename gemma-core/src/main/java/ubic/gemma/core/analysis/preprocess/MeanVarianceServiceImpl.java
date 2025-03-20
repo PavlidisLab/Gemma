@@ -21,18 +21,18 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.linearmodels.MeanVarianceEstimator;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
-import ubic.gemma.model.common.auditAndSecurity.eventType.FailedMeanVarianceUpdateEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MeanVarianceUpdateEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.filterAndLog2Transform;
 
 /**
  * Manage the mean-variance relationship.
@@ -43,7 +43,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 public class MeanVarianceServiceImpl implements MeanVarianceService {
 
     private static final Log log = LogFactory.getLog( MeanVarianceServiceImpl.class );
-    private static final ByteArrayConverter bac = new ByteArrayConverter();
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -78,8 +77,8 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
             throw new IllegalStateException( "Did not find any preferred quantitation type. Mean-variance relation was not computed." );
         }
         try {
-            intensities = ExpressionDataDoubleMatrixUtil.filterAndLog2Transform( intensities );
-        } catch ( UnsupportedQuantitationScaleConversionException e ) {
+            intensities = filterAndLog2Transform( intensities );
+        } catch ( QuantitationTypeConversionException e ) {
             log.warn( "Problem log transforming data. Check that the appropriate log scale is used. Mean-variance will be computed as is." );
         }
 
@@ -104,14 +103,14 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
     private MeanVarianceRelation calculateMeanVariance( ExpressionDataDoubleMatrix matrix ) {
         DoubleMatrix2D mat = new DenseDoubleMatrix2D( matrix.rows(), matrix.columns() );
         for ( int row = 0; row < mat.rows(); row++ ) {
-            mat.viewRow( row ).assign( matrix.getRawRow( row ) );
+            mat.viewRow( row ).assign( matrix.getRowAsDoubles( row ) );
         }
         MeanVarianceEstimator mve = new MeanVarianceEstimator( mat );
 
         MeanVarianceRelation mvr = MeanVarianceRelation.Factory.newInstance();
         if ( mve.getMeanVariance() != null ) {
-            mvr.setMeans( bac.doubleArrayToBytes( mve.getMeanVariance().viewColumn( 0 ).toArray() ) );
-            mvr.setVariances( bac.doubleArrayToBytes( mve.getMeanVariance().viewColumn( 1 ).toArray() ) );
+            mvr.setMeans( mve.getMeanVariance().viewColumn( 0 ).toArray() );
+            mvr.setVariances( mve.getMeanVariance().viewColumn( 1 ).toArray() );
         }
 
         return mvr;

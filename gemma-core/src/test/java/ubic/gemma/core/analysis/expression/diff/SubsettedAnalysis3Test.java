@@ -24,6 +24,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
+import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -72,6 +74,9 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
     @Autowired
     private GeoService geoService;
 
+    @Autowired
+    private ExpressionDataMatrixService expressionDataMatrixService;
+
     @Before
     public void setUp() throws Exception {
 
@@ -86,7 +91,7 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
 
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thaw( ee );
 
         Collection<ExperimentalFactor> toremove = new HashSet<>( ee.getExperimentalDesign().getExperimentalFactors() );
         for ( ExperimentalFactor ef : toremove ) {
@@ -95,7 +100,7 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
 
         expressionExperimentService.update( ee );
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
 
         ee = expressionExperimentService.thaw( ee );
 
@@ -108,7 +113,7 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
     @Category(SlowTest.class)
     public void test() {
 
-        ee = expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thaw( ee );
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 
         assertEquals( 3, factors.size() );
@@ -144,7 +149,8 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
 
         config.setSubsetFactor( diseasegroup );
 
-        Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( ee, config );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
+        Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( ee, dmatrix, config );
         assertEquals( 6, analyses.size() ); // a subset for each disease: SZ, PD, HD, ALS, ALZ, MS
 
         /*

@@ -6,6 +6,10 @@
     padding: 0 1.25em;
 }
 
+.d-none {
+    display: none;
+}
+
 .d-sm {
     display: none;
 }

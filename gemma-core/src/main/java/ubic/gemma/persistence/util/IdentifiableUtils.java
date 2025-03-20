@@ -15,6 +15,34 @@ import java.util.stream.Collectors;
 public class IdentifiableUtils {
 
     /**
+     * Convert a collection of identifiable to their IDs.
+     * @param entities entities
+     * @return returns a collection of IDs. Avoids using reflection by requiring that the given entities all
+     * implement the Identifiable interface.
+     */
+    public static <T extends Identifiable> List<Long> getIds( Collection<T> entities ) {
+        return entities.stream().map( Identifiable::getId ).collect( Collectors.toList() );
+    }
+
+    /**
+     * Given a set of entities, create a map of their ids to the entities.
+     * <p>
+     * Note: If more than one entity share the same ID, there is no guarantee on which will be kept in the final
+     * mapping. If the collection is ordered, the first encountered entity will be kept.
+     *
+     * @param entities where id is called "id"
+     * @param <T>      the type
+     * @return the created map
+     */
+    public static <T extends Identifiable> Map<Long, T> getIdMap( Collection<T> entities ) {
+        Map<Long, T> result = new HashMap<>();
+        for ( T entity : entities ) {
+            result.putIfAbsent( entity.getId(), entity );
+        }
+        return result;
+    }
+
+    /**
      * Collect results into an identifiable set.
      * <p>
      * This uses {@link Identifiable#getId()} for comparing elements, making the collection safe for holding proxies

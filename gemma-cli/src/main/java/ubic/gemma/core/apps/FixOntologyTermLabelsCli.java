@@ -66,7 +66,7 @@ public class FixOntologyTermLabelsCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         if ( autoLoadOntologies ) {
             throw new IllegalArgumentException( "Auto-loading of ontologies is enabled, disable it by setting load.ontologies=false in Gemma.properties." );
         }
@@ -103,9 +103,9 @@ public class FixOntologyTermLabelsCli extends AbstractAuthenticatedCLI {
 
         Map<String, OntologyTerm> mismatches = ontologyService.fixOntologyTermLabels( dryRun, 4, TimeUnit.HOURS );
 
-        System.out.println( "Wrong_label\tCorrect_Label\tURI" );
+        getCliContext().getOutputStream().println( "Wrong_label\tCorrect_Label\tURI" );
         for ( Map.Entry<String, OntologyTerm> entry : mismatches.entrySet() ) {
-            System.out.println( entry.getKey() + "\t" + entry.getValue().getLabel() + "\t" + entry.getValue().getUri() );
+            getCliContext().getOutputStream().println( entry.getKey() + "\t" + entry.getValue().getLabel() + "\t" + entry.getValue().getUri() );
         }
 
 

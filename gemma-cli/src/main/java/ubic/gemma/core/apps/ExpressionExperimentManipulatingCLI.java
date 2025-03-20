@@ -22,6 +22,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
@@ -30,13 +31,11 @@ import org.springframework.util.Assert;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.core.util.AbstractAuthenticatedCLI;
+import ubic.gemma.core.util.AbstractAutoSeekingCLI;
+import ubic.gemma.core.util.EntityLocator;
 import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -49,17 +48,16 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.Filter;
-import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-
-import static ubic.gemma.persistence.util.IdentifiableUtils.toIdentifiableSet;
 
 /**
  * Base class for CLIs that needs one or more expression experiment as an input. It offers the following ways of reading
@@ -82,14 +80,12 @@ import static ubic.gemma.persistence.util.IdentifiableUtils.toIdentifiableSet;
  *
  * @author Paul
  */
-public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthenticatedCLI {
+public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSeekingCLI<ExpressionExperiment> {
 
     @Autowired
     protected ExpressionExperimentService eeService;
     @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
-    @Autowired
-    private TaxonService taxonService;
     @Autowired
     private SearchService searchService;
     @Autowired
@@ -98,6 +94,12 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
     protected AuditTrailService auditTrailService;
     @Autowired
     protected AuditEventService auditEventService;
+    @Autowired
+    protected EntityLocator entityLocator;
+    @Autowired
+    protected EntityUrlBuilder entityUrlBuilder;
+    @Autowired
+    private GemmaRestApiClient gemmaRestApiClient;
 
     /**
      * Single-experiment mode.
@@ -105,9 +107,24 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
     private boolean singleExperimentMode = false;
 
     /**
+     * Default to all datasets if no options are supplied.
+     */
+    private boolean defaultToAll = false;
+
+    /**
      * Try to use references instead of actual entities.
      */
     private boolean useReferencesIfPossible = false;
+
+    /**
+     * Abort processing experiments if an error occurs.
+     */
+    private boolean abortOnError = false;
+
+    /**
+     * List of options only available when a single experiment is processed.
+     */
+    private final Set<String> singleExperimentOptions = new HashSet<>();
 
     /**
      * Process all experiments.
@@ -137,14 +154,14 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
      * File containing experiments to exclude.
      */
     private Path excludeFile;
-
     /**
-     * Force processing of EEs regardless of their troubled status.
+     * Subset of {@link #singleExperimentOptions} being used.
      */
-    protected boolean force = false;
+    private final Set<String> singleExperimentOptionsUsed = new HashSet<>();
 
     protected ExpressionExperimentManipulatingCLI() {
-        setRequireLogin( true );
+        super( ExpressionExperiment.class );
+        setRequireLogin();
     }
 
     @Override
@@ -152,8 +169,25 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         return CommandGroup.EXPERIMENT;
     }
 
+    /**
+     * Add an option that is only available in single-experiment mode.
+     */
+    protected void addSingleExperimentOption( Options options, Option option ) {
+        option.setDescription( option.getDescription() + "\n" + "This option is not available when processing more than one experiment." );
+        options.addOption( option );
+        singleExperimentOptions.add( option.getOpt() );
+    }
+
+    /**
+     * Add an option that is only available in single-experiment mode.
+     */
+    protected void addSingleExperimentOption( Options options, String opt, String longOpt, boolean hasArg, String description ) {
+        options.addOption( opt, longOpt, hasArg, description + "\n" + "This option is not available when processing more than one experiment." );
+        singleExperimentOptions.add( opt );
+    }
+
     @Override
-    protected void buildOptions( Options options ) {
+    protected final void buildOptions( Options options ) {
         Option expOption = Option.builder( "e" ).hasArg().argName( "shortname" ).desc(
                         "Expression experiment short name. Most tools recognize comma-delimited values given on the command line, "
                                 + "and if this option is omitted (and none other provided), the tool will be applied to all expression experiments." )
@@ -161,10 +195,14 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
 
         options.addOption( expOption );
 
-        if ( singleExperimentMode )
+        if ( singleExperimentMode ) {
+            buildExperimentOptions( options );
             return;
+        }
 
-        options.addOption( "all", false, "Process all expression experiments" );
+        if ( !defaultToAll ) {
+            options.addOption( "all", false, "Process all expression experiments" );
+        }
 
         Option eeFileListOption = Option.builder( "f" ).hasArg().type( Path.class ).argName( "file" )
                 .desc( "File with list of short names or IDs of expression experiments (one per line; use instead of '-e')" )
@@ -191,15 +229,25 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         options.addOption( excludeEeOption );
 
         addBatchOption( options );
+
+        buildExperimentOptions( options );
+    }
+
+    protected void buildExperimentOptions( Options options ) {
+
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        Assert.isTrue( commandLine.hasOption( "all" ) || commandLine.hasOption( "eeset" )
-                        || commandLine.hasOption( "e" ) || commandLine.hasOption( 'f' ) || commandLine.hasOption( 'q' ),
-                "At least one of -all, -e, -eeset, -f, or -q must be provided." );
-        this.force = commandLine.hasOption( "force" );
-        this.all = commandLine.hasOption( "all" );
+    protected final void processOptions( CommandLine commandLine ) throws ParseException {
+        boolean hasAnyDatasetOptions = commandLine.hasOption( "all" ) || commandLine.hasOption( "eeset" )
+                || commandLine.hasOption( "e" ) || commandLine.hasOption( 'f' ) || commandLine.hasOption( 'q' );
+        Assert.isTrue( hasAnyDatasetOptions || defaultToAll, "At least one of -all, -e, -eeset, -f, or -q must be provided." );
+        super.processOptions( commandLine );
+        if ( defaultToAll && !hasAnyDatasetOptions ) {
+            this.all = true;
+        } else {
+            this.all = commandLine.hasOption( "all" );
+        }
         if ( commandLine.hasOption( 'e' ) ) {
             String optionValue = commandLine.getOptionValue( 'e' );
             Assert.isTrue( StringUtils.isNotBlank( optionValue ), "List of EE identifiers must not be blank." );
@@ -210,12 +258,22 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         this.query = commandLine.getOptionValue( 'q' );
         this.taxonName = commandLine.getOptionValue( 't' );
         this.excludeFile = commandLine.getParsedOptionValue( 'x' );
+        for ( Option option : commandLine.getOptions() ) {
+            if ( singleExperimentOptions.contains( option.getOpt() ) ) {
+                singleExperimentOptionsUsed.add( option.getOpt() );
+            }
+        }
+        processExperimentOptions( commandLine );
+    }
+
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
+
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         // intentionally a TreeSet over IDs, to prevent proxy initialization via hashCode()
-        Set<BioAssaySet> expressionExperiments = new TreeSet<>( Comparator.comparing( BioAssaySet::getId ) );
+        Collection<BioAssaySet> expressionExperiments = new TreeSet<>( Comparator.comparing( BioAssaySet::getId ) );
 
         if ( all ) {
             if ( useReferencesIfPossible ) {
@@ -245,7 +303,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         }
 
         if ( query != null ) {
-            Taxon taxon = this.taxonName != null ? locateTaxon( this.taxonName ) : null;
+            Taxon taxon = this.taxonName != null ? entityLocator.locateTaxon( this.taxonName ) : null;
             log.info( "Processing all experiments that match query " + query + ( taxon != null ? " in taxon " + taxon : "" ) );
             try {
                 expressionExperiments.addAll( this.findExpressionExperimentsByQuery( query, taxon ) );
@@ -262,7 +320,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
             }
         }
 
-        if ( !force && !expressionExperiments.isEmpty() ) {
+        if ( !isForce() && !expressionExperiments.isEmpty() ) {
 
             if ( isAutoSeek() ) {
                 if ( this.getAutoSeekEventType() == null ) {
@@ -276,25 +334,46 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
             this.removeTroubledExperiments( expressionExperiments );
         }
 
+        expressionExperiments = preprocessBioAssaySets( expressionExperiments );
+
         if ( expressionExperiments.isEmpty() ) {
             throw new RuntimeException( "No expression experiments matched the given options." );
         } else if ( expressionExperiments.size() == 1 ) {
             BioAssaySet ee = expressionExperiments.iterator().next();
-            log.info( "Final dataset: " + experimentToString( ee ) );
+            log.info( "Final dataset: " + formatExperiment( ee ) );
+            processBioAssaySet( expressionExperiments.iterator().next() );
         } else {
+            if ( !singleExperimentOptionsUsed.isEmpty() ) {
+                throw new IllegalStateException( String.format( "There are single-experiment options used: %s, but more than one experiments was found.",
+                        singleExperimentOptionsUsed.stream().map( o -> "-" + o ).collect( Collectors.joining( ", " ) ) ) );
+            }
             log.info( String.format( "Final list: %d expression experiments", expressionExperiments.size() ) );
+            processBioAssaySets( expressionExperiments );
         }
-
-        processBioAssaySets( expressionExperiments );
     }
 
+    /**
+     * Pre-process BioAssays.
+     */
+    protected Collection<BioAssaySet> preprocessBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
+        return expressionExperiments;
+    }
+
+    /**
+     * Process multiple {@link BioAssaySet}.
+     * <p>
+     * This only called if more than one experiment was found.
+     */
     protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
+        setEstimatedMaxTasks( expressionExperiments.size() );
         for ( BioAssaySet bas : expressionExperiments ) {
             try {
                 processBioAssaySet( bas );
-                addSuccessObject( bas );
             } catch ( Exception e ) {
                 addErrorObject( bas, e );
+                if ( abortOnError ) {
+                    throw new RuntimeException( "Aborted processing due to error.", e );
+                }
             }
         }
     }
@@ -304,8 +383,9 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
      * <p>
      * This method delegates to one of {@link #processExpressionExperiment(ExpressionExperiment)},
      * {@link #processExpressionExperimentSubSet(ExpressionExperimentSubSet)} or {@link #processOtherBioAssaySet(BioAssaySet)}.
+     * @throws Exception if an error occurs, it will be collected via {@link #addErrorObject(Object, String, Throwable)}
      */
-    protected void processBioAssaySet( BioAssaySet bas ) {
+    protected void processBioAssaySet( BioAssaySet bas ) throws Exception {
         Assert.notNull( bas, "Cannot process a null BioAssaySet." );
         if ( bas instanceof ExpressionExperiment ) {
             processExpressionExperiment( ( ExpressionExperiment ) bas );
@@ -319,31 +399,25 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
     /**
      * Process an {@link ExpressionExperiment}.
      */
-    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) throws Exception {
         throw new UnsupportedOperationException( "This command line does support experiments." );
     }
 
     /**
      * Process an {@link ExpressionExperimentSubSet}.
      */
-    protected void processExpressionExperimentSubSet( ExpressionExperimentSubSet expressionExperimentSubSet ) {
+    protected void processExpressionExperimentSubSet( @SuppressWarnings("unused") ExpressionExperimentSubSet expressionExperimentSubSet ) throws Exception {
         throw new UnsupportedOperationException( "This command line does support experiment subsets." );
     }
 
     /**
      * Process other kinds of {@link BioAssaySet} that are neither experiment nor subset.
      */
-    protected void processOtherBioAssaySet( BioAssaySet bas ) {
+    protected void processOtherBioAssaySet( @SuppressWarnings("unused") BioAssaySet bas ) throws Exception {
         throw new UnsupportedOperationException( "This command line does support other kinds of BioAssaySet." );
     }
 
-    protected void addForceOption( Options options ) {
-        String desc = "Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)";
-        Option forceOption = Option.builder( "force" ).longOpt( "force" ).desc( desc ).build();
-        options.addOption( forceOption );
-    }
-
-    private void excludeFromFile( Set<BioAssaySet> expressionExperiments, Path excludeEeFileName ) throws IOException {
+    private void excludeFromFile( Collection<BioAssaySet> expressionExperiments, Path excludeEeFileName ) throws IOException {
         assert !expressionExperiments.isEmpty();
         Collection<ExpressionExperiment> excludeExperiments;
         excludeExperiments = this.readExpressionExperimentListFile( excludeEeFileName );
@@ -357,14 +431,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
     private List<ExpressionExperiment> experimentsFromCliList( String[] identifiers ) {
         List<ExpressionExperiment> ees = new ArrayList<>( identifiers.length );
         for ( String identifier : identifiers ) {
-            ExpressionExperiment expressionExperiment = this.locateExpressionExperiment( identifier );
-            if ( expressionExperiment == null ) {
-                continue;
-            }
-            if ( !useReferencesIfPossible ) {
-                expressionExperiment = eeService.thawLite( expressionExperiment );
-            }
-            ees.add( expressionExperiment );
+            ees.add( entityLocator.locateExpressionExperiment( identifier, useReferencesIfPossible ) );
         }
         return ees;
     }
@@ -431,43 +498,6 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         return ees;
     }
 
-    /**
-     * Attempt to locate an experiment using the given identifier.
-     */
-    @Nullable
-    private ExpressionExperiment locateExpressionExperiment( String identifier ) {
-        Assert.isTrue( StringUtils.isNotBlank( identifier ), "Expression experiment ID or short name must be provided" );
-        identifier = StringUtils.strip( identifier );
-        ExpressionExperiment ee;
-        try {
-            Long id = Long.parseLong( identifier );
-            if ( useReferencesIfPossible ) {
-                // this is never null, but may produce ObjectNotFoundException later on
-                return eeService.loadReference( id );
-            } else if ( ( ee = eeService.load( id ) ) != null ) {
-                log.debug( "Found " + ee + " by ID" );
-                return ee;
-            } else {
-                return null;
-            }
-        } catch ( NumberFormatException e ) {
-            // can be safely ignored, we'll attempt to use it as a short name
-        }
-        if ( ( ee = eeService.findByShortName( identifier ) ) != null ) {
-            log.debug( "Found " + ee + " by short name" );
-            return ee;
-        }
-        if ( ( ee = eeService.findOneByAccession( identifier ) ) != null ) {
-            log.debug( "Found " + ee + " by accession" );
-            return ee;
-        }
-        if ( ( ee = eeService.findOneByName( identifier ) ) != null ) {
-            log.debug( "Found " + ee + " by name" );
-            return ee;
-        }
-        log.warn( "Could not locate any experiment with identifier or name " + identifier );
-        return null;
-    }
 
     /**
      * Load expression experiments based on a list of short names or IDs in a file. Only the first column of the file is
@@ -479,10 +509,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
         log.info( String.format( "Found %d experiment identifiers in %s", idlist.size(), fileName ) );
         int count = 0;
         for ( String id : idlist ) {
-            ExpressionExperiment ee = locateExpressionExperiment( id );
-            if ( ee == null ) {
-                continue;
-            }
+            ExpressionExperiment ee = entityLocator.locateExpressionExperiment( id, useReferencesIfPossible );
             count++;
             ees.add( ee );
             if ( idlist.size() > 500 && count > 0 && count % 500 == 0 ) {
@@ -501,156 +528,44 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
             log.warn( "No experiments to remove troubled from" );
             return;
         }
-        // it's not possible to check the curation details directly as that might trigger proxy initialization
-        List<Long> troubledIds = eeService.loadIds( Filters.by( eeService.getFilter( "curationDetails.troubled", Boolean.class, Filter.Operator.eq, true ) ), null );
 
-        // for subsets, check if the source experiment is troubled
-        Set<BioAssaySet> troubledExpressionExperiments = expressionExperiments.stream()
-                .filter( ee -> {
-                    // for subsets, check source experiment troubled flag
-                    if ( ee instanceof ExpressionExperimentSubSet ) {
-                        return troubledIds.contains( ( ( ExpressionExperimentSubSet ) ee ).getSourceExperiment().getId() );
-                    } else {
-                        return troubledIds.contains( ee.getId() );
-                    }
-                } )
-                .collect( toIdentifiableSet() );
+        // it's not possible to check the curation details directly as that might trigger proxy initialization
+        Set<Long> troubledIds = new HashSet<>( eeService.loadTroubledIds() );
 
         // only retain non-troubled experiments
-        expressionExperiments.removeAll( troubledExpressionExperiments );
-
-        if ( !troubledExpressionExperiments.isEmpty() ) {
-            log.info( String.format( "Removed %s troubled experiments, leaving %d to be processed; use -force to include those.",
-                    experimentsToString( troubledExpressionExperiments ), expressionExperiments.size() ) );
-        }
-    }
-
-    /**
-     * @param auditable  auditable
-     * @param eventClass can be null
-     * @return boolean
-     */
-    protected boolean noNeedToRun( Auditable auditable, Class<? extends AuditEventType> eventClass ) {
-        boolean needToRun = true;
-        Date skipIfLastRunLaterThan = this.getLimitingDate();
-        List<AuditEvent> events = this.auditEventService.getEvents( auditable );
-
-        boolean okToRun = true; // assume okay unless indicated otherwise
-
-        // figure out if we need to run it by date; or if there is no event of the given class; "Fail" type events don't
-        // count.
-        for ( int j = events.size() - 1; j >= 0; j-- ) {
-            AuditEvent event = events.get( j );
-            if ( event == null ) {
-                continue; // legacy of ordered-list which could end up with gaps; should not be needed any more
-            }
-            AuditEventType eventType = event.getEventType();
-            if ( eventType != null && eventClass != null && eventClass.isAssignableFrom( eventType.getClass() )
-                    && !eventType.getClass().getSimpleName().startsWith( "Fail" ) ) {
-                if ( skipIfLastRunLaterThan != null ) {
-                    if ( event.getDate().after( skipIfLastRunLaterThan ) ) {
-                        log.info( auditable + ": " + " run more recently than " + skipIfLastRunLaterThan );
-                        addErrorObject( auditable, "Run more recently than " + skipIfLastRunLaterThan );
-                        needToRun = false;
-                    }
+        AtomicInteger removedTroubledExperiments = new AtomicInteger();
+        expressionExperiments.removeIf( ee -> {
+            // for subsets, check source experiment troubled flag
+            if ( ee instanceof ExpressionExperimentSubSet ) {
+                if ( troubledIds.contains( ( ( ExpressionExperimentSubSet ) ee ).getSourceExperiment().getId() ) ) {
+                    removedTroubledExperiments.incrementAndGet();
+                    return true;
                 } else {
-                    needToRun = false; // it has been run already at some point
+                    return false;
                 }
+            } else if ( troubledIds.contains( ee.getId() ) ) {
+                removedTroubledExperiments.incrementAndGet();
+                return true;
+            } else {
+                return false;
             }
+        } );
+        if ( removedTroubledExperiments.get() > 0 ) {
+            log.info( String.format( "Removed %d troubled experiments, leaving %d to be processed; use -%s to include those.",
+                    removedTroubledExperiments.get(), expressionExperiments.size(), FORCE_OPTION ) );
         }
-
-        /*
-         * Always skip if the object is curatable and troubled
-         */
-        if ( auditable instanceof Curatable ) {
-            Curatable curatable = ( Curatable ) auditable;
-            okToRun = !curatable.getCurationDetails().getTroubled(); //not ok if troubled
-
-            // special case for expression experiments - check associated ADs.
-            if ( okToRun && curatable instanceof ExpressionExperiment ) {
-                for ( ArrayDesign ad : eeService.getArrayDesignsUsed( ( ExpressionExperiment ) auditable ) ) {
-                    if ( ad.getCurationDetails().getTroubled() ) {
-                        okToRun = false; // not ok if even one parent AD is troubled, no need to check the remaining ones.
-                        break;
-                    }
-                }
-            }
-
-            if ( !okToRun ) {
-                addErrorObject( auditable, "Has an active 'trouble' flag" );
-            }
-        }
-
-        return !needToRun || !okToRun;
-    }
-
-    protected Taxon locateTaxon( String taxonName ) {
-        Assert.isTrue( StringUtils.isNotBlank( taxonName ), "Taxon name must be be blank." );
-        taxonName = StringUtils.strip( taxonName );
-        Taxon taxon;
-        try {
-            long id = Long.parseLong( taxonName );
-            if ( ( taxon = taxonService.load( id ) ) != null ) {
-                log.info( "Found " + taxon + " by ID" );
-                return taxon;
-            }
-            if ( ( taxon = taxonService.findByNcbiId( Math.toIntExact( id ) ) ) != null ) {
-                log.info( "Found " + taxon + " by NCBI ID" );
-                return taxon;
-            }
-            throw new NullPointerException( "No taxon with ID or NCBI ID " + id );
-        } catch ( NumberFormatException e ) {
-            // ignore
-        }
-        if ( ( taxon = taxonService.findByCommonName( taxonName ) ) != null ) {
-            log.info( "Found " + taxon + " by common name." );
-            return taxon;
-        }
-        if ( ( taxon = taxonService.findByScientificName( taxonName ) ) != null ) {
-            log.info( "Found " + taxon + " by scientific name." );
-            return taxon;
-        }
-        throw new NullPointerException( "Cannot find taxon with name " + taxonName );
-    }
-
-    protected ArrayDesign locateArrayDesign( String name ) {
-        Assert.isTrue( StringUtils.isNotBlank( name ), "Platform name must not be blank." );
-        name = StringUtils.strip( name );
-        ArrayDesign arrayDesign;
-        try {
-            long id = Long.parseLong( name );
-            if ( ( arrayDesign = arrayDesignService.load( id ) ) != null ) {
-                log.info( "Found " + arrayDesign + " by ID." );
-                return arrayDesign;
-            }
-            throw new NullPointerException( "No platform with ID " + id );
-        } catch ( NumberFormatException e ) {
-            // ignore
-        }
-        if ( ( arrayDesign = arrayDesignService.findByShortName( name ) ) != null ) {
-            log.info( "Found " + arrayDesign + " by short name." );
-            return arrayDesign;
-        }
-        if ( ( arrayDesign = arrayDesignService.findOneByName( name ) ) != null ) {
-            log.info( "Found " + arrayDesign + " by name." );
-            return arrayDesign;
-        }
-        if ( ( arrayDesign = arrayDesignService.findOneByAlternateName( name ) ) != null ) {
-            log.info( "Found " + arrayDesign + " by alternate name." );
-            return arrayDesign;
-        }
-        throw new NullPointerException( "No platform found with ID or name " + name );
     }
 
     /**
      * Refresh a dataset for Gemma Web.
+     * @param refreshProcessedVectors if true, refresh processed vectors from the caches
      */
-    protected void refreshExpressionExperimentFromGemmaWeb( ExpressionExperiment ee, boolean refreshVectors, boolean refreshReports ) throws Exception {
+    protected void refreshExpressionExperimentFromGemmaWeb( ExpressionExperiment ee, boolean refreshProcessedVectors, boolean refreshReports ) throws Exception {
         StopWatch timer = StopWatch.createStarted();
         // using IDs here to prevent proxy initialization
-        GemmaRestApiClient.Response response = getGemmaRestApiClient()
+        GemmaRestApiClient.Response response = gemmaRestApiClient
                 .perform( "/datasets/" + ee.getId() + "/refresh",
-                        "refreshVectors", refreshVectors,
+                        "refreshVectors", refreshProcessedVectors,
                         "refreshReports", refreshReports );
         if ( response instanceof GemmaRestApiClient.DataResponse ) {
             log.info( "Successfully refreshed dataset with ID " + ee.getId() + " from Gemma Web in " + timer.getTime() + " ms." );
@@ -669,11 +584,22 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
      * Enable the single-experiment mode.
      */
     protected void setSingleExperimentMode() {
+        Assert.state( !this.singleExperimentMode, "Single experiment mode is already enabled." );
         this.singleExperimentMode = true;
     }
 
     /**
-     * Set this to true to allow reference to be retrieved instead of actual entities.
+     * Default to all datasets if no options are provided.
+     * <p>
+     * This is a very dangerous setting that should be combined with {@link #useReferencesIfPossible}.
+     */
+    public void setDefaultToAll() {
+        Assert.state( !this.defaultToAll, "Default to all is already enabled." );
+        this.defaultToAll = true;
+    }
+
+    /**
+     * Set this to allow reference to be retrieved instead of actual entities.
      * <p>
      * This only works for entities retrieved by ID.
      * <p>
@@ -683,31 +609,84 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAuthen
      * The default is false.
      */
     protected void setUseReferencesIfPossible() {
+        Assert.state( !this.useReferencesIfPossible, "Use references if possible is already enabled." );
         this.useReferencesIfPossible = true;
     }
 
     /**
-     * Render an experiment to string, with special handling in case of an uninitialized proxy.
+     * Indicate if this CLI should abort on error or move on to the next experiment.
      */
-    private String experimentToString( BioAssaySet bas ) {
+    public boolean isAbortOnError() {
+        return abortOnError;
+    }
+
+    /**
+     * Set this to stop processing experiments if an error occurs.
+     */
+    protected void setAbortOnError() {
+        Assert.state( !this.abortOnError, "Abort on error is already enabled." );
+        this.abortOnError = true;
+    }
+
+    /**
+     * Render an experiment to string, with special handling in case of an uninitialized proxy.
+     * <p>
+     * Use this for printing datasets if {@link #useReferencesIfPossible} is set to prevent {@link org.hibernate.LazyInitializationException}.
+     */
+    protected String formatExperiment( BioAssaySet bas ) {
         if ( Hibernate.isInitialized( bas ) ) {
-            return String.valueOf( bas );
+            return bas + " " + entityUrlBuilder.fromHostUrl().entity( bas ).web().toUriString();
         } else if ( bas instanceof ExpressionExperiment ) {
-            return "ExpressionExperiment Id=" + bas.getId();
+            return "ExpressionExperiment Id=" + bas.getId() + " " + entityUrlBuilder.fromHostUrl().entity( ( ExpressionExperiment ) bas ).web().toUriString();
         } else if ( bas instanceof ExpressionExperimentSubSet ) {
-            return "ExpressionExperimentSubSet Id=" + bas.getId();
+            return "ExpressionExperimentSubSet Id=" + bas.getId() + entityUrlBuilder.fromHostUrl().entity( ( ExpressionExperimentSubSet ) bas ).web().toUriString();
         } else {
             return "BioAssaySet Id=" + bas.getId();
         }
     }
 
-    private String experimentsToString( Collection<? extends BioAssaySet> bas ) {
-        if ( bas.isEmpty() ) {
-            return "no experiments";
-        } else if ( bas.size() == 1 ) {
-            return experimentToString( bas.iterator().next() );
-        } else {
-            return bas.size() + " experiments";
+    @Override
+    protected boolean noNeedToRun( ExpressionExperiment auditable, @Nullable Class<? extends AuditEventType> eventClass ) {
+        if ( super.noNeedToRun( auditable, eventClass ) ) {
+            return true;
         }
+
+        // special case for expression experiments - check associated ADs.
+        for ( ArrayDesign ad : eeService.getArrayDesignsUsed( auditable ) ) {
+            if ( ad.getCurationDetails().getTroubled() ) {
+                addErrorObject( auditable, "Associated platform " + ad.getShortName() + " has an active troubled flag, use - " + FORCE_OPTION + "to process anyway." );
+                return true; // not ok if even one parent AD is troubled, no need to check the remaining ones.
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Read a changelog entry from the console.
+     * @param defaultText a default text to be shown in the editor, or null to keep the file empty
+     */
+    protected String readChangelogEntryFromConsole( ExpressionExperiment expressionExperiment, @Nullable String defaultText ) throws IOException, InterruptedException {
+        Assert.notNull( getCliContext().getConsole(), "An interactive console is required to read the changelog entry." );
+        String editorBin = getCliContext().getEnvironment().get( "EDITOR" );
+        if ( editorBin == null ) {
+            editorBin = "nano";
+        }
+        Path tempFile = Files.createTempFile( expressionExperiment.getShortName() + "-changelog-entry.md", null );
+        if ( defaultText != null ) {
+            PathUtils.writeString( tempFile, defaultText, StandardCharsets.UTF_8 );
+        }
+        int status = new ProcessBuilder( editorBin, tempFile.toString() )
+                .inheritIO()
+                .start()
+                .waitFor();
+        if ( status != 0 ) {
+            throw new RuntimeException( "Editor returned non-zero exit code." );
+        }
+        String buf = PathUtils.readString( tempFile, StandardCharsets.UTF_8 );
+        if ( StringUtils.isBlank( buf ) ) {
+            throw new RuntimeException( "Changelog entry is empty for " + expressionExperiment + "." );
+        }
+        return buf;
     }
 }

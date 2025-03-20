@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,26 +22,12 @@ import ubic.gemma.model.analysis.AnalysisResult;
 import ubic.gemma.model.analysis.AnalysisResultSet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
 public abstract class FactorAssociatedAnalysisResultSet<R extends AnalysisResult> extends AnalysisResultSet<R> {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 821072688513147160L;
-
     private Set<ExperimentalFactor> experimentalFactors = new HashSet<>();
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public FactorAssociatedAnalysisResultSet() {
-    }
 
     public Set<ExperimentalFactor> getExperimentalFactors() {
         return this.experimentalFactors;
@@ -50,5 +36,4 @@ public abstract class FactorAssociatedAnalysisResultSet<R extends AnalysisResult
     public void setExperimentalFactors( Set<ExperimentalFactor> experimentalFactors ) {
         this.experimentalFactors = experimentalFactors;
     }
-
 }

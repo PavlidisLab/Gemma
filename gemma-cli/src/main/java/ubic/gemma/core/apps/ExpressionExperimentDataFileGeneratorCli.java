@@ -25,6 +25,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -55,19 +56,15 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
-
+    protected void buildExperimentOptions( Options options ) {
         Option forceWriteOption = Option.builder( "w" )
                 .desc( "Overwrites existing files if this option is set" ).longOpt( "forceWrite" )
                 .build();
-
         options.addOption( forceWriteOption );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( 'w' ) ) {
             this.forceWrite = true;
         }
@@ -78,9 +75,11 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
         getBatchTaskExecutor().submit( () -> {
             log.info( "Processing Experiment: " + ee1.getName() );
             ExpressionExperiment ee = this.eeService.thawLite( ee1 );
-            expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, forceWrite );
+            expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, forceWrite )
+                    .forEach( LockedPath::close );
             ats.addUpdateEvent( ee, CommentedEvent.class, "Generated Flat data files for downloading" );
             addSuccessObject( ee, "Success:  generated data file for " + ee.getShortName() + " ID=" + ee.getId() );
+            return null;
         } );
     }
 }

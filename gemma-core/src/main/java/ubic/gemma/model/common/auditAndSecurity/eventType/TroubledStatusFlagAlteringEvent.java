@@ -7,4 +7,5 @@ import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
  * @author poirigui
  */
 public abstract class TroubledStatusFlagAlteringEvent extends CurationDetailsEvent {
+
 }

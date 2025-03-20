@@ -18,43 +18,31 @@
  */
 package ubic.gemma.model.genome;
 
-import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.description.ExternalDatabase;
 
-public class Taxon implements Identifiable, java.io.Serializable {
+import javax.annotation.Nullable;
+import java.util.Objects;
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 9219471082900615778L;
+public class Taxon extends AbstractIdentifiable {
+
+    @Nullable
     private String scientificName;
+    @Nullable
     private String commonName;
+    @Nullable
     private Integer ncbiId;
     private boolean isGenesUsable;
+    @Nullable
     private Integer secondaryNcbiId;
-    private Long id;
+    @Nullable
     private ExternalDatabase externalDatabase;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public Taxon() {
-    }
 
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * ( hashCode + ( this.getId() == null ? this.computeHashCode() : this.getId().hashCode() ) );
-
-        return hashCode;
+        return Objects.hash( scientificName, commonName, ncbiId, isGenesUsable, secondaryNcbiId, externalDatabase );
     }
 
-    /**
-     * Returns <code>true</code> if the argument is a Taxon instance and all identifiers for this entity equal the
-     * identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -65,23 +53,16 @@ public class Taxon implements Identifiable, java.io.Serializable {
         }
         final Taxon that = ( Taxon ) object;
 
-        if ( this.getId() == null || that.getId() == null || !this.getId().equals( that.getId() ) ) {
-
-            // use ncbi id OR scientific name.
-
-            if ( this.getNcbiId() != null && that.getNcbiId() != null && !this.getNcbiId().equals( that.getNcbiId() ) )
-                return false;
-
-            //noinspection SimplifiableIfStatement // Better readability
-            if ( this.getSecondaryNcbiId() != null && that.getSecondaryNcbiId() != null && !this.getSecondaryNcbiId()
-                    .equals( that.getSecondaryNcbiId() ) )
-                return false;
-
-            return this.getScientificName() == null || that.getScientificName() == null || this.getScientificName()
-                    .equals( that.getScientificName() );
-
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
         }
-        return true;
+
+        return Objects.equals( this.getCommonName(), that.getCommonName() )
+                && Objects.equals( this.getIsGenesUsable(), that.getIsGenesUsable() )
+                && Objects.equals( this.getExternalDatabase(), that.getExternalDatabase() )
+                && Objects.equals( this.getSecondaryNcbiId(), that.getSecondaryNcbiId() )
+                && Objects.equals( this.getNcbiId(), that.getNcbiId() )
+                && Objects.equals( this.getScientificName(), that.getScientificName() );
     }
 
     /**
@@ -106,29 +87,22 @@ public class Taxon implements Identifiable, java.io.Serializable {
         return buf.toString();
     }
 
+    @Nullable
     public String getCommonName() {
         return this.commonName;
     }
 
-    public void setCommonName( String commonName ) {
+    public void setCommonName( @Nullable String commonName ) {
         this.commonName = commonName;
     }
 
+    @Nullable
     public ExternalDatabase getExternalDatabase() {
         return this.externalDatabase;
     }
 
-    public void setExternalDatabase( ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
+    public void setExternalDatabase( @Nullable ExternalDatabase externalDatabase ) {
         this.externalDatabase = externalDatabase;
-    }
-
-    @Override
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
     }
 
     public boolean getIsGenesUsable() {
@@ -139,19 +113,21 @@ public class Taxon implements Identifiable, java.io.Serializable {
         this.isGenesUsable = isGenesUsable;
     }
 
+    @Nullable
     public Integer getNcbiId() {
         return this.ncbiId;
     }
 
-    public void setNcbiId( Integer ncbiId ) {
+    public void setNcbiId( @Nullable Integer ncbiId ) {
         this.ncbiId = ncbiId;
     }
 
+    @Nullable
     public String getScientificName() {
         return this.scientificName;
     }
 
-    public void setScientificName( String scientificName ) {
+    public void setScientificName( @Nullable String scientificName ) {
         this.scientificName = scientificName;
     }
 
@@ -160,25 +136,14 @@ public class Taxon implements Identifiable, java.io.Serializable {
      *         is
      *         budding yeast, which is id 4932 in GEO but genes use the (strain-specific) ID 559292.
      */
+    @Nullable
     public Integer getSecondaryNcbiId() {
         return this.secondaryNcbiId;
     }
 
-    public void setSecondaryNcbiId( Integer secondaryNcbiId ) {
+    @SuppressWarnings("unused")
+    public void setSecondaryNcbiId( @Nullable Integer secondaryNcbiId ) {
         this.secondaryNcbiId = secondaryNcbiId;
-    }
-
-    private int computeHashCode() {
-        int hashCode = 0;
-        if ( this.getNcbiId() != null ) {
-            hashCode += this.getNcbiId().hashCode();
-        } else if ( this.getScientificName() != null ) {
-            hashCode += this.getScientificName().hashCode();
-        } else {
-            hashCode += super.hashCode();
-        }
-
-        return hashCode;
     }
 
     public static final class Factory {
@@ -193,7 +158,6 @@ public class Taxon implements Identifiable, java.io.Serializable {
             entity.setCommonName( commonName );
             entity.setNcbiId( ncbiId );
             entity.setIsGenesUsable( isGenesUsable );
-
             return entity;
         }
 

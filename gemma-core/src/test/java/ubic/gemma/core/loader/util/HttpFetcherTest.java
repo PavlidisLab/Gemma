@@ -24,7 +24,6 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.loader.util.fetcher.HttpFetcher;
 import ubic.gemma.core.util.test.category.SlowTest;
-import ubic.gemma.model.common.description.LocalFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,10 +46,10 @@ public class HttpFetcherTest extends TestCase {
 
         try {
             hf.setForce( true );
-            Collection<LocalFile> results = hf.fetch( "http://www.yahoo.com" );
+            Collection<File> results = hf.fetch( "http://www.yahoo.com" );
             TestCase.assertNotNull( results );
-            TestCase.assertTrue( results.size() > 0 && results.iterator().next().getLocalURL() != null );
-            f = new File( results.iterator().next().getLocalURL() );
+            TestCase.assertTrue( results.size() > 0 && results.iterator().next() != null );
+            f = results.iterator().next();
             TestCase.assertTrue( f.length() > 0 );
         } catch ( Exception e ) {
             if ( e.getCause() instanceof IOException ) {

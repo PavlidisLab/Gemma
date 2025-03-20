@@ -26,9 +26,11 @@ import org.springframework.security.acls.domain.DefaultPermissionGrantingStrateg
 import org.springframework.security.acls.domain.SpringCacheBasedAclCache;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
 import org.springframework.transaction.PlatformTransactionManager;
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.context.EnvironmentProfiles;
 import ubic.gemma.persistence.hibernate.H2Dialect;
 import ubic.gemma.persistence.hibernate.LocalSessionFactoryBean;
 import ubic.gemma.persistence.initialization.DatabaseSchemaPopulator;
@@ -42,6 +44,7 @@ import java.util.Properties;
  *
  * @author poirigui
  */
+@ActiveProfiles(EnvironmentProfiles.TEST)
 public abstract class BaseDatabaseTest extends AbstractTransactionalJUnit4SpringContextTests {
 
     protected abstract static class BaseDatabaseTestContextConfiguration {

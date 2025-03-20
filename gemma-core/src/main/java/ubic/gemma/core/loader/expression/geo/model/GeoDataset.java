@@ -48,22 +48,17 @@ public class GeoDataset extends GeoData {
     private PlatformType platformType;
     private String pubmedId;
     private SampleType sampleType;
-    private Collection<GeoSeries> series;
-    private Collection<GeoSubset> subsets;
+    private final Collection<GeoSeries> series = new HashSet<>();
+    private final Collection<GeoSubset> subsets = new HashSet<>();
     private String updateDate;
     private ValueType valueType;
-
-    public GeoDataset() {
-        this.subsets = new HashSet<>();
-        this.series = new HashSet<>();
-    }
 
     /**
      * gene expression array-based, gene expression SAGE-based, gene expression MPSS-based, gene expression
      * RT-PCR-based, protein expression array-based, protein expression MS-based, array CGH, ChIP-chip, SNP
-     *
+     * <p>
      * Complete list of possibilities according to Nathaniel (6/2018)
-     * 
+     * <p>
      * Expression profiling by high throughput sequencing
      * Genome binding/occupancy profiling by high throughput sequencing
      * Expression profiling by array
@@ -92,7 +87,7 @@ public class GeoDataset extends GeoData {
      * Methylation profiling by SNP array
      * Protein profiling by Mass Spec
      *
-     * 
+     *
      * @param string experiment type string
      * @return experiment type object
      */
@@ -259,9 +254,7 @@ public class GeoDataset extends GeoData {
      * @param newSeries geo series
      */
     public void addSeries( GeoSeries newSeries ) {
-        assert this.series != null;
         this.series.add( newSeries );
-
     }
 
     public void addSubset( GeoSubset subset ) {
@@ -476,24 +469,10 @@ public class GeoDataset extends GeoData {
     }
 
     /**
-     * @param series The series to set.
-     */
-    public void setSeries( Collection<GeoSeries> series ) {
-        this.series = series;
-    }
-
-    /**
      * @return Returns the subsets.
      */
     public Collection<GeoSubset> getSubsets() {
         return this.subsets;
-    }
-
-    /**
-     * @param subsets The subsets to set.
-     */
-    public void setSubsets( Collection<GeoSubset> subsets ) {
-        this.subsets = subsets;
     }
 
     /**

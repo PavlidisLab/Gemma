@@ -7,22 +7,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.transaction.PlatformTransactionManager;
+import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueMigratorService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueMigratorServiceImpl;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
-import ubic.gemma.core.context.TestComponent;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @Deprecated
 @ContextConfiguration
-public class FactorValueMigratorServiceTest extends AbstractJUnit4SpringContextTests {
+public class FactorValueMigratorServiceTest extends BaseCliTest {
 
     @Configuration
     @TestComponent

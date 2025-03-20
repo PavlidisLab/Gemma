@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.preprocess.TwoChannelMissingValues;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -43,11 +44,11 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.io.IOException;
 import java.util.*;
@@ -93,7 +94,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
     }
 
     @Test
-    public void testReplaceProcessedDataVectors() {
+    public void testReplaceProcessedDataVectors() throws QuantitationTypeConversionException {
         ExpressionExperiment ee = new ExpressionExperiment();
         ee = expressionExperimentService.create( ee );
         ees.add( ee );
@@ -125,7 +126,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
             ee.getRawExpressionDataVectors().add( vec );
         }
         expressionExperimentService.update( ee );
-        assertEquals( 10, processedDataVectorService.createProcessedDataVectors( ee ) );
+        assertEquals( 10, processedDataVectorService.createProcessedDataVectors( ee, false ) );
         Set<ProcessedExpressionDataVector> createdVectors = ee.getProcessedExpressionDataVectors();
         assertThat( createdVectors ).hasSize( 10 );
         ee = expressionExperimentService.thaw( ee );
@@ -144,7 +145,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
             newVector.setData( v.getData() );
             newVectors.add( newVector );
         }
-        processedDataVectorService.replaceProcessedDataVectors( ee, newVectors );
+        processedDataVectorService.replaceProcessedDataVectors( ee, newVectors, false );
         ee = expressionExperimentService.thaw( ee );
         assertThat( ee.getProcessedExpressionDataVectors() )
                 .containsExactlyInAnyOrderElementsOf( newVectors );
@@ -154,7 +155,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
 
     /**
      * Test method for
-     * {@link ProcessedExpressionDataVectorDaoImpl#getProcessedDataArrays(java.util.Collection, java.util.Collection)}
+     * {@link ProcessedExpressionDataVectorService#getProcessedDataArrays(java.util.Collection, java.util.Collection)}
      * .
      */
     @Test
@@ -172,7 +173,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
             }
         }
 
-        assertEquals( 40, processedDataVectorService.createProcessedDataVectors( ee ) );
+        assertEquals( 40, processedDataVectorService.createProcessedDataVectors( ee, false ) );
         Collection<DoubleVectorValueObject> v = processedDataVectorService.getProcessedDataArrays( ee );
         assertEquals( 40, v.size() );
 
@@ -181,7 +182,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
         tableMaintenanceUtil.updateGene2CsEntries();
 
         assertEquals( 100, genes.size() );
-        v = processedDataVectorService.getProcessedDataArrays( Collections.singleton( ee ), EntityUtils.getIds( genes ) );
+        v = processedDataVectorService.getProcessedDataArrays( Collections.singleton( ee ), IdentifiableUtils.getIds( genes ) );
         assertTrue( "got " + v.size() + ", expected at least 40", 40 <= v.size() );
     }
 
@@ -209,8 +210,8 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
 
         ee.setShortName( RandomStringUtils.randomAlphabetic( 12 ) );
         expressionExperimentService.update( ee );
-        ee = expressionExperimentService.thawLite( ee );
-        processedDataVectorService.createProcessedDataVectors( ee );
+        ee = expressionExperimentService.thaw( ee );
+        processedDataVectorService.createProcessedDataVectors( ee, false );
         return ee;
     }
 

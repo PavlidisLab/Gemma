@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Update testdb" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="ubic.gemma.core.apps.GemmaCLI" />
+    <module name="gemma-cli" />
+    <option name="PROGRAM_PARAMETERS" value="updateDatabase -force" />
+    <option name="VM_PARAMETERS" value="-Dspring.profiles.active=dev,testdb -Dspring.security.strategy=MODE_INHERITABLETHREADLOCAL -Dlog4j.configuration=$PROJECT_DIR$/gemma-cli/src/main/config/log4j-dev.properties" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

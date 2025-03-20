@@ -99,7 +99,7 @@ public class SecureValueObjectAuthorizationTest extends BaseSpringContextTest {
 
         valueObjects = eeService.loadValueObjectsByIds( eeIds, true );
 
-        assertTrue( securityService.isViewableByUser( ee, ownerUsername ) );
+        assertTrue( securityService.isReadableByUser( ee, ownerUsername ) );
 
         assertEquals( 2, valueObjects.size() );
 

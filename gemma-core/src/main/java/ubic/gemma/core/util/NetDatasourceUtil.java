@@ -36,7 +36,7 @@ public abstract class NetDatasourceUtil {
     private final Log log = LogFactory.getLog( this.getClass().getName() );
     private String host;
     private String login = "anonymous";
-    private String password = "gemma@ubic.ca";
+    private String password = "";
 
     protected NetDatasourceUtil() {
         this.init();

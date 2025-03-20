@@ -1,19 +1,13 @@
-<%@ include file="/common/taglibs.jsp"%>
+<%@ include file="/common/taglibs.jsp" %>
 
 <head>
-	<title><fmt:message key="characteristicBrowser.title" /></title>
-	<security:authorize access="hasAuthority('GROUP_ADMIN')">
-		<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
-		<jwr:script src='/scripts/app/CharacteristicBrowser.js' />
-	</security:authorize>
+<title><fmt:message key="characteristicBrowser.title" /></title>
+<Gemma:script src='/scripts/app/CharacteristicBrowser.js' />
 </head>
 
-<h1>
-	<fmt:message key="characteristicBrowser.heading" />
-</h1>
+<div class="padded">
+    <h2><fmt:message key="characteristicBrowser.heading" /></h2>
 
-<div id="messages"></div>
-<div id="characteristicBrowser"></div>
-
-
-
+    <div id="messages"></div>
+    <div id="characteristicBrowser"></div>
+</div>

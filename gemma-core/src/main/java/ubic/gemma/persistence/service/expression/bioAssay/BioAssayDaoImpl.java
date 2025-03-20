@@ -26,6 +26,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
@@ -66,6 +67,22 @@ public class BioAssayDaoImpl extends AbstractNoopFilteringVoEnabledDao<BioAssay,
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select distinct b from BioAssay b inner join b.accession a where a.accession = :accession" )
                 .setParameter( "accession", accession ).list();
+    }
+
+    @Override
+    public Collection<BioAssaySet> getBioAssaySets( BioAssay bioAssay ) {
+        Collection<BioAssaySet> results = new HashSet<>();
+        //noinspection unchecked
+        results.addAll( getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct bas from ExpressionExperiment bas join bas.bioAssays ba where ba = :ba" )
+                .setParameter( "ba", bioAssay )
+                .list() );
+        //noinspection unchecked
+        results.addAll( getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct bas from ExpressionExperimentSubSet bas join bas.bioAssays ba where ba = :ba" )
+                .setParameter( "ba", bioAssay )
+                .list() );
+        return results;
     }
 
     /**

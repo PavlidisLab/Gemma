@@ -25,14 +25,10 @@ import org.apache.tools.ant.taskdefs.Expand;
 import org.apache.tools.ant.taskdefs.Untar;
 import org.apache.tools.ant.taskdefs.Untar.UntarCompressionMethod;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.persistence.util.EntityUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.concurrent.*;
 
@@ -68,14 +64,16 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
     protected void cleanUp( File outputFile ) {
         if ( this.doDelete ) {
             AbstractFetcher.log.info( "Cleaning up " + outputFile.getName() );
-            EntityUtils.deleteFile( outputFile );
+            FileUtils.deleteQuietly( outputFile );
         }
     }
 
     @Override
-    protected Collection<LocalFile> doTask( FutureTask<Boolean> future, long expectedSize, String seekFileName,
+    protected Collection<File> doTask( Callable<Boolean> callable, long expectedSize, String seekFileName,
             String outputFileName ) {
-        Executors.newSingleThreadExecutor().execute( future );
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Future<Boolean> future = executor.submit( callable );
+        executor.shutdown();
         try {
             File outputFile = new File( outputFileName );
             boolean ok = this.waitForDownload( future, expectedSize, outputFile );
@@ -146,7 +144,7 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
         }
     }
 
-    protected Collection<LocalFile> listFiles( String remoteFile, File newDir, Collection<LocalFile> result )
+    protected Collection<File> listFiles( String remoteFile, File newDir, Collection<File> result )
             throws IOException {
 
         if ( result == null )
@@ -155,11 +153,7 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
             if ( excludePattern != null && file.getPath().endsWith( excludePattern ) )
                 continue;
             // log.info( "\t" + file.getCanonicalPath() );
-            LocalFile newFile = LocalFile.Factory.newInstance();
-            newFile.setLocalURL( file.toURI() );
-            newFile.setRemoteURL( new File( remoteFile ).toURI() );
-            newFile.setVersion( new SimpleDateFormat().format( new Date() ) );
-            result.add( newFile );
+            result.add( file );
         }
 
         // recurse into subdirectories.
@@ -170,60 +164,54 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
     }
 
     protected void unPack( final File toUnpack ) {
-        FutureTask<Boolean> future = new FutureTask<>( new Callable<Boolean>() {
-            @Override
-            @SuppressWarnings("synthetic-access")
-            public Boolean call() {
-                File extractedFile = new File( FileTools.chompExtension( toUnpack.getAbsolutePath() ) );
-                /*
-                 * Decide if an existing file is plausibly usable. Err on the side of caution.
-                 */
-                if ( allowUseExisting && extractedFile.canRead() && extractedFile.length() >= toUnpack.length()
-                        && !FileUtils.isFileNewer( toUnpack, extractedFile ) ) {
-                    AbstractFetcher.log.warn( "Expanded file exists, skipping re-expansion: " + extractedFile );
-                    return Boolean.TRUE;
-                }
-
-                if ( expander != null ) {
-                    expander.setSrc( toUnpack );
-                    expander.setDest( toUnpack.getParentFile() );
-                    expander.perform();
-                } else if ( toUnpack.getAbsolutePath().toLowerCase().endsWith( "zip" ) ) {
-                    try {
-                        FileTools.unZipFiles( toUnpack.getAbsolutePath() );
-                    } catch ( IOException e ) {
-                        throw new RuntimeException( e );
-                    }
-
-                } else { // gzip.
-                    try {
-                        FileTools.unGzipFile( toUnpack.getAbsolutePath() );
-                    } catch ( IOException e ) {
-                        throw new RuntimeException( e );
-                    }
-                }
-
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Future<?> future = executor.submit( () -> {
+            File extractedFile = new File( FileTools.chompExtension( toUnpack.getAbsolutePath() ) );
+            /*
+             * Decide if an existing file is plausibly usable. Err on the side of caution.
+             */
+            if ( allowUseExisting && extractedFile.canRead() && extractedFile.length() >= toUnpack.length()
+                    && !FileUtils.isFileNewer( toUnpack, extractedFile ) ) {
+                AbstractFetcher.log.warn( "Expanded file exists, skipping re-expansion: " + extractedFile );
                 return Boolean.TRUE;
             }
 
-        } );
-        ExecutorService executor = Executors.newSingleThreadExecutor();
+            if ( expander != null ) {
+                expander.setSrc( toUnpack );
+                expander.setDest( toUnpack.getParentFile() );
+                expander.perform();
+            } else if ( toUnpack.getAbsolutePath().toLowerCase().endsWith( "zip" ) ) {
+                try {
+                    FileTools.unZipFiles( toUnpack.getAbsolutePath() );
+                } catch ( IOException e ) {
+                    throw new RuntimeException( e );
+                }
 
-        executor.execute( future );
+            } else { // gzip.
+                try {
+                    FileTools.unGzipFile( toUnpack.getAbsolutePath() );
+                } catch ( IOException e ) {
+                    throw new RuntimeException( e );
+                }
+            }
+
+            return Boolean.TRUE;
+        } );
         executor.shutdown();
 
-        StopWatch s = new StopWatch();
-        s.start();
-        while ( !future.isDone() && !future.isCancelled() ) {
+        StopWatch s = StopWatch.createStarted();
+        while ( true ) {
             try {
-                Thread.sleep( AbstractFetcher.INFO_UPDATE_INTERVAL );
+                future.get( AbstractFetcher.INFO_UPDATE_INTERVAL, TimeUnit.MILLISECONDS );
+                break;
+            } catch ( TimeoutException e ) {
+                AbstractFetcher.log.info( "Unpacking archive, " + Math.floor( s.getTime() / 1000.0 ) + " seconds elapsed." );
             } catch ( InterruptedException ie ) {
                 future.cancel( true );
-                return;
+                throw new RuntimeException( "Current thread was interrupted, unpacking has been cancelled." );
+            } catch ( ExecutionException e ) {
+                throw new RuntimeException( e );
             }
-            AbstractFetcher.log
-                    .info( "Unpacking archive ... " + Math.floor( s.getTime() / 1000.0 ) + " seconds elapsed" );
         }
     }
-
 }

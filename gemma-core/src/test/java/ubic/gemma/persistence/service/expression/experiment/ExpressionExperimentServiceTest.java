@@ -216,7 +216,7 @@ public class ExpressionExperimentServiceTest extends AbstractJUnit4SpringContext
     public void testRemoveDatasetWithCoexpressionLinks() {
         ExpressionExperiment ee = new ExpressionExperiment();
         when( coexpressionService.hasLinks( ee ) ).thenReturn( true );
-        when( securityService.isEditable( ee ) ).thenReturn( true );
+        when( securityService.isEditableByCurrentUser( ee ) ).thenReturn( true );
         assertThatThrownBy( () -> expressionExperimentService.remove( ee ) )
                 .isInstanceOf( IllegalStateException.class );
     }

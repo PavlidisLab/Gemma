@@ -39,17 +39,17 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.4.2</version>
                 <executions>
                     <execution>
                         <goals>
                             <goal>test-jar</goal>
                         </goals>
                         <configuration>
-                            <excludes>
-                                <!-- this file conflicts with dependent modules' ability to configure test logging -->
-                                <exclude>log4j-test.properties</exclude>
-                            </excludes>
+                            <!-- only include test classes that are meant to be re-used -->
+                            <includes>
+                                <include>org/springframework/security/test/**/*.class</include>
+                                <include>ubic/gemma/core/util/test/**/*.class</include>
+                            </includes>
                         </configuration>
                     </execution>
                 </executions>
@@ -57,7 +57,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.8.0</version>
+                <version>3.8.1</version>
                 <executions>
                     <execution>
                         <id>unpack-spring-security-test</id>
@@ -109,6 +109,12 @@
             <groupId>org.springframework.retry</groupId>
             <artifactId>spring-retry</artifactId>
             <version>1.0.3.RELEASE</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-context</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Email -->
@@ -122,6 +128,12 @@
             <groupId>org.apache.velocity</groupId>
             <artifactId>velocity-engine-core</artifactId>
             <version>2.4.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-lang3</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Lucene (version is synced with baseCode) -->
@@ -135,6 +147,11 @@
             <artifactId>lucene-analyzers</artifactId>
             <version>${lucene.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-highlighter</artifactId>
+            <version>${lucene.version}</version>
+        </dependency>
 
         <!-- Hibernate Search (latest for Hibernate and Lucene) -->
         <dependency>
@@ -146,6 +163,10 @@
                     <groupId>org.apache.avro</groupId>
                     <artifactId>avro</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.apache.solr</groupId>
+                    <artifactId>solr-analysis-extras</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
 
@@ -153,7 +174,13 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-csv</artifactId>
-            <version>1.12.0</version>
+            <version>1.13.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-codec</groupId>
+                    <artifactId>commons-codec</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -164,6 +191,13 @@
             <groupId>commons-net</groupId>
             <artifactId>commons-net</artifactId>
             <version>3.11.1</version>
+        </dependency>
+
+        <!-- Swagger (only annotations, implementation is reserved to Gemma REST) -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>${swagger.version}</version>
         </dependency>
 
         <!-- Utilities -->
@@ -185,10 +219,34 @@
             <!--suppress MavenPackageUpdate -->
             <version>0.7.9</version>
         </dependency>
+
+        <!-- MTJ, for reading MatrixMarket formats -->
+        <!-- this is also declared in baseCode, but we use it explicitly for reading single-cell data -->
         <dependency>
-            <groupId>jboss</groupId>
-            <artifactId>jboss-ejb3x</artifactId>
-            <version>4.2.2.GA</version>
+            <groupId>com.googlecode.matrix-toolkits-java</groupId>
+            <artifactId>mtj</artifactId>
+            <version>1.0.4</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.github.fommil.netlib</groupId>
+                    <artifactId>core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.github.fommil.netlib</groupId>
+            <artifactId>core</artifactId>
+            <version>1.1.2</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- HDF5 -->
+        <dependency>
+            <groupId>org.hdf5group</groupId>
+            <artifactId>hdf5</artifactId>
+            <version>${hdf5.version}</version>
+            <scope>system</scope>
+            <systemPath>${hdf5.jarPath}</systemPath>
         </dependency>
 
         <!-- Testing -->

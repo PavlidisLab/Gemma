@@ -28,6 +28,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 import javax.sql.DataSource;
+import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -86,9 +87,9 @@ public class GoldenPathQuery extends GoldenPath {
         result.setTargetEnd( rs.getLong( "tEnd" ) );
         result.setBlockCount( rs.getInt( "blockCount" ) );
 
-        result.setBlockSizes( SQLUtils.blobToString( rs.getBlob( "blockSizes" ) ) );
-        result.setQueryStarts( SQLUtils.blobToString( rs.getBlob( "qStarts" ) ) );
-        result.setTargetStarts( SQLUtils.blobToString( rs.getBlob( "tStarts" ) ) );
+        result.setBlockSizes( SQLUtils.blobToString( rs.getBlob( "blockSizes" ), StandardCharsets.ISO_8859_1 ) );
+        result.setQueryStarts( SQLUtils.blobToString( rs.getBlob( "qStarts" ), StandardCharsets.ISO_8859_1 ) );
+        result.setTargetStarts( SQLUtils.blobToString( rs.getBlob( "tStarts" ), StandardCharsets.ISO_8859_1 ) );
 
         String queryName = rs.getString( "qName" );
         queryName = BlatResultParser.cleanUpQueryName( queryName );

@@ -20,8 +20,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
+import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -29,6 +29,7 @@ import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -42,6 +43,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.determineAnalysisType;
 
 /**
  * @author Paul
@@ -71,11 +73,13 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
     @Autowired
     private GeoService geoService;
 
+    @Autowired
+    private ExpressionDataMatrixService expressionDataMatrixService;
+
     @Test
     @Category(SlowTest.class)
     public void test() {
-        AnalysisType aa = analysisService
-                .determineAnalysis( ee, ee.getExperimentalDesign().getExperimentalFactors(), null, true );
+        AnalysisType aa = determineAnalysisType( ee, ee.getExperimentalDesign().getExperimentalFactors(), null, true );
 
         assertEquals( AnalysisType.GENERICLM, aa );
 
@@ -85,16 +89,17 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
 
         assertEquals( 1, factors.size() );
         config.setAnalysisType( aa );
-        config.setFactorsToInclude( factors );
+        config.addFactorsToInclude( factors );
 
-        Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, config );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
+        Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, dmatrix, config );
         assertEquals( 1, result.size() );
 
         DifferentialExpressionAnalysis analysis = result.iterator().next();
 
         assertNotNull( analysis );
 
-        Map<ExperimentalFactor, FactorValue> baselineLevels = ExpressionDataMatrixColumnSort
+        Map<ExperimentalFactor, FactorValue> baselineLevels = ExperimentalDesignUtils
                 .getBaselineLevels( ee.getExperimentalDesign().getExperimentalFactors() );
 
         assertEquals( 1, baselineLevels.size() );
@@ -130,7 +135,7 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
             ee = ( ExpressionExperiment ) ( ( Collection<?> ) e.getData() ).iterator().next();
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thaw( ee );
 
         Collection<ExperimentalFactor> toremove = new HashSet<>( ee.getExperimentalDesign().getExperimentalFactors() );
         for ( ExperimentalFactor ef : toremove ) {
@@ -139,7 +144,7 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
 
         expressionExperimentService.update( ee );
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
 
         ee = expressionExperimentService.thaw( ee );
 

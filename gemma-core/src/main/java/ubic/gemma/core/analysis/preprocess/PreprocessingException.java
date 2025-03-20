@@ -15,14 +15,22 @@
 package ubic.gemma.core.analysis.preprocess;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationException;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Allows us to catch preprocessing errors and handle them correctly.
  * <p>
- * The main kind of preprocessing exceptions are {@link ubic.gemma.core.analysis.preprocess.filter.FilteringException}
- * and {@link ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationException}.
- *
+ * The main kind of preprocessing exceptions are:
+ * <ul>
+ *  <li>{@link QuantitationTypeDetectionRelatedPreprocessingException} when QT type cannot be detected from data or when
+ *  the detected one disagrees with the assigned one</li>
+ *  <li>{@link QuantitationTypeConversionRelatedPreprocessingException} when a desired QT conversion is not possible</li>
+ *  <li>{@link FilteringException} when processed data cannot be filtered</li>
+ *  <li>{@link BatchInfoPopulationException} when batch info cannot be detected, populated, etc.</li>
+ *  <li>{@link SVDRelatedPreprocessingException} when singular value decomposition fails</li>
+ *  </ul>
  * @author Paul
  */
 public class PreprocessingException extends RuntimeException {

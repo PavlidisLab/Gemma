@@ -41,25 +41,23 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         this.addForceOption( options );
     }
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
-        if ( !force && this.noNeedToRun( ee, BatchInformationFetchingEvent.class ) ) {
-            log.info( "Can't or don't need to run " + ee );
+        if ( this.noNeedToRun( ee, BatchInformationFetchingEvent.class ) ) {
             return;
         }
 
         log.info( "Processing: " + ee );
 
-        ser.fillBatchInformation( ee, force );
+        ser.fillBatchInformation( ee, isForce() );
         try {
             refreshExpressionExperimentFromGemmaWeb( ee, true, true );
         } catch ( Exception e ) {
-            log.error( "Failed to refresh " + ee + " from Gemma Web.", e );
+            addWarningObject( ee, "Could not refresh experiment from from Gemma Web.", e );
         }
     }
 }

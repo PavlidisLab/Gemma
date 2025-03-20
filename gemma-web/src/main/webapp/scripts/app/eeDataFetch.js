@@ -2,7 +2,7 @@ function handleFailure( data, e ) {
 
    Ext.DomHelper.overwrite( "messages", {
       tag : 'img',
-      src : ctxBasePath + '/images/icons/warning.png'
+      src : Gemma.CONTEXT_PATH + '/images/icons/warning.png'
    } );
    Ext.DomHelper.append( "messages", {
       tag : 'span',
@@ -17,7 +17,8 @@ function handleDoneGeneratingFile( url ) {
    window.location = url;
 }
 
-function fetchData( filter, eeId, formatType, qtId, eeDId ) {
+Gemma.ExpressionExperimentDataFetch = {}
+Gemma.ExpressionExperimentDataFetch.fetchData = function( filter, eeId, formatType, qtId, eeDId ) {
 
    // Get the parameters from the form.
    var commandObj = {
@@ -30,7 +31,7 @@ function fetchData( filter, eeId, formatType, qtId, eeDId ) {
 
    Ext.DomHelper.overwrite( "messages", {
       tag : 'img',
-      src : ctxBasePath + '/images/default/tree/loading.gif'
+      src : Gemma.CONTEXT_PATH + '/images/default/tree/loading.gif'
    } );
    Ext.DomHelper.append( "messages", "&nbsp;Fetching ..." );
 
@@ -53,11 +54,11 @@ function fetchData( filter, eeId, formatType, qtId, eeDId ) {
    } );
 }
 
-function fetchCoExpressionData( eeId ) {
+Gemma.ExpressionExperimentDataFetch.fetchCoExpressionData = function( eeId ) {
 
    Ext.DomHelper.overwrite( "messages", {
       tag : 'img',
-      src : ctxBasePath + '/images/default/tree/loading.gif'
+      src : Gemma.CONTEXT_PATH + '/images/default/tree/loading.gif'
    } );
    Ext.DomHelper.append( "messages", "&nbsp;Fetching ..." );
 
@@ -80,11 +81,11 @@ function fetchCoExpressionData( eeId ) {
    } );
 }
 
-function fetchDiffExpressionData( analysisId ) {
+Gemma.ExpressionExperimentDataFetch.fetchDiffExpressionData = function( analysisId ) {
 
    Ext.DomHelper.overwrite( "messages", {
       tag : 'img',
-      src : ctxBasePath + '/images/default/tree/loading.gif'
+      src : Gemma.CONTEXT_PATH + '/images/default/tree/loading.gif'
    } );
    Ext.DomHelper.append( "messages", "&nbsp;Fetching ..." );
 

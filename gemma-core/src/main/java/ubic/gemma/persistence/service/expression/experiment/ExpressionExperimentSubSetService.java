@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -27,6 +28,7 @@ import ubic.gemma.persistence.service.BaseService;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author kelsey
@@ -41,6 +43,9 @@ public interface ExpressionExperimentSubSetService extends BaseService<Expressio
     @Secured({ "GROUP_USER" })
     ExpressionExperimentSubSet findOrCreate( ExpressionExperimentSubSet entity );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperimentSubSet> findByBioAssayIn( Collection<BioAssay> bioAssays );
+
     @Override
     @Secured({ "GROUP_USER" })
     ExpressionExperimentSubSet create( ExpressionExperimentSubSet expressionExperimentSubSet );
@@ -48,6 +53,10 @@ public interface ExpressionExperimentSubSetService extends BaseService<Expressio
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperimentSubSet load( Long id );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    ExpressionExperimentSubSet loadWithBioAssays( Long id );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
@@ -75,5 +84,4 @@ public interface ExpressionExperimentSubSetService extends BaseService<Expressio
     Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor );
 
     Collection<FactorValueValueObject> getFactorValuesUsed( Long subSetId, Long experimentalFactor );
-
 }

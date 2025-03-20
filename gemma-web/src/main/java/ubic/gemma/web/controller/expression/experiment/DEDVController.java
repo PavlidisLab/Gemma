@@ -31,9 +31,7 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
 import ubic.gemma.core.analysis.expression.diff.GeneDifferentialExpressionService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
-import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.visualization.ExperimentalDesignVisualizationService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
@@ -51,15 +49,21 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.web.controller.ControllerUtils;
 import ubic.gemma.web.controller.visualization.VisualizationValueObject;
+import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.view.TextView;
 
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.Map.Entry;
+
+import static ubic.gemma.core.util.Constants.GEMMA_CITATION_NOTICE;
+import static ubic.gemma.core.util.Constants.GEMMA_LICENSE_NOTICE;
+import static ubic.gemma.core.util.TsvUtils.format;
 
 /**
  * Exposes methods for accessing underlying Design Element Data Vectors. eg: ajax methods for visualization
@@ -94,6 +98,8 @@ public class DEDVController {
     private SVDService svdService;
     @Autowired
     private ExperimentalFactorService experimentalFactorService;
+    @Autowired
+    private BuildInfo buildInfo;
 
     /**
      * Assign colour lists (queues actually) to factors. The idea is that every factor value will get a colour assigned
@@ -128,7 +134,7 @@ public class DEDVController {
                 factorColoursMap.put( factor, new LinkedList<String>() );
             }
 
-            if ( ExperimentalDesignUtils.isContinuous( factor ) ) {
+            if ( factor.getType().equals( FactorType.CONTINUOUS ) ) {
 
                 int numValues = factor.getFactorValues().size();
 
@@ -168,7 +174,7 @@ public class DEDVController {
      * Given a collection of expression experiment Ids and a geneId returns a map of DEDV value objects to a collection
      * of genes. The EE info is in the value object. FIXME handle subsets.
      */
-    public Map<ExpressionExperimentValueObject, Map<Long, Collection<DoubleVectorValueObject>>> getDEDV(
+    public Map<BioAssaySetValueObject, Map<Long, Collection<DoubleVectorValueObject>>> getDEDV(
             Collection<Long> eeIds, Collection<Long> geneIds ) {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -229,7 +235,7 @@ public class DEDVController {
 
         Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts;
 
-        layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
+        layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs, null );
 
         // layouts = experimentalDesignVisualizationService.sortLayoutSamplesByFactor( layouts );
         watch.stop();
@@ -291,7 +297,7 @@ public class DEDVController {
         watch.start();
 
         Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts;
-        layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
+        layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs, null );
 
         time = watch.getTime();
         if ( time > 100 ) {
@@ -369,7 +375,7 @@ public class DEDVController {
                     + " ms (times <100ms not reported)." );
         }
         Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts;
-        layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
+        layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs, null );
 
         time = watch.getTime();
         watch.reset();
@@ -448,8 +454,9 @@ public class DEDVController {
         StopWatch watch = new StopWatch();
         watch.start();
 
+        ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId, EntityNotFoundException::new );
         Map<ProbeLoading, DoubleVectorValueObject> topLoadedVectors = this.svdService
-                .getTopLoadedVectors( eeId, component, count );
+                .getTopLoadedVectors( ee, component, count );
 
         if ( topLoadedVectors == null )
             return null;
@@ -462,7 +469,7 @@ public class DEDVController {
             return null;
         }
 
-        layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( values );
+        layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( values, null );
         return makeVisCollection( values, null, null, layouts );
     }
 
@@ -480,7 +487,9 @@ public class DEDVController {
 
         Collection<DoubleVectorValueObject> dedvs;
         if ( geneIds == null || geneIds.isEmpty() ) {
-            dedvs = processedExpressionDataVectorService.getRandomProcessedDataArrays( ees.iterator().next(), SAMPLE_SIZE );
+            ExpressionExperiment ee = ees.iterator().next();
+            ee = expressionExperimentService.thawLite( ee );
+            dedvs = processedExpressionDataVectorService.getRandomProcessedDataArrays( ee, SAMPLE_SIZE );
             if ( dedvs.size() > SAMPLE_SIZE ) {
                 dedvs = new ArrayList<>( dedvs ).subList( 0, SAMPLE_SIZE );
             }
@@ -509,8 +518,7 @@ public class DEDVController {
                     " for " + geneIds.size() + " genes " ) + " in " + time + " ms (times <100ms not reported)." );
         }
 
-        Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts = experimentalDesignVisualizationService
-                .sortVectorDataByDesign( dedvs );
+        Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs, null );
 
         time = watch.getTime();
         watch.reset();
@@ -553,8 +561,7 @@ public class DEDVController {
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService
                 .getProcessedDataArraysByProbe( ees, probes );
 
-        Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts = experimentalDesignVisualizationService
-                .sortVectorDataByDesign( dedvs );
+        Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs, null );
 
         watch.stop();
         Long time = watch.getTime();
@@ -596,14 +603,15 @@ public class DEDVController {
             }
         }
 
-        Map<ExpressionExperimentValueObject, Map<Long, Collection<DoubleVectorValueObject>>> result;
+        Map<BioAssaySetValueObject, Map<Long, Collection<DoubleVectorValueObject>>> result;
 
         if ( request.getParameter( "pca" ) != null ) {
             int component = Integer.parseInt( request.getParameter( "component" ) );
             Long eeId = eeIds.iterator().next();
 
+            ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeId, EntityNotFoundException::new );
             Map<ProbeLoading, DoubleVectorValueObject> topLoadedVectors = this.svdService
-                    .getTopLoadedVectors( eeId, component, ( int ) thresh );
+                    .getTopLoadedVectors( ee, component, ( int ) thresh );
 
             if ( topLoadedVectors == null )
                 return null;
@@ -682,8 +690,12 @@ public class DEDVController {
 
     private String format4File( Collection<DoubleVectorValueObject> vectors ) {
         StringBuilder converted = new StringBuilder();
-        converted.append( "# Generated by Gemma\n# " ).append( new Date() ).append( "\n" );
-        converted.append( ExpressionDataFileService.DISCLAIMER + "#\n" );
+        converted.append( "# Generated by Gemma " ).append( buildInfo.getVersion() ).append( " on " ).append( format( new Date() ) ).append( "\n" );
+        for ( String line : GEMMA_CITATION_NOTICE ) {
+            converted.append( "# " ).append( line ).append( "\n" );
+        }
+        converted.append( "#\n" );
+        converted.append( "# " ).append( GEMMA_LICENSE_NOTICE ).append( "\n" );
         boolean didHeader = false;
 
         Map<Long, GeneValueObject> gmap = getGeneValueObjectsUsed( vectors );
@@ -724,13 +736,17 @@ public class DEDVController {
      * Converts the given map into a tab delimited String
      */
     private String format4File(
-            Map<ExpressionExperimentValueObject, Map<Long, Collection<DoubleVectorValueObject>>> result ) {
+            Map<BioAssaySetValueObject, Map<Long, Collection<DoubleVectorValueObject>>> result ) {
         StringBuilder converted = new StringBuilder();
         Map<Long, GeneValueObject> genes = new HashMap<>(); // Saves us from loading genes
         // unnecessarily
-        converted.append( "# Generated by Gemma\n# " ).append( new Date() ).append( "\n" );
-        converted.append( ExpressionDataFileService.DISCLAIMER + "#\n" );
-        for ( ExpressionExperimentValueObject ee : result.keySet() ) {
+        converted.append( "# Generated by Gemma " ).append( buildInfo.getVersion() ).append( " on " ).append( format( new Date() ) ).append( "\n" );
+        converted.append( "#\n" );
+        for ( String line : GEMMA_CITATION_NOTICE ) {
+            converted.append( "# " ).append( line ).append( "\n" );
+        }
+        converted.append( "#\n" );
+        for ( BioAssaySetValueObject ee : result.keySet() ) {
 
             boolean didHeaderForEe = false;
 
@@ -793,7 +809,7 @@ public class DEDVController {
 
     private List<GeneValueObject> getGeneValueObjectList( List<Long> genes ) {
         Collection<GeneValueObject> geneValueObjects = geneService.loadValueObjectsByIds( genes );
-        Map<Long, GeneValueObject> m = EntityUtils.getIdMap( geneValueObjects );
+        Map<Long, GeneValueObject> m = IdentifiableUtils.getIdMap( geneValueObjects );
         List<GeneValueObject> geneValueObjectList = new ArrayList<>();
         for ( Long id : genes ) {
             if ( !m.containsKey( id ) ) {
@@ -811,7 +827,7 @@ public class DEDVController {
                 continue;
             usedGeneIds.addAll( vec.getGenes() );
         }
-        return EntityUtils.getIdMap( geneService.loadValueObjectsByIds( usedGeneIds ) );
+        return IdentifiableUtils.getIdMap( geneService.loadValueObjectsByIds( usedGeneIds ) );
     }
 
     /**
@@ -872,7 +888,7 @@ public class DEDVController {
          * Get the probes for the vectors, organize by ee.
          */
         for ( DoubleVectorValueObject dedv : dedvs ) {
-            ExpressionExperimentValueObject ee = dedv.getExpressionExperiment();
+            BioAssaySetValueObject ee = dedv.getExpressionExperiment();
             if ( dedv.getGenes().contains( queryGene.getId() ) ) {
                 if ( !queryEE2ProbeIds.containsKey( ee.getId() ) ) {
                     queryEE2ProbeIds.put( ee.getId(), new HashSet<Long>() );
@@ -1011,11 +1027,11 @@ public class DEDVController {
 
         Map<Long, Collection<DoubleVectorValueObject>> vvoMap = new HashMap<>();
 
-        Map<Long, ExpressionExperimentValueObject> eeMap = new HashMap<>();
+        Map<Long, BioAssaySetValueObject> eeMap = new HashMap<>();
 
         // Organize by expression experiment
         for ( DoubleVectorValueObject dvvo : dedvs ) {
-            ExpressionExperimentValueObject ee = dvvo.getExpressionExperiment();
+            BioAssaySetValueObject ee = dvvo.getExpressionExperiment();
             eeMap.put( ee.getId(), ee );
             if ( !vvoMap.containsKey( ee.getId() ) ) {
                 vvoMap.put( ee.getId(), new HashSet<DoubleVectorValueObject>() );
@@ -1100,7 +1116,7 @@ public class DEDVController {
              */
 
             if ( layouts != null ) {
-                ExpressionExperimentValueObject ee = eeMap.get( ee2P.getEEId() );
+                BioAssaySetValueObject ee = eeMap.get( ee2P.getEEId() );
                 log.debug( "setup experimental design layout profiles for " + ee );
                 vvo.setUpFactorProfiles( layouts.get( ee.getId() ) );
             }
@@ -1126,8 +1142,12 @@ public class DEDVController {
         String firstThreeColumnHeadings = "GeneSymbol\tGeneName\tElement";
 
         StringBuilder buf = new StringBuilder();
-        ExpressionExperimentValueObject ee = dedv.getExpressionExperiment();
-        buf.append( "# " ).append( ee.getShortName() ).append( " : " ).append( ee.getName() ).append( "\n" );
+        BioAssaySetValueObject ee = dedv.getExpressionExperiment();
+        buf.append( "# " );
+        if ( ee instanceof ExpressionExperimentValueObject ) {
+            buf.append( ( ( ExpressionExperimentValueObject ) ee ).getShortName() ).append( " : " );
+        }
+        buf.append( ee.getName() ).append( "\n" );
         buf.append( firstThreeColumnHeadings );
         for ( BioAssayValueObject ba : dedv.getBioAssays() ) {
             buf.append( "\t" ).append( ba.getName() );
@@ -1138,18 +1158,18 @@ public class DEDVController {
         return buf.toString();
     }
 
-    private Map<ExpressionExperimentValueObject, Map<Long, Collection<DoubleVectorValueObject>>> makeVectorMap(
+    private Map<BioAssaySetValueObject, Map<Long, Collection<DoubleVectorValueObject>>> makeVectorMap(
             Collection<DoubleVectorValueObject> newResults,
             Map<Long, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
 
         // FIXME use the layouts.
 
-        Map<ExpressionExperimentValueObject, Map<Long, Collection<DoubleVectorValueObject>>> result = new HashMap<>();
+        Map<BioAssaySetValueObject, Map<Long, Collection<DoubleVectorValueObject>>> result = new HashMap<>();
 
         for ( DoubleVectorValueObject v : newResults ) {
-            ExpressionExperimentValueObject e = v.getExpressionExperiment();
+            BioAssaySetValueObject e = v.getExpressionExperiment();
             if ( !result.containsKey( e ) ) {
-                result.put( e, new HashMap<Long, Collection<DoubleVectorValueObject>>() );
+                result.put( e, new HashMap<>() );
             }
             Map<Long, Collection<DoubleVectorValueObject>> innerMap = result.get( e );
 
@@ -1185,9 +1205,9 @@ public class DEDVController {
         for ( DoubleVectorValueObject dvvo : dedvs ) {
             // FIXME: we can probably use this information, and do away with carrying so much Layout information around?
             // assert dvvo.isReorganized() && dvvo.getBioAssayDimension().isReordered(); // not always true!!
-            ExpressionExperimentValueObject ee = dvvo.getExpressionExperiment();
+            BioAssaySetValueObject ee = dvvo.getExpressionExperiment();
             if ( !vvoMap.containsKey( ee.getId() ) ) {
-                vvoMap.put( ee.getId(), new ArrayList<DoubleVectorValueObject>() );
+                vvoMap.put( ee.getId(), new ArrayList<>() );
             }
             vvoMap.get( ee.getId() ).add( dvvo );
         }
@@ -1365,13 +1385,13 @@ public class DEDVController {
 
     private String getFacValsStr( Map<Long, FactorValue> fvs, ExperimentalFactor factor, Double valueOrId ) {
         String facValsStr;
-        if ( ExperimentalDesignUtils.isContinuous( factor ) ) {
+        if ( factor.getType().equals( FactorType.CONTINUOUS ) ) {
             /*
              * FIXME continuous factors need a different color scheme.
              */
             log.debug( "Experiment has continuous factor." );
             facValsStr = valueOrId.toString();
-        } else if ( ExperimentalDesignUtils.isBatch( factor ) ) {
+        } else if ( ExperimentalDesignUtils.isBatchFactor( factor ) ) {
             /*
              * FIXME for batch, also treat like they are continuous. There can be many so we tend to run out of
              * colors.

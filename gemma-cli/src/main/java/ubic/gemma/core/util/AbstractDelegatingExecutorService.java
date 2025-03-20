@@ -1,7 +1,6 @@
 package ubic.gemma.core.util;
 
 import javax.annotation.Nonnull;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.*;
@@ -11,7 +10,6 @@ import java.util.stream.Collectors;
  * A delegating executor service inspired by {@link org.springframework.security.concurrent.DelegatingSecurityContextExecutorService}.
  * @author poirigui
  */
-@ParametersAreNonnullByDefault
 abstract class AbstractDelegatingExecutorService implements ExecutorService {
 
     protected abstract Runnable wrap( Runnable runnable );

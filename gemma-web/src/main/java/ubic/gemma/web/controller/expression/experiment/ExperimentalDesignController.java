@@ -19,20 +19,17 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import gemma.gsec.SecurityService;
-import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
+import ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.persistence.service.expression.experiment.FactorValueDeletion;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignUpdatedEvent;
@@ -47,17 +44,13 @@ import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.service.expression.experiment.*;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.EntityDelegator;
-import ubic.gemma.web.util.AnchorTagUtil;
 import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.util.WebEntityUrlBuilder;
 
-import javax.servlet.ServletContext;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -97,12 +90,12 @@ public class ExperimentalDesignController extends BaseController {
     @Autowired
     private AuditTrailService auditTrailService;
     @Autowired
-    private ServletContext servletContext;
+    private WebEntityUrlBuilder entityUrlBuilder;
 
     public void createDesignFromFile( Long eeid, String filePath ) {
         ExpressionExperiment ee = expressionExperimentService.loadAndThawOrFail( eeid, EntityNotFoundException::new, "Could not access experiment with id=" + eeid );
 
-        if ( !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+        if ( ee.getExperimentalDesign() != null && !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             throw new IllegalArgumentException( "Cannot import an experimental design for an experiment that already has design data populated." );
         }
 
@@ -137,6 +130,10 @@ public class ExperimentalDesignController extends BaseController {
         ExperimentalDesign ed = experimentalDesignService.loadWithExperimentalFactors( e.getId() );
         ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ed );
 
+        if ( ee == null ) {
+            throw new EntityNotFoundException( "No experiment for design with ID " + e.getId() );
+        }
+
         ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
         ef.setType( FactorType.valueOf( efvo.getType() ) );
         ef.setExperimentalDesign( ed );
@@ -161,7 +158,7 @@ public class ExperimentalDesignController extends BaseController {
             /*
              * get the biomaterials, pull the relevant characteristic keeping track of which biomaterial had which value, then create a factor value for each unique value. Then associate the factor values with the biomaterial according to the value it had for the characteristic.
              */
-            Collection<BioMaterialValueObject> bmvos = getBioMaterialValueObjects( experimentalDesignService.getExpressionExperiment( ed ) );
+            Collection<BioMaterialValueObject> bmvos = getBioMaterialValueObjects( ee );
 
             Map<CharacteristicValueObject, Collection<BioMaterial>> map = new HashMap<>();
 
@@ -241,10 +238,11 @@ public class ExperimentalDesignController extends BaseController {
 
     public void createFactorValue( EntityDelegator<ExperimentalFactor> e ) {
         if ( e == null || e.getId() == null ) return;
-        ExperimentalFactor ef = experimentalFactorService.load( e.getId() );
-
-        if ( ef == null ) {
-            throw new EntityNotFoundException( "Experimental factor with ID=" + e.getId() + " could not be accessed for editing" );
+        ExperimentalFactor ef = experimentalFactorService.loadOrFail( e.getId(), EntityNotFoundException::new,
+                "Experimental factor with ID=" + e.getId() + " could not be accessed for editing" );
+        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ef.getExperimentalDesign() );
+        if ( ee == null ) {
+            throw new EntityNotFoundException( "No experiment for factor: " + ef );
         }
 
         Set<Statement> chars = new HashSet<>();
@@ -265,8 +263,6 @@ public class ExperimentalDesignController extends BaseController {
         FactorValue fv = FactorValue.Factory.newInstance();
         fv.setExperimentalFactor( ef );
         fv.setCharacteristics( chars );
-
-        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ef.getExperimentalDesign() );
 
         // this is just a placeholder factor value; use has to edit it.
         expressionExperimentService.addFactorValue( ee, fv );
@@ -435,7 +431,10 @@ public class ExperimentalDesignController extends BaseController {
      * @return Collection of CharacteristicValueObjects but all we care about is the category
      */
     public Collection<CharacteristicValueObject> getBioMaterialCharacteristicCategories( Long experimentalDesignID ) {
-        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( experimentalDesignService.loadOrFail( experimentalDesignID ) );
+        ExpressionExperiment ee = experimentalDesignService.getExpressionExperimentById( experimentalDesignID );
+        if ( ee == null ) {
+            throw new EntityNotFoundException( "No experiment for design with ID " + experimentalDesignID );
+        }
 
         Collection<BioMaterialValueObject> bmvos = getBioMaterialValueObjects( ee );
         if ( bmvos.isEmpty() ) {
@@ -560,25 +559,27 @@ public class ExperimentalDesignController extends BaseController {
     public Collection<ExperimentalFactorValueObject> getExperimentalFactors( EntityDelegator<?> e ) {
         if ( e == null || e.getId() == null ) return null;
 
-        Collection<ExperimentalFactorValueObject> result = new HashSet<>();
-        Long designId;
+        ExpressionExperiment ee;
         if ( e.holds( ExpressionExperiment.class ) ) {
-            ExpressionExperiment ee = this.expressionExperimentService.loadOrFail( e.getId() );
-            designId = ee.getExperimentalDesign().getId();
+            ee = expressionExperimentService.loadOrFail( e.getId(), EntityNotFoundException::new );
         } else if ( e.holds( ExperimentalDesign.class ) ) {
-            designId = e.getId();
+            ee = experimentalDesignService.getExpressionExperimentById( e.getId() );
+            if ( ee == null ) {
+                throw new EntityNotFoundException( "There is no experiment associated to the design with ID " + e.getId() + "." );
+            }
         } else {
             throw new RuntimeException( "Don't know how to process a " + e.getClassDelegatingFor() );
         }
-        // ugly fix for bug 3746
-        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( this.experimentalDesignService.loadOrFail( designId ) );
-        ee = expressionExperimentService.thawLite( ee );
-        ExperimentalDesign ed = ee.getExperimentalDesign();
 
-        for ( ExperimentalFactor factor : ed.getExperimentalFactors() ) {
-            result.add( new ExperimentalFactorValueObject( factor ) );
+        ee = expressionExperimentService.thawLite( ee );
+        if ( ee.getExperimentalDesign() == null ) {
+            throw new EntityNotFoundException( "Experiment " + ee.getShortName() + " does not have an experimental design." );
         }
 
+        Collection<ExperimentalFactorValueObject> result = new HashSet<>();
+        for ( ExperimentalFactor factor : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            result.add( new ExperimentalFactorValueObject( factor ) );
+        }
         return result;
     }
 
@@ -620,8 +621,11 @@ public class ExperimentalDesignController extends BaseController {
 
     @RequestMapping(value = "/showExperimentalDesign.html", params = { "edid" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showById( @RequestParam("edid") Long edId ) {
-        ExperimentalDesign ed = experimentalDesignService.loadOrFail( edId, EntityNotFoundException::new );
-        return show( experimentalDesignService.getExpressionExperiment( ed ) );
+        ExpressionExperiment ee = experimentalDesignService.getExpressionExperimentById( edId );
+        if ( ee == null ) {
+            throw new EntityNotFoundException( String.format( "No ExpressionExperiment for design with ID %d.", edId ) );
+        }
+        return show( ee );
     }
 
     @RequestMapping(value = "/showExperimentalDesign.html", params = { "eeid" }, method = { RequestMethod.GET, RequestMethod.HEAD })
@@ -640,19 +644,24 @@ public class ExperimentalDesignController extends BaseController {
 
     private ModelAndView show( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thawLite( ee );
-        // strip white spaces
-        String desc = ee.getDescription();
-        ee.setDescription( StringUtils.strip( desc ) );
-        RequestContextHolder.getRequestAttributes().setAttribute( "id", ee.getExperimentalDesign().getId(), RequestAttributes.SCOPE_REQUEST );
-        return new ModelAndView( "experimentalDesign.detail" ).addObject( "taxonId", expressionExperimentService.getTaxon( ee ).getId() ).addObject( "hasPopulatedDesign", !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ).addObject( "experimentalDesign", ee.getExperimentalDesign() ).addObject( "expressionExperiment", ee ).addObject( "currentUserCanEdit", securityService.isEditable( ee ) ? "true" : "" ).addAllObjects( getNeedsAttentionDetails( ee ) ).addObject( "expressionExperimentUrl", AnchorTagUtil.getExpressionExperimentUrl( ee, servletContext ) );
+        if ( ee.getExperimentalDesign() == null ) {
+            throw new EntityNotFoundException( "Experiment " + ee.getShortName() + " does not have an experimental design." );
+        }
+        return new ModelAndView( "experimentalDesign.detail" )
+                .addObject( "taxon", expressionExperimentService.getTaxon( ee ) )
+                .addObject( "hasPopulatedDesign", !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() )
+                .addObject( "experimentalDesign", ee.getExperimentalDesign() )
+                .addObject( "expressionExperiment", ee )
+                .addObject( "currentUserCanEdit", securityService.isEditableByCurrentUser( ee ) )
+                .addAllObjects( getNeedsAttentionDetails( ee.getExperimentalDesign() ) );
     }
 
-    private Map<String, ?> getNeedsAttentionDetails( ExpressionExperiment ee ) {
+    private Map<String, ?> getNeedsAttentionDetails( ExperimentalDesign ed ) {
         Map<String, Object> result = new HashMap<>();
-        boolean needsAttention = ee.getExperimentalDesign().getExperimentalFactors().stream().flatMap( ef -> ef.getFactorValues().stream() ).anyMatch( FactorValue::getNeedsAttention );
+        boolean needsAttention = ed.getExperimentalFactors().stream().flatMap( ef -> ef.getFactorValues().stream() ).anyMatch( FactorValue::getNeedsAttention );
         result.put( "needsAttention", needsAttention );
         try {
-            ExperimentalDesign randomEd = experimentalDesignService.getRandomExperimentalDesignThatNeedsAttention( ee.getExperimentalDesign() );
+            ExperimentalDesign randomEd = experimentalDesignService.getRandomExperimentalDesignThatNeedsAttention( ed );
             result.put( "randomExperimentalDesignThatNeedsAttention", randomEd );
             if ( randomEd != null ) {
                 ExpressionExperiment randomEe = expressionExperimentService.findByDesign( randomEd );
@@ -683,10 +692,19 @@ public class ExperimentalDesignController extends BaseController {
         if ( biomaterials.isEmpty() ) return;
 
         BioMaterial bm = biomaterials.iterator().next();
-        ExpressionExperiment ee = expressionExperimentService.findByBioMaterial( bm );
-        if ( ee == null ) throw new IllegalStateException( "No Experiment for biomaterial: " + bm );
+        Collection<ExpressionExperiment> ees = expressionExperimentService.findByBioMaterial( bm );
+        if ( ees.isEmpty() ) {
+            throw new IllegalStateException( "No Experiment for biomaterial: " + bm );
+        } else if ( ees.size() > 1 ) {
+            throw new IllegalStateException( "There is more than one experiment for biomaterial: " + bm );
+        }
+        ExpressionExperiment ee = ees.iterator().next();
 
         ee = expressionExperimentService.thawLite( ee );
+
+        if ( ee.getExperimentalDesign() == null ) {
+            throw new EntityNotFoundException( "Experiment " + ee.getShortName() + " does not have an experimental design." );
+        }
 
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
@@ -695,7 +713,7 @@ public class ExperimentalDesignController extends BaseController {
                  * Check for unused factorValues
                  */
                 Collection<FactorValue> usedFactorValues = new HashSet<>();
-                LinearModelAnalyzer.populateFactorValuesFromBASet( ee, ef, usedFactorValues );
+                DiffExAnalyzerUtils.populateFactorValuesFromBASet( ee, ef, usedFactorValues );
 
                 Collection<FactorValue> toDelete = new HashSet<>();
                 for ( FactorValue fv : ef.getFactorValues() ) {
@@ -710,7 +728,7 @@ public class ExperimentalDesignController extends BaseController {
 
                 if ( !toDelete.isEmpty() ) {
                     log.info( "Deleting " + toDelete.size() + " unused factorvalues for " + ef );
-                    factorValueDeletion.deleteFactorValues( EntityUtils.getIds( toDelete ) );
+                    factorValueDeletion.deleteFactorValues( IdentifiableUtils.getIds( toDelete ) );
                 }
 
             }

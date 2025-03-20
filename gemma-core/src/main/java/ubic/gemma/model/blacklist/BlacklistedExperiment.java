@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2018 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,10 +21,22 @@ package ubic.gemma.model.blacklist;
 
 /**
  * TODO Document Me
- * 
+ *
  * @author paul
  */
 public class BlacklistedExperiment extends BlacklistedEntity {
-    
-    
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof BlacklistedExperiment ) )
+            return false;
+        BlacklistedExperiment that = ( BlacklistedExperiment ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return this.getId().equals( that.getId() );
+        } else {
+            return false;
+        }
+    }
 }

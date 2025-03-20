@@ -18,12 +18,6 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
-public class ArrayDesignSubsumeCheckEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -6105886398033742202L;
+public class ArrayDesignSubsumeCheckEvent extends ArrayDesignAnalysisEvent {
 
 }

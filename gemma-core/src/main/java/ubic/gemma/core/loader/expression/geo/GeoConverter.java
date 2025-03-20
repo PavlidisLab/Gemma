@@ -21,8 +21,8 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * @author paul
@@ -43,7 +43,7 @@ public interface GeoConverter extends Converter<GeoData, Object> {
     @Override
     Object convert( GeoData geoObject );
 
-    Object convert(GeoData geoObject, boolean skipDataVectors);
+    Object convert( GeoData geoObject, boolean skipDataVectors );
 
     /**
      * Converts Geo subsets to experimental factors. This adds a new factor value to the experimental factor of an
@@ -64,7 +64,12 @@ public interface GeoConverter extends Converter<GeoData, Object> {
      */
     void setSplitByPlatform( boolean splitByPlatform );
 
-    byte[] convertData( List<Object> vector, QuantitationType qt );
+    /**
+     * Convert a vector of data to a vector of the appropriate type for the quantitation type.
+     * @return null if all the data is missing
+     */
+    @Nullable
+    Object[] convertData( String[] vector, QuantitationType qt );
 
     /**
      * @param forceConvertElements Set the behaviour when a platform that normally would not be loaded in detail is

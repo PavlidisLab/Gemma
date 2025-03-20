@@ -1,8 +1,8 @@
 /*
  * The gemma-core project
- * 
+ *
  * Copyright (c) 2021 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,14 +23,9 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * Used to indicate that the suitability status of an experiment is the default. This should be used only after an
  * {@link UnsuitableForDifferentialExpressionAnalysisEvent}
  * event has been added, as the default is to assume an experiment is suitable.
- * 
+ *
  * @author paul
  */
 public class ResetSuitabilityForDifferentialExpressionAnalysisEvent extends DifferentialExpressionSuitabilityEvent {
-
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 5909581992797452478L;
 
 }

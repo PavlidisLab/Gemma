@@ -1,8 +1,4 @@
-
-
 package ubic.gemma.model.common.auditAndSecurity;
-
-import java.util.*;
 
 public enum AuditAction {
     /**

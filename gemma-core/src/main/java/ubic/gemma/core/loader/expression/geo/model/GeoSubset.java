@@ -34,13 +34,9 @@ public class GeoSubset extends GeoData {
     private String dataSet;
     private GeoDataset owningDataset;
     private String description = "";
-    private Collection<GeoSample> samples;
+    private final Collection<GeoSample> samples = new HashSet<>();
 
     private VariableType type;
-
-    public GeoSubset() {
-        this.samples = new HashSet<>();
-    }
 
     public void addToDescription( String s ) {
         this.description = this.description + " " + s;
@@ -65,10 +61,6 @@ public class GeoSubset extends GeoData {
      */
     public Collection<GeoSample> getSamples() {
         return this.samples;
-    }
-
-    public void setSample( Collection<GeoSample> samples ) {
-        this.samples = samples;
     }
 
     public void addSample( GeoSample sample ) {

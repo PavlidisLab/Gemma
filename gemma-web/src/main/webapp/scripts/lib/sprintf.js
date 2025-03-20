@@ -170,3 +170,5 @@ function sprintf() {
 
 	return format.replace(regex, doFormat);
 }
+
+window.sprintf = sprintf;

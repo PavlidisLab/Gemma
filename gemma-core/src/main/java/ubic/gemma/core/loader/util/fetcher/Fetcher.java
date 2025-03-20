@@ -1,7 +1,6 @@
 package ubic.gemma.core.loader.util.fetcher;
 
-import ubic.gemma.model.common.description.LocalFile;
-
+import java.io.File;
 import java.util.Collection;
 
 /**
@@ -17,7 +16,7 @@ public interface Fetcher {
      * @param identifier identifier
      * @return local files
      */
-    Collection<LocalFile> fetch( String identifier );
+    Collection<File> fetch( String identifier );
 
     /**
      * Set whether existing files should be overwritten.

@@ -11,10 +11,11 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.util.GemmaRestApiClient;
+import ubic.gemma.core.util.TestCliContext;
+import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 
 import java.util.concurrent.TimeUnit;
@@ -26,7 +27,7 @@ import static org.mockito.Mockito.verify;
 
 @ContextConfiguration
 @TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class FindObsoleteTermsCliTest extends AbstractJUnit4SpringContextTests {
+public class FindObsoleteTermsCliTest extends BaseCliTest {
 
     @Configuration
     @TestComponent
@@ -80,7 +81,7 @@ public class FindObsoleteTermsCliTest extends AbstractJUnit4SpringContextTests {
     @Test
     @WithMockUser
     public void test() throws TimeoutException {
-        assertEquals( 0, findObsoleteTermsCli.executeCommand() );
+        assertEquals( 0, findObsoleteTermsCli.executeCommand( new TestCliContext( null, new String[] {} ) ) );
         verify( ontology1 ).setSearchEnabled( false );
         verify( ontology1 ).setInferenceMode( ubic.basecode.ontology.providers.OntologyService.InferenceMode.NONE );
         verify( ontology1 ).initialize( true, false );

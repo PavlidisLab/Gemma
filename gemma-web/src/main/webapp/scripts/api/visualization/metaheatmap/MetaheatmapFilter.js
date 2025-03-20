@@ -1,6 +1,6 @@
 Ext.namespace( 'Gemma' );
 
-function GemmaMetaheatmapFilter() {
+Gemma.MetaheatmapFilter = function() {
    this._filterId = 1; // used to generate filter ids (private)
    this._length = 0; // number of filters (private)
    this._order = []; // array of filter ids storing the order the filters should be applied in (private)

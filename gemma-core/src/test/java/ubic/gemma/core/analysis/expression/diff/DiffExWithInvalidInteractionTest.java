@@ -34,6 +34,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -79,7 +80,7 @@ public class DiffExWithInvalidInteractionTest extends AbstractGeoServiceTest {
 
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thaw( ee );
 
         Collection<ExperimentalFactor> toremove = new HashSet<>( ee.getExperimentalDesign().getExperimentalFactors() );
         for ( ExperimentalFactor ef : toremove ) {
@@ -88,7 +89,7 @@ public class DiffExWithInvalidInteractionTest extends AbstractGeoServiceTest {
 
         expressionExperimentService.update( ee );
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
 
         ee = expressionExperimentService.thaw( ee );
 
@@ -111,7 +112,7 @@ public class DiffExWithInvalidInteractionTest extends AbstractGeoServiceTest {
     @Category(SlowTest.class)
     public void test() {
 
-        ee = expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thaw( ee );
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 
         assertEquals( 3, factors.size() ); // includes batch
@@ -136,7 +137,7 @@ public class DiffExWithInvalidInteractionTest extends AbstractGeoServiceTest {
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.getFactorsToInclude().add( timepoint );
         config.getFactorsToInclude().add( treatment );
-        config.addInteractionToInclude( treatment, timepoint );
+        config.addInteractionToInclude( Arrays.asList( treatment, timepoint ) );
 
         Collection<DifferentialExpressionAnalysis> result = analyzer.analyze( ee, config );
         assertEquals( 1, result.size() );

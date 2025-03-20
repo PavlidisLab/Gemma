@@ -1,0 +1,75 @@
+38651_GSE199762_600467_10x_MEX_expmat.unfilt.scdata
+├── 1003795_H48-g2_Entorhinal_cortex
+│   ├── barcodes.tsv.gz
+│   ├── features.tsv.gz
+│   └── matrix.mtx.gz
+├── 1003796_H29-g2_Entorhinal_cortex
+│   ├── barcodes.tsv.gz
+│   ├── features.tsv.gz
+│   └── matrix.mtx.gz
+├── 1003797_H33-g2_Entorhinal_cortex
+│   ├── barcodes.tsv.gz
+│   ├── features.tsv.gz
+│   └── matrix.mtx.gz
+├── 1003798_H31_Entorhinal_cortex
+│   ├── barcodes.tsv.gz
+│   ├── features.tsv.gz
+│   └── matrix.mtx.gz
+├── 1003799_H69_LGE_region
+│   ├── barcodes.tsv.gz
+│   ├── features.tsv.gz
+│   └── matrix.mtx.gz
+├── 1003800_H39-g1_Entorhinal_cortex
+│   ├── barcodes.tsv.gz
+│   ├── features.tsv.gz
+│   └── matrix.mtx.gz
+├── 1003801_H39-g2_Entorhinal_cortex
+│   ├── barcodes.tsv.gz
+│   ├── features.tsv.gz
+│   └── matrix.mtx.gz
+├── 1003802_H33-g1_Entorhinal_cortex
+│   ├── barcodes.tsv.gz
+│   ├── features.tsv.gz
+│   └── matrix.mtx.gz
+├── 1003803_H71_EC_stream_region
+│   ├── barcodes.tsv.gz
+│   ├── features.tsv.gz
+│   └── matrix.mtx.gz
+├── 1003804_H69_MGE_region
+│   ├── barcodes.tsv.gz
+│   ├── features.tsv.gz
+│   └── matrix.mtx.gz
+├── 1003805_H71_Entorhinal_cortex
+│   ├── barcodes.tsv.gz
+│   ├── features.tsv.gz
+│   └── matrix.mtx.gz
+├── 1003806_H69_Entorhinal_cortex
+│   ├── barcodes.tsv.gz
+│   ├── features.tsv.gz
+│   └── matrix.mtx.gz
+├── 1003807_H37_Entorhinal_cortex
+│   ├── barcodes.tsv.gz
+│   ├── features.tsv.gz
+│   └── matrix.mtx.gz
+├── 1003808_H48-g1_Entorhinal_cortex
+│   ├── barcodes.tsv.gz
+│   ├── features.tsv.gz
+│   └── matrix.mtx.gz
+├── 1003809_H46-g2_Entorhinal_cortex
+│   ├── barcodes.tsv.gz
+│   ├── features.tsv.gz
+│   └── matrix.mtx.gz
+├── 1003810_H29-g1_Entorhinal_cortex
+│   ├── barcodes.tsv.gz
+│   ├── features.tsv.gz
+│   └── matrix.mtx.gz
+├── 1003811_H46-g1_Entorhinal_cortex
+│   ├── barcodes.tsv.gz
+│   ├── features.tsv.gz
+│   └── matrix.mtx.gz
+└── 1003812_H69_CGE_region
+    ├── barcodes.tsv.gz
+    ├── features.tsv.gz
+    └── matrix.mtx.gz
+
+18 directories, 54 files

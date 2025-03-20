@@ -19,6 +19,7 @@
 
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import ubic.gemma.core.analysis.sequence.BlatAssociationScorer;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.genome.TaxonValueObject;
 
@@ -68,7 +69,7 @@ public class BlatResultValueObject extends IdentifiableValueObject<BlatResult> {
                 br.getBlockSizes(), br.getMatches(), br.getMismatches(), br.getNs(), br.getQueryEnd(),
                 br.getQueryGapBases(), br.getQueryGapCount(),
                 BioSequenceValueObject.fromEntity( br.getQuerySequence() ), br.getQueryStart(), br.getQueryStarts(),
-                br.getRepMatches(), br.score(), br.identity(), br.getStrand(), br.getTargetChromosome().getName(),
+                br.getRepMatches(), BlatAssociationScorer.score( br ), BlatAssociationScorer.identity( br ), br.getStrand(), br.getTargetChromosome().getName(),
                 br.getSearchedDatabase().getName(), br.getTargetEnd(), br.getTargetGapBases(), br.getTargetGapCount(),
                 br.getTargetStart(), br.getTargetStarts() );
     }

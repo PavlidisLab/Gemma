@@ -24,46 +24,25 @@ import java.util.Objects;
  * Data for one design element, across one or more bioassays, for a single quantitation type. For example, the
  * "expression profile" for a probe (gene) across a set of samples
  */
-public class RawExpressionDataVector extends DesignElementDataVector {
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -7410374297463625206L;
+public class RawExpressionDataVector extends BulkExpressionDataVector {
 
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
     @Override
     public int hashCode() {
-        return Objects.hash( getExpressionExperiment(), getQuantitationType(), getDesignElement(), getBioAssayDimension() );
+        return super.hashCode();
     }
 
     @Override
     public boolean equals( Object object ) {
-        if ( this == object ) {
+        if ( this == object )
             return true;
-        }
-        if ( !( object instanceof RawExpressionDataVector ) ) {
+        if ( !( object instanceof RawExpressionDataVector ) )
             return false;
-        }
-        final RawExpressionDataVector that = ( RawExpressionDataVector ) object;
-        if ( this.getId() != null && that.getId() != null ) {
-            return getId().equals( that.getId() );
-        }
-        return Objects.equals( getExpressionExperiment(), that.getExpressionExperiment() )
-                && Objects.equals( getDesignElement(), that.getDesignElement() )
-                && Objects.equals( getQuantitationType(), that.getQuantitationType() )
-                && Objects.equals( getBioAssayDimension(), that.getBioAssayDimension() );
-    }
-
-    @Override
-    public String toString() {
-        return this.getClass().getSimpleName() + ( this.getId() == null ? "" : " Id=" + this.getId() )
-                + ( this.getDesignElement() == null ? "" : " DE=" + this.getDesignElement().getName() )
-                + ( this.getQuantitationType() == null ? "" : " QT=" + this.getQuantitationType().getName() )
-                + ( this.getExpressionExperiment() == null ? ""
-                : " EE=" + this.getExpressionExperiment().getName() + ", " + this.getData().length + " bytes" );
-
+        RawExpressionDataVector other = ( RawExpressionDataVector ) object;
+        if ( getId() != null && other.getId() != null )
+            return getId().equals( other.getId() );
+        return Objects.equals( getExpressionExperiment(), other.getExpressionExperiment() )
+                && Objects.equals( getQuantitationType(), other.getQuantitationType() )
+                && Objects.equals( getDesignElement(), other.getDesignElement() );
     }
 
     public static final class Factory {

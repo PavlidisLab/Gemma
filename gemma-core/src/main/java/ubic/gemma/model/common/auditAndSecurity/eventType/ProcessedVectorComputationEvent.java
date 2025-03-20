@@ -19,17 +19,9 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * <p>
  * Computation of the "processed" expression data with the ranking (by 'expression level') information filled in, for an
  * Expression Experiment
- * </p>
  */
-public class ProcessedVectorComputationEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 3380481220417398475L;
+public class ProcessedVectorComputationEvent extends ExpressionExperimentAnalysisEvent {
 
 }

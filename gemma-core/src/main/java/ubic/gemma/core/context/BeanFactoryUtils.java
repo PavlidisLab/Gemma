@@ -1,5 +1,6 @@
 package ubic.gemma.core.context;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.beans.factory.support.AbstractBeanFactory;

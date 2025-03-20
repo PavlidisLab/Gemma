@@ -92,7 +92,7 @@ public class SignupControllerTest extends BaseWebIntegrationTest implements Init
                     assertThat( u.getUserName() ).isEqualTo( uname );
                     assertThat( u.getEmail() ).isEqualTo( email );
                     assertThat( u.getPassword() ).isEqualTo( passwordEncoder.encodePassword( password, uname ) );
-                    assertThat( u.getEnabled() ).isFalse();
+                    assertThat( u.isEnabled() ).isFalse();
                 } );
     }
 
@@ -118,7 +118,7 @@ public class SignupControllerTest extends BaseWebIntegrationTest implements Init
                     assertThat( u.getUserName() ).isEqualTo( uname );
                     assertThat( u.getEmail() ).isEqualTo( email );
                     assertThat( u.getPassword() ).isEqualTo( passwordEncoder.encodePassword( password, uname ) );
-                    assertThat( u.getEnabled() ).isFalse();
+                    assertThat( u.isEnabled() ).isFalse();
                 } );
     }
 

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,7 +22,6 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import ubic.basecode.util.NetUtils;
 import ubic.gemma.core.util.NetDatasourceUtil;
-import ubic.gemma.model.common.description.LocalFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,10 +50,8 @@ public abstract class FtpFetcher extends AbstractFetcher {
     }
 
     @Override
-    public Collection<LocalFile> fetch( String identifier ) {
-
+    public Collection<File> fetch( String identifier ) {
         String seekFile = formRemoteFilePath( identifier );
-
         return fetch( identifier, seekFile );
     }
 
@@ -76,32 +73,29 @@ public abstract class FtpFetcher extends AbstractFetcher {
 
     public abstract void setNetDataSourceUtil();
 
-    protected FutureTask<Boolean> defineTask( final String outputFileName, final String seekFile ) {
-        return new FutureTask<>( new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws IOException {
-                File existing = new File( outputFileName );
-                if ( existing.exists() && avoidDownload ) {
-                    log.info( "A local file exists, skipping download." );
-                    ftpClient.disconnect();
-                    return Boolean.TRUE;
-                } else if ( existing.exists() && allowUseExisting ) {
-                    log.info( "Checking validity of existing local file: " + outputFileName );
-                } else {
-                    log.info( "Fetching " + seekFile + " to " + outputFileName );
-                }
-                boolean status = NetUtils.ftpDownloadFile( ftpClient, seekFile, outputFileName, force );
+    protected Callable<Boolean> defineTask( final String outputFileName, final String seekFile ) {
+        return () -> {
+            File existing = new File( outputFileName );
+            if ( existing.exists() && avoidDownload ) {
+                log.info( "A local file exists, skipping download." );
                 ftpClient.disconnect();
-                return status;
+                return Boolean.TRUE;
+            } else if ( existing.exists() && allowUseExisting ) {
+                log.info( "Checking validity of existing local file: " + outputFileName );
+            } else {
+                log.info( "Fetching " + seekFile + " to " + outputFileName );
             }
-        } );
+            boolean status = NetUtils.ftpDownloadFile( ftpClient, seekFile, outputFileName, force );
+            ftpClient.disconnect();
+            return status;
+        };
     }
 
-    protected Collection<LocalFile> doTask( FutureTask<Boolean> future, long expectedSize, String seekFileName,
+    protected Collection<File> doTask( Callable<Boolean> callable, long expectedSize, String seekFileName,
             String outputFileName ) {
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute( future );
+        Future<Boolean> future = executor.submit( callable );
         executor.shutdown();
 
         try {
@@ -116,8 +110,8 @@ public abstract class FtpFetcher extends AbstractFetcher {
             } else if ( future.get() ) {
                 if ( log.isInfoEnabled() )
                     log.info( "Done: local file is " + outputFile );
-                LocalFile file = fetchedFile( seekFileName, outputFile.getAbsolutePath() );
-                Collection<LocalFile> result = new HashSet<>();
+                File file = fetchedFile( seekFileName, outputFile.getAbsolutePath() );
+                Collection<File> result = new HashSet<>();
                 result.add( file );
                 return result;
             }
@@ -133,7 +127,7 @@ public abstract class FtpFetcher extends AbstractFetcher {
         throw new RuntimeException( "Couldn't fetch file for " + seekFileName );
     }
 
-    protected Collection<LocalFile> fetch( String identifier, String seekFile ) {
+    protected Collection<File> fetch( String identifier, String seekFile ) {
         File existingFile = null;
         try {
             File newDir = mkdir( identifier );
@@ -151,7 +145,7 @@ public abstract class FtpFetcher extends AbstractFetcher {
 
             long expectedSize = getExpectedSize( seekFile );
 
-            FutureTask<Boolean> future = this.defineTask( outputFileName, seekFile );
+            Callable<Boolean> future = this.defineTask( outputFileName, seekFile );
             return this.doTask( future, expectedSize, seekFile, outputFileName );
         } catch ( UnknownHostException e ) {
             if ( force || !allowUseExisting || existingFile == null )
@@ -172,7 +166,7 @@ public abstract class FtpFetcher extends AbstractFetcher {
             if ( force || !allowUseExisting || existingFile == null ) {
                 /*
                  * Printing to log here because runtime error does not deliver message when passed through
-                 * java.util.concurrent.FutureTask (only throws InterruptedException and ExecutionException)
+                 * java.util.concurrent.Future (only throws InterruptedException and ExecutionException)
                  */
                 log.error( "Runtime exception thrown: " + e.getMessage() + ". \n Stack trace follows:", e );
                 throw new RuntimeException( "Cancelled, or couldn't fetch " + seekFile

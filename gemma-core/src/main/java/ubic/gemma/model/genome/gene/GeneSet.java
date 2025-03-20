@@ -19,9 +19,9 @@
 
 package ubic.gemma.model.genome.gene;
 
-import ubic.gemma.model.common.auditAndSecurity.SecuredNotChild;
 import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
+import ubic.gemma.model.common.auditAndSecurity.SecuredNotChild;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -103,6 +103,18 @@ public class GeneSet extends AbstractAuditable implements SecuredNotChild {
 
     public void setSourceAccession( DatabaseEntry sourceAccession ) {
         this.sourceAccession = sourceAccession;
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof GeneSet ) )
+            return false;
+        GeneSet that = ( GeneSet ) object;
+        if ( getId() != null && that.getId() != null )
+            return getId().equals( that.getId() );
+        return false;
     }
 
     public static final class Factory {

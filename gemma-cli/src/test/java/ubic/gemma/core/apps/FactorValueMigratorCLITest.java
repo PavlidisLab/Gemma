@@ -12,26 +12,27 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.transaction.PlatformTransactionManager;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.GemmaRestApiClient;
+import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueMigratorService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueMigratorServiceImpl;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
-import ubic.gemma.core.context.TestComponent;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.mockito.Mockito.*;
+import static ubic.gemma.core.util.test.Assertions.assertThat;
 
 @Deprecated
 @ContextConfiguration
 @TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class FactorValueMigratorCLITest extends AbstractJUnit4SpringContextTests {
+public class FactorValueMigratorCLITest extends BaseCliTest {
 
     @Configuration
     @TestComponent
@@ -118,9 +119,11 @@ public class FactorValueMigratorCLITest extends AbstractJUnit4SpringContextTests
     @Test
     @WithMockUser
     public void testMigrateFactorValues() throws IOException {
-        cli.executeCommand(
-                "-migrationFile", new ClassPathResource( "ubic/gemma/core/apps/factor-value-migration.tsv" ).getFile().getAbsolutePath(),
-                "-batchFormat", "suppress" );
+        assertThat( cli )
+                .withArguments(
+                        "-migrationFile", new ClassPathResource( "ubic/gemma/core/apps/factor-value-migration.tsv" ).getFile().getAbsolutePath(),
+                        "-batchFormat", "suppress" )
+                .succeeds();
         verify( factorValueService, times( 8 ) ).loadWithOldStyleCharacteristics( any(), eq( false ) );
         verify( factorValueService ).saveStatementIgnoreAcl( any(), eq( createStatement( getCategory( 1L, 1L ), "Pax6", "has_modifier", getObject( 1L, 2L ), "has_modifier", getObject( 1L, 3L ) ) ) );
         verify( factorValueService ).saveStatementIgnoreAcl( any(), eq( createStatement( "Gene", "Pax6" ) ) );

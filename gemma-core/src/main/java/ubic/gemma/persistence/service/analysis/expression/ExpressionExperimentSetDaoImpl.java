@@ -32,7 +32,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueOb
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -127,7 +127,7 @@ public class ExpressionExperimentSetDaoImpl
 
     @Override
     public List<ExpressionExperimentSetValueObject> doLoadValueObjects( Collection<ExpressionExperimentSet> entities ) {
-        return this.loadValueObjects( EntityUtils.getIds( entities ), false );
+        return this.loadValueObjects( IdentifiableUtils.getIds( entities ), false );
     }
 
     private Collection<Long> getExperimentIdsInSet( Long setId ) {
@@ -142,7 +142,7 @@ public class ExpressionExperimentSetDaoImpl
             return;
         }
 
-        Map<Long, ExpressionExperimentSetValueObject> idMap = EntityUtils.getIdMap( vo );
+        Map<Long, ExpressionExperimentSetValueObject> idMap = IdentifiableUtils.getIdMap( vo );
 
         StopWatch timer = new StopWatch();
         timer.start();

@@ -234,7 +234,7 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
             store: {
                 reader: new Ext.data.ListRangeReader({}, Gemma.GeneAndGeneGroupComboRecord),
                 proxy: new Ext.data.DWRProxy(GenePickerController.searchGenesAndGeneGroups,
-                    Gemma.genericErrorHandler),
+                    Gemma.Error.genericErrorHandler),
                 autoLoad: false
             }
         });

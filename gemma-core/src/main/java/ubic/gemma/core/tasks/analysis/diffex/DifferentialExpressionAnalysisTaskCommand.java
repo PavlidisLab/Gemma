@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.tasks.analysis.diffex;
 
-import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
+import ubic.gemma.core.analysis.expression.diff.AnalysisType;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.Task;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;

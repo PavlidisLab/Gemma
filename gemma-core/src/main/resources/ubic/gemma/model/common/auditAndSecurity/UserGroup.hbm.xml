@@ -33,7 +33,7 @@
          <key foreign-key="GROUP_AUTHORITY_GROUP_FKC">
             <column name="GROUP_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.common.auditAndSecurity.GroupAuthorityImpl"/>
+         <one-to-many class="ubic.gemma.model.common.auditAndSecurity.GroupAuthority"/>
       </set>
    </class>
 </hibernate-mapping>

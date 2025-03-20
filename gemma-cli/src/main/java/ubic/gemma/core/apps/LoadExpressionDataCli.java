@@ -26,7 +26,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
-import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -37,9 +36,8 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collection;
 
 /**
@@ -132,7 +130,7 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         if ( accessions == null && accessionFile == null ) {
             throw new IllegalArgumentException(
                     "You must specific either a file or accessions on the command line" );
@@ -176,8 +174,7 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
 
         if ( accessionFile != null ) {
             log.info( "Loading accessions from " + accessionFile );
-            InputStream is = new FileInputStream( accessionFile );
-            try ( BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
+            try ( BufferedReader br = Files.newBufferedReader( Paths.get( accessionFile ) ) ) {
 
                 String accession;
                 while ( ( accession = br.readLine() ) != null ) {
@@ -247,7 +244,11 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
 
             log.info( " ***** Starting processing of " + accession + " *****" );
             if ( updateOnly ) {
-                geoService.updateFromGEO( accession );
+                geoService.updateFromGEO( accession, GeoService.GeoUpdateConfig.builder()
+                        .experimentTags( true )
+                        .sampleCharacteristics( true )
+                        .publications( true )
+                        .build() );
                 addSuccessObject( accession, "Updated" );
                 return;
             }

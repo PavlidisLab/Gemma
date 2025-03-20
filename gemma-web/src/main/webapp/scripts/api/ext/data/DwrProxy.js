@@ -86,7 +86,7 @@ Ext.ux.data.DwrProxy = function( configOrMethod, errorHandler ) {
    if ( typeof errorHandler == 'function' ) {
       this.errorHandler = errorHandler;
    } else {
-      this.errorHandler = Gemma.genericErrorHandler;
+      this.errorHandler = Gemma.Error.genericErrorHandler;
    }
 
 };

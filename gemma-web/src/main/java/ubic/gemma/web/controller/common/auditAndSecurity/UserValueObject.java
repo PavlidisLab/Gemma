@@ -18,11 +18,11 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 
-import java.util.*;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
@@ -54,7 +54,7 @@ public class UserValueObject {
     public UserValueObject( User user ) {
         userName = user.getUserName();
         email = user.getEmail();
-        enabled = user.getEnabled();
+        enabled = user.isEnabled();
         password = user.getPassword();
         groups = user.getGroups().stream().map( UserGroup::getName ).collect( Collectors.toCollection( TreeSet::new ) );
         // FIXME: select the current group more intelligently

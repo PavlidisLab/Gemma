@@ -20,7 +20,6 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoParser;
 import ubic.gemma.core.loader.expression.AffyPowerToolsProbesetSummarize;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -57,7 +56,7 @@ public class AffyChipTypeExtractor {
      * @param files CEL files
      * @return map of bioassays to cel identifiers
      */
-    public static Map<BioAssay, String> getChipTypes( ExpressionExperiment ee, Collection<LocalFile> files ) {
+    public static Map<BioAssay, String> getChipTypes( ExpressionExperiment ee, Collection<File> files ) {
 
         Map<String, BioAssay> assayAccessions = BatchInfoParser.getAccessionToBioAssayMap( ee );
 
@@ -127,17 +126,17 @@ public class AffyChipTypeExtractor {
      * @param assayAccessions accessions
      * @return mapt od BAs to files
      */
-    private static Map<BioAssay, File> matchBioAssaysToRawDataFiles( Collection<LocalFile> files, Map<String, BioAssay> assayAccessions ) {
+    private static Map<BioAssay, File> matchBioAssaysToRawDataFiles( Collection<File> files, Map<String, BioAssay> assayAccessions ) {
 
         Map<BioAssay, File> result = new HashMap<>();
-        for ( LocalFile lf : files ) {
+        for ( File lf : files ) {
 
-            BioAssay bioAssay = AffyPowerToolsProbesetSummarize.matchBioAssayToCelFileName( assayAccessions, lf.asFile().getName() );
+            BioAssay bioAssay = AffyPowerToolsProbesetSummarize.matchBioAssayToCelFileName( assayAccessions, lf.getName() );
             if ( bioAssay == null ) {
                 continue;
             }
-            log.info( "BioAssay found for " + lf.asFile().getName() + " (" + bioAssay + ")" );
-            result.put( bioAssay, lf.asFile() );
+            log.info( "BioAssay found for " + lf.getName() + " (" + bioAssay + ")" );
+            result.put( bioAssay, lf );
         }
         return result;
 

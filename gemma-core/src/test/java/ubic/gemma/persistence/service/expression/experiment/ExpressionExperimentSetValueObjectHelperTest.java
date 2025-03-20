@@ -30,7 +30,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -101,7 +101,7 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
 
         assertEquals( 1, experimentValueObjectsInSet.size() );
 
-        eesvo.getExpressionExperimentIds().addAll( EntityUtils.getIds( experimentValueObjectsInSet ) );
+        eesvo.getExpressionExperimentIds().addAll( IdentifiableUtils.getIds( experimentValueObjectsInSet ) );
 
         // create entity from VO
         ExpressionExperimentSet remadeEE = expressionExperimentSetValueObjectHelper.convertToEntity( eesvo );

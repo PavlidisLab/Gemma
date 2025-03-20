@@ -133,7 +133,7 @@ Gemma.CytoscapeControlBar = Ext
                                  xtype : 'label',
                                  html : '&nbsp&nbsp<img ext:qtip="'
                                     + Gemma.HelpText.WidgetDefaults.CytoscapePanel.stringencySpinnerTT
-                                    + '" src="' + ctxBasePath + '/images/icons/question_blue.png"/>',
+                                    + '" src="' + Gemma.CONTEXT_PATH + '/images/icons/question_blue.png"/>',
                                  height : 15
                               },
                               ' ',
@@ -237,7 +237,7 @@ Gemma.CytoscapeControlBar = Ext
                                  xtype : 'label',
                                  html : '&nbsp&nbsp<img ext:qtip="'
                                     + Gemma.HelpText.WidgetDefaults.CytoscapePanel.nodeDegreeEmphasisTT
-                                    + '" src="' + ctxBasePath + '/images/icons/question_blue.png"/>&nbsp',
+                                    + '" src="' + Gemma.CONTEXT_PATH + '/images/icons/question_blue.png"/>&nbsp',
                                  height : 15
                               } ]
                   } );

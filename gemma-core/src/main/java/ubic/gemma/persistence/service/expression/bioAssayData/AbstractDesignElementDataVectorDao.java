@@ -25,21 +25,22 @@ import org.hibernate.metadata.ClassMetadata;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.AbstractDao;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 
-import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
+import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialUtils.visitBioMaterials;
 
 /**
  * @author pavlidis
  * @see    ubic.gemma.model.expression.bioAssayData.DesignElementDataVector
  */
-public abstract class AbstractDesignElementDataVectorDao<T extends DesignElementDataVector> extends AbstractDao<T>
+public abstract class AbstractDesignElementDataVectorDao<T extends BulkExpressionDataVector> extends AbstractDao<T>
         implements DesignElementDataVectorDao<T> {
 
     protected AbstractDesignElementDataVectorDao( Class<T> elementClass, SessionFactory sessionFactory ) {
@@ -60,75 +61,47 @@ public abstract class AbstractDesignElementDataVectorDao<T extends DesignElement
         return findByPropertyIn( "quantitationType", quantitationTypes );
     }
 
-
     @Override
-    public void thaw( Collection<T> designElementDataVectors ) {
-        if ( designElementDataVectors.isEmpty() ) {
-            return;
-        }
-
+    public void thaw( Collection<T> vectors ) {
         StopWatch timer = StopWatch.createStarted();
-        StopWatch vTimer = StopWatch.create(),
-                eeTimer = StopWatch.create(),
-                dimTimer = StopWatch.create();
-
-        // this is generally fast since vectors should be in the session already
-        vTimer.start();
-        Hibernate.initialize( designElementDataVectors );
-        vTimer.stop();
-
-        // collect all the entities to thaw
-        Set<ExpressionExperiment> ees = new HashSet<>( designElementDataVectors.size() );
-        Set<BioAssayDimension> dims = new HashSet<>( designElementDataVectors.size() );
-        for ( DesignElementDataVector vector : designElementDataVectors ) {
-            dims.add( vector.getBioAssayDimension() );
-            ees.add( vector.getExpressionExperiment() );
-        }
-
-        if ( !ees.isEmpty() ) {
-            eeTimer.start();
-            this.getSessionFactory().getCurrentSession()
-                    .createQuery( "select ee from ExpressionExperiment ee where ee in :ees" )
-                    .setParameterList( "ees", optimizeIdentifiableParameterList( ees ) )
-                    .list();
-            eeTimer.stop();
-        }
-
-        if ( !dims.isEmpty() ) {
-            dimTimer.start();
-            this.getSessionFactory().getCurrentSession().createQuery(
-                            "select distinct bad from BioAssayDimension bad "
-                                    + "left join fetch bad.bioAssays ba "
-                                    + "left join fetch ba.sampleUsed bm "
-                                    + "left join fetch ba.originalPlatform "
-                                    + "left join fetch ba.arrayDesignUsed "
-                                    + "left join fetch bm.factorValues fv "
-                                    + "left join fetch fv.experimentalFactor "
-                                    + "fetch all properties "
-                                    + "where bad in :dims" )
-                    .setParameterList( "dims", optimizeIdentifiableParameterList( dims ) )
-                    .list();
-            dimTimer.stop();
-        }
-
+        vectors.forEach( this::thaw );
         if ( timer.getTime() > 1000 ) {
-            log.warn( String.format( "Thawing %d %s took %d ms (vectors: %d ms, ee: %d ms, dims: %d ms)",
-                    designElementDataVectors.size(), getElementClass().getSimpleName(), timer.getTime(),
-                    vTimer.getTime(), eeTimer.getTime(), dimTimer.getTime() ) );
+            log.warn( String.format( "Thawing %d %s took %d ms",
+                    vectors.size(), getElementClass().getSimpleName(), timer.getTime() ) );
         }
     }
 
     @Override
-    public void thaw( T designElementDataVector ) {
-        Hibernate.initialize( designElementDataVector.getExpressionExperiment() );
-        Hibernate.initialize( designElementDataVector.getBioAssayDimension() );
-        // thaw the bioassays.
-        for ( BioAssay ba : designElementDataVector.getBioAssayDimension().getBioAssays() ) {
-            Hibernate.initialize( ba.getArrayDesignUsed() );
-            Hibernate.initialize( ba.getSampleUsed() );
-            Hibernate.initialize( ba.getSampleUsed().getFactorValues() );
+    public void thaw( T vector ) {
+        Hibernate.initialize( vector.getExpressionExperiment() );
+        thawDesignElement( vector.getDesignElement() );
+        thawBioAssayDimension( vector.getBioAssayDimension() );
+    }
+
+    private void thawDesignElement( CompositeSequence designElement ) {
+        Hibernate.initialize( designElement );
+        Hibernate.initialize( designElement.getBiologicalCharacteristic() );
+    }
+
+    private void thawBioAssayDimension( BioAssayDimension dim ) {
+        dim.getBioAssays().forEach( this::thawBioAssay );
+    }
+
+    private void thawBioAssay( BioAssay ba ) {
+        Hibernate.initialize( ba.getArrayDesignUsed() );
+        Hibernate.initialize( ba.getArrayDesignUsed().getDesignProvider() );
+        if ( ba.getOriginalPlatform() != null ) {
             Hibernate.initialize( ba.getOriginalPlatform() );
+            Hibernate.initialize( ba.getOriginalPlatform().getDesignProvider() );
         }
+        visitBioMaterials( ba.getSampleUsed(), bm -> {
+            Hibernate.initialize( bm );
+            Hibernate.initialize( bm.getFactorValues() );
+            for ( FactorValue fv : bm.getFactorValues() ) {
+                Hibernate.initialize( fv.getExperimentalFactor() );
+            }
+            Hibernate.initialize( bm.getTreatments() );
+        } );
     }
 
     @Override

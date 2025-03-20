@@ -159,6 +159,7 @@ public class ExpressionDataSVDTest {
     @Category(SlowTest.class)
     public void testMatrixReconstructB() throws Exception {
         GeoConverter gc = new GeoConverterImpl();
+        gc.setElementLimitForStrictness( 15000 );
         InputStream is = new GZIPInputStream( new ClassPathResource( "/data/loader/expression/geo/fullSizeTests/GSE1623_family.soft.txt.gz" ).getInputStream() );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );

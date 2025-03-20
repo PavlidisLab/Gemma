@@ -2,15 +2,17 @@ package ubic.gemma.core.util;
 
 import org.apache.commons.cli.Options;
 import org.junit.Test;
+import org.ocpsoft.prettytime.shade.edu.emory.mathcs.backport.java.util.Collections;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.apps.TestCli;
-import ubic.gemma.core.util.test.BaseCLIIntegrationTest;
+import ubic.gemma.core.util.test.BaseCliIntegrationTest;
 
 import javax.annotation.Nullable;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
@@ -19,7 +21,7 @@ import static org.junit.Assert.*;
  * Test various behaviours of CLIs when injected as bean.
  * @author poirigui
  */
-public class MarkCLIsAsPrototypesTest extends BaseCLIIntegrationTest {
+public class MarkCLIsAsPrototypesTest extends BaseCliIntegrationTest {
 
     @Autowired
     private BeanFactory beanFactory;
@@ -77,6 +79,11 @@ public class MarkCLIsAsPrototypesTest extends BaseCLIIntegrationTest {
             return "";
         }
 
+        @Override
+        public List<String> getCommandAliases() {
+            return Collections.emptyList();
+        }
+
         @Nullable
         @Override
         public String getShortDesc() {
@@ -99,7 +106,7 @@ public class MarkCLIsAsPrototypesTest extends BaseCLIIntegrationTest {
         }
 
         @Override
-        public int executeCommand( String... args ) {
+        public int executeCommand( CliContext ctx ) {
             return 0;
         }
     }

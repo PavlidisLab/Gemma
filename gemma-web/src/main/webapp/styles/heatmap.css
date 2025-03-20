@@ -1,0 +1,50 @@
+/* */
+
+/*
+# a single heatmap
+.heatmap
+  .heatmap-hbox
+    .heatmap-vbox
+      .heatmap-y-labels
+      .heatmap-img
+    .heatmap-x-labels
+
+# two heatmaps rendered side-by-side with a shared x-axis
+.heatmap
+  .heatmap-hbox
+    .heatmap-hbox
+      .heatmap-vbox
+        .heatmap-y-labels
+        .heatmap-img
+      .heatmap-vbox
+        .heatmap-y-labels
+        .heatmap-img
+    .heatmap-x-labels
+ */
+
+.heatmap .heatmap-hbox {
+    display: flex;
+    flex-direction: row;
+    gap: .2em;
+    align-items: end;
+}
+
+.heatmap .heatmap-vbox {
+    display: flex;
+    flex-direction: column;
+    gap: .2em;
+}
+
+.heatmap .heatmap-img {
+    image-rendering: pixelated;
+}
+
+.heatmap .heatmap-x-labels {
+    white-space: nowrap;
+}
+
+.heatmap .heatmap-y-labels {
+    white-space: nowrap;
+    writing-mode: sideways-lr;
+}
+

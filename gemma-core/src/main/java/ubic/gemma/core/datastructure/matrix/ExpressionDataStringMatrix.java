@@ -21,11 +21,10 @@ package ubic.gemma.core.datastructure.matrix;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.basecode.dataStructure.matrix.StringMatrix;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -42,14 +41,14 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
     private static final Log log = LogFactory.getLog( ExpressionDataStringMatrix.class.getName() );
     private StringMatrix<Integer, Integer> matrix;
 
-    public ExpressionDataStringMatrix( Collection<? extends DesignElementDataVector> vectors ) {
+    public ExpressionDataStringMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
         this.init();
         this.selectVectors( vectors );
         this.vectorsToMatrix( vectors );
     }
 
     @SuppressWarnings("unused")
-    public ExpressionDataStringMatrix( Collection<? extends DesignElementDataVector> dataVectors,
+    public ExpressionDataStringMatrix( Collection<? extends BulkExpressionDataVector> dataVectors,
             QuantitationType quantitationType ) {
         throw new UnsupportedOperationException();
     }
@@ -94,7 +93,7 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
     }
 
     @Override
-    public String[] getColumn( Integer index ) {
+    public String[] getColumn( int index ) {
         return this.matrix.getColumn( index );
     }
 
@@ -122,17 +121,8 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
     }
 
     @Override
-    public String[] getRow( Integer index ) {
+    public String[] getRow( int index ) {
         return matrix.getRow( index );
-    }
-
-    @Override
-    public String[][] getRows( List<CompositeSequence> designElements ) {
-        String[][] res = new String[this.rows()][];
-        for ( int i = 0; i < designElements.size(); i++ ) {
-            res[i] = this.matrix.getRow( this.getRowIndex( designElements.get( i ) ) );
-        }
-        return res;
     }
 
     @Override
@@ -158,7 +148,7 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
     }
 
     @Override
-    protected void vectorsToMatrix( Collection<? extends DesignElementDataVector> vectors ) {
+    protected void vectorsToMatrix( Collection<? extends BulkExpressionDataVector> vectors ) {
         if ( vectors == null || vectors.size() == 0 ) {
             throw new IllegalArgumentException( "No vectors!" );
         }
@@ -168,7 +158,7 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
         this.matrix = this.createMatrix( vectors, maxSize );
     }
 
-    private StringMatrix<Integer, Integer> createMatrix( Collection<? extends DesignElementDataVector> vectors,
+    private StringMatrix<Integer, Integer> createMatrix( Collection<? extends BulkExpressionDataVector> vectors,
             int maxSize ) {
 
         int numRows = this.rowDesignElementMapByInteger.keySet().size();
@@ -186,8 +176,7 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
             }
         }
 
-        ByteArrayConverter bac = new ByteArrayConverter();
-        for ( DesignElementDataVector vector : vectors ) {
+        for ( BulkExpressionDataVector vector : vectors ) {
 
             CompositeSequence designElement = vector.getDesignElement();
             assert designElement != null : "No designelement for " + vector;
@@ -197,8 +186,7 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
 
             mat.addRowName( rowIndex );
 
-            byte[] bytes = vector.getData();
-            String[] vals = bac.byteArrayToStrings( bytes );
+            String[] vals = vector.getDataAsStrings();
 
             BioAssayDimension dimension = vector.getBioAssayDimension();
             Collection<BioAssay> bioAssays = dimension.getBioAssays();

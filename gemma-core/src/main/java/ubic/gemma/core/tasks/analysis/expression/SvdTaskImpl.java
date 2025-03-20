@@ -41,7 +41,7 @@ public class SvdTaskImpl extends AbstractTask<SvdTaskCommand> implements SvdTask
         TaskResult result = new TaskResult( taskCommand, null );
 
         if ( taskCommand.getExpressionExperiment() != null ) {
-            svdService.svd( taskCommand.getExpressionExperiment().getId() );
+            svdService.svd( taskCommand.getExpressionExperiment() );
         } else {
             log.warn( "TaskCommand was not valid, nothing being done" );
         }

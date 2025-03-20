@@ -19,6 +19,7 @@
 package ubic.gemma.model.genome;
 
 import junit.framework.TestCase;
+import ubic.gemma.core.analysis.sequence.BlatAssociationScorer;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
@@ -37,7 +38,7 @@ public class BlatResultTest extends TestCase {
         brtest.setMismatches( 1 );
         brtest.setQuerySequence( BioSequence.Factory.newInstance() );
         brtest.getQuerySequence().setLength( 50L );
-        double actualReturn = brtest.score();
+        double actualReturn = BlatAssociationScorer.score( brtest );
         double expectedReturn = 47.0 / 50.0;
         TestCase.assertEquals( expectedReturn, actualReturn, 0.001 );
     }
@@ -50,7 +51,7 @@ public class BlatResultTest extends TestCase {
         brtest.setMismatches( 1 );
         brtest.setQuerySequence( BioSequence.Factory.newInstance() );
         brtest.getQuerySequence().setLength( 50L );
-        double actualReturn = brtest.score();
+        double actualReturn = BlatAssociationScorer.score( brtest );
         double expectedReturn = 47.0 / 50.0;
         TestCase.assertEquals( expectedReturn, actualReturn, 0.001 );
     }

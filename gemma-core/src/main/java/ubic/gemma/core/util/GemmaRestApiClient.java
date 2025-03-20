@@ -1,5 +1,7 @@
 package ubic.gemma.core.util;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.CredentialsContainer;
 import org.springframework.util.MultiValueMap;
 
 import java.io.IOException;
@@ -28,7 +30,7 @@ public interface GemmaRestApiClient {
     /**
      * Set credentials used for authenticating API requests.
      */
-    void setAuthentication( String username, String password );
+    void setAuthentication( Authentication authentication );
 
     /**
      * Clear any credentials.

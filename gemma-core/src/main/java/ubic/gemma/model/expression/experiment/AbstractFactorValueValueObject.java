@@ -85,7 +85,7 @@ public abstract class AbstractFactorValueValueObject extends IdentifiableValueOb
 
     protected AbstractFactorValueValueObject( FactorValue fv, boolean includeExperimentalFactor ) {
         super( fv );
-        
+
         if ( includeExperimentalFactor ) {
             this.experimentalFactorId = fv.getExperimentalFactor().getId();
             if ( Hibernate.isInitialized( fv.getExperimentalFactor() ) ) {

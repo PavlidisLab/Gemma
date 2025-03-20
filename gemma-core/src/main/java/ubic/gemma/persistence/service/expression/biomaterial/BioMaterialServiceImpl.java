@@ -36,13 +36,16 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorDao;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueDao;
+import ubic.gemma.persistence.util.Thaws;
 
 import java.util.*;
+
+import static ubic.gemma.persistence.util.Thaws.thawBioMaterial;
 
 /**
  * @author pavlidis
  * @author keshav
- * @see    BioMaterialService
+ * @see BioMaterialService
  */
 @Service
 public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial, BioMaterialValueObject>
@@ -52,17 +55,17 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     private final FactorValueDao factorValueDao;
     private final BioAssayDao bioAssayDao;
     private final ExperimentalFactorDao experimentalFactorDao;
-    @Autowired
-    private CharacteristicService characteristicService;
+    private final CharacteristicService characteristicService;
 
     @Autowired
     public BioMaterialServiceImpl( BioMaterialDao bioMaterialDao, FactorValueDao factorValueDao,
-            BioAssayDao bioAssayDao, ExperimentalFactorDao experimentalFactorDao ) {
+            BioAssayDao bioAssayDao, ExperimentalFactorDao experimentalFactorDao, CharacteristicService characteristicService ) {
         super( bioMaterialDao );
         this.bioMaterialDao = bioMaterialDao;
         this.factorValueDao = factorValueDao;
         this.bioAssayDao = bioAssayDao;
         this.experimentalFactorDao = experimentalFactorDao;
+        this.characteristicService = characteristicService;
     }
 
     @Override
@@ -73,21 +76,46 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<BioMaterial> findSubBioMaterials( BioMaterial bioMaterial, boolean direct ) {
+        return bioMaterialDao.findSubBioMaterials( bioMaterial, direct );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<BioMaterial> findSiblings( BioMaterial bioMaterial ) {
+        if ( bioMaterial.getSourceBioMaterial() == null ) {
+            return Collections.emptySet();
+        }
+        Collection<BioMaterial> siblings = findSubBioMaterials( bioMaterial.getSourceBioMaterial(), true );
+        siblings.remove( bioMaterial );
+        return siblings;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment ) {
         return this.bioMaterialDao.findByExperiment( experiment );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionExperiment getExpressionExperiment( Long id ) {
-        return this.bioMaterialDao.getExpressionExperiment( id );
+    public Collection<BioMaterial> findByFactor( ExperimentalFactor experimentalFactor ) {
+        return this.bioMaterialDao.findByFactor( experimentalFactor );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<BioMaterial, Map<BioAssay, ExpressionExperiment>> getExpressionExperiments( BioMaterial bm ) {
+        // source biomaterials need to be visited, so this must be in the session
+        bm = ensureInSession( bm );
+        return this.bioMaterialDao.getExpressionExperiments( bm );
     }
 
     @Override
     @Transactional(readOnly = true)
     public BioMaterial thaw( BioMaterial bioMaterial ) {
         bioMaterial = ensureInSession( bioMaterial );
-        this.bioMaterialDao.thaw( bioMaterial );
+        thawBioMaterial( bioMaterial );
         return bioMaterial;
     }
 
@@ -95,7 +123,7 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     @Transactional(readOnly = true)
     public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials ) {
         bioMaterials = ensureInSession( bioMaterials );
-        bioMaterials.forEach( this.bioMaterialDao::thaw );
+        bioMaterials.forEach( Thaws::thawBioMaterial );
         return bioMaterials;
     }
 
@@ -196,6 +224,7 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
     }
 
     @Override
+    @Transactional
     public void removeCharacteristic( BioMaterial bm, Characteristic characterId ) {
         Assert.notNull( characterId.getId(), "The characteristic must be persistent." );
         if ( !bm.getCharacteristics().remove( characterId ) ) {

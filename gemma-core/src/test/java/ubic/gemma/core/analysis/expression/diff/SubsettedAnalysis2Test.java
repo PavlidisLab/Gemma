@@ -20,6 +20,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
+import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -62,6 +64,9 @@ public class SubsettedAnalysis2Test extends AbstractGeoServiceTest {
     @Autowired
     private GeoService geoService;
 
+    @Autowired
+    private ExpressionDataMatrixService expressionDataMatrixService;
+
     @Before
     public void setUp() throws Exception {
 
@@ -76,7 +81,7 @@ public class SubsettedAnalysis2Test extends AbstractGeoServiceTest {
 
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thaw( ee );
 
         Collection<ExperimentalFactor> toremove = new HashSet<>( ee.getExperimentalDesign().getExperimentalFactors() );
         for ( ExperimentalFactor ef : toremove ) {
@@ -85,7 +90,7 @@ public class SubsettedAnalysis2Test extends AbstractGeoServiceTest {
 
         expressionExperimentService.update( ee );
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( ee );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
 
         ee = expressionExperimentService.thaw( ee );
 
@@ -104,7 +109,7 @@ public class SubsettedAnalysis2Test extends AbstractGeoServiceTest {
     @Category(SlowTest.class)
     public void test() {
 
-        ee = expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thaw( ee );
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 
         assertEquals( 4, factors.size() ); // includes batch
@@ -140,7 +145,8 @@ public class SubsettedAnalysis2Test extends AbstractGeoServiceTest {
 
         config.setSubsetFactor( strainOrLine );
 
-        Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, config );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
+        Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, dmatrix, config );
         assertEquals( 2, result.size() ); // two subsets
 
     }

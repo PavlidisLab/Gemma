@@ -2,13 +2,14 @@ package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.CLI;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
 
@@ -17,10 +18,10 @@ import java.util.*;
  */
 public class ExperimentalDesignViewCli extends AbstractAuthenticatedCLI {
 
-    @Override
-    public CommandGroup getCommandGroup() {
-        return CLI.CommandGroup.ANALYSIS;
-    }
+    @Autowired
+    private ExperimentalDesignService eds;
+    @Autowired
+    private ExpressionExperimentService ees;
 
     @Override
     public String getCommandName() {
@@ -33,6 +34,11 @@ public class ExperimentalDesignViewCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.ANALYSIS;
+    }
+
+    @Override
     protected void buildOptions( Options options ) {
     }
 
@@ -42,12 +48,9 @@ public class ExperimentalDesignViewCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
-        ExperimentalDesignService eds = getBean( ExperimentalDesignService.class );
-
-        ExpressionExperimentService ees = getBean( ExpressionExperimentService.class );
+    protected void doAuthenticatedWork() throws Exception {
         Collection<ExpressionExperimentValueObject> experiments = ees.loadValueObjectsByIds(
-                EntityUtils.getIds( ees.loadAll() ) );
+                IdentifiableUtils.getIds( ees.loadAll() ) );
 
         Map<Long, ExpressionExperimentValueObject> ed2ee = new HashMap<>();
 
@@ -82,7 +85,7 @@ public class ExperimentalDesignViewCli extends AbstractAuthenticatedCLI {
                 for ( FactorValue f : factor.getFactorValues() ) {
                     if ( f.getMeasurement() != null ) continue; // don't list individual quantitative values.
 
-                    if ( f.getCharacteristics().size() > 0 ) {
+                    if ( !f.getCharacteristics().isEmpty() ) {
                         for ( Characteristic c : f.getCharacteristics() ) {
                             if ( Objects.equals( c.getCategory(), category ) ) {
 

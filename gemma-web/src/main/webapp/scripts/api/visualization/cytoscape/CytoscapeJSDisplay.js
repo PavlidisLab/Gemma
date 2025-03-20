@@ -110,7 +110,7 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
          this.applyDefaultGraphStyle();
          this.applyGeneListOverlay();
       } catch (err) {
-         Gemma.genericErrorHandler( err );
+         Gemma.Error.genericErrorHandler( err );
       }
    },
 

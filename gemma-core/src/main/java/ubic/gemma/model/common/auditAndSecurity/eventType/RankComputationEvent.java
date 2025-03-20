@@ -19,16 +19,9 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * <p>
  * For backwards compatibility only.
- * </p>
  */
-public class RankComputationEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 7396366160834308993L;
+@Deprecated
+public class RankComputationEvent extends ProcessedVectorComputationEvent {
 
 }

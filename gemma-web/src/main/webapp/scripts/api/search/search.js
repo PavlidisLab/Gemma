@@ -5,7 +5,7 @@
  *
  */
 Ext.namespace( "Gemma.Search" );
-Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
+Ext.BLANK_IMAGE_URL = Gemma.CONTEXT_PATH + '/images/default/s.gif';
 
 Gemma.Search.SEARCH_RESULT_CLASS_METAS = {
    "ArrayDesign" : {title : "Platform", sortBy : "shortName"},
@@ -57,13 +57,13 @@ Gemma.Search.GeneralSearch = Ext.extend( Ext.Panel, {
 
       this.messagePanel = new Ext.Panel( {
          xtype : 'panel',
-         tpl : '<tpl if="msg != \'\'"><img src="' + ctxBasePath + '/images/icons/warning.png"/>{msg}</tpl>',
+         tpl : '<tpl if="msg != \'\'"><img src="' + Gemma.CONTEXT_PATH + '/images/icons/warning.png"/>{msg}</tpl>',
          border : false,
          flex : 1
       } );
       this.bookmarkPanel = new Ext.Panel( {
          xtype : 'panel',
-         tpl : '<a href="' + ctxBasePath + '/searcher.html?query={escapedQuery}{scopes}">Bookmarkable link</a>',
+         tpl : '<a href="' + Gemma.CONTEXT_PATH + '/searcher.html?query={escapedQuery}{scopes}">Bookmarkable link</a>',
          border : false,
          flex : 0,
          height : 25,
@@ -204,7 +204,7 @@ Gemma.Search.GeneralSearch = Ext.extend( Ext.Panel, {
       } );
 
       if ( typeof pageTracker !== 'undefined' ) {
-         pageTracker._trackPageview( ctxBasePath + "/searcher.search?query=" + escape( query ) + scopes );
+         pageTracker._trackPageview( Gemma.CONTEXT_PATH + "/searcher.search?query=" + escape( query ) + scopes );
       }
       this.messagePanel.update( {
          msg : ""
@@ -757,7 +757,7 @@ Gemma.SearchGrid = Ext.extend( Ext.grid.GridPanel, {
       this.fireEvent( "loadError", message );
       Ext.DomHelper.overwrite( 'messages', {
          tag : 'img',
-         src : ctxBasePath + '/images/icons/warning.png'
+         src : Gemma.CONTEXT_PATH + '/images/icons/warning.png'
       } );
       Ext.DomHelper.append( 'messages', {
          tag : 'span',
@@ -794,14 +794,14 @@ Gemma.SearchGrid = Ext.extend( Ext.grid.GridPanel, {
             + (data.sourceExperiment ? data.sourceExperiment : data.id) + "\">" + data.shortName + "</a> - "
             + data.name;
       } else if ( clazz === "CompositeSequence" ) {
-         return "<a href='" + ctxBasePath + "/compositeSequence/show.html?id=" + data.id + "'>" + data.name + "</a> - "
+         return "<a href='" + Gemma.CONTEXT_PATH + "/compositeSequence/show.html?id=" + data.id + "'>" + data.name + "</a> - "
             + (data.description ? data.description : "")
             + (data.arrayDesign ? "; Platform: " + data.arrayDesign.shortName : '');
       } else if ( clazz === "ArrayDesign" ) {
-         return "<a href='" + ctxBasePath + "/arrays/showArrayDesign.html?id=" + data.id + "'>" + data.shortName + "</a>  "
+         return "<a href='" + Gemma.CONTEXT_PATH + "/arrays/showArrayDesign.html?id=" + data.id + "'>" + data.shortName + "</a>  "
             + data.name;
       } else if ( clazz === "BioSequence" ) {
-         return "<a href='" + ctxBasePath + "/genome/bioSequence/showBioSequence.html?id=" + data.id + "'>" + data.name
+         return "<a href='" + Gemma.CONTEXT_PATH + "/genome/bioSequence/showBioSequence.html?id=" + data.id + "'>" + data.name
             + "</a> - " + data.taxon.commonName + " " + (data.description ? data.description : "");
       } else if ( clazz === "Gene" ) {
          return "<a href=\"" + Gemma.LinkRoots.genePage + data.id + "\">" + data.officialSymbol

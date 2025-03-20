@@ -20,23 +20,23 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Criteria;
-import org.hibernate.FlushMode;
-import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.Assert;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.List;
+
+import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
 
 /**
  * <p>
@@ -55,91 +55,61 @@ public class BioAssayDimensionDaoImpl extends AbstractVoEnabledDao<BioAssayDimen
         super( BioAssayDimension.class, sessionFactory );
     }
 
+    /**
+     * Find a BioAssayDimension with the exact same list of BioAssays, name and description.
+     */
     @Override
     public BioAssayDimension find( BioAssayDimension bioAssayDimension ) {
-
-        if ( bioAssayDimension == null || bioAssayDimension.getBioAssays() == null )
-            throw new IllegalArgumentException();
-
-        if ( bioAssayDimension.getBioAssays().isEmpty() ) {
-            throw new IllegalArgumentException( "BioAssayDimension had no BioAssays" );
+        BioAssayDimension found = super.find( bioAssayDimension );
+        if ( found != null ) {
+            return found;
         }
 
-        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( BioAssayDimension.class );
-        queryObject.setReadOnly( true );
-        queryObject.setFlushMode( FlushMode.MANUAL );
-        if ( StringUtils.isNotBlank( bioAssayDimension.getName() ) ) {
-            queryObject.add( Restrictions.eq( "name", bioAssayDimension.getName() ) );
-        }
-
-        if ( StringUtils.isNotBlank( bioAssayDimension.getDescription() ) ) {
-            queryObject.add( Restrictions.eq( "description", bioAssayDimension.getDescription() ) );
-        }
-
-        queryObject.add( Restrictions.sizeEq( "bioAssays", bioAssayDimension.getBioAssays().size() ) );
-
-        Collection<String> names = new HashSet<>();
+        Collection<Long> bioAssayIds = new HashSet<>();
         for ( BioAssay bioAssay : bioAssayDimension.getBioAssays() ) {
-            names.add( bioAssay.getName() );
+            Assert.notNull( bioAssay.getId(), "Cannot find a BioAssayDimension with a non-persistent BioAssay." );
+            bioAssayIds.add( bioAssay.getId() );
         }
-        queryObject.createCriteria( "bioAssays" ).add( Restrictions.in( "name", names ) );
-        queryObject.setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY );
-        BioAssayDimension candidate = ( BioAssayDimension ) queryObject.uniqueResult();
 
-        if ( candidate == null )
-            return null;
+        Criteria queryObject = this.getSessionFactory().getCurrentSession()
+                .createCriteria( BioAssayDimension.class );
+
+        // same size and set of IDs, this is not guaranteeing the order though
+        queryObject.add( Restrictions.sizeEq( "bioAssays", bioAssayDimension.getBioAssays().size() ) );
+        if ( !bioAssayIds.isEmpty() ) {
+            queryObject.createCriteria( "bioAssays" )
+                    .add( Restrictions.in( "id", bioAssayIds ) )
+                    .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY );
+        }
+
+        //noinspection unchecked
+        List<BioAssayDimension> candidates = ( List<BioAssayDimension> ) queryObject.list();
 
         // Now check that the bioassays and order are exactly the same.
-        Collection<BioAssay> desiredBioAssays = bioAssayDimension.getBioAssays();
-        Collection<BioAssay> candidateBioAssays = candidate.getBioAssays();
-
-        assert desiredBioAssays.size() == candidateBioAssays.size();
-
-        Iterator<BioAssay> dit = desiredBioAssays.iterator();
-        Iterator<BioAssay> cit = candidateBioAssays.iterator();
-
-        while ( dit.hasNext() ) {
-            BioAssay d = dit.next();
-            BioAssay c = cit.next();
-            if ( !c.equals( d ) )
-                return null;
-        }
-
-        return candidate;
-
-    }
-
-    @Override
-    public void thawLite( final BioAssayDimension bioAssayDimension ) {
-        Hibernate.initialize( bioAssayDimension );
-        Hibernate.initialize( bioAssayDimension.getBioAssays() );
-    }
-
-    @Override
-    public void thaw( final BioAssayDimension bioAssayDimension ) {
-        Hibernate.initialize( bioAssayDimension );
-        Hibernate.initialize( bioAssayDimension.getBioAssays() );
-
-        for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
-            if ( ba != null ) {
-                Hibernate.initialize( ba );
-                Hibernate.initialize( ba.getSampleUsed() );
-                Hibernate.initialize( ba.getArrayDesignUsed() );
-                Hibernate.initialize( ba.getOriginalPlatform() );
-                BioMaterial bm = ba.getSampleUsed();
-                Hibernate.initialize( bm );
-                Hibernate.initialize( bm.getBioAssaysUsedIn() );
-                Hibernate.initialize( bm.getFactorValues() );
-                for ( FactorValue fv : bm.getFactorValues() ) {
-                    Hibernate.initialize( fv.getExperimentalFactor() );
-                }
+        for ( BioAssayDimension candidate : candidates ) {
+            if ( candidate.getBioAssays().equals( bioAssayDimension.getBioAssays() ) ) {
+                return candidate;
             }
         }
+
+        return null;
+    }
+
+    @Override
+    public Collection<BioAssayDimension> findByBioAssaysContainingAll( Collection<BioAssay> bioAssays ) {
+        if ( bioAssays.isEmpty() ) {
+            return Collections.emptySet();
+        }
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select bad from BioAssayDimension bad join bad.bioAssays ba where ba in :bas group by bad having count(ba) = :numBas" )
+                .setParameterList( "bas", optimizeIdentifiableParameterList( bioAssays ) )
+                .setParameter( "numBas", bioAssays.stream().distinct().count() )
+                .list();
     }
 
     @Override
     protected BioAssayDimensionValueObject doLoadValueObject( BioAssayDimension entity ) {
         return new BioAssayDimensionValueObject( entity );
     }
-
 }

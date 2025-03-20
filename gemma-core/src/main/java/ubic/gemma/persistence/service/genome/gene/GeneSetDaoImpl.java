@@ -91,7 +91,9 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
     @Override
     public DatabaseBackedGeneSetValueObject loadValueObjectById( Long id ) {
         DatabaseBackedGeneSetValueObject vo = loadValueObjectByIdLite( id );
-        fillGeneIds( Collections.singletonList( vo ) );
+        if ( vo != null ) {
+            fillGeneIds( Collections.singletonList( vo ) );
+        }
         return vo;
     }
 

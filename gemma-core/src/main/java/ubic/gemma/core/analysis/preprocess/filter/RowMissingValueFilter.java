@@ -99,7 +99,7 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
                 if ( absentPresentRow >= 0 ) {
                     callIsPresent = absentPresentCalls.get( absentPresentRow, j );
                 }
-                if ( !Double.isNaN( data.get( i, j ) ) && callIsPresent ) {
+                if ( !Double.isNaN( data.getAsDouble( i, j ) ) && callIsPresent ) {
                     presentCount++;
                 }
             }

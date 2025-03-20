@@ -15,7 +15,6 @@
 package ubic.gemma.model.expression.experiment;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.auditAndSecurity.SecuredNotChild;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
@@ -28,10 +27,12 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.genome.Taxon;
 
 import javax.annotation.Nullable;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -48,6 +49,9 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     }
 
     private static final long serialVersionUID = -1342753625018841735L;
+
+    public static final int MAX_NAME_LENGTH = 255;
+
     /**
      * Type of batch effect detected or corrected for. See {@link BatchEffectType} enum for possible values.
      */
@@ -65,12 +69,17 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     @Nullable
     private String batchConfound;
     private CurationDetails curationDetails = new CurationDetails();
+    @Nullable
     private ExperimentalDesign experimentalDesign;
+    @Nullable
     private Geeq geeq;
+    @Nullable
     private MeanVarianceRelation meanVarianceRelation;
+    @Nullable
     private String metadata;
     private Integer numberOfDataVectors = 0;
     private Integer numberOfSamples = 0;
+    @Nullable
     private Taxon taxon;
 
     /**
@@ -90,38 +99,16 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
      * If this experiment was split off of a larger experiment, link to its relatives.
      */
     private Set<ExpressionExperiment> otherParts = new HashSet<>();
-    private Set<ProcessedExpressionDataVector> processedExpressionDataVectors = new HashSet<>();
     private Set<QuantitationType> quantitationTypes = new HashSet<>();
+
+    private Set<SingleCellExpressionDataVector> singleCellExpressionDataVectors = new HashSet<>();
     private Set<RawExpressionDataVector> rawExpressionDataVectors = new HashSet<>();
+    private Set<ProcessedExpressionDataVector> processedExpressionDataVectors = new HashSet<>();
     private String shortName;
 
     private String source;
 
     private Set<Characteristic> allCharacteristics;
-
-    @Override
-    public ExpressionExperimentValueObject createValueObject() {
-        return new ExpressionExperimentValueObject( this );
-    }
-
-    @SuppressWarnings("EqualsWhichDoesntCheckParameterClass") // It does check, just not the classic way.
-    @Override
-    public boolean equals( Object object ) {
-        if ( object == null )
-            return false;
-        Class<?> thisClass = HibernateProxyHelper.getClassWithoutInitializingProxy( this );
-        Class<?> thatClass = HibernateProxyHelper.getClassWithoutInitializingProxy( object );
-        if ( !thisClass.equals( thatClass ) )
-            return false;
-
-        ExpressionExperiment that = ( ExpressionExperiment ) object;
-        if ( this.getId() != null && that.getId() != null ) {
-            return this.getId().equals( that.getId() );
-        } else if ( this.getShortName() != null && that.getShortName() != null ) {
-            return this.getShortName().equals( that.getShortName() );
-        }
-        return false;
-    }
 
     @Override
     @DocumentId
@@ -172,14 +159,17 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         return super.getCharacteristics();
     }
 
+    @Nullable
     public String getBatchConfound() {
         return batchConfound;
     }
 
+    @Nullable
     public BatchEffectType getBatchEffect() {
         return batchEffect;
     }
 
+    @Nullable
     public String getBatchEffectStatistics() {
         return batchEffectStatistics;
     }
@@ -189,20 +179,23 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         return this.curationDetails;
     }
 
+    @Nullable
     @IndexedEmbedded
     public ExperimentalDesign getExperimentalDesign() {
         return this.experimentalDesign;
     }
 
-    @SuppressWarnings("unused")
+    @Nullable
     public Geeq getGeeq() {
         return geeq;
     }
 
+    @Nullable
     public MeanVarianceRelation getMeanVarianceRelation() {
         return this.meanVarianceRelation;
     }
 
+    @Nullable
     public String getMetadata() {
         return metadata;
     }
@@ -224,6 +217,10 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
 
     public Set<QuantitationType> getQuantitationTypes() {
         return this.quantitationTypes;
+    }
+
+    public Set<SingleCellExpressionDataVector> getSingleCellExpressionDataVectors() {
+        return singleCellExpressionDataVectors;
     }
 
     public Set<RawExpressionDataVector> getRawExpressionDataVectors() {
@@ -257,26 +254,15 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         return allCharacteristics;
     }
 
-    @Override
-    public int hashCode() {
-        int result = 1;
-        if ( this.getId() != null ) {
-            return this.getId().hashCode();
-        } else if ( this.getShortName() != null ) {
-            return this.getShortName().hashCode();
-        }
-        return result;
-    }
-
-    public void setBatchConfound( String batchConfound ) { // FIXME don't use a string for this
+    public void setBatchConfound( @Nullable String batchConfound ) { // FIXME don't use a string for this
         this.batchConfound = batchConfound;
     }
 
-    public void setBatchEffect( BatchEffectType batchEffect ) { // FIXME don't use a string for this
+    public void setBatchEffect( @Nullable BatchEffectType batchEffect ) { // FIXME don't use a string for this
         this.batchEffect = batchEffect;
     }
 
-    public void setBatchEffectStatistics( String batchEffectStatistics ) {
+    public void setBatchEffectStatistics( @Nullable String batchEffectStatistics ) {
         this.batchEffectStatistics = batchEffectStatistics;
     }
 
@@ -285,20 +271,19 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         this.curationDetails = curationDetails;
     }
 
-    public void setExperimentalDesign( ExperimentalDesign experimentalDesign ) {
+    public void setExperimentalDesign( @Nullable ExperimentalDesign experimentalDesign ) {
         this.experimentalDesign = experimentalDesign;
     }
 
-    @SuppressWarnings("unused")
-    public void setGeeq( Geeq geeq ) {
+    public void setGeeq( @Nullable Geeq geeq ) {
         this.geeq = geeq;
     }
 
-    public void setMeanVarianceRelation( MeanVarianceRelation meanVarianceRelation ) {
+    public void setMeanVarianceRelation( @Nullable MeanVarianceRelation meanVarianceRelation ) {
         this.meanVarianceRelation = meanVarianceRelation;
     }
 
-    public void setMetadata( String metadata ) {
+    public void setMetadata( @Nullable String metadata ) {
         this.metadata = metadata;
     }
 
@@ -319,6 +304,10 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         this.quantitationTypes = quantitationTypes;
     }
 
+    public void setSingleCellExpressionDataVectors( Set<SingleCellExpressionDataVector> singleCellExpressionDataVectors ) {
+        this.singleCellExpressionDataVectors = singleCellExpressionDataVectors;
+    }
+
     public void setRawExpressionDataVectors( Set<RawExpressionDataVector> rawExpressionDataVectors ) {
         this.rawExpressionDataVectors = rawExpressionDataVectors;
     }
@@ -337,22 +326,44 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     }
 
     /**
-     * This is a denormalization to speed up queries. For the definitive taxon, look at the bioAssays -{@literal >}
-     * sampleUsed -{@literal >} sourceTaxon
-     *
-     * @return the associated taxon
+     * Taxon of this dataset.
+     * <p>
+     * This is a denormalization to speed up queries. For the definitive taxon, look at the
+     * {@code bioAssays.sampleUsed.sourceTaxon}. It's possible that more than one distinct taxa can be found that way
+     * such experiments should eventually be split by taxon.
      */
+    @Nullable
     public Taxon getTaxon() {
         return taxon;
     }
 
-    public void setTaxon( Taxon taxon ) {
+    public void setTaxon( @Nullable Taxon taxon ) {
         this.taxon = taxon;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash( getShortName() );
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof ExpressionExperiment ) )
+            return false;
+        ExpressionExperiment that = ( ExpressionExperiment ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return this.getId().equals( that.getId() );
+        } else if ( this.getShortName() != null && that.getShortName() != null ) {
+            return this.getShortName().equals( that.getShortName() );
+        } else {
+            return false;
+        }
     }
 
     @Override
     public String toString() {
         return super.toString() + ( shortName != null ? " Short Name=" + shortName : "" );
     }
-
 }

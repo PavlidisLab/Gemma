@@ -60,8 +60,19 @@ public interface ExperimentalDesignService extends BaseService<ExperimentalDesig
      * @param experimentalDesign experimental design
      * @return experiment the given design belongs to
      */
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment getExpressionExperiment( ExperimentalDesign experimentalDesign );
+
+    /**
+     * Gets the expression experiment for the specified experimental design object
+     *
+     * @param experimentalDesignId experimental design ID
+     * @return experiment the given design belongs to
+     */
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    ExpressionExperiment getExpressionExperimentById( Long experimentalDesignId );
 
     /**
      * Obtain a random experimental design that needs attention.

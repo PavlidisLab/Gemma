@@ -25,14 +25,14 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixRowElement;
+import ubic.gemma.core.datastructure.matrix.TwoChannelExpressionDataMatrixBuilder;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -43,6 +43,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -103,15 +104,15 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
     @Override
     @Transactional
     public Collection<RawExpressionDataVector> computeMissingValues( ExpressionExperiment ee,
-            double signalToNoiseThreshold, Collection<Double> extraMissingValueIndicators ) {
+            double signalToNoiseThreshold, @Nullable Collection<Double> extraMissingValueIndicators ) {
 
         ee = expressionExperimentService.thawLite( ee );
-        Collection<QuantitationType> usefulQuantitationTypes = ExpressionDataMatrixBuilder
+        Collection<QuantitationType> usefulQuantitationTypes = TwoChannelExpressionDataMatrixBuilder
                 .getUsefulQuantitationTypes( ee );
 
         // check that we don't already have a missing value QT
         for ( QuantitationType qt : usefulQuantitationTypes ) {
-            if ( StandardQuantitationType.PRESENTABSENT.equals(qt.getType()) ) {
+            if ( StandardQuantitationType.PRESENTABSENT.equals( qt.getType() ) ) {
                 log.warn( "This experiment already has a missing value quantitation type, no action will be taken and empty collection returned" );
                 return new HashSet<>();
             }
@@ -132,10 +133,10 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         timer.stop();
         this.logTimeInfo( timer, procVectors.size() + rawVectors.size() );
 
-        Collection<? extends DesignElementDataVector> builderVectors = new HashSet<>(
+        Collection<? extends BulkExpressionDataVector> builderVectors = new HashSet<>(
                 rawVectors.isEmpty() ? procVectors : rawVectors );
 
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( builderVectors );
+        TwoChannelExpressionDataMatrixBuilder builder = new TwoChannelExpressionDataMatrixBuilder( builderVectors );
         Collection<BioAssayDimension> dims = builder.getBioAssayDimensions();
 
         /*
@@ -144,7 +145,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
          */
         TwoChannelMissingValuesImpl.log.info( "Study has " + dims.size() + " bioassaydimensions" );
 
-        if ( extraMissingValueIndicators != null && extraMissingValueIndicators.size() > 0 ) {
+        if ( extraMissingValueIndicators != null && !extraMissingValueIndicators.isEmpty() ) {
             TwoChannelMissingValuesImpl.log.info( "There are " + extraMissingValueIndicators.size()
                     + " manually-set missing value indicators" );
         }
@@ -214,10 +215,10 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
      * biomaterial dimension represented in the inputs.
      */
     private Collection<RawExpressionDataVector> computeMissingValues( ExpressionExperiment source,
-            ExpressionDataDoubleMatrix preferred, ExpressionDataDoubleMatrix signalChannelA,
-            ExpressionDataDoubleMatrix signalChannelB, ExpressionDataDoubleMatrix bkgChannelA,
-            ExpressionDataDoubleMatrix bkgChannelB, double signalToNoiseThreshold,
-            Collection<Double> extraMissingValueIndicators ) {
+            ExpressionDataDoubleMatrix preferred, @Nullable ExpressionDataDoubleMatrix signalChannelA,
+            @Nullable ExpressionDataDoubleMatrix signalChannelB, @Nullable ExpressionDataDoubleMatrix bkgChannelA,
+            @Nullable ExpressionDataDoubleMatrix bkgChannelB, double signalToNoiseThreshold,
+            @Nullable Collection<Double> extraMissingValueIndicators ) {
 
         boolean okToProceed = this.validate( preferred, signalChannelA, signalChannelB, bkgChannelA, bkgChannelB,
                 signalToNoiseThreshold );
@@ -228,11 +229,13 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
             return results;
         }
 
-        ByteArrayConverter converter = new ByteArrayConverter();
-
         int count = 0;
 
         ExpressionDataDoubleMatrix baseChannel = signalChannelA == null ? signalChannelB : signalChannelA;
+
+        if ( baseChannel == null ) {
+            throw new IllegalArgumentException( "At least one signal channel must be provided." );
+        }
 
         Double signalThreshold = Double.NaN;
         if ( bkgChannelA == null && bkgChannelB == null ) {
@@ -242,7 +245,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         source.getQuantitationTypes().add( present );
         for ( ExpressionDataMatrixRowElement element : baseChannel.getRowElements() ) {
             count = this.examineVector( source, preferred, signalChannelA, signalChannelB, bkgChannelA, bkgChannelB,
-                    signalToNoiseThreshold, extraMissingValueIndicators, results, converter, count, baseChannel,
+                    signalToNoiseThreshold, extraMissingValueIndicators, results, count, baseChannel,
                     signalThreshold, present, element );
 
         }
@@ -260,10 +263,10 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
     }
 
     private int examineVector( ExpressionExperiment source, ExpressionDataDoubleMatrix preferred,
-            ExpressionDataDoubleMatrix signalChannelA, ExpressionDataDoubleMatrix signalChannelB,
-            ExpressionDataDoubleMatrix bkgChannelA, ExpressionDataDoubleMatrix bkgChannelB,
-            double signalToNoiseThreshold, Collection<Double> extraMissingValueIndicators,
-            Collection<RawExpressionDataVector> results, ByteArrayConverter converter, int count,
+            @Nullable ExpressionDataDoubleMatrix signalChannelA, @Nullable ExpressionDataDoubleMatrix signalChannelB,
+            @Nullable ExpressionDataDoubleMatrix bkgChannelA, @Nullable ExpressionDataDoubleMatrix bkgChannelB,
+            double signalToNoiseThreshold, @Nullable Collection<Double> extraMissingValueIndicators,
+            Collection<RawExpressionDataVector> results, int count,
             ExpressionDataDoubleMatrix baseChannel, Double signalThreshold, QuantitationType present,
             ExpressionDataMatrixRowElement element ) {
         CompositeSequence designElement = element.getDesignElement();
@@ -272,31 +275,30 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         vect.setQuantitationType( present );
         vect.setExpressionExperiment( source );
         vect.setDesignElement( designElement );
-        assert baseChannel != null;
         vect.setBioAssayDimension( baseChannel.getBioAssayDimension( designElement ) );
 
         int numCols = preferred.columns( designElement );
 
         Boolean[] detectionCalls = new Boolean[numCols];
-        Double[] prefRow = preferred.getRow( designElement );
+        double[] prefRow = preferred.getRowAsDoubles( designElement );
 
-        Double[] signalA = null;
+        double[] signalA = null;
         if ( signalChannelA != null ) {
-            signalA = signalChannelA.getRow( designElement );
+            signalA = signalChannelA.getRowAsDoubles( designElement );
         }
 
-        Double[] signalB = null;
+        double[] signalB = null;
         if ( signalChannelB != null ) {
-            signalB = signalChannelB.getRow( designElement );
+            signalB = signalChannelB.getRowAsDoubles( designElement );
         }
-        Double[] bkgA = null;
-        Double[] bkgB = null;
+        double[] bkgA = null;
+        double[] bkgB = null;
 
         if ( bkgChannelA != null )
-            bkgA = bkgChannelA.getRow( designElement );
+            bkgA = bkgChannelA.getRowAsDoubles( designElement );
 
         if ( bkgChannelB != null )
-            bkgB = bkgChannelB.getRow( designElement );
+            bkgB = bkgChannelB.getRowAsDoubles( designElement );
 
         // columns only for this design element!
         boolean gaps = false; // we use this to track
@@ -305,16 +307,16 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
             if ( this.checkMissingValue( extraMissingValueIndicators, detectionCalls, prefRow, col ) )
                 continue;
 
-            Double bkgAV = Double.NaN;
-            Double bkgBV = Double.NaN;
+            double bkgAV = Double.NaN;
+            double bkgBV = Double.NaN;
 
             if ( bkgA != null )
                 bkgAV = bkgA[col];
             if ( bkgB != null )
                 bkgBV = bkgB[col];
 
-            Double sigAV = ( signalA == null || signalA[col] == null ) ? Double.NaN : signalA[col];
-            Double sigBV = ( signalB == null || signalB[col] == null ) ? Double.NaN : signalB[col];
+            double sigAV = signalA == null ? Double.NaN : signalA[col];
+            double sigBV = signalB == null ? Double.NaN : signalB[col];
 
             /*
              * Missing values here wreak havoc. Sometimes in multiarray studies data are missing.
@@ -331,7 +333,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
             this.fillGapsInCalls( detectionCalls );
         }
 
-        vect.setData( converter.booleanArrayToBytes( ArrayUtils.toPrimitive( detectionCalls ) ) );
+        vect.setDataAsBooleans( ArrayUtils.toPrimitive( detectionCalls ) );
         results.add( vect );
 
         if ( ++count % 4000 == 0 ) {
@@ -341,11 +343,11 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         return count;
     }
 
-    private boolean checkMissingValue( Collection<Double> extraMissingValueIndicators, Boolean[] detectionCalls,
-            Double[] prefRow, int col ) {
+    private boolean checkMissingValue( @Nullable Collection<Double> extraMissingValueIndicators, Boolean[] detectionCalls,
+            @Nullable double[] prefRow, int col ) {
         // If the "preferred" value is already missing, we retain that, or if it is a special value
-        Double pref = prefRow == null ? Double.NaN : prefRow[col];
-        if ( pref.isNaN() || ( extraMissingValueIndicators != null && extraMissingValueIndicators.contains( pref ) ) ) {
+        double pref = prefRow == null ? Double.NaN : prefRow[col];
+        if ( Double.isNaN( pref ) || ( extraMissingValueIndicators != null && extraMissingValueIndicators.contains( pref ) ) ) {
             detectionCalls[col] = false;
             return true;
         }
@@ -356,11 +358,11 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
      * Determine a threshold based on the data.
      */
     private Double computeSignalThreshold( ExpressionDataDoubleMatrix preferred,
-            ExpressionDataDoubleMatrix signalChannelA, ExpressionDataDoubleMatrix signalChannelB,
+            @Nullable ExpressionDataDoubleMatrix signalChannelA, @Nullable ExpressionDataDoubleMatrix signalChannelB,
             ExpressionDataDoubleMatrix baseChannel ) {
 
-        Double min = Double.MAX_VALUE;
-        Double max = Double.MIN_VALUE;
+        double min = Double.MAX_VALUE;
+        double max = Double.MIN_VALUE;
 
         for ( ExpressionDataMatrixRowElement element : baseChannel.getRowElements() ) {
             CompositeSequence designElement = element.getDesignElement();
@@ -368,26 +370,26 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
             int numCols = preferred.columns( designElement );
             for ( int col = 0; col < numCols; col++ ) {
 
-                Double[] signalA = null;
+                double[] signalA = null;
                 if ( signalChannelA != null ) {
-                    signalA = signalChannelA.getRow( designElement );
+                    signalA = signalChannelA.getRowAsDoubles( designElement );
                 }
 
-                Double[] signalB = null;
+                double[] signalB = null;
                 if ( signalChannelB != null ) {
-                    signalB = signalChannelB.getRow( designElement );
+                    signalB = signalChannelB.getRowAsDoubles( designElement );
                 }
 
-                Double sigAV = ( signalA == null || signalA[col] == null ) ? Double.NaN : signalA[col];
-                Double sigBV = ( signalB == null || signalB[col] == null ) ? Double.NaN : signalB[col];
+                double sigAV = signalA == null ? Double.NaN : signalA[col];
+                double sigBV = signalB == null ? Double.NaN : signalB[col];
 
-                if ( !sigAV.isNaN() && sigAV < min ) {
+                if ( !Double.isNaN( sigAV ) && sigAV < min ) {
                     min = sigAV;
-                } else if ( !sigBV.isNaN() && sigBV < min ) {
+                } else if ( !Double.isNaN( sigBV ) && sigBV < min ) {
                     min = sigBV;
-                } else if ( !sigAV.isNaN() && sigAV > max ) {
+                } else if ( !Double.isNaN( sigAV ) && sigAV > max ) {
                     max = sigAV;
-                } else if ( !sigBV.isNaN() && sigBV > max ) {
+                } else if ( !Double.isNaN( sigBV ) && sigBV > max ) {
                     max = sigBV;
                 }
 
@@ -401,22 +403,22 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
             int numCols = preferred.columns( designElement );
             for ( int col = 0; col < numCols; col++ ) {
 
-                Double[] signalA = null;
+                double[] signalA = null;
                 if ( signalChannelA != null ) {
-                    signalA = signalChannelA.getRow( designElement );
+                    signalA = signalChannelA.getRowAsDoubles( designElement );
                 }
 
-                Double[] signalB = null;
+                double[] signalB = null;
                 if ( signalChannelB != null ) {
-                    signalB = signalChannelB.getRow( designElement );
+                    signalB = signalChannelB.getRowAsDoubles( designElement );
                 }
 
-                Double sigAV = ( signalA == null || signalA[col] == null ) ? Double.NaN : signalA[col];
-                Double sigBV = ( signalB == null || signalB[col] == null ) ? Double.NaN : signalB[col];
+                double sigAV = signalA == null ? Double.NaN : signalA[col];
+                double sigBV = signalB == null ? Double.NaN : signalB[col];
 
-                if ( !sigAV.isNaN() )
+                if ( !Double.isNaN( sigAV ) )
                     h.fill( sigAV );
-                if ( !sigBV.isNaN() )
+                if ( !Double.isNaN( sigBV ) )
                     h.fill( sigBV );
 
             }
@@ -465,29 +467,30 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
      * @param bkgBV           can be null
      * @return call, or null if no decision could be made due to NaN in the values given.
      */
-    private Boolean computeCall( double signalToNoiseThreshold, Double signalThreshold, Double sigAV, Double sigBV,
-            Double bkgAV, Double bkgBV ) {
+    @Nullable
+    private Boolean computeCall( double signalToNoiseThreshold, double signalThreshold, double sigAV, double sigBV,
+            double bkgAV, double bkgBV ) {
 
-        if ( !sigAV.isNaN() && !bkgAV.isNaN() && sigAV > bkgAV * signalToNoiseThreshold )
+        if ( !Double.isNaN( sigAV ) && !Double.isNaN( bkgAV ) && sigAV > bkgAV * signalToNoiseThreshold )
             return true;
 
-        if ( !sigBV.isNaN() && !bkgBV.isNaN() && sigBV > bkgBV * signalToNoiseThreshold )
+        if ( !Double.isNaN( sigBV ) && !Double.isNaN( bkgBV ) && sigBV > bkgBV * signalToNoiseThreshold )
             return true;
 
         // if no background valeues, use the signal threshold, if we have one; both values must meet.
-        if ( !Double.isNaN( signalThreshold ) && bkgAV.isNaN() && bkgBV.isNaN() ) {
+        if ( !Double.isNaN( signalThreshold ) && Double.isNaN( bkgAV ) && Double.isNaN( bkgBV ) ) {
             return ( sigAV > signalThreshold || sigBV > signalThreshold );
         }
 
         // if both signals are unusable, false.
-        if ( ( sigAV.isNaN() || sigAV == 0 ) && ( sigBV.isNaN() || sigBV == 0 ) ) {
+        if ( ( Double.isNaN( sigAV ) || sigAV == 0 ) && ( Double.isNaN( sigBV ) || sigBV == 0 ) ) {
             return false;
         }
 
         /*
          * We couldn't decide because none of the above calculations could be done.
          */
-        if ( ( sigAV.isNaN() || bkgAV.isNaN() ) && ( sigBV.isNaN() || bkgBV.isNaN() ) )
+        if ( ( Double.isNaN( sigAV ) || Double.isNaN( bkgAV ) ) && ( Double.isNaN( sigBV ) || Double.isNaN( bkgBV ) ) )
             return null;
 
         // default: keep.
@@ -535,9 +538,9 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
      *
      * @return true if okay, false if not.
      */
-    private boolean validate( ExpressionDataDoubleMatrix preferred, ExpressionDataDoubleMatrix signalChannelA,
-            ExpressionDataDoubleMatrix signalChannelB, ExpressionDataDoubleMatrix bkgChannelA,
-            ExpressionDataDoubleMatrix bkgChannelB, double signalToNoiseThreshold ) {
+    private boolean validate( @Nullable ExpressionDataDoubleMatrix preferred, @Nullable ExpressionDataDoubleMatrix signalChannelA,
+            @Nullable ExpressionDataDoubleMatrix signalChannelB, @Nullable ExpressionDataDoubleMatrix bkgChannelA,
+            @Nullable ExpressionDataDoubleMatrix bkgChannelB, double signalToNoiseThreshold ) {
         // not exhaustive...
         if ( preferred == null || ( signalChannelA == null && signalChannelB == null ) ) {
             TwoChannelMissingValuesImpl.log

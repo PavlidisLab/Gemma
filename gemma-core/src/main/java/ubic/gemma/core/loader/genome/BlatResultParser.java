@@ -19,6 +19,7 @@
 package ubic.gemma.core.loader.genome;
 
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.analysis.sequence.BlatAssociationScorer;
 import ubic.gemma.core.analysis.sequence.SequenceWriter;
 import ubic.gemma.core.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -193,7 +194,7 @@ public class BlatResultParser extends BasicLineParser<BlatResult> {
                     chrom = chrom.substring( 0, chrom.indexOf( ".fa" ) );
                 }
             }
-            if ( scoreThreshold > 0.0 && result.score() < scoreThreshold ) {
+            if ( scoreThreshold > 0.0 && BlatAssociationScorer.score( result ) < scoreThreshold ) {
                 numSkipped++;
                 return null;
             }

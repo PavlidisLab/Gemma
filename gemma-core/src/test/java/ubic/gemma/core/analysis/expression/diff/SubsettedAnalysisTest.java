@@ -33,14 +33,11 @@ public class SubsettedAnalysisTest extends BaseAnalyzerConfigurationTest {
 
     @Test
     public final void testInvalidSubsetFactor() {
-
-        this.configureMocks();
-
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.getFactorsToInclude().add( this.experimentalFactorA_Area );
         config.setSubsetFactor( this.experimentalFactorA_Area );
         try {
-            analyzer.run( expressionExperiment, config );
+            analyzer.run( expressionExperiment, dmatrix, config );
             fail( "Should have gotten an exception" );
         } catch ( Exception ignored ) {
         }
@@ -48,14 +45,11 @@ public class SubsettedAnalysisTest extends BaseAnalyzerConfigurationTest {
 
     @Test
     public final void testWithSubset() {
-
-        this.configureMocks();
-
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.getFactorsToInclude().add( this.experimentalFactorA_Area );
         config.setSubsetFactor( this.experimentalFactorB );
         config.setModerateStatistics( false );
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, dmatrix, config );
 
         assertEquals( 2, expressionAnalyses.size() );
 
@@ -73,10 +67,4 @@ public class SubsettedAnalysisTest extends BaseAnalyzerConfigurationTest {
             assertTrue( numResults < 100 ); // we should have filtered some out.
         }
     }
-
-    private void configureMocks() {
-        this.configureMockAnalysisServiceHelper();
-        analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
-    }
-
 }

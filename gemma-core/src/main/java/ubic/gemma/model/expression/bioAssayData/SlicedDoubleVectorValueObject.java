@@ -1,44 +1,57 @@
 package ubic.gemma.model.expression.bioAssayData;
 
-import org.apache.commons.lang3.ArrayUtils;
+import lombok.Data;
+import org.springframework.util.Assert;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubsetValueObject;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
+@Data
 public class SlicedDoubleVectorValueObject extends DoubleVectorValueObject {
-
-    private final Long sourceVectorId;
-
-    /**
-     * Constructor for creating a slice.
-     */
-    public SlicedDoubleVectorValueObject( DoubleVectorValueObject vec, ExpressionExperimentSubSet bioassaySet, BioAssayDimensionValueObject slicedBad ) {
-        super( vec );
-        // because this is a 'slice', not a persistent one,
-        setId( null );
-        setExpressionExperiment( new ExpressionExperimentSubsetValueObject( bioassaySet ) );
-        setBioAssayDimension( slicedBad );
-        this.sourceVectorId = vec.getId(); // so we can track this!
-        Collection<Double> values = new ArrayList<>();
-        int i = 0;
-        for ( BioAssayValueObject ba : vec.getBioAssays() ) {
-            if ( this.getBioAssays().contains( ba ) ) {
-                values.add( vec.getData()[i] );
-            }
-            i++;
-        }
-        setData( ArrayUtils.toPrimitive( values.toArray( new Double[] {} ) ) );
-    }
 
     /**
      * Obtain the ID of the vector from which this slice is derived from.
      */
-    public Long getSourceVectorId() {
-        return sourceVectorId;
+    private Long sourceVectorId;
+
+    /**
+     * Constructor for creating a slice.
+     */
+    public SlicedDoubleVectorValueObject( DoubleVectorValueObject vec, ExpressionExperimentSubsetValueObject bioassaySet, BioAssayDimensionValueObject slicedBad ) {
+        super( vec );
+        Assert.isTrue( bioassaySet.getSourceExperiment().equals( vec.getExpressionExperiment().getId() ),
+                "The subset must belong to " + vec.getExpressionExperiment() + "." );
+        Map<BioAssayValueObject, Integer> bioAssayIndexMap = new HashMap<>( vec.getBioAssays().size() );
+        for ( int i = 0; i < vec.getBioAssays().size(); i++ ) {
+            bioAssayIndexMap.put( vec.getBioAssays().get( i ), i );
+        }
+        Assert.isTrue( bioAssayIndexMap.keySet().containsAll( slicedBad.getBioAssays() ),
+                "The sliced BAD must be a subset of its original BAD." );
+        // because this is a 'slice', not a persistent one,
+        setId( null );
+        setExpressionExperiment( bioassaySet );
+        setBioAssayDimension( slicedBad );
+        this.sourceVectorId = vec.getId(); // so we can track this!
+        double[] slicedData = new double[slicedBad.getBioAssays().size()];
+        List<BioAssayValueObject> bioAssays = slicedBad.getBioAssays();
+        for ( int i = 0; i < bioAssays.size(); i++ ) {
+            slicedData[i] = vec.getData()[bioAssayIndexMap.get( bioAssays.get( i ) )];
+        }
+        setData( slicedData );
+    }
+
+    protected SlicedDoubleVectorValueObject( SlicedDoubleVectorValueObject other ) {
+        super( other );
+        this.sourceVectorId = other.sourceVectorId;
+    }
+
+    @Override
+    public DoubleVectorValueObject copy() {
+        return new SlicedDoubleVectorValueObject( this );
     }
 
     @Override

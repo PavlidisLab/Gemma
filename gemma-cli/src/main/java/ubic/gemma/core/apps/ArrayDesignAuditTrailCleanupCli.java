@@ -37,11 +37,6 @@ import java.util.Map;
  */
 public class ArrayDesignAuditTrailCleanupCli extends ArrayDesignSequenceManipulatingCli {
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "adATcleanup";
@@ -53,17 +48,12 @@ public class ArrayDesignAuditTrailCleanupCli extends ArrayDesignSequenceManipula
         return null;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
-     */
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
             arrayDesign = getArrayDesignService().thawLite( arrayDesign );
 
-            List<AuditEvent> allEvents = ( List<AuditEvent> ) arrayDesign.getAuditTrail().getEvents();
+            List<AuditEvent> allEvents = arrayDesign.getAuditTrail().getEvents();
 
             Map<Object, List<AuditEvent>> eventsByType = new HashMap<>();
 
@@ -93,10 +83,10 @@ public class ArrayDesignAuditTrailCleanupCli extends ArrayDesignSequenceManipula
 
                 List<AuditEvent> evs = eventsByType.get( k );
 
-                System.err.println( "------------------------" );
-                System.err.println( k );
+                getCliContext().getErrorStream().println( "------------------------" );
+                getCliContext().getErrorStream().println( k );
                 for ( AuditEvent ae : evs ) {
-                    System.err.println( ae.getDate() + " " + ae.getNote() );
+                    getCliContext().getErrorStream().println( ae.getDate() + " " + ae.getNote() );
                 }
 
                 // possibly keep subsumption and merge events no matter what. ArrayDesignSubsumeCheckEvent ArrayDesignMergeEvent

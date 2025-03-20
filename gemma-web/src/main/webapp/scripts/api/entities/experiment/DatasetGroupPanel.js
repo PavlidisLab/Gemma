@@ -98,7 +98,7 @@ Gemma.DatasetGroupEditToolbar = Ext.extend( Ext.Toolbar, {
       this.newBut = new Ext.Button( {
          handler : this.initNew,
          scope : this,
-         icon : ctxBasePath + "/images/icons/add.png",
+         icon : Gemma.CONTEXT_PATH + "/images/icons/add.png",
          disabled : false, // if they are logged in.
          tooltip : "Create a new set (click 'commit' when you are done)"
       } );
@@ -107,7 +107,7 @@ Gemma.DatasetGroupEditToolbar = Ext.extend( Ext.Toolbar, {
          handler : this.commit,
          disabled : true,
          scope : this,
-         icon : ctxBasePath + "/images/icons/database_save.png",
+         icon : Gemma.CONTEXT_PATH + "/images/icons/database_save.png",
          tooltip : "Commit all changes to the database"
       } );
 
@@ -115,7 +115,7 @@ Gemma.DatasetGroupEditToolbar = Ext.extend( Ext.Toolbar, {
          handler : this.copy,
          scope : this,
          disabled : true,
-         icon : ctxBasePath + "/images/icons/arrow_branch.png",
+         icon : Gemma.CONTEXT_PATH + "/images/icons/arrow_branch.png",
          tooltip : "Clone as a new set (click 'save' afterwards)"
       } );
 
@@ -123,7 +123,7 @@ Gemma.DatasetGroupEditToolbar = Ext.extend( Ext.Toolbar, {
          handler : this.reset,
          scope : this,
          disabled : true,
-         icon : ctxBasePath + "/images/icons/arrow_undo.png",
+         icon : Gemma.CONTEXT_PATH + "/images/icons/arrow_undo.png",
          tooltip : "Reset selected set to stored version"
       } );
 
@@ -131,7 +131,7 @@ Gemma.DatasetGroupEditToolbar = Ext.extend( Ext.Toolbar, {
          handler : this.remove,
          scope : this,
          disabled : true,
-         icon : ctxBasePath + "/images/icons/database_delete.png",
+         icon : Gemma.CONTEXT_PATH + "/images/icons/database_delete.png",
          tooltip : "Delete selected set"
       } );
 
@@ -381,7 +381,7 @@ Gemma.DatasetGroupGridPanel = Ext
                              } ),
                              renderer : function( value, metadata, record, rowIndex, colIndex, store ) {
                                 if ( record.data.id && record.data.id > 0 ) {
-                                   return '<a target="_blank" href="' + ctxBasePath + '/expressionExperimentSet/showExpressionExperimentSet.html?id='
+                                   return '<a target="_blank" href="' + Gemma.CONTEXT_PATH + '/expressionExperimentSet/showExpressionExperimentSet.html?id='
                                       + record.data.id + '">' + value + '</a>';
                                 }
                                 return value;
@@ -426,7 +426,7 @@ Gemma.DatasetGroupGridPanel = Ext
                              renderer : function( value, metaData, record, rowIndex, colIndex, store ) {
                                 var v = "";
                                 if ( !value ) {
-                                   v = "<img src='" + ctxBasePath + "/images/icons/shield.png' height='16' width='16' "
+                                   v = "<img src='" + Gemma.CONTEXT_PATH + "/images/icons/shield.png' height='16' width='16' "
                                       + "ext:qtip='" + Gemma.HelpText.WidgetDefaults.DatasetGroupGridPanel.protectedTT
                                       + "' />";
                                 }
@@ -457,7 +457,7 @@ Gemma.DatasetGroupGridPanel = Ext
                              width : 0.12,
                              renderer : function( value, metaData, record, rowIndex, colIndex, store ) {
                                 if ( value ) {
-                                   return "<img src='" + ctxBasePath + "/images/icons/ok.png' height='16' width='16' ext:qtip='You can edit this group' />";
+                                   return "<img src='" + Gemma.CONTEXT_PATH + "/images/icons/ok.png' height='16' width='16' ext:qtip='You can edit this group' />";
                                 } else {
                                    return " ";
                                 }

@@ -79,7 +79,7 @@ Gemma.MetaAnalysisEvidenceWindow = Ext
                                  Ext.Msg
                                     .alert(
                                        Gemma.HelpText.WidgetDefaults.MetaAnalysisManagerGridPanel.ErrorTitle.saveMetaAnalysisAsEvidence,
-                                       Gemma.convertToEvidenceError( validateEvidenceValueObject ).errorMessage,
+                                       Gemma.Evidence.convertToEvidenceError( validateEvidenceValueObject ).errorMessage,
                                        function() {
                                           if ( validateEvidenceValueObject.userNotLoggedIn ) {
                                              Gemma.AjaxLogin.showLoginWindowFn();

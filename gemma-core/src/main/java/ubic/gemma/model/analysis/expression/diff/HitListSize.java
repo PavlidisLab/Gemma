@@ -18,32 +18,21 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
-import java.io.Serializable;
+import ubic.gemma.model.common.AbstractIdentifiable;
+
+import java.util.Objects;
 
 /**
  * <p>
  * The number of probes meeting a given q-value threshold in the result set.
  * </p>
  */
-public class HitListSize implements Serializable {
+public class HitListSize extends AbstractIdentifiable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -6398621486105806034L;
     private Double thresholdQvalue;
     private Integer numberOfProbes;
     private Direction direction;
     private Integer numberOfGenes;
-    private Long id;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public HitListSize() {
-    }
 
     public Direction getDirection() {
         return this.direction;
@@ -51,14 +40,6 @@ public class HitListSize implements Serializable {
 
     public void setDirection( Direction direction ) {
         this.direction = direction;
-    }
-
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
     }
 
     /**
@@ -93,10 +74,7 @@ public class HitListSize implements Serializable {
      */
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
+        return Objects.hash( thresholdQvalue, numberOfGenes, direction, numberOfGenes );
     }
 
     /**
@@ -113,7 +91,14 @@ public class HitListSize implements Serializable {
             return false;
         }
         final HitListSize that = ( HitListSize ) object;
-        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+        if ( this.getId() != null && that.getId() != null ) {
+            return this.getId().equals( that.getId() );
+        } else {
+            return Objects.equals( this.thresholdQvalue, that.thresholdQvalue )
+                    && Objects.equals( this.numberOfProbes, that.numberOfProbes )
+                    && Objects.equals( this.direction, that.direction )
+                    && Objects.equals( this.numberOfGenes, that.numberOfGenes );
+        }
     }
 
     public static final class Factory {

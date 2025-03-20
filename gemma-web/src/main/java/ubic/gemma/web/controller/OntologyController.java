@@ -17,6 +17,7 @@ import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.util.ServiceUnavailableException;
 
+import javax.servlet.ServletContext;
 import java.io.StringWriter;
 import java.util.List;
 import java.util.Optional;
@@ -48,6 +49,9 @@ public class OntologyController {
 
     @Autowired
     private FactorValueOntologyService factorValueOntologyService;
+
+    @Autowired
+    private ServletContext servletContext;
 
     @RequestMapping(value = "/TGEMO.OWL", method = { RequestMethod.GET, RequestMethod.HEAD })
     public RedirectView getOntology() {
@@ -159,8 +163,8 @@ public class OntologyController {
         } else {
             return String.format( "<a href=\"%s\">%s</a>",
                     escapeHtml4( oi.getUri()
-                            .replaceFirst( "^" + Pattern.quote( TGFVO_URI_PREFIX ), "/ont/TGFVO/" )
-                            .replaceFirst( "^" + Pattern.quote( TGEMO_URI_PREFIX ), "/ont/" ) ),
+                            .replaceFirst( "^" + Pattern.quote( TGFVO_URI_PREFIX ), servletContext.getContextPath() + "/ont/TGFVO/" )
+                            .replaceFirst( "^" + Pattern.quote( TGEMO_URI_PREFIX ), servletContext.getContextPath() + "/ont/" ) ),
                     escapeHtml4( oi.getLabel() ) );
         }
     }

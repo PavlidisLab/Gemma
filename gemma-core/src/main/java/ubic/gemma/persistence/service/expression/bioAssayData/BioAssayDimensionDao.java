@@ -18,19 +18,22 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
+
+import java.util.Collection;
 
 /**
  * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimension
  */
 public interface BioAssayDimensionDao extends BaseVoEnabledDao<BioAssayDimension, BioAssayDimensionValueObject> {
 
-    @SuppressWarnings("UnusedReturnValue")
-        // Possible external use
-    void thawLite( BioAssayDimension bioAssayDimension );
-
-    void thaw( BioAssayDimension bioAssayDimension );
-
+    /**
+     * Find all the dimensions that contains all the given assays.
+     * <p>
+     * Note: the dimension might contain more assays than the given ones.
+     */
+    Collection<BioAssayDimension> findByBioAssaysContainingAll( Collection<BioAssay> bioAssays );
 }

@@ -18,21 +18,18 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
-import java.io.Serializable;
+import ubic.gemma.model.common.AbstractIdentifiable;
+
 import java.util.Objects;
 
-public abstract class AuditEventType implements Serializable {
-
-    private static final long serialVersionUID = -7397754091918396538L;
-
-    private Long id;
+public abstract class AuditEventType extends AbstractIdentifiable {
 
     /**
      * @deprecated you should never use this property, rely instead on the actual type via {@link #getClass()}.
      */
     @Deprecated
     public Long getId() {
-        return this.id;
+        return super.getId();
     }
 
     @Override

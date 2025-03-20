@@ -18,44 +18,32 @@
  */
 package ubic.gemma.model.genome;
 
-import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
-import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Immutable representation of a chromosome
  */
-public class Chromosome implements Identifiable, Serializable {
+public class Chromosome extends AbstractIdentifiable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 7394734846565885136L;
-    final private String name;
-    final private ExternalDatabase assemblyDatabase;
-    final private BioSequence sequence;
-    final private Taxon taxon;
-    @SuppressWarnings("unused")// Hibernate sets it with reflection;
-    private Long id;
+    private String name;
+    private ExternalDatabase assemblyDatabase;
+    private BioSequence sequence;
+    private Taxon taxon;
 
     /**
      * No-arg constructor added to satisfy javabean contract
      */
     public Chromosome() {
-        this.name = null;
-        this.taxon = null;
-        this.assemblyDatabase = null;
-        this.sequence = null;
 
     }
 
     public Chromosome( String name, Taxon taxon ) {
         this.name = name;
         this.taxon = taxon;
-        this.assemblyDatabase = null;
-        this.sequence = null;
     }
 
     public Chromosome( String name, ExternalDatabase assemblyDatabase, BioSequence sequence, Taxon taxon ) {
@@ -65,37 +53,8 @@ public class Chromosome implements Identifiable, Serializable {
         this.taxon = taxon;
     }
 
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-
-        assert this.getId() != null || this.getName() != null;
-
-        hashCode = 29 * hashCode + ( this.getId() == null ?
-                this.getName().hashCode() + ( this.getTaxon() != null ? this.getTaxon().hashCode() : 0 ) :
-                this.getId().hashCode() );
-
-        return hashCode;
-    }
-
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof Chromosome ) ) {
-            return false;
-        }
-        final Chromosome that = ( Chromosome ) object;
-
-        return !( this.getId() == null || that.getId() == null || !this.getId().equals( that.getId() ) )
-                || this.getTaxon().equals( that.getTaxon() ) && this.getName().equals( that.getName() );
-
-    }
-
-    @Override
-    public String toString() {
-        return this.getTaxon().getScientificName() + " Chromosome " + this.getName();
+    public String getName() {
+        return this.name;
     }
 
     /**
@@ -103,15 +62,6 @@ public class Chromosome implements Identifiable, Serializable {
      */
     public ExternalDatabase getAssemblyDatabase() {
         return this.assemblyDatabase;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    @Override
-    public Long getId() {
-        return id;
     }
 
     /**
@@ -126,4 +76,29 @@ public class Chromosome implements Identifiable, Serializable {
         return this.taxon;
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash( getName(), getTaxon() );
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof Chromosome ) ) {
+            return false;
+        }
+        final Chromosome that = ( Chromosome ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return this.getId().equals( that.getId() );
+        }
+        return Objects.equals( getName(), that.getName() )
+                && Objects.equals( getTaxon(), that.getTaxon() );
+    }
+
+    @Override
+    public String toString() {
+        return this.getTaxon().getScientificName() + " Chromosome " + this.getName();
+    }
 }

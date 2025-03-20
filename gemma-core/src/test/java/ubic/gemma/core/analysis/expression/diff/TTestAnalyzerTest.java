@@ -32,8 +32,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -52,8 +51,6 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
         assumeTrue( "Could not establish R connection.  Skipping test ...", connected );
 
         this.configureVectors( super.biomaterials, "/data/stat-tests/onesample-ttest-data.txt" );
-
-        this.configureMocks();
 
         Collection<ExperimentalFactor> factors = new HashSet<>();
         factors.add( super.experimentalFactorA_Area );
@@ -74,14 +71,14 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
         quantitationType.setIsRatio( true ); // must be for one-sample to make sense.
         quantitationType.setScale( ScaleType.LOG2 );
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFactorsToInclude( factors );
+        config.addFactorsToInclude( factors );
         config.setModerateStatistics( false );
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, dmatrix, config );
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
         ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
 
-        assertEquals( null, resultSet.getBaselineGroup() );
+        assertNull( resultSet.getBaselineGroup() );
 
         int numResults = resultSet.getResults().size();
 
@@ -123,24 +120,21 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
      */
     @Test
     public void testTTestWithExpressionExperiment() {
-
         assumeTrue( "Could not establish R connection.  Skipping test ...", connected );
-
-        this.configureMocks();
 
         Collection<ExperimentalFactor> factors = new HashSet<>();
         factors.add( super.experimentalFactorA_Area );
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFactorsToInclude( factors );
+        config.addFactorsToInclude( factors );
         config.setModerateStatistics( false );
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, dmatrix, config );
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
         ExpressionAnalysisResultSet resultSet = resultSets.iterator().next();
 
         int numResults = resultSet.getResults().size();
 
-        assertEquals( numResults, BaseAnalyzerConfigurationTest.NUM_DESIGN_ELEMENTS );
+        assertEquals( BaseAnalyzerConfigurationTest.NUM_DESIGN_ELEMENTS, numResults );
 
         assertEquals( factorValueA2, resultSet.getBaselineGroup() );
 
@@ -189,13 +183,4 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
             }
         }
     }
-
-    private void configureMocks() {
-
-        this.configureMockAnalysisServiceHelper();
-
-        analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
-
-    }
-
 }

@@ -1,148 +1,137 @@
 <%@ include file="/common/taglibs.jsp" %>
+
 <head>
-    <jwr:script src='/scripts/api/ext/data/DwrProxy.js'/>
-    <jwr:script src='/scripts/app/bioassay.draganddrop.js'/>
+<title>Edit ${fn:escapeXml(expressionExperiment.shortName)} - ${fn:escapeXml(expressionExperiment.name)}</title>
+<meta name="description" content="${fn:escapeXml(expressionExperiment.description)}">
+<meta name="keywords" content="${fn:escapeXml(keywords)}" />
+<Gemma:script src='/scripts/app/bioassay.draganddrop.js' />
 </head>
 
-<jsp:useBean id="expressionExperiment" scope="request"
-             class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentEditValueObject"/>
-<spring:bind path="expressionExperiment.*">
-    <c:if test="${not empty status.errorMessages}">
-        <div class="error">
-            <c:forEach var="error" items="${status.errorMessages}">
-                <i class="red fa fa-warning fa-lg fa-fw"></i>
-                <c:out value="${error}" escapeXml="false"/>
-                <br/>
-            </c:forEach>
-        </div>
-    </c:if>
-</spring:bind>
-
-<title><fmt:message key="expressionExperiment.title"/> ${expressionExperiment.shortName}</title>
+<title><fmt:message key="expressionExperiment.title" /> ${expressionExperiment.shortName}</title>
 
 <div class="padded">
-    <form method="post" action="<c:url value="/expressionExperiment/editExpressionExperiment.html"/>">
+    <form:form modelAttribute="expressionExperiment" autocomplete="off">
         <h2>
-            Editing: <a
-                href="<c:url value="/expressionExperiment/showExpressionExperiment.html?id=${expressionExperiment.id}" />">${expressionExperiment.shortName}</a>
+            Editing:
+            <a href="<c:url value="/expressionExperiment/showExpressionExperiment.html?id=${expressionExperiment.id}" />">
+                    ${expressionExperiment.shortName}
+            </a>
         </h2>
+
         <h3>Quantitation Types</h3>
-        <c:choose>
-            <c:when test='<%=expressionExperiment.getQuantitationTypes().size() == 0%>'>
-                No quantitation types! Data may be corrupted (likely data import error)
-            </c:when>
-            <c:otherwise>
-                <table class="detail">
-                    <tr>
-                        <th>Name</th>
-                        <th>Desc</th>
-                        <th>Pref?</th>
-                        <th>Recom?</th>
-                        <th>Batch?</th>
-                        <th>Ratio?</th>
-                        <th>Bkg?</th>
-                        <th>BkgSub?</th>
-                        <th>Norm?</th>
-                        <th>Type</th>
-                        <th>Spec.Type</th>
-                        <th>Scale</th>
-                        <th>Rep.</th>
-                    </tr>
 
-                    <c:forEach var="index" begin="0" end="<%=expressionExperiment.getQuantitationTypes().size() - 1%>"
-                               step="1">
-                        <spring:nestedPath path="expressionExperiment.quantitationTypes[${index}]">
-                            <tr>
-                                <td><spring:bind path="name">
-                                    <input type="text" size="20" name="<c:out value="${status.expression}"/>"
-                                           value="<c:out value="${status.value}"/>"/>
-                                </spring:bind></td>
-                                <td><spring:bind path="description">
-                                    <input type="text" size="35" name="<c:out value="${status.expression}"/>"
-                                           value="<c:out value="${status.value}"/>"/>
-                                </spring:bind></td>
-                                <td><spring:bind path="isPreferred">
-                                    <input id="preferredCheckbox" type="checkbox" name="${status.expression}"
-                                           <c:if test="${status.value == true}">checked="checked"</c:if> />
-                                    <input type="hidden" name="_<c:out value="${status.expression}"/>">
-                                </spring:bind></td>
-                                <td><spring:bind path="isRecomputedFromRawData">
-                                    <input id="preferredCheckbox" type="checkbox" name="${status.expression}"
-                                           <c:if test="${status.value == true}">checked="checked"</c:if> />
-                                    <input type="hidden" name="_<c:out value="${status.expression}"/>">
-                                </spring:bind></td>
-                                <td><spring:bind path="isBatchCorrected">
-                                    <input id="preferredCheckbox" type="checkbox" name="${status.expression}"
-                                           <c:if test="${status.value == true}">checked="checked"</c:if> />
-                                    <input type="hidden" name="_<c:out value="${status.expression}"/>">
-                                </spring:bind></td>
-                                <td><spring:bind path="isRatio">
-                                    <input id="ratioCheckbox" type="checkbox" name="${status.expression}"
-                                           <c:if test="${status.value == true}">checked="checked"</c:if> />
-                                    <input type="hidden" name="_<c:out value="${status.expression}"/>">
-                                </spring:bind></td>
-                                <td><spring:bind path="isBackground">
-                                    <input id="backgroundCheckbox" type="checkbox" name="${status.expression}"
-                                           <c:if test="${status.value == true}">checked="checked"</c:if> />
-                                    <input type="hidden" name="_<c:out value="${status.expression}"/>">
-                                </spring:bind></td>
-                                <td><spring:bind path="isBackgroundSubtracted">
-                                    <input id="bkgsubCheckbox" type="checkbox" name="${status.expression}"
-                                           <c:if test="${status.value == true}">checked="checked"</c:if> />
-                                    <input type="hidden" name="_<c:out value="${status.expression}"/>">
-                                </spring:bind></td>
-                                <td><spring:bind path="isNormalized">
-                                    <input id="normCheckbox" type="checkbox" name="${status.expression}"
-                                           <c:if test="${status.value == true}">checked="checked"</c:if> />
-                                    <input type="hidden" name="_<c:out value="${status.expression}"/>">
-                                </spring:bind></td>
-                                <td><spring:bind path="generalType">
-                                    <select name="${status.expression}">
-                                        <c:forEach items="${generalQuantitationTypes}" var="type">
-                                            <option value="${type}"
-                                                    <c:if test="${status.value == type}">selected</c:if>>${type}</option>
-                                        </c:forEach>
-                                    </select>
-                                    <span class="fieldError">${status.errorMessage}</span>
-                                </spring:bind></td>
-                                <td><spring:bind path="type">
-                                    <select name="${status.expression}">
-                                        <c:forEach items="${standardQuantitationTypes}" var="type">
-                                            <option value="${type}"
-                                                    <c:if test="${status.value == type}">selected</c:if>>${type}</option>
-                                        </c:forEach>
-                                    </select>
-                                    <span class="fieldError">${status.errorMessage}</span>
-                                </spring:bind></td>
-                                <td><spring:bind path="scale">
-                                    <select name="${status.expression}">
-                                        <c:forEach items="${scaleTypes}" var="type">
-                                            <option value="${type}"
-                                                    <c:if test="${status.value == type}">selected</c:if>>${type}</option>
-                                        </c:forEach>
-                                    </select>
-                                    <span class="fieldError">${status.errorMessage}</span>
-                                </spring:bind></td>
-                                <td><spring:bind path="representation">
-                                    <select name="${status.expression}">
-                                        <c:forEach items="${representations}" var="type">
-                                            <option value="${type}"
-                                                    <c:if test="${status.value == type}">selected</c:if>>${type}</option>
-                                        </c:forEach>
-                                    </select>
-                                    <span class="fieldError">${status.errorMessage}</span>
-                                </spring:bind></td>
-                            </tr>
-                        </spring:nestedPath>
-                    </c:forEach>
+        <c:if test='${expressionExperiment.quantitationTypes.isEmpty()}'>
+            <p>No quantitation types! Data may be corrupted (likely data import error)</p>
+        </c:if>
 
-                </table>
-            </c:otherwise>
-        </c:choose>
+        <form:errors path="quantitationTypes" cssClass="error" />
+
+        <table class="detail">
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Preferred</th>
+                <th>Recomputed</th>
+                <th>Batch Corrected?</th>
+                <th>Ratio</th>
+                <th>Background</th>
+                <th>Background Subtracted</th>
+                <th>Normalized</th>
+                <th>General Type</th>
+                <th>Type</th>
+                <th>Scale</th>
+                <th>Representation</th>
+            </tr>
+
+            <!-- vectors, grouped by vector type -->
+            <c:forEach items="${expressionExperiment.quantitationTypesByVectorType.entrySet()}" var="e">
+                <c:set var="vectorType" value="${e.key}" />
+                <c:set var="quantitationTypes" value="${e.value}" />
+                <tr>
+                    <td colspan="13">
+                        <c:choose>
+                            <c:when test="${vectorType != null}">
+                                <h4><spring:message code="${vectorType.simpleName}.title"
+                                        text="??${vectorType.simpleName}.title??" /></h4>
+                            </c:when>
+                            <c:otherwise>
+                                <h4>Unused quantitation types</h4>
+                                <p>These quantitation types are not associated to any vectors.</p>
+                            </c:otherwise>
+                        </c:choose>
+                    </td>
+                </tr>
+                <c:forEach items="${quantitationTypes}" var="qt">
+                    <spring:nestedPath path="quantitationTypes[${expressionExperiment.quantitationTypes.indexOf(qt)}]">
+                        <tr>
+                            <td>
+                                <form:hidden path="id" />
+                                <form:input path="name" size="20" cssErrorClass="error" />
+                                <form:errors path="name" cssClass="error" />
+                            </td>
+                            <td><form:input path="description" size="35" /><form:errors path="description" /></td>
+                            <td class="text-center">
+                                <c:choose>
+                                    <c:when test="${vectorType == null}">
+                                        <!-- this happens when a QT does not have any associated vectors -->
+                                    </c:when>
+                                    <c:when test="${vectorType.simpleName == 'SingleCellExpressionDataVector'}">
+                                        <form:checkbox path="isSingleCellPreferred" />
+                                        <form:errors path="isSingleCellPreferred" />
+                                    </c:when>
+                                    <c:when test="${vectorType.simpleName == 'RawExpressionDataVector'}">
+                                        <form:checkbox path="isPreferred" />
+                                        <form:errors path="isPreferred" />
+                                    </c:when>
+                                    <c:when test="${vectorType.simpleName == 'ProcessedExpressionDataVector'}">
+                                        <form:checkbox path="isMaskedPreferred" disabled="true"
+                                                title="The preferred status for processed vectors cannot be modified." />
+                                        <form:errors path="isMaskedPreferred" />
+                                    </c:when>
+                                </c:choose>
+                            </td>
+                            <td class="text-center"><form:checkbox path="isRecomputedFromRawData" /></td>
+                            <td class="text-center"><form:checkbox path="isBatchCorrected" /></td>
+                            <td class="text-center"><form:checkbox path="isRatio" /></td>
+                            <td class="text-center"><form:checkbox path="isBackground" /></td>
+                            <td class="text-center"><form:checkbox path="isBackgroundSubtracted" /></td>
+                            <td class="text-center"><form:checkbox path="isNormalized" /></td>
+                            <td>
+                                <form:select path="generalType">
+                                    <form:options items="${generalQuantitationTypes}" />
+                                </form:select>
+                                <form:errors path="generalType" cssClass="error" />
+                            </td>
+                            <td>
+                                <form:select path="type">
+                                    <form:options items="${standardQuantitationTypes}" />
+                                </form:select>
+                                <form:errors path="type" cssClass="error" />
+                            </td>
+                            <td>
+                                <form:select path="scale">
+                                    <form:options items="${scaleTypes}" />
+                                </form:select>
+                                <form:errors path="scale" cssClass="error" />
+                            </td>
+                            <td>
+                                <form:select path="representation" disabled="true"
+                                        title="The representation cannot be changed without rewriting the vectors.">
+                                    <form:options items="${representations}" />
+                                </form:select>
+                                <form:errors path="representation" cssClass="error" />
+                            </td>
+                        </tr>
+                    </spring:nestedPath>
+                </c:forEach>
+            </c:forEach>
+        </table>
 
         <hr class="normal">
 
         <h3>Biomaterials and Assays</h3>
+
+        <form:errors path="assayToMaterialMap" cssClass="error" />
 
         <div class="v-padded">
             <a
@@ -152,17 +141,17 @@
 
         <div class="v-padded">
             <input type="button" onClick="Ext.getCmp('eemanager').unmatchBioAssays(${expressionExperiment.id})"
-                   value="Unmatch all bioassays"/>
+                    value="Unmatch all assays" />
         </div>
 
-
-        <Gemma:assayView bioAssays="${expressionExperiment.bioAssays}" edit="true"></Gemma:assayView>
+        <Gemma:assayView bioAssays="${expressionExperiment.bioAssays}"
+                expressionExperimentId="${expressionExperiment.id}" edit="true" />
 
         <div class="v-padded">
-            <input type="submit" class="button" name="save" value="<fmt:message key="button.save"/>"/>
-            <input type="submit" class="button" name="cancel" value="<fmt:message key="button.cancel"/>"/>
+            <input type="submit" class="button" value="<fmt:message key="button.save" />" />
+            <input type="reset" class="button" name="cancel" value="<fmt:message key="button.cancel"/>" />
         </div>
 
-    </form>
+    </form:form>
 
 </div>

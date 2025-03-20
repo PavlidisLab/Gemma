@@ -2,8 +2,7 @@
   <configuration default="false" name="Gemma CLI" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="ubic.gemma.core.apps.GemmaCLI" />
     <module name="gemma-cli" />
-    <option name="PROGRAM_PARAMETERS" value="loadSingleCellData -e GSE1234 -a Generic_mouse_ncbiIds" />
-    <option name="VM_PARAMETERS" value="-Dspring.profiles.active=dev -Dspring.security.strategy=MODE_INHERITABLETHREADLOCAL -Dlog4j.configuration=$PROJECT_DIR$/gemma-cli/src/main/config/log4j-dev.properties" />
+    <option name="VM_PARAMETERS" value="-Dspring.profiles.active=dev -Dspring.security.strategy=MODE_INHERITABLETHREADLOCAL -Dlog4j.configuration=./gemma-cli/src/main/config/log4j-dev.properties" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

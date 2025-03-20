@@ -23,6 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
@@ -56,25 +57,25 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     private static final String TAXON_DESC = "Taxon short name e.g. 'mouse' (use with --genefile, or alone to process all "
             + "known genes for the taxon, or with --batch to process all arrays for the taxon.";
     private static final String OVERWRITE_DESC = "If set will overwrite existing annotation files in the output directory";
+
+    @Autowired
+    private ArrayDesignAnnotationService arrayDesignAnnotationService;
+    @Autowired
+    private GeneOntologyService goService;
+    @Autowired
+    private TaxonService taxonService;
+    @Autowired
+    private GeneService geneService;
+
     // file info
     private String batchFileName;
-
     //  private boolean overWrite = false;
     private boolean processAllADs = false;
-    private ArrayDesignAnnotationService arrayDesignAnnotationService;
     // private String geneFileName;
-    private GeneOntologyService goService;
     private String taxonName;
     private boolean notifiedAboutGOState = false;
-    private TaxonService taxonService;
-
     private boolean useGO = true;
     private boolean deleteOtherFiles = true; // should other files that incorporate the annotations be deleted?
-
-    @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.PLATFORM;
-    }
 
     @Override
     protected void buildOptions( Options options ) {
@@ -162,9 +163,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 //            this.overWrite = true;
 
         super.processOptions( commandLine );
-
-        this.arrayDesignAnnotationService = this.getBean( ArrayDesignAnnotationService.class );
-        this.goService = this.getBean( GeneOntologyService.class );
     }
 
     @Override
@@ -178,9 +176,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     }
 
     @Override
-    protected void doWork() throws Exception {
-        this.taxonService = this.getBean( TaxonService.class );
-
+    protected void doAuthenticatedWork() throws Exception {
         if ( this.useGO ) {
             OntologyUtils.ensureInitialized( goService );
         }
@@ -351,7 +347,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                     continue;
                 }
 
-                ArrayDesign arrayDesign = this.locateArrayDesign( accession );
+                ArrayDesign arrayDesign = entityLocator.locateArrayDesign( accession );
 
                 try {
                     this.processAD( arrayDesign );
@@ -368,7 +364,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 //        InputStream is = new FileInputStream( geneFileName );
 //        try ( BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
 //            String line;
-//            GeneService geneService = this.getBean( GeneService.class );
 //            Taxon taxon = taxonService.findByCommonName( taxonName );
 //            if ( taxon == null ) {
 //                throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
@@ -390,13 +385,12 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 //            log.info( "File contained " + genes.size() + " potential gene symbols" );
 //
 //            int numProcessed = arrayDesignAnnotationService
-//                    .generateAnnotationFile( new PrintWriter( System.out ), genes );
+//                    .generateAnnotationFile( new PrintWriter( getCliContext().getOutputStream() ), genes );
 //            log.info( "Processed " + numProcessed + " genes that were found" );
 //        }
 //    }
 
     private void processGenesForTaxon() {
-        GeneService geneService = this.getBean( GeneService.class );
         Taxon taxon = taxonService.findByCommonName( taxonName );
         if ( taxon == null ) {
             throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
@@ -405,14 +399,12 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         Collection<Gene> genes = geneService.loadAll( taxon );
         log.info( "Taxon has " + genes.size() + " 'known' genes" );
         int numProcessed = arrayDesignAnnotationService
-                .generateAnnotationFile( new PrintWriter( System.out ), genes, useGO );
+                .generateAnnotationFile( new PrintWriter( getCliContext().getOutputStream() ), genes, useGO );
         log.info( "Processed " + numProcessed + " genes that were found" );
     }
 
     private void processOneAD( ArrayDesign inputAd ) throws IOException {
         this.arrayDesignAnnotationService.create( inputAd, useGO, deleteOtherFiles );
         addSuccessObject( inputAd );
-
     }
-
 }

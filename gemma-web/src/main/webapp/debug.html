@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Debug Webpack | Gemma</title>
+<link rel="stylesheet" href="/bundles/gemma-all.css" />
+<style>
+    body {
+        margin: 0;
+    }
+
+    .header {
+        border-bottom: 1px solid rgb(169, 191, 211);
+        height: 59px;
+        overflow-y: hidden;
+    }
+
+    .header .logo {
+        float: left;
+        padding-top: 2px;
+        padding-left: 12px;
+    }
+
+    .header .right-logo {
+        float: right;
+        padding-top: 15px;
+        padding-right: 12px;
+    }
+</style>
+<script src="/bundles/include.js"></script>
+<script src="/bundles/gemma-lib.js"></script>
+</head>
+<body>
+<header class="header">
+    <a href="https://localhost:8080/home.html" class="logo">
+        <img src="/images/logo/gemma-headerlogo.png" height="63" alt="Gemma Logo" />
+    </a>
+    <a href="https://www.ubc.ca/" class="right-logo">
+        <img src="/images/logo/ubc-logo-2018-crest-blue-rgb72.jpg" height="40" alt="UBC Logo" />
+    </a>
+</header>
+<div id="page">
+    <div id="content">
+        <div id="main">
+            <div class="padded">
+                <h1>Debug Webpack</h1>
+                <p>
+                    This HTML document contains the minimum necessary to load and debug
+                    Gemma Webpack bundles.<br>
+                </p>
+                <p>
+                    It can be tested out with:
+                </p>
+                <pre>npm run serve</pre>
+                <p>
+                    You can inspect the following bundles:
+                </p>
+                <ul>
+                    <li><a href="/bundles/gemma-all.css">CSS bundle</a></li>
+                    <li><a href="/bundles/include.js">JavaScript bundle</a></li>
+                    <li><a href="/bundles/gemma-lib.js">JavaScript bundle</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

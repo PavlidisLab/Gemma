@@ -19,19 +19,25 @@
 package ubic.gemma.core.analysis.expression.diff;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.test.context.ContextConfiguration;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.basecode.util.r.RClient;
 import ubic.basecode.util.r.RConnectionFactory;
 import ubic.basecode.util.r.RServeClient;
-import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -41,12 +47,13 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import java.util.*;
 
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Other tests can extend this class if they want an expression experiment with complete block design and biological
@@ -54,17 +61,43 @@ import static org.mockito.Mockito.when;
  *
  * @author keshav
  */
-public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
+@ContextConfiguration
+public abstract class BaseAnalyzerConfigurationTest extends BaseTest {
+
+    protected final Log log = LogFactory.getLog( getClass() );
+
+    @Configuration
+    @TestComponent
+    static class SubsettedAnalysis4TestContextConfiguration {
+
+        @Bean
+        public DiffExAnalyzer diffExAnalyzer() {
+            return new LinearModelAnalyzer();
+        }
+
+        @Bean
+        public CompositeSequenceService compositeSequenceService() {
+            return mock();
+        }
+
+        @Bean
+        public AsyncTaskExecutor taskExecutor() {
+            return new SimpleAsyncTaskExecutor();
+        }
+
+        @Bean
+        public EntityUrlBuilder entityUrlBuilder() {
+            return new EntityUrlBuilder( "http://localhost:8080" );
+        }
+
+        @Bean
+        public BuildInfo buildInfo() {
+            return mock();
+        }
+    }
 
     static final int NUM_DESIGN_ELEMENTS = 100;
     static final int NUM_TWA_RESULT_SETS = 3;
-    private final ByteArrayConverter bac = new ByteArrayConverter();
-
-    @Autowired
-    protected ExpressionDataMatrixService expressionDataMatrixService = null;
-
-    @Autowired
-    protected ProcessedExpressionDataVectorService processedExpressionDataVectorService = null;
 
     List<BioMaterial> biomaterials = null;
     boolean connected = false;
@@ -99,6 +132,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     private RClient rc = null;
 
     private Collection<ProcessedExpressionDataVector> vectors = null;
+    ExpressionDataDoubleMatrix dmatrix;
 
     @Before
     public void setUp() throws Exception {
@@ -123,12 +157,16 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
             log.warn( e.getMessage() );
         }
 
+        Taxon taxon = new Taxon();
+        taxon.setId( 1L );
+        taxon.setCommonName( "mouse" );
+
         /* array designs */
         arrayDesign = ArrayDesign.Factory.newInstance();
         arrayDesign.setTechnologyType( TechnologyType.ONECOLOR );
         arrayDesign.setId( 1L );
         arrayDesign.setName( "MG-U74Test_" + RandomStringUtils.randomAlphanumeric( 12 ) );
-        arrayDesign.setPrimaryTaxon( this.getTaxon( "mouse" ) );
+        arrayDesign.setPrimaryTaxon( taxon );
 
         expressionExperiment = ExpressionExperiment.Factory.newInstance();
         expressionExperiment.setName( "analysistest_" + RandomStringUtils.randomAlphanumeric( 12 ) );
@@ -360,9 +398,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         quantitationType.setIsRatio( false );
         expressionExperiment.getQuantitationTypes().add( quantitationType );
 
-        bioAssayDimension = BioAssayDimension.Factory.newInstance();
-        bioAssayDimension.setName( "test bioassay dimension" );
-        bioAssayDimension.setBioAssays( bioAssays );
+        bioAssayDimension = BioAssayDimension.Factory.newInstance( bioAssays );
 
         this.configureVectors( biomaterials, null );
     }
@@ -371,16 +407,6 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     public void tearDown() {
         if ( rc != null && rc.isConnected() && rc instanceof RServeClient )
             ( ( RServeClient ) rc ).disconnect();
-    }
-
-    /**
-     * Mocks the method getVectors in the {@link ExpressionDataMatrixService}.
-     *
-     */
-    void configureMockAnalysisServiceHelper() {
-        this.expressionDataMatrixService = mock( ExpressionDataMatrixService.class );
-        when( expressionDataMatrixService.getProcessedExpressionDataMatrix( expressionExperiment ) )
-                .thenReturn( new ExpressionDataDoubleMatrix( this.vectors ) );
     }
 
     /**
@@ -476,12 +502,9 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
             double[] dvals = new double[bioMaterials.size()];
             for ( int j = 0; j < dvals.length; j++ ) {
-
                 dvals[j] = dataMatrix.get( i, j );
             }
-
-            byte[] bvals = bac.doubleArrayToBytes( dvals );
-            vector.setData( bvals );
+            vector.setDataAsDoubles( dvals );
 
             vectors.add( vector );
 
@@ -492,5 +515,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         expressionExperiment.setNumberOfDataVectors( vectorsSet.size() );
 
         arrayDesign.setCompositeSequences( compositeSequences );
+
+        dmatrix = new ExpressionDataDoubleMatrix( this.vectors );
     }
 }

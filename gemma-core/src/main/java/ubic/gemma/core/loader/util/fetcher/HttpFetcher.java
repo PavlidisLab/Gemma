@@ -20,20 +20,13 @@ package ubic.gemma.core.loader.util.fetcher;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.core.config.Settings;
 
 import java.io.*;
-import java.net.URI;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
+import java.util.concurrent.*;
 
 /**
  * A generic class for fetching files via HTTP and writing them to a local file system.
@@ -44,11 +37,11 @@ import java.util.concurrent.FutureTask;
 public class HttpFetcher extends AbstractFetcher {
 
     @Override
-    public Collection<LocalFile> fetch( String url ) {
+    public Collection<File> fetch( String url ) {
         return this.fetch( url, null );
     }
 
-    public Collection<LocalFile> fetch( String url, String outputFileName ) {
+    public Collection<File> fetch( String url, String outputFileName ) {
         AbstractFetcher.log.info( "Seeking " + url );
 
         this.localBasePath = Settings.getDownloadPath();
@@ -79,51 +72,31 @@ public class HttpFetcher extends AbstractFetcher {
                 output = outputFileName;
             }
 
-            FutureTask<Boolean> future = this.defineTask( output, url );
-            return this.doTask( future, url, output );
+            Future<?> future = Executors.newSingleThreadExecutor().submit( () -> {
+                AbstractFetcher.log.info( "Fetching " + url );
+                try ( InputStream inputStream = new URL( url ).openStream();
+                        OutputStream outputStream = new FileOutputStream( output ) ) {
+                    IOUtils.copy( inputStream, outputStream );
+                } catch ( IOException e ) {
+                    throw new RuntimeException( e );
+                }
+            } );
+            while ( true ) {
+                try {
+                    future.get( AbstractFetcher.INFO_UPDATE_INTERVAL, TimeUnit.MILLISECONDS );
+                    return this.listFiles( url, output );
+                } catch ( TimeoutException ignored ) {
+                    AbstractFetcher.log.info( ( new File( output ).length() + " bytes read" ) );
+                } catch ( InterruptedException e ) {
+                    future.cancel( true );
+                    throw new RuntimeException( "Interrupted: Couldn't fetch file for " + url, e );
+                } catch ( ExecutionException | IOException e ) {
+                    throw new RuntimeException( "Couldn't fetch file for " + url, e );
+                }
+            }
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
-    }
-
-    protected FutureTask<Boolean> defineTask( final String outputFileName, final String seekFile ) {
-        return new FutureTask<>( new Callable<Boolean>() {
-            @Override
-            @SuppressWarnings("synthetic-access")
-            public Boolean call() throws IOException {
-                AbstractFetcher.log.info( "Fetching " + seekFile );
-                URL urlPattern = new URL( seekFile );
-
-                try ( InputStream inputStream = urlPattern.openStream();
-                        OutputStream outputStream = new FileOutputStream( outputFileName ) ) {
-                    IOUtils.copy( inputStream, outputStream );
-                    return Boolean.TRUE;
-                }
-            }
-        } );
-    }
-
-    protected Collection<LocalFile> doTask( FutureTask<Boolean> future, String seekFile, String outputFileName ) {
-        Executors.newSingleThreadExecutor().execute( future );
-        try {
-
-            while ( !future.isDone() ) {
-                try {
-                    Thread.sleep( AbstractFetcher.INFO_UPDATE_INTERVAL );
-                } catch ( InterruptedException ignored ) {
-
-                }
-                AbstractFetcher.log.info( ( new File( outputFileName ).length() + " bytes read" ) );
-            }
-            if ( future.get() ) {
-                return this.listFiles( seekFile, outputFileName );
-            }
-        } catch ( ExecutionException | IOException e ) {
-            throw new RuntimeException( "Couldn't fetch file for " + seekFile, e );
-        } catch ( InterruptedException e ) {
-            throw new RuntimeException( "Interrupted: Couldn't fetch file for " + seekFile, e );
-        }
-        throw new RuntimeException( "Couldn't fetch file for " + seekFile );
     }
 
     @Override
@@ -140,16 +113,11 @@ public class HttpFetcher extends AbstractFetcher {
     protected void initConfig() {
     }
 
-    protected Collection<LocalFile> listFiles( String seekFile, String outputFileName ) throws IOException {
-        Collection<LocalFile> result = new HashSet<>();
+    protected Collection<File> listFiles( String seekFile, String outputFileName ) throws IOException {
+        Collection<File> result = new HashSet<>();
         File file = new File( outputFileName );
         AbstractFetcher.log.info( "Downloaded: " + file );
-        LocalFile newFile = LocalFile.Factory.newInstance();
-        newFile.setLocalURL( file.toURI() );
-        newFile.setRemoteURL( URI.create( seekFile ) );
-        newFile.setVersion( new SimpleDateFormat().format( new Date() ) );
-        result.add( newFile );
+        result.add( file );
         return result;
     }
-
 }

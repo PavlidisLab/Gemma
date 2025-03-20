@@ -80,7 +80,7 @@ public class PubMedQueryController extends BaseController implements Initializin
         BibliographicReference bibRefFound = bibliographicReferenceService.findByExternalId( accession );
         if ( bibRefFound != null ) {
             request.setAttribute( "existsInSystem", Boolean.TRUE );
-            this.saveMessage( request, "bibliographicReference.alreadyInSystem", accession, "Already in Gemma" );
+            this.messageUtil.saveMessage( "bibliographicReference.alreadyInSystem", accession, "Already in Gemma" );
         } else {
             request.setAttribute( "existsInSystem", Boolean.FALSE );
             int pubMedId;
@@ -103,11 +103,12 @@ public class PubMedQueryController extends BaseController implements Initializin
                 return new ModelAndView( "bibRefSearch", result.getModel() );
             }
 
-            this.saveMessage( request, "bibliographicReference.found", accession, "Found" );
+            this.messageUtil.saveMessage( "bibliographicReference.found", accession, "Found" );
         }
 
         status.setComplete();
-        return new ModelAndView( "bibRefView" ).addObject( "bibliographicReference", bibRefFound );
+        return new ModelAndView( "bibRefView" )
+                .addObject( "bibliographicReference", bibRefFound );
     }
 
 }

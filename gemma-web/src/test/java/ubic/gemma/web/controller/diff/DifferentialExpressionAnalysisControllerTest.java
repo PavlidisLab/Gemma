@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
-import ubic.gemma.core.analysis.expression.diff.AnalysisSelectionAndExecutionService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
@@ -37,11 +36,6 @@ public class DifferentialExpressionAnalysisControllerTest extends BaseWebTest {
 
         @Bean
         public TaskRunningService taskRunningService() {
-            return mock();
-        }
-
-        @Bean
-        public AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService() {
             return mock();
         }
 

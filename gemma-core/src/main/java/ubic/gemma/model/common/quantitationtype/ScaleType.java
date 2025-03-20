@@ -18,28 +18,41 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
-import java.util.*;
-
 public enum ScaleType {
     /**
      * This is effectively the opposite of "log-transformed" (or any other transformation)
      */
     LINEAR,
+    /**
+     * Data is log-transformed with a natural log.
+     * @see Math#log(double)
+     */
     LN,
+    /**
+     * Data is log-transformed with a base 2 log.
+     */
     LOG2,
+    /**
+     * Data is log-transformed with a base 10 log.
+     * @see Math#log10(double)
+     */
     LOG10,
     /**
      * Data is log-transformed as per {@code ln X + 1}
+     * @see Math#log1p(double)
      */
     LOG1P,
+    /**
+     * Data is log-transformed, but the base is unknown.
+     */
     LOGBASEUNKNOWN,
     /**
      * Deprecated, do not use.
      */
+    @Deprecated
     FOLDCHANGE,
-    OTHER,
     /**
-     * An unscaled measurement is one that has no inherent scale; e.g., a categorial value.
+     * An unscaled measurement is one that has no inherent scale; e.g., a categorical value.
      */
     UNSCALED,
     /**
@@ -54,5 +67,9 @@ public enum ScaleType {
      * Indicates value was (originally) an integer count of something, such as RNAseq reads. This does not mean the
      * value is necessarily an integer.
      */
-    COUNT;
+    COUNT,
+    /**
+     * Other scale type. Can be used if unknown.
+     */
+    OTHER;
 }

@@ -139,15 +139,15 @@ public class ProbeMapperImpl implements ProbeMapper {
                     continue;
                 }
 
-                assert blatResult.score() >= 0 && blatResult.score() <= 1.0 : "Score was " + blatResult.score();
-                assert blatResult.identity() >= 0 && blatResult.identity() <= 1.0 :
-                        "Identity was " + blatResult.identity();
+                assert BlatAssociationScorer.score( blatResult ) >= 0 && BlatAssociationScorer.score( blatResult ) <= 1.0 : "Score was " + BlatAssociationScorer.score( blatResult );
+                assert BlatAssociationScorer.identity( blatResult ) >= 0 && BlatAssociationScorer.identity( blatResult ) <= 1.0 :
+                        "Identity was " + BlatAssociationScorer.identity( blatResult );
 
-                if ( blatResult.score() < config.getBlatScoreThreshold() || blatResult.identity() < config
+                if ( BlatAssociationScorer.score( blatResult ) < config.getBlatScoreThreshold() || BlatAssociationScorer.identity( blatResult ) < config
                         .getIdentityThreshold() ) {
                     if ( log.isDebugEnabled() )
-                        log.debug( "Result for " + sequence + " skipped with score=" + blatResult.score() + " identity="
-                                + blatResult.identity() );
+                        log.debug( "Result for " + sequence + " skipped with score=" + BlatAssociationScorer.score( blatResult ) + " identity="
+                                + BlatAssociationScorer.identity( blatResult ) );
                     skipped++;
                     continue;
                 }

@@ -23,6 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
@@ -41,14 +42,17 @@ import java.io.InputStream;
  */
 public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipulatingCli {
 
+    @Autowired
     private ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService;
+    @Autowired
+    private TaxonService taxonService;
+
     private boolean force = false;
     private String idFile = null;
     private String sequenceFile;
     private String sequenceId = null;
     private String sequenceType;
     private String taxonName = null;
-    private TaxonService taxonService;
 
     @Override
     public String getCommandName() {
@@ -56,7 +60,94 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     }
 
     @Override
-    protected void doWork() throws Exception {
+    public String getShortDesc() {
+        return "Attach sequences to array design, from a file or fetching from BLAST database.";
+    }
+
+    @Override
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
+
+        Option fileOption = Option.builder( "f" ).argName( "Input sequence file" ).hasArg()
+                .desc( "Path to file (FASTA for cDNA or three-column format for OLIGO). If the FASTA file doesn't have " +
+                        "probe identifiers included, provide identifiers via the -i option." ).longOpt( "file" ).build();
+
+        options.addOption( fileOption );
+
+        Option sequenceIdentifierOption = Option.builder( "i" ).argName( "Input identifier file" ).hasArg()
+                .desc( "Path to file (two columns with probe ids and sequence accessions); can use in combination with -file" )
+                .longOpt( "ids" ).build();
+
+        options.addOption( sequenceIdentifierOption );
+
+        StringBuilder buf = new StringBuilder();
+
+        for ( SequenceType lit : SequenceType.values() ) {
+            buf.append( lit.name() ).append( "\n" );
+        }
+
+        String seqtypes = buf.toString();
+        seqtypes = StringUtils.chop( seqtypes );
+
+        Option sequenceTypeOption = Option.builder( "y" ).required().argName( "Sequence type" ).hasArg()
+                .desc( seqtypes ).longOpt( "type" ).build();
+
+        options.addOption( sequenceTypeOption );
+
+        options.addOption( Option.builder( "s" ).hasArg().argName( "accession" ).desc( "A single accession to update" )
+                .longOpt( "sequence" ).build() );
+
+        Option forceOption = Option.builder( "force" )
+                .desc(
+                        "Force overwriting of existing sequences; If biosequences are encountered that already have sequences filled in, "
+                                + "they will be overwritten; default is to leave them." )
+                .build();
+
+        options.addOption( forceOption );
+
+        Option taxonOption = Option.builder( "t" ).hasArg().argName( "taxon" ).desc(
+                        "Taxon common name (e.g., human) for sequences (only required if array design is 'naive')" )
+                .build();
+
+        options.addOption( taxonOption );
+
+    }
+
+    @Override
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
+        super.processOptions( commandLine );
+
+        if ( commandLine.hasOption( 'y' ) ) {
+            sequenceType = commandLine.getOptionValue( 'y' );
+        }
+
+        if ( commandLine.hasOption( 'f' ) ) {
+            this.sequenceFile = commandLine.getOptionValue( 'f' );
+        }
+
+        if ( commandLine.hasOption( 's' ) ) {
+            this.sequenceId = commandLine.getOptionValue( 's' );
+        }
+
+        if ( commandLine.hasOption( 't' ) ) {
+            this.taxonName = commandLine.getOptionValue( 't' );
+            if ( StringUtils.isBlank( this.taxonName ) ) {
+                throw new IllegalArgumentException( "You must provide a taxon name when using the -t option" );
+            }
+        }
+
+        if ( commandLine.hasOption( 'i' ) ) {
+            this.idFile = commandLine.getOptionValue( 'i' );
+        }
+
+        if ( commandLine.hasOption( "force" ) ) {
+            this.force = true;
+        }
+
+    }
+
+    @Override
+    protected void doAuthenticatedWork() throws Exception {
         // this is kind of an oddball function of this tool.
         if ( this.sequenceId != null ) {
             BioSequence updated = arrayDesignSequenceProcessingService.processSingleAccession( this.sequenceId,
@@ -77,7 +168,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
         SequenceType sequenceTypeEn = SequenceType.valueOf( sequenceType );
 
-        Taxon taxon = null;
+        Taxon taxon;
         if ( this.taxonName != null ) {
             assert StringUtils.isNotBlank( this.taxonName );
             taxon = taxonService.findByCommonName( this.taxonName );
@@ -146,7 +237,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     /**
      */
     private String[] chooseBLASTdbs( Taxon taxon ) {
-        String[] databases = null;
+        String[] databases;
 
         if ( taxon != null && taxon.getCommonName().equals( "mouse" ) ) {
             databases = new String[] { "est_mouse", "nt" };
@@ -158,100 +249,9 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         return databases;
     }
 
-    @Override
-    public String getShortDesc() {
-        return "Attach sequences to array design, from a file or fetching from BLAST database.";
-    }
-
-    @SuppressWarnings("static-access")
-    @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
-
-        Option fileOption = Option.builder( "f" ).argName( "Input sequence file" ).hasArg()
-                .desc( "Path to file (FASTA for cDNA or three-column format for OLIGO). If the FASTA file doesn't have " +
-                        "probe identifiers included, provide identifiers via the -i option." ).longOpt( "file" ).build();
-
-        options.addOption( fileOption );
-
-        Option sequenceIdentifierOption = Option.builder( "i" ).argName( "Input identifier file" ).hasArg()
-                .desc( "Path to file (two columns with probe ids and sequence accessions); can use in combination with -file" )
-                .longOpt( "ids" ).build();
-
-        options.addOption( sequenceIdentifierOption );
-
-        StringBuilder buf = new StringBuilder();
-
-        for ( SequenceType lit : SequenceType.values() ) {
-            buf.append( lit.name() ).append( "\n" );
-        }
-
-        String seqtypes = buf.toString();
-        seqtypes = StringUtils.chop( seqtypes );
-
-        Option sequenceTypeOption = Option.builder( "y" ).required().argName( "Sequence type" ).hasArg()
-                .desc( seqtypes ).longOpt( "type" ).build();
-
-        options.addOption( sequenceTypeOption );
-
-        options.addOption( Option.builder( "s" ).hasArg().argName( "accession" ).desc( "A single accession to update" )
-                .longOpt( "sequence" ).build() );
-
-        Option forceOption = Option.builder( "force" )
-                .desc(
-                        "Force overwriting of existing sequences; If biosequences are encountered that already have sequences filled in, "
-                                + "they will be overwritten; default is to leave them." )
-                .build();
-
-        options.addOption( forceOption );
-
-        Option taxonOption = Option.builder( "t" ).hasArg().argName( "taxon" ).desc(
-                        "Taxon common name (e.g., human) for sequences (only required if array design is 'naive')" )
-                .build();
-
-        options.addOption( taxonOption );
-
-    }
-
-    @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
-        arrayDesignSequenceProcessingService = this.getBean( ArrayDesignSequenceProcessingService.class );
-        this.taxonService = this.getBean( TaxonService.class );
-
-        if ( commandLine.hasOption( 'y' ) ) {
-            sequenceType = commandLine.getOptionValue( 'y' );
-        }
-
-        if ( commandLine.hasOption( 'f' ) ) {
-            this.sequenceFile = commandLine.getOptionValue( 'f' );
-        }
-
-        if ( commandLine.hasOption( 's' ) ) {
-            this.sequenceId = commandLine.getOptionValue( 's' );
-        }
-
-        if ( commandLine.hasOption( 't' ) ) {
-            this.taxonName = commandLine.getOptionValue( 't' );
-            if ( StringUtils.isBlank( this.taxonName ) ) {
-                throw new IllegalArgumentException( "You must provide a taxon name when using the -t option" );
-            }
-        }
-
-        if ( commandLine.hasOption( 'i' ) ) {
-            this.idFile = commandLine.getOptionValue( 'i' );
-        }
-
-        if ( commandLine.hasOption( "force" ) ) {
-            this.force = true;
-        }
-
-    }
-
     private void audit( ArrayDesign arrayDesign, String note ) {
         // minor : don't add audit event if no sequences were changed, or --force.
         this.getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
         auditTrailService.addUpdateEvent( arrayDesign, ArrayDesignSequenceUpdateEvent.class, note );
     }
-
 }

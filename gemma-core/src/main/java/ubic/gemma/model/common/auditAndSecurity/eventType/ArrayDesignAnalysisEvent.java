@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,7 +22,5 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * An event involving the analysis of an ArrayDesign
  */
 public abstract class ArrayDesignAnalysisEvent extends AuditEventType {
-
-    private static final long serialVersionUID = -8391873112717801492L;
 
 }

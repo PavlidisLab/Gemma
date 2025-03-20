@@ -37,95 +37,25 @@ public class GeoSeries extends GeoData {
     private String status;
     private String submissionDate;
     private String platformId;
-    private final Collection<GeoSample> samples;
-    private final Collection<SeriesType> seriesTypes = new HashSet<>();
-    private final Collection<String> subSeries;
-    private final Map<Integer, GeoVariable> variables;
-    private Collection<GeoContact> contributers;
-    private Collection<GeoDataset> dataSets;
+    // use a LinkedHashSet for samples to preserve order
+    private final Collection<GeoSample> samples = new LinkedHashSet<>();
+    private final Collection<GeoSeriesType> seriesTypes = new HashSet<>();
+    private final Collection<String> subSeries = new HashSet<>();
+    private final Map<Integer, GeoVariable> variables = new HashMap<>();
+    private Collection<GeoContact> contributers = new HashSet<>();
+    private Collection<GeoDataset> dataSets = new HashSet<>();
     private boolean isSubSeries = false;
     private boolean isSuperSeries = false;
-    private Collection<String> keyWords;
+    private Collection<String> keyWords = new HashSet<>();
     private String lastUpdateDate = "";
     private String overallDesign = "";
-    private Collection<String> pubmedIds;
-    private Map<Integer, GeoReplication> replicates;
+    private Collection<String> pubmedIds = new HashSet<>();
+    private Map<Integer, GeoReplication> replicates = new HashMap<>();
     private GeoSampleCorrespondence sampleCorrespondence;
     private String summary = "";
-    private String supplementaryFile = "";
-    private GeoValues values;
-    private Collection<String> webLinks;
-
-    public GeoSeries() {
-        keyWords = new HashSet<>();
-        pubmedIds = new HashSet<>();
-        variables = new HashMap<>();
-        replicates = new HashMap<>();
-        webLinks = new HashSet<>();
-        contributers = new HashSet<>();
-        samples = new HashSet<>();
-        dataSets = new HashSet<>();
-        values = new GeoValues();
-        subSeries = new HashSet<>();
-    }
-
-    /**
-     * See also GeoDataset.convertStringToExperimentType
-     *
-     * @param  string series type string
-     * @return        series type object
-     */
-    public static SeriesType convertStringToSeriesType( String string ) {
-        if ( string.equalsIgnoreCase( "Expression profiling by array" ) ) {
-            return SeriesType.geneExpressionByArray;
-        } else if ( string.equalsIgnoreCase( "Methylation profiling by high throughput sequencing" ) ) {
-            return SeriesType.methylationArraybased;
-        } else if ( string.equalsIgnoreCase( "Genome binding/occupancy profiling by high throughput sequencing" ) ) {
-            return SeriesType.genomeBindingBySequencing;
-        } else if ( string.equalsIgnoreCase( "Expression profiling by high throughput sequencing" ) ) {
-            return SeriesType.geneExpressionBySequencing;
-        } else if ( string.equalsIgnoreCase( "Non-coding RNA profiling by array" ) ) {
-            return SeriesType.nonCodingRNAProfilingArraybased;
-        } else if ( string.equals( "Other" ) ) {
-            return SeriesType.other;
-        } else if ( string.equalsIgnoreCase( "Third-party reanalysis" ) ) {
-            return SeriesType.thirdPartyReanalysis;
-        } else if ( string.equalsIgnoreCase( "Genome binding/occupancy profiling by genome tiling array" ) ) {
-            return SeriesType.genomeBindingByArray;
-        } else if ( string.equalsIgnoreCase( "Genome variation profiling by array" ) ) {
-            return SeriesType.genomeVariationByArray;
-        } else if ( string.equalsIgnoreCase( "Non-coding RNA profiling by high throughput sequencing" ) ) {
-            return SeriesType.nonCodingRNAProfilingBySequencing;
-        } else if ( string.equalsIgnoreCase( "Methylation profiling by genome tiling array" ) ) {
-            return SeriesType.methylationByGenomeTiling;
-        } else if ( string.equalsIgnoreCase( "Genome variation profiling by genome tiling array" ) ) {
-            return SeriesType.genomeVariationByGenomeTiling;
-        } else if ( string.equalsIgnoreCase( "different tissues" ) || string
-                .equalsIgnoreCase( "cell_type_comparison_design" ) ) {
-            return SeriesType.other;
-        } else if ( string.equals( "other" ) || string.equalsIgnoreCase( "different tissues" ) || string
-                .equalsIgnoreCase( "cell_type_comparison_design; disease state; cell line; tissue type" )
-                || string
-                        .equalsIgnoreCase( "time-course" )
-                || string.equalsIgnoreCase( "Dual-label cDNA microarray" ) || string
-                        .equalsIgnoreCase( "SuperSeries" )
-                || string.equalsIgnoreCase( "Logical set" ) || string
-                        .equalsIgnoreCase( "DNA Oligonucleotide Array" )
-                || string
-                        .equalsIgnoreCase( "expression profiling; time course analysis; infection response" ) ) {
-            // these are possibilities that linger in tests. A pesky one is 'other', since that used to mean something
-            // different than 'Other' (note capitalization). The old meaning is still expression arrays.
-            return SeriesType.geneExpressionByArray;
-        } else if ( string.equalsIgnoreCase( "Expression profiling by SAGE" ) ) {
-            return SeriesType.geneExpressionBySAGE;
-        } else {
-            // there are too many hanging around, it's actually not so bad to guess.
-            log.warn( "Unknown series type '" + string + "', assuming is expression arrays" );
-            return SeriesType.geneExpressionByArray;
-            //
-            // throw new IllegalArgumentException( "Unknown series type '" + string + "'" );
-        }
-    }
+    private final Collection<String> supplementaryFiles = new LinkedHashSet<>();
+    private GeoValues values = new GeoValues();
+    private Collection<String> webLinks = new HashSet<>();
 
     public void addContributer( GeoContact contributer ) {
         this.contributers.add( contributer );
@@ -167,7 +97,7 @@ public class GeoSeries extends GeoData {
         assert this.pubmedIds.size() > 0;
     }
 
-    public void addToSeriesTypes( SeriesType type ) {
+    public void addToSeriesTypes( GeoSeriesType type ) {
         this.seriesTypes.add( type );
     }
 
@@ -338,7 +268,7 @@ public class GeoSeries extends GeoData {
         return this.samples;
     }
 
-    public Collection<SeriesType> getSeriesTypes() {
+    public Collection<GeoSeriesType> getSeriesTypes() {
         return seriesTypes;
     }
 
@@ -363,12 +293,12 @@ public class GeoSeries extends GeoData {
     /**
      * @return String
      */
-    public String getSupplementaryFile() {
-        return supplementaryFile;
+    public Collection<String> getSupplementaryFiles() {
+        return supplementaryFiles;
     }
 
-    public void setSupplementaryFile( String supplementaryFile ) {
-        this.supplementaryFile = supplementaryFile;
+    public void addToSupplementaryFiles( String supplementaryFile ) {
+        this.supplementaryFiles.add( supplementaryFile );
     }
 
     public GeoValues getValues() {
@@ -383,7 +313,7 @@ public class GeoSeries extends GeoData {
      * Get a subset of the values. This is only used for 'splitting' a series.
      *
      * @param  s Samples to include data from.
-     * @return   geo values
+     * @return geo values
      */
     public GeoValues getValues( Collection<GeoSample> s ) {
         return values.subset( s );
@@ -425,6 +355,16 @@ public class GeoSeries extends GeoData {
     }
 
     /**
+     * Only keep the given samples.
+     */
+    public void keepSamples( Collection<GeoSample> samplesToKeep ) {
+        if ( samplesToKeep == null || samplesToKeep.isEmpty() ) {
+            return;
+        }
+        this.samples.removeIf( s -> !samplesToKeep.contains( s ) );
+    }
+
+    /**
      * Clean up samples we have decided are ineligible (i.e., non transcriptomic)
      *
      * @param samplesToSkip the samples to remove
@@ -434,13 +374,6 @@ public class GeoSeries extends GeoData {
             return;
         }
         this.samples.removeAll( samplesToSkip );
-    }
-
-    /**
-     * @param contact The contact to set.
-     */
-    public void setContact( GeoContact contact ) {
-        this.contact = contact;
     }
 
     public void setDataSets( Collection<GeoDataset> dataSets ) {
@@ -459,10 +392,6 @@ public class GeoSeries extends GeoData {
      */
     public void setIsSuperSeries( boolean isSuperSeries ) {
         this.isSuperSeries = isSuperSeries;
-    }
-
-    public enum SeriesType {
-        geneExpressionByArray, geneExpressionBySAGE, geneExpressionBySequencing, genomeBindingByArray, genomeBindingBySequencing, genomeVariationByArray, genomeVariationByGenomeTiling, methylationArraybased, methylationByGenomeTiling, nonCodingRNAProfilingArraybased, nonCodingRNAProfilingBySequencing, other, thirdPartyReanalysis,
     }
 
 }

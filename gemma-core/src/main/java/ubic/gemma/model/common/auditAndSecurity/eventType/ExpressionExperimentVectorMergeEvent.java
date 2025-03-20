@@ -23,12 +23,6 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * Indicates that the "Vector merging" has been done on the associated experiment.
  * </p>
  */
-public class ExpressionExperimentVectorMergeEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 3635469819668645913L;
+public class ExpressionExperimentVectorMergeEvent extends ExpressionExperimentAnalysisEvent {
 
 }

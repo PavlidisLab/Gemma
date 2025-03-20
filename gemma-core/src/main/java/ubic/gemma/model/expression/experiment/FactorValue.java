@@ -18,17 +18,17 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import org.hibernate.search.annotations.DocumentId;
 import org.hibernate.search.annotations.Indexed;
 import org.hibernate.search.annotations.IndexedEmbedded;
-import ubic.gemma.model.common.Identifiable;
+import org.springframework.util.Assert;
+import ubic.gemma.model.common.AbstractIdentifiable;
+import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 
 import javax.annotation.Nullable;
 import javax.persistence.Transient;
-import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -38,14 +38,8 @@ import java.util.stream.Collectors;
  * The value for a ExperimentalFactor, representing a specific instance of the factor, such as "10 ug/kg" or "mutant"
  */
 @Indexed
-public class FactorValue implements Identifiable, SecuredChild, Serializable {
+public class FactorValue extends AbstractIdentifiable implements SecuredChild {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -3783172994360698631L;
-
-    private Long id;
     private ExperimentalFactor experimentalFactor;
     @Nullable
     @Deprecated
@@ -62,22 +56,10 @@ public class FactorValue implements Identifiable, SecuredChild, Serializable {
 
     private ExpressionExperiment securityOwner = null;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public FactorValue() {
-    }
-
     @Override
     @DocumentId
     public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
+        return super.getId();
     }
 
     public ExperimentalFactor getExperimentalFactor() {
@@ -207,7 +189,7 @@ public class FactorValue implements Identifiable, SecuredChild, Serializable {
     @Override
     public String toString() {
         return String.format( "FactorValue%s%s%s%s%s%s",
-                id != null ? " Id=" + id : "",
+                getId() != null ? " Id=" + getId() : "",
                 value != null ? " Value=" + value : "",
                 measurement != null ? " Measurement=" + measurement : "",
                 !characteristics.isEmpty() ? " Characteristics=[" + characteristics.stream().sorted().map( Statement::toString ).collect( Collectors.joining( ", " ) ) + "]" : "",
@@ -225,6 +207,35 @@ public class FactorValue implements Identifiable, SecuredChild, Serializable {
         public static FactorValue newInstance( ExperimentalFactor experimentalFactor ) {
             final FactorValue entity = new FactorValue();
             entity.setExperimentalFactor( experimentalFactor );
+            return entity;
+        }
+
+        /**
+         * Create a FactorValue with a single characteristic.
+         */
+        public static FactorValue newInstance( ExperimentalFactor factor, Characteristic c ) {
+            return newInstance( factor, c instanceof Statement ? ( Statement ) c : Statement.Factory.newInstance( c ) );
+        }
+
+        /**
+         * Create a FactorValue with a single statement.
+         */
+        public static FactorValue newInstance( ExperimentalFactor factor, Statement c ) {
+            Assert.isTrue( factor.getType() == FactorType.CATEGORICAL,
+                    "Only categorical factors can be created with a single characteristic." );
+            FactorValue entity = newInstance( factor );
+            entity.getCharacteristics().add( c );
+            return entity;
+        }
+
+
+        /**
+         * Create a FactorValue with a measurement.
+         */
+        public static FactorValue newInstance( ExperimentalFactor factor, Measurement measurement ) {
+            Assert.isTrue( factor.getType() == FactorType.CONTINUOUS, "Only continuous factors can have a measurement." );
+            FactorValue entity = newInstance( factor );
+            entity.setMeasurement( measurement );
             return entity;
         }
     }

@@ -23,18 +23,16 @@ import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.beans.BeanInstantiationException;
+import org.springframework.beans.BeanUtils;
+import org.springframework.context.*;
 import ubic.gemma.core.completion.BashCompletionGenerator;
 import ubic.gemma.core.completion.CompletionGenerator;
 import ubic.gemma.core.completion.FishCompletionGenerator;
 import ubic.gemma.core.context.SpringContextUtils;
 import ubic.gemma.core.logging.LoggingConfigurer;
 import ubic.gemma.core.logging.log4j.Log4jConfigurer;
-import ubic.gemma.core.util.BuildInfo;
-import ubic.gemma.core.util.CLI;
-import ubic.gemma.core.util.HelpUtils;
-import ubic.gemma.core.util.ShellUtils;
+import ubic.gemma.core.util.*;
 
 import javax.annotation.Nullable;
 import java.io.PrintWriter;
@@ -189,30 +187,57 @@ public class GemmaCLI {
 
         Map<String, Command> commandsByName = new HashMap<>();
         Map<String, Command> commandsByClassName = new HashMap<>();
+        Map<String, Command> commandsByAlias = new HashMap<>();
         SortedMap<CLI.CommandGroup, SortedMap<String, Command>> commandGroups = new TreeMap<>( Comparator.comparingInt( CLI.CommandGroup::ordinal ) );
         for ( String beanName : ctx.getBeanNamesForType( CLI.class ) ) {
             CLI cliInstance;
             Class<?> beanClass = ctx.getType( beanName );
             try {
-                cliInstance = ( CLI ) beanClass.newInstance();
-            } catch ( InstantiationException | IllegalAccessException e2 ) {
+                cliInstance = ( CLI ) BeanUtils.instantiate( beanClass );
+                // provide some useful context for the CLI that they can use for generating options
+                if ( cliInstance instanceof ApplicationContextAware ) {
+                    ( ( ApplicationContextAware ) cliInstance ).setApplicationContext( ctx );
+                }
+                if ( cliInstance instanceof EnvironmentAware ) {
+                    ( ( EnvironmentAware ) cliInstance ).setEnvironment( ctx.getEnvironment() );
+                }
+                if ( cliInstance instanceof MessageSourceAware ) {
+                    ( ( MessageSourceAware ) cliInstance ).setMessageSource( ctx );
+                }
+            } catch ( BeanInstantiationException e2 ) {
                 System.err.printf( "Failed to create %s using reflection, will have to create a complete bean to extract its metadata.%n", beanClass.getName() );
                 e2.printStackTrace( System.err );
                 cliInstance = ctx.getBean( beanName, CLI.class );
             }
-            Command cmd = new Command( beanClass, beanName, cliInstance.getCommandName(), cliInstance.getShortDesc(), cliInstance.getOptions(), cliInstance.allowPositionalArguments() );
+            Command cmd = new Command( beanClass, beanName, cliInstance.getCommandName(),
+                    cliInstance.getCommandAliases(), cliInstance.getShortDesc(), cliInstance.getOptions(),
+                    cliInstance.allowPositionalArguments() );
             commandsByClassName.put( beanClass.getName(), cmd );
             String commandName = cliInstance.getCommandName();
-            if ( commandName == null || StringUtils.isBlank( commandName ) ) {
-                // keep null to avoid printing some commands...
-                continue;
+            if ( StringUtils.isNotBlank( commandName ) ) {
+                if ( commandsByName.put( commandName, cmd ) != null ) {
+                    System.err.printf( "Non-unique command name '%s' for %s. It is also associated to %s.%n",
+                            commandName, beanClass.getName(), commandsByName.get( commandName ).getBeanClass().getName() );
+                    System.exit( 1 );
+                }
+                CLI.CommandGroup g = cliInstance.getCommandGroup();
+                if ( !commandGroups.containsKey( g ) ) {
+                    commandGroups.put( g, new TreeMap<>() );
+                }
+                commandGroups.get( g ).put( commandName, cmd );
             }
-            commandsByName.put( commandName, cmd );
-            CLI.CommandGroup g = cliInstance.getCommandGroup();
-            if ( !commandGroups.containsKey( g ) ) {
-                commandGroups.put( g, new TreeMap<>() );
+            for ( String alias : cliInstance.getCommandAliases() ) {
+                if ( commandsByName.containsKey( alias ) ) {
+                    System.err.printf( "Alias '%s' for %s is already used as a command name for %s.%n", alias,
+                            beanClass.getName(), commandsByName.get( alias ).getBeanClass().getName() );
+                    System.exit( 1 );
+                }
+                if ( commandsByAlias.put( alias, cmd ) != null ) {
+                    System.err.printf( "Non-unique alias '%s' for %s. It is also associated to %s.%n", alias,
+                            beanClass.getName(), commandsByAlias.get( alias ).getBeanClass().getName() );
+                    System.exit( 1 );
+                }
             }
-            commandGroups.get( g ).put( commandName, cmd );
         }
 
         // full help with all the commands
@@ -255,9 +280,15 @@ public class GemmaCLI {
             completionGenerator.generateCompletion( options, completionWriter );
             for ( SortedMap<String, Command> group : commandGroups.values() ) {
                 for ( Command cli : group.values() ) {
-                    completionGenerator.generateSubcommandCompletion( cli.getBeanClass().getName(), cli.getOptions(), cli.getShortDesc(), cli.isAllowsPositionalArguments(), completionWriter );
-                    if ( cli.getCommandName() != null ) {
-                        completionGenerator.generateSubcommandCompletion( cli.getCommandName(), cli.getOptions(), cli.getShortDesc(), cli.isAllowsPositionalArguments(), completionWriter );
+                    List<String> aliases = new ArrayList<>( 2 + cli.getCommandAliases().size() );
+                    aliases.add( cli.getBeanClass().getName() );
+                    if ( StringUtils.isNotBlank( cli.getCommandName() ) ) {
+                        aliases.add( cli.getCommandName() );
+                    }
+                    aliases.addAll( cli.getCommandAliases() );
+                    for ( String alias : aliases ) {
+                        completionGenerator.generateSubcommandCompletion( alias, cli.getOptions(),
+                                cli.getShortDesc(), cli.isAllowsPositionalArguments(), completionWriter );
                     }
                 }
             }
@@ -285,6 +316,8 @@ public class GemmaCLI {
             command = commandsByClassName.get( commandRequested );
         } else if ( commandsByName.containsKey( commandRequested ) ) {
             command = commandsByName.get( commandRequested );
+        } else if ( commandsByAlias.containsKey( commandRequested ) ) {
+            command = commandsByAlias.get( commandRequested );
         } else {
             System.err.println( "Unrecognized command: " + commandRequested );
             GemmaCLI.printHelp( options, commandGroups, new PrintWriter( System.err, true ) );
@@ -298,7 +331,7 @@ public class GemmaCLI {
             System.err.println( "========= Gemma CLI invocation of " + command.getCommandName() + " ============" );
             System.err.println( "Options: " + GemmaCLI.getOptStringForLogging( argsToPass ) );
             CLI cli = ctx.getBean( command.getBeanName(), CLI.class );
-            statusCode = cli.executeCommand( argsToPass );
+            statusCode = cli.executeCommand( new SystemCliContext( commandRequested, argsToPass ) );
         } catch ( Exception e ) {
             System.err.println( "Gemma CLI error: " + e.getClass().getName() + " - " + e.getMessage() );
             System.err.println( ExceptionUtils.getStackTrace( e ) );
@@ -329,7 +362,6 @@ public class GemmaCLI {
 
         StringBuilder footer = new StringBuilder();
         if ( commands != null ) {
-            footer.append( '\n' );
             footer.append( "Here is a list of available commands, grouped by category:" ).append( '\n' );
             footer.append( '\n' );
             for ( Map.Entry<CLI.CommandGroup, SortedMap<String, Command>> entry : commands.entrySet() ) {
@@ -339,8 +371,9 @@ public class GemmaCLI {
                 int longestCommandInGroup = commandsInGroup.keySet().stream().map( String::length ).max( Integer::compareTo ).orElse( 0 );
                 for ( Map.Entry<String, Command> e : commandsInGroup.entrySet() ) {
                     footer.append( e.getKey() ).append( StringUtils.repeat( ' ', longestCommandInGroup - e.getKey().length() ) )
-                            // FIXME: use a tabulation, but it creates newlines in IntelliJ's console
-                            .append( "    " ).append( StringUtils.defaultIfBlank( e.getValue().getShortDesc(), "No description provided" ) ).append( '\n' );
+                            .append( StringUtils.repeat( ' ', HelpFormatter.DEFAULT_DESC_PAD ) )
+                            .append( StringUtils.defaultIfBlank( e.getValue().getShortDesc(), "No description provided" ) )
+                            .append( '\n' );
                 }
                 footer.append( '\n' );
             }
@@ -350,7 +383,7 @@ public class GemmaCLI {
 
         footer.append( "To get help for a specific tool, use: 'gemma-cli <commandName> --help'." );
 
-        HelpUtils.printHelp( writer, "<commandName>", options, false, null, footer.toString() );
+        HelpUtils.printHelp( writer, "gemma-cli [options] [commandName] [commandOptions]", options, null, footer.toString() );
     }
 
     @Value
@@ -359,6 +392,8 @@ public class GemmaCLI {
         String beanName;
         @Nullable
         String commandName;
+        List<String> commandAliases;
+        @Nullable
         String shortDesc;
         Options options;
         boolean allowsPositionalArguments;

@@ -27,9 +27,4 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  */
 public class SingleBatchDeterminationEvent extends BatchInformationFetchingEvent {
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = -6544162258733474787L;
-
 }

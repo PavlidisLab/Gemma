@@ -6,10 +6,13 @@ import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.CLI;
+import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 
 import javax.annotation.Nullable;
 import java.util.Date;
+
+import static ubic.gemma.core.util.OptionsUtils.addDateOption;
 
 public class UpdateEE2CCli extends AbstractAuthenticatedCLI {
 
@@ -19,6 +22,9 @@ public class UpdateEE2CCli extends AbstractAuthenticatedCLI {
 
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
+
+    @Autowired
+    private GemmaRestApiClient gemmaRestApiClient;
 
     private boolean truncate;
     private Date sinceLastUpdate;
@@ -57,14 +63,14 @@ public class UpdateEE2CCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( sinceLastUpdate, truncate );
         if ( updated > 0 ) {
             try {
-                getGemmaRestApiClient().perform( "/datasets/annotations/refresh" );
-                log.info( "Refreshed all EE2C associations from " + getGemmaRestApiClient().getHostUrl() );
+                gemmaRestApiClient.perform( "/datasets/annotations/refresh" );
+                log.info( "Refreshed all EE2C associations from " + gemmaRestApiClient.getHostUrl() );
             } catch ( Exception e ) {
-                log.warn( "Failed to refresh EE2C from " + getGemmaRestApiClient().getHostUrl(), e );
+                log.warn( "Failed to refresh EE2C from " + gemmaRestApiClient.getHostUrl(), e );
             }
         }
     }

@@ -20,23 +20,19 @@ package ubic.gemma.model.common.description;
 
 import org.hibernate.search.annotations.DocumentId;
 import org.hibernate.search.annotations.Field;
+import ubic.gemma.model.common.AbstractIdentifiable;
 
-public abstract class BibRefAnnotation implements java.io.Serializable {
+import java.util.Objects;
 
-    private static final long serialVersionUID = -2925637697790915030L;
-    private Long id;
+public abstract class BibRefAnnotation extends AbstractIdentifiable {
+
     private Boolean isMajorTopic;
 
     private String term;
 
     @DocumentId
     public Long getId() {
-        return this.id;
-    }
-
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public void setId( Long id ) {
-        this.id = id;
+        return super.getId();
     }
 
     public Boolean getIsMajorTopic() {
@@ -58,10 +54,7 @@ public abstract class BibRefAnnotation implements java.io.Serializable {
 
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
+        return Objects.hash( term );
     }
 
     /**
@@ -77,7 +70,10 @@ public abstract class BibRefAnnotation implements java.io.Serializable {
             return false;
         }
         final BibRefAnnotation that = ( BibRefAnnotation ) object;
-        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        } else {
+            return Objects.equals( term, that.term );
+        }
     }
-
 }

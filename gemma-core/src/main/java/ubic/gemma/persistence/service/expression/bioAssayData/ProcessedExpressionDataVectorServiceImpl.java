@@ -4,12 +4,14 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
+import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
-import ubic.gemma.core.datastructure.matrix.QuantitationMismatchException;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -23,7 +25,8 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
+import ubic.gemma.persistence.util.Slice;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -66,50 +69,40 @@ public class ProcessedExpressionDataVectorServiceImpl
     }
 
     @Override
-    @Transactional
-    public int createProcessedDataVectors( ExpressionExperiment expressionExperiment ) {
+    @Transactional(rollbackFor = { QuantitationTypeConversionException.class })
+    public int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks ) throws QuantitationTypeConversionException {
         try {
-            return createProcessedDataVectors( expressionExperiment, true );
-        } catch ( QuantitationMismatchException e ) {
+            return createProcessedDataVectors( expressionExperiment, true, true );
+        } catch ( QuantitationTypeDetectionException e ) {
+            // never happening
             throw new RuntimeException( e );
         }
     }
 
     @Override
-    @Transactional
-    public int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
+    @Transactional(rollbackFor = { QuantitationTypeDetectionException.class, QuantitationTypeConversionException.class })
+    public int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
+        int created;
         try {
-            int created = this.processedExpressionDataVectorDao.createProcessedDataVectors( expressionExperiment, ignoreQuantitationMismatch );
+            created = this.processedExpressionDataVectorDao.createProcessedDataVectors( expressionExperiment, ignoreQuantitationMismatch );
             auditTrailService.addUpdateEvent( expressionExperiment, ProcessedVectorComputationEvent.class, String.format( "Created processed expression data for %s.", expressionExperiment ) );
-            return created;
         } catch ( Exception e ) {
+            // Note: addUpdateEvent with an exception uses REQUIRES_NEW, which will create an audit event that cannot be
+            //       rolled back
             auditTrailService.addUpdateEvent( expressionExperiment, FailedProcessedVectorComputationEvent.class, "Failed to create processed expression data vectors.", e );
             throw e;
         }
-    }
-
-    @Override
-    @Transactional
-    public int computeProcessedExpressionData( ExpressionExperiment ee ) {
-        try {
-            return computeProcessedExpressionData( ee, true );
-        } catch ( QuantitationMismatchException e ) {
-            throw new RuntimeException( e );
+        if ( updateRanks ) {
+            updateRanks( expressionExperiment );
         }
-    }
-
-    @Override
-    @Transactional
-    public int computeProcessedExpressionData( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws QuantitationMismatchException {
-        int created = createProcessedDataVectors( ee, ignoreQuantitationMismatch );
-        updateRanks( ee );
+        // cached vectors are no-longer valid
+        cachedProcessedExpressionDataVectorService.evict( expressionExperiment );
         return created;
     }
 
     @Override
     @Transactional
-    public int replaceProcessedDataVectors( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> vectors ) {
+    public int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors, boolean updateRanks ) {
         int replaced;
         try {
             replaced = expressionExperimentService.replaceProcessedDataVectors( ee, vectors );
@@ -118,8 +111,26 @@ public class ProcessedExpressionDataVectorServiceImpl
             auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.class, "Failed to replace processed expression data vectors.", e );
             throw e;
         }
-        updateRanks( ee );
+        if ( updateRanks ) {
+            updateRanks( ee );
+        }
+        cachedProcessedExpressionDataVectorService.evict( ee );
         return replaced;
+    }
+
+    @Override
+    @Transactional
+    public int removeProcessedDataVectors( ExpressionExperiment ee ) {
+        int removed;
+        try {
+            removed = expressionExperimentService.removeProcessedDataVectors( ee );
+            auditTrailService.addUpdateEvent( ee, ProcessedVectorComputationEvent.class, String.format( "Removed processed expression data for %s.", ee ) );
+        } catch ( Exception e ) {
+            auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.class, "Failed to remove processed expression data vectors.", e );
+            throw e;
+        }
+        cachedProcessedExpressionDataVectorService.evict( ee );
+        return removed;
     }
 
     @Override
@@ -127,6 +138,7 @@ public class ProcessedExpressionDataVectorServiceImpl
     public void reorderByDesign( ExpressionExperiment ee ) {
         this.helperService.reorderByDesign( ee );
         this.auditTrailService.addUpdateEvent( ee, "Reordered the data vectors by experimental design" );
+        cachedProcessedExpressionDataVectorService.evict( ee );
     }
 
     @Override
@@ -134,6 +146,7 @@ public class ProcessedExpressionDataVectorServiceImpl
     public void updateRanks( ExpressionExperiment ee ) {
         try {
             helperService.updateRanks( ee );
+            cachedProcessedExpressionDataVectorService.evict( ee );
         } catch ( Exception e ) {
             auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.class, "Failed to update ranks for expression data vectors.", e );
             throw e;
@@ -144,7 +157,7 @@ public class ProcessedExpressionDataVectorServiceImpl
     @Transactional(readOnly = true)
     public List<ExperimentExpressionLevelsValueObject> getExpressionLevels( Collection<ExpressionExperiment> ees,
             Collection<Gene> genes, boolean keepGeneNonSpecific, @Nullable String consolidateMode ) {
-        Map<Long, List<DoubleVectorValueObject>> vectorsByExperiment = cachedProcessedExpressionDataVectorService.getProcessedDataArrays( ees, EntityUtils.getIds( genes ) )
+        Map<Long, List<DoubleVectorValueObject>> vectorsByExperiment = cachedProcessedExpressionDataVectorService.getProcessedDataArrays( ees, IdentifiableUtils.getIds( genes ) )
                 .stream()
                 .collect( Collectors.groupingBy( vector -> vector.getExpressionExperiment().getId(), Collectors.toList() ) );
         List<ExperimentExpressionLevelsValueObject> vos = new ArrayList<>( ees.size() );
@@ -190,7 +203,7 @@ public class ProcessedExpressionDataVectorServiceImpl
 
         // Adapted from DEDV controller
         for ( ExpressionExperiment ee : ees ) {
-            Collection<DoubleVectorValueObject> vectors = svdService.getTopLoadedVectors( ee.getId(), component, limit )
+            Collection<DoubleVectorValueObject> vectors = svdService.getTopLoadedVectors( ee, component, limit )
                     .values();
             this.addExperimentGeneVectors( vos, ee, vectors, keepGeneNonSpecific, consolidateMode );
         }
@@ -240,6 +253,12 @@ public class ProcessedExpressionDataVectorServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe( ExpressionExperiment ee, Collection<CompositeSequence> compositeSequences ) {
+        return cachedProcessedExpressionDataVectorService.getProcessedDataArraysByProbe( ee, compositeSequences );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe( Collection<ExpressionExperiment> expressionExperiments, Collection<CompositeSequence> compositeSequences ) {
         return cachedProcessedExpressionDataVectorService.getProcessedDataArraysByProbe( expressionExperiments, compositeSequences );
     }
@@ -249,6 +268,18 @@ public class ProcessedExpressionDataVectorServiceImpl
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors(
             ExpressionExperiment expressionExperiment ) {
         return this.processedExpressionDataVectorDao.getProcessedVectors( expressionExperiment );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Slice<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, int offset, int limit ) {
+        return new Slice<>( this.processedExpressionDataVectorDao.getProcessedVectors( expressionExperiment, dimension, offset, limit ), null, offset, limit, null );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Slice<CompositeSequence> getProcessedDataVectorsDesignElements( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, int offset, int limit ) {
+        return new Slice<>( this.processedExpressionDataVectorDao.getProcessedVectorsDesignElements( expressionExperiment, dimension, offset, limit ), null, offset, limit, null );
     }
 
     @Override
@@ -293,7 +324,10 @@ public class ProcessedExpressionDataVectorServiceImpl
         }
 
         Collection<DoubleVectorValueObject> processedDataArraysByProbe = cachedProcessedExpressionDataVectorService.getProcessedDataArraysByProbeIds( analyzedSet, probes );
-        List<DoubleVectorValueObject> dedvs = new ArrayList<>( processedDataArraysByProbe );
+        // create a deep copy because we're going to modify it (with p-values)
+        List<DoubleVectorValueObject> dedvs = processedDataArraysByProbe.stream()
+                .map( DoubleVectorValueObject::copy )
+                .collect( Collectors.toList() );
 
         /*
          * Resort
@@ -306,6 +340,11 @@ public class ProcessedExpressionDataVectorServiceImpl
                 Comparator.nullsLast( Comparator.naturalOrder() ) ) );
 
         return dedvs;
+    }
+
+    @Override
+    public void evictFromCache( ExpressionExperiment ee ) {
+        cachedProcessedExpressionDataVectorService.evict( ee );
     }
 
     /**

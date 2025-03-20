@@ -24,10 +24,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -175,7 +175,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = analysisSelectionAndExecutionService
                     .analyze( expressionExperiment, config );
 
-            if ( config.getPersist() ) {
+            if ( config.isPersist() ) {
                 diffExpressionAnalyses = this.persistAnalyses( expressionExperiment, diffExpressionAnalyses, config );
             } else {
                 DifferentialExpressionAnalyzerServiceImpl.log.info( "Will not persist results" );
@@ -183,16 +183,14 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
             return diffExpressionAnalyses;
         } catch ( Exception e ) {
-            DifferentialExpressionAnalyzerServiceImpl.log
-                    .error( "Error during differential expression analysis: " + e.getMessage(), e );
             try {
                 auditTrailService.addUpdateEvent( expressionExperiment,
                         FailedDifferentialExpressionAnalysisEvent.class,
                         ExceptionUtils.getStackTrace( e ) );
             } catch ( Exception e2 ) {
-                DifferentialExpressionAnalyzerServiceImpl.log.error( "Could not attach failure audit event" );
+                DifferentialExpressionAnalyzerServiceImpl.log.error( "Could not attach failure audit event", e2 );
             }
-            throw new RuntimeException( e );
+            throw e;
         }
     }
 
@@ -228,9 +226,9 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         log.info( "Done persisting, creating archive file" );
 
         // we do this here because now we have IDs for everything.
-        if ( config.getMakeArchiveFile() ) {
-            try {
-                expressionDataFileService.writeDiffExArchiveFile( expressionExperiment, analysis, config );
+        if ( config.isMakeArchiveFile() ) {
+            try ( LockedPath lockedPath = expressionDataFileService.writeDiffExAnalysisArchiveFile( analysis, config ) ) {
+                log.info( "Create archive file at " + lockedPath.getPath() );
             } catch ( IOException e ) {
                 DifferentialExpressionAnalyzerServiceImpl.log
                         .error( "Unable to save the data to a file: " + e.getMessage() );
@@ -293,13 +291,12 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         PvalueDistribution pvd = PvalueDistribution.Factory.newInstance();
         pvd.setNumBins( 100 );
-        ByteArrayConverter bac = new ByteArrayConverter();
-        pvd.setBinCounts( bac.doubleArrayToBytes( pvalHist.getArray() ) );
+        pvd.setBinCounts( pvalHist.getArray() );
         resultSet.setPvalueDistribution( pvd ); // do not save yet.
     }
 
     private boolean configsAreEqual( ExpressionAnalysisResultSet temprs, ExpressionAnalysisResultSet oldrs ) {
-        return temprs.getBaselineGroup().equals( oldrs.getBaselineGroup() )
+        return Objects.equals( temprs.getBaselineGroup(), oldrs.getBaselineGroup() )
                 && temprs.getExperimentalFactors().size() == oldrs.getExperimentalFactors().size() && temprs
                 .getExperimentalFactors().containsAll( oldrs.getExperimentalFactors() );
     }
@@ -322,7 +319,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
              */
             if ( oldfactors.size() == 2 ) {
                 DifferentialExpressionAnalyzerServiceImpl.log.info( "Including interaction term" );
-                config.getInteractionsToInclude().add( oldfactors );
+                config.addInteractionToInclude( oldfactors );
             }
 
         }
@@ -506,28 +503,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         }
 
         return results;
-    }
-
-    /**
-     * Defines the different types of analyses our linear modeling framework supports:
-     * <ul>
-     * <li>GENERICLM - generic linear regression (interactions are omitted, but this could change)
-     * <li>OSTTEST - one sample t-test
-     * <li>OWA - one-way ANOVA
-     * <li>TTEST - two sample t-test
-     * <li>TWO_WAY_ANOVA_WITH_INTERACTION
-     * <li>TWO_WAY_ANOVA_NO_INTERACTION
-     * </ul>
-     *
-     * @author Paul
-     */
-    public enum AnalysisType {
-        GENERICLM, //
-        OSTTEST, //one-sample
-        OWA, //one-way ANOVA
-        TTEST, //
-        TWO_WAY_ANOVA_WITH_INTERACTION, //with interactions
-        TWO_WAY_ANOVA_NO_INTERACTION //no interactions
     }
 
 }

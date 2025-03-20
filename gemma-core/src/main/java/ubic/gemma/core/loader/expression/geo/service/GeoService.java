@@ -14,8 +14,10 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
+import lombok.Builder;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.Collection;
 
@@ -61,8 +63,22 @@ public interface GeoService {
 
     /**
      * Refetch and reprocess the GEO series, updating select information. Currently only implemented for experiments (GSEs)
+     * <p>
+     * All experiments that uses the GEO accession will be updated as per {@link #updateFromGEO(ExpressionExperiment, GeoUpdateConfig)}.
      */
-    void updateFromGEO( String geoAccession );
+    void updateFromGEO( String geoAccession, GeoUpdateConfig geoUpdateConfig );
+
+    /**
+     * Refetch and reprocess a given experiment.
+     */
+    void updateFromGEO( ExpressionExperiment expressionExperiment, GeoUpdateConfig geoUpdateConfig );
+
+    @Builder
+    class GeoUpdateConfig {
+        boolean experimentTags;
+        boolean sampleCharacteristics;
+        boolean publications;
+    }
 
     /**
      * Load from a SOFT file. This can be used for testing but maybe there are other situations it is useful.

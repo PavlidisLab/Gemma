@@ -35,7 +35,7 @@ Gemma.ExperimentSetPreview = Ext
                     callback: function (ees) {
                         this.loadPreview(ees, ids.length);
                     }.createDelegate(this),
-                    errorHandler: Gemma.genericErrorHandler
+                    errorHandler: Gemma.Error.genericErrorHandler
                 });
             },
 
@@ -70,7 +70,7 @@ Gemma.ExperimentSetPreview = Ext
                             this.loadPreview(experiments, this.selectedSetValueObject.size);
                             this.fireEvent('previewLoaded', experiments);
                         }.createDelegate(this),
-                        errorHandler: Gemma.genericErrorHandler
+                        errorHandler: Gemma.Error.genericErrorHandler
                     }]);
                 } else {
                     alert("Could not load");
@@ -118,7 +118,7 @@ Gemma.ExperimentSetPreview = Ext
                 var numWithDiffex = selectedSet.numWithDifferentialExpressionAnalysis;
 
                 if (!(selectedSet instanceof SessionBoundExpressionExperimentSetValueObject)) {
-                    name = '<a target="_blank" href="' + ctxBasePath + '/expressionExperimentSet/showExpressionExperimentSet.html?id='
+                    name = '<a target="_blank" href="' + Gemma.CONTEXT_PATH + '/expressionExperimentSet/showExpressionExperimentSet.html?id='
                         + selectedSet.id + '">' + selectedSet.name + '</a>';
                 } else {
                     name = selectedSet.name;
@@ -168,7 +168,7 @@ Gemma.ExperimentSetPreview = Ext
                             rvo.expressionExperimentIds = expIds;
                             this._appendAndUpdate(combo, rvo);
                         }.createDelegate(this),
-                        errorHandler: Gemma.genericErrorHandler
+                        errorHandler: Gemma.Error.genericErrorHandler
                     });
                 }
 
@@ -231,7 +231,7 @@ Gemma.ExperimentSetPreview = Ext
                                 this.fireEvent('doneModification');
 
                             }.createDelegate(this),
-                            errorHandler: Gemma.genericErrorHandler
+                            errorHandler: Gemma.Error.genericErrorHandler
                         });
 
                 } else {
@@ -274,7 +274,7 @@ Gemma.ExperimentSetPreview = Ext
                             this.fireEvent('doneModification');
 
                         }.createDelegate(this),
-                        errorHandler: Gemma.genericErrorHandler
+                        errorHandler: Gemma.Error.genericErrorHandler
                     });
                 }
             },
@@ -314,7 +314,7 @@ Gemma.ExperimentSetPreview = Ext
                                 '<tpl for=".">'
                                 + '<tpl if="!this.hideUnanalyzedDatasets || hasCoexpressionAnalysis || hasDifferentialExpressionAnalysis">'
                                 + ' <div style="padding-bottom:7px;">'
-                                + '<a target="_blank" href="' + ctxBasePath + '/expressionExperiment/showExpressionExperiment.html?id=',
+                                + '<a target="_blank" href="' + Gemma.CONTEXT_PATH + '/expressionExperiment/showExpressionExperiment.html?id=',
                                 '{id}"',
                                 ' ext:qtip="'
                                 + '<tpl if="hasCoexpressionAnalysis">Has coexpression analysis&nbsp</tpl>&nbsp;'

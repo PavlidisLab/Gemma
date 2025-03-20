@@ -38,7 +38,7 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.analysis.expression.diff.MissingResult;
 import ubic.gemma.persistence.service.analysis.expression.diff.NonRetainedResult;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -131,7 +131,7 @@ public class DifferentialExpressionSearchTaskImpl
 
         // database hit: important that this be fast.
         Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> analyses = differentialExpressionAnalysisService
-                .getAnalysesByExperiment( EntityUtils.getIds( experimentGroup ) );
+                .getAnalysesByExperiment( IdentifiableUtils.getIds( experimentGroup ) );
 
         experiment:
         for ( ExpressionExperimentDetailsValueObject bas : analyses.keySet() ) {
@@ -333,7 +333,7 @@ public class DifferentialExpressionSearchTaskImpl
                         continue;
                     Collection<ExperimentalFactorValueObject> facts = rs.getExperimentalFactors();
                     for ( ExperimentalFactorValueObject f : facts ) {
-                        if ( ExperimentalDesignUtils.isBatch( f ) )
+                        if ( ExperimentalDesignUtils.isBatchFactor( f ) )
                             continue;
                         factorsUsed.add( f );
                     }
@@ -513,7 +513,7 @@ public class DifferentialExpressionSearchTaskImpl
 
     private boolean isBatch( DiffExResultSetSummaryValueObject resultSet ) {
         for ( ExperimentalFactorValueObject factor : resultSet.getExperimentalFactors() ) {
-            if ( ExperimentalDesignUtils.isBatch( factor ) ) {
+            if ( ExperimentalDesignUtils.isBatchFactor( factor ) ) {
                 return true;
             }
         }

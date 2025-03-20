@@ -22,17 +22,21 @@ import gemma.gsec.authentication.ManualAuthenticationService;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.EnvironmentAware;
 import org.springframework.core.env.Environment;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.concurrent.DelegatingSecurityContextExecutorService;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import ubic.gemma.core.security.authentication.CLIAuthenticationAware;
 
-import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -47,7 +51,7 @@ import java.util.concurrent.ExecutorService;
  * will be looked up instead.
  * @author pavlidis
  */
-public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements InitializingBean {
+public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements InitializingBean, EnvironmentAware {
 
     /**
      * Environment variable used to store the username (if not passed directly to the CLI).
@@ -64,15 +68,6 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
      */
     private static final String PASSWORD_CMD_ENV = "GEMMA_PASSWORD_CMD";
 
-    @Autowired
-    private ManualAuthenticationService manAuthentication;
-
-    @Autowired
-    private GemmaRestApiClient gemmaRestApiClient;
-
-    @Autowired
-    private Environment env;
-
     private String
             usernameEnv = USERNAME_ENV,
             passwordEnv = PASSWORD_ENV,
@@ -80,9 +75,11 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
 
     private boolean requireLogin = false;
 
+    private Environment environment;
+
     @Override
     public void afterPropertiesSet() throws Exception {
-        if ( env.acceptsProfiles( "test", "testdb" ) ) {
+        if ( environment.acceptsProfiles( "test", "testdb" ) ) {
             log.info( "The test or testdb profile is active, using test credentials from environment variables starting with 'GEMMA_TESTDB_'." );
             usernameEnv = "GEMMA_TESTDB_USERNAME";
             passwordEnv = "GEMMA_TESTDB_PASSWORD";
@@ -91,30 +88,43 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
     }
 
     @Override
-    protected final void beforeWork() {
-        authenticate();
+    public void setEnvironment( Environment environment ) {
+        this.environment = environment;
+    }
+
+    /**
+     * Indicate that the command requires authentication.
+     */
+    protected void setRequireLogin() {
+        this.requireLogin = true;
     }
 
     @Override
-    protected final void afterWork( @Nullable Exception e ) {
-        SecurityContextHolder.clearContext();
+    protected final void doWork() throws Exception {
+        SecurityContext previousContext = SecurityContextHolder.getContext();
+        try {
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication( authenticate() );
+            SecurityContextHolder.setContext( context );
+            doAuthenticatedWork();
+        } finally {
+            SecurityContextHolder.clearContext();
+            SecurityContextHolder.setContext( previousContext );
+        }
     }
 
-    /**
-     * Indicate if the command requires authentication.
-     */
-    public void setRequireLogin( boolean requireLogin ) {
-        this.requireLogin = requireLogin;
-    }
+    protected abstract void doAuthenticatedWork() throws Exception;
 
     /**
-     * check username and password.
+     * Perform authentication from the CLI.
      */
-    private void authenticate() {
+    private Authentication authenticate() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if ( authentication != null && authentication.isAuthenticated() ) {
+            setAuth( authentication );
             log.info( String.format( "Logged in as %s", authentication.getPrincipal() ) );
-        } else if ( requireLogin || System.getenv().containsKey( usernameEnv ) ) {
+            return authentication;
+        } else if ( requireLogin || getCliContext().getEnvironment().containsKey( usernameEnv ) ) {
             String username = getUsername();
             String password = getPassword();
 
@@ -126,38 +136,61 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
                 throw new IllegalArgumentException( "Not authenticated. You didn't enter a password" );
             }
 
-            boolean success = manAuthentication.validateRequest( username, password );
-            if ( success ) {
-                gemmaRestApiClient.setAuthentication( username, password );
+            try {
+                Authentication auth = getApplicationContext()
+                        .getBean( ManualAuthenticationService.class )
+                        .authenticate( username, password );
+                // the authentication manager erases credentials, so we need to create it again
+                setAuth( new UsernamePasswordAuthenticationToken( username, password ) );
                 log.info( "Logged in as " + username );
-            } else {
-                throw new IllegalStateException( "Not authenticated. Make sure you entered a valid username (got '" + username
-                        + "') and/or password" );
+                return auth;
+            } catch ( AuthenticationException e ) {
+                clearAuth();
+                throw e;
             }
         } else {
-            log.info( "Logging in as anonymous guest with limited privileges" );
-            manAuthentication.authenticateAnonymously();
+            Authentication anonymousAuthentication = getApplicationContext()
+                    .getBean( ManualAuthenticationService.class ).authenticateAnonymously();
+            setAuth( anonymousAuthentication );
+            log.info( "Logged in as anonymous guest with limited privileges" );
+            return anonymousAuthentication;
+        }
+    }
+
+    private void setAuth( Authentication authentication ) {
+        Collection<CLIAuthenticationAware> cliAuthenticationAwareComponents = getApplicationContext()
+                .getBeansOfType( CLIAuthenticationAware.class ).values();
+        for ( CLIAuthenticationAware comp : cliAuthenticationAwareComponents ) {
+            comp.setAuthentication( authentication );
+        }
+    }
+
+    private void clearAuth() {
+        Collection<CLIAuthenticationAware> cliAuthenticationAwareComponents = getApplicationContext()
+                .getBeansOfType( CLIAuthenticationAware.class ).values();
+        for ( CLIAuthenticationAware comp : cliAuthenticationAwareComponents ) {
+            comp.clearAuthentication();
         }
     }
 
     private String getUsername() {
-        if ( System.getenv().containsKey( usernameEnv ) ) {
-            return System.getenv().get( usernameEnv );
-        } else if ( System.console() != null ) {
+        if ( getCliContext().getEnvironment().containsKey( usernameEnv ) ) {
+            return getCliContext().getEnvironment().get( usernameEnv );
+        } else if ( getCliContext().getConsole() != null ) {
             log.warn( "The " + usernameEnv + " environment variable is not set, consider setting it to skip this prompt." );
-            return System.console().readLine( "Username: " );
+            return getCliContext().getConsole().readLine( "Username: " );
         } else {
             throw new RuntimeException( String.format( "Could not read the username from the console. Please run Gemma CLI from an interactive shell or provide the %s environment variable.", usernameEnv ) );
         }
     }
 
     private String getPassword() {
-        if ( System.getenv().containsKey( passwordEnv ) ) {
-            return System.getenv().get( passwordEnv );
+        if ( getCliContext().getEnvironment().containsKey( passwordEnv ) ) {
+            return getCliContext().getEnvironment().get( passwordEnv );
         }
 
-        if ( System.getenv().containsKey( passwordCmdEnv ) ) {
-            String passwordCommand = System.getenv().get( passwordCmdEnv );
+        if ( getCliContext().getEnvironment().containsKey( passwordCmdEnv ) ) {
+            String passwordCommand = getCliContext().getEnvironment().get( passwordCmdEnv );
             try {
                 Process proc = Runtime.getRuntime().exec( passwordCommand );
                 if ( proc.waitFor() == 0 ) {
@@ -174,9 +207,9 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
         }
 
         // prompt the user for his password
-        if ( System.console() != null ) {
+        if ( getCliContext().getConsole() != null ) {
             log.warn( "Neither " + passwordEnv + " nor " + passwordCmdEnv + " environment variables are set, consider setting one of those to skip this prompt." );
-            return String.valueOf( System.console().readPassword( "Password: " ) );
+            return String.valueOf( getCliContext().getConsole().readPassword( "Password: " ) );
         } else {
             throw new IllegalArgumentException( String.format( "Could not read the password from the console. Please run Gemma CLI from an interactive shell or provide either the %s or %s environment variables.",
                     passwordEnv, passwordCmdEnv ) );
@@ -186,14 +219,5 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
     @Override
     protected ExecutorService createBatchTaskExecutorService() {
         return new DelegatingSecurityContextExecutorService( super.createBatchTaskExecutorService() );
-    }
-
-    /**
-     * Obtain a REST API client for Gemma.
-     * <p>
-     * This client is authenticated with the same credentials that the CLI is using.
-     */
-    protected GemmaRestApiClient getGemmaRestApiClient() {
-        return gemmaRestApiClient;
     }
 }

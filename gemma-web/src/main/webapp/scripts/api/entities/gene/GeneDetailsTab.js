@@ -37,7 +37,7 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
             var j, homologue;
             for (j = 0; j < homologues.length; j++) {
                 homologue = homologues[j];
-                homologueStr += "<a title='View this homologous gene in Gemma' href='" + ctxBasePath + "/gene/showGene.html?id="
+                homologueStr += "<a title='View this homologous gene in Gemma' href='" + Gemma.CONTEXT_PATH + "/gene/showGene.html?id="
                     + homologue.id
                     + "'>"
                     + homologue.officialSymbol
@@ -71,7 +71,7 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
 
             for (var i = 0; i < geneSets.length; i++) {
                 if (geneSets[i] && geneSets[i].name && geneSets[i].id) {
-                    geneSetLinks.push('<a target="_blank" href="' + ctxBasePath + '/geneSet/showGeneSet.html?id=' + geneSets[i].id
+                    geneSetLinks.push('<a target="_blank" href="' + Gemma.CONTEXT_PATH + '/geneSet/showGeneSet.html?id=' + geneSets[i].id
                         + '">' + geneSets[i].name + '</a>');
                 }
             }
@@ -92,7 +92,7 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
         if (geneDetails.multifunctionalityRank) {
             text = geneDetails.numGoTerms + " GO Terms; Overall multifunctionality "
                 + geneDetails.multifunctionalityRank.toFixed(2);
-            // text += "&nbsp;<img style='cursor:pointer' src='" + ctxBasePath + "/images/magnifier.png' ext:qtip='View the GO term tab'"
+            // text += "&nbsp;<img style='cursor:pointer' src='" + Gemma.CONTEXT_PATH + "/images/magnifier.png' ext:qtip='View the GO term tab'"
             //     + "onClick='Ext.getCmp(&#39;" + this.id + "&#39;).changeTab(&#39;goGrid&#39;)'>";
         } else {
             text = "[ Not available ]";
@@ -103,7 +103,7 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
             html: text,
             listeners: {
                 'afterrender': function (c) {
-                    jQuery('#multifuncHelp').qtip({
+                    window.jQuery('#multifuncHelp').qtip({
                         content: Gemma.HelpText.WidgetDefaults.GeneDetails.multifuncTT,
                         style: {
                             name: 'cream'
@@ -146,7 +146,7 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
             if (limit < phenotypes.length) {
                 text += ', ' + (phenotypes.length - limit) + ' more';
             }
-            text += "&nbsp;<img style='cursor:pointer' src='" + ctxBasePath + "/images/magnifier.png' ext:qtip='View the phenotype tab'"
+            text += "&nbsp;<img style='cursor:pointer' src='" + Gemma.CONTEXT_PATH + "/images/magnifier.png' ext:qtip='View the phenotype tab'"
                 + "onClick='Ext.getCmp(&#39;" + this.id + "&#39;).changeTab(&#39;phenotypes&#39;)'>";
 
         } else {
@@ -158,7 +158,7 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
             html: text,
             listeners: {
                 'afterrender': function (c) {
-                    jQuery('#phenotypeHelp').qtip({
+                    window.jQuery('#phenotypeHelp').qtip({
                         content: Gemma.HelpText.WidgetDefaults.GeneDetails.phenotypeTT,
                         style: {
                             name: 'cream'
@@ -188,7 +188,7 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
                     border: false,
                     html: '<span id="nodeDegreeSpark">...</span> Max support '
                     + (geneDetails.nodeDegreesPos.length - 1)
-                    + "&nbsp;<img style='cursor:pointer' src='" + ctxBasePath + "/images/magnifier.png' ext:qtip='View the coexpression tab'"
+                    + "&nbsp;<img style='cursor:pointer' src='" + Gemma.CONTEXT_PATH + "/images/magnifier.png' ext:qtip='View the coexpression tab'"
                     + "onClick='Ext.getCmp(&#39;" + this.id + "&#39;).changeTab(&#39;coex&#39;)'>",
                     listeners: {
                         'afterrender': function (c) {
@@ -278,7 +278,7 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
                                         }
                                     });
                             }
-                            jQuery("#nodeDegreeHelp").qtip({
+                            window.jQuery("#nodeDegreeHelp").qtip({
                                 content: Gemma.HelpText.WidgetDefaults.GeneDetails.nodeDegreeTT,
                                 style: {
                                     name: 'cream'
@@ -295,7 +295,7 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
                 html: "[ Not available ]",
                 listeners: {
                     'afterrender': function (c) {
-                        jQuery("#nodeDegreeHelp").qtip({
+                        window.jQuery("#nodeDegreeHelp").qtip({
                             content: Gemma.HelpText.WidgetDefaults.GeneDetails.nodeDegreeTT,
                             style: {
                                 name: 'cream'
@@ -344,7 +344,7 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
                         + '&nbsp;&nbsp;<a target="_blank" '
                         + 'href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids='
                         + geneDetails.ncbiId
-                        + '"><img ext:qtip="View NCBI record in a new window" alt="NCBI Gene Link" src="' + ctxBasePath + '/images/logo/ncbi.gif"/></a>'
+                        + '"><img ext:qtip="View NCBI record in a new window" alt="NCBI Gene Link" src="' + Gemma.CONTEXT_PATH + '/images/logo/ncbi.gif"/></a>'
                         + '<br/></div>'
 
                     },
@@ -408,12 +408,12 @@ Gemma.GeneDetails = Ext.extend(Ext.Panel, {
                                         + " on "
                                         + geneDetails.platformCount
                                         + " different platforms&nbsp;"
-                                        + "&nbsp;<img style='cursor:pointer' src='" + ctxBasePath + "/images/magnifier.png' ext:qtip='View all the elements for this gene'"
+                                        + "&nbsp;<img style='cursor:pointer' src='" + Gemma.CONTEXT_PATH + "/images/magnifier.png' ext:qtip='View all the elements for this gene'"
                                         + "onClick='Ext.getCmp(&#39;" + this.id
                                         + "&#39;).changeTab(&#39;elements&#39;)'>",
                                         listeners: {
                                             'afterrender': function (c) {
-                                                jQuery('#elementsHelp')
+                                                window.jQuery('#elementsHelp')
                                                     .qtip(
                                                         {
                                                             content: Gemma.HelpText.WidgetDefaults.GeneDetails.probesTT,

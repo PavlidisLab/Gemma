@@ -45,19 +45,18 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         super.addForceOption( options );
     }
 
     @Override
-    protected void processExpressionExperiment( ExpressionExperiment bas ) {
-        if ( !force && this.noNeedToRun( bas, PCAAnalysisEvent.class ) ) {
-            throw new IllegalArgumentException( "Already has PCA; use -force to override" );
+    protected void processExpressionExperiment( ExpressionExperiment ee ) {
+        if ( this.noNeedToRun( ee, PCAAnalysisEvent.class ) ) {
+            return;
         }
-        log.info( "Processing: " + bas );
+        log.info( "Processing: " + ee );
         try {
-            svdService.svd( bas.getId() );
+            svdService.svd( ee );
         } catch ( SVDException e ) {
             throw new RuntimeException( e );
         }

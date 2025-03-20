@@ -67,7 +67,6 @@ public class MeshTermFetcherCli extends AbstractCLI {
         return CLI.CommandGroup.MISC;
     }
 
-    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions( Options options ) {
         Option fileOption = Option.builder( "f" )
@@ -78,6 +77,16 @@ public class MeshTermFetcherCli extends AbstractCLI {
                 .build();
         options.addOption( fileOption );
         options.addOption( "m", "Use major subjects only" );
+    }
+
+    @Override
+    protected void processOptions( CommandLine commandLine ) {
+        if ( commandLine.hasOption( 'f' ) ) {
+            this.file = commandLine.getOptionValue( 'f' );
+        }
+        if ( commandLine.hasOption( 'm' ) ) {
+            this.majorTopicsOnly = true;
+        }
     }
 
     @Override
@@ -102,16 +111,6 @@ public class MeshTermFetcherCli extends AbstractCLI {
         }
     }
 
-    @Override
-    protected void processOptions( CommandLine commandLine ) {
-        if ( commandLine.hasOption( 'f' ) ) {
-            this.file = commandLine.getOptionValue( 'f' );
-        }
-        if ( commandLine.hasOption( 'm' ) ) {
-            this.majorTopicsOnly = true;
-        }
-    }
-
     private Collection<Integer> readIdsFromFile( String inFile ) throws IOException {
         log.info( "Reading " + inFile );
 
@@ -133,7 +132,7 @@ public class MeshTermFetcherCli extends AbstractCLI {
         Collection<BibliographicReference> refs = fetcher.retrieveByHTTP( ids );
 
         for ( BibliographicReference r : refs ) {
-            System.out.print( r.getPubAccession().getAccession() + "\t" );
+            getCliContext().getOutputStream().print( r.getPubAccession().getAccession() + "\t" );
             Collection<MedicalSubjectHeading> meshTerms = r.getMeshTerms();
             List<String> t = new ArrayList<>();
             for ( MedicalSubjectHeading mesh : meshTerms ) {
@@ -144,9 +143,9 @@ public class MeshTermFetcherCli extends AbstractCLI {
             }
 
             Collections.sort( t );
-            System.out.print( StringUtils.join( t, "|" ) );
+            getCliContext().getOutputStream().print( StringUtils.join( t, "|" ) );
 
-            System.out.print( "\n" );
+            getCliContext().getOutputStream().print( "\n" );
         }
     }
 

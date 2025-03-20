@@ -22,6 +22,7 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.genome.gene.ExternalFileGeneLoaderService;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.CLI;
@@ -36,16 +37,29 @@ import java.io.IOException;
  */
 public class ExternalFileGeneLoaderCLI extends AbstractAuthenticatedCLI {
 
+    @Autowired
+    private ExternalFileGeneLoaderService loader;
+
     private String directGeneInputFileName = null;
     private String taxonName;
 
     public ExternalFileGeneLoaderCLI() {
-        setRequireLogin( true );
+        setRequireLogin();
+    }
+
+    @Override
+    public String getCommandName() {
+        return "loadGenesFromFile";
     }
 
     @Override
     public String getShortDesc() {
         return "loading genes from a non-NCBI files; only used for species like salmon";
+    }
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CLI.CommandGroup.SYSTEM;
     }
 
     /**
@@ -69,12 +83,6 @@ public class ExternalFileGeneLoaderCLI extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    public String getCommandName() {
-        return "loadGenesFromFile";
-    }
-
-    @SuppressWarnings("static-access")
-    @Override
     protected void buildOptions( Options options ) {
         Option directGene = Option.builder( "f" )
                 .desc( "Tab delimited format containing gene symbol, gene name, uniprot id in that order" )
@@ -86,40 +94,25 @@ public class ExternalFileGeneLoaderCLI extends AbstractAuthenticatedCLI {
         options.addOption( taxonNameOption );
     }
 
-    @Override
-    protected void doWork() throws Exception {
-        this.processGeneList();
-    }
-
     /**
      * Main entry point to service class which reads a gene file and persists the genes in that file.
      */
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public void processGeneList() {
-
-        ExternalFileGeneLoaderService loader = this.getBean( ExternalFileGeneLoaderService.class );
-
+    @Override
+    protected void doAuthenticatedWork( ) throws Exception {
         try {
             int count = loader.load( directGeneInputFileName, taxonName );
-            System.out.println( count + " genes loaded successfully " );
+            getCliContext().getOutputStream().println( count + " genes loaded successfully " );
         } catch ( IOException e ) {
-            System.out.println( "File could not be read: " + e.getMessage() );
+            getCliContext().getOutputStream().println( "File could not be read: " + e.getMessage() );
             throw new RuntimeException( e );
         } catch ( IllegalArgumentException e ) {
-            System.out.println(
+            getCliContext().getOutputStream().println(
                     "One of the programme arguments were incorrect check gene file is in specified location and taxon is in system."
                             + e.getMessage() );
             throw new RuntimeException( e );
         } catch ( Exception e ) {
-            System.out.println( "Gene file persisting error: " + e.getMessage() );
+            getCliContext().getOutputStream().println( "Gene file persisting error: " + e.getMessage() );
             throw new RuntimeException( e );
         }
-
     }
-
-    @Override
-    public CommandGroup getCommandGroup() {
-        return CLI.CommandGroup.SYSTEM;
-    }
-
 }

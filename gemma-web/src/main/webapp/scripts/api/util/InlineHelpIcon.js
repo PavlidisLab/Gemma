@@ -11,7 +11,7 @@
  */
 Gemma.InlineHelpIcon = Ext.extend( Ext.Button, {
 
-   icon : ctxBasePath + "/images/icons/question_blue.png",
+   icon : Gemma.CONTEXT_PATH + "/images/icons/question_blue.png",
    padding : '3px',
    cls : 'transparent-btn',
    initComponent : function() {

@@ -29,9 +29,10 @@ import ubic.gemma.model.common.AbstractDescribable;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Objects;
+
+import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 /**
  * Instances of this are used to describe other entities. This base class is just a characteristic that is simply a
@@ -44,9 +45,7 @@ import java.util.Objects;
  * @author Paul
  */
 @Indexed
-public class Characteristic extends AbstractDescribable implements Serializable, Comparable<Characteristic> {
-
-    private static final long serialVersionUID = -7242166109264718620L;
+public class Characteristic extends AbstractDescribable implements Comparable<Characteristic> {
 
     private static final Comparator<Characteristic> BY_CATEGORY_COMPARATOR = ( c1, c2 ) -> CharacteristicUtils.compareTerm( c1.category, c1.categoryUri, c2.category, c2.categoryUri );
 
@@ -234,7 +233,7 @@ public class Characteristic extends AbstractDescribable implements Serializable,
             return false;
         Characteristic that = ( Characteristic ) object;
         if ( this.getId() != null && that.getId() != null )
-            return super.equals( object );
+            return getId().equals( that.getId() );
 
         /*
          * at this point, we know we have two Characteristics, at least one of which is transient, so we have to look at
@@ -280,17 +279,59 @@ public class Characteristic extends AbstractDescribable implements Serializable,
             return new Characteristic();
         }
 
+        /**
+         * Create a copy from the given characteristic.
+         */
+        public static Characteristic newInstance( Characteristic from ) {
+            final Characteristic entity = newInstance();
+            entity.setName( from.getName() );
+            entity.setDescription( from.getDescription() );
+            entity.setCategory( from.getCategory() );
+            entity.setCategoryUri( from.getCategoryUri() );
+            entity.setValue( from.getValue() );
+            entity.setValueUri( from.getValueUri() );
+            entity.setEvidenceCode( from.getEvidenceCode() );
+            // no need to copy originalValue, this is only relevant for historical reasons
+            return entity;
+        }
+
         public static Characteristic newInstance( String name, String description, String value, @Nullable String valueUri,
                 String category, @Nullable String categoryUri, GOEvidenceCode evidenceCode ) {
             final Characteristic entity = new Characteristic();
             entity.setName( name );
             entity.setDescription( description );
             entity.setValue( value );
-            entity.setValueUri( StringUtils.stripToNull( valueUri ) );
+            entity.setValueUri( stripToNull( valueUri ) );
             entity.setCategory( category );
-            entity.setCategoryUri( StringUtils.stripToNull( categoryUri ) );
+            entity.setCategoryUri( stripToNull( categoryUri ) );
             entity.setEvidenceCode( evidenceCode );
             return entity;
+        }
+
+        public static Characteristic newInstance( String category, @Nullable String categoryUri ) {
+            Characteristic entity = new Characteristic();
+            entity.setCategory( category );
+            entity.setCategoryUri( stripToNull( categoryUri ) );
+            entity.setValue( category );
+            entity.setValueUri( stripToNull( categoryUri ) );
+            return entity;
+        }
+
+        public static Characteristic newInstance( Category category ) {
+            return newInstance( category.getCategory(), category.getCategoryUri() );
+        }
+
+        public static Characteristic newInstance( String category, @Nullable String categoryUri, String value, @Nullable String valueUri ) {
+            final Characteristic entity = new Characteristic();
+            entity.setCategory( category );
+            entity.setCategoryUri( stripToNull( categoryUri ) );
+            entity.setValue( value );
+            entity.setValueUri( stripToNull( valueUri ) );
+            return entity;
+        }
+
+        public static Characteristic newInstance( Category category, String value, @Nullable String valueUri ) {
+            return newInstance( category.getCategory(), category.getCategoryUri(), value, valueUri );
         }
     }
 

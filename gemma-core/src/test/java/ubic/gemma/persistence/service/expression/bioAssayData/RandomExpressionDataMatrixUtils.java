@@ -1,20 +1,26 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import cern.jet.random.engine.MersenneTwister;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.math3.distribution.*;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.*;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import java.util.ArrayList;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.convertData;
 
 /**
  * Utilities for generating random {@link ExpressionDataDoubleMatrix} following various random distributions.
+ * @see RandomSingleCellDataUtils
+ * @see RandomBulkDataUtils
  */
 public class RandomExpressionDataMatrixUtils {
 
@@ -27,6 +33,11 @@ public class RandomExpressionDataMatrixUtils {
         RandomExpressionDataMatrixUtils.seed = seed;
     }
 
+    /**
+     * Generate a count matrix.
+     * <p>
+     * The counts are drawn from a Negative Binomial distribution.
+     */
     public static ExpressionDataDoubleMatrix randomCountMatrix( ExpressionExperiment ee ) {
         QuantitationType qt = new QuantitationType();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
@@ -36,6 +47,25 @@ public class RandomExpressionDataMatrixUtils {
         return randomExpressionMatrix( ee, qt, new NegativeBinomialDistribution( 6, 0.5 ) );
     }
 
+    /**
+     * Generate a "transformed" count matrix.
+     */
+    public static ExpressionDataDoubleMatrix randomCountMatrix( ExpressionExperiment ee, ScaleType scaleType ) {
+        ExpressionDataDoubleMatrix matrix = randomCountMatrix( ee );
+        for ( QuantitationType qt : matrix.getQuantitationTypes() ) {
+            qt.setScale( scaleType );
+        }
+        if ( scaleType == ScaleType.COUNT || scaleType == ScaleType.LINEAR ) {
+            return matrix;
+        }
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            for ( int j = 0; j < matrix.columns(); j++ ) {
+                double val = matrix.getAsDouble( i, j );
+                matrix.set( i, j, convertData( new double[] { val }, StandardQuantitationType.COUNT, ScaleType.COUNT, scaleType )[0] );
+            }
+        }
+        return matrix;
+    }
 
     public static ExpressionDataDoubleMatrix randomLinearMatrix( ExpressionExperiment ee ) {
         QuantitationType qt = new QuantitationType();
@@ -65,23 +95,71 @@ public class RandomExpressionDataMatrixUtils {
         return randomExpressionMatrix( ee, qt, new TruncatedNormalDistribution( 6.25, 1.46, 0, Double.POSITIVE_INFINITY ) );
     }
 
-    public static ExpressionDataDoubleMatrix randomExpressionMatrix( ExpressionExperiment ee, QuantitationType qt, RealDistribution distribution ) {
-        int numSamples = ee.getBioAssays().size();
-        if ( numSamples == 0 ) {
-            throw new IllegalArgumentException( "ExpressionExperiment must have at least one bioassay." );
+    /**
+     * Create a random matrix with a specific sample structure.
+     */
+    public static ExpressionDataDoubleMatrix randomLog2Matrix( ExpressionExperiment ee, BioAssayDimension dimension ) {
+        QuantitationType qt = new QuantitationType();
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.AMOUNT );
+        qt.setScale( ScaleType.LOG2 );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        Set<ArrayDesign> ads = new HashSet<>();
+        List<BioMaterial> samples = new ArrayList<>( dimension.getBioAssays().size() );
+        for ( BioAssay assay : dimension.getBioAssays() ) {
+            if ( !ee.getBioAssays().contains( assay ) && !CollectionUtils.containsAny( assay.getSampleUsed().getAllBioAssaysUsedIn(), ee.getBioAssays() ) ) {
+                throw new IllegalStateException( assay + " does not belong to " + ee + "." );
+            }
+            samples.add( assay.getSampleUsed() );
+            ads.add( assay.getArrayDesignUsed() );
         }
-        int numVectors = ee.getBioAssays().iterator().next().getArrayDesignUsed().getCompositeSequences().size();
+        if ( ads.size() != 1 ) {
+            throw new IllegalStateException( "Assays must use exactly one platform." );
+        }
+        List<CompositeSequence> designElements = ads.iterator().next().getCompositeSequences().stream().sorted( Comparator.comparing( CompositeSequence::getName ) ).collect( Collectors.toList() );
+        return randomExpressionMatrix( ee, qt, designElements, samples, new TruncatedNormalDistribution( 6.25, 1.46, 0, Double.POSITIVE_INFINITY ) );
+    }
+
+    public static ExpressionDataDoubleMatrix randomExpressionMatrix( ExpressionExperiment ee, QuantitationType qt, RealDistribution distribution ) {
+        List<BioMaterial> samples = ee.getBioAssays().stream()
+                .map( BioAssay::getSampleUsed )
+                .sorted( Comparator.comparing( BioMaterial::getName ) )
+                .collect( Collectors.toList() );
+        Set<ArrayDesign> ads = ee.getBioAssays().stream().map( BioAssay::getArrayDesignUsed ).collect( Collectors.toSet() );
+        if ( ads.size() != 1 ) {
+            throw new IllegalArgumentException( "ExpressionExperiment must use exactly one platform." );
+        }
+        List<CompositeSequence> designElements = ads.iterator().next().getCompositeSequences().stream()
+                .sorted( Comparator.comparing( CompositeSequence::getName ) )
+                .collect( Collectors.toList() );
+        return randomExpressionMatrix( ee, qt, designElements, samples, distribution );
+    }
+
+    public static ExpressionDataDoubleMatrix randomExpressionMatrix( ExpressionExperiment ee, QuantitationType qt, List<CompositeSequence> designElements, List<BioMaterial> samples, RealDistribution distribution ) {
+        int numSamples = samples.size();
+        if ( numSamples == 0 ) {
+            throw new IllegalArgumentException( "ExpressionExperiment must have at least one sample." );
+        }
+        int numVectors = designElements.size();
         if ( numVectors == 0 ) {
-            throw new IllegalArgumentException( "ExpressionExperiment must have at least one probe." );
+            throw new IllegalArgumentException( "ExpressionExperiment must have at least one design element." );
         }
         DenseDoubleMatrix<CompositeSequence, BioMaterial> matrix = new DenseDoubleMatrix<>( randomExpressionMatrix( numVectors, numSamples, distribution ) );
-        matrix.setRowNames( new ArrayList<>( ee.getBioAssays().iterator().next().getArrayDesignUsed().getCompositeSequences() ) );
-        matrix.setColumnNames( ee.getBioAssays().stream().map( BioAssay::getSampleUsed ).collect( Collectors.toList() ) );
+        matrix.setRowNames( designElements );
+        matrix.setColumnNames( samples );
         return new ExpressionDataDoubleMatrix( ee, qt, matrix );
     }
 
     private static ExpressionDataDoubleMatrix randomExpressionMatrix( ExpressionExperiment ee, QuantitationType qt, IntegerDistribution distribution ) {
-        int numSamples = ee.getBioAssays().size();
+        List<BioMaterial> samples = ee.getBioAssays().stream()
+                .map( BioAssay::getSampleUsed )
+                .sorted( Comparator.comparing( BioMaterial::getName ) )
+                .collect( Collectors.toList() );
+        return randomExpressionMatrix( ee, qt, samples, distribution );
+    }
+
+    private static ExpressionDataDoubleMatrix randomExpressionMatrix( ExpressionExperiment ee, QuantitationType qt, List<BioMaterial> samples, IntegerDistribution distribution ) {
+        int numSamples = samples.size();
         if ( numSamples == 0 ) {
             throw new IllegalArgumentException( "ExpressionExperiment must have at least one bioassay." );
         }
@@ -91,7 +169,7 @@ public class RandomExpressionDataMatrixUtils {
         }
         DenseDoubleMatrix<CompositeSequence, BioMaterial> matrix = new DenseDoubleMatrix<>( randomExpressionMatrix( numVectors, numSamples, distribution ) );
         matrix.setRowNames( new ArrayList<>( ee.getBioAssays().iterator().next().getArrayDesignUsed().getCompositeSequences() ) );
-        matrix.setColumnNames( ee.getBioAssays().stream().map( BioAssay::getSampleUsed ).collect( Collectors.toList() ) );
+        matrix.setColumnNames( samples );
         return new ExpressionDataDoubleMatrix( ee, qt, matrix );
     }
 
@@ -127,65 +205,6 @@ public class RandomExpressionDataMatrixUtils {
             }
         }
         return matrix;
-    }
-
-    private static class NegativeBinomialDistribution extends AbstractIntegerDistribution {
-
-        private final int i;
-        private final double v;
-        private cern.jet.random.NegativeBinomial distribution;
-
-        private NegativeBinomialDistribution( int i, double v ) {
-            super( null );
-            this.i = i;
-            this.v = v;
-            this.distribution = new cern.jet.random.NegativeBinomial( i, v, new MersenneTwister() );
-        }
-
-        @Override
-        public double probability( int x ) {
-            return distribution.pdf( x );
-        }
-
-        @Override
-        public double cumulativeProbability( int x ) {
-            return distribution.cdf( x );
-        }
-
-        @Override
-        public double getNumericalMean() {
-            return i * ( 1 - v ) / v;
-        }
-
-        @Override
-        public double getNumericalVariance() {
-            return i * ( 1 - v ) / ( v * v );
-        }
-
-        @Override
-        public int getSupportLowerBound() {
-            return 0;
-        }
-
-        @Override
-        public int getSupportUpperBound() {
-            return Integer.MAX_VALUE;
-        }
-
-        @Override
-        public boolean isSupportConnected() {
-            return true;
-        }
-
-        @Override
-        public void reseedRandomGenerator( long seed ) {
-            this.distribution = new cern.jet.random.NegativeBinomial( i, v, new MersenneTwister( ( int ) seed ) );
-        }
-
-        @Override
-        public int sample() {
-            return distribution.nextInt();
-        }
     }
 
     /**

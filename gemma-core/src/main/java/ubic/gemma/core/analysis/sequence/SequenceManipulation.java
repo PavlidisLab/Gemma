@@ -39,6 +39,14 @@ import java.util.HashSet;
 public class SequenceManipulation {
     private static final Log log = LogFactory.getLog( SequenceManipulation.class );
 
+    private static final int BIN_FIRST_SHIFT = 17; /* How much to shift to get to finest bin. */
+    private static final int BIN_NEXT_SHIFT = 3; /* How much to shift to get to next larger bin. */
+    private static final int[] BIN_OFFSETS_EXTENDED = { 4096 + 512 + 64 + 8 + 1, 512 + 64 + 8 + 1, 64 + 8 + 1, 8 + 1, 1,
+            0 };
+    private static final int[] BIN_OFFSETS = { 512 + 64 + 8 + 1, 64 + 8 + 1, 8 + 1, 1, 0 };
+    private static final int BIN_RANGE_MAX_END_512M = ( 512 * 1024 * 1024 );
+    private static final int BIN_OFFSET_OLD_TO_EXTENDED = 4681;
+
     /**
      * Puts "chr" prefix on the chromosome name, if need be.
      *
@@ -234,7 +242,7 @@ public class SequenceManipulation {
             for ( PhysicalLocation exonLocation : exons ) {
                 int exonStart = exonLocation.getNucleotide().intValue();
                 int exonEnd = exonLocation.getNucleotide().intValue() + exonLocation.getNucleotideLength();
-                totalOverlap += PhysicalLocation.computeOverlap( start, end, exonStart, exonEnd );
+                totalOverlap += computeOverlap( start, end, exonStart, exonEnd );
             }
             totalLength += end - start;
         }
@@ -245,6 +253,33 @@ public class SequenceManipulation {
                             + totalLength );
 
         return Math.min( totalOverlap, totalLength );
+    }
+
+    public static int computeOverlap( long starta, long enda, long startb, long endb ) {
+        if ( starta > enda )
+            throw new IllegalArgumentException( "Start " + starta + " must be before end " + enda );
+        if ( startb > endb )
+            throw new IllegalArgumentException( "Start " + startb + " must be before end " + endb );
+
+        long overlap;
+        if ( endb < starta || enda < startb ) {
+            overlap = 0;
+        } else if ( starta <= startb ) {
+            if ( enda < endb ) {
+                overlap = enda - startb; // overhang on the left
+            } else {
+                overlap = endb - startb; // includes entire target
+            }
+        } else if ( enda < endb ) { // entirely contained within target.
+            overlap = enda - starta; // length of our test sequence.
+        } else {
+            overlap = endb - starta; // overhang on the right
+        }
+
+        assert overlap >= 0 : "Negative overlap";
+        assert ( double ) overlap / ( double ) ( enda - starta ) <= 1.0 : "Overlap longer than sequence";
+        // if ( log.isTraceEnabled() ) log.trace( "Overlap=" + overlap );
+        return ( int ) overlap;
     }
 
     /**
@@ -386,8 +421,7 @@ public class SequenceManipulation {
             return 0;
         }
 
-        return PhysicalLocation
-                .computeOverlap( a.getNucleotide(), a.getNucleotide() + a.getNucleotideLength(), b.getNucleotide(),
+        return computeOverlap( a.getNucleotide(), a.getNucleotide() + a.getNucleotideLength(), b.getNucleotide(),
                         b.getNucleotide() + b.getNucleotideLength() );
 
     }
@@ -454,4 +488,54 @@ public class SequenceManipulation {
         return totalSize;
     }
 
+    /**
+     * @param start start
+     * @param end   end
+     * @return bin that this start-end segment is in
+     */
+    public static int binFromRange( int start, int end ) {
+        if ( end <= BIN_RANGE_MAX_END_512M )
+            return binFromRangeStandard( start, end );
+        return binFromRangeExtended( start, end );
+    }
+
+    private static int binFromRangeExtended( int start, int end )
+        /*
+         * Given start,end in chromosome coordinates assign it a bin. There's a bin for each 128k segment, for each 1M
+         * segment, for each 8M segment, for each 64M segment, for each 512M segment, and one top level bin for 4Gb. Note,
+         * since start and end are int's, the practical limit is up to 2Gb-1, and thus, only four result bins on the second
+         * level. A range goes into the smallest bin it will fit in.
+         */ {
+        int startBin = start, endBin = end - 1, i;
+        startBin >>= BIN_FIRST_SHIFT;
+        endBin >>= BIN_FIRST_SHIFT;
+        for ( i = 0; i < BIN_OFFSETS_EXTENDED.length; ++i ) {
+            if ( startBin == endBin )
+                return BIN_OFFSET_OLD_TO_EXTENDED + BIN_OFFSETS_EXTENDED[i]
+                        + startBin;
+            startBin >>= BIN_NEXT_SHIFT;
+            endBin >>= BIN_NEXT_SHIFT;
+        }
+        throw new IllegalArgumentException(
+                "start " + start + ", end " + end + " out of range in findBin (max is 512M)" );
+    }
+
+    private static int binFromRangeStandard( int start, int end )
+        /*
+         * Given start,end in chromosome coordinates assign it a bin. There's a bin for each 128k segment, for each 1M
+         * segment, for each 8M segment, for each 64M segment, and for each chromosome (which is assumed to be less than
+         * 512M.) A range goes into the smallest bin it will fit in.
+         */ {
+        int startBin = start, endBin = end - 1, i;
+        startBin >>= BIN_FIRST_SHIFT;
+        endBin >>= BIN_FIRST_SHIFT;
+        for ( i = 0; i < BIN_OFFSETS.length; ++i ) {
+            if ( startBin == endBin )
+                return BIN_OFFSETS[i] + startBin;
+            startBin >>= BIN_NEXT_SHIFT;
+            endBin >>= BIN_NEXT_SHIFT;
+        }
+        throw new IllegalArgumentException(
+                "start " + start + ", end " + end + " out of range in findBin (max is 512M)" );
+    }
 }

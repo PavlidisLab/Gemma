@@ -5,6 +5,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
+import ubic.gemma.core.loader.util.hdf5.H5Utils;
 
 import javax.annotation.Nullable;
 import java.io.FileNotFoundException;
@@ -102,6 +103,13 @@ public class BuildInfo implements InitializingBean {
     @Nullable
     public String getGitHash() {
         return gitHash;
+    }
+
+    /**
+     * Obtain the version of HDF5 used by Gemma.
+     */
+    public String getHDF5Version() {
+        return H5Utils.getH5Version();
     }
 
     @Override

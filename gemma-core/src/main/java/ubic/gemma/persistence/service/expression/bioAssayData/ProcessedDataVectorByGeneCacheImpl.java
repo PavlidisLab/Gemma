@@ -25,14 +25,13 @@ import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.cache.CacheUtils;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
+
+import static java.util.Collections.unmodifiableCollection;
 
 /**
  * Configures the cache for data vectors.
@@ -44,27 +43,21 @@ import java.util.Collections;
  * @author paul
  */
 @Component
-@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 class ProcessedDataVectorByGeneCacheImpl implements ProcessedDataVectorByGeneCache {
 
-    private static final String VECTOR_CACHE_NAME = "ProcessedExpressionDataVectorCache";
+    private static final String VECTOR_CACHE_NAME = "ProcessedExpressionDataVectorByGeneCache";
 
     private final Cache cache;
 
     @Autowired
     public ProcessedDataVectorByGeneCacheImpl( CacheManager cacheManager ) {
-        this.cache = CacheUtils.getCache( cacheManager, ProcessedDataVectorByGeneCacheImpl.VECTOR_CACHE_NAME );
+        this.cache = CacheUtils.getCache( cacheManager, VECTOR_CACHE_NAME );
     }
 
     @Override
-    public Collection<DoubleVectorValueObject> get( BioAssaySet bas, Gene gene ) {
-        Assert.notNull( bas.getId() );
-        Assert.notNull( gene.getId() );
-        return getById( bas.getId(), gene.getId() );
-    }
-
-    @Override
-    public Collection<DoubleVectorValueObject> getById( Long eeId, Long geneId ) {
+    public Collection<DoubleVectorValueObject> get( ExpressionExperiment ee, Long geneId ) {
+        Assert.notNull( ee.getId() );
+        Long eeId = ee.getId();
         Cache.ValueWrapper element = cache.get( new CacheKey( eeId, geneId ) );
         if ( element == null )
             return null;
@@ -73,35 +66,23 @@ class ProcessedDataVectorByGeneCacheImpl implements ProcessedDataVectorByGeneCac
     }
 
     @Override
-    public void put( BioAssaySet bas, Gene gene, Collection<DoubleVectorValueObject> collection ) {
-        Assert.notNull( bas.getId() );
-        Assert.notNull( gene.getId() );
-        putById( bas.getId(), gene.getId(), collection );
+    public void put( ExpressionExperiment ee, Long geneId, Collection<DoubleVectorValueObject> collection ) {
+        Assert.notNull( ee.getId() );
+        putById( ee.getId(), geneId, collection );
     }
 
     @Override
-    public void putById( Long basId, Long geneId, Collection<DoubleVectorValueObject> collection ) {
-        Collection<DoubleVectorValueObject> copy = new ArrayList<>( collection.size() );
-        for ( DoubleVectorValueObject vector : collection ) {
-            DoubleVectorValueObject c = new DoubleVectorValueObject( vector );
-            // See 2878 - we don't want to keep these values cached, so the vectors can be re-used.
-            c.setPvalue( null );
-            copy.add( c );
-        }
-        cache.put( new CacheKey( basId, geneId ), Collections.unmodifiableCollection( copy ) );
+    public void putById( Long eeId, Long geneId, Collection<DoubleVectorValueObject> collection ) {
+        cache.put( new CacheKey( eeId, geneId ), unmodifiableCollection( collection ) );
     }
 
     @Override
-    public void evict( BioAssaySet bas ) {
-        Assert.notNull( bas.getId() );
-        evictById( bas.getId() );
-    }
-
-    @Override
-    public void evictById( Long basId ) {
+    public void evict( ExpressionExperiment ee ) {
+        Assert.notNull( ee.getId() );
+        Long eeId = ee.getId();
         CacheUtils.evictIf( cache, o -> {
             CacheKey k = ( CacheKey ) o;
-            return k.getBasId().equals( basId );
+            return k.getExpressionExperimentId().equals( eeId );
         } );
     }
 
@@ -112,8 +93,7 @@ class ProcessedDataVectorByGeneCacheImpl implements ProcessedDataVectorByGeneCac
 
     @Value
     private static class CacheKey implements Serializable {
-        private static final long serialVersionUID = -7873367550383853137L;
-        Long basId;
+        Long expressionExperimentId;
         Long geneId;
     }
 }

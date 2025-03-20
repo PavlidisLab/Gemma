@@ -18,6 +18,10 @@
     <!-- import gsec definitions -->
     <import resource="classpath:gemma/gsec/applicationContext-*.xml"/>
 
+    <!-- gsec expects two beans to be defined: userDetailsManager and groupManager -->
+    <alias alias="userDetailsManager" name="userManager"/>
+    <alias alias="groupManager" name="userManager"/>
+
     <!-- works with the HttpSessionEventPublisher configured in web.xml -->
     <bean id="sessionRegistry" class="org.springframework.security.core.session.SessionRegistryImpl"/>
 
@@ -30,6 +34,7 @@
             </s:password-encoder>
         </s:authentication-provider>
         <s:authentication-provider ref="runAsAuthenticationProvider"/>
+        <s:authentication-provider ref="anonymousAuthenticationProvider"/>
     </s:authentication-manager>
 
     <bean id="runAsManager" class="org.springframework.security.access.intercept.RunAsManagerImpl">
@@ -66,6 +71,7 @@
         <s:after-invocation-provider ref="afterAclValueObject"/>
         <s:after-invocation-provider ref="afterAclMapRead"/>
         <s:after-invocation-provider ref="afterAclMapValuesRead"/>
+        <s:after-invocation-provider ref="afterAclStreamRead"/>
         <s:after-invocation-provider ref="postInvocationAdviceProvider"/><!-- for @Post... -->
     </s:global-method-security>
 

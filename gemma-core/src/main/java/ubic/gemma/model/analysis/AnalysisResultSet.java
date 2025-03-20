@@ -21,17 +21,10 @@ package ubic.gemma.model.analysis;
 
 import ubic.gemma.model.common.Identifiable;
 
-import java.io.Serializable;
-
 /**
  * An abstract class representing a related set of generic analysis results, part of an analysis.
  */
-public abstract class AnalysisResultSet<R extends AnalysisResult> implements Identifiable, Serializable {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -6749501453616281312L;
+public abstract class AnalysisResultSet<R extends AnalysisResult> implements Identifiable {
 
     private Long id = null;
 
@@ -41,17 +34,6 @@ public abstract class AnalysisResultSet<R extends AnalysisResult> implements Ide
      * @author Paul
      */
     public AnalysisResultSet() {
-    }
-
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
     }
 
     /**
@@ -66,8 +48,11 @@ public abstract class AnalysisResultSet<R extends AnalysisResult> implements Ide
         if ( !( object instanceof AnalysisResultSet ) ) {
             return false;
         }
-        final AnalysisResultSet that = ( AnalysisResultSet ) object;
-        return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
+        final AnalysisResultSet<?> that = ( AnalysisResultSet<?> ) object;
+        if ( getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        }
+        return false;
     }
 
     @Override

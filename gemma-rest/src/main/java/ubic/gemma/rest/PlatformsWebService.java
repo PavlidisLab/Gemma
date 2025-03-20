@@ -15,13 +15,18 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDecisionManager;
+import org.springframework.security.access.SecurityConfig;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -34,8 +39,8 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
-import ubic.gemma.rest.util.MediaTypeUtils;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
@@ -43,11 +48,11 @@ import ubic.gemma.rest.util.args.*;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.regex.Pattern;
-import java.util.zip.GZIPInputStream;
 
 import static ubic.gemma.rest.util.Responders.paginate;
 import static ubic.gemma.rest.util.Responders.respond;
@@ -59,37 +64,28 @@ import static ubic.gemma.rest.util.Responders.respond;
  */
 @Service
 @Path("/platforms")
+@CommonsLog
 public class PlatformsWebService {
 
     private static final String ERROR_ANNOTATION_FILE_NOT_AVAILABLE = "Annotation file for platform %s does not exist or can not be accessed.";
 
-    private GeneService geneService;
-    private ArrayDesignService arrayDesignService;
-    private CompositeSequenceService compositeSequenceService;
-    private ArrayDesignAnnotationService annotationFileService;
-    private PlatformArgService arrayDesignArgService;
-    private CompositeSequenceArgService probeArgService;
+    public static final String TEXT_TAB_SEPARATED_VALUES_UTF8 = "text/tab-separated-values; charset=UTF-8";
+    public static final MediaType TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE = new MediaType( "text", "tab-separated-values", "UTF-8" );
 
-    /**
-     * Required by spring
-     */
-    public PlatformsWebService() {
-    }
-
-    /**
-     * Constructor for service autowiring
-     */
     @Autowired
-    public PlatformsWebService( GeneService geneService, ArrayDesignService arrayDesignService,
-            CompositeSequenceService compositeSequenceService, ArrayDesignAnnotationService annotationFileService,
-            PlatformArgService arrayDesignArgService, CompositeSequenceArgService probeArgService ) {
-        this.geneService = geneService;
-        this.arrayDesignService = arrayDesignService;
-        this.compositeSequenceService = compositeSequenceService;
-        this.annotationFileService = annotationFileService;
-        this.arrayDesignArgService = arrayDesignArgService;
-        this.probeArgService = probeArgService;
-    }
+    private GeneService geneService;
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+    @Autowired
+    private CompositeSequenceService compositeSequenceService;
+    @Autowired
+    private ArrayDesignAnnotationService annotationFileService;
+    @Autowired
+    private PlatformArgService arrayDesignArgService;
+    @Autowired
+    private CompositeSequenceArgService probeArgService;
+    @Autowired
+    private AccessDecisionManager accessDecisionManager;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -269,9 +265,10 @@ public class PlatformsWebService {
      *                    is more efficient. Only platforms that user has access to will be available.
      * @return the content of the annotation file of the given platform.
      */
+    @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
     @GET
     @Path("/{platform}/annotations")
-    @Produces(MediaTypeUtils.TEXT_TAB_SEPARATED_VALUES_UTF8)
+    @Produces("text/tab-separated-values; charset=UTF-8")
     @Operation(summary = "Retrieve the annotations of a given platform",
             description = "The following columns are available: ElementName, GeneSymbols, GOTerms, GemmaIDs, NCBIids. Older files might still use ProbeName instead of ElementName.",
             responses = {
@@ -279,41 +276,35 @@ public class PlatformsWebService {
                             examples = { @ExampleObject("classpath:/restapidocs/examples/platform-annotations.tsv") }))
             })
     public Response getPlatformAnnotations( // Params:
-            @PathParam("platform") PlatformArg<?> platformArg // Optional, default null
+            @PathParam("platform") PlatformArg<?> platformArg,// Optional, default null
+            @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
+            @Parameter(hidden = true) @QueryParam("force") @DefaultValue("false") Boolean force
     ) {
-        try {
-            return outputAnnotationFile( arrayDesignArgService.getEntity( platformArg ) );
-        } catch ( IOException e ) {
-            throw new InternalServerErrorException( e );
+        if ( force ) {
+            checkIsAdmin();
         }
-    }
-
-    /**
-     * Creates a response with the annotation file for given array design
-     *
-     * @param arrayDesign the platform to fetch and output the annotation file for.
-     * @return a Response object containing the annotation file.
-     */
-    private Response outputAnnotationFile( ArrayDesign arrayDesign ) throws IOException {
+        ArrayDesign arrayDesign = arrayDesignArgService.getEntity( platformArg );
         String fileName = arrayDesign.getShortName().replaceAll( Pattern.quote( "/" ), "_" )
                 + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
-        File file = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
-        if ( !file.exists() ) {
+        java.nio.file.Path file = Paths.get( ArrayDesignAnnotationService.ANNOT_DATA_DIR ).resolve( fileName );
+        if ( !force || !Files.exists( file ) ) {
             try {
                 // generate it. This will cause a delay, and potentially a time-out, but better than a 404
                 // To speed things up, we don't delete other files
                 annotationFileService.create( arrayDesign, true, false ); // include GO by default.
-                file = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
-                if ( !file.canRead() ) throw new IOException( "Annotation file created but cannot read?" );
             } catch ( IOException e ) {
+                log.error( "Failed to generate annotation file for " + arrayDesign, e );
                 throw new NotFoundException( String.format( ERROR_ANNOTATION_FILE_NOT_AVAILABLE, arrayDesign.getShortName() ) );
             }
         }
-        return Response.ok( new GZIPInputStream( new FileInputStream( file ) ) )
-                .header( "Content-Encoding", "gzip" )
-                .header( "Content-Disposition", "attachment; filename=" + FilenameUtils.removeExtension( file.getName() ) )
+        return Response.ok( file )
+                .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                .header( "Content-Disposition", "attachment; filename=\"" + ( download ? file.getFileName().toString() : FilenameUtils.removeExtension( file.getFileName().toString() ) ) + "\"" )
                 .build();
     }
 
+    private void checkIsAdmin() {
+        accessDecisionManager.decide( SecurityContextHolder.getContext().getAuthentication(), null, Collections.singletonList( new SecurityConfig( "GROUP_ADMIN" ) ) );
+    }
 }

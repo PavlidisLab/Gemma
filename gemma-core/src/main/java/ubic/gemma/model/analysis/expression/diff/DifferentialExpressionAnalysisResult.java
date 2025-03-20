@@ -21,8 +21,8 @@ package ubic.gemma.model.analysis.expression.diff;
 import ubic.gemma.model.analysis.AnalysisResult;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
-import java.io.Serializable;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -30,12 +30,8 @@ import java.util.Set;
  * factor. These statistics are based on ANOVA-style analysis, with a collection of ContrastResults storing the
  * associated contrasts.
  */
-@SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public class DifferentialExpressionAnalysisResult extends AnalysisResult implements Serializable {
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 8952834115689524169L;
+public class DifferentialExpressionAnalysisResult extends AnalysisResult {
+
     private Double pvalue;
     /**
      * Typically actually a qvalue.
@@ -48,59 +44,28 @@ public class DifferentialExpressionAnalysisResult extends AnalysisResult impleme
     private ExpressionAnalysisResultSet resultSet;
     private CompositeSequence probe;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     */
-    public DifferentialExpressionAnalysisResult() {
-    }
-
     private static int getBin( Double value ) {
         return ( int ) Math.min( 5, Math.floor( -Math.log10( value ) ) );
     }
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( this.getId() == null ) ? 0 : this.getId().hashCode() );
-
-        if ( this.getId() == null ) {
-            result = prime * result + ( ( this.getResultSet() == null ) ? 0 : this.getResultSet().hashCode() );
-            result = prime * result + ( ( this.getProbe() == null ) ? 0 : this.getProbe().hashCode() );
-        }
-        return result;
+        return Objects.hash( getResultSet(), getProbe() );
     }
 
-    @SuppressWarnings("SimplifiableIfStatement") // Better readability
     @Override
     public boolean equals( Object obj ) {
         if ( this == obj )
             return true;
         if ( obj == null )
             return false;
-        if ( this.getClass() != obj.getClass() )
+        if ( !( obj instanceof DifferentialExpressionAnalysisResult ) )
             return false;
         DifferentialExpressionAnalysisResult other = ( DifferentialExpressionAnalysisResult ) obj;
-
-        if ( this.getId() == null ) {
-            if ( other.getId() != null )
-                return false;
-        } else if ( !this.getId().equals( other.getId() ) ) {
-            return false;
-        } else {
+        if ( this.getId() != null && other.getId() != null )
             return this.getId().equals( other.getId() );
-        }
-
-        // fallback.
-        if ( this.getResultSet() == null ) {
-            if ( other.getResultSet() != null )
-                return false;
-        } else if ( !this.getResultSet().equals( other.getResultSet() ) )
-            return false;
-        if ( this.getProbe() == null ) {
-            return other.getProbe() == null;
-        } else
-            return this.getProbe().equals( other.getProbe() );
+        return Objects.equals( getResultSet(), other.getResultSet() )
+                && Objects.equals( getProbe(), other.getProbe() );
     }
 
     @Override

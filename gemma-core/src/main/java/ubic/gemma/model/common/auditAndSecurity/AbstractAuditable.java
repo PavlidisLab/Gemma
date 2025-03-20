@@ -20,27 +20,14 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 import ubic.gemma.model.common.AbstractDescribable;
 
-import java.io.Serializable;
-
 /**
  * An entity which can have an audit trail attached to it.
  *
  * @author Paul
  */
-public abstract class AbstractAuditable extends AbstractDescribable implements Auditable, Serializable {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 2797229483150957490L;
+public abstract class AbstractAuditable extends AbstractDescribable implements Auditable {
 
     private AuditTrail auditTrail = new AuditTrail();
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     */
-    public AbstractAuditable() {
-    }
 
     @Override
     public AuditTrail getAuditTrail() {
@@ -51,5 +38,4 @@ public abstract class AbstractAuditable extends AbstractDescribable implements A
     public void setAuditTrail( AuditTrail auditTrail ) {
         this.auditTrail = auditTrail;
     }
-
 }

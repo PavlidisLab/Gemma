@@ -6,10 +6,10 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.authentication.TestingAuthenticationProvider;
-import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.vote.AuthenticatedVoter;
+import org.springframework.security.authentication.*;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -19,10 +19,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.security.authentication.UserManager;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * Utilities for manipulating the {@link SecurityContextHolder} in a test envirnoment.
@@ -37,6 +34,9 @@ public class TestAuthenticationUtilsImpl implements InitializingBean, TestAuthen
 
     @Autowired
     private AuthenticationManager authenticationManager;
+
+    @Value("${gemma.anonymousAuth.key}")
+    private String anonymousAuthKey;
 
     @Override
     public void afterPropertiesSet() {
@@ -55,19 +55,15 @@ public class TestAuthenticationUtilsImpl implements InitializingBean, TestAuthen
     @Override
     public void runAsAdmin() {
         // Grant all roles to test user.
-        TestingAuthenticationToken token = new TestingAuthenticationToken( "administrator", "administrator",
-                Arrays.asList( new GrantedAuthority[] {
-                        new SimpleGrantedAuthority( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) } ) );
-        token.setAuthenticated( true );
+        TestingAuthenticationToken token = new TestingAuthenticationToken( "administrator",
+                "administrator", AuthorityConstants.ADMIN_GROUP_AUTHORITY );
         createAndSetSecurityContext( token );
     }
 
     @Override
     public void runAsAgent() {
-        TestingAuthenticationToken token = new TestingAuthenticationToken( "administrator", "administrator",
-                Arrays.asList( new GrantedAuthority[] {
-                        new SimpleGrantedAuthority( AuthorityConstants.AGENT_GROUP_AUTHORITY ) } ) );
-        token.setAuthenticated( true );
+        TestingAuthenticationToken token = new TestingAuthenticationToken( "administrator",
+                "administrator", AuthorityConstants.AGENT_GROUP_AUTHORITY );
         createAndSetSecurityContext( token );
     }
 
@@ -84,7 +80,7 @@ public class TestAuthenticationUtilsImpl implements InitializingBean, TestAuthen
             user = this.userManager.loadUserByUsername( userName );
         } catch ( UsernameNotFoundException e ) {
             if ( createIfMissing ) {
-                user = new UserDetailsImpl( "foo", userName, true, null,
+                user = new UserDetailsImpl( "foo", userName, true, Collections.singletonList( new SimpleGrantedAuthority( AuthorityConstants.USER_GROUP_AUTHORITY ) ),
                         RandomStringUtils.randomAlphabetic( 10 ) + "@example.com", "key", new Date() );
                 this.userManager.createUser( user );
             } else {
@@ -99,14 +95,12 @@ public class TestAuthenticationUtilsImpl implements InitializingBean, TestAuthen
 
     @Override
     public void runAsAnonymous() {
-        TestingAuthenticationToken token = new TestingAuthenticationToken( AuthorityConstants.ANONYMOUS_USER_NAME, null,
-                Arrays.asList( new GrantedAuthority[] {
-                        new SimpleGrantedAuthority( AuthorityConstants.ANONYMOUS_GROUP_AUTHORITY ) } ) );
-        token.setAuthenticated( false );
+        AnonymousAuthenticationToken token = new AnonymousAuthenticationToken( anonymousAuthKey, "anonymousUser",
+                Arrays.asList( new SimpleGrantedAuthority( AuthenticatedVoter.IS_AUTHENTICATED_ANONYMOUSLY ) ) );
         createAndSetSecurityContext( token );
     }
 
-    private static void createAndSetSecurityContext( TestingAuthenticationToken token ) {
+    private static void createAndSetSecurityContext( Authentication token ) {
         SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
         securityContext.setAuthentication( token );
         SecurityContextHolder.setContext( securityContext );

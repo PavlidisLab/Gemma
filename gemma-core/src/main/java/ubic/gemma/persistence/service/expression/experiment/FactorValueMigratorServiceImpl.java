@@ -1,7 +1,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,7 +12,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -43,7 +43,7 @@ public class FactorValueMigratorServiceImpl implements FactorValueMigratorServic
             throw new IllegalArgumentException( String.format( "No FactorValue with ID %d.", migration.getFactorValueId() ) );
         }
 
-        Map<Long, Characteristic> oldStyleCharacteristicsById = EntityUtils.getIdMap( fv.getOldStyleCharacteristics() );
+        Map<Long, Characteristic> oldStyleCharacteristicsById = IdentifiableUtils.getIdMap( fv.getOldStyleCharacteristics() );
 
         validateMigration( migration, fv, oldStyleCharacteristicsById );
 

@@ -19,16 +19,8 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * <p>
  * Indicates that samples that were previously removed have been "put back", e.g. un-marked as an outlier.
- * </p>
  */
-public class SampleRemovalReversionEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -2893496636576496129L;
+public class SampleRemovalReversionEvent extends ExpressionExperimentAnalysisEvent {
 
 }

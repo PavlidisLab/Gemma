@@ -1,9 +1,12 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.Options;
+import org.ocpsoft.prettytime.shade.edu.emory.mathcs.backport.java.util.Collections;
 import ubic.gemma.core.util.CLI;
+import ubic.gemma.core.util.CliContext;
 
 import javax.annotation.Nullable;
+import java.util.List;
 
 public class TestCli implements CLI {
 
@@ -11,6 +14,11 @@ public class TestCli implements CLI {
     @Override
     public String getCommandName() {
         return "";
+    }
+
+    @Override
+    public List<String> getCommandAliases() {
+        return Collections.emptyList();
     }
 
     @Nullable
@@ -35,7 +43,7 @@ public class TestCli implements CLI {
     }
 
     @Override
-    public int executeCommand( String... args ) {
+    public int executeCommand( CliContext ctx ) {
         return 0;
     }
 }

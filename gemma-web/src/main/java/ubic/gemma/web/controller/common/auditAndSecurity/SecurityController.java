@@ -21,8 +21,6 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
 import gemma.gsec.AuthorityConstants;
 import gemma.gsec.SecurityService;
 import gemma.gsec.authentication.UserDetailsImpl;
-import org.springframework.stereotype.Controller;
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -32,19 +30,21 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import ubic.gemma.persistence.service.genome.gene.GeneSetService;
+import org.springframework.stereotype.Controller;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.core.util.MailEngine;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.common.Describable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
-import ubic.gemma.core.util.MailEngine;
-import ubic.gemma.core.config.Settings;
+import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
@@ -88,14 +88,14 @@ public class SecurityController {
         User u;
         if ( userManager.userExists( userName ) ) {
             u = userManager.findByUserName( userName );
-            if ( !u.getEnabled() ) {
+            if ( !u.isEnabled() ) {
                 throw new IllegalArgumentException( "Sorry, that user's account is not enabled." );
             }
 
             securityService.addUserToGroup( userName, groupName );
         } else if ( userManager.userWithEmailExists( userName ) ) {
             u = userManager.findByEmail( userName );
-            if ( !u.getEnabled() ) {
+            if ( !u.isEnabled() ) {
                 throw new IllegalArgumentException( "Sorry, that user's account is not enabled." );
             }
 
@@ -249,7 +249,6 @@ public class SecurityController {
         return result;
     }
 
-    // @Transactional(readOnly = true)
     public SecurityInfoValueObject getSecurityInfo( EntityDelegator<? extends Securable> ed ) {
 
         // TODO Figure out why Transaction(readOnly = true) throws an error when this method is called from
@@ -288,7 +287,7 @@ public class SecurityController {
 
     public boolean makeGroupWriteable( EntityDelegator<? extends Securable> ed, String groupName ) {
         Securable s = this.getSecurable( ed );
-        securityService.makeWriteableByGroup( s, groupName );
+        securityService.makeEditableByGroup( s, groupName );
         return true;
     }
 
@@ -312,7 +311,7 @@ public class SecurityController {
 
     public boolean removeGroupWriteable( EntityDelegator<? extends Securable> ed, String groupName ) {
         Securable s = this.getSecurable( ed );
-        securityService.makeUnwriteableByGroup( s, groupName );
+        securityService.makeUneditableByGroup( s, groupName );
         return true;
     }
 
@@ -383,9 +382,9 @@ public class SecurityController {
             if ( writeable ) {
                 // if writable should be readable
                 securityService.makeReadableByGroup( s, currentGroupName );
-                securityService.makeWriteableByGroup( s, currentGroupName );
+                securityService.makeEditableByGroup( s, currentGroupName );
             } else {
-                securityService.makeUnwriteableByGroup( s, currentGroupName );
+                securityService.makeUneditableByGroup( s, currentGroupName );
             }
 
         } else {
@@ -402,7 +401,7 @@ public class SecurityController {
                 }
 
                 securityService.makeUnreadableByGroup( s, groupName );
-                securityService.makeUnwriteableByGroup( s, groupName );
+                securityService.makeUneditableByGroup( s, groupName );
             }
 
             /*
@@ -425,7 +424,7 @@ public class SecurityController {
                 }
                 // when it is writable it should be readable
                 securityService.makeReadableByGroup( s, writer );
-                securityService.makeWriteableByGroup( s, writer );
+                securityService.makeEditableByGroup( s, writer );
             }
         }
 
@@ -539,7 +538,7 @@ public class SecurityController {
          */
         boolean isPublic = securityService.isPublic( s );
         boolean isShared = securityService.isShared( s );
-        boolean canWrite = securityService.isEditable( s );
+        boolean canWrite = securityService.isEditableByCurrentUser( s );
 
         SecurityInfoValueObject result = new SecurityInfoValueObject( s );
 
@@ -599,7 +598,7 @@ public class SecurityController {
 
             // FIXME this does not seem to be used in the UI and it fixes issue #41: https://github.com/ppavlidis/Gemma/issues/41
             vo.setCurrentUserOwns( false );//securityService.isOwnedByCurrentUser( s ) );
-            vo.setCurrentUserCanwrite( securityService.isEditable( s ) );
+            vo.setCurrentUserCanwrite( securityService.isEditableByCurrentUser( s ) );
 
             vo.setGroupsThatCanRead( groupsThatCanRead == null ? new HashSet<String>() : groupsThatCanRead );
             vo.setGroupsThatCanWrite( groupsThatCanWrite == null ? new HashSet<String>() : groupsThatCanWrite );

@@ -111,7 +111,7 @@ public class SettingsConfig {
 
         MutablePropertySources result = new MutablePropertySources();
 
-        result.addLast( new PropertiesPropertySource( "system", filteredSystemProperties() ) );
+        result.addLast( new PropertiesPropertySource( "system", filterSystemProperties( System.getProperties() ) ) );
 
         boolean userConfigLoaded = false;
 
@@ -123,7 +123,7 @@ public class SettingsConfig {
             if ( !r.exists() ) {
                 throw new RuntimeException( p + " could not be loaded." );
             }
-            warnIfReadableByGroupOrOthers( p );
+            warnIfReadableByOthers( p );
             result.addLast( new ResourcePropertySource( r.getDescription() + " (from -Dgemma.config)", r ) );
             userConfigLoaded = true;
         }
@@ -136,7 +136,7 @@ public class SettingsConfig {
             FileSystemResource r = new FileSystemResource( p.toFile() );
             if ( r.exists() ) {
                 log.debug( "Loading user configuration from " + p.toAbsolutePath() + " since $CATALINA_BASE is defined." );
-                warnIfReadableByGroupOrOthers( p );
+                warnIfReadableByOthers( p );
                 result.addLast( new ResourcePropertySource( r.getDescription() + " (from $CATALINA_BASE)", r ) );
                 userConfigLoaded = true;
             }
@@ -148,7 +148,7 @@ public class SettingsConfig {
         FileSystemResource r = new FileSystemResource( p.toFile() );
         if ( !userConfigLoaded && r.exists() ) {
             log.debug( "Loading user configuration from " + p.toAbsolutePath() + "." );
-            warnIfReadableByGroupOrOthers( p );
+            warnIfReadableByOthers( p );
             result.addLast( new ResourcePropertySource( r.getDescription() + " (from $HOME)", r ) );
             userConfigLoaded = true;
         }
@@ -178,27 +178,25 @@ public class SettingsConfig {
     /**
      * Filter system properties that are declared in the default locations.
      */
-    private static Properties filteredSystemProperties() throws IOException {
+    static Properties filterSystemProperties( Properties allProperties ) throws IOException {
         Properties props = new Properties();
         for ( String loc : DEFAULT_CONFIGURATIONS ) {
             try ( InputStream is = new ClassPathResource( loc ).getInputStream() ) {
                 Properties defaultProperties = new Properties();
                 defaultProperties.load( is );
                 for ( String key : defaultProperties.stringPropertyNames() ) {
-                    String val;
-                    if ( key.startsWith( SYSTEM_PROPERTY_PREFIX ) ) {
-                        val = System.getProperty( key );
-                    } else {
-                        val = System.getProperty( key );
-                        if ( val != null ) {
-                            // allow unprefixed keys for backward-compatibility
-                            log.warn( String.format( "System property %s should be prefixed with '%s'.", key, SYSTEM_PROPERTY_PREFIX ) );
-                        } else {
-                            val = System.getProperty( SYSTEM_PROPERTY_PREFIX + key );
-                        }
+                    if ( props.containsKey( key ) ) {
+                        continue;
                     }
-                    if ( val != null ) {
-                        props.setProperty( key, val );
+                    if ( allProperties.containsKey( SYSTEM_PROPERTY_PREFIX + key ) ) {
+                        props.setProperty( key, allProperties.getProperty( SYSTEM_PROPERTY_PREFIX + key ) );
+                    } else if ( allProperties.containsKey( key ) ) {
+                        if ( !key.startsWith( SYSTEM_PROPERTY_PREFIX ) ) {
+                            // allow un-prefixed keys for backward-compatibility
+                            // TODO: remove this as per https://github.com/PavlidisLab/Gemma/issues/1110
+                            log.warn( String.format( "System property %s should be prefixed with '%s'.", key, SYSTEM_PROPERTY_PREFIX ) );
+                        }
+                        props.setProperty( key, allProperties.getProperty( key ) );
                     }
                 }
             }
@@ -206,16 +204,15 @@ public class SettingsConfig {
         return props;
     }
 
-    private static void warnIfReadableByGroupOrOthers( Path path ) throws IOException {
+    private static void warnIfReadableByOthers( Path path ) throws IOException {
         Set<PosixFilePermission> permissions;
         try {
             permissions = Files.getPosixFilePermissions( path );
         } catch ( UnsupportedOperationException e ) {
             return;
         }
-        if ( permissions.contains( PosixFilePermission.GROUP_READ ) || permissions.contains( PosixFilePermission.OTHERS_READ ) ) {
-            log.warn( String.format( "%s may contain credentials and is not exclusively readable by its owner. Adjust the permissions by running 'chmod go-r %s' to remove this warning.",
-                    path.getFileName(), path.toAbsolutePath() ) );
+        if ( permissions.contains( PosixFilePermission.OTHERS_READ ) ) {
+            log.warn( String.format( "%s may contain credentials and is readable by others. Adjust the permissions by running 'chmod o-r %s' to remove this warning.", path.getFileName(), path.toAbsolutePath() ) );
         }
     }
 }

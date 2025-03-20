@@ -219,9 +219,9 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
     }
 
     @Test
-    public void testGetDesignElementDataVectorCount() {
+    public void testGetRawDataVectorCount() {
         ExpressionExperiment ee = createExpressionExperiment();
-        assertEquals( 24, expressionExperimentService.getDesignElementDataVectorCount( ee ) );
+        assertEquals( 24, expressionExperimentService.getRawDataVectorCount( ee ) );
     }
 
     @Test
@@ -507,6 +507,34 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         assertNotNull( eeSet );
         assertThat( eeSet.getExperiments() )
                 .containsExactly( ee2 );
+    }
+
+    @Test
+    public void testStreamExperiments() {
+        runAsUser( "bob" );
+        ExpressionExperiment bobExperiment = getTestPersistentBasicExpressionExperiment();
+        runAsUser( "joe" );
+        ExpressionExperiment joeExperiment = getTestPersistentBasicExpressionExperiment();
+
+        runAsAdmin();
+        assertThat( expressionExperimentService.streamAll( true ) )
+                .contains( bobExperiment, joeExperiment );
+
+        runAsUser( "bob" );
+        assertThat( expressionExperimentService.streamAll( true ) )
+                .contains( bobExperiment )
+                .doesNotContain( joeExperiment );
+
+        runAsUser( "joe" );
+        assertThat( expressionExperimentService.streamAll( true ) )
+                .contains( joeExperiment )
+                .doesNotContain( bobExperiment );
+
+        runAsAnonymous();
+        assertThat( expressionExperimentService.streamAll( true ) )
+                .doesNotContain( bobExperiment, joeExperiment );
+
+        runAsAdmin();
     }
 
     @Test

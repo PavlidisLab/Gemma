@@ -22,18 +22,13 @@ import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.expression.biomaterial.Compound;
 
-import java.io.Serializable;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
 @Indexed
-public class BibliographicReference extends AbstractDescribable implements Serializable {
+public class BibliographicReference extends AbstractDescribable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 5823969791153895703L;
     private String authorList;
     private String title;
     private String publisher;
@@ -65,6 +60,19 @@ public class BibliographicReference extends AbstractDescribable implements Seria
     @DocumentId
     public Long getId() {
         return super.getId();
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof BibliographicReference ) )
+            return false;
+        BibliographicReference that = ( BibliographicReference ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        }
+        return false;
     }
 
     @Override

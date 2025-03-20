@@ -22,10 +22,10 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.Collection;
@@ -93,7 +93,7 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
         newee = eeService.thawLite( newee );
 
         for ( ExperimentalFactor ef : newee.getExperimentalDesign().getExperimentalFactors() ) {
-            if ( ef.getName().equals( ExperimentalFactorService.BATCH_FACTOR_NAME ) ) {
+            if ( ef.getName().equals( ExperimentalDesignUtils.BATCH_FACTOR_NAME ) ) {
                 for ( FactorValue fv : ef.getFactorValues() ) {
                     assertNotNull( fv.getValue() );
                     assertTrue( fv.getValue().startsWith( "Batch_0" ) ); // Batch_01, Batch_02 etc.

@@ -103,9 +103,9 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
                 break;
             }
         }
-        newee = expressionExperimentService.thawLite( newee );
+        newee = expressionExperimentService.thaw( newee );
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( newee );
+        processedExpressionDataVectorService.createProcessedDataVectors( newee, true );
 
         try ( InputStream deis = this.getClass()
                 .getResourceAsStream( "/data/loader/expression/geo/gse18162Short/design.txt" ) ) {

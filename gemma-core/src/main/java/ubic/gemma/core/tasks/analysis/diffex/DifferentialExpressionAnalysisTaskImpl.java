@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2013 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -19,14 +19,14 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.analysis.expression.diff.AnalysisSelectionAndExecutionService;
+import ubic.gemma.core.analysis.expression.diff.AnalysisType;
+import ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
-import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl;
-import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
-import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.AbstractTask;
+import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -34,6 +34,8 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.util.Collection;
 import java.util.HashSet;
+
+import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.determineAnalysisType;
 
 /**
  * A differential expression analysis spaces task
@@ -52,8 +54,6 @@ public class DifferentialExpressionAnalysisTaskImpl
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
-    @Autowired
-    private AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService;
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
@@ -113,22 +113,21 @@ public class DifferentialExpressionAnalysisTaskImpl
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         boolean rnaSeq = expressionExperimentService.isRNASeq( ee );
         config.setUseWeights( rnaSeq );
-        config.setFactorsToInclude( factors );
+        config.addFactorsToInclude( factors );
         config.setSubsetFactor( taskCommand.getSubsetFactor() );
         if ( taskCommand.isIncludeInteractions() && factors.size() == 2 ) {
             /*
              * We should not include 'batch' in an interaction. But I don't want to enforce that here.
              */
             for ( ExperimentalFactor ef : factors ) {
-                if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
+                if ( ExperimentalDesignUtils.isBatchFactor( ef ) ) {
                     log.warn( "Batch is included in the interaction!" );
                 }
             }
             config.addInteractionToInclude( factors ); // might get dropped.
         }
 
-        DifferentialExpressionAnalyzerServiceImpl.AnalysisType analyzer = analysisSelectionAndExecutionService
-                .determineAnalysis( ee, config );
+        AnalysisType analyzer = DiffExAnalyzerUtils.determineAnalysisType( ee, config );
 
         if ( analyzer == null ) {
             throw new IllegalStateException( "Data set cannot be analyzed" );

@@ -40,7 +40,7 @@
 
 	<s:http access-decision-manager-ref="httpAccessDecisionManager" pattern="/rest/v2/**"
 			entry-point-ref="restAuthEntryPoint" realm="Gemma RESTful API">
-		<s:anonymous granted-authority="GROUP_ANONYMOUS"/>
+		<s:anonymous granted-authority="IS_AUTHENTICATED_ANONYMOUSLY"/>
 		<s:http-basic entry-point-ref="restAuthEntryPoint"/>
 		<!-- accessing user details requires at the very least a user role -->
 		<s:intercept-url pattern="/rest/v2/users/**" access="GROUP_USER"/>
@@ -49,7 +49,7 @@
 	<!-- Notes. 1) The auto-config doesn't do much since we customize most things. 2) We provide a custom accessDecisionManager
 		so we can get the role hierarchy and GROUP_ prefix applied to http request. -->
 	<s:http access-decision-manager-ref="httpAccessDecisionManager" realm="Gemma" pattern="/**">
-		<s:anonymous granted-authority="GROUP_ANONYMOUS"/>
+		<s:anonymous granted-authority="IS_AUTHENTICATED_ANONYMOUSLY"/>
 		<s:http-basic/>
 
 		<s:intercept-url pattern="/admin/**" access="GROUP_ADMIN"/>

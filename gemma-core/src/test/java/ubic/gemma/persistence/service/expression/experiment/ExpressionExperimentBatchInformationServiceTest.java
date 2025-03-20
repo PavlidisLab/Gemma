@@ -17,6 +17,7 @@ import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
+import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
@@ -85,14 +86,12 @@ public class ExpressionExperimentBatchInformationServiceTest extends AbstractJUn
         SVDValueObject svdResult = mock();
         when( svdResult.getDatePvals() ).thenReturn( Collections.singletonMap( 0, 0.0000001 ) );
         when( svdResult.getVariances() ).thenReturn( new double[] { 0.99 } );
-        when( svdService.getSvdFactorAnalysis( 1L ) ).thenReturn( svdResult );
-        ExperimentalFactor batchFactor = new ExperimentalFactor();
-        batchFactor.setName( ExperimentalDesignUtils.BATCH_FACTOR_NAME );
-        Characteristic c = Characteristic.Factory.newInstance();
-        c.setCategory( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME );
+        ExperimentalFactor batchFactor = ExperimentalFactor.Factory.newInstance( ExperimentalDesignUtils.BATCH_FACTOR_NAME, FactorType.CATEGORICAL );
+        Characteristic c = Characteristic.Factory.newInstance( Categories.BLOCK );
         batchFactor.setCategory( c );
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );
+        when( svdService.svdFactorAnalysis( ee ) ).thenReturn( svdResult );
         ee.setExperimentalDesign( new ExperimentalDesign() );
         ee.getExperimentalDesign().getExperimentalFactors().add( batchFactor );
         assertTrue( eeBatchService.checkHasBatchInfo( ee ) );
@@ -107,16 +106,14 @@ public class ExpressionExperimentBatchInformationServiceTest extends AbstractJUn
 
     @Test
     public void testGetBatchConfounds() {
-        ExperimentalFactor batchFactor = new ExperimentalFactor();
-        batchFactor.setName( ExperimentalDesignUtils.BATCH_FACTOR_NAME );
-        Characteristic c = Characteristic.Factory.newInstance();
-        c.setCategory( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME );
+        ExperimentalFactor batchFactor = ExperimentalFactor.Factory.newInstance( ExperimentalDesignUtils.BATCH_FACTOR_NAME, FactorType.CATEGORICAL );
+        Characteristic c = Characteristic.Factory.newInstance( Categories.BLOCK );
         batchFactor.setCategory( c );
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );
         ee.setExperimentalDesign( new ExperimentalDesign() );
         ee.getExperimentalDesign().getExperimentalFactors().add( batchFactor );
-        when( expressionExperimentService.thawBioAssays( ee ) ).thenReturn( ee );
+        when( expressionExperimentService.thawLite( ee ) ).thenReturn( ee );
         assertTrue( eeBatchService.getSignificantBatchConfounds( ee ).isEmpty() );
         assertTrue( eeBatchService.getSignificantBatchConfoundsForSubsets( ee ).isEmpty() );
     }

@@ -18,21 +18,28 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
-import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
-import java.io.Serializable;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Stores the order of BioAssays referred to in DataVectors.
  * Note: Not a SecuredChild - maybe should be?
  */
-public class BioAssayDimension extends AbstractDescribable implements Serializable {
+public class BioAssayDimension extends AbstractIdentifiable {
 
-    private static final long serialVersionUID = -3786404705366085672L;
+    private List<BioAssay> bioAssays = new ArrayList<>();
 
-    private List<BioAssay> bioAssays = new java.util.ArrayList<>();
+    /**
+     * Indicate if this BioAssayDimension resulting from merging other BioAssayDimensions.
+     * TODO: switch to a regular boolean once all the entities have been migrated to the new schema.
+     */
+    @Nullable
+    private Boolean merged;
 
     public List<BioAssay> getBioAssays() {
         return this.bioAssays;
@@ -42,20 +49,43 @@ public class BioAssayDimension extends AbstractDescribable implements Serializab
         this.bioAssays = bioAssays;
     }
 
+    @Nullable
+    public Boolean getMerged() {
+        return merged;
+    }
+
+    public void setMerged( @Nullable Boolean merged ) {
+        this.merged = merged;
+    }
+
+    @Override
+    public int hashCode() {
+        return bioAssays.hashCode();
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof BioAssayDimension ) )
+            return false;
+        BioAssayDimension that = ( BioAssayDimension ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        }
+        return Objects.equals( getBioAssays(), that.getBioAssays() );
+    }
+
     public static final class Factory {
 
         public static BioAssayDimension newInstance() {
             return new BioAssayDimension();
         }
 
-        public static BioAssayDimension newInstance( String name, String description, List<BioAssay> bioAssays ) {
-            final BioAssayDimension entity = new BioAssayDimension();
-            entity.setName( name );
-            entity.setDescription( description );
+        public static BioAssayDimension newInstance( List<BioAssay> bioAssays ) {
+            final BioAssayDimension entity = newInstance();
             entity.setBioAssays( bioAssays );
             return entity;
         }
-
     }
-
 }

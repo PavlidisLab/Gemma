@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" %>
+<jsp:useBean id="appConfig" scope="application" type="java.util.Map" />
 <!DOCTYPE html>
 <html lang="en">
 <head>

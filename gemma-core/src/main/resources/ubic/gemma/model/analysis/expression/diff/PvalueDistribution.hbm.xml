@@ -14,8 +14,11 @@
         <property name="numBins" type="java.lang.Integer">
             <column name="NUM_BINS" not-null="true" unique="false" sql-type="INTEGER"/>
         </property>
-        <property name="binCounts" type="org.hibernate.type.MaterializedBlobType">
+        <property name="binCounts">
             <column name="BIN_COUNTS" not-null="true" unique="false" sql-type="BLOB"/>
+            <type name="ubic.gemma.persistence.hibernate.ByteArrayType">
+                <param name="arrayType">double</param>
+            </type>
         </property>
     </class>
 </hibernate-mapping>

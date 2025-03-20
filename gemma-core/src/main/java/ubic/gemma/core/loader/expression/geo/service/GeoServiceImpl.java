@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
@@ -37,6 +38,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentUp
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -193,7 +195,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
             geoConverter.setForceConvertElements( true );
 
             for ( GeoData d : platforms ) {
-                if ( expressionExperimentService.isBlackListed( d.getGeoAccession() ) ) {
+                if ( d.getGeoAccession() != null && expressionExperimentService.isBlackListed( d.getGeoAccession() ) ) {
                     throw new IllegalArgumentException(
                             "Entity with accession " + d.getGeoAccession() + " is blacklisted" );
                 }
@@ -281,7 +283,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
 
     @Override
     @Transactional
-    public void updateFromGEO( String geoAccession ) {
+    public void updateFromGEO( String geoAccession, GeoUpdateConfig geoUpdateConfig ) {
         // load the experiment locally and complain if it doesn't exist. Note: might be split into parts in Gemma, in which case we do all.
         Collection<ExpressionExperiment> ees = this.expressionExperimentService.findByAccession( geoAccession );
 
@@ -291,6 +293,32 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
             log.info( "Updating " + ees.size() + " experiments from accession " + geoAccession );
         }
 
+        Collection<ExpressionExperiment> result = fetchFromGEO( geoAccession, geoUpdateConfig );
+
+        // multi-species automatically split by Gemma at conversion stage so we may have >1
+        for ( ExpressionExperiment freshFromGEO : result ) {
+            // multi-species automatically split by Gemma at conversion stage so we may have >1
+            for ( ExpressionExperiment ee : ees ) { // because it could be a split by us.
+                updateFromGEO( ee, geoAccession, freshFromGEO, geoUpdateConfig );
+            }
+        }
+    }
+
+    @Override
+    public void updateFromGEO( ExpressionExperiment ee, GeoUpdateConfig geoUpdateConfig ) {
+        Assert.isTrue( ee.getAccession() != null
+                        && ee.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ),
+                "This method is only for GEO experiments" );
+
+        String geoAccession = ee.getAccession().getAccession();
+        Collection<ExpressionExperiment> result = fetchFromGEO( geoAccession, geoUpdateConfig );
+
+        for ( ExpressionExperiment freshFromGEO : result ) {
+            updateFromGEO( ee, geoAccession, freshFromGEO, geoUpdateConfig );
+        }
+    }
+
+    private Collection<ExpressionExperiment> fetchFromGEO( String geoAccession, GeoUpdateConfig geoUpdateConfig ) {
         // other complications arise if this is a multiplatform data set that was switched/merged etc, but we will take the data for the corresponding GSMs.
 
         // fetch the experiment from GEO
@@ -299,107 +327,121 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         Collection<? extends GeoData> parseResult = geoDomainObjectGenerator.generate( geoAccession );
         Object obj = parseResult.iterator().next();
         GeoSeries series = ( GeoSeries ) obj;
+        //noinspection unchecked
         Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoConverter.convert( series, true );
 
         /*
          * We're never splitting by platform, so we should have only one result.
          */
         if ( result.isEmpty() ) {
-            throw new IllegalStateException( "No result from fetching and coversion of " + geoAccession );
+            throw new IllegalStateException( "No result from fetching and conversion of " + geoAccession );
         } else {
             log.info( "Got " + result.size() + " experiments from GEO for " + geoAccession );
         }
 
-        this.getPubMedInfo( result );
+        if ( geoUpdateConfig.publications ) {
+            this.getPubMedInfo( result );
+        }
 
-        // multi-species automatically split by Gemma at conversion stage so we may have >1
-        for ( ExpressionExperiment freshFromGEO : result ) {
+        return result;
+    }
 
-            // make map of characteristics by GSM ID for biassays
+    /**
+     * update the experiment in Gemma:
+     * 1) experiment-level tags
+     * 2) publication
+     * 3) BioMaterial Characteristics (mostly for backporting)
+     * 4) Original platform (this is for backporting, and may be removed in the future)
+     */
+    private void updateFromGEO( ExpressionExperiment ee, String geoAccession, ExpressionExperiment freshFromGEO, GeoUpdateConfig geoUpdateConfig ) {
+        /*
+         * If we have more than one result from GEO due to species-splitting,
+         * then we could try to match to the existing one instead of looping over all the ones in Gemma,
+         * but it doesn't really matter, the loop over bioassays won't do anything for the mismatched one.
+         */
+
+        int numNewCharacteristics = 0;
+        boolean pubUpdate = false;
+
+        ee = expressionExperimentService.thawLite( ee );
+
+        if ( geoUpdateConfig.experimentTags ) {
+            // EE tags are often manually curated, so we don't want to overwrite them. Fortunately, the
+            // Characteristic.equals definition has really neat behavior for this
+            for ( Characteristic newEeTag : freshFromGEO.getCharacteristics() ) {
+                if ( ee.getCharacteristics().add( newEeTag ) ) {
+                    log.info( "Found a new experiment-level tag for " + geoAccession + ": " + newEeTag );
+                    numNewCharacteristics++;
+                }
+            }
+        }
+
+        if ( geoUpdateConfig.publications ) {
+            BibliographicReference primaryPublication = freshFromGEO.getPrimaryPublication();
+            if ( ee.getPrimaryPublication() == null && primaryPublication != null ) {
+                log.info( "Found new primary publication for " + geoAccession + ": " + primaryPublication.getPubAccession() );
+                primaryPublication = ( BibliographicReference ) persisterHelper.persist( primaryPublication );
+                ee.setPrimaryPublication( primaryPublication ); // persist first?
+                pubUpdate = true;
+            }
+        }
+
+        if ( geoUpdateConfig.sampleCharacteristics ) {
+            // make map of characteristics by GSM ID for bioassays
             Map<String, BioAssay> freshBAsByGSM = new HashMap<>();
             for ( BioAssay ba : freshFromGEO.getBioAssays() ) {
                 String acc = ba.getAccession().getAccession();
-                freshBAsByGSM
-                        .put( acc, ba );
+                freshBAsByGSM.put( acc, ba );
             }
 
-            BibliographicReference primaryPublication = freshFromGEO.getPrimaryPublication();
+            for ( BioAssay ba : ee.getBioAssays() ) {
+                BioMaterial bm = ba.getSampleUsed();
+                String gsmID = ba.getAccession().getAccession();
 
-            // update the experiment in Gemma:
-            // 1) publication
-            // 2) BioMaterial Characteristics (mostly for backporting)
-            // 3) Original platform (this is for backporting, and may be removed in the future)
-            for ( ExpressionExperiment ee : ees ) { // because it could be a split by us.
-
-                /*
-                 * If we have more than one result from GEO due to species-splitting,
-                 * then we could try to match to the existing one instead of looping over all the ones in Gemma,
-                 * but it doesn't really matter, the loop over bioassays won't do anything for the mismatched one.
-                 */
-
-                int numNewCharacteristics = 0;
-                boolean pubUpdate = false;
-
-                ee = expressionExperimentService.thawLite( ee );
-
-                if ( ee.getPrimaryPublication() == null && primaryPublication != null ) {
-                    log.info( "Found new primary publication for " + geoAccession + ": " + primaryPublication.getPubAccession() );
-                    primaryPublication = ( BibliographicReference ) persisterHelper.persist( primaryPublication );
-                    ee.setPrimaryPublication( primaryPublication ); // persist first?
-                    pubUpdate = true;
+                if ( !freshBAsByGSM.containsKey( gsmID ) ) { // sanity check ...
+                    // suppress this warning, because if we split up front, then this is expected.
+                    //log.warn( "GEO didn't have " + gsmID + " associated with " + ee );
+                    continue;
                 }
 
-                for ( BioAssay ba : ee.getBioAssays() ) {
-                    BioMaterial bm = ba.getSampleUsed();
-                    String gsmID = ba.getAccession().getAccession();
-
-                    if ( !freshBAsByGSM.containsKey( gsmID ) ) { // sanity check ...
-                        // suppress this warning, because if we split up front, then this is expected.
-                        //log.warn( "GEO didn't have " + gsmID + " associated with " + ee );
-                        continue;
+                // fill in the original platform, if we need to.
+                ArrayDesign arrayDesignUsed = freshBAsByGSM.get( gsmID ).getArrayDesignUsed();
+                if ( ba.getOriginalPlatform() == null ) {
+                    ArrayDesign ad = arrayDesignService.findByShortName( arrayDesignUsed.getShortName() );
+                    if ( ad != null ) {
+                        log.info( "Updating original platform for " + gsmID + " in " + ee.getShortName() + " = " + arrayDesignUsed );
+                        ba.setOriginalPlatform( ad );
+                        bioAssayService.update( ba );
+                    } else {
+                        log.warn( "Could not update original platform for " + gsmID + " in " + ee.getShortName() + ", it was not in the system: " + arrayDesignUsed );
                     }
-
-                    // fill in the original paltform, if we need to.
-                    ArrayDesign arrayDesignUsed = freshBAsByGSM.get( gsmID ).getArrayDesignUsed();
-                    if ( ba.getOriginalPlatform() == null ) {
-                        ArrayDesign ad = arrayDesignService.findByShortName( arrayDesignUsed.getShortName() );
-                        if ( ad != null ) {
-                            log.info( "Updating original platform for " + gsmID + " in " + ee.getShortName() + " = " + arrayDesignUsed );
-                            ba.setOriginalPlatform( ad );
-                            bioAssayService.update( ba );
-                        } else {
-                            log.warn( "Could not update original platform for " + gsmID + " in " + ee.getShortName() + ", it was not in the system: " + arrayDesignUsed );
-                        }
-                    }
+                }
 
                 /*
                  delete the old characteristics and start over. Trying to match them up will often fail, and adding them instead of deleting them just creats a mess.
                  */
-                    Set<Characteristic> bmchars = bm.getCharacteristics();
-                    int numOldChars = bmchars.size();
-                    bmchars.clear();
-                    characteristicService.remove( bmchars );
-                    Collection<Characteristic> freshCharacteristics = freshBAsByGSM.get( gsmID ).getSampleUsed().getCharacteristics();
-                    if ( log.isDebugEnabled() )
-                        log.debug( "Found " + freshCharacteristics.size() + " characteristics for " + gsmID + " replacing " + numOldChars + " old ones ..." );
-                    bmchars.addAll( freshCharacteristics );
-                    numNewCharacteristics += freshCharacteristics.size();
-                    bioMaterialService.update( bm );
-                }
-
-
-                if (numNewCharacteristics == 0 ) {
-                    // that's okay but probably shouldn't do anything
-                } else {
-                    expressionExperimentService.update( ee );
-                    String message = " Updated from GEO; " + numNewCharacteristics + " characteristics added/replaced" + ( pubUpdate ? "; Publication added" : "" );
-                    log.info( ee.getShortName() + message );
-                    auditTrailService.addUpdateEvent( ee, ExpressionExperimentUpdateFromGEOEvent.class, message );
-                }
-
+                Set<Characteristic> bmchars = bm.getCharacteristics();
+                int numOldChars = bmchars.size();
+                bmchars.clear();
+                characteristicService.remove( bmchars );
+                Collection<Characteristic> freshCharacteristics = freshBAsByGSM.get( gsmID ).getSampleUsed().getCharacteristics();
+                if ( log.isDebugEnabled() )
+                    log.debug( "Found " + freshCharacteristics.size() + " characteristics for " + gsmID + " replacing " + numOldChars + " old ones ..." );
+                bmchars.addAll( freshCharacteristics );
+                numNewCharacteristics += freshCharacteristics.size();
+                bioMaterialService.update( bm );
             }
         }
 
+        if ( numNewCharacteristics > 0 || pubUpdate ) {
+            expressionExperimentService.update( ee );
+            String message = " Updated from GEO; " + numNewCharacteristics + " characteristics added/replaced" + ( pubUpdate ? "; Publication added" : "" );
+            log.info( ee.getShortName() + message );
+            auditTrailService.addUpdateEvent( ee, ExpressionExperimentUpdateFromGEOEvent.class, message );
+        } else {
+            // that's okay but probably shouldn't do anything
+            log.debug( "No new characteristics for " + ee );
+        }
     }
 
     @Override
@@ -505,6 +547,10 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         Collection<GeoSample> toSkip = new HashSet<>();
 
         for ( GeoSample sample : series.getSamples() ) {
+            if ( sample.getGeoAccession() == null ) {
+                log.warn( "Ignoring sample without GEO accession in " + series );
+                continue;
+            }
             if ( !sample.appearsInMultipleSeries() ) {
                 // nothing to worry about: if this series is not loaded, then we're guaranteed to be new.
                 continue;
@@ -904,7 +950,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
             throw new IllegalStateException( "Series " + series.getGeoAccession() + " has no platform." );
         for ( GeoPlatform pl : platforms ) {
 
-            if ( expressionExperimentService.isBlackListed( pl.getGeoAccession() ) ) {
+            if ( pl.getGeoAccession() != null && expressionExperimentService.isBlackListed( pl.getGeoAccession() ) ) {
                 throw new IllegalArgumentException(
                         "A platform used by " + series.getGeoAccession() + " is blacklisted: " + pl.getGeoAccession() );
             }

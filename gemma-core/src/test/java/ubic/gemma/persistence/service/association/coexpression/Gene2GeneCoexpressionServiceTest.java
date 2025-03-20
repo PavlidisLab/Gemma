@@ -28,10 +28,6 @@ import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
-import ubic.gemma.persistence.service.association.coexpression.LinkCreator;
-import ubic.gemma.persistence.service.association.coexpression.NonPersistentNonOrderedCoexpLink;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.*;

@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.apache.commons.lang.math.RandomUtils;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,8 +62,15 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
     @Override
     public ExpressionExperiment getExpressionExperiment( final ExperimentalDesign experimentalDesign ) {
         return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct ee FROM ExpressionExperiment as ee where ee.experimentalDesign = :ed " )
+                .createQuery( "select distinct ee FROM ExpressionExperiment as ee where ee.experimentalDesign = :ed" )
                 .setParameter( "ed", experimentalDesign ).uniqueResult();
+    }
+
+    @Override
+    public ExpressionExperiment getExpressionExperimentById( Long experimentalDesignId ) {
+        return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct ee FROM ExpressionExperiment as ee where ee.experimentalDesign.id = :edId" )
+                .setParameter( "edId", experimentalDesignId ).uniqueResult();
     }
 
     @Nullable
@@ -75,13 +81,13 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
                         + "join ef.factorValues fv where ed.id != :edId and fv.needsAttention = true" )
                 .setParameter( "edId", excludedDesign.getId() )
                 .uniqueResult();
-        if (numThatNeedsAttention == 0)
+        if ( numThatNeedsAttention == 0 )
             return null;
         return ( ExperimentalDesign ) getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct ed from ExperimentalDesign ed join ed.experimentalFactors ef "
                         + "join ef.factorValues fv where ed.id != :edId and fv.needsAttention = true" )
                 .setParameter( "edId", excludedDesign.getId() )
-                .setFirstResult( RandomUtils.nextInt( numThatNeedsAttention.intValue() ) )
+                .setFirstResult( new Random().nextInt( numThatNeedsAttention.intValue() ) )
                 .setMaxResults( 1 )
                 .uniqueResult();
     }

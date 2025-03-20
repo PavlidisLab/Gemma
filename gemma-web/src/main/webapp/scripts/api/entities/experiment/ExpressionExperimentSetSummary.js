@@ -1,5 +1,5 @@
 Ext.namespace( 'Gemma' );
-Ext.BLANK_IMAGE_URL = ctxBasePath + '/images/default/s.gif';
+Ext.BLANK_IMAGE_URL = Gemma.CONTEXT_PATH + '/images/default/s.gif';
 /**
  * 
  * Panel containing the most interesting info about an experiment set.
@@ -40,7 +40,7 @@ Gemma.ExpressionExperimentSetSummary = Ext
          renderStatus : function( e ) {
             var statusString = "";
             if ( !e.modifiable ) {
-               statusString += "<img src='" + ctxBasePath + "/images/icons/shield.png' height='16' width='16' " + "title='"
+               statusString += "<img src='" + Gemma.CONTEXT_PATH + "/images/icons/shield.png' height='16' width='16' " + "title='"
                   + Gemma.HelpText.WidgetDefaults.DatasetGroupGridPanel.protectedTT + "' />&nbsp;";
             }
             var sl = Gemma.SecurityManager.getSecurityLink(
@@ -204,7 +204,7 @@ Gemma.ExpressionExperimentSetSummary = Ext
 
             var deleteEEButton = new Ext.Button( {
                text : 'Delete Experiment Group',
-               icon : ctxBasePath + '/images/icons/cross.png',
+               icon : Gemma.CONTEXT_PATH + '/images/icons/cross.png',
                toolTip : 'Delete the experiment from the system',
                disabled : !this.editable,
                handler : this.deleteExperimentSet,
@@ -303,7 +303,7 @@ Gemma.ExpressionExperimentSetSummary = Ext
 
             experimentMembersGrid.on( 'experimentListCreated', function( eesvo ) {
                Ext.getBody().mask( 'Loading new set' );
-               window.location = ctxBasePath + "/expressionExperimentSet/showExpressionExperimentSet.html?id=" + eesvo.id;
+               window.location = Gemma.CONTEXT_PATH + "/expressionExperimentSet/showExpressionExperimentSet.html?id=" + eesvo.id;
             } );
 
             experimentMembersGrid.on( 'afterrender', function() {
@@ -359,7 +359,7 @@ Gemma.ExpressionExperimentSetSummary = Ext
                      this.deleteMask.show();
                      callParams.push( {
                         callback : function( data ) {
-                           window.location = ctxBasePath + '/home.html';
+                           window.location = Gemma.CONTEXT_PATH + '/home.html';
                         }.createDelegate( this ),
                         errorHandler : function( error ) {
                            Ext.Msg.alert( "Deletion failed", error );

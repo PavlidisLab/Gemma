@@ -2,6 +2,8 @@ package ubic.gemma.rest;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -10,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
@@ -17,17 +20,20 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.DifferentialExpressionAnalysisResultListFileService;
 import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.search.SearchSettings;
@@ -45,6 +51,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
@@ -58,14 +65,19 @@ import ubic.gemma.rest.util.args.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.list;
 import static org.mockito.Mockito.*;
+import static ubic.gemma.rest.DatasetsWebService.TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE;
 import static ubic.gemma.rest.util.Assertions.assertThat;
 
 @ContextConfiguration
@@ -217,6 +229,16 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
         public DifferentialExpressionAnalysisResultListFileService differentialExpressionAnalysisResultListFileService() {
             return mock();
         }
+
+        @Bean
+        public SingleCellExpressionExperimentService singleCellExpressionExperimentService() {
+            return mock();
+        }
+
+        @Bean
+        public AsyncTaskExecutor taskExecutor() {
+            return mock( AsyncTaskExecutor.class );
+        }
     }
 
     @Autowired
@@ -248,6 +270,12 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
 
     @Autowired
     private ExpressionExperimentReportService expressionExperimentReportService;
+
+    @Autowired
+    private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
+
+    @Autowired
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     private ExpressionExperiment ee;
 
@@ -483,7 +511,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .entity()
                 .hasFieldOrPropertyWithValue( "limit", 5000 );
         verify( expressionExperimentService ).getFiltersWithInferredAnnotations( Filters.empty(), null, new HashSet<>(), 30000, TimeUnit.MILLISECONDS );
-        verify( expressionExperimentService ).getAnnotationsUsageFrequency( Filters.empty(), null, null, null, null, 10, null, 5000, 30000, TimeUnit.MILLISECONDS );
+        verify( expressionExperimentService ).getAnnotationsUsageFrequency( eq( Filters.empty() ), isNull(), isNull(), isNull(), isNull(), eq( 10 ), isNull(), eq( 5000 ), longThat( l -> l <= 30000 ), eq( TimeUnit.MILLISECONDS ) );
     }
 
     @Test
@@ -526,14 +554,17 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetProcessedExpression() throws IOException {
+    public void testGetDatasetProcessedExpression() throws IOException, URISyntaxException, InterruptedException, TimeoutException, FilteringException {
         when( expressionExperimentService.hasProcessedExpressionData( eq( ee ) ) ).thenReturn( true );
+        when( expressionDataFileService.writeOrLocateProcessedDataFile( ee, false, false, 5, TimeUnit.SECONDS ) )
+                .thenReturn( Optional.of( new DummyLockedPath( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ), true ) ) );
         assertThat( target( "/datasets/1/data/processed" ).request().get() )
                 .hasStatus( Response.Status.OK )
-                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .hasMediaTypeCompatibleWith( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                .hasHeader( "Content-Disposition", "attachment; filename=\"data.txt\"" )
                 .hasEncoding( "gzip" );
-        verify( expressionExperimentService ).hasProcessedExpressionData( eq( ee ) );
-        verify( expressionDataFileService ).writeProcessedExpressionData( eq( ee ), any() );
+        verify( expressionExperimentService ).hasProcessedExpressionData( ee );
+        verify( expressionDataFileService ).writeOrLocateProcessedDataFile( ee, false, false, 5, TimeUnit.SECONDS );
     }
 
     @Test
@@ -549,17 +580,20 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetRawExpression() throws IOException {
+    public void testGetDatasetRawExpression() throws IOException, URISyntaxException, InterruptedException, TimeoutException {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         when( expressionExperimentService.getPreferredQuantitationType( ee ) )
                 .thenReturn( qt );
+        when( expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, false, 5, TimeUnit.SECONDS ) )
+                .thenReturn( new DummyLockedPath( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ), true ) );
         assertThat( target( "/datasets/1/data/raw" ).request().get() )
                 .hasStatus( Response.Status.OK )
-                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .hasMediaTypeCompatibleWith( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                .hasHeader( "Content-Disposition", "attachment; filename=\"data.txt\"" )
                 .hasEncoding( "gzip" );
         verify( expressionExperimentService ).getPreferredQuantitationType( ee );
         verifyNoInteractions( quantitationTypeService );
-        verify( expressionDataFileService ).writeRawExpressionData( eq( ee ), eq( qt ), any() );
+        verify( expressionDataFileService ).writeOrLocateRawExpressionDataFile( ee, qt, false, 5, TimeUnit.SECONDS );
     }
 
     @Test
@@ -578,17 +612,21 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     }
 
     @Test
-    public void testGetDatasetRawExpressionByQuantitationType() throws IOException {
+    public void testGetDatasetRawExpressionByQuantitationType() throws IOException, URISyntaxException, InterruptedException, TimeoutException {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setId( 12L );
         when( quantitationTypeService.load( 12L ) ).thenReturn( qt );
         when( quantitationTypeService.loadByIdAndVectorType( 12L, ee, RawExpressionDataVector.class ) ).thenReturn( qt );
+
+        when( expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, false, 5, TimeUnit.SECONDS ) )
+                .thenReturn( new DummyLockedPath( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ), true ) );
         Response res = target( "/datasets/1/data/raw" )
                 .queryParam( "quantitationType", "12" ).request().get();
         verify( quantitationTypeService ).loadByIdAndVectorType( 12L, ee, RawExpressionDataVector.class );
-        verify( expressionDataFileService ).writeRawExpressionData( eq( ee ), eq( qt ), any() );
+        verify( expressionDataFileService ).writeOrLocateRawExpressionDataFile( ee, qt, false, 5, TimeUnit.SECONDS );
         assertThat( res ).hasStatus( Response.Status.OK )
-                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .hasMediaTypeCompatibleWith( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                .hasHeader( "Content-Disposition", "attachment; filename=\"data.txt\"" )
                 .hasEncoding( "gzip" );
     }
 
@@ -612,7 +650,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                 .hasStatus( Response.Status.OK )
                 .hasHeader( "Cache-Control", "max-age=1200" );
         verify( expressionExperimentService ).load( 1L );
-        verify( expressionExperimentService ).getAnnotationsById( 1L );
+        verify( expressionExperimentService ).getAnnotations( ee );
     }
 
     @Test
@@ -664,7 +702,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     @WithMockUser
     public void testRefreshDataset() {
         ee.setId( 1L );
-        when( expressionExperimentService.loadAndThawWithRefreshCacheMode( 1L ) ).thenReturn( ee );
+        when( expressionExperimentService.loadAndThawLiteWithRefreshCacheMode( 1L ) ).thenReturn( ee );
         when( expressionExperimentService.loadValueObject( ee ) ).thenReturn( new ExpressionExperimentValueObject( ee ) );
         assertThat( target( "/datasets/1/refresh" )
                 .queryParam( "refreshVectors", true )
@@ -679,8 +717,140 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                             .endsWith( "/datasets/1" );
                 } )
                 .entity();
-        verify( expressionExperimentService ).loadAndThawWithRefreshCacheMode( 1L );
+        verify( expressionExperimentService ).loadAndThawLiteWithRefreshCacheMode( 1L );
+        verify( processedExpressionDataVectorService ).evictFromCache( ee );
         verify( expressionExperimentService ).loadValueObject( ee );
         verify( expressionExperimentReportService ).evictFromCache( 1L );
+    }
+
+    @Test
+    public void testGetDatasetSingleCellData() throws InterruptedException, TimeoutException, URISyntaxException, IOException {
+        QuantitationType qt = new QuantitationType();
+        when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
+                .thenReturn( Optional.of( qt ) );
+        when( expressionDataFileService.getDataFile( eq( ee ), eq( qt ), eq( ExpressionExperimentDataFileType.TABULAR ), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( new DummyLockedPath( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ), true ) );
+        assertThat( target( "/datasets/1/data/singleCell" ).request()
+                .accept( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ).get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaType( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
+                .hasEncoding( "gzip" )
+                .hasHeader( "Content-Disposition", "attachment; filename=\"data.txt\"" );
+    }
+
+    @Test
+    public void testGetDatasetSingleCellDataAsDownload() throws InterruptedException, TimeoutException, URISyntaxException, IOException {
+        QuantitationType qt = new QuantitationType();
+        when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
+                .thenReturn( Optional.of( qt ) );
+        when( expressionDataFileService.getDataFile( eq( ee ), eq( qt ), eq( ExpressionExperimentDataFileType.TABULAR ), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( new DummyLockedPath( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ), true ) );
+        assertThat( target( "/datasets/1/data/singleCell" ).queryParam( "download", "true" ).request()
+                .accept( TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE ).get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaType( MediaType.APPLICATION_OCTET_STREAM_TYPE )
+                .doesNotHaveEncoding( "gzip" )
+                .hasHeader( "Content-Disposition", "attachment; filename=\"data.txt.gz\"" );
+    }
+
+    @Test
+    public void testGetDatasetSingleCellDataAsMex() throws InterruptedException, TimeoutException, URISyntaxException, IOException {
+        QuantitationType qt = new QuantitationType();
+        when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
+                .thenReturn( Optional.of( qt ) );
+        when( expressionDataFileService.getDataFile( eq( ee ), eq( qt ), eq( ExpressionExperimentDataFileType.MEX ), anyBoolean(), anyLong(), any() ) )
+                .thenReturn( new DummyLockedPath( Paths.get( requireNonNull( getClass().getResource( "/data.mex" ) ).toURI() ), true ) );
+        assertThat( target( "/datasets/1/data/singleCell" ).request()
+                .accept( DatasetsWebService.APPLICATION_10X_MEX_TYPE ).get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaType( DatasetsWebService.APPLICATION_10X_MEX_TYPE )
+                .doesNotHaveEncoding( "gzip" )
+                .hasHeader( "Content-Disposition", "attachment; filename=\"data.mex.tar\"" )
+                .entityAsStream()
+                .satisfies( is -> {
+                    List<String> files = new ArrayList<>();
+                    try ( TarArchiveInputStream tais = new TarArchiveInputStream( is ) ) {
+                        TarArchiveEntry entry;
+                        while ( ( entry = tais.getNextEntry() ) != null ) {
+                            files.add( entry.getName() );
+                        }
+                    }
+                    assertThat( files )
+                            .containsExactlyInAnyOrder(
+                                    "A/barcodes.tsv.gz",
+                                    "A/features.tsv.gz",
+                                    "A/matrix.mtx.gz",
+                                    "B/barcodes.tsv.gz",
+                                    "B/features.tsv.gz",
+                                    "B/matrix.mtx.gz",
+                                    "C/barcodes.tsv.gz",
+                                    "C/features.tsv.gz",
+                                    "C/matrix.mtx.gz",
+                                    "D/barcodes.tsv.gz",
+                                    "D/features.tsv.gz",
+                                    "D/matrix.mtx.gz"
+                            );
+                } );
+    }
+
+    private static class DummyLockedPath implements LockedPath {
+
+        private final Path path;
+        private final boolean shared;
+
+        private DummyLockedPath( Path path, boolean shared ) {
+            this.path = path;
+            this.shared = shared;
+        }
+
+        @Override
+        public Path getPath() {
+            return path;
+        }
+
+        @Override
+        public boolean isValid() {
+            return true;
+        }
+
+        @Override
+        public boolean isShared() {
+            return shared;
+        }
+
+        @Override
+        public void close() {
+
+        }
+
+        @Override
+        public Path closeAndGetPath() {
+            return path;
+        }
+
+        @Override
+        public LockedPath toExclusive() {
+            return new DummyLockedPath( path, false );
+        }
+
+        @Override
+        public LockedPath toExclusive( long timeout, TimeUnit timeUnit ) {
+            return new DummyLockedPath( path, false );
+        }
+
+        @Override
+        public LockedPath toShared() {
+            return new DummyLockedPath( path, true );
+        }
+
+        @Override
+        public LockedPath steal() {
+            return this;
+        }
+
+        @Override
+        public LockedPath stealWithPath( Path path ) {
+            return new DummyLockedPath( path, shared );
+        }
     }
 }

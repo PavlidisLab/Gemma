@@ -21,9 +21,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.job.TaskResult;
-import ubic.gemma.core.security.authentication.UserService;
-import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.MailEngine;
+import ubic.gemma.model.common.auditAndSecurity.User;
 
 /**
  * @author anton
@@ -37,7 +37,7 @@ public class TaskMailUtilsImpl implements TaskMailUtils {
     private MailEngine mailEngine;
 
     @Autowired
-    private UserService userService;
+    private UserManager userManager;
 
     @Override
     public void sendTaskCompletedNotificationEmail( EmailNotificationContext emailNotificationContext,
@@ -47,7 +47,7 @@ public class TaskMailUtilsImpl implements TaskMailUtils {
         String taskName = emailNotificationContext.getTaskName();
 
         if ( StringUtils.isNotBlank( submitter ) ) {
-            User user = userService.findByUserName( submitter );
+            User user = userManager.findByUserName( submitter );
 
             assert user != null;
 

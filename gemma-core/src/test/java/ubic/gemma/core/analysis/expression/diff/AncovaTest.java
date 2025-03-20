@@ -55,9 +55,6 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
      */
     @Test
     public void testAncovaContinuousCovariate() {
-
-        this.configureMocks();
-
         /*
          * Add a continuous factor
          */
@@ -72,9 +69,9 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
         expressionExperiment.getExperimentalDesign().getExperimentalFactors().add( experimentalFactorC );
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFactorsToInclude( expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
+        config.addFactorsToInclude( expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
         config.setModerateStatistics( false );
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, dmatrix, config );
 
         assertTrue( !expressionAnalyses.isEmpty() );
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
@@ -103,9 +100,6 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
      */
     @Test
     public void testAncovaCovariate() {
-
-        this.configureMocks();
-
         /*
          * Add a continuous factor
          */
@@ -116,10 +110,10 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
         this.setupFactorValues( experimentalFactorC );
         expressionExperiment.getExperimentalDesign().getExperimentalFactors().add( experimentalFactorC );
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFactorsToInclude( expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
+        config.addFactorsToInclude( expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
         config.setModerateStatistics( false );
 
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, dmatrix, config );
 
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
 
@@ -188,9 +182,6 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
      */
     @Test
     public void testAncovaTriLevel() {
-
-        this.configureMocks();
-
         /*
          * Add a factor with three levels (same one used in onewayanovaanalyzertest)
          */
@@ -224,9 +215,9 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
         factors.add( experimentalFactorA_Area );
         factors.add( experimentalFactorC );
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFactorsToInclude( factors );
+        config.addFactorsToInclude( factors );
         config.setModerateStatistics( false );
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, dmatrix, config );
 
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
 
@@ -310,13 +301,10 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
      */
     @Test
     public void testAncovaTwoway() {
-
-        this.configureMocks();
-
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFactorsToInclude( super.experimentalFactors );
+        config.addFactorsToInclude( super.experimentalFactors );
         config.setModerateStatistics( false );
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, dmatrix, config );
 
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
 
@@ -387,15 +375,12 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
      */
     @Test
     public void testAncovaWithInteraction() {
-
-        this.configureMocks();
-
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.getFactorsToInclude().add( this.experimentalFactorA_Area );
         config.getFactorsToInclude().add( this.experimentalFactorB );
         config.getInteractionsToInclude().add( config.getFactorsToInclude() );
         config.setModerateStatistics( false );
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, dmatrix, config );
 
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
 
@@ -483,14 +468,6 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
         }
         assertTrue( foundInteractions );
         assertTrue( foundContrast );
-    }
-
-    private void configureMocks() {
-
-        this.configureMockAnalysisServiceHelper();
-
-        analyzer.setExpressionDataMatrixService( expressionDataMatrixService );
-
     }
 
     private void setupFactorValues( ExperimentalFactor experimentalFactorC ) {

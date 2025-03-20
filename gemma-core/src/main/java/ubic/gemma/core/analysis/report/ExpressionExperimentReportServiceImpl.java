@@ -43,7 +43,7 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.*;
 
@@ -106,7 +106,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Override
     public void evictFromCache( Long id ) {
         this.statsCache.evict( id );
-        experimentalDesignVisualizationService.clearCaches( id );
     }
 
     @Override
@@ -127,7 +126,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Override
     @Transactional(propagation = Propagation.NEVER)
     public Collection<ExpressionExperimentDetailsValueObject> generateSummaryObjects() {
-        Collection<Long> ids = EntityUtils.getIds( expressionExperimentService.loadAll() );
+        Collection<Long> ids = IdentifiableUtils.getIds( expressionExperimentService.loadAll() );
         Collection<ExpressionExperimentDetailsValueObject> vos = expressionExperimentService
                 .loadDetailsValueObjectsByIds( ids );
         this.getStats( vos );
@@ -178,7 +177,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         StopWatch timer = new StopWatch();
         timer.start();
 
-        Collection<Long> ids = EntityUtils.getIds( vos );
+        Collection<Long> ids = IdentifiableUtils.getIds( vos );
 
         // do this ahead to avoid round trips - this also filters...
         Collection<ExpressionExperiment> ees = expressionExperimentService.load( ids );
@@ -187,7 +186,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             return;
         }
 
-        Map<Long, ExpressionExperiment> eeMap = EntityUtils.getIdMap( ees );
+        Map<Long, ExpressionExperiment> eeMap = IdentifiableUtils.getIdMap( ees );
         Map<Long, Date> lastArrayDesignUpdates = expressionExperimentService.getLastArrayDesignUpdate( ees );
         Collection<Class<? extends AuditEventType>> typesToGet = Arrays.asList( eventTypes );
 
@@ -314,7 +313,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         }
 
         Collection<ExpressionExperimentDetailsValueObject> cachedVos = this.retrieveSummaryObjects( ids );
-        Map<Long, ExpressionExperimentDetailsValueObject> id2cachedVo = EntityUtils.getIdMap( cachedVos );
+        Map<Long, ExpressionExperimentDetailsValueObject> id2cachedVo = IdentifiableUtils.getIdMap( cachedVos );
 
         for ( ExpressionExperimentDetailsValueObject eeVo : vos ) {
             ExpressionExperimentDetailsValueObject cacheVo = id2cachedVo.get( eeVo.getId() );

@@ -40,8 +40,6 @@ public interface GeneDifferentialExpressionService {
 
     ExperimentalFactorValueObject configExperimentalFactorValueObject( ExperimentalFactor ef );
 
-    ExpressionExperimentValueObject configExpressionExperimentValueObject( ExpressionExperimentValueObject ee );
-
     /**
      * Get the differential expression results for the given gene that is in a specified set of experiments.
      *

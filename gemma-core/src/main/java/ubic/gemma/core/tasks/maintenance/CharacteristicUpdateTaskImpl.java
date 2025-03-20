@@ -249,7 +249,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
              * Check needed because Characteristics are not securable.
              */
             if ( parent != null && Securable.class.isAssignableFrom( parent.getClass() ) && !securityService
-                    .isEditable( ( Securable ) parent ) ) {
+                    .isEditableByCurrentUser( ( Securable ) parent ) ) {
                 throw new AccessDeniedException( "Access is denied" );
             }
 

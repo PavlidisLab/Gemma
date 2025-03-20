@@ -18,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.analysis.expression.pca.Eigenvalue;
 import ubic.gemma.model.analysis.expression.pca.Eigenvector;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
@@ -78,13 +77,11 @@ public class PrincipalComponentAnalysisServiceImpl extends AbstractService<Princ
         /*
          * deal with V. note we store all of it.
          */
-        ByteArrayConverter bac = new ByteArrayConverter();
         for ( int i = 0; i < v.columns(); i++ ) {
             double[] column = v.getColumn( i );
-            byte[] eigenVectorBytes = bac.doubleArrayToBytes( column );
             int componentNumber = i + 1;
             log.debug( componentNumber );
-            Eigenvector evec = Eigenvector.Factory.newInstance( componentNumber, eigenVectorBytes );
+            Eigenvector evec = Eigenvector.Factory.newInstance( componentNumber, column );
             pca.getEigenVectors().add( evec );
         }
 

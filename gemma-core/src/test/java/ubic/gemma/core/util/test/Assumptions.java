@@ -1,8 +1,13 @@
 package ubic.gemma.core.util.test;
 
+import org.apache.commons.io.FileUtils;
+
 import javax.net.ssl.SSLException;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import static org.junit.Assume.assumeNoException;
 import static org.junit.Assume.assumeTrue;
@@ -12,6 +17,45 @@ import static org.junit.Assume.assumeTrue;
  * @author poirigui
  */
 public class Assumptions {
+
+    /**
+     * Assume that a certain amount of memory is available.
+     * @param jvm whether to consider the free JVM memory or the system free memory
+     */
+    public static void assumeThatFreeMemoryIsGreaterOrEqualTo( long bytes, boolean jvm ) {
+        long f = ( jvm ? Runtime.getRuntime().freeMemory() : getSystemFreeMemory() );
+        assumeTrue( String.format( "At least %s of free memory is required to run this test, only %s was available.",
+                FileUtils.byteCountToDisplaySize( bytes ), FileUtils.byteCountToDisplaySize( f ) ), f >= bytes );
+    }
+
+    private static long getSystemFreeMemory() {
+        try ( BufferedReader br = Files.newBufferedReader( Paths.get( "/proc/meminfo" ) ) ) {
+            return br
+                    .lines()
+                    .filter( l -> l.startsWith( "MemAvailable:" ) )
+                    .map( l -> {
+                        String[] pieces = l.split( "\\s+" );
+                        long m = Long.parseLong( pieces[1] );
+                        String unit = pieces[2];
+                        switch ( unit.charAt( 0 ) ) {
+                            case 'B':
+                                return m;
+                            case 'k':
+                                assert unit.charAt( 1 ) == 'B';
+                                return 1000 * m;
+                            case 'm':
+                                assert unit.charAt( 1 ) == 'B';
+                                return 1000000 * m;
+                            default:
+                                throw new RuntimeException();
+                        }
+                    } )
+                    .findFirst()
+                    .orElse( 0L );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
 
     /**
      * Assume that a resource identified by a URL is available.
@@ -38,7 +82,7 @@ public class Assumptions {
                                 url, httpCon.getResponseCode(), httpCon.getResponseMessage() ),
                         httpCon.getResponseCode() < 400 );
             }
-        } catch ( UnknownHostException | ConnectException e ) {
+        } catch ( UnknownHostException | ConnectException | SocketTimeoutException e ) {
             assumeNoException( String.format( "The resource at %s is not available.", url ), e );
         } catch ( SSLException e ) {
             assumeNoException( String.format( "SSL issue attempting to connect to %s.", url ), e );

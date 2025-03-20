@@ -28,10 +28,6 @@ import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
  */
 public class NotTroubledStatusFlagEvent extends TroubledStatusFlagAlteringEvent {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -8586752080144045085L;
 
     /**
      * No-arg constructor added to satisfy javabean contract

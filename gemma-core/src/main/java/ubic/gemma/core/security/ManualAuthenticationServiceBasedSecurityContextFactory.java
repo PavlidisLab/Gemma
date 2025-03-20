@@ -33,7 +33,7 @@ public class ManualAuthenticationServiceBasedSecurityContextFactory extends Abst
         try {
             log.debug( "Attempting manual authentication as " + userName + "." );
             SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-            securityContext.setAuthentication( manualAuthenticationService.attemptAuthentication( userName, password ) );
+            securityContext.setAuthentication( manualAuthenticationService.authenticate( userName, password ) );
             return securityContext;
         } finally {
             log.debug( "Erasing credentials for manual authentication." );

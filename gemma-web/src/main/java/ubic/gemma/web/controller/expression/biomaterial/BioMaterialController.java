@@ -24,24 +24,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
+import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -54,11 +52,11 @@ public class BioMaterialController {
     @Autowired
     private BioMaterialService bioMaterialService;
     @Autowired
-    private OntologyService ontologyService;
-    @Autowired
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private FactorValueService factorValueService;
+    @Autowired
+    private BioAssayDimensionService bioAssayDimensionService;
 
     /**
      * AJAX
@@ -147,6 +145,7 @@ public class BioMaterialController {
         BioMaterial bioM = bioMaterialService.loadOrFail( bm.getId() );
         bioM = bioMaterialService.thaw( bioM );
         Collection<FactorValueValueObject> results = new HashSet<>();
+        // TODO: include inherited factor values (but the UI is not ready yet for that)
         Collection<FactorValue> factorValues = bioM.getFactorValues();
 
         for ( FactorValue value : factorValues )
@@ -157,11 +156,39 @@ public class BioMaterialController {
     }
 
     @RequestMapping(value = { "/showBioMaterial.html", "/" }, method = { RequestMethod.GET, RequestMethod.HEAD })
-    public ModelAndView show( @RequestParam("id") Long id ) {
+    public ModelAndView show( @RequestParam("id") Long id, @RequestParam(value = "dimension", required = false) Long dimensionId ) {
         BioMaterial bioMaterial = bioMaterialService.loadOrFail( id, EntityNotFoundException::new );
         bioMaterial = bioMaterialService.thaw( bioMaterial );
-        return new ModelAndView( "bioMaterial.detail" ).addObject( "bioMaterial", bioMaterial )
-                .addObject( "expressionExperiment", bioMaterialService.getExpressionExperiment( id ) );
+        return new ModelAndView( "bioMaterial.detail" )
+                .addObject( "bioMaterial", bioMaterial )
+                .addObject( "expressionExperiments", bioMaterialService.getExpressionExperiments( bioMaterial ) )
+                .addAllObjects( getBioMaterialHierarchy( bioMaterial, dimensionId ) );
+    }
+
+    private Map<String, ?> getBioMaterialHierarchy( BioMaterial bioMaterial, Long dimensionId ) {
+        if ( dimensionId == null ) {
+            return Collections.emptyMap();
+        }
+        BioAssayDimension dim = bioAssayDimensionService.loadOrFail( dimensionId, EntityNotFoundException::new );
+        Set<BioMaterial> sharedBMs = new HashSet<>();
+        for ( BioAssay ba : dim.getBioAssays() ) {
+            sharedBMs.add( ba.getSampleUsed() );
+        }
+        List<BioMaterial> siblings = bioMaterialService.findSiblings( bioMaterial ).stream()
+                .filter( sharedBMs::contains )
+                .sorted( Comparator.comparing( BioMaterial::getName ) )
+                .collect( Collectors.toList() );
+        List<BioMaterial> children = bioMaterialService.findSubBioMaterials( bioMaterial, true )
+                .stream()
+                .filter( sharedBMs::contains )
+                .sorted( Comparator.comparing( BioMaterial::getName ) )
+                .collect( Collectors.toList() );
+        Map<String, Object> results = new HashMap<>();
+        results.put( "dimension", dim );
+        results.put( "parent", bioMaterial.getSourceBioMaterial() );
+        results.put( "children", children );
+        results.put( "siblings", siblings );
+        return results;
     }
 }
 

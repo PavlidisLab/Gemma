@@ -74,7 +74,7 @@ public class RssFeedControllerTest extends BaseSpringWebTest {
 
     @Test
     public void testGetLatestExperiments() {
-        ModelAndView mav = rssFeedController.getLatestExperiments( null, null );
+        ModelAndView mav = rssFeedController.getLatestExperiments();
         assertNotNull( mav );
 
         Map<String, Object> model = mav.getModel();

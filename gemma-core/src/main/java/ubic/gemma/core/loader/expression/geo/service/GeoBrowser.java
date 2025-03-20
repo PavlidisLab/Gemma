@@ -38,6 +38,7 @@ import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.core.loader.expression.geo.model.GeoSeriesType;
 import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.core.util.SimpleRetryCallable;
 import ubic.gemma.core.util.XMLUtils;
@@ -388,7 +389,7 @@ public class GeoBrowser {
      * @return a list of GeoRecords
      * @throws IOException if there is a problem obtaining or manipulating the file (some exceptions are not thrown and just logged)
      */
-    public Slice<GeoRecord> searchGeoRecords( @Nullable String searchTerms, @Nullable GeoSearchField field, @Nullable Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatforms, @Nullable Collection<String> seriesTypes, int start, int pageSize, boolean detailed ) throws IOException {
+    public Slice<GeoRecord> searchGeoRecords( @Nullable String searchTerms, @Nullable GeoSearchField field, @Nullable Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatforms, @Nullable Collection<GeoSeriesType> seriesTypes, int start, int pageSize, boolean detailed ) throws IOException {
         String term = "gse[ETYP]";
 
         if ( StringUtils.isNotBlank( searchTerms ) ) {
@@ -407,7 +408,7 @@ public class GeoBrowser {
         }
 
         if ( seriesTypes != null ) {
-            term += " AND (" + seriesTypes.stream().map( s -> quoteTerm( s ) + "[DataSet Type]" ).collect( Collectors.joining( " OR " ) ) + ")";
+            term += " AND (" + seriesTypes.stream().map( s -> quoteTerm( s.getIdentifier() ) + "[DataSet Type]" ).collect( Collectors.joining( " OR " ) ) + ")";
         }
 
         String searchUrl = ESEARCH

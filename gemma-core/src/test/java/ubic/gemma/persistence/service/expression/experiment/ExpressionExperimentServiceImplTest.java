@@ -205,7 +205,7 @@ public class ExpressionExperimentServiceImplTest extends AbstractJUnit4SpringCon
 
         svc = new ExpressionExperimentServiceImpl( eeDao );
 
-        User nobody = User.Factory.newInstance();
+        User nobody = User.Factory.newInstance( "foo" );
 
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setDescription( "From test" );
@@ -255,23 +255,30 @@ public class ExpressionExperimentServiceImplTest extends AbstractJUnit4SpringCon
         bad.setBioAssays( Collections.singletonList( new BioAssay() ) );
         ArrayDesign ad = new ArrayDesign();
         when( bioAssayDimensionService.findOrCreate( bad ) ).thenReturn( bad );
-        when( quantitationTypeService.create( qt ) ).thenReturn( qt );
+        when( quantitationTypeService.create( qt, RawExpressionDataVector.class ) ).thenReturn( qt );
         Set<RawExpressionDataVector> vectors = createRawVectors( ee, qt, bad, ad );
         svc.replaceAllRawDataVectors( ee, vectors );
         verify( bioAssayDimensionService ).findOrCreate( bad );
-        verify( eeDao ).removeAllRawDataVectors( ee );
+        verify( quantitationTypeService ).create( qt, RawExpressionDataVector.class );
         verify( eeDao ).addRawDataVectors( ee, qt, vectors );
     }
 
     @Test
-    public void testReplaceAllRawDataVectorsWithoutPreferredQt() {
+    public void testReplaceAllRawDataVectorsWithMoreThanOnePreferredQt() {
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );
         when( eeDao.load( 1L ) ).thenReturn( ee );
-        QuantitationType qt = new QuantitationType();
+        QuantitationType qt1 = new QuantitationType();
+        qt1.setName( "qt1" );
+        qt1.setIsPreferred( true );
+        QuantitationType qt2 = new QuantitationType();
+        qt2.setName( "qt2" );
+        qt2.setIsPreferred( true );
         BioAssayDimension bad = new BioAssayDimension();
         ArrayDesign ad = new ArrayDesign();
-        Set<RawExpressionDataVector> vectors = createRawVectors( ee, qt, bad, ad );
+        Set<RawExpressionDataVector> vectors = new HashSet<>();
+        vectors.addAll( createRawVectors( ee, qt1, bad, ad ) );
+        vectors.addAll( createRawVectors( ee, qt2, bad, ad ) );
         assertThatThrownBy( () -> svc.replaceAllRawDataVectors( ee, vectors ) )
                 .isInstanceOf( IllegalArgumentException.class );
         verifyNoInteractions( eeDao );

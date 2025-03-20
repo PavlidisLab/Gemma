@@ -7,7 +7,7 @@ Gemma.PHENOCARTA_CITATION = "If you use this file for your research, please cite
 (function() {
 	Gemma.helpTip = function(selecter, message, theme) {
 		return function(c) {
-			jQuery(selecter).qtip({
+			window.jQuery(selecter).qtip({
 				content: message,
 				style: {
 					name: theme ? theme : 'cream'
@@ -348,7 +348,7 @@ Gemma.HelpText.WidgetDefaults = {
 	DatasetGroupEditor: {
 		widgetTT: "Use this tool to create and edit groups of datasets. "
 			+ "You can modify a built-in group by making a copy (clone) and editing the copy",
-		helpURL: Gemma.WIKI + "Dataset+chooser"
+		helpURL: Gemma.WIKI_URL + "/Dataset+chooser"
 	},
 	DatasetGroupGridPanel: {
 		protectedTT: "Protected; cannot have members changed, usually applies to automatically generated groups."
@@ -357,7 +357,7 @@ Gemma.HelpText.WidgetDefaults = {
 		visualizaButtonTT: "Click to display data for selected genes, or a 'random' selection of data from this experiment",
 		instructions: 'Use the search fields to find individual genes, or groups of genes. '
 			+ 'Gene group searches work for GO terms and other groups in Gemma. '
-			+ 'To create groups use the <a href=\"' + ctxBasePath + '/geneGroupManager.html\">gene group manager</a>.'
+			+ 'To create groups use the <a href=\"' + Gemma.CONTEXT_PATH + '/geneGroupManager.html\">gene group manager</a>.'
 			+ ' Click "show" to view the data for those genes. '
 			+ 'Note that when viewing gene groups, not all genes in the group are necessarily in the data set.',
 		GoButtonText: {
@@ -383,7 +383,7 @@ Gemma.HelpText.WidgetDefaults = {
 	ExperimentalDesignUpload: {
 		instructions: '<p>Experimental design submission works in two phases. '
 			+ 'First you must upload your design file (file format instructions' + ' <a target="_blank" href="'
-			+ Gemma.WIKI + 'Experimental+Design+Upload">here</a>). '
+			+ Gemma.WIKI_URL + '/Experimental+Design+Upload">here</a>). '
 			+ 'Then click "submit". If your file format is invalid or does not match the properties of the '
 			+ 'experiment the design is intended for, you will see an error message.</p>'
 	},
@@ -421,7 +421,7 @@ Gemma.HelpText.WidgetDefaults = {
 	ExpressionDataUpload: {
 		instructions: '<ul class="plainList" >'
 			+ '<li>Is your data available on GEO? If so, it is probably already loaded for you. '
-			+ 'Check <a href="' + ctxBasePath + '/expressionExperiment/showAllExpressionExperiments.html">here</a>.</li>'
+			+ 'Check <a href="' + Gemma.CONTEXT_PATH + '/expressionExperiment/showAllExpressionExperiments.html">here</a>.</li>'
 			+ '<li>Complete all sections of the form, upload your data file (compress it first to speed things up)'
 			+ ', and click "Validate data"; once validation is complete you will be able to click "Submit data".</li>'
 			+ '<li>Most of the descriptive text you enter can be modified later. '
@@ -434,7 +434,7 @@ Gemma.HelpText.WidgetDefaults = {
 		loadingGEOWarningTitle: 'GEO Dataset Check',
 		loadingGEOWarningText: 'It looks like you\'re trying to load a GEO dataset. '
 			+ 'Please check that it is not already loaded in Gemma. '
-			+ '\nTry looking <a href="' + ctxBasePath + '/expressionExperiment/showAllExpressionExperiments.html">here</a>.'
+			+ '\nTry looking <a href="' + Gemma.CONTEXT_PATH + '/expressionExperiment/showAllExpressionExperiments.html">here</a>.'
 	},
 	ExpressionExperimentDetails: {
 		statusMultiplePreferredQuantitationTypes: 'This experiment has multiple \'preferred\' quantitation types. '
@@ -581,11 +581,11 @@ Gemma.HelpText.WidgetDefaults = {
 			+ '<b>geneStoreProxy</b>, <b>evidenceStoreProxy</b> and <b>getGeneLink</b><br />'
 			+ 'should not be set in config. Otherwise, all of them should be set.<br />' + '',
 		modifyPhenotypeAssociationOutsideOfGemmaTitle: "Add new phenotype association",
-		modifyPhenotypeAssociationOutsideOfGemmaText: "To add, edit or remove gene-phenotype associatons, please go to the <a target='_blank' href='" + ctxBasePath + "/phenotypes.html'>Gemma website</a>.",
+		modifyPhenotypeAssociationOutsideOfGemmaText: "To add, edit or remove gene-phenotype associatons, please go to the <a target='_blank' href='" + Gemma.CONTEXT_PATH + "/phenotypes.html'>Gemma website</a>.",
 		viewBibliographicReferenceOutsideOfGemmaTitle: "View bibliographic reference",
-		viewBibliographicReferenceOutsideOfGemmaText: "To view bibliographic reference, please go to the <a target='_blank' href='" + ctxBasePath + "/phenotypes.html'>Gemma website</a>.",
+		viewBibliographicReferenceOutsideOfGemmaText: "To view bibliographic reference, please go to the <a target='_blank' href='" + Gemma.CONTEXT_PATH + "/phenotypes.html'>Gemma website</a>.",
 		filterMyAnnotationsOutsideOfGemmaTitle: "Filter by my annotations",
-		filterMyAnnotationsOutsideOfGemmaText: "To filter by my annotations, please go to the <a target='_blank' href='" + ctxBasePath + "/phenotypes.html'>Gemma website</a>."
+		filterMyAnnotationsOutsideOfGemmaText: "To filter by my annotations, please go to the <a target='_blank' href='" + Gemma.CONTEXT_PATH + "/phenotypes.html'>Gemma website</a>."
 	},
 	PhenotypeAssociationForm: {
 		ErrorMessage: {
@@ -613,7 +613,7 @@ Gemma.HelpText.WidgetDefaults = {
 	},
 	SecurityManager: {
 		noGroupsToShareWith: 'You cannot share this entity because you do not belong to any user groups.'
-			+ '<br>Would you like to <a href="' + ctxBasePath + '/manageGroups.html">create one</a>? ',
+			+ '<br>Would you like to <a href="' + Gemma.CONTEXT_PATH + '/manageGroups.html">create one</a>? ',
 		publicWarning: 'Please note: setting the read permissions to "public" means that all '
 			+ 'users of Gemma (registered and anonymous) will be able to view this entity and use it in analyses.'
 	},

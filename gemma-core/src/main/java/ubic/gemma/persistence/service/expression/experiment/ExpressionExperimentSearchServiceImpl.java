@@ -37,7 +37,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -170,7 +170,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
             /*
              * This is security filtered.
              */
-            Collection<Long> ids = EntityUtils
+            Collection<Long> ids = IdentifiableUtils
                     .getIds( expressionExperimentSetService.getExperimentValueObjectsInSet( set.getId() ) );
 
             set.setSize( ids.size() ); // to account for security filtering.
@@ -280,7 +280,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
             }
         } else if ( taxon != null ) {
             // get all for taxon
-            eeIds = EntityUtils.getIds( expressionExperimentService.findByTaxon( taxon ) );
+            eeIds = IdentifiableUtils.getIds( expressionExperimentService.findByTaxon( taxon ) );
         }
         return eeIds;
     }

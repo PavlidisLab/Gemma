@@ -98,7 +98,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel,
             } else {
                 GeneSetController.getGenesInGroup(gsvo.id, -1, {
                     callback: this._loadGeneRecords.createDelegate(this),
-                    errorHandler: Gemma.genericErrorHandler
+                    errorHandler: Gemma.Error.genericErrorHandler
                 });
             }
 
@@ -130,7 +130,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel,
 
             GenePickerController.getGenes(geneIds, {
                 callback: this._loadGeneRecords.createDelegate(this),
-                errorHandler: Gemma.genericErrorHandler
+                errorHandler: Gemma.Error.genericErrorHandler
             });
         },
 
@@ -249,7 +249,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel,
                             width: 75,
                             renderer: function (value, metadata, record, row, col, ds) {
                                 return String.format(
-                                    "<a target='_blank' href='" + ctxBasePath + "/gene/showGene.html?id={0}'>{1}</a><br>"
+                                    "<a target='_blank' href='" + Gemma.CONTEXT_PATH + "/gene/showGene.html?id={0}'>{1}</a><br>"
                                     + "<span style='font-color:grey; white-space:normal !important;'>{2}</span> ",
                                     record.data.id, record.data.officialSymbol, record.data.officialName);
                             }
@@ -373,7 +373,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel,
 
         exportToTxt: function () {
             // make download link
-            var downloadLink = String.format(ctxBasePath + "/gene/downloadGeneList.html?g={0}", this.getGeneIds());
+            var downloadLink = String.format(Gemma.CONTEXT_PATH + "/gene/downloadGeneList.html?g={0}", this.getGeneIds());
             window.open(downloadLink);
         }
 
@@ -438,7 +438,7 @@ Gemma.GeneMembersSaveGrid = Ext
                 if (this.allowRemovals) {
                     var removeSelectedBtn = new Ext.Button({
                         text: 'Remove Selected',
-                        icon: ctxBasePath + "/images/icons/cross.png",
+                        icon: Gemma.CONTEXT_PATH + "/images/icons/cross.png",
                         hidden: true,
                         handler: function (button) {
                             var records = this.getSelectionModel().getSelections();
@@ -481,7 +481,7 @@ Gemma.GeneMembersSaveGrid = Ext
                             width: 75,
                             renderer: function (value, metadata, record, row, col, ds) {
                                 return String.format(
-                                    "<a target='_blank' href='" + ctxBasePath + "/gene/showGene.html?id={0}'>{1}</a>",
+                                    "<a target='_blank' href='" + Gemma.CONTEXT_PATH + "/gene/showGene.html?id={0}'>{1}</a>",
                                     record.data.id, record.data.officialSymbol);
                             }
                         }, {
@@ -497,7 +497,7 @@ Gemma.GeneMembersSaveGrid = Ext
                         dataIndex: 'officialSymbol',
                         width: 35,
                         renderer: function (value, metadata, record, row, col, ds) {
-                            return String.format("<a target='_blank' href='" + ctxBasePath + "/gene/showGene.html?id={0}'>{1}</a><br>"
+                            return String.format("<a target='_blank' href='" + Gemma.CONTEXT_PATH + "/gene/showGene.html?id={0}'>{1}</a><br>"
                                 + "<span style='font-color:grey; white-space:normal !important;'>{2}</span> ", record.data.id,
                                 record.data.officialSymbol, record.data.officialName);
                         }
@@ -576,7 +576,7 @@ Gemma.GeneMembersSaveGrid = Ext
                     disabled: (this.allowSaveToSession || this.hideOkCancel)
                 });
                 this.exportButton = new Ext.Button({
-                    icon: ctxBasePath + "/images/download.gif",
+                    icon: Gemma.CONTEXT_PATH + "/images/download.gif",
                     tooltip: Gemma.HelpText.WidgetDefaults.GeneMembersSaveGrid.exportTT,
                     handler: this.exportToTxt,
                     scope: this
@@ -761,7 +761,7 @@ Gemma.GeneMembersSaveGrid = Ext
 
             exportToTxt: function () {
                 // make download link
-                var downloadLink = String.format(ctxBasePath + "/gene/downloadGeneList.html?g={0}", this.getGeneIds());
+                var downloadLink = String.format(Gemma.CONTEXT_PATH + "/gene/downloadGeneList.html?g={0}", this.getGeneIds());
                 window.open(downloadLink);
             },
 
@@ -826,7 +826,7 @@ Gemma.GeneMembersSaveGrid = Ext
                             this.promptLoginForSave('save');
                         }
                     }.createDelegate(this),
-                    errorHandler: Gemma.genericErrorHandler
+                    errorHandler: Gemma.Error.genericErrorHandler
                 });
 
             },
@@ -922,7 +922,7 @@ Gemma.GeneMembersSaveGrid = Ext
                                 this.saveAsHandler();
                             }
                         }.createDelegate(this),
-                        errorHandler: Gemma.genericErrorHandler
+                        errorHandler: Gemma.Error.genericErrorHandler
                     });
 
                 } else {
@@ -979,7 +979,7 @@ Gemma.GeneMembersSaveGrid = Ext
                             this.fireEvent('doneModification');
                         }
                     }.createDelegate(this),
-                    errorHandler: Gemma.genericErrorHandler
+                    errorHandler: Gemma.Error.genericErrorHandler
                 });
 
             },
@@ -1015,7 +1015,7 @@ Gemma.GeneMembersSaveGrid = Ext
                             this.fireEvent('doneModification');
                         }
                     }.createDelegate(this),
-                    errorHandler: Gemma.genericErrorHandler
+                    errorHandler: Gemma.Error.genericErrorHandler
                 });
 
             },
@@ -1031,7 +1031,7 @@ Gemma.GeneMembersSaveGrid = Ext
                         this.fireEvent('geneListSavedOver');
                         this.fireEvent('doneModification');
                     }.createDelegate(this),
-                    errorHandler: Gemma.genericErrorHandler
+                    errorHandler: Gemma.Error.genericErrorHandler
                 });
             }
         });
@@ -1070,7 +1070,7 @@ Gemma.GeneAndGroupAdderToolbar = Ext.extend(Ext.Toolbar, {
         });
 
         this.addBtn = new Ext.Toolbar.Button({
-            icon: ctxBasePath + "/images/icons/add.png",
+            icon: Gemma.CONTEXT_PATH + "/images/icons/add.png",
             cls: "x-btn-text-icon",
             tooltip: "Add selected genes(s) to the list",
             text: 'Add',
@@ -1111,7 +1111,7 @@ Gemma.GeneGroupMemberPanelClassic = Ext.extend(Gemma.GeneGrid, {
         this.getEl().mask("Loading genes ...");
         GeneSetController.getGenesInGroup.apply(this, [groupRecord.get('id'), -1, {
             callback: this.afterLoadGenes.createDelegate(this, [groupRecord], true),
-            errorHandler: Gemma.genericErrorHandler
+            errorHandler: Gemma.Error.genericErrorHandler
         }]);
     },
 

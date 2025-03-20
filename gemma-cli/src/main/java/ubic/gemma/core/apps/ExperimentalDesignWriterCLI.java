@@ -22,9 +22,12 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
+import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
+import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -35,6 +38,12 @@ import java.io.PrintWriter;
  * @author keshav
  */
 public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatingCLI {
+
+    @Autowired
+    private EntityUrlBuilder entityUrlBuilder;
+
+    @Autowired
+    private BuildInfo buildInfo;
 
     private String outFileName;
 
@@ -49,8 +58,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         Option outputFileOption = Option.builder( "o" ).hasArg().required().argName( "outFilePrefix" )
                 .desc( "File prefix for saving the output (short name will be appended)" )
                 .longOpt( "outFilePrefix" ).build();
@@ -58,14 +66,13 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         outFileName = commandLine.getOptionValue( 'o' );
     }
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
-        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
+        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo );
         try ( PrintWriter writer = new PrintWriter( outFileName + "_" + FileTools.cleanForFileName( ee.getShortName() ) + ".txt" ) ) {
             edWriter.write( writer, ee, true );
             writer.flush();

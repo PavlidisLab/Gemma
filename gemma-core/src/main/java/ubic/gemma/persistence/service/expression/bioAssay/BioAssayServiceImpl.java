@@ -14,6 +14,7 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssay;
 
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,15 +24,20 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static ubic.gemma.persistence.util.Thaws.thawBioAssay;
+import static ubic.gemma.persistence.util.Thaws.thawBioMaterial;
 
 /**
  * @author pavlidis
@@ -81,6 +87,29 @@ public class BioAssayServiceImpl extends AbstractFilteringVoEnabledService<BioAs
         return this.bioAssayDao.findByAccession( accession );
     }
 
+    @Autowired
+    private BioMaterialService bioMaterialService;
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<BioAssay> findSubBioAssays( BioAssay bioAssay, boolean direct ) {
+        Collection<BioMaterial> bms = bioMaterialService.findSubBioMaterials( bioAssay.getSampleUsed(), direct );
+        return bms.stream().map( BioMaterial::getBioAssaysUsedIn ).flatMap( Collection::stream ).collect( Collectors.toSet() );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<BioAssay> findSiblings( BioAssay bioAssay ) {
+        Collection<BioMaterial> bms = bioMaterialService.findSiblings( bioAssay.getSampleUsed() );
+        return bms.stream().map( BioMaterial::getBioAssaysUsedIn ).flatMap( Collection::stream ).collect( Collectors.toSet() );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<BioAssaySet> getBioAssaySets( BioAssay bioAssay ) {
+        return bioAssayDao.getBioAssaySets( bioAssay );
+    }
+
     /**
      * @see BioAssayService#removeBioMaterialAssociation(BioAssay, ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
@@ -92,18 +121,18 @@ public class BioAssayServiceImpl extends AbstractFilteringVoEnabledService<BioAs
 
     @Override
     @Transactional(readOnly = true)
-    public BioAssay thaw( BioAssay bioAssay ) {
-        bioAssay = ensureInSession( bioAssay );
-        this.bioMaterialDao.thaw( bioAssay.getSampleUsed() );
-        return bioAssay;
+    public BioAssay thaw( BioAssay ba ) {
+        ba = ensureInSession( ba );
+        thawBioAssay( ba );
+        return ba;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<BioAssay> thaw( Collection<BioAssay> bioAssays ) {
         bioAssays = ensureInSession( bioAssays );
-        for ( BioAssay bioAssay : bioAssays ) {
-            this.bioMaterialDao.thaw( bioAssay.getSampleUsed() );
+        for ( BioAssay ba : bioAssays ) {
+            thawBioAssay( ba );
         }
         return bioAssays;
     }

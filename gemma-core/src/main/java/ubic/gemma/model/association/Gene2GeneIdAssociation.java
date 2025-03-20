@@ -19,8 +19,6 @@
 
 package ubic.gemma.model.association;
 
-import java.io.Serializable;
-
 /**
  * Entity representing a relationship between two genes identified by ID, rather than by the Gene entity (for efficiency
  * reasons). The designation of "first" and "second" Long is by default completely arbitrary, there is no direction to
@@ -30,8 +28,8 @@ import java.io.Serializable;
  *
  * @author paul
  */
-public abstract class Gene2GeneIdAssociation implements Serializable {
-    private static final long serialVersionUID = 3735868529324395241L;
+public abstract class Gene2GeneIdAssociation {
+
     final private Long id = null;
     final private Long firstGene = null;
     final private Long secondGene = null;

@@ -2,7 +2,7 @@
 <hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 				   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
-	<class name="ubic.gemma.model.analysis.expression.coexpression.OtherCoexpressionSupportDetailsImpl" table="OTHER_LINK_SUPPORT_DETAILS"
+	<class name="ubic.gemma.model.analysis.expression.coexpression.OtherCoexpressionSupportDetails" table="OTHER_LINK_SUPPORT_DETAILS"
     >
 		<id access="field" name="id" type="java.lang.Long" unsaved-value="null">
 			<column name="ID" sql-type="BIGINT" />

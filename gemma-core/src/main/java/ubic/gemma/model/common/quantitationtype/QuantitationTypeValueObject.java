@@ -22,8 +22,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -45,24 +45,30 @@ import javax.annotation.Nullable;
 public class QuantitationTypeValueObject extends IdentifiableValueObject<QuantitationType> {
 
     private static final long serialVersionUID = 7537853492100102404L;
+
+    private String name;
     private String description;
+
     @Schema(implementation = GeneralType.class)
     private String generalType;
-    private Boolean isBackground;
-    private Boolean isBackgroundSubtracted;
-    private Boolean isBatchCorrected;
-    private Boolean isMaskedPreferred;
-    private Boolean isNormalized;
-    private Boolean isPreferred;
-    private Boolean isRatio;
-    private Boolean isRecomputedFromRawData = false;
-    private String name;
+    @Schema(implementation = StandardQuantitationType.class)
+    private String type;
     @Schema(implementation = PrimitiveType.class)
     private String representation;
     @Schema(implementation = ScaleType.class)
     private String scale;
-    @Schema(implementation = StandardQuantitationType.class)
-    private String type;
+
+    private boolean isBackground;
+    private boolean isBackgroundSubtracted;
+    private boolean isBatchCorrected;
+    private boolean isNormalized;
+    private boolean isRatio;
+    private boolean isRecomputedFromRawData;
+
+    private boolean isPreferred;
+    @Deprecated
+    @Schema(deprecated = true)
+    private boolean isMaskedPreferred;
 
     /**
      * Associated expression experiment ID.
@@ -89,18 +95,23 @@ public class QuantitationTypeValueObject extends IdentifiableValueObject<Quantit
         super( qt );
         this.name = qt.getName();
         this.description = qt.getDescription();
+
         this.generalType = qt.getGeneralType().toString();
+        this.type = qt.getType().toString();
+        this.scale = qt.getScale().toString();
+        this.representation = qt.getRepresentation().toString();
+
         this.isBackground = qt.getIsBackground();
         this.isBackgroundSubtracted = qt.getIsBackgroundSubtracted();
         this.isBatchCorrected = qt.getIsBatchCorrected();
-        this.isMaskedPreferred = qt.getIsMaskedPreferred();
         this.isNormalized = qt.getIsNormalized();
-        this.isPreferred = qt.getIsPreferred();
         this.isRatio = qt.getIsRatio();
-        this.representation = qt.getRepresentation().toString();
-        this.scale = qt.getScale().toString();
-        this.type = qt.getType().toString();
         this.isRecomputedFromRawData = qt.getIsRecomputedFromRawData();
+
+        // for QT VO, we don't to expose the intricacies of the preferred flag, there is already a vectorType for the
+        // purpose of telling which type of vector is preferred
+        this.isPreferred = qt.getIsPreferred() || qt.getIsSingleCellPreferred() || qt.getIsMaskedPreferred();
+        this.isMaskedPreferred = qt.getIsMaskedPreferred();
     }
 
     /**
@@ -118,5 +129,73 @@ public class QuantitationTypeValueObject extends IdentifiableValueObject<Quantit
         if ( vectorType != null ) {
             this.vectorType = vectorType.getName();
         }
+    }
+
+    // because of the 'is' prefix, we need to override Lombok's getter/setter naming
+
+    public boolean getIsBackground() {
+        return this.isBackground;
+    }
+
+    public void setIsBackground( boolean isBackground ) {
+        this.isBackground = isBackground;
+    }
+
+    public boolean getIsBackgroundSubtracted() {
+        return this.isBackgroundSubtracted;
+    }
+
+    public void setIsBackgroundSubtracted( boolean isBackgroundSubtracted ) {
+        this.isBackgroundSubtracted = isBackgroundSubtracted;
+    }
+
+    public boolean getIsBatchCorrected() {
+        return this.isBatchCorrected;
+    }
+
+    public void setIsBatchCorrected( boolean isBatchCorrected ) {
+        this.isBatchCorrected = isBatchCorrected;
+    }
+
+    public boolean getIsNormalized() {
+        return this.isNormalized;
+    }
+
+    public void setIsNormalized( boolean isNormalized ) {
+        this.isNormalized = isNormalized;
+    }
+
+    public boolean getIsRatio() {
+        return this.isRatio;
+    }
+
+    public void setIsRatio( boolean isRatio ) {
+        this.isRatio = isRatio;
+    }
+
+    public boolean getIsRecomputedFromRawData() {
+        return isRecomputedFromRawData;
+    }
+
+    public void setIsRecomputedFromRawData( boolean isRecomputedFromRawData ) {
+        this.isRecomputedFromRawData = isRecomputedFromRawData;
+    }
+
+    public boolean getIsPreferred() {
+        return this.isPreferred;
+    }
+
+    public void setIsPreferred( boolean isPreferred ) {
+        this.isPreferred = isPreferred;
+    }
+
+    @Deprecated
+    public boolean getIsMaskedPreferred() {
+        return this.isMaskedPreferred;
+    }
+
+    @Deprecated
+    public void setIsMaskedPreferred( boolean isMaskedPreferred ) {
+        this.isMaskedPreferred = isMaskedPreferred;
     }
 }

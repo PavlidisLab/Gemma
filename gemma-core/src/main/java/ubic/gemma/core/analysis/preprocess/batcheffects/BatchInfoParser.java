@@ -19,7 +19,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -63,7 +62,7 @@ public class BatchInfoParser {
         return assayAccessions;
     }
 
-    public Map<BioMaterial, Date> getBatchInfo( ExpressionExperiment ee, Collection<LocalFile> files ) {
+    public Map<BioMaterial, Date> getBatchInfo( ExpressionExperiment ee, Collection<File> files ) {
 
         Map<String, BioAssay> assayAccessions = BatchInfoParser.getAccessionToBioAssayMap( ee );
 
@@ -207,14 +206,13 @@ public class BatchInfoParser {
      * @return map
      */
     @SuppressWarnings("StatementWithEmptyBody") // Better readability
-    private Map<BioAssay, File> matchBioAssaysToRawDataFiles( Collection<LocalFile> files,
+    private Map<BioAssay, File> matchBioAssaysToRawDataFiles( Collection<File> files,
             Map<String, BioAssay> assayAccessions ) {
 
         Pattern regex = Pattern.compile( "(GSM[0-9]+).+" );
 
         Map<BioAssay, File> bioAssays2Files = new HashMap<>();
-        for ( LocalFile file : files ) {
-            File f = file.asFile();
+        for ( File f : files ) {
 
             String n = f.getName();
 

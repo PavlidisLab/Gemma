@@ -16,6 +16,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.util.Thaws;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -35,6 +36,29 @@ public class BioMaterialDaoTest extends BaseDatabaseTest {
 
     @Autowired
     private BioMaterialDao bioMaterialDao;
+
+    @Test
+    public void findAllSubBioMaterials() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        BioMaterial bm1 = new BioMaterial();
+        bm1.setSourceTaxon( taxon );
+        bm1 = bioMaterialDao.create( bm1 );
+        BioMaterial bm2 = new BioMaterial();
+        bm2.setSourceTaxon( taxon );
+        bm2.setSourceBioMaterial( bm1 );
+        bm2 = bioMaterialDao.create( bm2 );
+        BioMaterial bm3 = new BioMaterial();
+        bm3.setSourceTaxon( taxon );
+        bm3.setSourceBioMaterial( bm2 );
+        bm3 = bioMaterialDao.create( bm3 );
+        BioMaterial bm4 = new BioMaterial();
+        bm4.setSourceTaxon( taxon );
+        bm4.setSourceBioMaterial( bm2 );
+        bm4 = bioMaterialDao.create( bm4 );
+        assertThat( bioMaterialDao.findSubBioMaterials( bm1, false ) )
+                .containsExactlyInAnyOrder( bm2, bm3, bm4 );
+    }
 
     @Test
     public void testThaw() {
@@ -63,7 +87,7 @@ public class BioMaterialDaoTest extends BaseDatabaseTest {
         assertThat( bm.getFactorValues() )
                 .extracting( FactorValue::getExperimentalFactor )
                 .noneMatch( Hibernate::isInitialized );
-        bioMaterialDao.thaw( bm );
+        Thaws.thawBioMaterial( bm );
         assertThat( bm.getTreatments() )
                 .matches( Hibernate::isInitialized )
                 .hasSize( 1 );
@@ -96,5 +120,37 @@ public class BioMaterialDaoTest extends BaseDatabaseTest {
         assertThatThrownBy( () -> bioMaterialDao.create( bm ) )
                 .isInstanceOf( IllegalArgumentException.class )
                 .hasMessageStartingWith( "BioMaterial has more than one factor values for ExperimentalFactor Id=" + ef.getId() + " Type=CATEGORICAL:" );
+    }
+
+    @Test
+    public void testCreateCircularBioMaterial() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        BioMaterial bm1 = new BioMaterial();
+        bm1.setSourceTaxon( taxon );
+        BioMaterial bm2 = new BioMaterial();
+        bm2.setSourceTaxon( taxon );
+
+        bm1.setSourceBioMaterial( bm2 );
+        bm2.setSourceBioMaterial( bm1 );
+
+        assertThatThrownBy( () -> bioMaterialDao.create( bm1 ) )
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessage( "A sub-biomaterial cannot be its own source." );
+    }
+
+    @Test
+    public void testRemoveWithSubBioMaterials() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        BioMaterial bm1 = new BioMaterial();
+        bm1.setSourceTaxon( taxon );
+        bm1 = bioMaterialDao.create( bm1 );
+        BioMaterial bm2 = new BioMaterial();
+        bm2.setSourceTaxon( taxon );
+        bm2.setSourceBioMaterial( bm1 );
+        bm2 = bioMaterialDao.create( bm2 );
+        bioMaterialDao.remove( bm1 );
+        assertThat( bm2.getSourceBioMaterial() ).isNull();
     }
 }

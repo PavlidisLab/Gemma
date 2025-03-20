@@ -119,14 +119,14 @@ Gemma.CytoscapeJSPanel = Ext.extend( Ext.Panel, {
                      xtype : 'label',
                      id : 'tooltipMenuNotEnabled',
                      html : '&nbsp&nbsp<img ext:qtip="' + Gemma.HelpText.WidgetDefaults.CytoscapePanel.graphSizeMenuTT2
-                        + '" src="' + ctxBasePath + '/images/icons/question_blue.png"/>&nbsp',
+                        + '" src="' + Gemma.CONTEXT_PATH + '/images/icons/question_blue.png"/>&nbsp',
                      height : 15
                   },
                   {
                      xtype : 'label',
                      id : 'tooltipMenuEnabled',
                      html : '&nbsp&nbsp<img ext:qtip="' + Gemma.HelpText.WidgetDefaults.CytoscapePanel.graphSizeMenuTT
-                        + '" src="' + ctxBasePath + '/images/icons/question_blue.png"/>&nbsp',
+                        + '" src="' + Gemma.CONTEXT_PATH + '/images/icons/question_blue.png"/>&nbsp',
                      height : 15
                   } ]
 

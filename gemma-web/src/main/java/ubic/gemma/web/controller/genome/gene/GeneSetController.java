@@ -26,15 +26,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.model.genome.gene.SessionBoundGeneSetValueObject;
-import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 import ubic.gemma.core.search.ParseSearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.SessionBoundGeneSetValueObject;
+import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 import ubic.gemma.web.persistence.SessionListManager;
 import ubic.gemma.web.util.EntityNotFoundException;
 
@@ -142,7 +143,7 @@ public class GeneSetController {
         if ( gsvo instanceof DatabaseBackedGeneSetValueObject ) {
             groupIsDBBacked = true;
             try {
-                userCanEditGroup = securityService.isEditable( geneSetService.loadOrFail( gsvo.getId(), EntityNotFoundException::new, "No gene set with ID " + gsvo.getId() ) );
+                userCanEditGroup = securityService.isEditableByCurrentUser( geneSetService.loadOrFail( gsvo.getId(), EntityNotFoundException::new, "No gene set with ID " + gsvo.getId() ) );
             } catch ( org.springframework.security.access.AccessDeniedException ade ) {
                 return "{groupIsDBBacked:" + groupIsDBBacked + ",userCanEditGroup:" + false + "}";
             }
@@ -357,20 +358,15 @@ public class GeneSetController {
 
     /**
      * If the current user has access to given gene group will return the gene ids in the gene group;
-     *
-     * @param request request
-     * @return model and view
      */
     @RequestMapping(value = "/showGeneSet.html", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public ModelAndView showGeneSet( HttpServletRequest request ) {
-
-        ModelAndView mav = new ModelAndView( "geneSet.detail" );
-
-        GeneSetValueObject geneSet = this.getGeneSetFromRequest( request );
-        mav.addObject( "geneSetId", geneSet.getId() );
-        mav.addObject( "geneSetName", geneSet.getName() );
-
-        return mav;
+    public ModelAndView showGeneSet( @RequestParam("id") Long id ) {
+        GeneSetValueObject geneSet = geneSetService.loadValueObjectById( id );
+        if ( geneSet == null ) {
+            throw new EntityNotFoundException( "Unable to access gene set with id=" + id );
+        }
+        return new ModelAndView( "geneSet.detail" )
+                .addObject( "geneSet", geneSet );
     }
 
     /**
@@ -482,32 +478,4 @@ public class GeneSetController {
 
         return geneSetService.createDatabaseEntity( obj );
     }
-
-    /**
-     * @param request request
-     * @return gene set vo
-     * @throws IllegalArgumentException if a matching EE can't be loaded
-     */
-    private GeneSetValueObject getGeneSetFromRequest( HttpServletRequest request ) {
-
-        GeneSetValueObject geneSet;
-        Long id;
-
-        if ( request.getParameter( "id" ) != null ) {
-            try {
-                id = Long.parseLong( request.getParameter( "id" ) );
-            } catch ( NumberFormatException e ) {
-                throw new IllegalArgumentException( "You must provide a valid numerical identifier" );
-            }
-            geneSet = geneSetService.loadValueObjectById( id );
-
-            if ( geneSet == null ) {
-                throw new EntityNotFoundException( "Unable to access gene set with id=" + id );
-            }
-        } else {
-            throw new IllegalArgumentException( "You must provide an id" );
-        }
-        return geneSet;
-    }
-
 }

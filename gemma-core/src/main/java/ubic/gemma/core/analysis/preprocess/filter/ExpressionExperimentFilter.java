@@ -228,7 +228,7 @@ public class ExpressionExperimentFilter {
             config.setAfterMinPresentFilter( afterMinPresentFilter );
 
             if ( filteredMatrix.rows() == 0 ) {
-                throw new NoRowsLeftAfterFilteringException( eeDoubleMatrix.getExpressionExperiment(), "No rows left after minimum non-missing data filtering" );
+                throw new NoRowsLeftAfterFilteringException( "No rows left after minimum non-missing data filtering" );
             }
         }
 
@@ -240,7 +240,7 @@ public class ExpressionExperimentFilter {
         afterZeroVarianceCut = filteredMatrix.rows();
         config.setAfterZeroVarianceCut( afterZeroVarianceCut );
         if ( filteredMatrix.rows() == 0 ) {
-            throw new NoRowsLeftAfterFilteringException( eeDoubleMatrix.getExpressionExperiment(), "No rows left after filtering rows with zero variance" );
+            throw new NoRowsLeftAfterFilteringException( "No rows left after filtering rows with zero variance" );
         }
 
         /*
@@ -254,7 +254,7 @@ public class ExpressionExperimentFilter {
             config.setAfterLowExpressionCut( afterLowExpressionCut );
 
             if ( filteredMatrix.rows() == 0 ) {
-                throw new NoRowsLeftAfterFilteringException( eeDoubleMatrix.getExpressionExperiment(), "No rows left after expression level filtering" );
+                throw new NoRowsLeftAfterFilteringException( "No rows left after expression level filtering" );
             }
         }
 
@@ -275,7 +275,7 @@ public class ExpressionExperimentFilter {
             config.setAfterLowVarianceCut( afterLowVarianceCut );
 
             if ( filteredMatrix.rows() == 0 ) {
-                throw new NoRowsLeftAfterFilteringException( eeDoubleMatrix.getExpressionExperiment(), "No rows left after variance filtering" );
+                throw new NoRowsLeftAfterFilteringException( "No rows left after variance filtering" );
             }
         }
 
@@ -370,7 +370,7 @@ public class ExpressionExperimentFilter {
 
         for ( int i = 0; i < eeDoubleMatrix.rows(); i++ ) {
             for ( int j = 0; j < eeDoubleMatrix.columns(); j++ ) {
-                double v = eeDoubleMatrix.get( i, j );
+                double v = eeDoubleMatrix.getAsDouble( i, j );
                 if ( v > 20 ) {
                     ExpressionExperimentFilter.log.info( "Data has large values, doesn't look log transformed" );
                     return false;

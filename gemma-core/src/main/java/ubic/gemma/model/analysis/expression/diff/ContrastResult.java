@@ -22,19 +22,13 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
-import java.util.Objects;
 
 /**
  * Represents a contrast between "conditions". In practice, this is the comparison between a factor level and the
  * baseline; for interactions it is the difference of comparisons.
  */
-public class ContrastResult implements Identifiable, Serializable {
+public class ContrastResult implements Identifiable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -4310735803120153778L;
     @Nullable
     private Double pvalue;
     @Nullable
@@ -131,14 +125,6 @@ public class ContrastResult implements Identifiable, Serializable {
     }
 
     /**
-     * @return a hash code based on this entity's identifiers.
-     */
-    @Override
-    public int hashCode() {
-        return Objects.hash( id );
-    }
-
-    /**
      * @return <code>true</code> if the argument is an ContrastResult instance and all identifiers for this entity equal
      * the identifiers of the argument entity. Returns <code>false</code> otherwise.
      */
@@ -151,7 +137,7 @@ public class ContrastResult implements Identifiable, Serializable {
             return false;
         }
         final ContrastResult that = ( ContrastResult ) object;
-        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+        return this.getId() != null && that.getId() != null && this.getId().equals( that.getId() );
     }
 
     @Override

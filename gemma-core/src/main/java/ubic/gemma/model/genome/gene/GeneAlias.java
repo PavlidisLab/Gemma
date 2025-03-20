@@ -22,47 +22,14 @@ import org.hibernate.search.annotations.Analyze;
 import org.hibernate.search.annotations.DocumentId;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
-import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.AbstractIdentifiable;
 
-import java.io.Serializable;
+import java.util.Objects;
 
 @Indexed
-public class GeneAlias implements Identifiable, Serializable {
+public class GeneAlias extends AbstractIdentifiable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -4156628260205167700L;
     private String alias;
-    private Long id;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public GeneAlias() {
-    }
-
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
-    }
-
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof GeneAlias ) ) {
-            return false;
-        }
-        final GeneAlias that = ( GeneAlias ) object;
-        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
-    }
 
     @Field(analyze = Analyze.NO)
     public String getAlias() {
@@ -76,24 +43,40 @@ public class GeneAlias implements Identifiable, Serializable {
     @Override
     @DocumentId
     public Long getId() {
-        return this.id;
+        return super.getId();
     }
 
-    public void setId( Long id ) {
-        this.id = id;
+    @Override
+    public int hashCode() {
+        return Objects.hash( alias );
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof GeneAlias ) ) {
+            return false;
+        }
+        final GeneAlias that = ( GeneAlias ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return getId().equals( that.getId() );
+        } else {
+            return Objects.equals( alias, that.alias );
+        }
     }
 
     public static final class Factory {
-        public static ubic.gemma.model.genome.gene.GeneAlias newInstance() {
-            return new ubic.gemma.model.genome.gene.GeneAlias();
+
+        public static GeneAlias newInstance() {
+            return new GeneAlias();
         }
 
-        @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-        public static ubic.gemma.model.genome.gene.GeneAlias newInstance( String alias ) {
-            final ubic.gemma.model.genome.gene.GeneAlias entity = new ubic.gemma.model.genome.gene.GeneAlias();
+        public static GeneAlias newInstance( String alias ) {
+            final GeneAlias entity = new GeneAlias();
             entity.setAlias( alias );
             return entity;
         }
     }
-
 }

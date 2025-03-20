@@ -50,21 +50,17 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( 'm' ) ) {
             this.mode = GeeqService.ScoreMode.valueOf( commandLine.getOptionValue( 'm' ) );
         }
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         super.addAutoOption( options, GeeqEvent.class );
         super.addLimitingDateOption( options );
         super.addForceOption( options );
-
         Option modeOption = Option.builder( "m" ).longOpt( "mode" )
                 .desc( "If specified, switches the scoring mode. By default the mode is set to 'all'" //
                         + "\n Possible values are:" //
@@ -78,8 +74,7 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
-        if ( !force && this.noNeedToRun( ee, GeeqEvent.class ) ) {
-            log.info( "Can't or don't need to run " + ee );
+        if ( this.noNeedToRun( ee, GeeqEvent.class ) ) {
             return;
         }
 
@@ -88,7 +83,7 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
         try {
             refreshExpressionExperimentFromGemmaWeb( ee, false, true );
         } catch ( Exception e ) {
-            log.warn( "Failed to refresh " + ee + " from Gemma Web", e );
+            addWarningObject( ee, "Failed to refresh " + ee + " from Gemma Web", e );
         }
     }
 }

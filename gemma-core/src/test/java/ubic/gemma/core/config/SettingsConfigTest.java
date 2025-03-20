@@ -16,9 +16,11 @@ import ubic.gemma.core.context.EnvironmentProfiles;
 import ubic.gemma.core.context.TestComponent;
 
 import java.io.IOException;
+import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
+import static ubic.gemma.core.config.SettingsConfig.filterSystemProperties;
 
 @ActiveProfiles(EnvironmentProfiles.TEST)
 @ContextConfiguration
@@ -68,6 +70,12 @@ public class SettingsConfigTest extends AbstractJUnit4SpringContextTests {
     @Value("${gemma.hosturl}")
     private String hostUrl;
 
+    @Value("${gemma.project.dir}")
+    private String projectDir;
+
+    @Value("${gemma.log.dir}")
+    private String logDir;
+
     @Test
     public void test() {
         assertNotNull( version );
@@ -79,5 +87,29 @@ public class SettingsConfigTest extends AbstractJUnit4SpringContextTests {
         assertEquals( appDataHome + "/download", downloadPath );
         assertEquals( appDataHome + "/searchIndices", searchDir );
         assertEquals( searchDir, compassDir );
+        assertEquals( ".", projectDir );
+        assertEquals( ".", logDir );
+    }
+
+    @Test
+    public void testFilteredProperties() throws IOException {
+        Properties props;
+
+        props = new Properties();
+        props.setProperty( "gemma.fastaCmd.exe", "foo" );
+        assertThat( filterSystemProperties( props ) )
+                .containsEntry( "fastaCmd.exe", "foo" );
+
+        // this is deprecated and will be removed in the future
+        props = new Properties();
+        props.setProperty( "fastaCmd.exe", "foo" );
+        assertThat( filterSystemProperties( props ) )
+                .containsEntry( "fastaCmd.exe", "foo" );
+
+        props = new Properties();
+        props.setProperty( "gemma.fastaCmd.exe", "foo" );
+        props.setProperty( "fastaCmd.exe", "bar" );
+        assertThat( filterSystemProperties( props ) )
+                .containsEntry( "fastaCmd.exe", "foo" );
     }
 }

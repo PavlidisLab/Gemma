@@ -25,15 +25,14 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.persistence.service.*;
-import ubic.gemma.persistence.util.Filter;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.persistence.service.BaseService;
+import ubic.gemma.persistence.service.FilteringVoEnabledService;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 
-import javax.annotation.Nullable;
 import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author kelsey
@@ -66,6 +65,15 @@ public interface BioAssayService extends BaseService<BioAssay>, FilteringVoEnabl
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<BioAssay> findByAccession( String accession );
 
+    /**
+     * @see BioMaterialService#findSubBioMaterials(BioMaterial, boolean)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<BioAssay> findSubBioAssays( BioAssay bioAssay, boolean direct );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<BioAssay> findSiblings( BioAssay bioAssay );
+
     @Override
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
     BioAssay findOrCreate( BioAssay bioAssay );
@@ -93,6 +101,12 @@ public interface BioAssayService extends BaseService<BioAssay>, FilteringVoEnabl
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( BioAssay bioAssay );
+
+    /**
+     * Obtain all the {@link BioAssaySet} that contain the given {@link BioAssay}.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<BioAssaySet> getBioAssaySets( BioAssay bioAssay );
 
     /**
      * Removes the association between a specific bioMaterial and a bioAssay.

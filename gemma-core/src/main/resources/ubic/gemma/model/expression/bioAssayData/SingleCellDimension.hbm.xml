@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping http://hibernate.org/xsd/hibernate-mapping-4.0.xsd">
+    <class name="ubic.gemma.model.expression.bioAssayData.SingleCellDimension"
+           table="SINGLE_CELL_DIMENSION" mutable="false">
+        <cache usage="read-only"/>
+        <id name="id" type="java.lang.Long" unsaved-value="null">
+            <column name="ID" sql-type="BIGINT"/>
+            <generator class="native"/>
+        </id>
+        <property name="cellIds">
+            <!-- stored as a compressed blob -->
+            <column name="CELL_IDS" not-null="true" sql-type="LONGBLOB"/>
+            <type name="ubic.gemma.persistence.hibernate.CompressedStringListType">
+                <param name="delimiter">\n</param>
+            </type>
+        </property>
+        <property name="numberOfCells" type="java.lang.Integer">
+            <column name="NUMBER_OF_CELLS" not-null="true" sql-type="INTEGER"/>
+        </property>
+        <set name="cellTypeAssignments" lazy="true" fetch="select" cascade="all-delete-orphan">
+            <key foreign-key="SINGLE_CELL_DIMENSION_FKC">
+                <column name="SINGLE_CELL_DIMENSION_FK" sql-type="BIGINT"/>
+            </key>
+            <one-to-many class="ubic.gemma.model.expression.bioAssayData.CellTypeAssignment"/>
+        </set>
+        <set name="cellLevelCharacteristics" lazy="true" fetch="select" cascade="all-delete-orphan">
+            <key foreign-key="CELL_LEVEL_CHARACTERISTICS_SINGLE_SINGLE_CELL_DIMENSION_FKC">
+                <column name="SINGLE_CELL_DIMENSION_FK" sql-type="BIGINT"/>
+            </key>
+            <one-to-many class="ubic.gemma.model.expression.bioAssayData.GenericCellLevelCharacteristics"/>
+        </set>
+        <list name="bioAssays" table="BIO_ASSAYS2SINGLE_CELL_DIMENSIONS" lazy="false" fetch="select" mutable="false">
+            <cache usage="read-only"/>
+            <key foreign-key="SINGLE_CELL_DIMENSIONS_FKC">
+                <column name="SINGLE_CELL_DIMENSIONS_FK" sql-type="BIGINT"/>
+            </key>
+            <list-index column="ORDERING"/>
+            <many-to-many class="ubic.gemma.model.expression.bioAssay.BioAssay" foreign-key="BIO_ASSAYS_SC_FKC">
+                <column name="BIO_ASSAYS_FK" sql-type="BIGINT"/>
+            </many-to-many>
+        </list>
+        <property name="bioAssaysOffset">
+            <column name="BIO_ASSAYS_OFFSET" not-null="true" sql-type="LONGBLOB"/>
+            <type name="ubic.gemma.persistence.hibernate.ByteArrayType">
+                <param name="arrayType">int</param>
+            </type>
+        </property>
+    </class>
+</hibernate-mapping>

@@ -36,7 +36,6 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -50,8 +49,7 @@ import java.util.stream.Collectors;
 @Data
 @Builder
 @With
-public class SearchSettings implements Serializable {
-
+public class SearchSettings {
 
     public enum SearchMode {
         /**
@@ -67,11 +65,6 @@ public class SearchSettings implements Serializable {
          */
         FAST
     }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -982243911532743661L;
 
     /**
      * How many results per result type are allowed. This implies that if you search for multiple types of things, you

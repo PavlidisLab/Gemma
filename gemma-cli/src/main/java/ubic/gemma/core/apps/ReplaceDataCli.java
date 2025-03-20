@@ -63,15 +63,13 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildExperimentOptions( Options options ) {
         options.addOption( Option.builder( "file" ).longOpt( null ).desc( "Path to file with tab-delimited data, first column = probe ids, first row = sample IDs (e.g. GEO GSM#)" ).argName( "file path" ).hasArg().required().build() );
         super.addForceOption( options );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         this.file = commandLine.getOptionValue( "file" );
     }
 

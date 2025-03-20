@@ -27,7 +27,7 @@ import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
@@ -71,12 +71,12 @@ public class ExpressionDataTestMatrix extends ExpressionDataDoubleMatrix {
         metaData.setType( StandardQuantitationType.AMOUNT );
         metaData.setIsRatio( true );
 
-        try (InputStream data = this.getClass()
-                .getResourceAsStream( "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" )) {
+        try ( InputStream data = this.getClass()
+                .getResourceAsStream( "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" ) ) {
             DoubleMatrix<String, String> matrix = service.parse( data );
             ExpressionExperiment ee = service.convert( metaData, matrix );
             super.init();
-            Collection<DesignElementDataVector> selectedVectors = super.selectVectors( ee, ee.getQuantitationTypes().iterator().next() );
+            Collection<BulkExpressionDataVector> selectedVectors = super.selectVectors( ee, ee.getQuantitationTypes().iterator().next() );
             this.vectorsToMatrix( selectedVectors );
         }
 

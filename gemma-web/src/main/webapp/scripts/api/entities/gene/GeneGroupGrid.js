@@ -74,8 +74,8 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
             sortable: false,
             renderer: function (value, metadata, record, rowIndex, colIndex, store) {
                 return '<a target="_blank" title="Go to gene group page" '
-                    + 'href="' + ctxBasePath + '/geneSet/showGeneSet.html?id=' + record.data.id
-                    + '"><img src="' + ctxBasePath + '/images/magnifier.png"></a>';
+                    + 'href="' + Gemma.CONTEXT_PATH + '/geneSet/showGeneSet.html?id=' + record.data.id
+                    + '"><img src="' + Gemma.CONTEXT_PATH + '/images/magnifier.png"></a>';
             }
         },
         {

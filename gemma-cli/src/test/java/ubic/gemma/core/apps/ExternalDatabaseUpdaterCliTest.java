@@ -11,25 +11,26 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.security.authentication.UserManager;
 import ubic.gemma.core.util.GemmaRestApiClient;
+import ubic.gemma.core.util.test.BaseCliTest;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
-import ubic.gemma.core.context.TestComponent;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
+import static ubic.gemma.core.util.test.Assertions.assertThat;
 
 @ContextConfiguration
 @TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class ExternalDatabaseUpdaterCliTest extends AbstractJUnit4SpringContextTests {
+public class ExternalDatabaseUpdaterCliTest extends BaseCliTest {
 
     @Configuration
     @TestComponent
@@ -91,11 +92,13 @@ public class ExternalDatabaseUpdaterCliTest extends AbstractJUnit4SpringContextT
     @Test
     @WithMockUser
     public void test() throws MalformedURLException {
-        User user = User.Factory.newInstance();
+        User user = User.Factory.newInstance( "foo" );
         when( userManager.getCurrentUser() ).thenReturn( user );
         when( externalDatabaseService.findByNameWithAuditTrail( "test" ) ).thenReturn( ed );
         when( externalDatabaseService.findByNameWithExternalDatabases( "test2" ) ).thenReturn( ed2 );
-        externalDatabaseUpdaterCli.executeCommand( new String[] { "--name", "test", "--description", "Youpi!", "--release", "--release-note", "Yep", "--release-version", "123", "--release-url", "http://example.com/test", "--parent-database", "test2" } );
+        assertThat( externalDatabaseUpdaterCli )
+                .withArguments( "--name", "test", "--description", "Youpi!", "--release", "--release-note", "Yep", "--release-version", "123", "--release-url", "http://example.com/test", "--parent-database", "test2" )
+                .succeeds();
         verify( externalDatabaseService ).findByNameWithExternalDatabases( "test2" );
         verify( externalDatabaseService ).findByNameWithAuditTrail( "test" );
         assertThat( ed.getDescription() ).isEqualTo( "Youpi!" );

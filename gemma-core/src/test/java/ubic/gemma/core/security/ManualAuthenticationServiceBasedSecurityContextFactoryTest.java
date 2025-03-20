@@ -18,7 +18,7 @@ public class ManualAuthenticationServiceBasedSecurityContextFactoryTest {
         factory.setPassword( "1234" );
         assertThat( factory.isSingleton() ).isTrue();
         factory.afterPropertiesSet();
-        verify( s ).attemptAuthentication( "groupAgent", "1234" );
+        verify( s ).authenticate( "groupAgent", "1234" );
         assertThatThrownBy( factory::createInstance )
                 .isInstanceOf( IllegalArgumentException.class );
         verifyNoMoreInteractions( s );

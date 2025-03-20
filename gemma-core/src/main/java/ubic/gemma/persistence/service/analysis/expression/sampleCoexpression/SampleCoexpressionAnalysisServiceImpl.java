@@ -24,17 +24,16 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.MatrixRowStats;
 import ubic.basecode.math.MatrixStats;
 import ubic.basecode.math.linearmodels.DesignMatrix;
 import ubic.basecode.math.linearmodels.LeastSquaresFit;
+import ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
-import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
-import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis;
@@ -45,14 +44,22 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+
+import static ubic.gemma.model.expression.experiment.ExperimentalDesignUtils.buildRDesignMatrix;
+import static ubic.gemma.model.expression.experiment.ExperimentalDesignUtils.getBaselineConditions;
+import static ubic.gemma.persistence.util.ByteArrayUtils.bytesToDoubleMatrix;
+import static ubic.gemma.persistence.util.ByteArrayUtils.doubleMatrixToBytes;
 
 /**
  * Manage the "sample correlation/coexpression" matrices.
@@ -63,7 +70,6 @@ import java.util.*;
 @CommonsLog
 public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpressionAnalysisService {
 
-    private static final ByteArrayConverter bac = new ByteArrayConverter();
     private static final String MSG_ERR_NO_VECTORS = "No processed expression vectors available for experiment, can not compute sample correlation matrix.";
     private static final String MSG_ERR_NO_DESIGN = "Can not run factor regression! No experimental factors found.";
     private static final String MSG_ERR_NO_FACTORS = "Can not run factor regression! No factors to include in the regressed matrix.";
@@ -88,7 +94,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     @Autowired
     private SampleCoexpressionAnalysisDao sampleCoexpressionAnalysisDao;
     @Autowired
-    private SVDServiceHelper svdService;
+    private SVDService svdService;
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
@@ -133,7 +139,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
     @Override
     @Transactional(readOnly = true)
-    public PreparedCoexMatrices prepare( ExpressionExperiment ee ) {
+    public PreparedCoexMatrices prepare( ExpressionExperiment ee ) throws FilteringException {
         // Create new analysis
         Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
@@ -172,7 +178,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
             log.warn( "Regressed coexpression matrix could not be computed, review experimental design? Experiment " + thawedee );
         }
 
-        SampleCoexpressionAnalysis analysis = new SampleCoexpressionAnalysis( thawedee, // Analyzed experiment
+        SampleCoexpressionAnalysis analysis = SampleCoexpressionAnalysis.Factory.newInstance( thawedee, // Analyzed experiment
                 matrix, // Full
                 regressedMatrix );// Regressed
 
@@ -233,8 +239,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         }
 
         try {
-            double[][] rawMatrix = SampleCoexpressionAnalysisServiceImpl.bac
-                    .byteArrayToDoubleMatrix( matrixBytes, numBa );
+            double[][] rawMatrix = bytesToDoubleMatrix( matrixBytes, numBa );
             DoubleMatrix<BioAssay, BioAssay> result = new DenseDoubleMatrix<>( rawMatrix );
             result.setRowNames( bioAssays );
             result.setColumnNames( bioAssays );
@@ -248,7 +253,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     private SampleCoexpressionMatrix getMatrix( ExpressionExperiment ee, boolean regress,
-            Collection<ProcessedExpressionDataVector> vectors ) {
+            Collection<ProcessedExpressionDataVector> vectors ) throws FilteringException {
         SampleCoexpressionAnalysisServiceImpl.log.info( String
                 .format( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_COMPUTING_SCM, ee.getId(), regress ) );
 
@@ -266,8 +271,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
                     bestBioAssayDimension.getBioAssays().size(), cormat.rows() ) );
         }
 
-        return new SampleCoexpressionMatrix( bestBioAssayDimension,
-                SampleCoexpressionAnalysisServiceImpl.bac.doubleMatrixToBytes( cormat.getRawMatrix() ) );
+        return SampleCoexpressionMatrix.Factory.newInstance( bestBioAssayDimension, doubleMatrixToBytes( cormat.getRawMatrix() ) );
     }
 
     private DoubleMatrix<BioAssay, BioAssay> dataToDoubleMat( ExpressionDataDoubleMatrix matrix ) {
@@ -285,7 +289,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     private ExpressionDataDoubleMatrix loadDataMatrix( ExpressionExperiment ee, boolean useRegression,
-            Collection<ProcessedExpressionDataVector> vectors ) {
+            Collection<ProcessedExpressionDataVector> vectors ) throws FilteringException {
         if ( vectors.isEmpty() ) {
             SampleCoexpressionAnalysisServiceImpl.log.warn( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_VECTORS );
             return null;
@@ -308,7 +312,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
     private ExpressionDataDoubleMatrix loadFilteredDataMatrix( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> vectors, boolean requireSequences ) {
+            Collection<ProcessedExpressionDataVector> vectors, boolean requireSequences ) throws FilteringException {
         FilterConfig fConfig = new FilterConfig();
         fConfig.setIgnoreMinimumRowsThreshold( true );
         fConfig.setIgnoreMinimumSampleThreshold( true );
@@ -329,7 +333,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         if ( !importantFactors.isEmpty() ) {
             SampleCoexpressionAnalysisServiceImpl.log.info( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_REGRESSING );
             DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-            config.setFactorsToInclude( importantFactors );
+            config.addFactorsToInclude( importantFactors );
             mat = this.regressionResiduals( mat, config );
         }
         return mat;
@@ -368,7 +372,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
             return null;
         }
 
-        List<ExperimentalFactor> factors = config.getFactorsToInclude();
+        List<ExperimentalFactor> factors = ExperimentalDesignUtils.getOrderedFactors( config.getFactorsToInclude() );
 
         /*
          * Using ordered samples isn't necessary, it doesn't matter so long as the design matrix is in the same order.
@@ -383,16 +387,13 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         }
 
         // set up design matrix
-        Map<ExperimentalFactor, FactorValue> baselineConditions = ExperimentalDesignUtils
-                .getBaselineConditions( samplesUsed, factors );
 
         ObjectMatrix<String, String, Object> designMatrix;
         try {
             /*
              * A failure here can mean that the design matrix could not be built because of missing values; see #664
              */
-            designMatrix = ExperimentalDesignUtils
-                    .buildDesignMatrix( factors, samplesUsed, baselineConditions );
+            designMatrix = buildRDesignMatrix( factors, samplesUsed, getBaselineConditions( samplesUsed, factors ), false );
         } catch ( Exception e ) {
             return null;
         }
@@ -400,7 +401,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
         ExpressionDataDoubleMatrix dmatrix = new ExpressionDataDoubleMatrix( matrix, samplesUsed, bad );
         DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.getMatrix();
-        DoubleMatrix<String, String> sNamedMatrix = LinearModelAnalyzer.makeDataMatrix( designMatrix, namedMatrix );
+        DoubleMatrix<String, String> sNamedMatrix = DiffExAnalyzerUtils.makeDataMatrix( designMatrix, namedMatrix );
 
         LeastSquaresFit fit = new LeastSquaresFit( properDesignMatrix, sNamedMatrix );
 

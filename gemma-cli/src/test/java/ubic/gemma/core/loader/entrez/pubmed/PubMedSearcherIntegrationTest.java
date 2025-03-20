@@ -18,38 +18,42 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.util.CliContext;
+import ubic.gemma.core.util.test.BaseCliIntegrationTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 
-import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeFalse;
+import java.io.ByteArrayOutputStream;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static ubic.gemma.core.util.test.Assertions.assertThat;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * Tests command line. This creates an entire new Spring Context so is pretty heavy.
  *
  * @author pavlidis
  */
-public class PubMedSearcherIntegrationTest {
+public class PubMedSearcherIntegrationTest extends BaseCliIntegrationTest {
 
-    private static final Log log = LogFactory.getLog( PubMedSearcherIntegrationTest.class );
-    private final PubMedSearcher p = new PubMedSearcher();
+    @Autowired
+    private PubMedSearcher p;
 
     /**
-     * Test method for {@link ubic.gemma.core.loader.entrez.pubmed.PubMedSearcher#executeCommand(String[])}.
+     * Test method for {@link ubic.gemma.core.loader.entrez.pubmed.PubMedSearcher#executeCommand(CliContext)}.
      */
     @Test
     @Category(SlowTest.class)
     public final void testMain() {
-        try {
-            p.executeCommand( new String[]{"-testing", "-v", "3", "hippocampus", "diazepam", "juvenile"} );
-        } catch ( Exception e ) {
-            assumeFalse( "Test skipped because of UnknownHostException", e instanceof java.net.UnknownHostException );
-            assumeFalse( "Test skipped because of a 502 from NCBI", e.getMessage().contains( "code: 503" ) );
-            fail( e.getMessage() );
-        }
+        assumeThatResourceIsAvailable( "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi" );
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        assertThat( p )
+                .withArguments( "hippocampus", "diazepam", "juvenile" )
+                .withOutputStream( os )
+                .succeeds();
+        assertThat( os.toString() )
+                .matches( "\\d+ references found\n" );
     }
-
 }

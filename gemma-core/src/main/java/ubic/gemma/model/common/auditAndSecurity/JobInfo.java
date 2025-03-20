@@ -21,12 +21,10 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 import ubic.gemma.model.common.Identifiable;
 
-import java.io.Serializable;
 import java.util.Date;
 
-public class JobInfo implements Identifiable, Serializable, SecuredNotChild {
+public class JobInfo implements Identifiable, SecuredNotChild {
 
-    private static final long serialVersionUID = -4998165708433543706L;
     private Boolean runningStatus = Boolean.TRUE;
     private String failedMessage;
     private Date startTime;
@@ -37,14 +35,6 @@ public class JobInfo implements Identifiable, Serializable, SecuredNotChild {
     private String taskId;
     private Long id;
     private User user;
-
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
-    }
 
     @Override
     public boolean equals( Object object ) {

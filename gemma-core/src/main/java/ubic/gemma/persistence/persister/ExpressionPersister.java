@@ -29,7 +29,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Compound;
@@ -270,7 +270,7 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
 
     }
 
-    private BioAssayDimension fillInDesignElementDataVectorAssociations( DesignElementDataVector dataVector, Caches caches ) {
+    private BioAssayDimension fillInDesignElementDataVectorAssociations( BulkExpressionDataVector dataVector, Caches caches ) {
         // we should have done this already.
         assert dataVector.getDesignElement() != null;
 
@@ -333,10 +333,10 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
         }
     }
 
-    private BioAssayDimension getBioAssayDimensionFromCacheOrCreate( DesignElementDataVector vector, Caches caches ) {
-        Map<String, BioAssayDimension> bioAssayDimensionCache = caches.getBioAssayDimensionCache();
+    private BioAssayDimension getBioAssayDimensionFromCacheOrCreate( BulkExpressionDataVector vector, Caches caches ) {
+        Map<Integer, BioAssayDimension> bioAssayDimensionCache = caches.getBioAssayDimensionCache();
 
-        String dimensionName = vector.getBioAssayDimension().getName();
+        Integer dimensionName = vector.getBioAssayDimension().hashCode();
         if ( bioAssayDimensionCache.containsKey( dimensionName ) ) {
             vector.setBioAssayDimension( bioAssayDimensionCache.get( dimensionName ) );
         } else {
@@ -421,6 +421,10 @@ public abstract class ExpressionPersister extends ArrayDesignPersister implement
      * If we get here first (e.g., via bioAssay->bioMaterial) we have to override the cascade.
      */
     private FactorValue persistFactorValue( FactorValue factorValue, Caches caches ) {
+        if ( factorValue.getId() != null ) {
+            // already persistent
+            return factorValue;
+        }
         if ( factorValue.getExperimentalFactor().getId() == null ) {
             throw new IllegalArgumentException(
                     "You must fill in the experimental factor before persisting a factorvalue" );

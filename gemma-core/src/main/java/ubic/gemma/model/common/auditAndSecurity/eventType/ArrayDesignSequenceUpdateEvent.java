@@ -19,16 +19,8 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * <p>
  * The updating of the sequences associated with an ArrayDesign
- * </p>
  */
-public class ArrayDesignSequenceUpdateEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 2502989996801972836L;
+public class ArrayDesignSequenceUpdateEvent extends ArrayDesignAnalysisEvent {
 
 }

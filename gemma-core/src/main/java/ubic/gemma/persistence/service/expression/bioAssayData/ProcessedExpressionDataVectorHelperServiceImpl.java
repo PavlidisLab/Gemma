@@ -20,7 +20,6 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import cern.colt.list.DoubleArrayList;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,25 +27,29 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
-import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
-import ubic.gemma.core.datastructure.matrix.*;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataBooleanMatrix;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.datastructure.matrix.TwoChannelExpressionDataMatrixBuilder;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort.orderByExperimentalDesign;
 
 /**
  * Transactional methods.
@@ -75,7 +78,7 @@ class ProcessedExpressionDataVectorHelperServiceImpl
     @Override
     @Transactional
     public void reorderByDesign( ExpressionExperiment ee ) {
-        if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+        if ( ee.getExperimentalDesign() == null || ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             log.info( ee + " does not have a populated experimental design, skipping" );
             return;
         }
@@ -99,8 +102,8 @@ class ProcessedExpressionDataVectorHelperServiceImpl
         /*
          * Get the ordering we want.
          */
-        List<BioMaterial> orderedSamples = ExpressionDataMatrixColumnSort
-                .orderByExperimentalDesign( originalSamples, ee.getExperimentalDesign().getExperimentalFactors() );
+        List<BioMaterial> orderedSamples = new ArrayList<>( originalSamples );
+        orderByExperimentalDesign( originalSamples, ee.getExperimentalDesign().getExperimentalFactors() );
 
         if ( originalSamples.equals( orderedSamples ) ) {
             log.info( ee + " already has correct ordering; no need to reorder processed vectors." );
@@ -123,22 +126,18 @@ class ProcessedExpressionDataVectorHelperServiceImpl
             indexes[oldIndex] = newIndex;
         }
 
-        BioAssayDimension newBioAssayDimension = BioAssayDimension.Factory.newInstance();
-        newBioAssayDimension.setBioAssays( Arrays.asList( orderedBioAssays ) );
-        newBioAssayDimension.setName( "Processed data of ee " + ee.getShortName() + " ordered by design" );
-        newBioAssayDimension.setDescription( "Data was reordered based on the experimental design." );
+        BioAssayDimension newBioAssayDimension = BioAssayDimension.Factory.newInstance( Arrays.asList( orderedBioAssays ) );
         newBioAssayDimension = bioAssayDimensionService.create( newBioAssayDimension );
 
-        ByteArrayConverter converter = new ByteArrayConverter();
         for ( ProcessedExpressionDataVector v : processedDataVectors ) {
             assert newBioAssayDimension != null;
-            double[] data = converter.byteArrayToDoubles( v.getData() );
+            double[] data = v.getDataAsDoubles();
             // put the data in the order of the bioAssayDimension.
             double[] resortedData = new double[data.length];
             for ( int k = 0; k < data.length; k++ ) {
                 resortedData[k] = data[indexes[k]];
             }
-            v.setData( converter.doubleArrayToBytes( resortedData ) );
+            v.setDataAsDoubles( resortedData );
             v.setBioAssayDimension( newBioAssayDimension );
         }
 
@@ -194,25 +193,31 @@ class ProcessedExpressionDataVectorHelperServiceImpl
              * Get vectors needed to compute intensities.
              */
             Collection<QuantitationType> quantitationTypes = eeService.getQuantitationTypes( ee );
-            Collection<QuantitationType> usefulQuantitationTypes = ExpressionDataMatrixBuilder
+            Collection<QuantitationType> usefulQuantitationTypes = TwoChannelExpressionDataMatrixBuilder
                     .getUsefulQuantitationTypes( quantitationTypes );
 
             if ( usefulQuantitationTypes.isEmpty() ) {
                 throw new IllegalStateException( "No useful quantitation types for " + ee.getShortName() );
             }
 
-            Collection<? extends DesignElementDataVector> vectors = rawExpressionDataVectorService.findAndThaw( usefulQuantitationTypes );
+
+            Collection<? extends BulkExpressionDataVector> vectors = ee.getRawExpressionDataVectors().stream()
+                    .filter( v -> usefulQuantitationTypes.contains( v.getQuantitationType() ) )
+                    .collect( Collectors.toSet() );
             if ( vectors.isEmpty() ) {
-                vectors = processedExpressionDataVectorService.findAndThaw( usefulQuantitationTypes );
+                log.warn( "No raw vectors for useful quantitation types for " + ee + ", will look-up processed vectors instead." );
+                vectors = ee.getProcessedExpressionDataVectors().stream()
+                        .filter( v -> usefulQuantitationTypes.contains( v.getQuantitationType() ) )
+                        .collect( Collectors.toSet() );
             }
 
             if ( vectors.isEmpty() ) {
-                throw new IllegalStateException( "No vectors for useful quantitation types for " + ee.getShortName() );
+                throw new IllegalStateException( "No vectors for useful quantitation types for " + ee + "." );
             }
 
-            ProcessedExpressionDataVectorHelperServiceImpl.log.info( "Vectors loaded ..." );
+            ProcessedExpressionDataVectorHelperServiceImpl.log.info( vectors.size() + " vectors loaded." );
 
-            ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( processedVectors, vectors );
+            TwoChannelExpressionDataMatrixBuilder builder = new TwoChannelExpressionDataMatrixBuilder( processedVectors, vectors );
             intensities = builder.getIntensity();
 
             ExpressionDataBooleanMatrix missingValues = builder.getMissingValueData();
@@ -281,7 +286,7 @@ class ProcessedExpressionDataVectorHelperServiceImpl
 
         for ( ProcessedExpressionDataVector vector : processedDataVectors ) {
             CompositeSequence de = vector.getDesignElement();
-            if ( intensities.getRow( de ) == null ) {
+            if ( intensities.getRowAsDoubles( de ) == null ) {
                 ProcessedExpressionDataVectorHelperServiceImpl.log
                         .warn( "No intensity value for " + de + ", rank for vector will be null" );
                 vector.setRankByMean( null );
@@ -302,7 +307,7 @@ class ProcessedExpressionDataVectorHelperServiceImpl
         DoubleArrayList result = new DoubleArrayList( intensities.rows() );
 
         for ( ExpressionDataMatrixRowElement de : intensities.getRowElements() ) {
-            double[] rowObj = ArrayUtils.toPrimitive( intensities.getRow( de.getDesignElement() ) );
+            double[] rowObj = intensities.getRowAsDoubles( de.getDesignElement() );
             double valueForRank = Double.MIN_VALUE;
             if ( rowObj != null ) {
                 DoubleArrayList row = new DoubleArrayList( rowObj );
@@ -331,6 +336,37 @@ class ProcessedExpressionDataVectorHelperServiceImpl
      * @param inMatrix The matrix to be masked
      */
     private void maskMissingValues( ExpressionDataDoubleMatrix inMatrix, ExpressionDataBooleanMatrix missingValues ) {
-        ExpressionDataDoubleMatrixUtil.maskMatrix( inMatrix, missingValues );
+        maskMatrix( inMatrix, missingValues );
+    }
+
+    /**
+     * Use the mask matrix to turn some values in a matrix to NaN. Ideally, they matrices are conformant, but if they
+     * are not (as some rows are sometimes missing for some quantitation types), this method attempts to handle it
+     * anyway (see below). The rows and columns do not have to be in the same order, but they do have to have the same
+     * column keys and row keys (with the exception of missing rows). The result is stored in matrix.
+     *
+     * @param matrix matrix
+     * @param mask if null, masking is not attempted.
+     */
+    private void maskMatrix( ExpressionDataDoubleMatrix matrix, @Nullable ExpressionDataBooleanMatrix mask ) {
+        if ( mask == null ) return;
+        // checkConformant( a, b );
+        if ( matrix.columns() != mask.columns() )
+            throw new IllegalArgumentException( "Unequal column counts: " + matrix.columns() + " != " + mask.columns() );
+        int columns = matrix.columns();
+        for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
+            CompositeSequence del = el.getDesignElement();
+            if ( mask.getRow( del ) == null ) {
+                log.warn( "Mask Matrix is missing a row for " + del );
+                continue;
+            }
+            for ( int i = 0; i < columns; i++ ) {
+                BioAssay bm = matrix.getBioAssayForColumn( i );
+                boolean present = mask.get( del, bm );
+                if ( !present ) {
+                    matrix.set( del, bm, Double.NaN );
+                }
+            }
+        }
     }
 }

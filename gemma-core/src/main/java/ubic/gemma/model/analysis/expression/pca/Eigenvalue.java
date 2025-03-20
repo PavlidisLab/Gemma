@@ -18,22 +18,15 @@
  */
 package ubic.gemma.model.analysis.expression.pca;
 
-public class Eigenvalue implements java.io.Serializable {
+import ubic.gemma.model.common.AbstractIdentifiable;
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -6675153115416719020L;
+import java.util.Objects;
+
+public class Eigenvalue extends AbstractIdentifiable {
+
     private Integer componentNumber;
     private Double value;
     private Double varianceFraction;
-    private Long id;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     */
-    public Eigenvalue() {
-    }
 
     public Integer getComponentNumber() {
         return this.componentNumber;
@@ -41,14 +34,6 @@ public class Eigenvalue implements java.io.Serializable {
 
     public void setComponentNumber( Integer componentNumber ) {
         this.componentNumber = componentNumber;
-    }
-
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
     }
 
     public Double getValue() {
@@ -69,10 +54,7 @@ public class Eigenvalue implements java.io.Serializable {
 
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
+        return Objects.hash( componentNumber, value, varianceFraction );
     }
 
     @Override
@@ -84,7 +66,13 @@ public class Eigenvalue implements java.io.Serializable {
             return false;
         }
         final Eigenvalue that = ( Eigenvalue ) object;
-        return this.id != null && that.getId() != null && this.id.equals( that.getId() );
+        if ( this.getId() != null && that.getId() != null ) {
+            return this.getId().equals( that.getId() );
+        } else {
+            return Objects.equals( componentNumber, that.componentNumber )
+                    && Objects.equals( value, that.value )
+                    && Objects.equals( varianceFraction, that.varianceFraction );
+        }
     }
 
     public static final class Factory {

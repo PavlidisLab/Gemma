@@ -50,7 +50,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.io.File;
 import java.io.InputStream;
@@ -163,13 +163,13 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         assertNotNull( ds2 );
         assertNotNull( ds3 );
 
-        ds1 = experimentService.thawLite( ds1 );
-        ds2 = experimentService.thawLite( ds2 );
-        ds3 = experimentService.thawLite( ds3 );
+        ds1 = experimentService.thaw( ds1 );
+        ds2 = experimentService.thaw( ds2 );
+        ds3 = experimentService.thaw( ds3 );
 
-        processedExpressionDataVectorService.computeProcessedExpressionData( ds1 );
-        processedExpressionDataVectorService.computeProcessedExpressionData( ds2 );
-        processedExpressionDataVectorService.computeProcessedExpressionData( ds3 );
+        processedExpressionDataVectorService.createProcessedDataVectors( ds1, true );
+        processedExpressionDataVectorService.createProcessedDataVectors( ds2, true );
+        processedExpressionDataVectorService.createProcessedDataVectors( ds3, true );
 
         /*
          * Delete the experimental design (which came with the GEO import) and reload. the new designs have been
@@ -346,7 +346,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
                 case "GUK1":
                     found[7] = true;
                     foundTests++;
-                    assertEquals( this.logComponentResults( r, gene ), 2.820089e-06, r.getMetaPvalue(), 1e-8 );
+                    assertEquals( this.logComponentResults( r, gene ), 1.65675107E-6, r.getMetaPvalue(), 1e-8 );
                     break;
                 case "KXD1":
                     foundTests++;
@@ -413,20 +413,20 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
 
         assertNotNull( differentialExpressionResultService.find( g ) );
         assertNotNull(
-                differentialExpressionResultService.find( g, EntityUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ) ) );
+                differentialExpressionResultService.find( g, IdentifiableUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ) ) );
         assertNotNull( differentialExpressionResultService
-                .find( EntityUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ), 0.05, 10 ) );
+                .find( IdentifiableUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ), 0.05, 10 ) );
         assertNotNull( differentialExpressionResultService.find( g, 0.05, 10 ) );
 
         assertTrue( !differentialExpressionResultService.find( g ).isEmpty() );
-        assertTrue( !differentialExpressionResultService.find( g, EntityUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ) )
+        assertTrue( !differentialExpressionResultService.find( g, IdentifiableUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ) )
                 .isEmpty() );
         assertTrue( !differentialExpressionResultService
-                .find( EntityUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ), 0.05, 10 ).isEmpty() );
+                .find( IdentifiableUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ), 0.05, 10 ).isEmpty() );
         assertTrue( !differentialExpressionResultService.find( g, 0.05, 10 ).isEmpty() );
 
         Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> analysesByExperiment = differentialExpressionAnalysisService
-                .getAnalysesByExperiment( EntityUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ) );
+                .getAnalysesByExperiment( IdentifiableUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ) );
 
         Collection<DiffExResultSetSummaryValueObject> resultSets = new HashSet<>();
         for ( ExpressionExperimentDetailsValueObject evo : analysesByExperiment.keySet() ) {
@@ -544,7 +544,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
     private DifferentialExpressionAnalysisConfig getConfig( ExpressionExperiment ee ) {
         DifferentialExpressionAnalysisConfig config1 = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
-        config1.setFactorsToInclude( factors );
+        config1.addFactorsToInclude( factors );
         config1.setModerateStatistics( false );
         return config1;
     }

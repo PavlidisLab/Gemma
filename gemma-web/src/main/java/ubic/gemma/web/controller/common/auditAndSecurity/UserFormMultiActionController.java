@@ -23,6 +23,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.security.core.Authentication;
@@ -33,15 +34,19 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.core.util.MailEngine;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.util.JsonUtil;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -67,6 +72,12 @@ public class UserFormMultiActionController extends BaseController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private MailEngine mailEngine;
+
+    @Autowired
+    private ServletContext servletContext;
+
     /**
      * Entry point for updates.
      */
@@ -74,7 +85,7 @@ public class UserFormMultiActionController extends BaseController {
     public void editUser( @RequestParam("email") String email, @RequestParam("password") String password,
             @RequestParam("passwordConfirm") String passwordConfirm, @RequestParam("oldPassword") String oldPassword,
             @RequestParam("username") String originalUserName,
-            HttpServletRequest request, HttpServletResponse response ) throws Exception {
+            HttpServletResponse response ) throws Exception {
 
         /*
          * I had this idea we could let users change their user names, but this turns out to be a PITA.
@@ -118,7 +129,7 @@ public class UserFormMultiActionController extends BaseController {
                 userManager.updateUser( user );
             }
 
-            saveMessage( request, "Changes saved." );
+            messageUtil.saveMessage( "Changes saved." );
             JsonUtil.writeToResponse( new JSONObject().put( "success", true ), response );
 
         } catch ( Exception e ) {
@@ -211,16 +222,28 @@ public class UserFormMultiActionController extends BaseController {
         try {
             Map<String, Object> model = new HashMap<>();
             model.put( "password", password );
-            model.put( "message", getText( "login.passwordReset.emailMessage", request.getLocale() ) );
+            model.put( "message", messageSource.getMessage( "login.passwordReset.emailMessage", null, request.getLocale() ) );
 
-            this.sendConfirmationEmail( request, token, username, email, model, "passwordReset.vm" );
+            this.sendConfirmationEmail( token, username, email, model, "passwordReset.vm" );
 
-            saveMessage( request,
-                    getText( "login.passwordReset", new Object[] { username, email }, request.getLocale() ) );
+            messageUtil.saveMessage( "login.passwordReset", new Object[] { username, email }, "??login.passwordReset??" );
         } catch ( Exception e ) {
             throw new RuntimeException( "Couldn't send password change confirmation email to " + email, e );
         }
 
     }
 
+    private void sendConfirmationEmail( String token, String username, String email, Map<String, Object> model, String templateName ) {
+        Locale locale = LocaleContextHolder.getLocale();
+        try {
+            model.put( "username", username );
+            model.put( "confirmLink",
+                    Settings.getHostUrl() + servletContext.getContextPath() + "/confirmRegistration.html?key=" + token + "&username=" + username );
+
+            mailEngine.sendMessage( username + "<" + email + ">", this.messageSource.getMessage( "signup.email.subject", null, locale ), templateName, model );
+
+        } catch ( Exception e ) {
+            log.error( "Couldn't send email to " + email, e );
+        }
+    }
 }

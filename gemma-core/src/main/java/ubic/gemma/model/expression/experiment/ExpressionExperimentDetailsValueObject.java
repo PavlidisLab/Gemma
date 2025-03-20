@@ -70,7 +70,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private Boolean isRNASeq = false;
     private String lastArrayDesignUpdateDate;
     private String linkAnalysisEventType;
-    private Double minPvalue;
     private String missingValueAnalysisEventType;
     private Long numAnnotations;
     private Long numPopulatedFactors;
@@ -244,10 +243,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     public String getLinkAnalysisEventType() {
         return this.linkAnalysisEventType;
-    }
-
-    public Double getMinPvalue() {
-        return this.minPvalue;
     }
 
     public String getMissingValueAnalysisEventType() {
@@ -528,10 +523,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     public void setLinkAnalysisEventType( String linkAnalysisEventType ) {
         this.linkAnalysisEventType = linkAnalysisEventType;
-    }
-
-    public void setMinPvalue( Double minPvalue ) {
-        this.minPvalue = minPvalue;
     }
 
     public void setMissingValueAnalysisEventType( String missingValueAnalysisEventType ) {

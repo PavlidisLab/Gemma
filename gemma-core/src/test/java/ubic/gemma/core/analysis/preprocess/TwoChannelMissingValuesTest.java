@@ -22,8 +22,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataBooleanMatrix;
+import ubic.gemma.core.datastructure.matrix.TwoChannelExpressionDataMatrixBuilder;
 import ubic.gemma.core.loader.expression.geo.*;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
@@ -49,7 +49,8 @@ import static org.junit.Assert.*;
  */
 public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
 
-    private GeoConverter gc = new GeoConverterImpl();
+    @Autowired
+    private GeoConverter gc;
 
     @Autowired
     private TwoChannelMissingValues tcmv;
@@ -81,14 +82,12 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         BioAssayDimension dim = calls.iterator().next().getBioAssayDimension();
 
         // Spot check the results. For sample ME-TMZ, ID #27 should be 'true' and 26 should be false.
-        ByteArrayConverter bac = new ByteArrayConverter();
 
         boolean foundA = false;
         boolean foundB = false;
         for ( DesignElementDataVector vector : calls ) {
             if ( vector.getDesignElement().getName().equals( "26" ) ) {
-                byte[] dat = vector.getData();
-                boolean[] row = bac.byteArrayToBooleans( dat );
+                boolean[] row = vector.getDataAsBooleans();
                 int i = 0;
                 for ( BioAssay bas : dim.getBioAssays() ) {
                     if ( bas.getName().equals( "expression array ME-TMZ" ) ) {
@@ -99,8 +98,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
                 }
             }
             if ( vector.getDesignElement().getName().equals( "27" ) ) {
-                byte[] dat = vector.getData();
-                boolean[] row = bac.byteArrayToBooleans( dat );
+                boolean[] row = vector.getDataAsBooleans();
                 int i = 0;
                 for ( BioAssay bas : dim.getBioAssays() ) {
                     if ( bas.getName().equals( "expression array ME-TMZ" ) ) {
@@ -137,7 +135,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         expExp = persisterHelper.persist( expExp, persisterHelper.prepare( expExp ) );
         Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
 
-        assertEquals( 30, calls.size() );
+        assertEquals( 20, calls.size() );
 
     }
 
@@ -183,7 +181,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
 
         assertTrue( hasNewQT );
 
-        ExpressionDataMatrixBuilder builder = new ExpressionDataMatrixBuilder( calls );
+        TwoChannelExpressionDataMatrixBuilder builder = new TwoChannelExpressionDataMatrixBuilder( calls );
 
         ExpressionDataBooleanMatrix missingValues = builder.getMissingValueData();
         assertTrue( missingValues.getQuantitationTypes().iterator().next().getDescription()
@@ -237,7 +235,6 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
      */
     @SuppressWarnings("unused")
     private void print( Collection<RawExpressionDataVector> calls ) {
-        ByteArrayConverter bac = new ByteArrayConverter();
         BioAssayDimension dim = calls.iterator().next().getBioAssayDimension();
 
         System.err.print( "\n" );
@@ -247,8 +244,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         System.err.print( "\n" );
         for ( DesignElementDataVector vector : calls ) {
             System.err.print( vector.getDesignElement() );
-            byte[] dat = vector.getData();
-            boolean[] row = bac.byteArrayToBooleans( dat );
+            boolean[] row = vector.getDataAsBooleans();
             for ( boolean b : row ) {
                 System.err.print( "\t" + b );
             }

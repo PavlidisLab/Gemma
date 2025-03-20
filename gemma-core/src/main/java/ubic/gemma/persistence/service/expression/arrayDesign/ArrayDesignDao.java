@@ -21,6 +21,7 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by tesarst on 13/03/17.
@@ -61,7 +62,17 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
 
     Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign );
 
+    /**
+     * Obtain all the genes associated to the platform.
+     */
     Collection<Gene> getGenes( ArrayDesign arrayDesign );
+
+    /**
+     * Obtain all the genes associated to the platform organized by corresponding design elements.
+     */
+    Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( ArrayDesign arrayDesign );
+
+    Map<CompositeSequence, Set<Gene>> getGenesByCompositeSequence( Collection<ArrayDesign> arrayDesign );
 
     Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
 
@@ -139,6 +150,8 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
 
     /**
      * Lightly thaw the given platform.
+     * <p>
+     * This includes all the to-one relations, but not the design elements.
      */
     void thawLite( ArrayDesign arrayDesign );
 
@@ -146,6 +159,11 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
      * Thaw the given platform as per {@link #thawLite(ArrayDesign)} with its probes and genes.
      */
     void thaw( ArrayDesign arrayDesign );
+
+    /**
+     * Only thaw the design elements of a given platform.
+     */
+    void thawCompositeSequences( ArrayDesign arrayDesign );
 
     boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
 

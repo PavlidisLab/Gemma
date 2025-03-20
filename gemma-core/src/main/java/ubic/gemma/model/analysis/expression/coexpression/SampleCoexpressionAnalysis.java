@@ -30,21 +30,9 @@ import javax.persistence.Transient;
  */
 public class SampleCoexpressionAnalysis extends SingleExperimentAnalysis {
 
-    private static final long serialVersionUID = 5006465967597402551L;
-
     private SampleCoexpressionMatrix fullCoexpressionMatrix;
     @Nullable
     private SampleCoexpressionMatrix regressedCoexpressionMatrix;
-
-    protected SampleCoexpressionAnalysis() {
-    }
-
-    public SampleCoexpressionAnalysis( BioAssaySet experimentAnalyzed, SampleCoexpressionMatrix fullCoexpressionMatrix,
-            @Nullable SampleCoexpressionMatrix regressedCoexpressionMatrix ) {
-        super( experimentAnalyzed );
-        this.fullCoexpressionMatrix = fullCoexpressionMatrix;
-        this.regressedCoexpressionMatrix = regressedCoexpressionMatrix;
-    }
 
     /**
      * Note that since you get a full square matrix, all correlations are represented twice, and values on the main
@@ -78,5 +66,31 @@ public class SampleCoexpressionAnalysis extends SingleExperimentAnalysis {
     @Transient
     public SampleCoexpressionMatrix getBestCoexpressionMatrix() {
         return regressedCoexpressionMatrix != null ? regressedCoexpressionMatrix : fullCoexpressionMatrix;
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object )
+            return true;
+        if ( !( object instanceof SampleCoexpressionAnalysis ) )
+            return false;
+        SampleCoexpressionAnalysis that = ( SampleCoexpressionAnalysis ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return this.getId().equals( that.getId() );
+        } else {
+            return false;
+        }
+    }
+
+    public static class Factory {
+
+        public static SampleCoexpressionAnalysis newInstance( BioAssaySet experimentAnalyzed, SampleCoexpressionMatrix fullCoexpressionMatrix,
+                @Nullable SampleCoexpressionMatrix regressedCoexpressionMatrix ) {
+            SampleCoexpressionAnalysis analysis = new SampleCoexpressionAnalysis();
+            analysis.setExperimentAnalyzed( experimentAnalyzed );
+            analysis.setFullCoexpressionMatrix( fullCoexpressionMatrix );
+            analysis.setRegressedCoexpressionMatrix( regressedCoexpressionMatrix );
+            return analysis;
+        }
     }
 }

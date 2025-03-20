@@ -28,7 +28,6 @@ import ubic.gemma.core.loader.util.fetcher.HttpFetcher;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
-import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
@@ -75,7 +74,7 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void doWork() throws Exception {
+    protected void doAuthenticatedWork() throws Exception {
         NCBIGene2GOAssociationLoader gene2GOAssLoader = new NCBIGene2GOAssociationLoader();
         gene2GOAssLoader.setPersisterHelper( persisterHelper );
 
@@ -85,21 +84,19 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractAuthenticatedCLI {
 
         HttpFetcher fetcher = new HttpFetcher();
 
-        Collection<LocalFile> files;
+        Collection<File> files;
         if ( filePath != null ) {
             File f = new File( filePath );
             if ( !f.canRead() ) {
                 throw new IOException( "Cannot read from " + filePath );
             }
             files = new HashSet<>();
-            LocalFile lf = LocalFile.Factory.newInstance();
-            lf.setLocalURL( f.toURI() );
-            files.add( lf );
+            files.add( f );
         } else {
             files = fetcher.fetch( "ftp://ftp.ncbi.nih.gov/gene/DATA/" + NCBIGene2GOAssociationLoaderCLI.GENE2GO_FILE );
         }
         assert files.size() == 1;
-        LocalFile gene2Gofile = files.iterator().next();
+        File gene2Gofile = files.iterator().next();
         log.info( "Removing all old GO associations" );
         gene2GOAssociationService.removeAll();
 

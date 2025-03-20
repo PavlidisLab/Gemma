@@ -33,6 +33,7 @@ import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
+import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
@@ -47,16 +48,15 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisServiceImpl;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import java.io.File;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 import static org.junit.Assert.*;
@@ -123,7 +123,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
-        config.setFactorsToInclude( factors );
+        config.addFactorsToInclude( factors );
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, config );
         assertFalse( analyses.isEmpty() );
@@ -153,7 +153,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         ExperimentalFactor subsetFactor = factors[1];
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFactorsToInclude( factorsToUse );
+        config.addFactorsToInclude( factorsToUse );
         config.setSubsetFactor( subsetFactor );
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, config );
@@ -171,7 +171,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assertNotNull( ee.getId() );
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
-        config.setFactorsToInclude( factors );
+        config.addFactorsToInclude( factors );
         config.addInteractionToInclude( factors );
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, config );
@@ -186,7 +186,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         aclTestUtils.checkLacksAces( analysis );
         aclTestUtils.checkHasAclParent( analysis, ee );
 
-        long numVectors = expressionExperimentService.getDesignElementDataVectorCount( ee );
+        long numVectors = expressionExperimentService.getRawDataVectorCount( ee );
         assertEquals( 100L, numVectors );
 
         for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
@@ -201,18 +201,19 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         for ( ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
             this.arrayDesignAnnotationService.deleteExistingFiles( ad );
         }
-        Collection<File> outputLocations = expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, true );
+        Collection<LockedPath> outputLocations = expressionDataFileService.writeOrLocateDiffExpressionDataFiles( ee, true );
 
         assertEquals( 1, outputLocations.size() );
 
-        File outputLocation = outputLocations.iterator().next();
+        Path outputLocation = outputLocations.iterator().next()
+                .closeAndGetPath();
 
         // NOte that this reader generally won't work for experiment files because of the gene annotations.
         DoubleMatrixReader r = new DoubleMatrixReader();
 
-        assertTrue( outputLocation.canRead() );
+        assertTrue( Files.exists( outputLocation ) );
 
-        DoubleMatrix<String, String> readIn = r.read( outputLocation.getAbsolutePath() );
+        DoubleMatrix<String, String> readIn = r.read( outputLocation.toAbsolutePath().toString() );
 
         assertTrue( readIn.rows() > 0 );
         assertEquals( 9, readIn.columns() );
@@ -239,7 +240,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
             ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
             assumeNoException( e );
         }
-        processedDataVectorService.createProcessedDataVectors( ee );
+        processedDataVectorService.createProcessedDataVectors( ee, false );
 
         ee = expressionExperimentService.thawLite( ee );
         Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
@@ -276,12 +277,10 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
 
-        config.setFactorsToInclude( factors );
+        config.addFactorsToInclude( factors );
         config.setSubsetFactor( subsetFactor );
 
-        HashSet<Collection<ExperimentalFactor>> ifacts = new HashSet<>();
-        ifacts.add( factors );
-        config.setInteractionsToInclude( ifacts );
+        config.addInteractionToInclude( factors );
 
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, config );
@@ -326,7 +325,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         prepareGSE1611();
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
-        config.setFactorsToInclude( factors );
+        config.addFactorsToInclude( factors );
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, config );
         for ( DifferentialExpressionAnalysis analysis : analyses ) {
@@ -382,14 +381,15 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         // analyze
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
-        config.setFactorsToInclude( factors );
+        config.addFactorsToInclude( factors );
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, config );
         assertFalse( analyses.isEmpty() );
 
         // this triggers an error?
-        expressionDataFileService.writeDiffExArchiveFile( ee, analyses.iterator().next(), config );
-
+        try ( LockedPath lockedPath = expressionDataFileService.writeDiffExAnalysisArchiveFile( analyses.iterator().next(), config ) ) {
+            assertNotNull( lockedPath.getPath() );
+        }
     }
 
     private void prepareGSE1611() throws Exception {
@@ -406,7 +406,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         assertEquals( 2, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
-        assertEquals( 100, processedDataVectorService.createProcessedDataVectors( ee ) );
+        assertEquals( 100, processedDataVectorService.createProcessedDataVectors( ee, false ) );
         ee = expressionExperimentService.thawLite( ee );
         assertEquals( 100, ee.getNumberOfDataVectors().intValue() );
         differentialExpressionAnalyzerService.deleteAnalyses( ee );

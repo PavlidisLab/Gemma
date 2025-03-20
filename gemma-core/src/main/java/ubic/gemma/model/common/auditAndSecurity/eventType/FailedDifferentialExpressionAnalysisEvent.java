@@ -20,9 +20,4 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 public class FailedDifferentialExpressionAnalysisEvent extends NeedsAttentionEvent {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 6904992064998125083L;
-
 }

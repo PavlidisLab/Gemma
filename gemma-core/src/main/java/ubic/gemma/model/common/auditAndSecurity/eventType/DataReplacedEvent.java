@@ -19,17 +19,9 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * <p>
  * Signifies that the data for the experiment was replaced (or filled in) after the experiment was loaded into the
  * system. This is always 'raw' data.
- * </p>
  */
-public class DataReplacedEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -3239733956797015820L;
+public class DataReplacedEvent extends ExpressionExperimentAnalysisEvent {
 
 }

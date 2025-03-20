@@ -1,6 +1,6 @@
 package ubic.gemma.model.expression.experiment;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.search.annotations.Analyze;
 import org.hibernate.search.annotations.Field;
 import ubic.gemma.model.common.description.Characteristic;
@@ -12,11 +12,16 @@ import javax.persistence.Transient;
 import java.util.Comparator;
 import java.util.Objects;
 
+import static org.apache.commons.lang3.StringUtils.stripToNull;
+
 /**
  * A special kind of characteristic that act as a statement.
  * <p>
  * It can relate to up to two other objects, essentially forming two statements. This is a limited form of RDF-style
  * triplet with the main limitation that a given subject can have up to two predicates and objects.
+ * <p>
+ * You can make abstraction of that implementation detail by using {@link #getSubject(int)}, {@link #getPredicate(int)},
+ * {@link #getObject(int)} and {@link #getNumberOfStatements()}.
  * @author poirigui
  */
 public class Statement extends Characteristic {
@@ -33,6 +38,19 @@ public class Statement extends Characteristic {
     public static class Factory {
         public static Statement newInstance() {
             return new Statement();
+        }
+
+        public static Statement newInstance( String category, @Nullable String categoryUri, String subject, @Nullable String subjectUri ) {
+            final Statement entity = new Statement();
+            entity.setCategory( category );
+            entity.setCategoryUri( stripToNull( categoryUri ) );
+            entity.setSubject( subject );
+            entity.setSubjectUri( stripToNull( subjectUri ) );
+            return entity;
+        }
+
+        public static Statement newInstance( Characteristic subject ) {
+            return newInstance( subject.getCategory(), subject.getCategoryUri(), subject.getValue(), subject.getValueUri() );
         }
     }
 
@@ -211,6 +229,77 @@ public class Statement extends Characteristic {
         this.secondObjectUri = secondObjectUri;
     }
 
+    @Nullable
+    @Transient
+    public String getSubject( int index ) {
+        if ( index > 1 ) {
+            throw new UnsupportedOperationException( "Only up to two statements are supported." );
+        }
+        return getSubject();
+    }
+
+    @Nullable
+    @Transient
+    public String getSubjectUri( int index ) {
+        if ( index > 1 ) {
+            throw new UnsupportedOperationException( "Only up to two statements are supported." );
+        }
+        return getSubjectUri();
+    }
+
+    @Nullable
+    @Transient
+    public String getPredicate( int index ) {
+        if ( index == 0 ) {
+            return predicate;
+        } else if ( index == 1 ) {
+            return secondPredicate;
+        } else {
+            throw new UnsupportedOperationException( "Only up to two statements are supported." );
+        }
+    }
+
+    @Nullable
+    @Transient
+    public String getPredicateUri( int index ) {
+        if ( index == 0 ) {
+            return predicateUri;
+        } else if ( index == 1 ) {
+            return secondPredicateUri;
+        } else {
+            throw new UnsupportedOperationException( "Only up to two statements are supported." );
+        }
+    }
+
+    @Nullable
+    @Transient
+    public String getObject( int index ) {
+        if ( index == 0 ) {
+            return object;
+        } else if ( index == 1 ) {
+            return secondObject;
+        } else {
+            throw new UnsupportedOperationException( "Only up to two statements are supported." );
+        }
+    }
+
+    @Nullable
+    @Transient
+    public String getObjectUri( int index ) {
+        if ( index == 0 ) {
+            return objectUri;
+        } else if ( index == 1 ) {
+            return secondObjectUri;
+        } else {
+            throw new UnsupportedOperationException( "Only up to two statements are supported." );
+        }
+    }
+
+    @Transient
+    public int getNumberOfStatements() {
+        return 2;
+    }
+
     @Override
     public boolean equals( Object object ) {
         if ( object == null )
@@ -231,8 +320,6 @@ public class Statement extends Characteristic {
 
     @Override
     public int hashCode() {
-        if ( this.getId() != null )
-            return super.hashCode();
         // don't both hashing labels unless the URI is null
         return super.hashCode() + 31 * Objects.hash(
                 StringUtils.lowerCase( predicateUri != null ? predicateUri : predicate ),

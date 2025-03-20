@@ -18,11 +18,6 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
-public class ArrayDesignMergeEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 8243373027784116451L;
+public class ArrayDesignMergeEvent extends ArrayDesignAnalysisEvent {
 
 }

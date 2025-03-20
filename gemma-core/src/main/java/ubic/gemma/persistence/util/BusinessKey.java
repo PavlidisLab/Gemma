@@ -28,9 +28,11 @@ import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.description.*;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.measurement.Unit;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.AlternateName;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -284,31 +286,6 @@ public class BusinessKey {
         BusinessKey.attachCriteria( queryObject, gene2GOAssociation.getOntologyEntry() );
     }
 
-    public static void addRestrictions( Criteria queryObject, QuantitationType quantitationType ) {
-        queryObject.add( Restrictions.eq( "name", quantitationType.getName() ) );
-
-        queryObject.add( Restrictions.eq( "description", quantitationType.getDescription() ) );
-
-        queryObject.add( Restrictions.eq( "generalType", quantitationType.getGeneralType() ) );
-
-        queryObject.add( Restrictions.eq( "type", quantitationType.getType() ) );
-
-        queryObject.add( Restrictions.eq( "isBackground", quantitationType.getIsBackground() ) );
-
-        if ( quantitationType.getRepresentation() != null )
-            queryObject.add( Restrictions.eq( "representation", quantitationType.getRepresentation() ) );
-
-        if ( quantitationType.getScale() != null )
-            queryObject.add( Restrictions.eq( "scale", quantitationType.getScale() ) );
-
-        queryObject.add( Restrictions.eq( "isBackgroundSubtracted", quantitationType.getIsBackgroundSubtracted() ) );
-
-        queryObject.add( Restrictions.eq( "isPreferred", quantitationType.getIsPreferred() ) );
-
-        queryObject.add( Restrictions.eq( "isNormalized", quantitationType.getIsNormalized() ) );
-
-    }
-
     public static void addRestrictions( Criteria queryObject, Taxon taxon ) {
         BusinessKey.checkValidKey( taxon );
         BusinessKey.attachCriteria( queryObject, taxon );
@@ -560,16 +537,6 @@ public class BusinessKey {
         }
     }
 
-    public static void checkValidKey( ubic.gemma.model.common.description.LocalFile localFile ) {
-        if ( localFile == null || ( localFile.getLocalURL() == null && localFile.getRemoteURL() == null ) ) {
-            if ( localFile != null )
-                BusinessKey.log
-                        .error( "Localfile without valid key: localURL=" + localFile.getLocalURL() + " remoteUrL="
-                                + localFile.getRemoteURL() + " size=" + localFile.getSize() );
-            throw new IllegalArgumentException( "localFile was null or had no valid business keys" );
-        }
-    }
-
     public static void checkValidKey( Unit unit ) {
         if ( unit == null || StringUtils.isBlank( unit.getUnitNameCV() ) ) {
             throw new IllegalArgumentException( unit + " did not have a valid key" );
@@ -793,7 +760,7 @@ public class BusinessKey {
         queryObject.add( Restrictions.sizeEq( "bioAssays", entity.getBioAssays().size() ) );
 
         queryObject.createCriteria( "bioAssays" )
-                .add( Restrictions.in( "id", EntityUtils.getIds( entity.getBioAssays() ) ) );
+                .add( Restrictions.in( "id", IdentifiableUtils.getIds( entity.getBioAssays() ) ) );
 
     }
 }

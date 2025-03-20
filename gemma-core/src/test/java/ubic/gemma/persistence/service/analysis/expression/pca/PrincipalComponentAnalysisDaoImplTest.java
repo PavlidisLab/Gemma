@@ -56,7 +56,7 @@ public class PrincipalComponentAnalysisDaoImplTest extends BaseDatabaseTest {
             pca.getEigenValues().add( ev );
             Eigenvector evc = new Eigenvector();
             evc.setComponentNumber( i );
-            evc.setVector( new byte[0] );
+            evc.setVector( new double[0] );
             pca.getEigenVectors().add( evc );
             ProbeLoading pl = new ProbeLoading();
             pl.setComponentNumber( i );

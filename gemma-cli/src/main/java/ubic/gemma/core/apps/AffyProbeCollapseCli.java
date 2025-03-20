@@ -51,11 +51,6 @@ public class AffyProbeCollapseCli extends ArrayDesignSequenceManipulatingCli {
 
     private String affyProbeFileName;
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "affyCollapse";
@@ -82,13 +77,8 @@ public class AffyProbeCollapseCli extends ArrayDesignSequenceManipulatingCli {
         affyProbeFileName = commandLine.getOptionValue( "affyProbeFile" );
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
-     */
     @Override
-    protected void doWork() throws IOException {
+    protected void doAuthenticatedWork() throws IOException {
 
         // parse
         AffyProbeReader apr = new AffyProbeReader();
@@ -99,7 +89,7 @@ public class AffyProbeCollapseCli extends ArrayDesignSequenceManipulatingCli {
 
             BioSequence collapsed = SequenceManipulation.collapse( apr.get( newCompositeSequence ) );
             String sequenceName = newCompositeSequence.getName() + "_collapsed";
-            System.out.println( ">" + newCompositeSequence.getName() + "\t" + sequenceName + "\n" + collapsed.getSequence() + "\n" );
+            getCliContext().getOutputStream().println( ">" + newCompositeSequence.getName() + "\t" + sequenceName + "\n" + collapsed.getSequence() + "\n" );
         }
     }
 

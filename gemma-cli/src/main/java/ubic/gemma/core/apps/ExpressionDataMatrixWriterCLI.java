@@ -22,15 +22,28 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
+import ubic.gemma.core.util.OptionsUtils;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.zip.GZIPOutputStream;
+
+import static ubic.gemma.core.util.OptionsUtils.addEnumOption;
 
 /**
  * Prints preferred data matrix to a file.
@@ -42,8 +55,11 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     @Autowired
     private ExpressionDataFileService fs;
 
-    private boolean filter = false;
-    private String outFileName = null;
+    @Nullable
+    private ScaleType scaleType;
+    @Nullable
+    private Path outputFile;
+    private boolean filter;
 
     @Override
     public String getCommandName() {
@@ -52,28 +68,27 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
     @Override
     public String getShortDesc() {
-        return "Prints preferred data matrix to a file; gene information is included if available.";
+        return "Write processed data matrix to a file; gene information is included if available.";
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
-        options.addOption( Option.builder( "o" ).longOpt( "outputFileName" ).desc( "File name. If omitted, the file name will be based on the short name of the experiment." ).argName( "filename" ).hasArg().build() );
+    protected void buildExperimentOptions( Options options ) {
+        options.addOption( Option.builder( "o" ).longOpt( "outputFileName" ).desc( "File name. If omitted, the file name will be based on the short name of the experiment." ).argName( "filename" ).hasArg().type( Path.class ).build() );
         options.addOption( "filter", "Filter expression matrix under default parameters" );
+        addEnumOption( options, "scaleType", "scale-type", "Scale type to use for the output", ScaleType.class );
+        addForceOption( options );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
-        outFileName = commandLine.getOptionValue( 'o' );
-        if ( commandLine.hasOption( "filter" ) ) {
-            filter = true;
-        }
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
+        scaleType = OptionsUtils.getEnumOptionValue( commandLine, "scaleType", ScaleType.class );
+        outputFile = commandLine.getParsedOptionValue( 'o' );
+        filter = commandLine.hasOption( "filter" );
     }
 
     @Override
     protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
-        if ( expressionExperiments.size() > 1 && StringUtils.isNotBlank( outFileName ) ) {
+        if ( outputFile != null ) {
             throw new IllegalArgumentException( "Output file name can only be used for single experiment output" );
         }
         super.processBioAssaySets( expressionExperiments );
@@ -81,17 +96,28 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
-        String fileName;
-        if ( StringUtils.isNotBlank( outFileName ) ) {
-            fileName = outFileName;
+        Path fileName;
+        if ( outputFile != null ) {
+            fileName = outputFile;
         } else {
-            fileName = FileTools.cleanForFileName( ee.getShortName() ) + ".txt";
+            fileName = Paths.get( ExpressionDataFileUtils.getDataOutputFilename( ee, filter, ExpressionDataFileUtils.TABULAR_BULK_DATA_FILE_SUFFIX ) );
         }
-        try {
-            fs.writeProcessedExpressionDataFile( ee, filter, fileName, false )
-                    .orElseThrow( () -> new RuntimeException( "No processed expression data vectors to write." ) );
-        } catch ( IOException e ) {
+        try ( Writer writer = new OutputStreamWriter( openOutputFile( fileName, isForce() ), StandardCharsets.UTF_8 ) ) {
+            int written = fs.writeProcessedExpressionData( ee, filter, scaleType, writer );
+            addSuccessObject( ee, "Wrote " + written + " vectors to " + fileName + "." );
+        } catch ( IOException | FilteringException e ) {
             throw new RuntimeException( e );
+        }
+    }
+
+    private OutputStream openOutputFile( Path fileName, boolean overwriteExisting ) throws IOException {
+        if ( !overwriteExisting && Files.exists( fileName ) ) {
+            throw new RuntimeException( fileName + " already exists, use -force/--force to override." );
+        }
+        if ( fileName.toString().endsWith( ".gz" ) ) {
+            return new GZIPOutputStream( Files.newOutputStream( fileName ) );
+        } else {
+            return Files.newOutputStream( fileName );
         }
     }
 }

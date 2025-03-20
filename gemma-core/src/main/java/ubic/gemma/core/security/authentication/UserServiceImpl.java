@@ -20,7 +20,8 @@ import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
 import gemma.gsec.acl.domain.AclService;
 import gemma.gsec.authentication.UserExistsException;
 import gemma.gsec.util.SecurityUtil;
-import org.apache.commons.lang.StringUtils;
+import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
@@ -34,6 +35,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.UserGroupDao;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 
@@ -41,7 +43,10 @@ import static java.util.Objects.requireNonNull;
  * @author pavlidis
  */
 @Service
+@CommonsLog
 public class UserServiceImpl implements UserService {
+
+    private static final String ADMINISTRATOR_USER_NAME = "administrator";
 
     @Autowired
     private UserDao userDao;
@@ -61,12 +66,12 @@ public class UserServiceImpl implements UserService {
         group = requireNonNull( userGroupDao.load( group.getId() ) );
         for ( gemma.gsec.model.GroupAuthority ga : group.getAuthorities() ) {
             if ( ga.getAuthority().equals( authority ) ) {
+                log.warn( "Group already has authority '" + authority + "', ignoring." );
                 return;
             }
         }
-        GroupAuthority ga = GroupAuthority.Factory.newInstance();
-        ga.setAuthority( authority );
-        group.getAuthorities().add( ga );
+        ( ( UserGroup ) group ).getAuthorities().add( GroupAuthority.Factory.newInstance( authority ) );
+        // will be created in cascade
         update( group );
     }
 
@@ -76,7 +81,7 @@ public class UserServiceImpl implements UserService {
         group = requireNonNull( userGroupDao.load( group.getId() ) );
         user = requireNonNull( userDao.load( user.getId() ) );
         // add user to list of members
-        group.getGroupMembers().add( user );
+        ( ( UserGroup ) group ).getGroupMembers().add( ( User ) user );
     }
 
     @Override
@@ -138,14 +143,16 @@ public class UserServiceImpl implements UserService {
             throw new AccessDeniedException( "Only administrator or owner of a group can remove it" );
         }
 
-        String authority = securityService.getGroupAuthorityNameFromGroupName( groupName );
+        List<String> authority = securityService.getGroupAuthoritiesNameFromGroupName( groupName );
 
-        this.userGroupDao.remove( ( ubic.gemma.model.common.auditAndSecurity.UserGroup ) group );
+        this.userGroupDao.remove( ( UserGroup ) group );
 
         /*
          * clean up acls that use this group...do that last!
          */
-        aclService.deleteSid( new AclGrantedAuthoritySid( authority ) );
+        for ( String a : authority ) {
+            aclService.deleteSid( new AclGrantedAuthoritySid( a ) );
+        }
     }
 
     @Override
@@ -219,8 +226,7 @@ public class UserServiceImpl implements UserService {
         String userName = user.getUserName();
         String groupName = group.getName();
 
-        if ( AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME.equals( userName )
-                && AuthorityConstants.ADMIN_GROUP_NAME.equals( groupName ) ) {
+        if ( ADMINISTRATOR_USER_NAME.equals( userName ) && AuthorityConstants.ADMIN_GROUP_NAME.equals( groupName ) ) {
             throw new IllegalArgumentException( "You cannot remove the administrator from the ADMIN group!" );
         }
 

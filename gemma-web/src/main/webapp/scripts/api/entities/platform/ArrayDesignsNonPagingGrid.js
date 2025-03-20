@@ -268,7 +268,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext
                         }
                      } );
                   } else if ( action === 'icon-refresh' ) {
-                     updateArrayDesignReport( record.id, grid ); // function in arrayDesign.js
+                     Gemma.ArrayDesign.updateArrayDesignReport( record.id, grid ); // function in arrayDesign.js
                   }
                },
                // You can cancel the action by returning false from this
@@ -324,7 +324,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext
                                  dataIndex : 'name',
                                  width : 0.3, // viewConfig.forceFit resizes based on relative widths,
                                  renderer : function( value, metaData, record, rowIndex, colIndex, store ) {
-                                    return (value && record) ? '<a target="_blank" href="' + ctxBasePath
+                                    return (value && record) ? '<a target="_blank" href="' + Gemma.CONTEXT_PATH
                                        + '/arrays/showArrayDesign.html?id=' + record.id + '">' + value + '</a>' : '';
                                  }
                               },
@@ -347,22 +347,22 @@ Gemma.ArrayDesignsNonPagingGrid = Ext
                                     if ( record.get( 'isMerged' ) ) {
                                        statusString += '<img title="'
                                           + Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.isMergedTT + '"'
-                                          + ' src="' + ctxBasePath + '/images/icons/merging_result.png"/>&nbsp;';
+                                          + ' src="' + Gemma.CONTEXT_PATH + '/images/icons/merging_result.png"/>&nbsp;';
                                     }
                                     if ( record.get( 'isMergee' ) ) {
                                        statusString += '<img title="'
                                           + Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.isMergeeTT + '"'
-                                          + ' src="' + ctxBasePath + '/images/icons/arrow_merge.png"/>&nbsp;';
+                                          + ' src="' + Gemma.CONTEXT_PATH + '/images/icons/arrow_merge.png"/>&nbsp;';
                                     }
                                     if ( record.get( 'isSubsumed' ) ) {
                                        statusString += '<img title="'
                                           + Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.isSubsumedTT + '"'
-                                          + ' src="' + ctxBasePath + '/images/icons/subsumed.png"/>&nbsp;';
+                                          + ' src="' + Gemma.CONTEXT_PATH + '/images/icons/subsumed.png"/>&nbsp;';
                                     }
                                     if ( record.get( 'isSubsumer' ) ) {
                                        statusString += '<img title="'
                                           + Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.isSubsumerTT + '"'
-                                          + ' src="' + ctxBasePath + '/images/icons/subsumer.png"/>';
+                                          + ' src="' + Gemma.CONTEXT_PATH + '/images/icons/subsumer.png"/>';
                                     }
                                     if (record.get('isAffymetrixAltCdf')) {
                                         statusString += '&nbsp;<i class="orange fa fa-exclamation-circle fa-lg" ext:qtip="'
@@ -539,7 +539,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext
                      ref : 'fieldClearBtn',
                      disabled : true,
                      tooltip : 'Clear your search',
-                     icon : ctxBasePath + '/images/icons/cross.png',
+                     icon : Gemma.CONTEXT_PATH + '/images/icons/cross.png',
                      handler : function() {
                         this.clearFilter();
                      },
@@ -547,7 +547,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext
                   }, '-', {
                      ref : 'refreshButton',
                      text : 'Refresh',
-                     icon : ctxBasePath + '/images/icons/arrow_refresh_small.png',
+                     icon : Gemma.CONTEXT_PATH + '/images/icons/arrow_refresh_small.png',
                      tooltip : 'Refresh the contents of this table',
                      handler : function() {
                         this.clearFilter();
@@ -760,7 +760,7 @@ Gemma.ArrayDesignsSummaryWindow = Ext
             }.createDelegate( this ) );
          },
          tpl : '<a href="'
-            + ctxBasePath
+            + Gemma.CONTEXT_PATH
             + '/arrays/generateArrayDesignSummary.html" onclick="return confirm(\'Regenerate report for all platforms?\');">Regenerate this report</a><br><br>'
             + Gemma.Widget.tpl.ArrayDesignsNonPagingGrid.rowDetails,
          padding : 7,

@@ -1,34 +1,25 @@
 package ubic.gemma.core.security.authentication;
 
-import gemma.gsec.authentication.UserDetailsImpl;
+import gemma.gsec.authentication.GroupManager;
+import gemma.gsec.authentication.UserDetailsManager;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.Set;
 
 /**
  * Overrides gsec's UserManager to provide Gemma-specific types.
  * @author poirigui
  */
-public interface UserManager extends gemma.gsec.authentication.UserManager {
+public interface UserManager extends UserDetailsManager, GroupManager {
 
-    @Override
     @Secured({ "GROUP_USER", "RUN_AS_ADMIN" })
     User findByEmail( String s ) throws UsernameNotFoundException;
 
-    @Override
-    @Secured({ "GROUP_USER", "RUN_AS_ADMIN" })
-    gemma.gsec.model.User findbyEmail( String emailAddress );
-
-    @Override
     User findByUserName( String s ) throws UsernameNotFoundException;
-
-    @Override
-    UserGroup findGroupByName( String s );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_USER" })
@@ -38,10 +29,21 @@ public interface UserManager extends gemma.gsec.authentication.UserManager {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     boolean userWithEmailExists( String emailAddress );
 
-    @Override
+    /**
+     * Obtain the {@link User} corresponding to the currently logged in user.
+     * @return the user, or null if no user is logged in
+     */
+    @Nullable
     User getCurrentUser();
 
+    /**
+     * Obtain the username of the currently logged in user.
+     * <p>
+     * If no user is logged in, the principal of the anonymous authentication token is returned.
+     */
     @Override
+    String getCurrentUsername();
+
     @Secured("GROUP_ADMIN")
     Collection<User> loadAll();
 

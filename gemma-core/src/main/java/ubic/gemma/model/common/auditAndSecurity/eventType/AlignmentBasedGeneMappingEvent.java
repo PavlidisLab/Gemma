@@ -21,12 +21,6 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * Signifies a mapping based on sequence alignment performed by the system.
  */
-public class AlignmentBasedGeneMappingEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent {
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 7667960927701046528L;
+public class AlignmentBasedGeneMappingEvent extends ArrayDesignGeneMappingEvent {
 
 }

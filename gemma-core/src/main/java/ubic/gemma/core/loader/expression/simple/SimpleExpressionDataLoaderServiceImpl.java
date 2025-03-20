@@ -27,7 +27,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
-import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
@@ -179,13 +178,13 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
             }
         }
 
-        if ( usedDesignElements.size() == 0 ) {
+        if ( usedDesignElements.isEmpty() ) {
             throw new IllegalArgumentException( "No design elements matched?" );
         }
 
         SimpleExpressionDataLoaderServiceImpl.log.info( "Found " + rows.size() + " data rows for " + design );
 
-        if ( rows.size() == 0 ) {
+        if ( rows.isEmpty() ) {
             SimpleExpressionDataLoaderServiceImpl.log.warn( "A platform was entered ( " + design
                     + " ) for which there are no matching rows in the data" );
             return null;
@@ -279,9 +278,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
     private BioAssayDimension convertBioAssayDimension( ExpressionExperiment ee, ArrayDesign arrayDesign, Taxon taxon,
             DoubleMatrix<String, String> matrix ) {
 
-        BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
-        bad.setName( "For " + ee.getShortName() );
-        bad.setDescription( "Generated from flat file" );
+        List<BioAssay> bioAssays = new ArrayList<>( matrix.columns() );
         for ( int i = 0; i < matrix.columns(); i++ ) {
             String columnName = matrix.getColName( i );
 
@@ -296,19 +293,17 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
             assay.setSampleUsed( bioMaterial );
             assay.setIsOutlier( false );
             assay.setSequencePairedReads( false );
-            bad.getBioAssays().add( assay );
+            bioAssays.add( assay );
         }
 
-        SimpleExpressionDataLoaderServiceImpl.log.info( "Generated " + bad.getBioAssays().size() + " bioAssays" );
+        SimpleExpressionDataLoaderServiceImpl.log.info( "Generated " + bioAssays.size() + " bioAssays" );
 
-        return bad;
+        return BioAssayDimension.Factory.newInstance( bioAssays );
     }
 
     private Collection<RawExpressionDataVector> convertDesignElementDataVectors(
             ExpressionExperiment expressionExperiment, BioAssayDimension bioAssayDimension, ArrayDesign arrayDesign,
             QuantitationType quantitationType, DoubleMatrix<String, String> matrix ) {
-        ByteArrayConverter bArrayConverter = new ByteArrayConverter();
-
         Collection<RawExpressionDataVector> vectors = new HashSet<>();
 
         Map<String, CompositeSequence> csMap = new HashMap<>();
@@ -317,20 +312,16 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         }
 
         for ( int i = 0; i < matrix.rows(); i++ ) {
-            byte[] bdata = bArrayConverter.doubleArrayToBytes( matrix.getRow( i ) );
-
-            RawExpressionDataVector vector = RawExpressionDataVector.Factory.newInstance();
-            vector.setData( bdata );
-
             CompositeSequence cs = csMap.get( matrix.getRowName( i ) );
             if ( cs == null ) {
                 continue;
             }
+            RawExpressionDataVector vector = RawExpressionDataVector.Factory.newInstance();
             vector.setDesignElement( cs );
             vector.setQuantitationType( quantitationType );
             vector.setExpressionExperiment( expressionExperiment );
             vector.setBioAssayDimension( bioAssayDimension );
-
+            vector.setDataAsDoubles( matrix.getRow( i ) );
             vectors.add( vector );
 
         }
