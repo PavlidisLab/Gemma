@@ -2046,6 +2046,7 @@ public class GeoConverterImpl implements GeoConverter {
     private void convertSeriesTypes( GeoSeries series, ExpressionExperiment expExp ) {
         Set<Characteristic> assayTypes = series.getSeriesTypes().stream()
                 .map( st -> convertSeriesType( series, st ) )
+                .filter(Objects::nonNull)
                 .collect( Collectors.toSet() );
         if ( !assayTypes.isEmpty() ) {
             log.info( String.format( "%s will be tagged with the following assay types: %s.", expExp,
@@ -2089,6 +2090,9 @@ public class GeoConverterImpl implements GeoConverter {
                     }
                 }
                 return Characteristic.Factory.newInstance( Categories.ASSAY, "RNA-seq of coding RNA", "http://www.ebi.ac.uk/efo/EFO_0003738" );
+            default:
+                log.warn("Unsupported GEO series type: " + seriesType);
+                return null;
         }
     }
 
