@@ -277,7 +277,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                     assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
                     assertThat( rawVec.getDataAsDoubles() )
                             .hasSize( 16 )
-                            .containsExactly( 19.927216544784468, 19.927216544784468, 19.927216544784468, 19.927216544784468, 19.927108921133478, 19.927108921133478, 19.927108921133478, 19.927108921133478, 19.925786216730167, 19.925786216730167, 19.925786216730167, 19.925786216730167, 19.925544781696406, 19.925544781696406, 19.925544781696406, 19.925544781696406 );
+                            .containsExactly( 19.92538999439505, 19.92538999439505, 19.92538999439505, 19.92538999439505, 19.9259658630948, 19.9259658630948, 19.9259658630948, 19.9259658630948, 19.92778692878175, 19.92778692878175, 19.92778692878175, 19.92778692878175, 19.928079583244294, 19.928079583244294, 19.928079583244294, 19.928079583244294 );
                 } );
         verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
     }
@@ -368,7 +368,8 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                     assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
                     assertThat( rawVec.getDataAsDoubles() )
                             .hasSize( 16 )
-                            .containsExactly( 19.79085337048598, 19.79085337048598, 19.79085337048598, 19.79085337048598, 19.790524266814366, 19.790524266814366, 19.790524266814366, 19.790524266814366, 19.789332307461518, 19.789332307461518, 19.789332307461518, 19.789332307461518, 19.78913462294074, 19.78913462294074, 19.78913462294074, 19.78913462294074 );
+                            .containsExactly( 19.789357121212962, 19.789357121212962, 19.789357121212962, 19.789357121212962, 19.7895882875424, 19.7895882875424, 19.7895882875424, 19.7895882875424, 19.790970239151374, 19.790970239151374, 19.790970239151374, 19.790970239151374, 19.7912097933244, 19.7912097933244, 19.7912097933244, 19.7912097933244 )
+                    ;
                 } );
         verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
     }
@@ -412,11 +413,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                     assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
                     assertThat( rawVec.getDataAsDoubles() )
                             .hasSize( 16 )
-                            .containsExactly(
-                                    19.929746930992494, 19.929746930992494, 19.929746930992494, 19.929746930992494,
-                                    19.9296592830575, 19.9296592830575, 19.9296592830575, 19.9296592830575,
-                                    19.929304310569375, 19.929304310569375, 19.929304310569375, 19.929304310569375,
-                                    19.92901519935523, 19.92901519935523, 19.92901519935523, 19.92901519935523 );
+                            .containsExactly( 19.9287347434194, 19.9287347434194, 19.9287347434194, 19.9287347434194, 19.929196198277772, 19.929196198277772, 19.929196198277772, 19.929196198277772, 19.93002776164528, 19.93002776164528, 19.93002776164528, 19.93002776164528, 19.930184629445435, 19.930184629445435, 19.930184629445435, 19.930184629445435 );
                 } );
         verify( bioAssayService, times( 2 ) ).update( anyCollection() );
         verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
@@ -458,14 +455,65 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                     assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
                     assertThat( rawVec.getDataAsDoubles() )
                             .hasSize( 16 )
-                            .containsExactly(
-                                    19.927216544784468, 19.927216544784468, 19.927216544784468, 19.927216544784468,
-                                    19.927108921133478, 19.927108921133478, 19.927108921133478, 19.927108921133478,
-                                    19.925786216730167, 19.925786216730167, 19.925786216730167, 19.925786216730167,
-                                    19.925544781696406, 19.925544781696406, 19.925544781696406, 19.925544781696406 );
+                            .containsExactly( 19.92538999439505, 19.92538999439505, 19.92538999439505, 19.92538999439505, 19.9259658630948, 19.9259658630948, 19.9259658630948, 19.9259658630948, 19.92778692878175, 19.92778692878175, 19.92778692878175, 19.92778692878175, 19.928079583244294, 19.928079583244294, 19.928079583244294, 19.928079583244294 );
                 } );
         verify( bioAssayService, times( 2 ) ).update( anyCollection() );
         verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
+    }
+
+    @Test
+    public void testCellsWithNAs() {
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "Counts" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.COUNT );
+        qt.setScale( ScaleType.COUNT );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        List<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( ee, ad, qt );
+        SingleCellDimension dimension = vectors.iterator().next().getSingleCellDimension();
+        // randomly assign cell types
+        CellTypeAssignment cta = createCellTypeAssignment( dimension );
+        dimension.getCellTypeAssignments().add( cta );
+        when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, qt ) )
+                .thenReturn( Optional.of( cta ) );
+        when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
+                .thenReturn( Optional.of( qt ) );
+        when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
+                .thenReturn( vectors );
+
+        // rewrite specific cell types as NAs for a specific de
+        SingleCellExpressionDataVector vec = vectors.stream()
+                .filter( v -> v.getDesignElement().getName().equals( "cs1" ) )
+                .findAny()
+                .orElse( null );
+        assertThat( vec ).isNotNull();
+        double[] d = vec.getDataAsDoubles();
+        for ( int i = 0; i < d.length; i++ ) {
+            if ( cta.getCellTypeIndices()[vec.getDataIndices()[i]] == 0 ) {
+                d[i] = Double.NaN;
+            }
+        }
+        vec.setDataAsDoubles( d );
+
+        AggregateConfig config = AggregateConfig.builder().makePreferred( true ).build();
+        QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectorsByCellType( ee, cellBAs, config );
+        assertThat( newQt.getName() ).isEqualTo( "Counts aggregated by cell type (log2cpm)" );
+        assertThat( newQt.getDescription() ).isEqualTo( "Expression data has been aggregated by cell type using SUM. The data was subsequently converted to log2cpm." );
+        assertThat( newQt.getIsPreferred() ).isTrue();
+        ArgumentCaptor<Collection<RawExpressionDataVector>> capt = ArgumentCaptor.captor();
+        verify( expressionExperimentService ).addRawDataVectors( eq( ee ), eq( newQt ), capt.capture() );
+        verify( expressionExperimentService ).addRawDataVectors( eq( ee ), eq( newQt ), capt.capture() );
+        assertThat( capt.getValue() )
+                .hasSameSizeAs( ad.getCompositeSequences() )
+                .anySatisfy( rawVec -> {
+                    assertThat( rawVec.getDesignElement().getName() ).isEqualTo( "cs1" );
+                    assertThat( rawVec.getBioAssayDimension().getBioAssays() )
+                            .hasSize( 4 * 4 );
+                    assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
+                    assertThat( rawVec.getDataAsDoubles() )
+                            .hasSize( 16 )
+                            .containsExactly( Double.NaN, Double.NaN, Double.NaN, Double.NaN, 19.9259658630948, 19.9259658630948, 19.9259658630948, 19.9259658630948, 19.92778692878175, 19.92778692878175, 19.92778692878175, 19.92778692878175, 19.928079583244294, 19.928079583244294, 19.928079583244294, 19.928079583244294 );
+                } );
     }
 
     @Test
@@ -506,11 +554,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                     assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
                     assertThat( rawVec.getDataAsDoubles() )
                             .hasSize( 16 )
-                            .containsExactly(
-                                    19.927216544784468, 19.927216544784468, 19.927216544784468, 19.927216544784468,
-                                    19.927108921133478, 19.927108921133478, 19.927108921133478, 19.927108921133478,
-                                    19.925786216730167, 19.925786216730167, 19.925786216730167, 19.925786216730167,
-                                    19.925544781696406, 19.925544781696406, 19.925544781696406, 19.925544781696406 );
+                            .containsExactly( 19.92538999439505, 19.92538999439505, 19.92538999439505, 19.92538999439505, 19.9259658630948, 19.9259658630948, 19.9259658630948, 19.9259658630948, 19.92778692878175, 19.92778692878175, 19.92778692878175, 19.92778692878175, 19.928079583244294, 19.928079583244294, 19.928079583244294, 19.928079583244294 );
                 } );
         verify( bioAssayService ).update( anyCollection() );
         verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
@@ -627,7 +671,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                     assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
                     assertThat( rawVec.getDataAsDoubles() )
                             .hasSize( 12 )
-                            .containsExactly( 19.927216544784468, 19.927216544784468, 19.927216544784468, 19.927216544784468, 19.927108921133478, 19.927108921133478, 19.927108921133478, 19.927108921133478, 19.925786216730167, 19.925786216730167, 19.925786216730167, 19.925786216730167 );
+                            .containsExactly( 19.92538999439505, 19.92538999439505, 19.92538999439505, 19.92538999439505, 19.9259658630948, 19.9259658630948, 19.9259658630948, 19.9259658630948, 19.92778692878175, 19.92778692878175, 19.92778692878175, 19.92778692878175 );
                 } );
         verify( auditTrailService ).addUpdateEvent( eq( ee ), eq( DataAddedEvent.class ), any(), any( String.class ) );
     }

@@ -332,17 +332,21 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
                 int start = getSampleStart( scv, sourceSampleIndex, 0 );
                 int end = getSampleEnd( scv, sourceSampleIndex, start );
                 for ( int k = start; k < end; k++ ) {
+                    double value = getDouble( scrv, k, representation );
+                    if ( Double.isNaN( value ) ) {
+                        continue;
+                    }
                     double unscaledValue;
                     if ( method == SingleCellExpressionAggregationMethod.SUM ) {
-                        unscaledValue = getDouble( scrv, k, representation );
+                        unscaledValue = value;
                     } else if ( method == SingleCellExpressionAggregationMethod.LOG_SUM ) {
-                        unscaledValue = Math.exp( getDouble( scrv, k, representation ) );
+                        unscaledValue = Math.exp( value );
                     } else if ( method == SingleCellExpressionAggregationMethod.LOG1P_SUM ) {
-                        unscaledValue = Math.expm1( getDouble( scrv, k, representation ) );
+                        unscaledValue = Math.expm1( value );
                     } else {
                         throw new UnsupportedOperationException( "Unsupported aggregation method: " + method );
                     }
-                    if ( cellTypeIndex == cta.getIndices()[k] ) {
+                    if ( cellTypeIndex == cta.getIndices()[scv.getDataIndices()[k]] ) {
                         librarySize[i] += unscaledValue;
                     }
                     sourceLibrarySize[sourceSampleIndex] += unscaledValue;
@@ -417,21 +421,31 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
             int start = getSampleStart( scv, sourceSampleIndex, 0 );
             int end = getSampleEnd( scv, sourceSampleIndex, start );
             rv[i] = 0;
+            int numberOfCells = 0;
             for ( int k = start; k < end; k++ ) {
-                if ( cellTypeIndex == cta.getIndices()[k] ) {
+                if ( cellTypeIndex == cta.getIndices()[scv.getDataIndices()[k]] ) {
+                    double val = getDouble( scrv, k, representation );
+                    if ( Double.isNaN( val ) ) {
+                        continue;
+                    }
                     if ( method == SingleCellExpressionAggregationMethod.SUM ) {
-                        rv[i] += getDouble( scrv, k, representation );
+                        rv[i] += val;
                     } else if ( method == SingleCellExpressionAggregationMethod.LOG_SUM ) {
-                        rv[i] += Math.exp( getDouble( scrv, k, representation ) );
+                        rv[i] += Math.exp( val );
                     } else if ( method == SingleCellExpressionAggregationMethod.LOG1P_SUM ) {
-                        rv[i] += Math.expm1( getDouble( scrv, k, representation ) );
+                        rv[i] += Math.expm1( val );
                     } else {
                         throw new UnsupportedOperationException( "Unsupported aggregation method: " + method );
                     }
+                    numberOfCells++;
                 }
             }
 
-            if ( performLog2cpm ) {
+            if ( numberOfCells == 0 ) {
+                // when there are no cells, use NAs
+                rv[i] = Double.NaN;
+            } else if ( performLog2cpm ) {
+                // it's possible that librarySize[i] is zero even if numberOfCells > 0 if all the cells are zero
                 if ( librarySize[i] == 0 ) {
                     // this is technically a 0/0 situation
                     rv[i] = Double.NaN;
