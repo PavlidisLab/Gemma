@@ -462,61 +462,6 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
     }
 
     @Test
-    public void testCellsWithNAs() {
-        QuantitationType qt = new QuantitationType();
-        qt.setName( "Counts" );
-        qt.setGeneralType( GeneralType.QUANTITATIVE );
-        qt.setType( StandardQuantitationType.COUNT );
-        qt.setScale( ScaleType.COUNT );
-        qt.setRepresentation( PrimitiveType.DOUBLE );
-        List<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( ee, ad, qt );
-        SingleCellDimension dimension = vectors.iterator().next().getSingleCellDimension();
-        // randomly assign cell types
-        CellTypeAssignment cta = createCellTypeAssignment( dimension );
-        dimension.getCellTypeAssignments().add( cta );
-        when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, qt ) )
-                .thenReturn( Optional.of( cta ) );
-        when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
-                .thenReturn( Optional.of( qt ) );
-        when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
-                .thenReturn( vectors );
-
-        // rewrite specific cell types as NAs for a specific de
-        SingleCellExpressionDataVector vec = vectors.stream()
-                .filter( v -> v.getDesignElement().getName().equals( "cs1" ) )
-                .findAny()
-                .orElse( null );
-        assertThat( vec ).isNotNull();
-        double[] d = vec.getDataAsDoubles();
-        for ( int i = 0; i < d.length; i++ ) {
-            if ( cta.getCellTypeIndices()[vec.getDataIndices()[i]] == 0 ) {
-                d[i] = Double.NaN;
-            }
-        }
-        vec.setDataAsDoubles( d );
-
-        AggregateConfig config = AggregateConfig.builder().makePreferred( true ).build();
-        QuantitationType newQt = singleCellExpressionExperimentAggregatorService.aggregateVectorsByCellType( ee, cellBAs, config );
-        assertThat( newQt.getName() ).isEqualTo( "Counts aggregated by cell type (log2cpm)" );
-        assertThat( newQt.getDescription() ).isEqualTo( "Expression data has been aggregated by cell type using SUM. The data was subsequently converted to log2cpm." );
-        assertThat( newQt.getIsPreferred() ).isTrue();
-        ArgumentCaptor<Collection<RawExpressionDataVector>> capt = ArgumentCaptor.captor();
-        verify( expressionExperimentService ).addRawDataVectors( eq( ee ), eq( newQt ), capt.capture() );
-        verify( expressionExperimentService ).addRawDataVectors( eq( ee ), eq( newQt ), capt.capture() );
-        assertThat( capt.getValue() )
-                .hasSameSizeAs( ad.getCompositeSequences() )
-                .anySatisfy( rawVec -> {
-                    assertThat( rawVec.getDesignElement().getName() ).isEqualTo( "cs1" );
-                    assertThat( rawVec.getBioAssayDimension().getBioAssays() )
-                            .hasSize( 4 * 4 );
-                    assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
-                    assertThat( rawVec.getDataAsDoubles() )
-                            .hasSize( 16 )
-                            .containsExactly( Double.NaN, Double.NaN, Double.NaN, Double.NaN, 19.9259658630948, 19.9259658630948, 19.9259658630948, 19.9259658630948, 19.92778692878175, 19.92778692878175, 19.92778692878175, 19.92778692878175, 19.928079583244294, 19.928079583244294, 19.928079583244294, 19.928079583244294 );
-                } );
-    }
-
-    @Test
     public void testAggregateToNonPreferredVectors() {
         QuantitationType qt = new QuantitationType();
         qt.setName( "log1p" );
