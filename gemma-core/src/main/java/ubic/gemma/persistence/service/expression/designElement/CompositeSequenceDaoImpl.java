@@ -504,51 +504,6 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         }
     }
 
-    //    @Override
-    //    public CompositeSequence thaw( final CompositeSequence compositeSequence ) {
-    //        if ( compositeSequence == null )
-    //            return null;
-    //        //noinspection unchecked
-    //        HibernateTemplate templ = this.getHibernateTemplate();
-    //        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-    //            @Override
-    //            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-    //                Hibernate.initialize( compositeSequence );
-    //                Hibernate.initialize( compositeSequence.getBiologicalCharacteristic() );
-    //                if ( compositeSequence.getBiologicalCharacteristic() != null ) {
-    //                    Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getTaxon() );
-    //                    if ( compositeSequence.getBiologicalCharacteristic().getTaxon() != null ) {
-    //                        Hibernate
-    //                                .initialize( compositeSequence.getBiologicalCharacteristic().getTaxon().getExternalDatabase() );
-    //                    }
-    //                    Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() );
-    //                    if ( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry() != null ) {
-    //                        Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getSequenceDatabaseEntry()
-    //                                .getExternalDatabase() );
-    //                    }
-    //                    Hibernate.initialize( compositeSequence.getBiologicalCharacteristic().getBioSequence2GeneProduct() );
-    //                    for ( BioSequence2GeneProduct bsgp : compositeSequence.getBiologicalCharacteristic()
-    //                            .getBioSequence2GeneProduct() ) {
-    //                        if ( bsgp != null ) {
-    //                            Hibernate.initialize( bsgp );
-    //                            if ( bsgp.getGeneProduct() != null ) {
-    //                                Hibernate.initialize( bsgp.getGeneProduct() );
-    //                                Hibernate.initialize( bsgp.getGeneProduct().getGene() );
-    //                                if ( bsgp.getGeneProduct().getGene() != null ) {
-    //                                    Hibernate.initialize( bsgp.getGeneProduct().getGene().getAliases() );
-    //                                    Hibernate.initialize( bsgp.getGeneProduct().getGene().getAccessions() );
-    //                                }
-    //                            }
-    //                        }
-    //                    }
-    //                }
-    //                Hibernate.initialize( compositeSequence.getArrayDesign() );
-    //                return compositeSequence;
-    //            }
-    //        } );
-    //
-    //    }
-
     @Override
     public CompositeSequence find( CompositeSequence compositeSequence ) {
 

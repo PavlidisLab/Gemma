@@ -2,6 +2,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.CacheMode;
+import org.hibernate.NonUniqueResultException;
 import org.hibernate.Query;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -541,11 +542,10 @@ public interface ExpressionExperimentDao
     /**
      * Obtain the preferred assignment of the preferred single-cell vectors.
      *
-     * @throws org.springframework.dao.IncorrectResultSizeDataAccessException if there are multiple preferred cell-type
-     *                                                                        labellings
+     * @throws org.hibernate.NonUniqueResultException if there are multiple preferred cell-type labellings
      */
     @Nullable
-    CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee );
+    CellTypeAssignment getPreferredCellTypeAssignment( ExpressionExperiment ee ) throws NonUniqueResultException;
 
     /**
      * Obtain a cell type assignment by ID.

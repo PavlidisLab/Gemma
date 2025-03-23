@@ -20,7 +20,6 @@ package ubic.gemma.core.goldenpath;
 
 import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import ubic.basecode.util.SQLUtils;
 import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
@@ -404,7 +403,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         return this.getJdbcTemplate().query( query, params, new ResultSetExtractor<Collection<Gene>>() {
 
             @Override
-            public Collection<Gene> extractData( ResultSet rs ) throws SQLException, DataAccessException {
+            public Collection<Gene> extractData( ResultSet rs ) throws SQLException {
 
                 Collection<Gene> r = new HashSet<>();
                 while ( rs.next() ) {
@@ -690,7 +689,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         return this.getJdbcTemplate().query( query, params, new ResultSetExtractor<Collection<GeneProduct>>() {
 
             @Override
-            public Collection<GeneProduct> extractData( ResultSet rs ) throws SQLException, DataAccessException {
+            public Collection<GeneProduct> extractData( ResultSet rs ) throws SQLException {
                 Collection<GeneProduct> r = new HashSet<>();
                 while ( rs.next() ) {
 
@@ -788,7 +787,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
         return this.getJdbcTemplate().query( query, params, new ResultSetExtractor<Collection<BlatResult>>() {
             @Override
-            public Collection<BlatResult> extractData( ResultSet rs ) throws SQLException, DataAccessException {
+            public Collection<BlatResult> extractData( ResultSet rs ) throws SQLException {
                 Collection<BlatResult> r = new HashSet<>();
                 while ( rs.next() ) {
 
