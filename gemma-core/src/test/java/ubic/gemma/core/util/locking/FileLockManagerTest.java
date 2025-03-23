@@ -59,7 +59,8 @@ public class FileLockManagerTest {
         try ( LockedPath lock = fileLockManager.acquirePathLock( dir.resolve( "foo" ), false ) ) {
             assertThat( lock.isValid() ).isTrue();
             assertThat( fileLockManager.getAllLockInfos() )
-                    .containsOnlyKeys( dir.resolve( "foo" ) );
+                    .extracting( FileLockInfo::getPath )
+                    .contains( dir.resolve( "foo" ) );
             assertThat( fileLockManager.getLockInfo( dir.resolve( "foo" ) ).getReadLockCount() ).isEqualTo( 1 );
             assertThat( fileLockManager.getLockInfo( dir.resolve( "foo" ) ).isWriteLocked() ).isFalse();
             try ( LockedPath lock2 = fileLockManager.acquirePathLock( dir.resolve( "foo" ), false ) ) {

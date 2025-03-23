@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
 import ubic.gemma.core.util.locking.FileLockInfo;
+import ubic.gemma.core.util.locking.FileLockInfoUtils;
 import ubic.gemma.core.util.locking.FileLockManager;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -99,23 +100,7 @@ public class LockExpressionDataFileCli extends ExpressionExperimentManipulatingC
             p = dataDir.resolve( filename );
         }
         try {
-            FileLockInfo lockInfo = fileLockManager.getLockInfo( p );
-            StringBuilder message = new StringBuilder();
-            message.append( "Lock status for " ).append( lockInfo.getPath() ).append( "\n" )
-                    .append( "Number of readers:\t" ).append( lockInfo.getReadLockCount() ).append( "\n" )
-                    .append( "Write locked:\t" ).append( lockInfo.isWriteLocked() ? "yes" : "no" );
-            if ( !lockInfo.getProcInfo().isEmpty() ) {
-                message.append( "\nProcess info:" );
-                for ( FileLockInfo.ProcessInfo processInfo : lockInfo.getProcInfo() ) {
-                    message.append( "\n\t" )
-                            .append( "PID: " ).append( processInfo.getPid() ).append( ", " )
-                            .append( "Mandatory: " ).append( processInfo.isMandatory() ? "yes" : "no" ).append( ", " )
-                            .append( "Exclusive: " ).append( processInfo.isExclusive() ? "yes" : "no" ).append( ", " )
-                            .append( "Start: " ).append( processInfo.getStart() ).append( ", " )
-                            .append( "Length: " ).append( processInfo.getLength() );
-                }
-            }
-            log.info( message );
+            log.info( FileLockInfoUtils.format( fileLockManager.getLockInfo( p ) ) );
         } catch ( IOException e ) {
             log.warn( "Failed to get lock info for " + p, e );
         }

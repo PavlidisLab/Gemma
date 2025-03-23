@@ -17,6 +17,10 @@ public class FileLockInfo {
      */
     Path path;
     /**
+     * Path being locked, which is usually {@link #getPath()} with a {@code .lock} suffix.
+     */
+    Path lockfilePath;
+    /**
      * @see ReentrantReadWriteLock#getReadHoldCount()
      */
     int readHoldCount;
@@ -48,10 +52,26 @@ public class FileLockInfo {
      */
     @Value
     public static class ProcessInfo {
+        /**
+         * Unique identifier for the lock.
+         */
         String id;
+        /**
+         * Indicate if this lock is mandatory (i.e. being enforced by the OS).
+         */
         boolean mandatory;
+        /**
+         * Indicate if this lock is exclusive.
+         */
         boolean exclusive;
+        /**
+         * PID of the process holding the lock.
+         */
         int pid;
+        /**
+         * Indicate if this process info belongs to the current process.
+         */
+        boolean self;
         String majorDevice;
         String minorDevice;
         long inode;

@@ -8,6 +8,7 @@ import org.springframework.util.Assert;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -18,6 +19,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author poirigui
@@ -29,57 +31,92 @@ public class FileLockManagerImpl implements FileLockManager {
     private static final Map<Path, ReadWriteFileLock> fileLocks = Collections.synchronizedMap( new WeakHashMap<>() );
 
     @Override
-    public Map<Path, FileLockInfo> getAllLockInfos() throws IOException {
-        Map<Long, List<FileLockInfo.ProcessInfo>> lockMetadata = readLocksMetadata().stream()
+    public Collection<FileLockInfo> getAllLockInfos() throws IOException {
+        Map<Long, List<FileLockInfo.ProcessInfo>> lockMetadata = readLocksMetadata( getPid() ).stream()
                 .collect( Collectors.groupingBy( FileLockInfo.ProcessInfo::getInode, Collectors.toList() ) );
         return fileLocks.entrySet().stream()
                 // only display files with active locks
                 .filter( e -> e.getValue().getChannelHoldCount() > 0 )
-                .collect( Collectors.toMap( Map.Entry::getKey, e -> createLockInfo( e.getKey(), e.getValue(), lockMetadata ) ) );
+                .map( e -> createLockInfo( e.getKey(), e.getValue(), lockMetadata ) )
+                .collect( Collectors.toList() );
+    }
 
+    @Override
+    @SuppressWarnings("resource")
+    public Stream<FileLockInfo> getAllLockInfosByWalking( Path directory, int maxDepth ) throws IOException {
+        Map<Long, List<FileLockInfo.ProcessInfo>> lockMetadata = readLocksMetadata( getPid() ).stream()
+                .collect( Collectors.groupingBy( FileLockInfo.ProcessInfo::getInode, Collectors.toList() ) );
+        return Files.walk( directory, maxDepth )
+                .map( p -> {
+                    if ( fileLocks.containsKey( p ) ) {
+                        return createLockInfo( p, fileLocks.get( p ), lockMetadata );
+                    } else if ( Files.exists( resolveLockPath( p ) ) ) {
+                        return createLockInfo( p, null, lockMetadata );
+                    } else {
+                        // we don't know about the lock and there is no lock file, ignore
+                        return null;
+                    }
+                } )
+                .filter( Objects::nonNull );
     }
 
     @Override
     public FileLockInfo getLockInfo( Path path ) throws IOException {
-        Map<Long, List<FileLockInfo.ProcessInfo>> lockMetadata = readLocksMetadata().stream()
+        Map<Long, List<FileLockInfo.ProcessInfo>> lockMetadata = readLocksMetadata( getPid() ).stream()
                 .collect( Collectors.groupingBy( FileLockInfo.ProcessInfo::getInode, Collectors.toList() ) );
         return createLockInfo( path, fileLocks.get( path ), lockMetadata );
     }
 
     private FileLockInfo createLockInfo( Path path, @Nullable ReadWriteFileLock lock, Map<Long, List<FileLockInfo.ProcessInfo>> procInfosPerInode ) {
         List<FileLockInfo.ProcessInfo> procInfosForInode;
+        Path lockfilePath = resolveLockPath( path );
         try {
-            Long inode = ( Long ) Files.getAttribute( resolveLockPath( path ), "unix:ino" );
+            Long inode = ( Long ) Files.getAttribute( lockfilePath, "unix:ino" );
             procInfosForInode = procInfosPerInode.getOrDefault( inode, Collections.emptyList() );
+        } catch ( NoSuchFileException e ) {
+            // simply means there is no lock file, no need to warn
+            procInfosForInode = Collections.emptyList();
         } catch ( IOException e ) {
             log.warn( "Failed to get inode number for " + path + ", will not populate process info.", e );
             procInfosForInode = Collections.emptyList();
         }
         if ( lock == null ) {
-            return new FileLockInfo( path, 0, 0, 0, false,
+            return new FileLockInfo( path, lockfilePath, 0, 0, 0, false,
                     0, procInfosForInode );
         }
-        return new FileLockInfo( path, lock.getReadHoldCount(), lock.getReadLockCount(), lock.getWriteHoldCount(),
+        return new FileLockInfo( path, lockfilePath, lock.getReadHoldCount(), lock.getReadLockCount(), lock.getWriteHoldCount(),
                 lock.isWriteLocked(), lock.getChannelHoldCount(), procInfosForInode );
+    }
+
+    private static final Path PROC_SELF_FILE = Paths.get( "/proc/self" );
+
+    private int getPid() throws IOException {
+        if ( !Files.exists( PROC_SELF_FILE ) ) {
+            log.warn( "No /proc/self file found, cannot determine current process PID." );
+            return -1;
+        }
+        return Integer.parseInt( Files.readSymbolicLink( PROC_SELF_FILE ).getFileName().toString() );
     }
 
     private static final Path PROC_LOCKS_FILE = Paths.get( "/proc/locks" );
     // we only care about POSIX locks
-    private static final Pattern PROC_LOCS_PATTERN = Pattern.compile( "^(.+): POSIX  (ADVISORY|MANDATORY)  (READ|WRITE) (\\d+) (.+):(.+):(\\d+) (\\d+) (\\d+|EOF)$" );
+    private static final Pattern PROC_LOCKS_PATTERN = Pattern.compile( "^(.+): POSIX {2}(ADVISORY|MANDATORY) {2}(READ|WRITE) (\\d+) (.+):(.+):(\\d+) (\\d+) (\\d+|EOF)$" );
 
     /**
      * Read system-wide lock metadata from /proc/locks.
      * <p>
      * This implementation has been tested on Fedora 41 and Rocky Linux 9.
+     * <p>
+     * FIXME: locks held through NFS do not show up under /proc/locks.
      */
-    private List<FileLockInfo.ProcessInfo> readLocksMetadata() throws IOException {
+    private List<FileLockInfo.ProcessInfo> readLocksMetadata( int myPid ) throws IOException {
         if ( !Files.exists( PROC_LOCKS_FILE ) ) {
             log.warn( "No /proc/locks file found, returning empty list." );
             return Collections.emptyList();
         }
         List<FileLockInfo.ProcessInfo> result = new ArrayList<>();
         for ( String line : Files.readAllLines( PROC_LOCKS_FILE ) ) {
-            Matcher matcher = PROC_LOCS_PATTERN.matcher( line );
+            Matcher matcher = PROC_LOCKS_PATTERN.matcher( line );
             if ( !matcher.matches() )
                 continue;
             String id = matcher.group( 1 );
@@ -91,7 +128,7 @@ public class FileLockManagerImpl implements FileLockManager {
             long inode = Long.parseLong( matcher.group( 7 ) );
             long start = Long.parseLong( matcher.group( 8 ) );
             long length = "EOF".equals( matcher.group( 9 ) ) ? Long.MAX_VALUE : ( Long.parseLong( matcher.group( 9 ) ) - start + 1 );
-            result.add( new FileLockInfo.ProcessInfo( id, mandatory, exclusive, pid, majorDevice, minorDevice, inode, start, length ) );
+            result.add( new FileLockInfo.ProcessInfo( id, mandatory, exclusive, pid, pid == myPid, majorDevice, minorDevice, inode, start, length ) );
         }
         return result;
     }
