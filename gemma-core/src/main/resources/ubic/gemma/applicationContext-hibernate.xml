@@ -46,7 +46,7 @@
 	</bean>
 
 	<bean id="transactionManager" class="ubic.gemma.persistence.hibernate.HibernateTransactionManager">
-		<property name="sessionFactory" ref="sessionFactory"/>
+		<constructor-arg index="0" ref="sessionFactory"/>
 	</bean>
 
 	<tx:annotation-driven order="3"/>
