@@ -1,8 +1,8 @@
 package ubic.gemma.core.security.audit;
 
+import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.helpers.ISO8601DateFormat;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Auditable;
 

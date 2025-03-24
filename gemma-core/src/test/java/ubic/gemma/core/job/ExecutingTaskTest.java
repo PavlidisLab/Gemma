@@ -41,12 +41,6 @@ import static org.mockito.Mockito.verify;
  */
 public class ExecutingTaskTest extends BaseSpringContextTest {
 
-    @Before
-    public void setUp() throws Exception {
-        Assume.assumeTrue( "These tests must be run with -Dlog4j1.compatibility=true",
-                Objects.equals( System.getProperty( "log4j1.compatibility" ), "true" ) );
-    }
-
     @Test
     public void testOrderOfExecutionFailure() {
         TaskCommand taskCommand = new TaskCommand();

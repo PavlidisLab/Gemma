@@ -16,22 +16,21 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.job.progress;
+package ubic.gemma.core.logging.log4j;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Assume;
-import org.junit.Before;
 import org.junit.Test;
+import ubic.gemma.core.job.progress.ProgressUpdateCallback;
+import ubic.gemma.core.job.progress.ProgressUpdateContext;
 
 import java.util.Deque;
-import java.util.Objects;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * For this test to work you should have the appender configured in log4j-test.properties. If not it will be set up
@@ -39,22 +38,16 @@ import static org.junit.Assert.assertEquals;
  *
  * @author pavlidis
  */
-public class ProgressAppenderTest {
+public class ProgressUpdateAppenderTest {
 
-    private static Log log = LogFactory.getLog( ProgressAppenderTest.class );
+    private static Log log = LogFactory.getLog( ProgressUpdateAppenderTest.class );
 
     private final Deque<String> updates = new LinkedBlockingDeque<>();
-
-    @Before
-    public void setUp() {
-        Assume.assumeTrue( "This test must be run with -Dlog4j1.compatibility=true",
-                Objects.equals( System.getProperty( "log4j1.compatibility" ), "true" ) );
-    }
 
     @Test
     public void testProgressLogging() {
         // create a region where the task executes that the update callback is responsive to logs
-        try ( ProgressUpdateAppender.ProgressUpdateContext progressUpdateContext = new ProgressUpdateAppender.ProgressUpdateContext( updates::add ) ) {
+        try ( ProgressUpdateContext progressUpdateContext = ProgressUpdateAppender.createContext( updates::add ) ) {
             String expectedValue = "la de da";
             log.info( expectedValue );
 
@@ -75,18 +68,18 @@ public class ProgressAppenderTest {
     @Test
     public void testLoggingInProgressUpdateCallbackDoesNotResultInLoggingRecursion() {
         AtomicBoolean reached = new AtomicBoolean( false );
-        ProgressUpdateAppender.ProgressUpdateCallback progressUpdateCallback = ( message ) -> {
+        ProgressUpdateCallback progressUpdateCallback = ( message ) -> {
             // if this is set here, the ProcessUpdateAppender might recurse, so we must ensure that there is no
             // current context
-            assertNull( ProgressUpdateAppender.ProgressUpdateContext.currentContext() );
+            assertThat( ProgressUpdateAppender.currentContext() ).isEmpty();
             log.info( "This message should not be picked up." );
             reached.set( true );
         };
-        try ( ProgressUpdateAppender.ProgressUpdateContext progressUpdateContext = new ProgressUpdateAppender.ProgressUpdateContext( progressUpdateCallback ) ) {
-            assertEquals( progressUpdateContext, ProgressUpdateAppender.ProgressUpdateContext.currentContext() );
+        try ( ProgressUpdateContext progressUpdateContext = ProgressUpdateAppender.createContext( progressUpdateCallback ) ) {
+            assertThat( ProgressUpdateAppender.currentContext() ).hasValue( progressUpdateContext );
             log.info( "la da de" );
         }
         assertTrue( reached.get() );
-        assertNull( ProgressUpdateAppender.ProgressUpdateContext.currentContext() );
+        assertThat( ProgressUpdateAppender.currentContext() ).isEmpty();
     }
 }

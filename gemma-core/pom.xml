@@ -249,6 +249,29 @@
             <systemPath>${hdf5.jarPath}</systemPath>
         </dependency>
 
+        <!-- Gemma Slack Bot -->
+        <dependency>
+            <groupId>com.slack.api</groupId>
+            <artifactId>slack-api-client</artifactId>
+            <version>${slack.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jetbrains.kotlin</groupId>
+                    <artifactId>kotlin-stdlib-jdk8</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.slack.api</groupId>
+            <artifactId>slack-api-model</artifactId>
+            <version>${slack.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib-jdk8</artifactId>
+            <version>1.9.25</version>
+        </dependency>
+
         <!-- Testing -->
         <!-- specifically for spring-security-test which refers to definitions from javax.servlet-api, spring-web and spring-security-web -->
         <dependency>

@@ -14,7 +14,7 @@
  */
 package ubic.gemma.core.job;
 
-import ubic.gemma.core.job.progress.ProgressUpdateAppender;
+import ubic.gemma.core.job.progress.ProgressUpdateContext;
 
 import java.util.concurrent.Callable;
 
@@ -46,7 +46,7 @@ class ExecutingTask implements Callable<TaskResult> {
 
         lifecycleHandler.onStart();
 
-        try ( ProgressUpdateAppender.ProgressUpdateContext ignored = new ProgressUpdateAppender.ProgressUpdateContext( lifecycleHandler::onProgress ) ) {
+        try ( ProgressUpdateContext ignored = ProgressUpdateContext.createContext( lifecycleHandler::onProgress ) ) {
             // From here we are running as user who submitted the task.
             result = this.task.call();
         } catch ( Exception e ) {

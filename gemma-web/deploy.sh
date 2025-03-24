@@ -17,7 +17,7 @@ if [ -z "$1" ]; then
 fi
 
 project_dir=$(dirname "$0")
-gemma_web_log4j="$project_dir"/src/main/config/log4j.properties
+gemma_web_log4j="$project_dir"/src/main/config/log4j2.xml
 gemma_web_war="$project_dir"/target/Gemma.war
 
 if [ -n "$(git -C "$project_dir" status --porcelain --untracked-files=no)" ]; then
@@ -46,6 +46,6 @@ if [ ! -f "$gemma_web_war" ]; then
 fi
 
 echo "Deploying Gemma to $deploy_dest..."
-rsync -v --mkpath "$gemma_web_log4j" "$deploy_dest/lib/log4j.properties"
-rsync -v --mkpath "$gemma_web_war" "$deploy_dest/Gemma.war"
+rsync -v --mkpath "$gemma_web_log4j" "$deploy_dest/lib/"
+rsync -v --mkpath "$gemma_web_war" "$deploy_dest/"
 echo "Deployment completed!"

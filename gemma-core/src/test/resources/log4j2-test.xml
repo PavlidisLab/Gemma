@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Configuration xmlns="https://logging.apache.org/xml/ns"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:schemaLocation="
+                   https://logging.apache.org/xml/ns
+                   https://logging.apache.org/xml/ns/log4j-config-2.xsd">
+    <Appenders>
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d %highlight{%p} %style{%pid}{magenta} [%t] %style{%C{1.}.%M(%L)}{cyan} | %m%n"/>
+        </Console>
+        <!-- this is used for the ProgressUpdateAppenderTest and ExecutingTaskTest -->
+        <ProgressUpdate name="progressUpdate">
+            <PatternLayout pattern="%m"/>
+            <Filters>
+                <ThreadContextMapFilter>
+                    <KeyValuePair key="ubic.gemma.core.logging.log4j.ProgressUpdateAppender.isActive" value="true"/>
+                </ThreadContextMapFilter>
+            </Filters>
+        </ProgressUpdate>
+    </Appenders>
+    <Loggers>
+        <Root level="WARN">
+            <AppenderRef ref="console"/>
+            <AppenderRef ref="progressUpdate" level="INFO"/>
+        </Root>
+        <Logger name="ubic.gemma.core.logging.LoggingTest" level="WARN"/>
+        <Logger name="ubic.gemma" level="INFO">
+            <AppenderRef ref="progressUpdate"/>
+        </Logger>
+        <Logger name="ubic.gemma.core.security.audit.AuditLogger" level="WARN"/>
+        <Logger name="net.sf.ehcache.hibernate.strategy.AbstractReadWriteEhcacheAccessStrategy"
+                level="ERROR"/>
+        <Logger name="org.hibernate.cache.ehcache.internal.strategy.AbstractReadWriteEhcacheAccessStrategy"
+                level="ERROR"/>
+        <Logger name="com.hp.hpl.jena.rdf.model.impl.RDFDefaultErrorHandler" level="ERROR"/>
+    </Loggers>
+</Configuration>

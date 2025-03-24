@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Configuration xmlns="https://logging.apache.org/xml/ns"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:schemaLocation="
+                   https://logging.apache.org/xml/ns
+                   https://logging.apache.org/xml/ns/log4j-config-2.xsd">
+    <Properties>
+        <Property name="gemma.log.dir" value="${sys:gemma.log.dir}"/>
+        <!-- The following packages are suppressed from printed stacktraces in the console -->
+        <Property name="gemma.log.filter"
+                  value="com.sun.proxy,java.lang.reflect,jdk,org.hibernate,org.springframework.aop,org.springframework.cglib,org.springframework.retry,org.springframework.security.access.intercept,org.springframework.transaction.interceptor"/>
+        <Property name="gemma.log.pattern" value="%d %p %pid [%t] %C.%M(%L) | %m%n"/>
+        <Property name="gemma.slack.token" value="${sys:gemma.slack.token}"/>
+        <Property name="gemma.slack.channel" value="${sys:gemma.slack.channel}"/>
+    </Properties>
+    <Appenders>
+        <!-- Logging to the standard error because the standard output is used for the output of the command line tool. -->
+        <Console name="console" target="SYSTEM_ERR">
+            <PatternLayout
+                pattern="%d %highlight{%p} %style{%pid}{magenta} [%t] %style{%C{1.}.%M(%L)}{cyan} | %m%n%xEx{filters(${gemma.log.filter})}"/>
+        </Console>
+        <RollingFile name="file" fileName="${gemma.log.dir}/gemma.log" filePattern="${gemma.log.dir}/gemma.log.%i">
+            <PatternLayout pattern="${gemma.log.pattern}"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="10000KB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10" fileIndex="min"/>
+        </RollingFile>
+        <RollingFile name="warningFile" fileName="${gemma.log.dir}/gemma-warnings.log"
+                     filePattern="${gemma.log.dir}/gemma-warnings.log%d{'.'yyyy-MM-dd}">
+            <PatternLayout pattern="${gemma.log.pattern}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy modulate="true"/>
+            </Policies>
+            <DefaultRolloverStrategy max="2147483647" fileIndex="min"/>
+        </RollingFile>
+        <RollingFile name="errorFile" fileName="${gemma.log.dir}/gemma-errors.log"
+                     filePattern="${gemma.log.dir}/gemma-errors.log%d{'.'yyyy-MM-dd}">
+            <PatternLayout pattern="${gemma.log.pattern}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy modulate="true"/>
+            </Policies>
+            <DefaultRolloverStrategy max="2147483647" fileIndex="min"/>
+        </RollingFile>
+        <RollingFile name="auditFile" fileName="${gemma.log.dir}/gemma-audit.log"
+                     filePattern="${gemma.log.dir}/gemma-audit.log%d{'.'yyyy-MM-dd}">
+            <PatternLayout pattern="%m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy modulate="true"/>
+            </Policies>
+            <DefaultRolloverStrategy max="2147483647" fileIndex="min"/>
+        </RollingFile>
+        <RollingFile name="phenocartaFile" fileName="${gemma.log.dir}/gemma-phenocarta.log"
+                     filePattern="${gemma.log.dir}/gemma-phenocarta.log.%i">
+            <PatternLayout pattern="[PhenoCarta - %d] %m%n"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="10000KB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="100" fileIndex="min"/>
+        </RollingFile>
+        <RollingFile name="annotationsFile" fileName="${gemma.log.dir}/gemma-annotations.log"
+                     filePattern="${gemma.log.dir}/gemma-annotations.log.%i">
+            <PatternLayout pattern="${gemma.log.pattern}"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="10000KB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="100" fileIndex="min"/>
+        </RollingFile>
+        <!-- Slack appender for ERROR and FATAL messages -->
+        <Slack name="slack" token="${gemma.slack.token}" channel="${gemma.slack.channel}">
+            <PatternLayout pattern="${gemma.log.pattern}%throwable{none}"/>
+        </Slack>
+    </Appenders>
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="console"/>
+            <AppenderRef ref="file"/>
+            <AppenderRef ref="warningFile" level="WARN"/>
+            <AppenderRef ref="errorFile" level="ERROR"/>
+            <AppenderRef ref="slack" level="ERROR"/>
+        </Root>
+
+        <Logger name="com" level="WARN"/>
+
+        <!-- Jena -->
+        <Logger name="com.hp.hpl.jena.rdf.model.impl.RDFDefaultErrorHandler" level="ERROR"/>
+
+        <Logger name="com.opensymphony.oscache" level="WARN"/>
+
+        <!-- Slack -->
+        <Logger name="com.slack.api" additivity="false">
+            <AppenderRef ref="console"/>
+            <AppenderRef ref="file"/>
+            <AppenderRef ref="warningFile" level="WARN"/>
+            <AppenderRef ref="errorFile" level="ERROR"/>
+        </Logger>
+
+        <!-- HDF5 -->
+        <Logger name="hdf.hdf5lib" level="WARN"/>
+
+        <Logger name="net" level="WARN"/>
+
+        <Logger name="net.sf.ehcache.hibernate.strategy.AbstractReadWriteEhcacheAccessStrategy" level="ERROR"/>
+
+        <Logger name="org" level="WARN"/>
+
+        <Logger name="org.apache.commons" level="WARN"/>
+
+        <Logger name="org.hibernate" level="WARN"/>
+        <Logger name="org.hibernate.cache.ReadWriteCache" level="ERROR"/>
+        <Logger name="org.hibernate.cache.ehcache.internal.strategy.AbstractReadWriteEhcacheAccessStrategy"
+                level="ERROR"/>
+        <Logger name="org.hibernate.engine.loading.LoadContexts" level="ERROR"/>
+        <Logger name="org.hibernate.search.impl.SimpleIndexingProgressMonitor" level="INFO"/>
+
+        <Logger name="org.springframework" level="WARN"/>
+        <Logger name="org.springframework.beans.GenericTypeAwarePropertyDescriptor" level="FATAL"/>
+        <Logger name="org.springframework.security.access.event.LoggerListener" level="INFO"/>
+        <Logger name="org.springframework.security.authentication.event.LoggerListener" level="ERROR"/>
+
+        <Logger name="ubic.basecode" level="INFO"/>
+        <Logger name="ubic.basecode.ontology.model.PropertyFactory" level="ERROR"/>
+        <Logger name="ubic.basecode.ontology.providers" level="WARN"/>
+
+        <Logger name="ubic.gemma" level="INFO"/>
+        <Logger name="ubic.gemma.contrib" level="INFO"/>
+        <Logger name="ubic.gemma.core.association.phenotype" level="INFO">
+            <AppenderRef ref="phenocartaFile"/>
+        </Logger>
+        <Logger name="ubic.gemma.core.security.audit.AuditLogger" level="INFO">
+            <AppenderRef ref="auditFile"/>
+        </Logger>
+        <Logger name="ubic.gemma.core.ontology.OntologyService" level="INFO">
+            <AppenderRef ref="annotationsFile"/>
+        </Logger>
+        <Logger name="ubic.gemma.persistence.hibernate.HibernateTransactionManager" level="WARN"/>
+        <Logger name="ubic.gemma.web.controller.common.CharacteristicBrowserController" level="INFO">
+            <AppenderRef ref="annotationsFile"/>
+        </Logger>
+        <Logger name="ubic.gemma.web.controller.expression.experiment.AnnotationController" level="INFO">
+            <AppenderRef ref="annotationsFile"/>
+        </Logger>
+    </Loggers>
+</Configuration>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Configuration xmlns="https://logging.apache.org/xml/ns"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:schemaLocation="
+                   https://logging.apache.org/xml/ns
+                   https://logging.apache.org/xml/ns/log4j-config-2.xsd">
+    <Appenders>
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d %highlight{%p} %style{%pid}{magenta} [%t] %style{%C{1.}.%M(%L)}{cyan} | %m%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Root levelAndRefs="INFO">
+            <AppenderRef ref="console"/>
+        </Root>
+        <Logger name="net.sf.ehcache.hibernate.strategy.AbstractReadWriteEhcacheAccessStrategy"
+                levelAndRefs="console,ERROR"/>
+        <Logger name="org.hibernate.cache.ehcache.internal.strategy.AbstractReadWriteEhcacheAccessStrategy"
+                level="ERROR"/>
+
+        <!-- Gemma -->
+        <Logger name="ubic.gemma.core.security.audit.AuditLogger" level="WARN"/>
+
+        <!-- Spring -->
+        <Logger name="org.springframework.web.servlet.PageNotFound" level="ERROR"/>
+
+        <!-- Jersey -->
+        <Logger name="org.glassfish.jersey.internal.Errors" level="ERROR"/>
+        <Logger name="org.glassfish.jersey.server.spring.SpringComponentProvider" level="FATAL"/>
+
+        <!-- Jena -->
+        <Logger name="com.hp.hpl.jena.rdf.model.impl.RDFDefaultErrorHandler" level="ERROR"/>
+    </Loggers>
+</Configuration>
