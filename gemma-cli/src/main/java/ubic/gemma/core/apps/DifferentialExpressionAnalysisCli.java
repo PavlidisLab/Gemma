@@ -19,6 +19,7 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
@@ -27,6 +28,7 @@ import ubic.gemma.core.analysis.expression.diff.AnalysisType;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.util.EnumConverter;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
@@ -112,13 +114,17 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 "ID number, category or name of the factor to use for subsetting the analysis; must also use with -factors. "
                         + "If the experiment already has subsets for the factor, those will be reused." );
 
-        options.addOption( "type", "type", true,
-                "Type of analysis to perform. If omitted, the system will try to guess based on the experimental design. "
+        options.addOption( Option.builder( "type" )
+                .longOpt( "type" )
+                .hasArg()
+                .converter( EnumConverter.of( AnalysisType.class ) )
+                .desc( "Type of analysis to perform. If omitted, the system will try to guess based on the experimental design. "
                         + "Choices are : "
                         + Arrays.stream( AnalysisType.values() )
                         .map( e -> getApplicationContext().getMessage( "AnalysisType." + e.name() + ".shortDesc", new Object[] { e }, e.name(), Locale.getDefault() ) )
                         .collect( Collectors.joining( ", " ) )
-                        + "; default: auto-detect" );
+                        + "; default: auto-detect" )
+                .build() );
 
         options.addOption( "usebatch", "use-batch-factor", false, "If a 'batch' factor is available, use it. Otherwise, batch information can/will be ignored in the analysis." );
 

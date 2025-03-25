@@ -8,7 +8,9 @@ import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import ubic.gemma.core.logging.LoggingConfigurer;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of {@link LoggingConfigurer} for Log4j.
@@ -20,6 +22,11 @@ public class Log4jConfigurer implements LoggingConfigurer {
 
     public Log4jConfigurer() {
         loggerContext = ( LoggerContext ) LogManager.getContext( false );
+    }
+
+    @Override
+    public List<String> getAllLoggerNames() {
+        return loggerContext.getConfiguration().getLoggers().keySet().stream().sorted().collect( Collectors.toList() );
     }
 
     @Override

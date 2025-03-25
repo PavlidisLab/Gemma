@@ -81,7 +81,7 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
     @Override
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
-        scaleType = OptionsUtils.getEnumOptionValue( commandLine, "scaleType", ScaleType.class );
+        scaleType = OptionsUtils.getEnumOptionValue( commandLine, "scaleType" );
         outputFile = commandLine.getParsedOptionValue( 'o' );
         filter = commandLine.hasOption( "filter" );
     }

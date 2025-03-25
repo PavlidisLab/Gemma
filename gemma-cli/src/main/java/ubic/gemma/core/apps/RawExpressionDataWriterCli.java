@@ -62,7 +62,7 @@ public class RawExpressionDataWriterCli extends ExpressionExperimentVectorsManip
 
     @Override
     protected void processExperimentVectorsOptions( CommandLine commandLine ) throws ParseException {
-        this.scaleType = OptionsUtils.getEnumOptionValue( commandLine, "scaleType", ScaleType.class );
+        this.scaleType = OptionsUtils.getEnumOptionValue( commandLine, "scaleType" );
         this.outputFile = commandLine.getParsedOptionValue( "o" );
     }
 

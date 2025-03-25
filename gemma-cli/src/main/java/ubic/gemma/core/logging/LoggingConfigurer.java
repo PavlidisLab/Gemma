@@ -3,12 +3,22 @@ package ubic.gemma.core.logging;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
 
+import java.util.List;
+
 /**
  * Simple interface for configuring logging levels.
  */
 public interface LoggingConfigurer {
 
     String[] NAMED_LEVELS = { "off", "fatal", "error", "warn", "info", "debug", "trace" };
+
+    String[] NUMBERED_LEVELS = { "0", "1", "2", "3", "4", "5", "6" };
+
+    /**
+     * Obtain the list of all logger names.
+     * @return
+     */
+    List<String> getAllLoggerNames();
 
     /**
      * Set the logging level of all loggers.

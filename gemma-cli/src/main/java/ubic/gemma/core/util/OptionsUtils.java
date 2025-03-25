@@ -4,7 +4,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Converter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.apache.commons.lang3.StringUtils;
 import org.ocpsoft.prettytime.nlp.PrettyTimeParser;
 import ubic.basecode.util.DateUtil;
 
@@ -128,40 +127,35 @@ public class OptionsUtils {
         }
     }
 
-    public static <T extends Enum<T>> void addEnumOption( Options options, String optionName, String longOption, String description, Class<? extends Enum<T>> enumClass ) {
-        options.addOption( optionName, longOption, true, String.format( "%s Possible values are: %s.",
-                appendIfMissing( description, "." ),
-                Arrays.stream( enumClass.getEnumConstants() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) ) );
+    public static <T extends Enum<T>> void addEnumOption( Options options, String optionName, String longOption, String description, Class<T> enumClass ) {
+        options.addOption( Option.builder( optionName )
+                .longOpt( longOption )
+                .hasArg()
+                .converter( EnumConverter.of( enumClass ) )
+                .desc( String.format( "%s Possible values are: %s.",
+                        appendIfMissing( description, "." ),
+                        Arrays.stream( enumClass.getEnumConstants() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) ) )
+                .build() );
     }
 
     /**
      * Obtain the value of an enumerated option.
+     * <p>
+     * The option must have been previously declared with {@link #addEnumOption(Options, String, String, String, Class)}.
      */
     @Nullable
-    public static <T extends Enum<T>> T getEnumOptionValue( CommandLine commandLine, String optionName, Class<T> enumClass ) throws org.apache.commons.cli.ParseException {
-        String value = commandLine.getOptionValue( optionName );
-        return parseEnumOption( optionName, value, enumClass );
+    public static <T extends Enum<T>> T getEnumOptionValue( CommandLine commandLine, String optionName ) throws org.apache.commons.cli.ParseException {
+        return commandLine.getParsedOptionValue( optionName );
     }
 
     /**
-     * Obtain the value of an enumerated option.
+     * Obtain the value of an enumerated option and if present, make sure that it satisfies a predicate.
+     * <p>
+     * The option must have been previously declared with {@link #addEnumOption(Options, String, String, String, Class)}.
      */
     @Nullable
-    public static <T extends Enum<T>> T getEnumOptionValue( CommandLine commandLine, String optionName, Class<T> enumClass, Predicate<CommandLine> predicate ) throws org.apache.commons.cli.ParseException {
-        String value = getOptionValue( commandLine, optionName, predicate );
-        return parseEnumOption( optionName, value, enumClass );
-    }
-
-    @Nullable
-    private static <T extends Enum<T>> T parseEnumOption( String optionName, @Nullable String value, Class<T> enumClass ) throws org.apache.commons.cli.ParseException {
-        if ( value == null ) {
-            return null;
-        }
-        try {
-            return Enum.valueOf( enumClass, StringUtils.strip( value ).toUpperCase() );
-        } catch ( IllegalArgumentException e ) {
-            throw new org.apache.commons.cli.ParseException( "Failed to parse enumerated option " + optionName + "." );
-        }
+    public static <T extends Enum<T>> T getEnumOptionValue( CommandLine commandLine, String optionName, Predicate<CommandLine> predicate ) throws org.apache.commons.cli.ParseException {
+        return getParsedOptionValue( commandLine, optionName, predicate );
     }
 
     /**

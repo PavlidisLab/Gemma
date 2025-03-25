@@ -65,6 +65,7 @@ public class GemmaCLI {
             COMPLETION_OPTION = "c",
             COMPLETION_EXECUTABLE_OPTION = "ce",
             COMPLETION_SHELL_OPTION = "cs",
+            COMPLETION_LIST_LOGGERS_OPTION = "cl",
             VERSION_OPTION = "version",
             LOGGER_OPTION = "logger",
             VERBOSITY_OPTION = "v",
@@ -86,17 +87,25 @@ public class GemmaCLI {
         Option logOpt = Option.builder( VERBOSITY_OPTION )
                 .longOpt( "verbosity" ).hasArg()
                 .desc( "Set verbosity level for all loggers (0=silent, 5=very verbose; default is custom, see log4j2.xml). You can also use the following: " + String.join( ", ", LoggingConfigurer.NAMED_LEVELS ) + "." )
+                .converter( EnumeratedStringConverter.of( getLogLevelsWithDescriptions() ) )
                 .build();
         Option otherLogOpt = Option.builder( LOGGER_OPTION )
                 .longOpt( "logger" ).hasArg()
                 .desc( "Configure a specific logger verbosity (0=silent, 5=very verbose; default is custom, see log4j2.xml). You can also use the following: " + String.join( ", ", LoggingConfigurer.NAMED_LEVELS ) + ".\nFor example, '--logger ubic.gemma=5', '--logger org.hibernate.SQL=5' or '--logger org.hibernate.SQL=debug'. " )
+                .converter( EnumeratedByCommandStringConverter.of( getGemmaCliPath(), "-" + COMPLETION_LIST_LOGGERS_OPTION ) )
                 .build();
         Options options = new Options()
                 .addOption( HELP_OPTION, "help", false, "Show help" )
                 .addOption( HELP_ALL_OPTION, "help-all", false, "Show complete help with all available CLI commands" )
                 .addOption( COMPLETION_OPTION, "completion", false, "Generate a completion script" )
                 .addOption( COMPLETION_EXECUTABLE_OPTION, "completion-executable", true, "Name of the executable to generate completion for (defaults to gemma-cli)" )
-                .addOption( COMPLETION_SHELL_OPTION, "completion-shell", true, "Indicate which shell to generate completion for. Only fish and bash are supported" )
+                .addOption( Option.builder( COMPLETION_SHELL_OPTION )
+                        .longOpt( "completion-shell" )
+                        .hasArg()
+                        .converter( EnumeratedStringConverter.of( "bash", "fish" ) )
+                        .desc( "Indicate which shell to generate completion for. Only fish and bash are supported" )
+                        .build() )
+                .addOption( COMPLETION_LIST_LOGGERS_OPTION, "completion-list-loggers", false, "List all available logger that can be used for -" + LOGGER_OPTION + "." )
                 .addOption( VERSION_OPTION, "version", false, "Show Gemma version" )
                 .addOption( otherLogOpt )
                 .addOption( logOpt )
@@ -120,6 +129,14 @@ public class GemmaCLI {
         if ( commandLine.hasOption( VERSION_OPTION ) ) {
             BuildInfo buildInfo = BuildInfo.fromClasspath();
             System.out.printf( "Gemma %s%n", buildInfo );
+            System.exit( 0 );
+            return;
+        }
+
+        if ( commandLine.hasOption( COMPLETION_LIST_LOGGERS_OPTION ) ) {
+            // TODO: descriptions for CLI options
+            loggingConfigurer.getAllLoggerNames()
+                    .forEach( x -> System.out.printf( "%s\t%s%n", x, x.isEmpty() ? "Root logger" : "" ) );
             System.exit( 0 );
             return;
         }
@@ -341,6 +358,26 @@ public class GemmaCLI {
         }
 
         System.exit( statusCode );
+    }
+
+    private static Map<String, String> getLogLevelsWithDescriptions() {
+        Map<String, String> result = new LinkedHashMap<>( 2 * LoggingConfigurer.NAMED_LEVELS.length );
+        for ( int i = 0; i < LoggingConfigurer.NAMED_LEVELS.length; i++ ) {
+            result.put( LoggingConfigurer.NAMED_LEVELS[i], "" );
+        }
+        for ( int i = 0; i < LoggingConfigurer.NAMED_LEVELS.length; i++ ) {
+            result.put( LoggingConfigurer.NUMBERED_LEVELS[i], LoggingConfigurer.NAMED_LEVELS[i] );
+        }
+        return result;
+    }
+
+    private static String getGemmaCliPath() {
+        if ( System.getProperty( "app.home" ) != null ) {
+            // this is set by Appassembler
+            return System.getProperty( "app.home" ) + "/bin/gemma-cli";
+        } else {
+            return "gemma-cli";
+        }
     }
 
     /**

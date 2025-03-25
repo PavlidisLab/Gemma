@@ -379,7 +379,7 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
         }
 
         if ( commandLine.hasOption( BATCH_FORMAT_OPTION ) ) {
-            this.batchFormat = OptionsUtils.getEnumOptionValue( commandLine, BATCH_FORMAT_OPTION, BatchFormat.class );
+            this.batchFormat = OptionsUtils.getEnumOptionValue( commandLine, BATCH_FORMAT_OPTION );
         } else {
             this.batchFormat = commandLine.hasOption( BATCH_OUTPUT_FILE_OPTION ) ? BatchFormat.TSV : BatchFormat.TEXT;
         }

@@ -31,7 +31,6 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
@@ -99,8 +98,8 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
 
     @Override
     protected void buildExperimentVectorsOptions( Options options ) {
-        options.addOption( "format", "format", true, "Format to write the matrix for (possible values: tabular, MEX, defaults to tabular)" );
-        options.addOption( "scaleType", "scale-type", true, "Scale type to use when generating data to disk (possible values: " + Arrays.stream( ScaleType.values() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) + ")." );
+        addEnumOption( options, "format", "format", "Format to write the matrix for (defaults to tabular)", MatrixFormat.class );
+        addEnumOption( options, "scaleType", "scale-type", "Scale type to use when generating data to disk.", ScaleType.class );
         options.addOption( "useEnsemblIds", "use-ensembl-ids", false, "Use Ensembl IDs instead of official gene symbols (only for MEX output)" );
         options.addOption( "noStreaming", "no-streaming", false, "Use in-memory storage instead streaming for retrieving and writing vectors (defaults to false)" );
         options.addOption( Option.builder( "fetchSize" ).longOpt( "fetch-size" ).hasArg( true ).type( Integer.class ).desc( "Fetch size to use when retrieving vectors, incompatible with -noStreaming/--no-streaming." ).build() );
@@ -123,12 +122,12 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         this.useStreaming = !commandLine.hasOption( "noStreaming" );
         this.fetchSize = commandLine.getParsedOptionValue( "fetchSize", 30 );
         if ( commandLine.hasOption( "format" ) ) {
-            this.format = getEnumOptionValue( commandLine, "format", MatrixFormat.class );
+            this.format = getEnumOptionValue( commandLine, "format" );
         } else {
             this.format = MatrixFormat.TABULAR;
         }
         if ( commandLine.hasOption( "scaleType" ) ) {
-            this.scaleType = getEnumOptionValue( commandLine, "scaleType", ScaleType.class );
+            this.scaleType = getEnumOptionValue( commandLine, "scaleType" );
         }
         this.standardLocation = commandLine.hasOption( "standardLocation" );
         this.outputFile = commandLine.getParsedOptionValue( "o" );
@@ -149,7 +148,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                 requires( allOf( toBeSet( "aggregateByAssay" ), toBeUnset( "standardLocation" ), toBeUnset( "format" ), toBeUnset( "useEnsemblIds" ) ) ) );
         aggregateByCellLevelCharacteristics = getOptionValue( commandLine, "aggregateByClc",
                 requires( allOf( toBeSet( "aggregateByAssay" ), toBeUnset( "standardLocation" ), toBeUnset( "format" ), toBeUnset( "useEnsemblIds" ) ) ) );
-        aggregationMethod = getEnumOptionValue( commandLine, "aggregateMethod", SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.class,
+        aggregationMethod = getEnumOptionValue( commandLine, "aggregateMethod",
                 requires( allOf( anyOf( toBeSet( "aggregateByAssay" ), toBeSet( "aggregateByPreferredCellTypeAssignment" ), toBeSet( "aggregateByCellTypeAssignment" ), toBeSet( "aggregateByCellLevelCharacteristics" ) ),
                         toBeUnset( "standardLocation" ), toBeUnset( "format" ), toBeUnset( "useEnsemblIds" ) ) ) );
     }
