@@ -10,16 +10,17 @@
         </Console>
     </Appenders>
     <Loggers>
-        <Root levelAndRefs="INFO">
+        <Root level="WARN">
             <AppenderRef ref="console"/>
         </Root>
         <Logger name="net.sf.ehcache.hibernate.strategy.AbstractReadWriteEhcacheAccessStrategy"
-                levelAndRefs="console,ERROR"/>
+                level="ERROR"/>
         <Logger name="org.hibernate.cache.ehcache.internal.strategy.AbstractReadWriteEhcacheAccessStrategy"
                 level="ERROR"/>
 
         <!-- Gemma -->
         <Logger name="ubic.gemma.core.security.audit.AuditLogger" level="WARN"/>
+        <Logger name="ubic.gemma.persistence.hibernate.HibernateTransactionManager" level="WARN"/>
 
         <!-- Spring -->
         <Logger name="org.springframework.web.servlet.PageNotFound" level="ERROR"/>

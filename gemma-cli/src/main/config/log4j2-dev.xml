@@ -37,5 +37,6 @@
         <Logger name="ubic.basecode.ontology.providers" level="WARN"/>
         <Logger name="ubic.gemma" level="INFO"/>
         <Logger name="ubic.gemma.contrib" level="INFO"/>
+        <Logger name="ubic.gemma.persistence.hibernate.HibernateTransactionManager" level="WARN"/>
     </Loggers>
 </Configuration>

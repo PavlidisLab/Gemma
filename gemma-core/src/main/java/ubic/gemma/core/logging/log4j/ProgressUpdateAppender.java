@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.logging.log4j;
 
+import org.apache.logging.log4j.CloseableThreadContext;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Filter;
@@ -49,11 +50,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ProgressUpdateAppender extends AbstractAppender {
 
     /**
-     * {@link ThreadContext} key that indicates if the progress update appender is active.
-     */
-    private static final String IS_PROGRESS_UPDATE_ACTIVE_CONTEXT_KEY = "ubic.gemma.core.logging.log4j.ProgressUpdateAppender.isActive";
-
-    /**
      * Key used in {@link ThreadContext} for referring to the current progress update context.
      */
     private static final String CURRENT_PROGRESS_UPDATE_CONTEXT_KEY = "ubic.gemma.core.logging.log4j.ProgressUpdateAppender.currentContextKey";
@@ -64,9 +60,6 @@ public class ProgressUpdateAppender extends AbstractAppender {
      * Obtain the current context for reporting progress, if any.
      */
     static Optional<ProgressUpdateContext> currentContext() {
-        if ( !"true".equals( ThreadContext.get( IS_PROGRESS_UPDATE_ACTIVE_CONTEXT_KEY ) ) ) {
-            return Optional.empty();
-        }
         return Optional.of( ProgressUpdateAppender.CURRENT_PROGRESS_UPDATE_CONTEXT_KEY )
                 .map( ThreadContext::get )
                 .map( contextMap::get );
@@ -113,6 +106,8 @@ public class ProgressUpdateAppender extends AbstractAppender {
         private final String key;
         private final ProgressUpdateCallback progressUpdateCallback;
 
+        private String previousKey;
+
         private ProgressUpdateContextImpl( ProgressUpdateCallback progressUpdateCallback ) {
             this.key = UUID.randomUUID().toString();
             this.progressUpdateCallback = progressUpdateCallback;
@@ -121,27 +116,23 @@ public class ProgressUpdateAppender extends AbstractAppender {
 
         private void init() {
             contextMap.put( key, this );
+            previousKey = ThreadContext.get( CURRENT_PROGRESS_UPDATE_CONTEXT_KEY );
             ThreadContext.put( CURRENT_PROGRESS_UPDATE_CONTEXT_KEY, key );
-            ThreadContext.put( IS_PROGRESS_UPDATE_ACTIVE_CONTEXT_KEY, "true" );
         }
 
         /**
          * Report a progress update.
          */
         public void reportProgressUpdate( String message ) {
-            // suspend the current context to avoid recursion
-            ThreadContext.remove( IS_PROGRESS_UPDATE_ACTIVE_CONTEXT_KEY );
-            try {
+            try ( CloseableThreadContext.Instance ignored = CloseableThreadContext
+                    .put( CURRENT_PROGRESS_UPDATE_CONTEXT_KEY, null ) ) {
                 progressUpdateCallback.onProgressUpdate( message );
-            } finally {
-                ThreadContext.put( IS_PROGRESS_UPDATE_ACTIVE_CONTEXT_KEY, "true" );
             }
         }
 
         @Override
         public void close() {
-            ThreadContext.remove( IS_PROGRESS_UPDATE_ACTIVE_CONTEXT_KEY );
-            ThreadContext.remove( CURRENT_PROGRESS_UPDATE_CONTEXT_KEY );
+            ThreadContext.put( CURRENT_PROGRESS_UPDATE_CONTEXT_KEY, previousKey );
             contextMap.remove( key, this );
         }
     }

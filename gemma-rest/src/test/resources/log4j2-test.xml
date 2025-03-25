@@ -10,14 +10,17 @@
         </Console>
     </Appenders>
     <Loggers>
-        <Root levelAndRefs="WARN,console"/>
-        <Logger name="ubic.gemma.core.security.audit.AuditLogger" levelAndRefs="WARN,console"/>
+        <Root level="WARN">
+            <AppenderRef ref="console"/>
+        </Root>
+        <Logger name="ubic.gemma.persistence.hibernate.HibernateTransactionManager" level="WARN"/>
+        <Logger name="ubic.gemma.core.security.audit.AuditLogger" level="WARN"/>
         <Logger name="net.sf.ehcache.hibernate.strategy.AbstractReadWriteEhcacheAccessStrategy"
-                levelAndRefs="ERROR,console"/>
+                level="ERROR"/>
         <Logger name="org.hibernate.cache.ehcache.internal.strategy.AbstractReadWriteEhcacheAccessStrategy"
-                levelAndRefs="ERROR,console"/>
-        <Logger name="org.glassfish.jersey.server.spring.SpringComponentProvider" levelAndRefs="FATAL,console"/>
-        <Logger name="org.glassfish.jersey.internal.Errors" levelAndRefs="ERROR,console"/>
-        <Logger name="com.hp.hpl.jena.rdf.model.impl.RDFDefaultErrorHandler" levelAndRefs="ERROR,console"/>
+                level="ERROR"/>
+        <Logger name="org.glassfish.jersey.server.spring.SpringComponentProvider" level="FATAL"/>
+        <Logger name="org.glassfish.jersey.internal.Errors" level="ERROR"/>
+        <Logger name="com.hp.hpl.jena.rdf.model.impl.RDFDefaultErrorHandler" level="ERROR"/>
     </Loggers>
 </Configuration>

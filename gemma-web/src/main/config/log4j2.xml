@@ -65,11 +65,6 @@
         <!--  Special appender for task progress updates -->
         <ProgressUpdate name="progressUpdate">
             <PatternLayout pattern="%m"/>
-            <Filters>
-                <ThreadContextMapFilter>
-                    <KeyValuePair key="ubic.gemma.core.logging.log4j.ProgressUpdateAppender.isActive" value="true"/>
-                </ThreadContextMapFilter>
-            </Filters>
         </ProgressUpdate>
     </Appenders>
     <Loggers>
@@ -78,7 +73,6 @@
             <AppenderRef ref="warningFile" level="WARN"/>
             <AppenderRef ref="errorFile" level="ERROR"/>
             <AppenderRef ref="slack" level="ERROR"/>
-            <AppenderRef ref="progressUpdate" level="INFO"/>
         </Root>
 
         <Logger name="com" level="WARN"/>
@@ -118,6 +112,10 @@
         <Logger name="ubic.basecode" level="INFO"/>
         <Logger name="ubic.basecode.ontology.model.PropertyFactory" level="ERROR"/>
         <Logger name="ubic.basecode.ontology.providers" level="WARN"/>
+
+        <Logger name="ubic.gemma" level="INFO">
+            <AppenderRef ref="progressUpdate"/>
+        </Logger>
 
         <Logger name="ubic.gemma.core.ontology.OntologyService" level="INFO">
             <AppenderRef ref="annotationsFile"/>

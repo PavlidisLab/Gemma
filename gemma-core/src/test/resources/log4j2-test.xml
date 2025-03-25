@@ -11,23 +11,18 @@
         <!-- this is used for the ProgressUpdateAppenderTest and ExecutingTaskTest -->
         <ProgressUpdate name="progressUpdate">
             <PatternLayout pattern="%m"/>
-            <Filters>
-                <ThreadContextMapFilter>
-                    <KeyValuePair key="ubic.gemma.core.logging.log4j.ProgressUpdateAppender.isActive" value="true"/>
-                </ThreadContextMapFilter>
-            </Filters>
         </ProgressUpdate>
     </Appenders>
     <Loggers>
         <Root level="WARN">
             <AppenderRef ref="console"/>
-            <AppenderRef ref="progressUpdate" level="INFO"/>
         </Root>
         <Logger name="ubic.gemma.core.logging.LoggingTest" level="WARN"/>
         <Logger name="ubic.gemma" level="INFO">
             <AppenderRef ref="progressUpdate"/>
         </Logger>
         <Logger name="ubic.gemma.core.security.audit.AuditLogger" level="WARN"/>
+        <Logger name="ubic.gemma.persistence.hibernate.HibernateTransactionManager" level="WARN"/>
         <Logger name="net.sf.ehcache.hibernate.strategy.AbstractReadWriteEhcacheAccessStrategy"
                 level="ERROR"/>
         <Logger name="org.hibernate.cache.ehcache.internal.strategy.AbstractReadWriteEhcacheAccessStrategy"
