@@ -1,14 +1,19 @@
 package ubic.gemma.core.completion;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.MessageSource;
+import org.springframework.context.MessageSourceResolvable;
+import org.springframework.context.NoSuchMessageException;
 import ubic.gemma.core.util.EnumeratedByCommandConverter;
 import ubic.gemma.core.util.EnumeratedConverter;
 
 import javax.annotation.Nullable;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -18,14 +23,19 @@ import static ubic.gemma.core.util.ShellUtils.quoteIfNecessary;
  * Generates fish completion script.
  * @author poirigui
  */
+@CommonsLog
 public class FishCompletionGenerator extends AbstractCompletionGenerator {
 
     private final String executableName;
     private final String allSubcommands;
+    private final MessageSource messageSource;
+    private final Locale locale;
 
-    public FishCompletionGenerator( String executableName, Set<String> allSubcommands ) {
+    public FishCompletionGenerator( String executableName, Set<String> allSubcommands, MessageSource messageSource, Locale locale ) {
         this.executableName = executableName;
         this.allSubcommands = allSubcommands.stream().filter( StringUtils::isNotBlank ).sorted().collect( Collectors.joining( " " ) );
+        this.messageSource = messageSource;
+        this.locale = locale;
     }
 
     @Override
@@ -92,10 +102,20 @@ public class FishCompletionGenerator extends AbstractCompletionGenerator {
                     .getPossibleValues()
                     .entrySet()
                     .stream()
-                    .map( v -> v.getKey() + "\t" + StringUtils.defaultIfBlank( v.getValue(), "" ) )
+                    // TODO: properly escape the description
+                    .map( v -> v.getKey() + "\t" + resolveDescription( v.getKey(), v.getValue() ) )
                     .collect( Collectors.joining( "\n" ) );
             return " -a " + quoteIfNecessary( "(echo -e \"" + possibleValues + "\" 2>/dev/null)" );
         } else {
+            return "";
+        }
+    }
+
+    private String resolveDescription( String k, MessageSourceResolvable v ) {
+        try {
+            return messageSource.getMessage( v, locale );
+        } catch ( NoSuchMessageException e ) {
+            log.warn( "Could not resolve a description for " + k, e );
             return "";
         }
     }

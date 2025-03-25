@@ -1,8 +1,10 @@
 package ubic.gemma.core.util;
 
+import org.springframework.context.MessageSourceResolvable;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
+
 import java.util.Arrays;
 import java.util.Map;
-import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -12,23 +14,25 @@ import java.util.stream.Collectors;
  */
 public class EnumeratedStringConverter implements EnumeratedConverter<String, IllegalArgumentException> {
 
+    private static final MessageSourceResolvable EMPTY_MESSAGE = new DefaultMessageSourceResolvable( null, null, "" );
+
     public static EnumeratedStringConverter of( String... possibleValues ) {
         return new EnumeratedStringConverter( Arrays.stream( possibleValues )
-                .collect( Collectors.toMap( e -> e, e -> "", ( a, b ) -> a, TreeMap::new ) ) );
+                .collect( Collectors.toMap( e -> e, e -> EMPTY_MESSAGE, ( a, b ) -> a, TreeMap::new ) ) );
     }
 
-    public static EnumeratedStringConverter of( Map<String, String> descriptions ) {
-        return new EnumeratedStringConverter(  descriptions  );
+    public static EnumeratedStringConverter of( Map<String, MessageSourceResolvable> descriptions ) {
+        return new EnumeratedStringConverter( descriptions );
     }
 
-    private final Map<String, String> possibleValues;
+    private final Map<String, MessageSourceResolvable> possibleValues;
 
-    private EnumeratedStringConverter( Map<String, String> possibleValues ) {
+    private EnumeratedStringConverter( Map<String, MessageSourceResolvable> possibleValues ) {
         this.possibleValues = possibleValues;
     }
 
     @Override
-    public Map<String, String> getPossibleValues() {
+    public Map<String, MessageSourceResolvable> getPossibleValues() {
         return possibleValues;
     }
 

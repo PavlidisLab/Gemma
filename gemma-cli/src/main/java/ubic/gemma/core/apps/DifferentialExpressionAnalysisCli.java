@@ -23,6 +23,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSourceResolvable;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import ubic.gemma.core.analysis.expression.diff.AnalysisType;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
@@ -136,10 +138,10 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     }
 
-    private EnumMap<AnalysisType, String> getAnalysisTypeDescriptions() {
-        EnumMap<AnalysisType, String> result = new EnumMap<>( AnalysisType.class );
+    private EnumMap<AnalysisType, MessageSourceResolvable> getAnalysisTypeDescriptions() {
+        EnumMap<AnalysisType, MessageSourceResolvable> result = new EnumMap<>( AnalysisType.class );
         for ( AnalysisType e : AnalysisType.values() ) {
-            result.put( e, getApplicationContext().getMessage( "AnalysisType." + e.name() + ".shortDesc", null, "", Locale.getDefault() ) );
+            result.put( e, new DefaultMessageSourceResolvable( new String[] { "AnalysisType." + e.name() + ".shortDesc" }, null, "" ) );
         }
         return result;
     }

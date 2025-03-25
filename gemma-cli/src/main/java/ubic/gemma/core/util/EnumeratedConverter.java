@@ -1,6 +1,7 @@
 package ubic.gemma.core.util;
 
 import org.apache.commons.cli.Converter;
+import org.springframework.context.MessageSourceResolvable;
 
 import java.util.Map;
 
@@ -16,5 +17,5 @@ public interface EnumeratedConverter<T, E extends Throwable> extends Converter<T
      * Implementation should use either a {@link java.util.SortedMap} or {@link java.util.LinkedHashMap} for
      * reproducibility.
      */
-    Map<String, String> getPossibleValues();
+    Map<String, MessageSourceResolvable> getPossibleValues();
 }

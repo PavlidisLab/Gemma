@@ -1,6 +1,8 @@
 package ubic.gemma.core.util;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.MessageSourceResolvable;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -14,19 +16,21 @@ import java.util.stream.Collectors;
  */
 public class EnumConverter<T extends Enum<T>> implements EnumeratedConverter<Enum<T>, IllegalArgumentException> {
 
+    private static final MessageSourceResolvable EMPTY_MESSAGE = new DefaultMessageSourceResolvable( null, null, "" );
+
     public static <T extends Enum<T>> EnumConverter<T> of( Class<T> enumClass ) {
         return new EnumConverter<>( enumClass, new EnumMap<>( enumClass ) );
     }
 
-    public static <T extends Enum<T>> EnumConverter<T> of( Class<T> enumClass, EnumMap<T, String> descriptions ) {
+    public static <T extends Enum<T>> EnumConverter<T> of( Class<T> enumClass, EnumMap<T, MessageSourceResolvable> descriptions ) {
         return new EnumConverter<>( enumClass, descriptions );
     }
 
     private final Class<T> enumClass;
-    private final EnumMap<T, String> descriptions;
+    private final EnumMap<T, MessageSourceResolvable> descriptions;
     private final TreeMap<String, Enum<T>> enumByName = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
 
-    private EnumConverter( Class<T> enumClass, EnumMap<T, String> descriptions ) {
+    private EnumConverter( Class<T> enumClass, EnumMap<T, MessageSourceResolvable> descriptions ) {
         this.enumClass = enumClass;
         this.descriptions = descriptions;
         for ( T e : EnumSet.allOf( enumClass ) ) {
@@ -50,8 +54,8 @@ public class EnumConverter<T extends Enum<T>> implements EnumeratedConverter<Enu
     }
 
     @Override
-    public Map<String, String> getPossibleValues() {
+    public Map<String, MessageSourceResolvable> getPossibleValues() {
         return EnumSet.allOf( enumClass ).stream()
-                .collect( Collectors.toMap( Enum::name, e -> descriptions.getOrDefault( e, "" ), ( a, b ) -> a, LinkedHashMap::new ) );
+                .collect( Collectors.toMap( Enum::name, e -> descriptions.getOrDefault( e, EMPTY_MESSAGE ), ( a, b ) -> a, LinkedHashMap::new ) );
     }
 }

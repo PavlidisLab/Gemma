@@ -26,6 +26,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.BeanInstantiationException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.*;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import ubic.gemma.core.completion.BashCompletionGenerator;
 import ubic.gemma.core.completion.CompletionGenerator;
 import ubic.gemma.core.completion.FishCompletionGenerator;
@@ -80,6 +81,8 @@ public class GemmaCLI {
     private static final Pattern PASSWORD_IN_CLI_MATCHER = Pattern.compile( "(-{1,2}p(?:assword)?)\\s+(.+?)\\b" );
 
     private static final LoggingConfigurer loggingConfigurer = new Log4jConfigurer();
+
+    private static final MessageSourceResolvable EMPTY_MESSAGE = new DefaultMessageSourceResolvable( null, null, "" );
 
     private static ApplicationContext ctx = null;
 
@@ -286,7 +289,7 @@ public class GemmaCLI {
             if ( shellName.equals( "bash" ) ) {
                 completionGenerator = new BashCompletionGenerator( executableName, subcommands );
             } else if ( shellName.equals( "fish" ) ) {
-                completionGenerator = new FishCompletionGenerator( executableName, subcommands );
+                completionGenerator = new FishCompletionGenerator( executableName, subcommands, ctx, Locale.getDefault() );
             } else {
                 System.err.printf( "Completion is not support for %s.%n", shellName );
                 System.exit( 1 );
@@ -360,13 +363,13 @@ public class GemmaCLI {
         System.exit( statusCode );
     }
 
-    private static Map<String, String> getLogLevelsWithDescriptions() {
-        Map<String, String> result = new LinkedHashMap<>( 2 * LoggingConfigurer.NAMED_LEVELS.length );
+    private static Map<String, MessageSourceResolvable> getLogLevelsWithDescriptions() {
+        Map<String, MessageSourceResolvable> result = new LinkedHashMap<>( 2 * LoggingConfigurer.NAMED_LEVELS.length );
         for ( int i = 0; i < LoggingConfigurer.NAMED_LEVELS.length; i++ ) {
-            result.put( LoggingConfigurer.NAMED_LEVELS[i], "" );
+            result.put( LoggingConfigurer.NAMED_LEVELS[i], EMPTY_MESSAGE );
         }
         for ( int i = 0; i < LoggingConfigurer.NAMED_LEVELS.length; i++ ) {
-            result.put( LoggingConfigurer.NUMBERED_LEVELS[i], LoggingConfigurer.NAMED_LEVELS[i] );
+            result.put( LoggingConfigurer.NUMBERED_LEVELS[i], new DefaultMessageSourceResolvable( null, null, LoggingConfigurer.NAMED_LEVELS[i] ) );
         }
         return result;
     }

@@ -5,6 +5,8 @@ import org.apache.commons.cli.Converter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.ocpsoft.prettytime.nlp.PrettyTimeParser;
+import org.springframework.context.MessageSourceResolvable;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import ubic.basecode.util.DateUtil;
 
 import javax.annotation.Nullable;
@@ -127,18 +129,25 @@ public class OptionsUtils {
         }
     }
 
-    public static <T extends Enum<T>> void addEnumOption( Options options, String optionName, String longOption, String description, Class<T> enumClass ) {
-        options.addOption( Option.builder( optionName )
-                .longOpt( longOption )
-                .hasArg()
-                .converter( EnumConverter.of( enumClass ) )
-                .desc( String.format( "%s Possible values are: %s.",
-                        appendIfMissing( description, "." ),
-                        Arrays.stream( enumClass.getEnumConstants() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) ) )
-                .build() );
+    /**
+     * Add an enumerated option with localized descriptions.
+     * <p>
+     * The code pattern for the message source is {@code <enum class name>.<enum value>.label}.
+     */
+    public static <T extends Enum<T>> void addEnumOption( Options options, String optionName, String longOption,
+            String description, Class<T> enumClass ) {
+        EnumMap<T, MessageSourceResolvable> descriptions = new EnumMap<>( enumClass );
+        for ( T v : EnumSet.allOf( enumClass ) ) {
+            descriptions.put( v, new DefaultMessageSourceResolvable( new String[] { enumClass.getSimpleName() + "." + v.name() + ".label" }, null, "" ) );
+        }
+        addEnumOption( options, optionName, longOption, description, enumClass, descriptions );
     }
 
-    public static <T extends Enum<T>> void addEnumOption( Options options, String optionName, String longOption, String description, Class<T> enumClass, EnumMap<T, String> descriptions ) {
+    /**
+     * Add an enumerated option with descriptions.
+     */
+    public static <T extends Enum<T>> void addEnumOption( Options options, String optionName, String longOption,
+            String description, Class<T> enumClass, EnumMap<T, MessageSourceResolvable> descriptions ) {
         options.addOption( Option.builder( optionName )
                 .longOpt( longOption )
                 .hasArg()
@@ -155,7 +164,8 @@ public class OptionsUtils {
      * The option must have been previously declared with {@link #addEnumOption(Options, String, String, String, Class)}.
      */
     @Nullable
-    public static <T extends Enum<T>> T getEnumOptionValue( CommandLine commandLine, String optionName ) throws org.apache.commons.cli.ParseException {
+    public static <T extends Enum<T>> T getEnumOptionValue( CommandLine commandLine, String optionName ) throws
+            org.apache.commons.cli.ParseException {
         return commandLine.getParsedOptionValue( optionName );
     }
 
@@ -165,7 +175,8 @@ public class OptionsUtils {
      * The option must have been previously declared with {@link #addEnumOption(Options, String, String, String, Class)}.
      */
     @Nullable
-    public static <T extends Enum<T>> T getEnumOptionValue( CommandLine commandLine, String optionName, Predicate<CommandLine> predicate ) throws org.apache.commons.cli.ParseException {
+    public static <T extends Enum<T>> T getEnumOptionValue( CommandLine commandLine, String
+            optionName, Predicate<CommandLine> predicate ) throws org.apache.commons.cli.ParseException {
         return getParsedOptionValue( commandLine, optionName, predicate );
     }
 
@@ -173,7 +184,8 @@ public class OptionsUtils {
      * Obtain the value of an option and if present, make sure that it satisfies a predicate.
      */
     @Nullable
-    public static String getOptionValue( CommandLine commandLine, String optionName, Predicate<CommandLine> predicate ) throws org.apache.commons.cli.ParseException {
+    public static String getOptionValue( CommandLine commandLine, String
+            optionName, Predicate<CommandLine> predicate ) throws org.apache.commons.cli.ParseException {
         if ( hasOption( commandLine, optionName, predicate ) ) {
             return commandLine.getOptionValue( optionName );
         } else {
@@ -185,7 +197,9 @@ public class OptionsUtils {
      * @see #getOptionValue(CommandLine, String, Predicate)
      */
     @Nullable
-    public static <T> T getParsedOptionValue( CommandLine commandLine, String optionName, Predicate<CommandLine> predicate ) throws org.apache.commons.cli.ParseException {
+    public static <T> T
+    getParsedOptionValue( CommandLine commandLine, String optionName, Predicate<CommandLine> predicate ) throws
+            org.apache.commons.cli.ParseException {
         if ( hasOption( commandLine, optionName, predicate ) ) {
             return commandLine.getParsedOptionValue( optionName );
         } else {
@@ -199,7 +213,8 @@ public class OptionsUtils {
      * The predicate can be any {@link Predicate}, but using the ones defined in this class will produce more
      * informative error messages.
      */
-    public static boolean hasOption( CommandLine commandLine, String optionName, Predicate<CommandLine> predicate ) throws org.apache.commons.cli.ParseException {
+    public static boolean hasOption( CommandLine commandLine, String
+            optionName, Predicate<CommandLine> predicate ) throws org.apache.commons.cli.ParseException {
         if ( commandLine.hasOption( optionName ) ) {
             // make sure that all the required options are set
             if ( !predicate.test( commandLine ) ) {
@@ -276,7 +291,8 @@ public class OptionsUtils {
                 .orElse( "-" + optionName );
     }
 
-    private static String formatPredicates( Predicate<CommandLine>[] predicates, CommandLine cl, String w, int depth ) {
+    private static String formatPredicates( Predicate<CommandLine>[] predicates, CommandLine cl, String w,
+            int depth ) {
         String s = Arrays.stream( predicates )
                 .map( p -> formatPredicate( p, cl, depth + 1 ) )
                 .collect( Collectors.joining( w ) );

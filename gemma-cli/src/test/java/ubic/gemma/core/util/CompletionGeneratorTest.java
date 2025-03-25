@@ -14,11 +14,13 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeNoException;
+import static org.mockito.Mockito.mock;
 
 public class CompletionGeneratorTest {
 
@@ -53,7 +55,7 @@ public class CompletionGeneratorTest {
             return;
         }
         try ( PrintWriter writer = new PrintWriter( new OutputStreamWriter( process.getOutputStream() ) ) ) {
-            writeCompletionScript( new FishCompletionGenerator( "gemma-cli", new HashSet<>( Arrays.asList( "a", "b", "c" ) ) ), writer );
+            writeCompletionScript( new FishCompletionGenerator( "gemma-cli", new HashSet<>( Arrays.asList( "a", "b", "c" ) ), mock(), Locale.getDefault() ), writer );
         }
         String error = IOUtils.toString( process.getErrorStream(), StandardCharsets.UTF_8 );
         assertEquals( error, 0, process.waitFor() );
@@ -95,7 +97,7 @@ public class CompletionGeneratorTest {
     private String getFishCompletions( String words ) throws IOException, InterruptedException {
         Process process = Runtime.getRuntime().exec( "fish", new String[] { "LANG=C" } );
         try ( PrintWriter writer = new PrintWriter( new OutputStreamWriter( process.getOutputStream() ) ) ) {
-            writeCompletionScript( new FishCompletionGenerator( "gemma-cli", new HashSet<>( Arrays.asList( "a", "b", "c" ) ) ), writer );
+            writeCompletionScript( new FishCompletionGenerator( "gemma-cli", new HashSet<>( Arrays.asList( "a", "b", "c" ) ), mock(), Locale.getDefault() ), writer );
             writer.println( "complete -C 'gemma-cli " + words + "'" );
         }
         return getProcessOutput( process );
