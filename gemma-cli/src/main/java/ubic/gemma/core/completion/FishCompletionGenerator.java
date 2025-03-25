@@ -86,15 +86,15 @@ public class FishCompletionGenerator extends AbstractCompletionGenerator {
                 cli = Arrays.copyOf( cli, cli.length );
                 cli[0] = executableName;
             }
-            return " -a " + quoteIfNecessary( "(" + String.join( " ", cli ) + ")" );
+            return " -a " + quoteIfNecessary( "(" + String.join( " ", cli ) + " 2>/dev/null)" );
         } else if ( o.getConverter() instanceof EnumeratedConverter ) {
-            return " -a " + quoteIfNecessary( "(echo -e \"" + ( ( EnumeratedConverter<?, ?> ) o.getConverter() )
+            String possibleValues = ( ( EnumeratedConverter<?, ?> ) o.getConverter() )
                     .getPossibleValues()
                     .entrySet()
                     .stream()
-                    // TODO: include a description for options (after the tab character)
                     .map( v -> v.getKey() + "\t" + StringUtils.defaultIfBlank( v.getValue(), "" ) )
-                    .collect( Collectors.joining( "\n" ) ) + "\")" );
+                    .collect( Collectors.joining( "\n" ) );
+            return " -a " + quoteIfNecessary( "(echo -e \"" + possibleValues + "\" 2>/dev/null)" );
         } else {
             return "";
         }
