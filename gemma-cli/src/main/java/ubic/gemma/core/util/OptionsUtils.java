@@ -138,6 +138,17 @@ public class OptionsUtils {
                 .build() );
     }
 
+    public static <T extends Enum<T>> void addEnumOption( Options options, String optionName, String longOption, String description, Class<T> enumClass, EnumMap<T, String> descriptions ) {
+        options.addOption( Option.builder( optionName )
+                .longOpt( longOption )
+                .hasArg()
+                .converter( EnumConverter.of( enumClass, descriptions ) )
+                .desc( String.format( "%s Possible values are: %s.",
+                        appendIfMissing( description, "." ),
+                        Arrays.stream( enumClass.getEnumConstants() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) ) )
+                .build() );
+    }
+
     /**
      * Obtain the value of an enumerated option.
      * <p>
