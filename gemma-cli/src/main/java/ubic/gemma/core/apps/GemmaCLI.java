@@ -92,7 +92,7 @@ public class GemmaCLI {
         Option otherLogOpt = Option.builder( LOGGER_OPTION )
                 .longOpt( "logger" ).hasArg()
                 .desc( "Configure a specific logger verbosity (0=silent, 5=very verbose; default is custom, see log4j2.xml). You can also use the following: " + String.join( ", ", LoggingConfigurer.NAMED_LEVELS ) + ".\nFor example, '--logger ubic.gemma=5', '--logger org.hibernate.SQL=5' or '--logger org.hibernate.SQL=debug'. " )
-                .converter( EnumeratedByCommandStringConverter.of( getGemmaCliPath(), "-" + COMPLETION_LIST_LOGGERS_OPTION ) )
+                .converter( EnumeratedByCommandStringConverter.of( "gemma-cli", "-" + COMPLETION_LIST_LOGGERS_OPTION ) )
                 .build();
         Options options = new Options()
                 .addOption( HELP_OPTION, "help", false, "Show help" )
@@ -369,15 +369,6 @@ public class GemmaCLI {
             result.put( LoggingConfigurer.NUMBERED_LEVELS[i], LoggingConfigurer.NAMED_LEVELS[i] );
         }
         return result;
-    }
-
-    private static String getGemmaCliPath() {
-        if ( System.getProperty( "app.home" ) != null ) {
-            // this is set by Appassembler
-            return System.getProperty( "app.home" ) + "/bin/gemma-cli";
-        } else {
-            return "gemma-cli";
-        }
     }
 
     /**

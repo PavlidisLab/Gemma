@@ -8,6 +8,7 @@ import ubic.gemma.core.util.EnumeratedConverter;
 
 import javax.annotation.Nullable;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -80,7 +81,12 @@ public class FishCompletionGenerator extends AbstractCompletionGenerator {
 
     private String getPossibleValues( Option o ) {
         if ( o.getConverter() instanceof EnumeratedByCommandConverter ) {
-            return " -a " + quoteIfNecessary( "(" + String.join( " ", ( ( EnumeratedByCommandConverter<?, ?> ) o.getConverter() ).getPossibleValuesCommand() ) + ")" );
+            String[] cli = ( ( EnumeratedByCommandConverter<?, ?> ) o.getConverter() ).getPossibleValuesCommand();
+            if ( "gemma-cli".equals( cli[0] ) ) {
+                cli = Arrays.copyOf( cli, cli.length );
+                cli[0] = executableName;
+            }
+            return " -a " + quoteIfNecessary( "(" + String.join( " ", cli ) + ")" );
         } else if ( o.getConverter() instanceof EnumeratedConverter ) {
             return " -a " + quoteIfNecessary( "(echo -e \"" + ( ( EnumeratedConverter<?, ?> ) o.getConverter() )
                     .getPossibleValues()
