@@ -23,7 +23,11 @@ import gemma.gsec.util.SecurityUtil;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,7 +48,7 @@ import static java.util.Objects.requireNonNull;
  */
 @Service
 @CommonsLog
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl implements UserService, InitializingBean, ApplicationContextAware {
 
     private static final String ADMINISTRATOR_USER_NAME = "administrator";
 
@@ -57,8 +61,20 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private AclService aclService;
 
-    @Autowired
+    // FIXME: remove SecurityService from here, it depends on UserService, we're using afterPropertiesSet() as a
+    //        workaround to prevent circular dependency
+    private ApplicationContext applicationContext;
     private SecurityService securityService;
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        this.securityService = applicationContext.getBean( SecurityService.class );
+    }
+
+    @Override
+    public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
+        this.applicationContext = applicationContext;
+    }
 
     @Override
     @Transactional
