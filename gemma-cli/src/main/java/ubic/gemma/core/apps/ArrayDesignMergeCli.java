@@ -74,6 +74,7 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
 
     @Override
     protected void buildOptions( Options options ) {
+        super.buildOptions( options );
         Option otherArrayDesignOption = Option.builder( "o" ).required().hasArg().argName( "Other platforms" )
                 .desc(
                         "Short name(s) of arrays to merge with the one given to the -a option, preferably subsumed by it, comma-delimited. "
