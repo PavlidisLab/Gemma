@@ -191,12 +191,11 @@ public class SettingsConfig {
                     if ( allProperties.containsKey( SYSTEM_PROPERTY_PREFIX + key ) ) {
                         props.setProperty( key, allProperties.getProperty( SYSTEM_PROPERTY_PREFIX + key ) );
                     } else if ( allProperties.containsKey( key ) ) {
-                        if ( !key.startsWith( SYSTEM_PROPERTY_PREFIX ) ) {
-                            // allow un-prefixed keys for backward-compatibility
-                            // TODO: remove this as per https://github.com/PavlidisLab/Gemma/issues/1110
-                            log.warn( String.format( "System property %s should be prefixed with '%s'.", key, SYSTEM_PROPERTY_PREFIX ) );
+                        if ( key.startsWith( SYSTEM_PROPERTY_PREFIX ) ) {
+                            props.setProperty( key, allProperties.getProperty( key ) );
+                        } else {
+                            log.warn( String.format( "System property %s matches a Gemma property, but it is not prefixed with with '%s'. It will be ignored.", key, SYSTEM_PROPERTY_PREFIX ) );
                         }
-                        props.setProperty( key, allProperties.getProperty( key ) );
                     }
                 }
             }
