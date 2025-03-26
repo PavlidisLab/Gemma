@@ -7,14 +7,23 @@ import java.io.PrintWriter;
 
 public interface CompletionGenerator {
 
-    default void beforeCompletion( PrintWriter writer ) {
-    }
+    /**
+     * Executed before any completions has been generated.
+     */
+    void beforeCompletion( PrintWriter writer );
 
+    /**
+     * Generate completion for the given options.
+     */
     void generateCompletion( Options options, PrintWriter writer );
 
+    /**
+     * Generate completions for the given subcommand.
+     */
     void generateSubcommandCompletion( String subcommand, Options subcommandOptions, @Nullable String subcommandDescription, boolean allowsPositionalArguments, PrintWriter writer );
 
-    default void afterCompletion( PrintWriter writer ) {
-
-    }
+    /**
+     * Executed after all completions have been generated.
+     */
+    void afterCompletion( PrintWriter writer );
 }

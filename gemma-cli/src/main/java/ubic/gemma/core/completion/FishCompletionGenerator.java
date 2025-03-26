@@ -41,7 +41,6 @@ public class FishCompletionGenerator extends AbstractCompletionGenerator {
 
     @Override
     public void beforeCompletion( PrintWriter writer ) {
-        super.beforeCompletion( writer );
         writer.printf( "set gemma_all_subcommands %s%n", quoteIfNecessary( allSubcommands ) );
         // erase all existing completions
         writer.printf( "complete -e %s%n", quoteIfNecessary( executableName ) );
@@ -88,6 +87,11 @@ public class FishCompletionGenerator extends AbstractCompletionGenerator {
                     isFileOption( o ) ? " -F" : " -f",
                     StringUtils.isNotBlank( o.getDescription() ) ? " --description " + quoteIfNecessary( o.getDescription() ) : "" );
         }
+    }
+
+    @Override
+    public void afterCompletion( PrintWriter writer ) {
+        writer.printf( "set -e gemma_all_subcommands%n" );
     }
 
     private String getPossibleValues( Option o ) {

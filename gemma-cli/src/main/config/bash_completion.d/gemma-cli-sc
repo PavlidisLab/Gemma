@@ -857,13 +857,19 @@ function __gemma_cli_sc_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignMergeCli ' ]]; then
-        if ! [[ "$current_option" =~ (--name|--other|--shortname|-n|-o|-s) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --name --other --shortname -add -h -n -o -s" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|--name|--other|--shortname|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-mdate|-n|-o|-s) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch-format --batch-output-file --batch-report-frequency --help --name --other --shortname -a -add -auto -batchFormat -batchOutputFile -batchReportFrequency -f -h -mdate -n -o -s" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--adListFile|--batch-output-file|-batchOutputFile|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' mergePlatforms ' ]]; then
-        if ! [[ "$current_option" =~ (--name|--other|--shortname|-n|-o|-s) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--help --name --other --shortname -add -h -n -o -s" -- "$2")
+        if ! [[ "$current_option" =~ (--adListFile|--array|--batch-format|--batch-output-file|--batch-report-frequency|--name|--other|--shortname|-a|-batchFormat|-batchOutputFile|-batchReportFrequency|-f|-mdate|-n|-o|-s) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--adListFile --array --batch-format --batch-output-file --batch-report-frequency --help --name --other --shortname -a -add -auto -batchFormat -batchOutputFile -batchReportFrequency -f -h -mdate -n -o -s" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--adListFile|--batch-output-file|-batchOutputFile|-f) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.core.apps.ArrayDesignRepeatScanCli ' ]]; then
