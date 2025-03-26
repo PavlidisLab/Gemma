@@ -198,6 +198,8 @@ public class SingleCellSparsityMetrics {
             case PERCENT1:
                 if ( threshold == 0 ) {
                     return value > 0;
+                } else {
+                    throw new IllegalArgumentException( "Cannot determine if data on scale " + scaleType + " is expressed for a non-zero threshold." );
                 }
             case LOG1P:
                 return value > thresholdLog1p;
