@@ -5,7 +5,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.DataDeleterService;
-import ubic.gemma.core.util.EntityLocator;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
@@ -31,9 +30,6 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
 
     @Autowired
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
-
-    @Autowired
-    private EntityLocator entityLocator;
 
     private String ctaIdentifier;
     private String clcIdentifier;

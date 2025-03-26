@@ -27,7 +27,6 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -38,9 +37,6 @@ import java.io.PrintWriter;
  * @author keshav
  */
 public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatingCLI {
-
-    @Autowired
-    private EntityUrlBuilder entityUrlBuilder;
 
     @Autowired
     private BuildInfo buildInfo;

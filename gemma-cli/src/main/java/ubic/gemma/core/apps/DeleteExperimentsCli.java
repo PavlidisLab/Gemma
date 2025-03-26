@@ -19,7 +19,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.EntityLocator;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -38,8 +37,6 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
 
     @Autowired
     private ArrayDesignService ads;
-    @Autowired
-    private EntityLocator entityLocator;
 
     private List<String> platformAccs = null;
 
