@@ -71,7 +71,7 @@ public class GemmaCLI {
             COMPLETION_OPTION = "c",
             COMPLETION_EXECUTABLE_OPTION = "ce",
             COMPLETION_SHELL_OPTION = "cs",
-            COMPLETION_LIST_LOGGERS_OPTION = "cl",
+            COMPLETE_LOGGERS = "cl",
             VERSION_OPTION = "version",
             LOGGER_OPTION = "logger",
             VERBOSITY_OPTION = "v",
@@ -100,7 +100,7 @@ public class GemmaCLI {
         Option otherLogOpt = Option.builder( LOGGER_OPTION )
                 .longOpt( "logger" ).hasArg()
                 .desc( "Configure a specific logger verbosity (0=silent, 5=very verbose; default is custom, see log4j2.xml). You can also use the following: " + String.join( ", ", LoggingConfigurer.NAMED_LEVELS ) + ".\nFor example, '--logger ubic.gemma=5', '--logger org.hibernate.SQL=5' or '--logger org.hibernate.SQL=debug'. " )
-                .converter( EnumeratedByCommandStringConverter.of( GEMMA_CLI_EXE, "-" + COMPLETION_LIST_LOGGERS_OPTION ) )
+                .converter( EnumeratedByCommandStringConverter.of( GEMMA_CLI_EXE, "-" + COMPLETE_LOGGERS ) )
                 .build();
         Options options = new Options()
                 .addOption( HELP_OPTION, "help", false, "Show help" )
@@ -113,7 +113,7 @@ public class GemmaCLI {
                         .converter( EnumeratedStringConverter.of( "bash", "fish" ) )
                         .desc( "Indicate which shell to generate completion for. Only fish and bash are supported" )
                         .build() )
-                .addOption( COMPLETION_LIST_LOGGERS_OPTION, "completion-list-loggers", false, "List all available logger that can be used for -" + LOGGER_OPTION + "." )
+                .addOption( COMPLETE_LOGGERS, "complete-loggers", false, "List all available logger that can be used for -" + LOGGER_OPTION + "." )
                 .addOption( VERSION_OPTION, "version", false, "Show Gemma version" )
                 .addOption( otherLogOpt )
                 .addOption( logOpt )
@@ -141,7 +141,7 @@ public class GemmaCLI {
             return;
         }
 
-        if ( commandLine.hasOption( COMPLETION_LIST_LOGGERS_OPTION ) ) {
+        if ( commandLine.hasOption( COMPLETE_LOGGERS ) ) {
             // TODO: descriptions for CLI options
             loggingConfigurer.getAllLoggerNames()
                     .forEach( x -> System.out.printf( "%s\t%s%n", x, x.isEmpty() ? "Root logger" : "" ) );
