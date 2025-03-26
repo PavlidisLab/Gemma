@@ -96,10 +96,14 @@ public abstract class AbstractAutoSeekingCLI<T extends Auditable> extends Abstra
     }
 
     protected void addForceOption( Options options ) {
+        String desc = "Ignore other reasons for skipping entities (e.g., troubled experiments) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)";
+        addForceOption( options, desc );
+    }
+
+    protected void addForceOption( Options options, String description ) {
         Assert.state( !force, "Force mode is enabled for this CLI, you cannot add the -force/--force option." );
         Assert.state( !options.hasOption( FORCE_OPTION ), "The -" + FORCE_OPTION + " option was already added." );
-        String desc = "Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)";
-        options.addOption( FORCE_OPTION, "force", false, desc );
+        options.addOption( FORCE_OPTION, "force", false, description );
     }
 
     /**

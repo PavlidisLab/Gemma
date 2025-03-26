@@ -20,7 +20,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,6 +27,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
+import static ubic.gemma.core.util.EntityOptionsUtils.addTaxonOption;
 
 /**
  * Process the blat results for an array design to map them onto genes. Typical workflow would be to run:
@@ -59,8 +60,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private final static String OPTION_MRNA = "m";
     private final static String OPTION_REFSEQ = "r";
 
-    @Autowired
-    private TaxonService taxonService;
     @Autowired
     private ArrayDesignProbeMapperService arrayDesignProbeMapperService;
     @Autowired
@@ -145,12 +144,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                                 + "; overrides -config." )
                 .build() );
 
-        Option taxonOption = Option.builder( "t" ).hasArg().argName( "taxon" ).desc(
-                        "Taxon common name (e.g., human); if using '-import', this taxon will be assumed; otherwise analysis will be run for all"
-                                + " ArrayDesigns from that taxon (overrides -a)" )
-                .build();
-
-        options.addOption( taxonOption );
+        addTaxonOption( options, "t", "taxon", "Taxon identifier (e.g., human); if using '-import', this taxon will be assumed; otherwise analysis will be run for all platforms from that taxon; overrides -a." );
 
         Option force = Option.builder( "force" ).desc( "Run no matter what" ).build();
 
@@ -215,7 +209,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             }
         }
         if ( commandLine.hasOption( 't' ) ) {
-            this.taxon = this.getTaxonByName( commandLine );
+            this.taxon = entityLocator.locateTaxon( commandLine.getOptionValue( 't' ) );
         }
 
         if ( commandLine.hasOption( "nodb" ) ) {
@@ -699,12 +693,4 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
     }
 
-    private Taxon getTaxonByName( CommandLine commandLine ) {
-        String taxonName = commandLine.getOptionValue( 't' );
-        ubic.gemma.model.genome.Taxon taxon = taxonService.findByCommonName( taxonName );
-        if ( taxon == null ) {
-            log.error( "ERROR: Cannot find taxon " + taxonName );
-        }
-        return taxon;
-    }
 }

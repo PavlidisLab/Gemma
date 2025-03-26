@@ -41,6 +41,8 @@ import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.io.IOException;
 import java.util.*;
 
+import static ubic.gemma.core.util.EntityOptionsUtils.addPlatformOption;
+
 /**
  * Aggregates functionality useful when writing CLIs that need to get an array design from the database and do something
  * with it.
@@ -78,13 +80,10 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
 
     @Override
     protected void buildOptions( Options options ) {
-        Option arrayDesignOption = Option.builder( "a" ).hasArg().argName( "Array design" )
-                .desc( "Array design name (or short name); or comma-delimited list" ).longOpt( "array" ).build();
+        addPlatformOption( options, "a", "array", "Platform ID, short name or name; or comma-delimited list of these" );
 
-        options.addOption( arrayDesignOption );
-
-        Option eeFileListOption = Option.builder( "f" ).hasArg().argName( "Array Design list file" )
-                .desc( "File with list of short names or IDs of designs (one per line; use instead of '-a')" )
+        Option eeFileListOption = Option.builder( "f" ).hasArg().argName( "File containing platform identifiers" )
+                .desc( "File with list of short names or IDs of platforms (one per line; use instead of '-a')" )
                 .longOpt( "adListFile" ).build();
         options.addOption( eeFileListOption );
 

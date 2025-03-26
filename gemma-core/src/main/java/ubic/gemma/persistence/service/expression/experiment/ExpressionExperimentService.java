@@ -86,7 +86,26 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * Load troubled experiment IDs.
      * @see CuratableDao#loadTroubledIds()
      */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     List<Long> loadTroubledIds();
+
+    /**
+     * Load all ID and name pairs.
+     * <p>
+     * Results are filtered by ACLs at the query-level.
+     */
+    SortedMap<Long, String> loadAllIdAndName();
+
+    /**
+     * Load all short name and name pairs.
+     * <p>
+     * Results are filtered by ACLs at the query-level.
+     */
+    SortedMap<String, String> loadAllShortNameAndName();
+
+    SortedSet<String> loadAllName();
+
+    SortedMap<String, String> loadAllAccessionAndName();
 
     /**
      * @see ExpressionExperimentDao#reload(Object)
@@ -537,7 +556,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Collection<BioAssayDimension> getBioAssayDimensionsFromSubSets(ExpressionExperiment expressionExperiment);
+    Collection<BioAssayDimension> getBioAssayDimensionsFromSubSets( ExpressionExperiment expressionExperiment );
 
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })

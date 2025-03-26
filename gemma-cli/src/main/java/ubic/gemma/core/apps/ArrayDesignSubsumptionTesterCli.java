@@ -23,6 +23,9 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.completion.CompletionType;
+import ubic.gemma.core.completion.CompletionUtils;
+import ubic.gemma.core.util.EnumeratedByCommandStringConverter;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -56,7 +59,9 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
         super.buildOptions( options );
         Option otherArrayDesignOption = Option.builder( "o" ).required().hasArg().argName( "Other platform" )
                 .desc( "Short name(s) of platforms to compare to the first one, comma-delimited" )
-                .longOpt( "other" ).build();
+                .longOpt( "other" )
+                .converter( EnumeratedByCommandStringConverter.of( CompletionUtils.generateCompleteCommand( CompletionType.PLATFORM ) ) )
+                .build();
         Option allways = Option.builder( "all" ).desc( "Test all platforms listed against all (not just to the first one)" ).build();
 
         options.addOption( otherArrayDesignOption );

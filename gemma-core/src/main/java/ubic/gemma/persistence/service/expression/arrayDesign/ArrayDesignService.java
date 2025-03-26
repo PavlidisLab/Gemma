@@ -47,6 +47,12 @@ import java.util.function.Function;
 public interface ArrayDesignService extends SecurableBaseService<ArrayDesign>,
         SecurableFilteringVoEnabledService<ArrayDesign, ArrayDesignValueObject> {
 
+    /**
+     * Load *generic* gene-based platforms.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ArrayDesign> loadAllGenericGenePlatforms();
+
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ArrayDesign loadAndThaw( Long id );

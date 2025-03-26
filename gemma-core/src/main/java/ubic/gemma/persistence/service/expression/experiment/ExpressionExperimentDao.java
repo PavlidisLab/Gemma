@@ -50,6 +50,14 @@ public interface ExpressionExperimentDao
      */
     ExpressionExperiment load( Long id, CacheMode cacheMode );
 
+    SortedMap<Long, String> loadAllIdAndName();
+
+    SortedMap<String, String> loadAllShortNameAndName();
+
+    SortedSet<String> loadAllName();
+
+    SortedMap<String, String> loadAllAccessionAndName();
+
     @Nullable
     BioAssaySet loadBioAssaySet( Long id );
 

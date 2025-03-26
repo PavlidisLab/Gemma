@@ -171,6 +171,30 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public SortedMap<Long, String> loadAllIdAndName() {
+        return expressionExperimentDao.loadAllIdAndName();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SortedMap<String, String> loadAllShortNameAndName() {
+        return expressionExperimentDao.loadAllShortNameAndName();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SortedSet<String> loadAllName() {
+        return expressionExperimentDao.loadAllName();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SortedMap<String, String> loadAllAccessionAndName() {
+        return expressionExperimentDao.loadAllAccessionAndName();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ExpressionExperiment reload( ExpressionExperiment ee ) {
         return expressionExperimentDao.reload( ee );
     }

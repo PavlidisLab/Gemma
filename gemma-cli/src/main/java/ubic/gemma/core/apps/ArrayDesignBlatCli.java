@@ -37,6 +37,8 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
 
+import static ubic.gemma.core.util.EntityOptionsUtils.addTaxonOption;
+
 /**
  * Command line interface to run blat on the sequences for a microarray; the results are persisted in the DB. You must
  * start the BLAT server first before using this.
@@ -84,13 +86,10 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
         options.addOption( Option.builder( "sensitive" ).desc( "Run on more sensitive server, if available" ).build() );
 
-        Option taxonOption = Option.builder( "t" ).hasArg().argName( "taxon" ).desc(
-                        "Taxon common name (e.g., human); if platform name not given (analysis will be "
-                                + "restricted to sequences on that platform for taxon given), blat "
-                                + "will be run for all ArrayDesigns from that taxon (overrides -a and -b)" )
-                .build();
+        addTaxonOption( options, "t", "taxon", "Taxon identifier (e.g., human); if platform name not given (analysis will be "
+                + "restricted to sequences on that platform for taxon given), blat "
+                + "will be run for all ArrayDesigns from that taxon (overrides -a and -b)" );
 
-        options.addOption( taxonOption );
         // this.addThreadsOption( options );
         options.addOption( blatScoreThresholdOption );
         options.addOption( blatResultOption );
@@ -118,10 +117,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
         if ( commandLine.hasOption( 't' ) ) {
             String taxonName = commandLine.getOptionValue( 't' );
-            this.taxon = taxonService.findByCommonName( taxonName );
-            if ( taxon == null ) {
-                throw new IllegalArgumentException( "No taxon named " + taxonName );
-            }
+            this.taxon = entityLocator.locateTaxon( taxonName );
         }
     }
 

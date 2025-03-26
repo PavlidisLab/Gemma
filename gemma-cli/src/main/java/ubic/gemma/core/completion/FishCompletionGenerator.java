@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.NoSuchMessageException;
+import ubic.gemma.core.apps.GemmaCLI;
 import ubic.gemma.core.util.EnumeratedByCommandConverter;
 import ubic.gemma.core.util.EnumeratedConverter;
 
@@ -92,7 +93,7 @@ public class FishCompletionGenerator extends AbstractCompletionGenerator {
     private String getPossibleValues( Option o ) {
         if ( o.getConverter() instanceof EnumeratedByCommandConverter ) {
             String[] cli = ( ( EnumeratedByCommandConverter<?, ?> ) o.getConverter() ).getPossibleValuesCommand();
-            if ( "gemma-cli".equals( cli[0] ) ) {
+            if ( GemmaCLI.GEMMA_CLI_EXE.equals( cli[0] ) ) {
                 cli = Arrays.copyOf( cli, cli.length );
                 cli[0] = executableName;
             }

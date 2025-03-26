@@ -38,6 +38,8 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import static ubic.gemma.core.util.EntityOptionsUtils.addTaxonOption;
+
 /**
  * Given an array design creates a Gene Ontology Annotation file Given a batch file creates all the Annotation files for
  * the AD's specified in the batch file Given nothing creates annotation files for every AD that isn't subsumed or
@@ -89,9 +91,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 //        Option geneListFile = Option.builder( "g" ).longOpt( GENE_NAME_LIST_FILE_OPTION ).desc( ArrayDesignAnnotationFileCli.GENE_LIST_FILE_DESC )
 //                .hasArg().argName( "File of gene symbols" ).build();
 
-        Option taxonNameOption = Option.builder( "t" ).longOpt( "taxon" ).hasArg().argName( "taxon name" )
-                .desc( ArrayDesignAnnotationFileCli.TAXON_DESC ).build();
-
         //   Option overWriteOption = Option.builder( "o" ).longOpt( "overwrite" ).desc( ArrayDesignAnnotationFileCli.OVERWRITE_DESC ).build();
 
         Option skipGOOption = Option.builder( "nogo" ).longOpt( "nogo" ).desc( "Skip GO annotations" ).build();
@@ -102,7 +101,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         options.addOption( fileLoading );
         options.addOption( batchLoading );
         //   options.addOption( overWriteOption );
-        options.addOption( taxonNameOption );
+        addTaxonOption( options, "t", "taxon",
+                ArrayDesignAnnotationFileCli.TAXON_DESC );
         options.addOption( skipGOOption );
         options.addOption( dontDeleteOtherFilesOption );
         //    options.addOption( geneListFile );
@@ -391,10 +391,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 //    }
 
     private void processGenesForTaxon() {
-        Taxon taxon = taxonService.findByCommonName( taxonName );
-        if ( taxon == null ) {
-            throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
-        }
+        Taxon taxon = entityLocator.locateTaxon( taxonName );
         log.info( "Processing all genes for " + taxon );
         Collection<Gene> genes = geneService.loadAll( taxon );
         log.info( "Taxon has " + genes.size() + " 'known' genes" );

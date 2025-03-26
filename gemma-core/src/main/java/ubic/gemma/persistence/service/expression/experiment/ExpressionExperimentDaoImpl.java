@@ -126,6 +126,48 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public SortedMap<Long, String> loadAllIdAndName() {
+        Query query = getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.id, ee.name from ExpressionExperiment ee "
+                        + AclQueryUtils.formAclRestrictionClause( "ee.id" ) );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        return QueryUtils.<Object[]>list( query )
+                .stream()
+                .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( String ) row[1], ( a, b ) -> a, TreeMap::new ) );
+    }
+
+    @Override
+    public SortedMap<String, String> loadAllShortNameAndName() {
+        Query query = getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.shortName, ee.name from ExpressionExperiment ee "
+                        + AclQueryUtils.formAclRestrictionClause( "ee.id" ) );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        return QueryUtils.<Object[]>list( query )
+                .stream()
+                .collect( Collectors.toMap( row -> ( String ) row[0], row -> ( String ) row[1], ( a, b ) -> a, TreeMap::new ) );
+    }
+
+    @Override
+    public SortedSet<String> loadAllName() {
+        Query query = getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.name from ExpressionExperiment ee "
+                        + AclQueryUtils.formAclRestrictionClause( "ee.id" ) );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        return new TreeSet<>( QueryUtils.list( query ) );
+    }
+
+    @Override
+    public SortedMap<String, String> loadAllAccessionAndName() {
+        Query query = getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.accession.accession, ee.name from ExpressionExperiment ee "
+                        + AclQueryUtils.formAclRestrictionClause( "ee.id" ) );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        return QueryUtils.<Object[]>list( query )
+                .stream()
+                .collect( Collectors.toMap( row -> ( String ) row[0], row -> ( String ) row[1], ( a, b ) -> a, TreeMap::new ) );
+    }
+
+    @Override
     public List<ExpressionExperiment> browse( int start, int limit ) {
         Query query = this.getSessionFactory().getCurrentSession().createQuery( "from ExpressionExperiment" );
         query.setMaxResults( limit );

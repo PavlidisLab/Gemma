@@ -35,6 +35,8 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.InputStream;
 
+import static ubic.gemma.core.util.EntityOptionsUtils.addTaxonOption;
+
 /**
  * Attach sequences to array design, fetching from BLAST database if requested.
  *
@@ -97,20 +99,9 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         options.addOption( Option.builder( "s" ).hasArg().argName( "accession" ).desc( "A single accession to update" )
                 .longOpt( "sequence" ).build() );
 
-        Option forceOption = Option.builder( "force" )
-                .desc(
-                        "Force overwriting of existing sequences; If biosequences are encountered that already have sequences filled in, "
-                                + "they will be overwritten; default is to leave them." )
-                .build();
+        addForceOption( options, "Force overwriting of existing sequences; If biosequences are encountered that already have sequences filled in, they will be overwritten; default is to leave them." );
 
-        options.addOption( forceOption );
-
-        Option taxonOption = Option.builder( "t" ).hasArg().argName( "taxon" ).desc(
-                        "Taxon common name (e.g., human) for sequences (only required if array design is 'naive')" )
-                .build();
-
-        options.addOption( taxonOption );
-
+        addTaxonOption( options, "t", "taxon", "Taxon identifier (e.g., human) for sequences (only required if array design is 'naive')" );
     }
 
     @Override
@@ -170,11 +161,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
         Taxon taxon;
         if ( this.taxonName != null ) {
-            assert StringUtils.isNotBlank( this.taxonName );
-            taxon = taxonService.findByCommonName( this.taxonName );
-            if ( taxon == null ) {
-                throw new IllegalArgumentException( "No taxon named " + taxonName );
-            }
+            taxon = entityLocator.locateTaxon( this.taxonName );
         } else {
             taxon = this.getArrayDesignService().getTaxon( arrayDesign.getId() );
             // could still be null

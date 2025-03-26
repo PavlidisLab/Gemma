@@ -21,10 +21,10 @@ package ubic.gemma.core.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.genome.gene.ncbi.NcbiGeneLoader;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
+import ubic.gemma.core.util.EntityLocator;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.genome.Taxon;
@@ -32,8 +32,11 @@ import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.Date;
+
+import static ubic.gemma.core.util.EntityOptionsUtils.addTaxonOption;
 
 /**
  * Command line interface to gene parsing and loading
@@ -52,9 +55,12 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
     private Persister persisterHelper;
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
+    @Autowired
+    private EntityLocator entityLocator;
 
     private NcbiGeneLoader loader;
     private String filePath = null;
+    @Nullable
     private String taxonCommonName = null;
     private boolean skipDownload = false;
     private Integer startNcbiId = null;
@@ -89,7 +95,7 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
 
         options.addOption( pathOption );
 
-        options.addOption( Option.builder( "taxon" ).longOpt( null ).desc( "Specific taxon for which to update genes" ).argName( "taxon" ).hasArg().build() );
+        addTaxonOption( options, "taxon", "taxon", "Specific taxon for which to update genes" );
 
         options.addOption( "nodownload", "Set to suppress NCBI file download" );
 
@@ -106,11 +112,8 @@ public class NcbiGeneLoaderCLI extends AbstractAuthenticatedCLI {
         loader.setStartingNcbiId( startNcbiId );
 
         Taxon t = null;
-        if ( StringUtils.isNotBlank( taxonCommonName ) ) {
-            t = taxonService.findByCommonName( this.taxonCommonName );
-            if ( t == null ) {
-                throw new IllegalArgumentException( "Unrecognized taxon: " + taxonCommonName );
-            }
+        if ( taxonCommonName != null ) {
+            t = entityLocator.locateTaxon( this.taxonCommonName );
         }
 
         if ( filePath != null ) {

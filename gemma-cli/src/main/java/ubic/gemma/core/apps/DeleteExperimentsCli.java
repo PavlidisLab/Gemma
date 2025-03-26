@@ -15,17 +15,19 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.util.EntityLocator;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 import java.util.Arrays;
 import java.util.List;
+
+import static ubic.gemma.core.util.EntityOptionsUtils.addCommaDelimitedPlatformOption;
 
 /**
  * Delete one or more experiments from the system.
@@ -36,6 +38,8 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
 
     @Autowired
     private ArrayDesignService ads;
+    @Autowired
+    private EntityLocator entityLocator;
 
     private List<String> platformAccs = null;
 
@@ -56,10 +60,7 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
     protected void buildExperimentOptions( Options options ) {
-        options.addOption(
-                Option.builder( "a" ).longOpt( "array" )
-                        .desc( "Delete platform(s) instead; you must delete associated experiments first; other options are ignored" )
-                        .argName( "comma-delimited list of platform short names" ).hasArg().build() );
+        addCommaDelimitedPlatformOption( options, "a", "array", "Delete platform(s) instead; you must delete associated experiments first; other options are ignored." );
     }
 
     @Override
@@ -80,7 +81,7 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
 
             for ( String p : platformAccs ) {
 
-                ArrayDesign a = ads.findByShortName( p );
+                ArrayDesign a = entityLocator.locateArrayDesign( p );
 
                 if ( a == null ) {
                     log.info( "No such platform " + p );

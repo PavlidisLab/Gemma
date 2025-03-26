@@ -4,8 +4,11 @@ import org.apache.commons.cli.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
+import ubic.gemma.core.completion.CompletionType;
+import ubic.gemma.core.completion.CompletionUtils;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.expression.singleCell.*;
+import ubic.gemma.core.util.EnumeratedByCommandStringConverter;
 import ubic.gemma.core.util.OptionsUtils;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -21,11 +24,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
-import java.util.stream.Collectors;
 
+import static ubic.gemma.core.util.EntityOptionsUtils.addGenericPlatformOption;
 import static ubic.gemma.core.util.OptionsUtils.*;
 
 public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI {
@@ -179,18 +181,18 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         options.addOption( LOAD_CELL_LEVEL_CHARACTERISTICS_OPTION, "load-cell-level-characteristics", false, "Only load cell-level characteristics. Use -" + QT_NAME_OPTION + " to specify which set of vectors this is applicable to." );
         options.addOption( LOAD_SEQUENCING_METADATA_OPTION, "load-sequencing-metadata", false, "Load sequencing metadata." );
 
-        options.addOption( DATA_TYPE_OPTION, "data-type", true, "Data type to import. Must be one of " + Arrays.stream( SingleCellDataType.values() ).map( Enum::name ).collect( Collectors.joining( ", " ) ) + "." );
+        addEnumOption( options, DATA_TYPE_OPTION, "data-type", "Data type to import.", SingleCellDataType.class );
         options.addOption( Option.builder( DATA_PATH_OPTION )
                 .longOpt( "data-path" )
                 .hasArg()
                 .type( Path.class )
                 .desc( "Load single-cell data from the given path instead of looking up the download directory. For AnnData and Seurat Disk, it is a file. For MEX it is a directory. Requires the -" + DATA_TYPE_OPTION + " option to be set." )
                 .build() );
-        options.addOption( PLATFORM_OPTION, "platform", true, "Target platform (must already exist in the system)" );
+        addGenericPlatformOption( options, PLATFORM_OPTION, "platform", "Target platform (must already exist in the system)" );
         options.addOption( QT_NAME_OPTION, "quantitation-type-name", true, "Quantitation type to import (optional, use if more than one is present in data)" );
         options.addOption( QT_NEW_NAME_OPTION, "quantitation-type-new-name", true, "New name to use for the imported quantitation type (optional, defaults to the data)" );
-        options.addOption( QT_NEW_TYPE_OPTION, "quantitation-type-new-type", true, "New type to use for the imported quantitation type (optional, defaults to the data)" );
-        options.addOption( QT_NEW_SCALE_TYPE_OPTION, "quantitation-type-new-scale-type", true, "New scale type to use for the imported quantitation type (optional, defaults to the data)" );
+        addEnumOption( options, QT_NEW_TYPE_OPTION, "quantitation-type-new-type", "New type to use for the imported quantitation type (optional, defaults to the data)", StandardQuantitationType.class );
+        addEnumOption( options, QT_NEW_SCALE_TYPE_OPTION, "quantitation-type-new-scale-type", "New scale type to use for the imported quantitation type (optional, defaults to the data)", ScaleType.class );
         options.addOption( PREFERRED_QT_OPTION, "preferred-quantitation-type", false, "Make the quantitation type the preferred one." );
         options.addOption( PREFER_SINGLE_PRECISION, "prefer-single-precision", false, "Prefer single precision for storage, even if the data is available with double precision. This reduces the size of vectors and thus the storage requirement." );
         options.addOption( REPLACE_OPTION, "replace", false, "Replace an existing quantitation type." );
@@ -210,7 +212,11 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 .desc( "Path to a cell type assignment file. If missing, cell type importing will be delegated to a specific loader. For AnnData, you must supply the -" + ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION + " option." )
                 .build() );
         options.addOption( CELL_TYPE_ASSIGNMENT_NAME_OPTION, "cell-type-assignment-name", true, "Name to use for the cell type assignment. This require the -" + CELL_TYPE_ASSIGNMENT_FILE_OPTION + " option to be set." );
-        options.addOption( CELL_TYPE_ASSIGNMENT_PROTOCOL_NAME_OPTION, "cell-type-assignment-protocol", true, "An identifier for a protocol describing the cell type assignment. This require the -" + CELL_TYPE_ASSIGNMENT_FILE_OPTION + " option to be set." );
+        options.addOption( Option.builder( CELL_TYPE_ASSIGNMENT_PROTOCOL_NAME_OPTION )
+                .longOpt( "cell-type-assignment-protocol" ).hasArg()
+                .converter( EnumeratedByCommandStringConverter.of( CompletionUtils.generateCompleteCommand( CompletionType.PROTOCOL ) ) )
+                .desc( "An identifier for a protocol describing the cell type assignment. This require the -" + CELL_TYPE_ASSIGNMENT_FILE_OPTION + " option to be set." )
+                .build() );
         options.addOption( PREFERRED_CELL_TYPE_ASSIGNMENT, "preferred-cell-type-assignment", false, "Make the cell type assignment the preferred one." );
         options.addOption( Option.builder( OTHER_CELL_LEVEL_CHARACTERISTICS_FILE )
                 .longOpt( "cell-level-characteristics-file" )
@@ -274,7 +280,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
             }
         }
         if ( commandLine.hasOption( DATA_TYPE_OPTION ) ) {
-            dataType = SingleCellDataType.valueOf( commandLine.getOptionValue( DATA_TYPE_OPTION ) );
+            dataType = commandLine.getParsedOptionValue( DATA_TYPE_OPTION );
         } else {
             dataType = null;
         }
@@ -282,12 +288,12 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         qtName = commandLine.getOptionValue( QT_NAME_OPTION );
         newName = commandLine.getOptionValue( QT_NEW_NAME_OPTION );
         if ( commandLine.hasOption( QT_NEW_TYPE_OPTION ) ) {
-            newType = StandardQuantitationType.valueOf( commandLine.getOptionValue( QT_NEW_TYPE_OPTION ).toUpperCase() );
+            newType = commandLine.getParsedOptionValue( QT_NEW_TYPE_OPTION );
         } else {
             newType = null;
         }
         if ( commandLine.hasOption( QT_NEW_SCALE_TYPE_OPTION ) ) {
-            newScaleType = ScaleType.valueOf( commandLine.getOptionValue( QT_NEW_SCALE_TYPE_OPTION ) );
+            newScaleType = commandLine.getParsedOptionValue( QT_NEW_SCALE_TYPE_OPTION );
         } else {
             newScaleType = null;
         }

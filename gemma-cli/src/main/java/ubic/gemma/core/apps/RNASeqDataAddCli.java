@@ -41,6 +41,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import static ubic.gemma.core.util.EntityOptionsUtils.addGenericPlatformOption;
+
 /**
  * Designed to add count and/or RPKM data to a data set that has only meta-data.
  *
@@ -87,7 +89,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
 
         options.addOption( Option.builder( RNASeqDataAddCli.COUNT_FILE_OPT ).longOpt( null ).desc( "File with count data" ).argName( "file path" ).hasArg().build() );
         options.addOption( RNASeqDataAddCli.ALLOW_MISSING, "Set this if your data files don't have information for all samples." );
-        options.addOption( Option.builder( "a" ).longOpt( null ).required().desc( "Target platform (must already exist in the system)" ).argName( "platform short name" ).hasArg().build() );
+        addGenericPlatformOption( options, "a", "array", "Target platform (must already exist in the system)" );
 
         options.addOption( Option.builder( RNASeqDataAddCli.METADATAOPT ).longOpt( null ).desc( "Information on read length given as a string like '100:paired', '36:unpaired' or simply '36' if pairedness is unknown" ).argName( "length" ).hasArg().build() );
 

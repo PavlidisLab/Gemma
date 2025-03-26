@@ -24,7 +24,10 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.completion.CompletionType;
+import ubic.gemma.core.completion.CompletionUtils;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
+import ubic.gemma.core.util.EnumeratedByCommandStringConverter;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 import java.util.Collection;
@@ -71,13 +74,14 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
 
     @Override
     protected void buildOptions( Options options ) {
-        super.buildOptions( options );
         Option otherArrayDesignOption = Option.builder( "o" ).required().hasArg().argName( "Other platforms" )
                 .desc(
                         "Short name(s) of arrays to merge with the one given to the -a option, preferably subsumed by it, comma-delimited. "
                                 + "If the platform given with -a is already a merged design, these will be added to it if the -add option is given"
                                 + "The designs cannot be ones already merged into another design, but they can be mergees." )
-                .longOpt( "other" ).build();
+                .longOpt( "other" )
+                .converter( EnumeratedByCommandStringConverter.of( CompletionUtils.generateCompleteCommand( CompletionType.PLATFORM ) ) )
+                .build();
 
         options.addOption( otherArrayDesignOption );
 

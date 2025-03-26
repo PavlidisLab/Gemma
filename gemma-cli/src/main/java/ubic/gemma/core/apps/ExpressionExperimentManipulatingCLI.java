@@ -59,6 +59,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.core.util.EntityOptionsUtils.*;
+
 /**
  * Base class for CLIs that needs one or more expression experiment as an input. It offers the following ways of reading
  * them in:
@@ -188,12 +190,9 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
 
     @Override
     protected final void buildOptions( Options options ) {
-        Option expOption = Option.builder( "e" ).hasArg().argName( "shortname" ).desc(
-                        "Expression experiment short name. Most tools recognize comma-delimited values given on the command line, "
-                                + "and if this option is omitted (and none other provided), the tool will be applied to all expression experiments." )
-                .longOpt( "experiment" ).build();
-
-        options.addOption( expOption );
+        addDatasetOption( options, "e", "experiment",
+                "Dataset identifier. Most tools recognize comma-delimited values given on the command line, "
+                        + "and if this option is omitted (and none other provided), the tool will be applied to all expression experiments." );
 
         if ( singleExperimentMode ) {
             buildExperimentOptions( options );
@@ -209,19 +208,14 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
                 .longOpt( "eeListfile" ).build();
         options.addOption( eeFileListOption );
 
-        Option eeSetOption = Option.builder( "eeset" ).hasArg().argName( "eeSetName" )
-                .desc( "Name of expression experiment set to use" ).build();
-        options.addOption( eeSetOption );
+        addExperimentSetOption( options, "eeset", "experiment-set", "Name of expression experiment set to use" );
 
         Option eeSearchOption = Option.builder( "q" ).hasArg().argName( "expressionQuery" )
                 .desc( "Use a query string for defining which expression experiments to use" )
                 .longOpt( "expressionQuery" ).build();
         options.addOption( eeSearchOption );
 
-        Option taxonOption = Option.builder( "t" ).hasArg().argName( "taxon name" )
-                .desc( "Taxon of the expression experiments and genes" ).longOpt( "taxon" )
-                .build();
-        options.addOption( taxonOption );
+        addTaxonOption( options, "t", "taxon", "Taxon of the expression experiments and genes" );
 
         Option excludeEeOption = Option.builder( "x" ).hasArg().type( Path.class ).argName( "file" )
                 .desc( "File containing list of expression experiments to exclude" )

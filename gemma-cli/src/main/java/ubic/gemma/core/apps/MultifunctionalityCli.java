@@ -15,14 +15,17 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.service.GeneMultifunctionalityPopulationService;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.util.CLI;
+import ubic.gemma.core.util.EntityLocator;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+
+import javax.annotation.Nullable;
+
+import static ubic.gemma.core.util.EntityOptionsUtils.addTaxonOption;
 
 /**
  * @author paul
@@ -32,9 +35,10 @@ public class MultifunctionalityCli extends AbstractAuthenticatedCLI {
     @Autowired
     private GeneMultifunctionalityPopulationService gfs;
     @Autowired
-    private TaxonService taxonService;
+    private EntityLocator entityLocator;
 
-    private Taxon taxon;
+    @Nullable
+    private String taxonName;
 
     public MultifunctionalityCli() {
         setRequireLogin();
@@ -58,26 +62,20 @@ public class MultifunctionalityCli extends AbstractAuthenticatedCLI {
 
     @Override
     protected void buildOptions( Options options ) {
-        Option taxonOption = Option.builder( "t" ).hasArg()
-                .desc( "Taxon to process" ).longOpt( "taxon" )
-                .build();
-        options.addOption( taxonOption );
+        addTaxonOption( options, "t", "taxon", "Taxon to process" );
     }
 
     @Override
     protected void processOptions( CommandLine commandLine ) {
         if ( commandLine.hasOption( 't' ) ) {
-            String taxonName = commandLine.getOptionValue( 't' );
-            this.taxon = taxonService.findByCommonName( taxonName );
-            if ( taxon == null ) {
-                log.error( "ERROR: Cannot find taxon " + taxonName );
-            }
+            this.taxonName = commandLine.getOptionValue( 't' );
         }
     }
 
     @Override
     protected void doAuthenticatedWork() {
-        if ( this.taxon != null ) {
+        if ( taxonName != null ) {
+            Taxon taxon = entityLocator.locateTaxon( taxonName );
             gfs.updateMultifunctionality( taxon );
         } else {
             gfs.updateMultifunctionality();

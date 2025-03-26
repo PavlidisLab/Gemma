@@ -19,7 +19,6 @@
 package ubic.gemma.core.apps;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchService;
@@ -27,6 +26,8 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPl
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+
+import static ubic.gemma.core.util.EntityOptionsUtils.addPlatformOption;
 
 /**
  * Switch the array design used to the merged one.
@@ -55,10 +56,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
 
     @Override
     protected void buildExperimentOptions( Options options ) {
-        Option arrayDesignOption = Option.builder( "a" ).hasArg().argName( "Array design" ).desc(
-                        "Array design short name to be switched to - no need to specify if the platforms used by the EE are merged" )
-                .longOpt( "array" ).build();
-        options.addOption( arrayDesignOption );
+        addPlatformOption( options, "a", "array", "Array design short name to be switched to - no need to specify if the platforms used by the EE are merged" );
         this.addForceOption( options );
     }
 

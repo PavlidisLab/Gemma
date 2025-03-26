@@ -60,6 +60,11 @@ public class GemmaCLI {
         }
     }
 
+    /**
+     * Name of the Gemma CLI executable.
+     */
+    public static String GEMMA_CLI_EXE = "gemma-cli";
+
     private static final String
             HELP_OPTION = "h",
             HELP_ALL_OPTION = "ha",
@@ -95,13 +100,13 @@ public class GemmaCLI {
         Option otherLogOpt = Option.builder( LOGGER_OPTION )
                 .longOpt( "logger" ).hasArg()
                 .desc( "Configure a specific logger verbosity (0=silent, 5=very verbose; default is custom, see log4j2.xml). You can also use the following: " + String.join( ", ", LoggingConfigurer.NAMED_LEVELS ) + ".\nFor example, '--logger ubic.gemma=5', '--logger org.hibernate.SQL=5' or '--logger org.hibernate.SQL=debug'. " )
-                .converter( EnumeratedByCommandStringConverter.of( "gemma-cli", "-" + COMPLETION_LIST_LOGGERS_OPTION ) )
+                .converter( EnumeratedByCommandStringConverter.of( GEMMA_CLI_EXE, "-" + COMPLETION_LIST_LOGGERS_OPTION ) )
                 .build();
         Options options = new Options()
                 .addOption( HELP_OPTION, "help", false, "Show help" )
                 .addOption( HELP_ALL_OPTION, "help-all", false, "Show complete help with all available CLI commands" )
                 .addOption( COMPLETION_OPTION, "completion", false, "Generate a completion script" )
-                .addOption( COMPLETION_EXECUTABLE_OPTION, "completion-executable", true, "Name of the executable to generate completion for (defaults to gemma-cli)" )
+                .addOption( COMPLETION_EXECUTABLE_OPTION, "completion-executable", true, "Name of the executable to generate completion for (defaults to " + GEMMA_CLI_EXE + ")" )
                 .addOption( Option.builder( COMPLETION_SHELL_OPTION )
                         .longOpt( "completion-shell" )
                         .hasArg()
@@ -283,7 +288,7 @@ public class GemmaCLI {
                     return;
                 }
             }
-            String executableName = commandLine.getOptionValue( COMPLETION_EXECUTABLE_OPTION, "gemma-cli" );
+            String executableName = commandLine.getOptionValue( COMPLETION_EXECUTABLE_OPTION, GEMMA_CLI_EXE );
             Set<String> subcommands = new HashSet<>( commandsByName.keySet() );
             subcommands.addAll( commandsByClassName.keySet() );
             if ( shellName.equals( "bash" ) ) {
@@ -412,9 +417,9 @@ public class GemmaCLI {
             footer.append( '\n' );
         }
 
-        footer.append( "To get help for a specific tool, use: 'gemma-cli <commandName> --help'." );
+        footer.append( "To get help for a specific tool, use: '" + GEMMA_CLI_EXE + " <commandName> --help'." );
 
-        HelpUtils.printHelp( writer, "gemma-cli [options] [commandName] [commandOptions]", options, null, footer.toString() );
+        HelpUtils.printHelp( writer, GEMMA_CLI_EXE + " [options] [commandName] [commandOptions]", options, null, footer.toString() );
     }
 
     @Value

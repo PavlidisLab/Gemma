@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  * it will perform an upper case match.
  * @author poirigui
  */
-public class EnumConverter<T extends Enum<T>> implements EnumeratedConverter<Enum<T>, IllegalArgumentException> {
+public class EnumConverter<T extends Enum<T>> implements EnumeratedConverter<T, IllegalArgumentException> {
 
     private static final MessageSourceResolvable EMPTY_MESSAGE = new DefaultMessageSourceResolvable( null, null, "" );
 
@@ -28,7 +28,7 @@ public class EnumConverter<T extends Enum<T>> implements EnumeratedConverter<Enu
 
     private final Class<T> enumClass;
     private final EnumMap<T, MessageSourceResolvable> descriptions;
-    private final TreeMap<String, Enum<T>> enumByName = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
+    private final TreeMap<String, T> enumByName = new TreeMap<>( String.CASE_INSENSITIVE_ORDER );
 
     private EnumConverter( Class<T> enumClass, EnumMap<T, MessageSourceResolvable> descriptions ) {
         this.enumClass = enumClass;
@@ -39,13 +39,13 @@ public class EnumConverter<T extends Enum<T>> implements EnumeratedConverter<Enu
     }
 
     @Override
-    public Enum<T> apply( String value ) {
+    public T apply( String value ) {
         value = StringUtils.strip( value ).replace( '-', '_' );
         try {
             // as-is
             return Enum.valueOf( enumClass, value );
         } catch ( IllegalArgumentException e ) {
-            Enum<T> v = enumByName.get( value );
+            T v = enumByName.get( value );
             if ( v == null ) {
                 throw e;
             }

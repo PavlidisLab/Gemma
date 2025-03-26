@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
+import ubic.gemma.core.util.EntityLocator;
 import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -39,10 +40,12 @@ import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.File;
 import java.util.*;
+
+import static ubic.gemma.core.util.EntityOptionsUtils.addGenericPlatformOption;
+import static ubic.gemma.core.util.EntityOptionsUtils.addTaxonOption;
 
 /**
  * Create (or update) an array design based on a list of NCBI gene IDs desired to be on the platform.
@@ -65,22 +68,17 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
     private CompositeSequenceService compositeSequenceService;
     @Autowired
     private GeneService geneService;
-
     @Autowired
     private GeneProductService geneProductService;
-
     @Autowired
-    private TaxonService taxonService;
+    private EntityLocator entityLocator;
+    @Autowired
+    private AuditTrailService auditTrailService;
 
     private String platformShortName = null;
     private String geneListFileName = null;
-    private Taxon taxon = null;
-
+    private String taxonName = null;
     private boolean noDB = false;
-
-
-    @Autowired
-    private AuditTrailService auditTrailService;
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -93,12 +91,15 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        options.addOption( Option.builder( "t" ).longOpt( "taxon" ).desc( "Taxon of the genes" ).argName( "taxon" ).required().hasArg().build() );
+    public String getShortDesc() {
+        return "Update a 'platform' based on a list of NCBI IDs";
+    }
 
-        Option arrayDesignOption = Option.builder( "a" ).hasArg().argName( "shortName" )
-                .desc( "Platform short name (existing or new to add)" ).required().longOpt( "platform" ).build();
-        options.addOption( arrayDesignOption );
+    @Override
+    protected void buildOptions( Options options ) {
+        addTaxonOption( options, "t", "taxon", "Taxon of the genes" );
+
+        addGenericPlatformOption( options, "a", "array", "Platform short name (existing or new to add)" );
 
         Option geneListOption = Option.builder( "f" ).hasArg().argName( "file" ).desc(
                         "File with list of NCBI IDs of genes to add to platform (one per line)" )
@@ -109,10 +110,23 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
     }
 
     @Override
+    protected void processOptions( CommandLine commandLine ) {
+        this.platformShortName = commandLine.getOptionValue( "a" );
+        this.taxonName = commandLine.getOptionValue( "t" );
+        this.geneListFileName = commandLine.getOptionValue( "f" );
+        this.noDB = commandLine.hasOption( "nodb" );
+        if ( noDB ) {
+            log.warn( "***** DRY RUN - no changes will be saved (you may still see relevant logging messages) *****" );
+        }
+    }
+
+    @Override
     protected void doAuthenticatedWork() throws Exception {
 
-        ArrayDesign platform = arrayDesignService.findByShortName( this.platformShortName );
+        ArrayDesign platform = entityLocator.locateArrayDesign( this.platformShortName );
         platform = arrayDesignService.thaw( platform );
+
+        Taxon taxon = entityLocator.locateTaxon( this.taxonName );
 
         // test whether the geneListFileName file exists and is readable
         File geneListFile = new File( this.geneListFileName );
@@ -224,7 +238,7 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
                     } else {
                         bioSequence.setName( gene.getOfficialSymbol() + " [NCBI ID=" + gene.getNcbiGeneId() + "] generic sequence placeholder" );
                     }
-                    bioSequence.setTaxon( this.taxon );
+                    bioSequence.setTaxon( taxon );
                     bioSequence.setPolymerType( PolymerType.RNA );
                     bioSequence.setType( SequenceType.DUMMY );
                     if ( !noDB ) bioSequence = bioSequenceService.create( bioSequence );
@@ -250,7 +264,7 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
 
             if ( csForGene == null ) {
                 if ( gene == null ) {
-                    log.info( "New platform element for NCBI=" + ncbiId + " (" + this.taxon.getCommonName() + ") - but no corresponding gene exists in Gemma" );
+                    log.info( "New platform element for NCBI=" + ncbiId + " (" + taxon.getCommonName() + ") - but no corresponding gene exists in Gemma" );
                 } else {
                     log.info( "New platform element for " + gene.getOfficialSymbol() + " NCBI=" + gene.getNcbiGeneId() + " (" + gene.getTaxon().getCommonName() + ")" );
                 }
@@ -330,27 +344,6 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
 //            }
 //        }
     }
-
-    @Override
-    public String getShortDesc() {
-        return "Update a 'platform' based on a list of NCBI IDs";
-    }
-
-    @Override
-    protected void processOptions( CommandLine commandLine ) {
-
-        this.platformShortName = commandLine.getOptionValue( "a" );
-        this.taxon = this.taxonService.findByCommonName( commandLine.getOptionValue( "t" ) );
-        this.geneListFileName = commandLine.getOptionValue( "f" );
-
-        this.noDB = commandLine.hasOption( "nodb" );
-
-        if ( noDB ) {
-            log.warn( "***** DRY RUN - no changes will be saved (you may still see relevant logging messages) *****" );
-        }
-
-    }
-
 
     private Map<String, CompositeSequence> nameMap( ArrayDesign arrayDesign ) {
 
