@@ -503,7 +503,8 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                 if ( fv.getExperimentalFactor().equals( subsetFactor ) ) {
                     if ( subsetFactorValue == null ) {
                         subsetFactorValue = fv;
-                    } else if ( subsetFactorValue.equals( fv ) ) {
+                    }
+                    if ( subsetFactorValue.equals( fv ) ) {
                         found = true;
                     } else {
                         throw new IllegalStateException( String.format( "%s has more than one factor value for %s.", bm, subsetFactor ) );
