@@ -915,7 +915,7 @@ Non-Small-Cell Lung Cancer	non-small cell lung carcinoma	http://purl.obolibrary.
 none (control)	reference substance role	http://purl.obolibrary.org/obo/OBI_0000025	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 none (untreated control)	reference substance role	http://purl.obolibrary.org/obo/OBI_0000025	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 normal	reference subject role	http://purl.obolibrary.org/obo/OBI_0000220	disease	http://www.ebi.ac.uk/efo/EFO_0000408
-normal airway epithelial cells	respiratory epithelial cell	http://purl.obolibrary.org/obo/CL_0002368	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
+normal airway epithelial cells	respiratory tract epithelial cell	http://purl.obolibrary.org/obo/CL_0002368	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 normal breast	breast	http://purl.obolibrary.org/obo/UBERON_0000310	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 normal chow	reference substance role	http://purl.obolibrary.org/obo/OBI_0000025	diet	http://www.ebi.ac.uk/efo/EFO_0002755
 normal colon	colon	http://purl.obolibrary.org/obo/UBERON_0001155	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
@@ -1381,7 +1381,8 @@ Wistar-Kyoto	Wistar-Kyoto	http://www.ebi.ac.uk/efo/EFO_0001345	strain	http://www
 wt	wild type genotype	http://www.ebi.ac.uk/efo/EFO_0005168	genotype	http://www.ebi.ac.uk/efo/EFO_0000513
 WT/WT	wild type genotype	http://www.ebi.ac.uk/efo/EFO_0005168	genotype	http://www.ebi.ac.uk/efo/EFO_0000513
 xenograft	xenograft	http://purl.obolibrary.org/obo/OBI_0100058	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
-Yoruba in Ibadan	Yoruban	http://purl.obolibrary.org/obo/HANCESTRO_0575	population	http://purl.obolibrary.org/obo/OBI_0000181
-Yoruban sample	Yoruban	http://purl.obolibrary.org/obo/HANCESTRO_0575	population	http://purl.obolibrary.org/obo/OBI_0000181
+Yoruban	Yoruba	http://purl.obolibrary.org/obo/AfPO_0000105	population	http://purl.obolibrary.org/obo/OBI_0000181
+Yoruba in Ibadan	Yoruba	http://purl.obolibrary.org/obo/AfPO_0000105	population	http://purl.obolibrary.org/obo/OBI_0000181
+Yoruban sample	Yoruba	http://purl.obolibrary.org/obo/AfPO_0000105	population	http://purl.obolibrary.org/obo/OBI_0000181
 zebularine	zebularine	http://purl.obolibrary.org/obo/CHEBI_46938	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 Zuckerkandl organ	paraaortic body	http://purl.obolibrary.org/obo/UBERON_0001237	organism part	http://www.ebi.ac.uk/efo/EFO_0000635

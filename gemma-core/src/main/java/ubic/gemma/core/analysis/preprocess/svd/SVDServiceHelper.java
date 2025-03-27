@@ -35,10 +35,10 @@ import java.util.Set;
 public interface SVDServiceHelper {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    SVDValueObject retrieveSvd( ExpressionExperiment ee );
+    SVDResult retrieveSvd( ExpressionExperiment ee );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    SVDValueObject svd( ExpressionExperiment ee ) throws SVDException;
+    SVDResult svd( ExpressionExperiment ee ) throws SVDException;
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Map<ProbeLoading, DoubleVectorValueObject> getTopLoadedVectors( ExpressionExperiment ee, int component, int count );
@@ -63,7 +63,7 @@ public interface SVDServiceHelper {
      * @return SVD VO
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    SVDValueObject svdFactorAnalysis( PrincipalComponentAnalysis pca );
+    SVDResult svdFactorAnalysis( PrincipalComponentAnalysis pca );
 
     /**
      * Compare ExperimentalFactors and BioAssay.processingDates to the PCs.
@@ -72,5 +72,5 @@ public interface SVDServiceHelper {
      * @return SVD VO
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    SVDValueObject svdFactorAnalysis( ExpressionExperiment ee );
+    SVDResult svdFactorAnalysis( ExpressionExperiment ee );
 }

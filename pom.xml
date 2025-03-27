@@ -5,7 +5,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.31.12</version>
+	<version>1.31.13</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>The Gemma Project for meta-analysis of genomics data</description>
 	<url>https://gemma.msl.ubc.ca</url>
@@ -16,7 +16,7 @@
 	<parent>
 		<groupId>ubc.pavlab</groupId>
 		<artifactId>pavlab-starter-parent</artifactId>
-		<version>1.2.15</version>
+		<version>1.2.19</version>
 	</parent>
 	<modules>
 		<module>gemma-core</module>
@@ -36,7 +36,7 @@
 	</issueManagement>
 	<ciManagement>
 		<system>Jenkins</system>
-		<url>https://jenkins.pavlab.msl.ubc.ca</url>
+		<url>https://jenkins.pavlab.msl.ubc.ca/job/Gemma/</url>
 	</ciManagement>
 	<licenses>
 		<license>
@@ -185,7 +185,7 @@
 		<dependency>
 			<groupId>org.aspectj</groupId>
 			<artifactId>aspectjweaver</artifactId>
-			<version>1.9.22.1</version>
+			<version>1.9.23</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -286,7 +286,7 @@
 		<dependency>
 			<groupId>org.apache.ant</groupId>
 			<artifactId>ant</artifactId>
-			<version>1.10.14</version>
+			<version>1.10.15</version>
 		</dependency>
 
 		<!-- Plotting -->
@@ -306,6 +306,7 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-text</artifactId>
+			<!-- 1.13.0 is not compatible with commons-configuration2 2.8.0 -->
 			<version>1.12.0</version>
 		</dependency>
 		<dependency>
@@ -330,7 +331,7 @@
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<version>2.16.1</version>
+			<version>2.18.0</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-fileupload</groupId>
@@ -444,7 +445,7 @@
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<version>2.3.230</version>
+			<version>2.3.232</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -553,7 +554,6 @@
 					<links>
 						<link>https://gemma.msl.ubc.ca/resources/baseCode/apidocs/</link>
 						<link>https://dst.lbl.gov/ACSSoftware/colt/api/</link>
-						<link>https://static.springsource.org/spring/docs/${spring.version}/javadoc-api/</link>
 						<link>https://docs.jboss.org/hibernate/orm/4.2/javadocs/</link>
 					</links>
 					<additionalJOptions>
@@ -564,16 +564,18 @@
 			<plugin>
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
-				<version>9.1.0</version>
+				<!-- 7.00 and newer do not work with Maven 3.1.1 -->
+				<version>6.5.3</version>
 				<configuration>
 					<assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
+					<yarnAuditAnalyzerEnabled>false</yarnAuditAnalyzerEnabled>
 				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>versions-maven-plugin</artifactId>
 				<!-- a newer version with better filters can be enabled with -Pdepcheck, but it's incompatible with the Maven minimum requirement -->
-				<version>2.11.0</version>
+				<version>2.14.1</version>
 				<configuration>
 					<allowMajorUpdates>false</allowMajorUpdates>
 					<processDependencyManagement>false</processDependencyManagement>
@@ -611,7 +613,7 @@
 			<distributionManagement>
 				<site>
 					<id>pavlab</id>
-					<url>file:///space/web/maven-sites/${project.groupId}/gemma-${project.version}</url>
+					<url>file://${pavlab.siteDir}/${project.groupId}/gemma-${project.version}</url>
 				</site>
 			</distributionManagement>
 		</profile>
@@ -627,6 +629,7 @@
 							<ignoredVersions>.*-a.*,.*-b.*,.*-M.*</ignoredVersions>
 							<dependencyExcludes>
 								<dependencyExclude>org.apache.commons:commons-configuration2:*</dependencyExclude>
+								<dependencyExclude>org.apache.commons:commons-text:*</dependencyExclude>
 								<dependencyExclude>org.hibernate:hibernate-core:*</dependencyExclude>
 								<dependencyExclude>org.hibernate:hibernate-ehcache:*</dependencyExclude>
 								<dependencyExclude>net.sf.ehcache:ehcache-core:*</dependencyExclude>
@@ -639,6 +642,9 @@
 								<dependencyExclude>org.antlr:antlr4-runtime:*</dependencyExclude>
 								<dependencyExclude>com.jayway.jsonpath:json-path:*</dependencyExclude>
 								<dependencyExclude>opensymphony:sitemesh:*</dependencyExclude>
+								<dependencyExclude>org.apache.commons:commons-lang3:*</dependencyExclude>
+								<!-- there seems to be a regression in the 1.14 series -->
+								<dependencyExclude>io.micrometer:*:*</dependencyExclude>
 							</dependencyExcludes>
 							<pluginDependencyExcludes>
 								<pluginDependencyExclude>org.antlr:antlr4-maven-plugin:*</pluginDependencyExclude>
@@ -652,7 +658,7 @@
 	<distributionManagement>
 		<site>
 			<id>pavlab</id>
-			<url>scpexe://frink.msl.ubc.ca/space/web/maven-sites/${project.groupId}/gemma-${project.version}</url>
+			<url>scpexe://${pavlab.server}${pavlab.siteDir}/${project.groupId}/gemma-${project.version}</url>
 		</site>
 	</distributionManagement>
 	<reporting>
@@ -670,7 +676,6 @@
 					<links>
 						<link>https://gemma.msl.ubc.ca/resources/baseCode/apidocs/</link>
 						<link>https://dst.lbl.gov/ACSSoftware/colt/api/</link>
-						<link>https://static.springsource.org/spring/docs/${spring.version}/javadoc-api/</link>
 						<link>https://docs.jboss.org/hibernate/orm/4.2/javadocs/</link>
 					</links>
 					<additionalJOptions>
@@ -686,13 +691,6 @@
 							<report>test-aggregate</report>
 						</reports>
 					</reportSet>
-					<reportSet>
-						<id>default</id>
-						<reports>
-							<report>javadoc</report>
-							<report>test-javadoc</report>
-						</reports>
-					</reportSet>
 				</reportSets>
 			</plugin>
 		</plugins>
@@ -703,13 +701,14 @@
 		<spring.version>3.2.18.RELEASE</spring.version>
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
 		<jersey.version>2.25.1</jersey.version>
-		<jackson.version>2.17.2</jackson.version>
-		<swagger.version>2.2.22</swagger.version>
+		<jackson.version>2.18.3</jackson.version>
+		<swagger.version>2.2.29</swagger.version>
 		<jawr.version>3.9</jawr.version>
 		<lucene.version>3.6.2</lucene.version>
-		<slack.version>1.40.3</slack.version>
-		<micrometer.version>1.13.2</micrometer.version>
+		<slack.version>1.45.3</slack.version>
+		<micrometer.version>1.13.6</micrometer.version>
 		<dom4j.version>2.1.4</dom4j.version>
+		<log4j.version>2.24.3</log4j.version>
 		<mysql.version>8.4.0</mysql.version>
 		<!-- this ensures that -DexcludedGroups works properly -->
 		<excludedGroups/>

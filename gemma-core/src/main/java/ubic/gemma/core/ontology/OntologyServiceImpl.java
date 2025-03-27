@@ -50,10 +50,13 @@ import ubic.gemma.core.search.lucene.LuceneQueryUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 
@@ -91,6 +94,15 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      * If the future does not resolve within the timeout, increase it by the given amount.
      */
     private static final double exponentialBackoff = 1.5;
+
+    /**
+     * When searching terms in the database, only consider characteristics owned by the following entity types.
+     */
+    private static final Collection<Class<?>> parentClasses = Arrays.asList(
+            ExpressionExperiment.class,
+            ExperimentalDesign.class,
+            FactorValue.class,
+            BioMaterial.class );
 
     @Autowired
     private CharacteristicService characteristicService;
@@ -166,7 +178,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 .map( String::toLowerCase ) // we can merge URIs with the same case
                 .collect( Collectors.toSet() );
 
-        Map<String, Long> existingCharacteristicsUsingTheseTerms = characteristicService.countCharacteristicsByValueUri( uris );
+        Map<String, Long> existingCharacteristicsUsingTheseTerms = characteristicService.countByValueUri( uris, parentClasses );
 
         for ( Map.Entry<String, CharacteristicValueObject> entry : results.entrySet() ) {
             String k = entry.getKey();
@@ -813,7 +825,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         StopWatch watch = new StopWatch();
         watch.start();
 
-        Map<String, Characteristic> foundChars = characteristicService.findCharacteristicsByValueUriOrValueLike( queryString );
+        Map<String, Characteristic> foundChars = characteristicService.findByValueUriOrValueLike( queryString, parentClasses );
 
         /*
          * Want to flag in the web interface that these are already used by Gemma (also ignore capitalization; category

@@ -31,7 +31,7 @@ public class BashCompletionGenerator extends AbstractCompletionGenerator {
 
     @Override
     public void beforeCompletion( PrintWriter writer ) {
-        writer.println( "function __gemma_cli_complete() {" );
+        writer.println( "function " + mangle( "__" + executableName + "_complete" ) + "() {" );
         pushIndent();
         writer.append( indent ).println( "COMPREPLY=()" );
         writer.append( indent ).println( "words=\"${COMP_WORDS[*]}\"" );
@@ -126,7 +126,16 @@ public class BashCompletionGenerator extends AbstractCompletionGenerator {
     public void afterCompletion( PrintWriter writer ) {
         popIndent();
         writer.println( "}" );
-        writer.println( "complete -o filenames -o bashdefault -F __gemma_cli_complete " + quoteIfNecessary( executableName ) );
+        writer.println( "complete -o filenames -o bashdefault -F " + mangle( "__" + executableName + "_complete" ) + " " + quoteIfNecessary( executableName ) );
+    }
+
+    /**
+     * Mangle a string to form a valid bash identifier.
+     * <p>
+     * Only alphanumeric characters and underscores are allowed. Invalid characters are replaced with '_'.
+     */
+    private String mangle( String s ) {
+        return s.replaceAll( "[^a-z0-9_]", "_" );
     }
 
     private String quoteRegex( String s ) {

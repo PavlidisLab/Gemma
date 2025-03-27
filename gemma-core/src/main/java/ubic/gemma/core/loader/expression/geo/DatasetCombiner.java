@@ -38,7 +38,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static ubic.gemma.core.util.XMLUtils.createDocumentBuilder;
+import static ubic.gemma.core.loader.entrez.NcbiXmlUtils.createDocumentBuilder;
 
 /**
  * Class to handle cases where there are multiple GEO dataset for a single actual experiment. This can occur in at least
@@ -160,7 +160,7 @@ public class DatasetCombiner {
         Collection<String> associatedDatasetAccessions = new HashSet<>();
         try {
             String details = new EutilFetch( ncbiApiKey ).fetch( "gds", seriesAccession, 100 );
-            if ( details.equalsIgnoreCase( "no results" ) ) {
+            if ( details == null ) {
                 return associatedDatasetAccessions;
             }
             XPathFactory xf = XPathFactory.newInstance();

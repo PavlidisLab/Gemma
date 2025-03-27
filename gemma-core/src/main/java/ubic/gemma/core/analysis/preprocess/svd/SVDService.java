@@ -28,10 +28,10 @@ public interface SVDService {
 
     boolean hasPca( Long eeId );
 
-    SVDValueObject getSvd( Long eeId );
+    SVDResult getSvd( Long eeId );
 
-    SVDValueObject svd( Long eeId ) throws SVDException;
+    SVDResult svd( Long eeId ) throws SVDException;
 
-    SVDValueObject getSvdFactorAnalysis( Long eeId );
+    SVDResult getSvdFactorAnalysis( Long eeId );
 
 }

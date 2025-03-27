@@ -136,6 +136,8 @@ public class OpenApiTest extends AbstractJUnit4SpringContextTests {
         }
         assertThat( config.getResourcePackages() )
                 .containsExactly( getClass().getPackage().getName() );
+        assertThat( config.getDefaultResponseCode() )
+                .isEqualTo( "200" );
         assertThat( spec.getInfo().getVersion() )
                 .isNotBlank()
                 .isEqualTo( config.getOpenAPI().getInfo().getVersion() );
@@ -144,27 +146,30 @@ public class OpenApiTest extends AbstractJUnit4SpringContextTests {
     @Data
     private static class OpenApiConfiguration {
         private String[] resourcePackages;
+        private String defaultResponseCode;
         private OpenAPI openAPI;
     }
 
     @Test
-    public void testEnsureThatAllEndpointHaveADefaultGetResponseOrIsARedirection() {
-        assertThat( spec.getPaths() ).allSatisfy( ( path, operations ) -> {
-            assertThat( operations.getGet().getResponses() )
-                    .describedAs( "GET %s", path )
-                    .hasEntrySatisfying( new Condition<>( entry -> {
-                        if ( entry.getKey().startsWith( "3" ) ) {
-                            // a redirection, no need for a default response
-                        } else {
-                            assertThat( entry.getKey() ).isEqualTo( "default" );
-                            assertThat( entry.getValue().getContent() )
-                                    .describedAs( "GET %s -> default", path )
-                                    .isNotEmpty()
-                                    .doesNotContainKey( "*/*" );
-                        }
-                        return true;
-                    }, "" ) );
-        } );
+    public void testEnsureThatAllEndpointHaveASuccessOrRedirection() {
+        assertThat( spec.getPaths() )
+                .describedAs( "all paths" )
+                .allSatisfy( ( path, operations ) -> {
+                    assertThat( operations.getGet().getResponses() )
+                            .describedAs( "GET %s", path )
+                            .hasEntrySatisfying( new Condition<>( entry -> {
+                                if ( entry.getKey().startsWith( "3" ) ) {
+                                    // a redirection, no need for a default response
+                                } else {
+                                    assertThat( entry.getKey() ).startsWith( "2" );
+                                    assertThat( entry.getValue().getContent() )
+                                            .describedAs( "GET %s -> 200", path )
+                                            .isNotEmpty()
+                                            .doesNotContainKey( "*/*" );
+                                }
+                                return true;
+                            }, "" ) );
+                } );
     }
 
     @Test
@@ -191,7 +196,7 @@ public class OpenApiTest extends AbstractJUnit4SpringContextTests {
     @Test
     public void testGetDatasetsCategories() {
         assertThat( spec.getPaths().get( "/datasets/categories" ).getGet().getResponses() )
-                .hasEntrySatisfying( "default", response -> {
+                .hasEntrySatisfying( "200", response -> {
                     assertThat( response.getContent().get( "application/json" ).getSchema().get$ref() )
                             .isEqualTo( "#/components/schemas/QueriedAndFilteredAndInferredAndLimitedResponseDataObjectCategoryWithUsageStatisticsValueObject" );
                 } )
@@ -258,10 +263,10 @@ public class OpenApiTest extends AbstractJUnit4SpringContextTests {
     @Test
     public void testExamplesFromClasspath() throws IOException {
         assertThat( spec.getPaths().get( "/resultSets/{resultSet}" ).getGet().getResponses()
-                .get( "default" )
+                .get( "200" )
                 .getContent()
                 .get( "text/tab-separated-values; charset=UTF-8" )
                 .getExample() )
-                .isEqualTo( IOUtils.resourceToString(  "/restapidocs/examples/result-set.tsv" , StandardCharsets.UTF_8 ) );
+                .isEqualTo( IOUtils.resourceToString( "/restapidocs/examples/result-set.tsv", StandardCharsets.UTF_8 ) );
     }
 }

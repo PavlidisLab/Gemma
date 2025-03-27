@@ -30,7 +30,10 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.Filter;
+import ubic.gemma.persistence.util.FilterQueryUtils;
+import ubic.gemma.persistence.util.Filters;
+import ubic.gemma.persistence.util.Subquery;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -485,15 +488,22 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     @Test
     public void testGetAllAnnotations() {
         ee = createExpressionExperiment();
-        expressionExperimentDao.getAllAnnotations( ee );
+        expressionExperimentDao.getAllAnnotations( ee, true );
+        expressionExperimentDao.getAllAnnotations( ee, false );
     }
 
     @Test
     public void testGetAnnotationsByLevel() {
         ee = createExpressionExperiment();
-        expressionExperimentDao.getExperimentAnnotations( ee );
-        expressionExperimentDao.getBioMaterialAnnotations( ee );
-        expressionExperimentDao.getExperimentalDesignAnnotations( ee );
+        // via the EE2C table
+        expressionExperimentDao.getExperimentAnnotations( ee, true );
+        expressionExperimentDao.getBioMaterialAnnotations( ee, true );
+        expressionExperimentDao.getExperimentalDesignAnnotations( ee, true );
+        // directly
+        expressionExperimentDao.getExperimentAnnotations( ee, false );
+        expressionExperimentDao.getBioMaterialAnnotations( ee, false );
+        expressionExperimentDao.getExperimentalDesignAnnotations( ee, false );
+        expressionExperimentDao.getFactorValueAnnotations( ee );
     }
 
     @Test

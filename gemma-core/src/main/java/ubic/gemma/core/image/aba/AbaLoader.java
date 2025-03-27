@@ -1,24 +1,30 @@
 package ubic.gemma.core.image.aba;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.util.Assert;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
-
-import ubic.gemma.core.util.XMLUtils;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.core.config.Settings;
 
+import javax.annotation.Nullable;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.*;
-import java.net.HttpURLConnection;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import static ubic.gemma.core.util.XMLUtils.createDocumentBuilder;
 
 /**
  * Provides the hooks to load data from aba
  */
 class AbaLoader {
+
+    private static final Log log = LogFactory.getLog( AbaLoader.class.getName() );
 
     /**
      * see
@@ -26,7 +32,7 @@ class AbaLoader {
      * http://help.brain-map.org/display/mousebrain/API
      * for documentation
      */
-    private static final String API_BASE_URL = "http://api.brain-map.org/api/v2";
+    private static final String API_BASE_URL = "https://api.brain-map.org/api/v2";
 
     /**
      * 1st parameter: Gene NCBI ID
@@ -50,94 +56,80 @@ class AbaLoader {
      */
     private static final String GET_IMAGE_SERIES_URL = "/data/SectionDataSet/query.xml?criteria=rma::criteria,genes[entrez_id$eq@],reference_space[id$eq@],rma::include,section_images";
 
-    private static final Log log = LogFactory.getLog( AbaLoader.class.getName() );
+    private final Path cacheDir;
+    private final long cacheTimeToLiveMillis;
+
+    AbaLoader( Path cacheDir, long cacheTimeToLiveMillis ) {
+        Assert.notNull( cacheDir, "A cache directory must be set." );
+        Assert.isTrue( cacheTimeToLiveMillis >= 0, "TTL must be zero or greater." );
+        this.cacheDir = cacheDir;
+        this.cacheTimeToLiveMillis = cacheTimeToLiveMillis;
+    }
 
     String getGeneUrl( Gene gene ) {
-        String args[] = { gene.getNcbiGeneId().toString() };
+        String[] args = { gene.getNcbiGeneId().toString() };
         return this.buildUrlString( AbaLoader.GET_GENE_URL, args );
     }
 
-    String getImageUrl(int id){
-        String args[] = { String.valueOf( id ), "5", "" };
+    String getImageUrl( int id ) {
+        String[] args = { String.valueOf( id ), "5", "" };
         return this.buildUrlString( AbaLoader.GET_IMAGE_URL, args );
     }
 
+    @Nullable
     Document getAbaGeneXML( Gene gene ) {
-        return this.getDocument( gene, "gene" );
-    }
-
-    Document getAbaGeneSagittalImages( Gene gene ) {
-        return this.getDocument( gene, "sagittal" );
-    }
-
-    private Document getDocument( Gene gene, String type ) {
-        File outputFile = this.getFile( type + "_" + gene.getNcbiGeneId().toString() );
-        Document document;
-
-        try (FileOutputStream out = new FileOutputStream( outputFile )) {
-            switch ( type ) {
-                default:
-                case "gene":
-                    this.writeGene( gene, out );
-                    break;
-                case "sagittal":
-                    this.writeSagittalImageSeries( gene, out );
-                    break;
-            }
+        try {
+            return this.getDocument( gene, "gene" );
         } catch ( IOException e ) {
-            AbaLoader.log.error( e.getMessage(), e.getCause() );
-            e.printStackTrace();
+            log.error( "An I/O error occurred while querying metadata for " + gene + ".", e );
             return null;
         }
+    }
 
-        try (FileInputStream input = new FileInputStream( outputFile )) {
-            document = XMLUtils.openAndParse( input );
-        } catch ( ParserConfigurationException | IOException | SAXException e ) {
-            AbaLoader.log.error( e );
+    @Nullable
+    Document getAbaGeneSagittalImages( Gene gene ) {
+        try {
+            return this.getDocument( gene, "sagittal" );
+        } catch ( IOException e ) {
+            log.error( "An I/O error occurred while querying sagittal images for " + gene + ".", e );
             return null;
         }
-
-        return document;
     }
 
-    private void writeGene( Gene gene, OutputStream out ) throws IOException {
-
-        String args[] = { gene.getNcbiGeneId().toString() };
-        String getGeneUrl = this.buildUrlString( AbaLoader.GET_GENE_URL, args );
-
-        this.writeUrlResponse( getGeneUrl, out );
-    }
-
-    private void writeSagittalImageSeries( Gene gene, OutputStream out ) throws IOException {
-
-        String args[] = { gene.getNcbiGeneId().toString(), "10" };
-        String getImageSeriesUrl = this.buildUrlString( AbaLoader.GET_IMAGE_SERIES_URL, args );
-
-        this.writeUrlResponse( getImageSeriesUrl, out );
-    }
-
-    private File getFile( String fileName ) {
-
-        String dir = Settings.getString( "gemma.appdata.home" ) + "/abaCache/";
-        File outputFile = new File( dir + "aba_" + fileName + ".xml" );
-
-        if ( outputFile.exists() ) {
-            EntityUtils.deleteFile( outputFile );
-
-            // wait for file to be deleted before proceeding
-            int i = 5;
-            while ( ( i > 0 ) && ( outputFile.exists() ) ) {
-                try {
-                    Thread.sleep( 100 );
-                } catch ( InterruptedException ie ) {
-                    AbaLoader.log.error( ie );
+    private Document getDocument( Gene gene, String type ) throws IOException {
+        Path outputFile = this.getFile( type + "_" + gene.getNcbiGeneId().toString() );
+        if ( !Files.exists( outputFile ) || isStale( outputFile ) ) {
+            try ( OutputStream out = Files.newOutputStream( outputFile ) ) {
+                String url;
+                switch ( type ) {
+                    case "gene":
+                        String[] args = { gene.getNcbiGeneId().toString() };
+                        url = this.buildUrlString( AbaLoader.GET_GENE_URL, args );
+                        break;
+                    case "sagittal":
+                        String[] args1 = { gene.getNcbiGeneId().toString(), "10" };
+                        url = this.buildUrlString( AbaLoader.GET_IMAGE_SERIES_URL, args1 );
+                        break;
+                    default:
+                        throw new IllegalArgumentException( "Invalid type: " + type );
                 }
-                i--;
+                IOUtils.copy( new URL( url ), out );
             }
-
         }
-        return outputFile;
+        try ( InputStream input = Files.newInputStream( outputFile ) ) {
+            return createDocumentBuilder().parse( input );
+        } catch ( ParserConfigurationException | SAXException e ) {
+            throw new RuntimeException( e );
+        }
+    }
 
+    private Path getFile( String fileName ) throws IOException {
+        Files.createDirectories( cacheDir );
+        return cacheDir.resolve( "aba_" + fileName + ".xml" );
+    }
+
+    private boolean isStale( Path outputFile ) throws IOException {
+        return Files.getLastModifiedTime( outputFile ).toMillis() < System.currentTimeMillis() - cacheTimeToLiveMillis;
     }
 
     /**
@@ -148,48 +140,10 @@ class AbaLoader {
      * @param args       arguments
      * @return full url
      */
-    private String buildUrlString( String urlPattern, String args[] ) {
-
-        for ( String arg : args )
+    private String buildUrlString( String urlPattern, String[] args ) {
+        for ( String arg : args ) {
             urlPattern = urlPattern.replaceFirst( "@", arg );
-
-        return ( AbaLoader.API_BASE_URL + urlPattern );
-    }
-
-    private DataInputStream getInput( URL url ) throws IOException {
-
-        HttpURLConnection conn = ( HttpURLConnection ) url.openConnection();
-        conn.connect();
-        DataInputStream in = new DataInputStream( conn.getInputStream() );
-
-        if ( conn.getResponseCode() != HttpURLConnection.HTTP_OK ) {
-            AbaLoader.log.error( conn.getResponseMessage() );
-            return ( null );
         }
-
-        return ( in );
+        return AbaLoader.API_BASE_URL + urlPattern;
     }
-
-    private void writeUrlResponse( String urlString, OutputStream out ) throws IOException {
-
-        URL url = new URL( urlString );
-        try (DataInputStream in = this.getInput( url )) {
-            if ( in == null )
-                return;
-            this.transferData( in, out );
-        }
-    }
-
-    private void transferData( DataInputStream in, OutputStream out ) throws IOException {
-        // This is whacked. There must be a better way than throwing an exception.
-        boolean EOF = false;
-        while ( !EOF ) {
-            try {
-                out.write( in.readUnsignedByte() );
-            } catch ( EOFException eof ) {
-                EOF = true;
-            }
-        }
-    }
-
 }

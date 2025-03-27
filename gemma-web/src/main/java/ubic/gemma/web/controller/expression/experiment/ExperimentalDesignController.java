@@ -32,7 +32,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.analysis.expression.diff.LinearModelAnalyzer;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.persistence.service.expression.experiment.FactorValueDeletion;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignUpdatedEvent;
@@ -47,10 +46,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
+import ubic.gemma.persistence.service.expression.experiment.*;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.EntityDelegator;
@@ -223,7 +219,7 @@ public class ExperimentalDesignController extends BaseController {
                         s.setCategoryUri( ef.getCategory().getCategoryUri() );
                     }
                     s.setSubject( cvo.getValue() );
-                    s.setSubjectUri( cvo.getValueUri() ); // can be null
+                    s.setSubjectUri( StringUtils.stripToNull( cvo.getValueUri() ) ); // can be null
                     fv.getCharacteristics().add( s );
                     fv = expressionExperimentService.addFactorValue( ee, fv );
 
@@ -366,8 +362,6 @@ public class ExperimentalDesignController extends BaseController {
             Statement newC = new Statement();
             newC.setCategory( c.getCategory() );
             newC.setCategoryUri( c.getCategoryUri() );
-            newC.setValue( c.getValue() ); // deprecated
-            newC.setValueUri( c.getOriginalValue() );// deprecated
             newC.setSubject( c.getSubject() );
             newC.setSubjectUri( c.getSubjectUri() );
             newC.setPredicate( c.getPredicate() );
@@ -842,7 +836,7 @@ public class ExperimentalDesignController extends BaseController {
                 c.setPredicate( fvvo.getPredicate() );
                 c.setPredicateUri( fvvo.getPredicateUri() );
                 c.setObject( fvvo.getObject() );
-                c.setObjectUri( fvvo.getObjectUri() );
+                c.setObjectUri( StringUtils.stripToNull( fvvo.getObjectUri() ) );
             } else {
                 c.setPredicate( null );
                 c.setPredicateUri( null );
@@ -854,7 +848,7 @@ public class ExperimentalDesignController extends BaseController {
                 c.setSecondPredicate( fvvo.getSecondPredicate() );
                 c.setSecondPredicateUri( fvvo.getSecondPredicateUri() );
                 c.setSecondObject( fvvo.getSecondObject() );
-                c.setSecondObjectUri( fvvo.getSecondObjectUri() );
+                c.setSecondObjectUri( StringUtils.stripToNull( fvvo.getSecondObjectUri() ) );
             } else {
                 c.setSecondPredicate( null );
                 c.setSecondPredicateUri( null );

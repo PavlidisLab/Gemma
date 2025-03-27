@@ -17,6 +17,9 @@ import java.util.Objects;
  * <p>
  * It can relate to up to two other objects, essentially forming two statements. This is a limited form of RDF-style
  * triplet with the main limitation that a given subject can have up to two predicates and objects.
+ * <p>
+ * You can make abstraction of that implementation detail by using {@link #getSubject(int)}, {@link #getPredicate(int)},
+ * {@link #getObject(int)} and {@link #getNumberOfStatements()}.
  * @author poirigui
  */
 public class Statement extends Characteristic {
@@ -209,6 +212,77 @@ public class Statement extends Characteristic {
 
     public void setSecondObjectUri( @Nullable String secondObjectUri ) {
         this.secondObjectUri = secondObjectUri;
+    }
+
+    @Nullable
+    @Transient
+    public String getSubject( int index ) {
+        if ( index > 1 ) {
+            throw new UnsupportedOperationException( "Only up to two statements are supported." );
+        }
+        return getSubject();
+    }
+
+    @Nullable
+    @Transient
+    public String getSubjectUri( int index ) {
+        if ( index > 1 ) {
+            throw new UnsupportedOperationException( "Only up to two statements are supported." );
+        }
+        return getSubjectUri();
+    }
+
+    @Nullable
+    @Transient
+    public String getPredicate( int index ) {
+        if ( index == 0 ) {
+            return predicate;
+        } else if ( index == 1 ) {
+            return secondPredicate;
+        } else {
+            throw new UnsupportedOperationException( "Only up to two statements are supported." );
+        }
+    }
+
+    @Nullable
+    @Transient
+    public String getPredicateUri( int index ) {
+        if ( index == 0 ) {
+            return predicateUri;
+        } else if ( index == 1 ) {
+            return secondPredicateUri;
+        } else {
+            throw new UnsupportedOperationException( "Only up to two statements are supported." );
+        }
+    }
+
+    @Nullable
+    @Transient
+    public String getObject( int index ) {
+        if ( index == 0 ) {
+            return object;
+        } else if ( index == 1 ) {
+            return secondObject;
+        } else {
+            throw new UnsupportedOperationException( "Only up to two statements are supported." );
+        }
+    }
+
+    @Nullable
+    @Transient
+    public String getObjectUri( int index ) {
+        if ( index == 0 ) {
+            return objectUri;
+        } else if ( index == 1 ) {
+            return secondObjectUri;
+        } else {
+            throw new UnsupportedOperationException( "Only up to two statements are supported." );
+        }
+    }
+
+    @Transient
+    public int getNumberOfStatements() {
+        return 2;
     }
 
     @Override

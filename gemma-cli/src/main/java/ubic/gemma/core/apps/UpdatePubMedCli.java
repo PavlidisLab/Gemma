@@ -21,6 +21,8 @@ import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
+import ubic.gemma.core.loader.expression.geo.service.GeoBrowserImpl;
+import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.core.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -85,8 +87,8 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
         }
         log.info( "Found " + toFetch.size() + " experiments lacking publications in Gemma.." );
 
-        GeoBrowser gbs = new GeoBrowser( ncbiApiKey );
-        Collection<GeoRecord> geoRecords = gbs.getGeoRecords( toFetch.keySet(), false );
+        GeoBrowser gbs = new GeoBrowserImpl( ncbiApiKey );
+        Collection<GeoRecord> geoRecords = gbs.getGeoRecords( GeoRecordType.SERIES, toFetch.keySet() );
 
         int numFound = 0;
         for ( GeoRecord rec : geoRecords ) {

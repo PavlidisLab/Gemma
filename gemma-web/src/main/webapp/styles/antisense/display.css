@@ -1,0 +1,13 @@
+/* Utilities for displaying content */
+
+/* https://vuetifyjs.com/en/styles/display/ */
+
+.d-sr-only-focusable {
+    position: absolute;
+    top: -3em;
+    background: #fff;
+}
+
+.d-sr-only-focusable:focus {
+    top: 0;
+}

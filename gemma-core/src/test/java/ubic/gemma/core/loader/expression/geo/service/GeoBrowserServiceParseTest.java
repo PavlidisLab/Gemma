@@ -134,7 +134,7 @@ public class GeoBrowserServiceParseTest extends AbstractJUnit4SpringContextTests
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
-        System.out.println(response);
+        System.out.println( response );
         try {
             serv.formatDetails( response, "" );
         } catch ( IOException e ) {
@@ -147,7 +147,7 @@ public class GeoBrowserServiceParseTest extends AbstractJUnit4SpringContextTests
     @Test
     public void testMINiMLParse() throws Exception {
         ClassPathResource resource = new ClassPathResource( "/data/loader/expression/geo/GSE180363.miniml.xml" );
-        GeoBrowser serv = new GeoBrowser( Settings.getString( "entrez.efetch.apikey" ) );
+        GeoBrowserImpl serv = new GeoBrowserImpl( Settings.getString( "entrez.efetch.apikey" ) );
         GeoRecord rec = new GeoRecord();
         serv.fillSubSeriesStatus( rec, serv.parseMiniMLDocument( resource.getURL() ) );
         assertTrue( rec.isSubSeries() );
@@ -157,9 +157,10 @@ public class GeoBrowserServiceParseTest extends AbstractJUnit4SpringContextTests
     @Category(SlowTest.class)
     public void testSampleMINiMLParse() throws Exception {
         ClassPathResource resource = new ClassPathResource( "/data/loader/expression/geo/GSE171682.xml" );
-        GeoBrowser serv = new GeoBrowser( Settings.getString( "entrez.efetch.apikey" ) );
+        GeoBrowserImpl serv = new GeoBrowserImpl( Settings.getString( "entrez.efetch.apikey" ) );
         GeoRecord rec = new GeoRecord();
-        serv.fillSampleDetails( rec, serv.parseMiniMLDocument( resource.getURL() ) );
+        serv.fillLibraryStrategy( rec, serv.parseMiniMLDocument( resource.getURL() ) );
+        serv.fillSampleChannelDetails( rec, serv.parseMiniMLDocument( resource.getURL() ) );
         assertTrue( rec.getSampleDetails().contains( "colorectal cancer" ) );
         assertTrue( rec.getSampleDetails().contains( "Large intestine" ) );
         assertEquals( "RNA-Seq", rec.getLibraryStrategy() );

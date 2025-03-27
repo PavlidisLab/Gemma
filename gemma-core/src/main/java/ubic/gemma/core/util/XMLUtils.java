@@ -18,25 +18,25 @@
  */
 package ubic.gemma.core.util;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.util.xml.SimpleSaxErrorHandler;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-import ubic.gemma.core.loader.util.NcbiEntityResolver;
 
-import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.io.InputStream;
+import javax.xml.xpath.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Handy methods for dealing with XML.
@@ -48,6 +48,28 @@ public class XMLUtils {
 
     private static final Log log = LogFactory.getLog( XMLUtils.class );
 
+    private static final XPathFactory xFactory = XPathFactory.newInstance();
+    private static final XPath xpath = xFactory.newXPath();
+
+    /**
+     * Create a new DocumentBuilder with some good presets for Gemma.
+     * <p>
+     * For security reasons (and also performance), the returned DocumentBuilder is not capable of resolving entities.
+     * If you need to resolve DTDs or XSD schemas, you must implement an {@link org.xml.sax.EntityResolver}.
+     */
+    public static DocumentBuilder createDocumentBuilder() throws ParserConfigurationException {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setIgnoringComments( true );
+        factory.setValidating( false );
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        builder.setErrorHandler( new SimpleSaxErrorHandler( log ) );
+        // the default behavior is to retrieve DTDs from the web, which is extremely dangerous (and slow)
+        builder.setEntityResolver( ( systemId, publicId ) -> {
+            throw new RuntimeException( "No entity resolver has been set." );
+        } );
+        return builder;
+    }
+
     public static List<String> extractMultipleChildren( Node parent, String elementName ) {
         List<String> r = new ArrayList<>();
 
@@ -58,7 +80,7 @@ public class XMLUtils {
                 continue;
             }
             if ( jitem.getNodeName().equals( elementName ) ) {
-                r.add( XMLUtils.getTextValue( ( Element ) jitem ) );
+                r.add( XMLUtils.getTextValue( jitem ) );
             }
         }
         return r;
@@ -72,7 +94,7 @@ public class XMLUtils {
                 continue;
             }
             if ( jitem.getNodeName().equals( elementName ) ) {
-                return XMLUtils.getTextValue( ( Element ) jitem );
+                return XMLUtils.getTextValue( jitem );
             }
         }
         return null;
@@ -81,7 +103,7 @@ public class XMLUtils {
     public static Node extractOneChild( Node parent, String elementName ) {
         NodeList jNodes = parent.getChildNodes();
         for ( int q = 0; q < jNodes.getLength(); q++ ) {
-            Node jitem = jNodes.item( q );
+            Node jitem = requireNonNull( jNodes.item( q ) );
             if ( jitem.getNodeName().equals( elementName ) ) {
                 return jitem;
             }
@@ -106,12 +128,30 @@ public class XMLUtils {
         // Node ids = idList.item( 0 );
         for ( int i = 0; i < idList.getLength(); i++ ) {
             Node item = idList.item( i );
-            String value = XMLUtils.getTextValue( ( Element ) item );
+            String value = XMLUtils.getTextValue( item );
             XMLUtils.log.debug( "Got " + value );
             result.add( value );
         }
 
         return result;
+    }
+
+    /**
+     * Obtain an item from a {@link NodeList} at a given index.
+     */
+    public static Node getItem( NodeList nodeList, int i ) {
+        return requireNonNull( nodeList.item( i ) );
+    }
+
+    /**
+     * Obtain a single item from a {@link NodeList}.
+     */
+    public static Node getUniqueItem( NodeList nodeList ) {
+        // nodelist is a linked list, so getting the size is O(n)
+        if ( nodeList.item( 1 ) != null ) {
+            throw new IllegalStateException( "Expected only one item, got " + nodeList.getLength() );
+        }
+        return requireNonNull( nodeList.item( 0 ) );
     }
 
     /**
@@ -125,29 +165,50 @@ public class XMLUtils {
      * @param ele element
      * @return text value
      */
-    public static String getTextValue( org.w3c.dom.Element ele ) {
+    public static String getTextValue( Node ele ) {
         if ( ele == null )
             return null;
         StringBuilder value = new StringBuilder();
-        org.w3c.dom.NodeList nl = ele.getChildNodes();
+        NodeList nl = ele.getChildNodes();
         for ( int i = 0; i < nl.getLength(); i++ ) {
-            org.w3c.dom.Node item = nl.item( i );
-            value.append( item.getTextContent().trim() );
+            Node node = requireNonNull( nl.item( i ) );
+            if ( node.getTextContent() != null ) {
+                value.append( StringUtils.strip( node.getTextContent() ) );
+            }
         }
         return value.toString();
     }
 
-    public static DocumentBuilder createDocumentBuilder() throws ParserConfigurationException {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setIgnoringComments( true );
-        factory.setValidating( false );
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        builder.setEntityResolver( new NcbiEntityResolver() );
-        return builder;
+    /**
+     * Compile an XPath expression.
+     */
+    public static XPathExpression compile( String expr ) {
+        try {
+            return xpath.compile( expr );
+        } catch ( XPathExpressionException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
-    public static Document openAndParse( InputStream is )
-            throws IOException, ParserConfigurationException, SAXException {
-        return createDocumentBuilder().parse( is );
+    /**
+     * Evaluate an XPath expression that produces a {@link NodeList}.
+     */
+    public static NodeList evaluate( XPathExpression xpath, Node item ) {
+        try {
+            return ( NodeList ) xpath.evaluate( item, XPathConstants.NODESET );
+        } catch ( XPathExpressionException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * Evaluate an XPath expression that produces a {@link NodeList}.
+     */
+    public static String evaluateToString( XPathExpression xpath, Node item ) {
+        try {
+            return ( String ) xpath.evaluate( item, XPathConstants.STRING );
+        } catch ( XPathExpressionException e ) {
+            throw new RuntimeException( e );
+        }
     }
 }

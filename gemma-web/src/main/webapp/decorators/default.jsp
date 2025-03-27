@@ -41,6 +41,8 @@
 <body <decorator:getProperty property="body.id" writeEntireProperty="true"/>
 	<decorator:getProperty property="body.class" writeEntireProperty="true"/>>
 
+	<a href="#main" class="d-sr-only-focusable">Skip to main content</a>
+
 	<div id="page">
 
 		<div id="headerclearnopadding" class="clearfix">

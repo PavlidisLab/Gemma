@@ -25,18 +25,18 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.core.config.Settings;
 
 import java.io.*;
 import java.util.*;
@@ -46,8 +46,9 @@ import java.util.*;
  */
 @Component("arrayDesignReportService")
 public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
-    private final static String HOME_DIR = Settings.getString( "gemma.appdata.home" );
+
     private final static Log log = LogFactory.getLog( ArrayDesignReportServiceImpl.class );
+
     private final static String ARRAY_DESIGN_REPORT_DIR = "ArrayDesignReports";
     private final static String ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX = "ArrayDesignReport";
     // For all array designs
@@ -59,13 +60,15 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     @Autowired
     private AuditEventService auditEventService;
 
+    @Value("${gemma.appdata.home}")
+    private String appdataHome;
+
     /**
      * Batch of classes we can get events for all at once.
      */
-    @SuppressWarnings("unchecked")
-    private final Class<? extends AuditEventType>[] eventTypes = new Class[] { ArrayDesignSequenceUpdateEvent.class,
-            ArrayDesignSequenceAnalysisEvent.class, ArrayDesignGeneMappingEvent.class,
-            ArrayDesignRepeatAnalysisEvent.class };
+    private static final List<Class<? extends AuditEventType>> eventTypes = Arrays.asList(
+            ArrayDesignSequenceUpdateEvent.class, ArrayDesignSequenceAnalysisEvent.class,
+            ArrayDesignGeneMappingEvent.class, ArrayDesignRepeatAnalysisEvent.class );
 
     @Override
     public void generateAllArrayDesignReport() {
@@ -89,7 +92,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         adVo.setDateCached( timestamp );
 
         // remove file first
-        File f = new File( ArrayDesignReportServiceImpl.HOME_DIR + File.separatorChar
+        File f = new File( appdataHome + File.separatorChar
                 + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR + File.separatorChar
                 + ArrayDesignReportServiceImpl.ARRAY_DESIGN_SUMMARY );
         if ( f.exists() ) {
@@ -98,7 +101,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
                 return;
             }
         }
-        try ( FileOutputStream fos = new FileOutputStream( ArrayDesignReportServiceImpl.HOME_DIR + File.separatorChar
+        try ( FileOutputStream fos = new FileOutputStream( appdataHome + File.separatorChar
                 + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR + File.separatorChar
                 + ArrayDesignReportServiceImpl.ARRAY_DESIGN_SUMMARY );
                 ObjectOutputStream oos = new ObjectOutputStream( fos ) ) {
@@ -150,7 +153,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         adVo.setDateCached( timestamp );
 
         // check the directory exists.
-        String reportDir = ArrayDesignReportServiceImpl.HOME_DIR + File.separatorChar
+        String reportDir = appdataHome + File.separatorChar
                 + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR;
         File reportDirF = new File( reportDir );
         try {
@@ -187,7 +190,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     public ArrayDesignValueObject generateArrayDesignReport( Long id ) {
         Collection<ArrayDesignValueObject> adVo = arrayDesignService
                 .loadValueObjectsByIds( Collections.singleton( id ) );
-        if ( adVo != null && adVo.size() > 0 ) {
+        if ( adVo != null && !adVo.isEmpty() ) {
             this.generateArrayDesignReport( adVo.iterator().next() );
             return this.getSummaryObject( id );
         }
@@ -204,7 +207,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     public ArrayDesignValueObject getSummaryObject( Long id ) {
         ArrayDesignValueObject adVo = null;
         File f = new File(
-                ArrayDesignReportServiceImpl.HOME_DIR + "/" + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR
+                appdataHome + "/" + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR
                         + File.separatorChar + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX + "."
                         + id );
         if ( f.exists() ) {
@@ -227,7 +230,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     @Override
     public ArrayDesignValueObject getSummaryObject() {
         ArrayDesignValueObject adVo = null;
-        File f = new File( ArrayDesignReportServiceImpl.HOME_DIR + File.separatorChar
+        File f = new File( appdataHome + File.separatorChar
                 + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR + File.separatorChar
                 + ArrayDesignReportServiceImpl.ARRAY_DESIGN_SUMMARY );
         if ( f.exists() ) {
@@ -263,32 +266,29 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     @Override
     public void fillEventInformation( Collection<ArrayDesignValueObject> adVos ) {
 
-        if ( adVos == null || adVos.size() == 0 )
+        if ( adVos == null || adVos.isEmpty() )
             return;
 
         StopWatch watch = new StopWatch();
         watch.start();
 
         Collection<Long> ids = new ArrayList<>();
-        for ( Object object : adVos ) {
-            ArrayDesignValueObject adVo = ( ArrayDesignValueObject ) object;
+        for ( ArrayDesignValueObject adVo : adVos ) {
             Long id = adVo.getId();
             if ( id == null )
                 continue;
             ids.add( id );
         }
 
-        if ( ids.size() == 0 )
+        if ( ids.isEmpty() )
             return;
-
-        Collection<Class<? extends AuditEventType>> typesToGet = Arrays.asList( eventTypes );
 
         Collection<ArrayDesign> arrayDesigns = arrayDesignService.load( ids );
 
         Map<Long, ArrayDesign> idMap = EntityUtils.getIdMap( arrayDesigns );
 
         Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> events = auditEventService
-                .getLastEvents( arrayDesigns, typesToGet );
+                .getLastEvents( arrayDesigns, eventTypes );
 
         Map<Auditable, AuditEvent> geneMappingEvents = events.get( ArrayDesignGeneMappingEvent.class );
         Map<Auditable, AuditEvent> sequenceUpdateEvents = events.get( ArrayDesignSequenceUpdateEvent.class );
@@ -345,10 +345,9 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     @Override
     public void fillInSubsumptionInfo( Collection<ArrayDesignValueObject> valueObjects ) {
         Collection<Long> ids = new ArrayList<>();
-        for ( Object object : valueObjects ) {
-            if ( object == null )
+        for ( ArrayDesignValueObject adVo : valueObjects ) {
+            if ( adVo == null )
                 continue;
-            ArrayDesignValueObject adVo = ( ArrayDesignValueObject ) object;
             ids.add( adVo.getId() );
         }
         Map<Long, Boolean> isSubsumed = arrayDesignService.isSubsumed( ids );
@@ -446,7 +445,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
             }
         }
 
-        if ( events.size() == 0 ) {
+        if ( events.isEmpty() ) {
             return "[None]";
         }
 
@@ -458,8 +457,8 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     }
 
     private void initDirectories() {
-        FileTools.createDir( ArrayDesignReportServiceImpl.HOME_DIR );
-        FileTools.createDir( ArrayDesignReportServiceImpl.HOME_DIR + File.separator
+        FileTools.createDir( appdataHome );
+        FileTools.createDir( appdataHome + File.separator
                 + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR );
     }
 

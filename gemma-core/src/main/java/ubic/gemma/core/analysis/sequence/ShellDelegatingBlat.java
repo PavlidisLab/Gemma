@@ -23,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.genome.BlatResultParser;
 import ubic.gemma.core.profiling.StopWatchUtils;
 import ubic.gemma.core.util.concurrent.GenericStreamConsumer;
@@ -32,7 +33,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.util.EntityUtils;
-import ubic.gemma.core.config.Settings;
 
 import java.io.*;
 import java.net.Socket;
@@ -43,10 +43,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
+import java.util.concurrent.*;
 
 /**
  * Class to manage the gfServer and run BLAT searches. Delegates to the command-line shell to run blat.
@@ -147,7 +144,7 @@ public class ShellDelegatingBlat implements Blat {
         String seqName = b.getName().replaceAll( " ", "_" );
         File querySequenceFile = File.createTempFile( seqName, ".fa" );
 
-        try (BufferedWriter out = new BufferedWriter( new FileWriter( querySequenceFile ) )) {
+        try ( BufferedWriter out = new BufferedWriter( new FileWriter( querySequenceFile ) ) ) {
             String trimmed = SequenceManipulation
                     .stripPolyAorT( b.getSequence(), ShellDelegatingBlat.POLY_AT_THRESHOLD );
             out.write( ">" + seqName + "\n" + trimmed );
@@ -297,7 +294,7 @@ public class ShellDelegatingBlat implements Blat {
 
     @Override
     public void startServer( BlattableGenome genome, int port ) throws IOException {
-        try (Socket socket = new Socket( host, port )) {
+        try ( Socket socket = new Socket( host, port ) ) {
             ShellDelegatingBlat.log.info( "There is already a server on port " + port );
             this.doShutdown = false;
         } catch ( UnknownHostException e ) {
@@ -495,29 +492,29 @@ public class ShellDelegatingBlat implements Blat {
         try {
             ShellDelegatingBlat.log.debug( "Starting blat run" );
 
-            FutureTask<Boolean> blatThread = new FutureTask<>( new Callable<Boolean>() {
-                @Override
-                public Boolean call() {
-                    ShellDelegatingBlat.this
-                            .GfClientCall( host, Integer.toString( portToUse ), seqDir, querySequenceFile.getPath(),
-                                    outputPath );
-                    return true;
-                }
-            } );
-
             ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.execute( blatThread );
+            Future<?> future = executor.submit( () -> {
+                ShellDelegatingBlat.this
+                        .GfClientCall( host, Integer.toString( portToUse ), seqDir, querySequenceFile.getPath(),
+                                outputPath );
+            } );
             executor.shutdown();
 
             // wait...
             StopWatch overallWatch = new StopWatch();
             overallWatch.start();
 
-            while ( !blatThread.isDone() ) {
+            while ( !future.isDone() ) {
                 try {
-                    Thread.sleep( ShellDelegatingBlat.BLAT_UPDATE_INTERVAL_MS );
+                    future.get( ShellDelegatingBlat.BLAT_UPDATE_INTERVAL_MS, java.util.concurrent.TimeUnit.MILLISECONDS );
+                } catch ( TimeoutException e ) {
+                    log.info( "Waiting for blat to finish..." );
+                    continue;
                 } catch ( InterruptedException ie ) {
+                    future.cancel( true );
                     throw new RuntimeException( ie );
+                } catch ( ExecutionException e ) {
+                    throw new RuntimeException( e );
                 }
                 this.outputFile( outputPath, overallWatch );
             }

@@ -180,7 +180,13 @@ public class ExperimentalDesignUtils {
         }
         Characteristic category = ef.getCategory();
         return ef.getName().equals( ExperimentalDesignUtils.BATCH_FACTOR_NAME ) &&
-                ( category != null && ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME.equals( category.getCategory() ) );
+                category != null && isBatch( category );
+    }
+
+    public static boolean isBatch( Characteristic category ) {
+        // FIXME: this should be an &&
+        return ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME.equalsIgnoreCase( category.getCategory() )
+                || ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_URI.equalsIgnoreCase( category.getCategoryUri() );
     }
 
     /**

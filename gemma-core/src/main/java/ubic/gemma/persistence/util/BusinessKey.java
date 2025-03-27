@@ -24,11 +24,15 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.*;
+import org.springframework.util.Assert;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.description.*;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.measurement.Unit;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.AlternateName;
@@ -39,6 +43,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
@@ -46,6 +51,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -162,22 +168,48 @@ public class BusinessKey {
 
     }
 
-    @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-    public static void addRestrictions( Criteria queryObject, Characteristic characteristic ) {
+    private static Conjunction createStatementRestriction( Statement statement ) {
+        Conjunction queryObject = createCharacteristicRestriction( statement );
 
-        if ( characteristic.getCategoryUri() != null ) {
-            queryObject.add( Restrictions.eq( "categoryUri", characteristic.getCategoryUri() ) );
-        } else if ( characteristic.getCategory() != null ) {
-            queryObject.add( Restrictions.eq( "category", characteristic.getCategory() ) );
+        if ( statement.getPredicate() != null ) {
+            queryObject.add( createOntologyTermRestriction( statement.getPredicateUri(), statement.getPredicate(), "predicate" ) );
+            if ( statement.getObject() != null ) {
+                queryObject.add( createOntologyTermRestriction( statement.getObjectUri(), statement.getObject(), "object" ) );
+            }
         }
 
-        if ( StringUtils.isNotBlank( characteristic.getValueUri() ) ) {
-            queryObject.add( Restrictions.eq( "valueUri", characteristic.getValueUri() ) );
+        if ( statement.getSecondPredicate() != null ) {
+            queryObject.add( createOntologyTermRestriction( statement.getSecondPredicateUri(), statement.getSecondPredicate(), "secondPredicate" ) );
+            if ( statement.getSecondObject() != null ) {
+                queryObject.add( createOntologyTermRestriction( statement.getSecondObjectUri(), statement.getSecondObject(), "secondObject" ) );
+            }
+        }
+
+        return queryObject;
+    }
+
+    public static Conjunction createCharacteristicRestriction( Characteristic characteristic ) {
+        Conjunction queryObject = Restrictions.conjunction();
+        if ( characteristic.getCategory() != null ) {
+            queryObject.add( createOntologyTermRestriction( characteristic.getCategoryUri(), characteristic.getCategory(), "category" ) );
+        }
+        queryObject.add( createOntologyTermRestriction( characteristic.getValueUri(), characteristic.getValue(), "value" ) );
+        return queryObject;
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.CharacteristicUtils#equals(String, String, String, String)
+     */
+    private static Conjunction createOntologyTermRestriction( @Nullable String uri, String value, String propertyNamePrefix ) {
+        Conjunction queryObject = Restrictions.conjunction();
+        Assert.notNull( value, String.format( "An ontology term (for properties %s and %sUri) must at least have a value.",
+                propertyNamePrefix, propertyNamePrefix ) );
+        if ( uri != null ) {
+            queryObject.add( Restrictions.eq( propertyNamePrefix + "Uri", uri ) );
         } else {
-            assert characteristic.getValue() != null;
-            queryObject.add( Restrictions.eq( "value", characteristic.getValue() ) );
+            queryObject.add( Restrictions.eq( propertyNamePrefix, value ) );
         }
-
+        return queryObject;
     }
 
     @SuppressWarnings({ "WeakerAccess", "unused" }) // Possible external use
@@ -342,8 +374,8 @@ public class BusinessKey {
      */
     @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
     public static void attachCriteria( Criteria queryObject, Characteristic ontologyEntry, String propertyName ) {
-        Criteria innerQuery = queryObject.createCriteria( propertyName );
-        BusinessKey.addRestrictions( innerQuery, ontologyEntry );
+        Criteria queryObject1 = queryObject.createCriteria( propertyName );
+        queryObject1.add( createCharacteristicRestriction( ontologyEntry ) );
     }
 
     /**
@@ -464,8 +496,7 @@ public class BusinessKey {
     }
 
     public static void checkKey( FactorValue factorValue ) {
-        if ( factorValue.getValue() == null && factorValue.getMeasurement() == null
-                && factorValue.getCharacteristics().size() == 0 ) {
+        if ( factorValue.getMeasurement() == null && factorValue.getCharacteristics().isEmpty() && factorValue.getValue() == null ) {
             throw new IllegalArgumentException(
                     "FactorValue must have a value (or associated measurement or characteristics)." );
         }
@@ -581,15 +612,13 @@ public class BusinessKey {
         ExperimentalFactor ef = factorValue.getExperimentalFactor();
 
         if ( ef == null )
-            throw new IllegalArgumentException( "Must have experimentalfactor on factorvalue to search" );
+            throw new IllegalArgumentException( "Cannot find a factor value lacking an experimental factor." );
 
         Criteria innerQuery = queryObject.createCriteria( "experimentalFactor" );
         BusinessKey.addRestrictions( innerQuery, ef );
-
-        if ( factorValue.getValue() != null ) {
-            queryObject.add( Restrictions.eq( "value", factorValue.getValue() ) );
-        } else if ( factorValue.getCharacteristics().size() > 0 ) {
-
+        if ( factorValue.getMeasurement() != null ) {
+            queryObject.add( Restrictions.eq( "measurement", factorValue.getMeasurement() ) );
+        } else if ( !factorValue.getCharacteristics().isEmpty() ) {
             /*
              * All the characteristics have to match ones in the result, and the result cannot have any extras. In other
              * words there has to be a one-to-one match between the characteristics.
@@ -610,29 +639,14 @@ public class BusinessKey {
              * formal possibility.
              */
             Disjunction vdj = Restrictions.disjunction();
-            for ( Characteristic characteristic : factorValue.getCharacteristics() ) {
-
-                Conjunction c = Restrictions.conjunction();
-
-                if ( StringUtils.isNotBlank( characteristic.getCategoryUri() ) ) {
-                    c.add( Restrictions.eq( "categoryUri", characteristic.getCategoryUri() ) );
-                }
-                if ( StringUtils.isNotBlank( characteristic.getValueUri() ) ) {
-                    c.add( Restrictions.eq( "valueUri", characteristic.getValueUri() ) );
-                }
-
-                if ( StringUtils.isNotBlank( characteristic.getValue() ) )
-                    c.add( Restrictions.eq( "value", characteristic.getValue() ) );
-
-                if ( StringUtils.isNotBlank( characteristic.getCategory() ) )
-                    c.add( Restrictions.eq( "category", characteristic.getCategory() ) );
-
-                vdj.add( c );
+            for ( Statement characteristic : factorValue.getCharacteristics() ) {
+                vdj.add( createStatementRestriction( characteristic ) );
             }
             characteristicsCriteria.add( vdj );
-
-        } else if ( factorValue.getMeasurement() != null ) {
-            queryObject.add( Restrictions.eq( "measurement", factorValue.getMeasurement() ) );
+        } else if ( factorValue.getValue() != null ) {
+            queryObject.add( Restrictions.eq( "value", factorValue.getValue() ) );
+        } else {
+            throw new IllegalArgumentException( "No suitable fields defined to find a matching FactorValue." );
         }
 
         queryObject.setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY );
@@ -688,7 +702,7 @@ public class BusinessKey {
     public static Criteria createQueryObject( Session session, Characteristic ontologyEntry ) {
         Criteria queryObject = session.createCriteria( Characteristic.class );
         BusinessKey.checkKey( ontologyEntry );
-        BusinessKey.addRestrictions( queryObject, ontologyEntry );
+        queryObject.add( createCharacteristicRestriction( ontologyEntry ) );
         return queryObject;
     }
 
@@ -757,7 +771,7 @@ public class BusinessKey {
 
     private static void attachCriteria( Criteria queryObject, Characteristic ontologyEntry ) {
         Criteria innerQuery = queryObject.createCriteria( "ontologyEntry" );
-        BusinessKey.addRestrictions( innerQuery, ontologyEntry );
+        innerQuery.add( createCharacteristicRestriction( ontologyEntry ) );
     }
 
     private static void checkKey( BioAssay bioAssay ) {

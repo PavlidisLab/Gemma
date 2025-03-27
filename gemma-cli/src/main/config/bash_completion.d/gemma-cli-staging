@@ -1,4 +1,4 @@
-function __gemma_cli_complete() {
+function __gemma_cli_gemma_cli_staging_complete() {
     COMPREPLY=()
     words="${COMP_WORDS[*]}"
     current_option="${COMP_WORDS[$COMP_CWORD-1]}"
@@ -352,10 +352,10 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' listGEOData ' ]]; then
-        if ! [[ "$current_option" =~ (--acc|--file|-chunkSize|-date|-e|-f|-gselimit|-output|-platformLimit|-startat|-startdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--acc' '--file' '--help' '-chunkSize' '-date' '-e' '-f' '-gselimit' '-h' '-output' '-platformLimit' '-startat' '-startdate' '-y'" -- "$2")
+        if ! [[ "$current_option" =~ (--acc|--chunk-size|--file|--output|-chunkSize|-date|-e|-f|-gselimit|-output|-platformLimit|-startat|-startdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--acc' '--chunk-size' '--file' '--help' '--output' '-chunkSize' '-date' '-e' '-f' '-gselimit' '-h' '-output' '-platformLimit' '-raw' '-startat' '-startdate' '-y'" -- "$2")
         fi
-        if [[ "$current_option" =~ (--file|-f|-output) ]]; then
+        if [[ "$current_option" =~ (--file|--output|-f|-output) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
@@ -528,4 +528,4 @@ function __gemma_cli_complete() {
         mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "'--help' '-h'" -- "$2")
     fi
 }
-complete -o filenames -o bashdefault -F __gemma_cli_complete 'gemma-cli-staging'
+complete -o filenames -o bashdefault -F __gemma_cli_gemma_cli_staging_complete 'gemma-cli-staging'

@@ -56,7 +56,7 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
-import static ubic.gemma.core.util.XMLUtils.createDocumentBuilder;
+import static ubic.gemma.core.loader.entrez.NcbiXmlUtils.createDocumentBuilder;
 
 /**
  * This is marked as {@link Lazy} since we don't use it outside Gemma Web, so it won't be loaded unless it's needed.
@@ -115,7 +115,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
 
     @Override
     public void afterPropertiesSet() {
-        browser = new GeoBrowser( ncbiApiKey );
+        browser = new GeoBrowserImpl( ncbiApiKey );
         try {
             es.submit( this::initializeLocalInfo );
         } finally {
@@ -157,12 +157,12 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
 
     @Override
     public List<GeoRecord> getRecentGeoRecords( int start, int count ) throws IOException {
-        return this.filterGeoRecords( browser.getRecentGeoRecords( start, count ) );
+        return this.filterGeoRecords( browser.getRecentGeoRecords( GeoRecordType.SERIES, start, count ) );
     }
 
     @Override
     public List<GeoRecord> searchGeoRecords( String searchString, int start, int count, boolean detailed ) throws IOException {
-        return this.filterGeoRecords( browser.searchGeoRecords( searchString, null, null, null, null, start, count, detailed ) );
+        return this.filterGeoRecords( browser.searchAndRetrieveGeoRecords( GeoRecordType.SERIES, searchString, null, null, null, null, start, count, detailed ) );
     }
 
     @Override

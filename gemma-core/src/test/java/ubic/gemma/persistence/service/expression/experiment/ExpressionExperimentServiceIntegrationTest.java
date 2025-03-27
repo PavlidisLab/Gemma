@@ -35,12 +35,14 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
@@ -76,6 +78,8 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
     private CharacteristicService characteristicService;
     @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
+    @Autowired
+    private BioMaterialService bioMaterialService;
 
     /**
      * A collection of {@link ExpressionExperiment} that will be removed at the end of the test.
@@ -341,20 +345,34 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public void testLoadValueObjectsByFactorValueCharacteristic() {
-        Filter of = expressionExperimentService.getFilter( "experimentalDesign.experimentalFactors.factorValues.characteristics.id", Filter.Operator.eq, "1" );
+        ExpressionExperiment ee = createExpressionExperiment();
+        FactorValue fv = ee.getExperimentalDesign().getExperimentalFactors().iterator().next()
+                .getFactorValues().iterator().next();
+        Statement s = new Statement();
+        fv.getCharacteristics().add( s );
+        expressionExperimentService.update( ee );
+        Filter of = expressionExperimentService.getFilter( "experimentalDesign.experimentalFactors.factorValues.characteristics.id", Filter.Operator.eq, String.valueOf( s.getId() ) );
         assertEquals( "id", of.getPropertyName() );
         assertEquals( Long.class, of.getPropertyType() );
         Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjects( Filters.by( of ), null, 0, 0 );
-        assertTrue( list.isEmpty() );
+        assertThat( list ).extracting( ExpressionExperimentValueObject::getId )
+                .containsOnly( ee.getId() );
     }
 
     @Test
     public void testLoadValueObjectsBySampleUsedCharacteristic() {
-        Filter of = expressionExperimentService.getFilter( "bioAssays.sampleUsed.characteristics.id", Filter.Operator.eq, "1" );
+        ExpressionExperiment ee = createExpressionExperiment();
+        BioMaterial bm = ee.getBioAssays().iterator().next()
+                .getSampleUsed();
+        Characteristic c = Characteristic.Factory.newInstance();
+        bm.getCharacteristics().add( c );
+        bioMaterialService.update( bm );
+        Filter of = expressionExperimentService.getFilter( "bioAssays.sampleUsed.characteristics.id", Filter.Operator.eq, String.valueOf( c.getId() ) );
         assertEquals( "id", of.getPropertyName() );
         assertEquals( Long.class, of.getPropertyType() );
         Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjects( Filters.by( of ), null, 0, 0 );
-        assertTrue( list.isEmpty() );
+        assertThat( list ).extracting( ExpressionExperimentValueObject::getId )
+                .containsOnly( ee.getId() );
     }
 
     @Test

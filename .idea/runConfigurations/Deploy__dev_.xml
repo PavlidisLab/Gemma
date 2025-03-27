@@ -2,20 +2,20 @@
   <configuration default="false" name="Deploy (dev)" type="ShConfigurationType">
     <option name="SCRIPT_TEXT" value="rsync $PROJECT_DIR$/gemma-web/target/Gemma.war chalmers.msl.ubc.ca:/var/local/tomcat/gemma/Gemma.war" />
     <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
-    <option name="SCRIPT_PATH" value="" />
-    <option name="SCRIPT_OPTIONS" value="" />
+    <option name="SCRIPT_PATH" value="$PROJECT_DIR$/gemma-web/deploy.sh" />
+    <option name="SCRIPT_OPTIONS" value="gemma" />
     <option name="INDEPENDENT_SCRIPT_WORKING_DIRECTORY" value="true" />
     <option name="SCRIPT_WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <option name="INDEPENDENT_INTERPRETER_PATH" value="true" />
-    <option name="INTERPRETER_PATH" value="/usr/bin/fish" />
+    <option name="INTERPRETER_PATH" value="/bin/sh" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="EXECUTE_IN_TERMINAL" value="false" />
-    <option name="EXECUTE_SCRIPT_FILE" value="false" />
-    <envs />
+    <option name="EXECUTE_SCRIPT_FILE" value="true" />
+    <envs>
+      <env name="GEMMA_WEB_DEPLOY_SERVER" value="chalmers.pavlab.msl.ubc.ca" />
+    </envs>
     <method v="2">
-      <option name="BuildArtifacts" enabled="true">
-        <artifact name="gemma-web:war" />
-      </option>
+      <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/pom.xml" goal="clean package -am -pl gemma-web -DskipTests" />
     </method>
   </configuration>
 </component>

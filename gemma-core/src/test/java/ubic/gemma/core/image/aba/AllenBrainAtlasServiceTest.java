@@ -23,14 +23,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.AllenBrainAtlasTest;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assume.assumeNotNull;
+import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
  * Alan brain Atlas service test.
@@ -53,6 +55,7 @@ public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
 
     @Before
     public void SetUp() {
+        assumeThatResourceIsAvailable( "https://api.brain-map.org/api/v2/" );
         gene = Gene.Factory.newInstance();
         gene.setName( "glutamate receptor, ionotropic, NMDA1 (zeta 1)" );
         gene.setOfficialSymbol( "grin1" );
@@ -64,7 +67,9 @@ public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
 
     @After
     public void Cleanup() {
-        this.geneService.remove( gene );
+        if ( gene != null ) {
+            this.geneService.remove( gene );
+        }
     }
 
     @Test
