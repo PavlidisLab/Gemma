@@ -167,7 +167,11 @@ public class SettingsConfig {
         if ( versionResource.exists() ) {
             result.addLast( new ResourcePropertySource( versionResource ) );
         } else {
-            log.warn( "The ubic/gemma/version.properties resource was not found; run `mvn generate-resources -pl gemma-core` to generate it." );
+            String mvnPath = System.getenv( "MAVEN" );
+            if ( mvnPath == null ) {
+                mvnPath = "mvn";
+            }
+            log.warn( "The ubic/gemma/version.properties resource was not found; run `" + mvnPath + " generate-resources -pl gemma-core` to generate it." );
         }
 
         cachedSettingsPropertySources = result;
