@@ -52,6 +52,9 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
 
     public static final int MAX_NAME_LENGTH = 255;
 
+    @Nullable
+    private DatabaseEntry accession;
+
     /**
      * Type of batch effect detected or corrected for. See {@link BatchEffectType} enum for possible values.
      */
@@ -135,10 +138,9 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     }
 
     @Nullable
-    @Override
     @IndexedEmbedded
     public DatabaseEntry getAccession() {
-        return super.getAccession();
+        return accession;
     }
 
     @Override
@@ -252,6 +254,10 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
      */
     public Set<Characteristic> getAllCharacteristics() {
         return allCharacteristics;
+    }
+
+    public void setAccession( @Nullable DatabaseEntry accession ) {
+        this.accession = accession;
     }
 
     public void setBatchConfound( @Nullable String batchConfound ) { // FIXME don't use a string for this

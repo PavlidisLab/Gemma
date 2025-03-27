@@ -23,7 +23,7 @@ public class SlicedDoubleVectorValueObject extends DoubleVectorValueObject {
      */
     public SlicedDoubleVectorValueObject( DoubleVectorValueObject vec, ExpressionExperimentSubsetValueObject bioassaySet, BioAssayDimensionValueObject slicedBad ) {
         super( vec );
-        Assert.isTrue( bioassaySet.getSourceExperiment().equals( vec.getExpressionExperiment().getId() ),
+        Assert.isTrue( bioassaySet.getSourceExperimentId().equals( vec.getExpressionExperiment().getId() ),
                 "The subset must belong to " + vec.getExpressionExperiment() + "." );
         Map<BioAssayValueObject, Integer> bioAssayIndexMap = new HashMap<>( vec.getBioAssays().size() );
         for ( int i = 0; i < vec.getBioAssays().size(); i++ ) {

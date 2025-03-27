@@ -15,6 +15,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -24,6 +25,7 @@ import ubic.gemma.rest.util.MalformedArgException;
 import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.ServiceUnavailableException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -194,5 +196,31 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     public Set<AnnotationValueObject> getAnnotations( DatasetArg<?> arg ) {
         ExpressionExperiment ee = this.getEntity( arg );
         return service.getAnnotations( ee );
+    }
+
+    public List<ExpressionExperimentSubSet> getSubSets( DatasetArg<?> datasetArg ) {
+        return service.getSubSetsWithCharacteristics( getEntity( datasetArg ) ).stream()
+                .sorted( Comparator.comparing( ExpressionExperimentSubSet::getName ) )
+                .collect( Collectors.toList() );
+    }
+
+    public ExpressionExperimentSubSet getSubSet( DatasetArg<?> datasetArg, Long subSetId ) {
+        ExpressionExperiment ee = getEntity( datasetArg );
+        ExpressionExperimentSubSet subset = service.getSubSetByIdWithCharacteristics( ee, subSetId );
+        if ( subset == null ) {
+            throw new NotFoundException( "No subset found with ID " + subSetId );
+        }
+        return subset;
+    }
+
+    public List<BioAssayValueObject> getSubSetSamples( DatasetArg<?> datasetArg, Long subSetId ) {
+        ExpressionExperiment ee = getEntity( datasetArg );
+        ExpressionExperimentSubSet subset = service.getSubSetByIdWithBioAssays( ee, subSetId );
+        if ( subset == null ) {
+            throw new NotFoundException( "No subset found with ID " + subSetId );
+        }
+        return subset.getBioAssays().stream()
+                .map( BioAssayValueObject::new )
+                .collect( Collectors.toList() );
     }
 }

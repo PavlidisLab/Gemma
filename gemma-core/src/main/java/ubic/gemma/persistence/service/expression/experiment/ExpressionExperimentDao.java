@@ -269,6 +269,9 @@ public interface ExpressionExperimentDao
 
     Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> getSubSetsByDimension( ExpressionExperiment expressionExperiment );
 
+    @Nullable
+    ExpressionExperimentSubSet getSubSetById( ExpressionExperiment ee, Long subSetId );
+
     <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets );
 
     /**

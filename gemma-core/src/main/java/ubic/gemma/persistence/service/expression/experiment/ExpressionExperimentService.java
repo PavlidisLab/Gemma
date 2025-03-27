@@ -705,7 +705,15 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * Obtain all the subsets for a given dataset.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment );
+    Collection<ExpressionExperimentSubSet> getSubSetsWithBioAssays( ExpressionExperiment expressionExperiment );
+
+    /**
+     * Obtain all the subsets for a given dataset.
+     * <p>
+     * Subsets characteristics are initialized and assays are thawed as per {@link ubic.gemma.persistence.util.Thaws#thawBioAssay(BioAssay)}.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<ExpressionExperimentSubSet> getSubSetsWithCharacteristics( ExpressionExperiment ee );
 
     /**
      * Obtain all the subsets organized by dimension for a given dataset.
@@ -714,10 +722,26 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> getSubSetsByDimension( ExpressionExperiment expressionExperiment );
 
     /**
+     * Obtain all the subsets organized by dimension for a given dataset.
+     * <p>
+     * Assays are thawed as per {@link ubic.gemma.persistence.util.Thaws#thawBioAssay(BioAssay)}.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> getSubSetsByDimensionWithBioAssays( ExpressionExperiment expressionExperiment );
+
+    /**
      * Obtain the subsets for a particular dimension.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment, BioAssayDimension dimension );
+
+    /**
+     * Obtain the subsets for a particular dimension.
+     * <p>
+     * Assays are thawed as per {@link ubic.gemma.persistence.util.Thaws#thawBioAssay(BioAssay)}.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Collection<ExpressionExperimentSubSet> getSubSetsWithBioAssays( ExpressionExperiment expressionExperiment, BioAssayDimension dimension );
 
     /**
      * Reconstitute the FV to subset mapping for a given experiment.
@@ -745,6 +769,19 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Map<FactorValue, ExpressionExperimentSubSet> getSubSetsByFactorValueWithCharacteristicsAndBioAssays( ExpressionExperiment expressionExperiment, ExperimentalFactor experimentalFactor, BioAssayDimension dimension );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    ExpressionExperimentSubSet getSubSetByIdWithCharacteristics( ExpressionExperiment ee, Long subSetId );
+
+    /**
+     * Obtain a particular subset by ID.
+     * <p>
+     * Subsets characteristics are initialized and assays are thawed as per {@link ubic.gemma.persistence.util.Thaws#thawBioAssay(BioAssay)}.
+     */
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    ExpressionExperimentSubSet getSubSetByIdWithBioAssays( ExpressionExperiment ee, Long subSetId );
 
     /**
      * Return the taxon for each of the given experiments (or subsets).

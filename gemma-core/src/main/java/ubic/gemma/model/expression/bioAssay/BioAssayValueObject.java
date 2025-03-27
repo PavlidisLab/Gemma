@@ -67,6 +67,8 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
     // to hold state change, initialized as this.outlier
     private Boolean userFlaggedOutlier = false;
 
+    private Long sourceBioAssayId;
+
     /**
      * Required when using the class as a spring bean.
      */
@@ -74,11 +76,27 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
         super();
     }
 
+    public BioAssayValueObject( BioAssay bioAssay ) {
+        this( bioAssay, null, null, false );
+    }
+
+    public BioAssayValueObject( BioAssay bioAssay, boolean basic ) {
+        this( bioAssay, null, null, basic );
+    }
+
+    public BioAssayValueObject( BioAssay bioAssay, boolean basic, boolean predictedOutlier ) {
+        this( bioAssay, null, null, basic );
+        this.predictedOutlier = predictedOutlier;
+    }
+
     /**
      * @param arrayDesignValueObjectsById pre-populated array design VOs by ID, or null to ignore and the VOs will be
      *                                    initialized via {@link ArrayDesignValueObject#ArrayDesignValueObject(ArrayDesign)}
+     * @param sourceBioAssayId            the ID of the source {@link BioAssay} if known, this corresponds to the assay
+     *                                    of the source sample, but since there might be more than one, it must be
+     *                                    picked explicitly based on the context
      */
-    public BioAssayValueObject( BioAssay bioAssay, @Nullable Map<Long, ArrayDesignValueObject> arrayDesignValueObjectsById, boolean basic ) {
+    public BioAssayValueObject( BioAssay bioAssay, @Nullable Map<Long, ArrayDesignValueObject> arrayDesignValueObjectsById, @Nullable Long sourceBioAssayId, boolean basic ) {
         super( bioAssay );
         this.name = bioAssay.getName();
         this.description = bioAssay.getDescription();
@@ -121,15 +139,6 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
         }
 
         this.userFlaggedOutlier = this.outlier;
-    }
-
-    public BioAssayValueObject( BioAssay bioAssay, boolean basic ) {
-        this( bioAssay, null, basic );
-    }
-
-    public BioAssayValueObject( BioAssay bioAssay, boolean basic, boolean predictedOutlier ) {
-        this( bioAssay, null, basic );
-        this.predictedOutlier = predictedOutlier;
     }
 
     public BioAssayValueObject( Long id ) {

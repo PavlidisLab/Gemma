@@ -34,6 +34,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.*;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -62,6 +63,9 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
      */
     private Collection<Long> bioAssayIds = new HashSet<>();
     private Collection<CharacteristicValueObject> characteristics = new HashSet<>();
+
+    @Nullable
+    private Long sourceBioMaterialId;
 
     /*
      * Map of (informative) categories to values (for this biomaterial). This is only used for display so we don't need ids as well.
@@ -125,6 +129,18 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         this( bm, false );
     }
 
+    public BioMaterialValueObject( BioMaterial bm, BioAssay ba ) {
+        this( bm, false );
+        BioAssayValueObject baVo = new BioAssayValueObject( ba, false );
+        this.bioAssayIds.add( baVo.getId() );
+        this.assayName = ba.getName();
+        this.assayDescription = ba.getDescription();
+        this.assayName = ba.getName();
+        this.assayDescription = ba.getDescription();
+        this.assayProcessingDate = ba.getProcessingDate();
+        this.fastqHeaders = ba.getFastqHeaders() == null ? "" : ba.getFastqHeaders();
+    }
+
     public BioMaterialValueObject( BioMaterial bm, boolean basic ) {
         super( bm );
         this.name = bm.getName();
@@ -171,18 +187,8 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
                 this.characteristicOriginalValues.put( c.getCategory(), c.getOriginalValue() );
             }
         }
-    }
 
-    public BioMaterialValueObject( BioMaterial bm, BioAssay ba ) {
-        this( bm );
-        BioAssayValueObject baVo = new BioAssayValueObject( ba, false );
-        this.bioAssayIds.add( baVo.getId() );
-        this.assayName = ba.getName();
-        this.assayDescription = ba.getDescription();
-        this.assayName = ba.getName();
-        this.assayDescription = ba.getDescription();
-        this.assayProcessingDate = ba.getProcessingDate();
-        this.fastqHeaders = ba.getFastqHeaders() == null ? "" : ba.getFastqHeaders();
+        this.sourceBioMaterialId = bm.getSourceBioMaterial() != null ? bm.getSourceBioMaterial().getId() : null;
     }
 
     @JsonProperty("factorValues")

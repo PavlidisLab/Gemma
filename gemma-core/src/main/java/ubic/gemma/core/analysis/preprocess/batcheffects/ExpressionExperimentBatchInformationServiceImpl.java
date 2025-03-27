@@ -143,7 +143,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
 
         Map<ExpressionExperimentSubSet, List<BatchConfound>> significantSubsetConfounds = new HashMap<>();
 
-        Collection<ExpressionExperimentSubSet> subSets = expressionExperimentService.getSubSets( ee );
+        Collection<ExpressionExperimentSubSet> subSets = expressionExperimentService.getSubSetsWithBioAssays( ee );
         for ( ExpressionExperimentSubSet subset : subSets ) {
             try {
                 List<BatchConfound> subsetConfounds = new ArrayList<>( BatchConfoundUtils.test( subset ) );

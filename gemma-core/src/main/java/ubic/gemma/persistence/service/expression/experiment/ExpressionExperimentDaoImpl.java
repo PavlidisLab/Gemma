@@ -1494,6 +1494,15 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public ExpressionExperimentSubSet getSubSetById( ExpressionExperiment ee, Long subSetId ) {
+        return ( ExpressionExperimentSubSet ) getSessionFactory().getCurrentSession()
+                .createQuery( "select eess from ExpressionExperimentSubSet eess where eess.sourceExperiment = :ee and eess.id = :id" )
+                .setParameter( "ee", ee )
+                .setParameter( "id", subSetId )
+                .uniqueResult();
+    }
+
+    @Override
     public <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets ) {
         if ( bioAssaySets.isEmpty() )
             return Collections.emptyMap();

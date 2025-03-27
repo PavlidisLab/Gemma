@@ -97,13 +97,13 @@ public class BioAssayDaoImpl extends AbstractNoopFilteringVoEnabledDao<BioAssay,
     public List<BioAssayValueObject> loadValueObjects( Collection<BioAssay> entities, Map<Long, ArrayDesignValueObject> arrayDesignValueObjects, boolean basic ) {
         List<BioAssayValueObject> vos = new LinkedList<>();
         for ( BioAssay e : entities ) {
-            vos.add( new BioAssayValueObject( e, arrayDesignValueObjects, basic ) );
+            vos.add( new BioAssayValueObject( e, arrayDesignValueObjects, null, basic ) );
         }
         return vos;
     }
 
     @Override
     protected BioAssayValueObject doLoadValueObject( BioAssay entity ) {
-        return new BioAssayValueObject( entity, null, false );
+        return new BioAssayValueObject( entity, null, null, false );
     }
 }

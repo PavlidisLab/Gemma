@@ -112,7 +112,7 @@ public class AnalysisResultSetsWebService {
             bas = new ArrayList<>( ees );
             // expand with all subsets
             for ( ExpressionExperiment ee : ees ) {
-                bas.addAll( expressionExperimentService.getSubSets( ee ) );
+                bas.addAll( expressionExperimentService.getSubSetsWithBioAssays( ee ) );
             }
         }
         Collection<DatabaseEntry> des = null;

@@ -20,10 +20,8 @@
 package ubic.gemma.model.expression.experiment;
 
 import ubic.gemma.model.analysis.Investigation;
-import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
-import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -37,18 +35,7 @@ import java.util.Set;
  */
 public abstract class BioAssaySet extends Investigation {
 
-    @Nullable
-    private DatabaseEntry accession;
     private Set<BioAssay> bioAssays = new HashSet<>();
-
-    @Nullable
-    public DatabaseEntry getAccession() {
-        return this.accession;
-    }
-
-    public void setAccession( @Nullable DatabaseEntry accession ) {
-        this.accession = accession;
-    }
 
     public Set<BioAssay> getBioAssays() {
         return bioAssays;
