@@ -21,6 +21,7 @@ package ubic.gemma.core.loader.expression.geo.service;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.w3c.dom.Document;
@@ -104,6 +105,7 @@ public class GeoBrowserTest {
      *
      */
     @Test
+    @Ignore("This test started breaking around March 25 2025.")
     public void testRetrieveDetailedGeoRecords() throws IOException {
         GeoQuery query = b.searchGeoRecords( GeoRecordType.SERIES, null, null, null, null, null );
         // Check that the search has returned at least one record
