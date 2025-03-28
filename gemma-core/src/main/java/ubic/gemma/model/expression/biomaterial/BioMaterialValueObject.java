@@ -126,11 +126,11 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     }
 
     public BioMaterialValueObject( BioMaterial bm ) {
-        this( bm, false );
+        this( bm, false, false );
     }
 
     public BioMaterialValueObject( BioMaterial bm, BioAssay ba ) {
-        this( bm, false );
+        this( bm, false, false );
         BioAssayValueObject baVo = new BioAssayValueObject( ba, false );
         this.bioAssayIds.add( baVo.getId() );
         this.assayName = ba.getName();
@@ -141,7 +141,15 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         this.fastqHeaders = ba.getFastqHeaders() == null ? "" : ba.getFastqHeaders();
     }
 
-    public BioMaterialValueObject( BioMaterial bm, boolean basic ) {
+    /**
+     *
+     * @param basic                             if true, populate {@link #fVBasicVOs} instead of {@link #factorValueObjects}.
+     *                                          Note that basic FVs should be preferred for new code.
+     * @param allFactorValuesAndCharacteristics whether to include all factor values and characteristics, including
+     *                                          those inherited from the source biomaterial, otherwise only those from
+     *                                          the sample will be included
+     */
+    public BioMaterialValueObject( BioMaterial bm, boolean basic, boolean allFactorValuesAndCharacteristics ) {
         super( bm );
         this.name = bm.getName();
         this.description = bm.getDescription();
@@ -154,7 +162,8 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         this.factors = new HashMap<>();
         this.factorValues = new HashMap<>();
         this.factorIdToFactorValueId = new HashMap<>();
-        for ( FactorValue fv : bm.getFactorValues() ) {
+        Set<FactorValue> fvs = allFactorValuesAndCharacteristics ? bm.getAllFactorValues() : bm.getFactorValues();
+        for ( FactorValue fv : fvs ) {
             if ( basicFVs ) {
                 this.fVBasicVOs.add( new FactorValueBasicValueObject( fv ) );
             } else {
@@ -178,7 +187,8 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         }
 
         // used for display of characteristics in the biomaterial experimental design editor view.
-        for ( Characteristic c : bm.getCharacteristics() ) {
+        Set<Characteristic> cs = allFactorValuesAndCharacteristics ? bm.getAllCharacteristics() : bm.getCharacteristics();
+        for ( Characteristic c : cs ) {
             if ( StringUtils.isBlank( c.getCategory() ) ) {
                 continue;
             }
