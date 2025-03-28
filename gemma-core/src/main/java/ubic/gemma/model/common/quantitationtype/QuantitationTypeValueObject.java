@@ -24,7 +24,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.IdentifiableValueObject;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
@@ -123,7 +123,7 @@ public class QuantitationTypeValueObject extends IdentifiableValueObject<Quantit
      * @param expressionExperiment associated experiment
      * @param vectorType vector type if applicable, otherwise null
      */
-    public QuantitationTypeValueObject( QuantitationType qt, ExpressionExperiment expressionExperiment, @Nullable Class<? extends DesignElementDataVector> vectorType ) {
+    public QuantitationTypeValueObject( QuantitationType qt, ExpressionExperiment expressionExperiment, @Nullable Class<? extends DataVector> vectorType ) {
         this( qt );
         this.expressionExperimentId = expressionExperiment.getId();
         if ( vectorType != null ) {

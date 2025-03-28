@@ -738,7 +738,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     /**
      * Obtain the subsets for a particular dimension.
      * <p>
-     * Assays are thawed as per {@link ubic.gemma.persistence.util.Thaws#thawBioAssay(BioAssay)}.
+     * Assays are lightly thawed.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<ExpressionExperimentSubSet> getSubSetsWithBioAssays( ExpressionExperiment expressionExperiment, BioAssayDimension dimension );
@@ -781,7 +781,7 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      */
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    ExpressionExperimentSubSet getSubSetByIdWithBioAssays( ExpressionExperiment ee, Long subSetId );
+    ExpressionExperimentSubSet getSubSetByIdWithCharacteristicsAndBioAssays( ExpressionExperiment ee, Long subSetId );
 
     /**
      * Return the taxon for each of the given experiments (or subsets).

@@ -30,6 +30,7 @@ import lombok.Getter;
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.lucene.analysis.Analyzer;
@@ -68,6 +69,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.experiment.*;
@@ -77,6 +79,7 @@ import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -179,6 +182,8 @@ public class DatasetsWebService {
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
     @Autowired
     private AccessDecisionManager accessDecisionManager;
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
 
     @Context
     private UriInfo uriInfo;
@@ -1925,6 +1930,220 @@ public class DatasetsWebService {
         return Response.created( URI.create( "/datasets/" + ee.getId() ) )
                 .entity( new ResponseDataObjectExpressionExperimentValueObject( expressionExperimentService.loadValueObject( ee ) ) )
                 .build();
+    }
+
+    /**
+     * Retrieve all the "groups" of subsets of a dataset.
+     * <p>
+     * Each group of subsets is logically organized by a {@link BioAssayDimension} that holds its assays. We don't
+     * expose that aspect however, and simply use the ID of the BAD as ID of the group.
+     */
+    @GET
+    @Path("/{dataset}/subSetGroups")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Obtain all the subset groups of a dataset")
+    public ResponseDataObject<List<ExpressionExperimentSubSetGroupValueObject>> getDatasetSubSetGroups(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        return respond( expressionExperimentService.getSubSetsByDimension( ee )
+                .entrySet()
+                .stream()
+                .map( e -> {
+                    Map<ExperimentalFactor, Map<FactorValue, ExpressionExperimentSubSet>> ssvs = expressionExperimentService.getSubSetsByFactorValue( ee, e.getKey() );
+                    List<QuantitationTypeValueObject> qts = expressionExperimentService.getQuantitationTypes( ee, e.getKey() ).stream()
+                            .sorted( Comparator.comparing( QuantitationType::getName ) )
+                            .map( qt -> new QuantitationTypeValueObject( qt, ee, quantitationTypeService.getDataVectorType( qt ) ) )
+                            .collect( Collectors.toList() );
+                    return createSubSetGroup( e.getKey(), e.getValue(), ssvs, qts, false );
+                } )
+                .collect( Collectors.toList() ) );
+    }
+
+    @GET
+    @Path("/{dataset}/subSetGroups/{subSetGroup}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Obtain a specific subset group of a dataset")
+    public ResponseDataObject<ExpressionExperimentSubSetGroupValueObject> getDatasetSubSetGroup(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @PathParam("subSetGroup") Long bioAssayDimensionId
+    ) {
+        ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+        // this is preferred, because it does not require any data to be present
+        BioAssayDimension bad = expressionExperimentService.getBioAssayDimensionById( ee, bioAssayDimensionId );
+        if ( bad == null ) {
+            throw new NotFoundException( "No subset group with ID " + bioAssayDimensionId );
+        }
+        Map<ExperimentalFactor, Map<FactorValue, ExpressionExperimentSubSet>> ssvs = expressionExperimentService.getSubSetsByFactorValue( ee, bad );
+        List<QuantitationTypeValueObject> qts = expressionExperimentService.getQuantitationTypes( ee, bad ).stream()
+                .sorted( Comparator.comparing( QuantitationType::getName ) )
+                .map( qt -> new QuantitationTypeValueObject( qt, ee, quantitationTypeService.getDataVectorType( qt ) ) )
+                .collect( Collectors.toList() );
+        return respond( createSubSetGroup( bad, expressionExperimentService.getSubSetsWithBioAssays( ee, bad ), ssvs, qts, true ) );
+    }
+
+    private ExpressionExperimentSubSetGroupValueObject createSubSetGroup( BioAssayDimension bad,
+            Collection<ExpressionExperimentSubSet> subsets,
+            Map<ExperimentalFactor, Map<FactorValue, ExpressionExperimentSubSet>> ssvs,
+            List<QuantitationTypeValueObject> qts,
+            boolean includeAssays ) {
+        Map<ExpressionExperimentSubSet, Set<FactorValue>> fvs = new HashMap<>();
+        ssvs.forEach( ( ef, s2fv ) -> {
+            s2fv.forEach( ( fv, s ) -> {
+                fvs.computeIfAbsent( s, k -> new HashSet<>() ).add( fv );
+            } );
+        } );
+        List<ExperimentalFactorValueObject> factors = ssvs.keySet().stream()
+                .sorted( Comparator.comparing( ExperimentalFactor::getName ) )
+                // don't include values, those are already included in the subsets
+                .map( ef -> new ExperimentalFactorValueObject( ef, false ) )
+                .collect( Collectors.toList() );
+        List<ExpressionExperimentSubsetWithFactorValuesObject> ssvos = subsets.stream()
+                // TODO order the subsets by how they appear in the BioAssayDimension
+                .sorted( Comparator.comparing( ExpressionExperimentSubSet::getName ) )
+                .map( subset -> {
+                    Map<Long, ArrayDesignValueObject> id2advo;
+                    Map<BioAssay, BioAssay> assay2sourceAssayMap;
+                    if ( includeAssays ) {
+                        id2advo = new HashMap<>();
+                        assay2sourceAssayMap = new HashMap<>();
+                        for ( BioAssay ba : subset.getBioAssays() ) {
+                            if ( !id2advo.containsKey( ba.getArrayDesignUsed().getId() ) ) {
+                                id2advo.put( ba.getArrayDesignUsed().getId(), new ArrayDesignValueObject( ba.getArrayDesignUsed() ) );
+                            }
+                            if ( ba.getSampleUsed().getSourceBioMaterial() == null ) {
+                                log.warn( ba + " does not have a source assay in " + subset.getSourceExperiment() + "." );
+                                continue;
+                            }
+                            Set<BioAssay> sourceAssays = ba.getSampleUsed().getSourceBioMaterial().getBioAssaysUsedIn().stream()
+                                    .filter( subset.getSourceExperiment().getBioAssays()::contains )
+                                    .collect( Collectors.toSet() );
+                            if ( sourceAssays.size() == 1 ) {
+                                assay2sourceAssayMap.put( ba, sourceAssays.iterator().next() );
+                            } else if ( sourceAssays.isEmpty() ) {
+                                log.warn( ba + " does not have a source assay in " + subset.getSourceExperiment() + "." );
+                            } else {
+                                log.warn( ba + " has more than one source assay in " + subset.getSourceExperiment() + "." );
+                            }
+                        }
+                    } else {
+                        id2advo = null;
+                        assay2sourceAssayMap = null;
+                    }
+                    return new ExpressionExperimentSubsetWithFactorValuesObject( subset, fvs.get( subset ), id2advo, includeAssays, assay2sourceAssayMap );
+                } )
+                .collect( Collectors.toList() );
+        return new ExpressionExperimentSubSetGroupValueObject( bad, ssvos, factors, qts );
+    }
+
+    @GET
+    @Path("/{dataset}/subSets")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Obtain all subsets of a dataset")
+    public ResponseDataObject<List<ExpressionExperimentSubSetWithGroupsValueObject>> getDatasetSubSets(
+            @PathParam("dataset") DatasetArg<?> datasetArg
+    ) {
+        Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> ss2bad = expressionExperimentService.getSubSetsByDimension( datasetArgService.getEntity( datasetArg ) );
+        Map<ExpressionExperimentSubSet, List<Long>> subSetGroups = new HashMap<>();
+        for ( Map.Entry<BioAssayDimension, Set<ExpressionExperimentSubSet>> entry : ss2bad.entrySet() ) {
+            for ( ExpressionExperimentSubSet s : entry.getValue() ) {
+                subSetGroups.computeIfAbsent( s, k -> new ArrayList<>() )
+                        .add( entry.getKey().getId() );
+            }
+        }
+        subSetGroups.values().forEach( list -> list.sort( Comparator.naturalOrder() ) );
+        return respond( datasetArgService.getSubSets( datasetArg ).stream()
+                .map( subset -> new ExpressionExperimentSubSetWithGroupsValueObject( subset, subSetGroups.getOrDefault( subset, Collections.emptyList() ) ) )
+                .collect( Collectors.toList() ) );
+    }
+
+    @GET
+    @Path("/{dataset}/subSets/{subSet}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Obtain a specific subset of a dataset")
+    public ResponseDataObject<ExpressionExperimentSubSetWithGroupsValueObject> getDatasetSubSetById(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @PathParam("subSet") Long subSetId
+    ) {
+        Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> ss2bad = expressionExperimentService.getSubSetsByDimension( datasetArgService.getEntity( datasetArg ) );
+        Map<ExpressionExperimentSubSet, List<Long>> subSetGroups = new HashMap<>();
+        for ( Map.Entry<BioAssayDimension, Set<ExpressionExperimentSubSet>> entry : ss2bad.entrySet() ) {
+            for ( ExpressionExperimentSubSet s : entry.getValue() ) {
+                subSetGroups.computeIfAbsent( s, k -> new ArrayList<>() )
+                        .add( entry.getKey().getId() );
+            }
+        }
+        subSetGroups.values().forEach( list -> list.sort( Comparator.naturalOrder() ) );
+        ExpressionExperimentSubSet subset = datasetArgService.getSubSet( datasetArg, subSetId );
+        return respond( new ExpressionExperimentSubSetWithGroupsValueObject( subset, subSetGroups.getOrDefault( subset, Collections.emptyList() ) ) );
+    }
+
+    @GET
+    @Path("/{dataset}/subSets/{subSet}/samples")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Obtain the samples of a specific subset of a dataset")
+    public ResponseDataObject<List<BioAssayValueObject>> getDatasetSubSetSamples(
+            @PathParam("dataset") DatasetArg<?> datasetArg,
+            @PathParam("subSet") Long subSetId
+    ) {
+        return respond( datasetArgService.getSubSetSamples( datasetArg, subSetId ) );
+    }
+
+    /**
+     * A group of subsets, logically organized by a {@link BioAssayDimension}.
+     * @author poirigui
+     */
+    @Getter
+    public static class ExpressionExperimentSubSetGroupValueObject {
+
+        private final Long id;
+
+        private final String name;
+
+        /**
+         * List of factors that are associated with the subsets in this group.
+         */
+        private final List<ExperimentalFactorValueObject> factors;
+
+        private final List<QuantitationTypeValueObject> quantitationTypes;
+
+        private final List<ExpressionExperimentSubsetWithFactorValuesObject> subSets;
+
+        public ExpressionExperimentSubSetGroupValueObject( BioAssayDimension bioAssayDimension, List<ExpressionExperimentSubsetWithFactorValuesObject> subSets, List<ExperimentalFactorValueObject> factors, List<QuantitationTypeValueObject> quantitationTypes ) {
+            this.id = bioAssayDimension.getId();
+            // FIXME: make the name generation more robust, it's only tailored to how we name single-cell subsets
+            this.name = StringUtils.removeEnd( StringUtils.getCommonPrefix( subSets.stream().map( ExpressionExperimentSubsetValueObject::getName ).toArray( String[]::new ) ), " - " );
+            this.subSets = subSets;
+            this.factors = factors;
+            this.quantitationTypes = quantitationTypes;
+        }
+    }
+
+    @Getter
+    public static class ExpressionExperimentSubsetWithFactorValuesObject extends ExpressionExperimentSubsetValueObject {
+
+        private final List<FactorValueBasicValueObject> factorValues;
+
+        public ExpressionExperimentSubsetWithFactorValuesObject( ExpressionExperimentSubSet subset,
+                Set<FactorValue> factorValues,
+                @Nullable Map<Long, ArrayDesignValueObject> id2advo,
+                boolean includeAssays, @Nullable Map<BioAssay, BioAssay> assay2sourceAssayMap ) {
+            super( subset, id2advo, assay2sourceAssayMap, includeAssays, true, true );
+            this.factorValues = factorValues.stream()
+                    .map( FactorValueBasicValueObject::new )
+                    .collect( Collectors.toList() );
+        }
+    }
+
+    @Getter
+    public static class ExpressionExperimentSubSetWithGroupsValueObject extends ExpressionExperimentSubsetValueObject {
+
+        private final List<Long> subSetGroupIds;
+
+        public ExpressionExperimentSubSetWithGroupsValueObject( ExpressionExperimentSubSet subset, List<Long> subSetGroupIds ) {
+            super( subset, null, null, false, true, false );
+            this.subSetGroupIds = subSetGroupIds;
+        }
     }
 
     public static class ResponseDataObjectExpressionExperimentValueObject extends ResponseDataObject<ExpressionExperimentValueObject> {

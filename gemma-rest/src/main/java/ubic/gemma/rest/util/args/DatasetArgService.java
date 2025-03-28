@@ -215,12 +215,32 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
 
     public List<BioAssayValueObject> getSubSetSamples( DatasetArg<?> datasetArg, Long subSetId ) {
         ExpressionExperiment ee = getEntity( datasetArg );
-        ExpressionExperimentSubSet subset = service.getSubSetByIdWithBioAssays( ee, subSetId );
+        ExpressionExperimentSubSet subset = service.getSubSetByIdWithCharacteristicsAndBioAssays( ee, subSetId );
         if ( subset == null ) {
             throw new NotFoundException( "No subset found with ID " + subSetId );
         }
         return subset.getBioAssays().stream()
-                .map( BioAssayValueObject::new )
+                .map( ba -> {
+                    BioAssay sourceAssay;
+                    if ( ba.getSampleUsed().getSourceBioMaterial() != null ) {
+                        Set<BioAssay> sourceAssays = ba.getSampleUsed().getSourceBioMaterial().getBioAssaysUsedIn().stream()
+                                .filter( subset.getSourceExperiment().getBioAssays()::contains )
+                                .collect( Collectors.toSet() );
+                        if ( sourceAssays.size() == 1 ) {
+                            sourceAssay = sourceAssays.iterator().next();
+                        } else if ( sourceAssays.isEmpty() ) {
+                            log.warn( ba + " does not have a source assay in " + subset.getSourceExperiment() + "." );
+                            sourceAssay = null;
+                        } else {
+                            log.warn( ba + " has more than one source assay in " + subset.getSourceExperiment() + "." );
+                            sourceAssay = null;
+                        }
+                    } else {
+                        log.warn( ba + " does not have a source assay in " + subset.getSourceExperiment() + "." );
+                        sourceAssay = null;
+                    }
+                    return new BioAssayValueObject( ba, null, sourceAssay, false, true );
+                } )
                 .collect( Collectors.toList() );
     }
 }

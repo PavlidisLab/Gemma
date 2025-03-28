@@ -9,10 +9,13 @@ import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Getter
@@ -63,10 +66,14 @@ public class ExpressionExperimentSubsetValueObject extends IdentifiableValueObje
     }
 
     public ExpressionExperimentSubsetValueObject( ExpressionExperimentSubSet ees ) {
-        this( ees, false );
+        this( ees, null, null, false, false, false );
     }
 
-    public ExpressionExperimentSubsetValueObject( ExpressionExperimentSubSet ees, boolean includeAssays ) {
+    /**
+     * @param bioAssay2SourceBioAssayMap mapping of assays to their source assays
+     * @param includeAssays              whether to include assays in the serialization
+     */
+    public ExpressionExperimentSubsetValueObject( ExpressionExperimentSubSet ees, @Nullable Map<Long, ArrayDesignValueObject> arrayDesignValueObjectsById, @Nullable Map<BioAssay, BioAssay> bioAssay2SourceBioAssayMap, boolean includeAssays, boolean basic, boolean allFactorValues ) {
         super( ees.getId() );
         this.sourceExperimentId = ees.getSourceExperiment().getId();
         if ( Hibernate.isInitialized( ees.getSourceExperiment() ) ) {
@@ -78,7 +85,7 @@ public class ExpressionExperimentSubsetValueObject extends IdentifiableValueObje
             this.numberOfBioAssays = ees.getBioAssays().size();
             if ( includeAssays ) {
                 bioAssays = ees.getBioAssays().stream()
-                        .map( BioAssayValueObject::new )
+                        .map( ba -> new BioAssayValueObject( ba, arrayDesignValueObjectsById, bioAssay2SourceBioAssayMap != null ? bioAssay2SourceBioAssayMap.get( ba ) : null, basic, allFactorValues ) )
                         .collect( Collectors.toSet() );
             }
         } else {

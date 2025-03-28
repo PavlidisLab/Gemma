@@ -1462,6 +1462,10 @@ public class ExpressionExperimentServiceImpl
     public Collection<ExpressionExperimentSubSet> getSubSetsWithBioAssays( ExpressionExperiment expressionExperiment, BioAssayDimension dimension ) {
         Collection<ExpressionExperimentSubSet> subSets = expressionExperimentDao.getSubSets( expressionExperiment, dimension );
         for ( ExpressionExperimentSubSet s : subSets ) {
+            for ( BioAssay ba : s.getSourceExperiment().getBioAssays() ) {
+                Hibernate.initialize( ba.getSampleUsed() );
+                Hibernate.initialize( ba.getSampleUsed().getSourceBioMaterial() );
+            }
             for ( BioAssay ba : s.getBioAssays() ) {
                 Hibernate.initialize( ba.getSampleUsed() );
                 Hibernate.initialize( ba.getSampleUsed().getSourceBioMaterial() );
@@ -1530,9 +1534,10 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionExperimentSubSet getSubSetByIdWithBioAssays( ExpressionExperiment ee, Long subSetId ) {
+    public ExpressionExperimentSubSet getSubSetByIdWithCharacteristicsAndBioAssays( ExpressionExperiment ee, Long subSetId ) {
         ExpressionExperimentSubSet result = expressionExperimentDao.getSubSetById( ee, subSetId );
         if ( result != null ) {
+            result.getSourceExperiment().getBioAssays().forEach( Thaws::thawBioAssay );
             result.getBioAssays().forEach( Thaws::thawBioAssay );
         }
         return result;

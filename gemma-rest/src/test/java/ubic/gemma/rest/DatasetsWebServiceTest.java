@@ -37,9 +37,9 @@ import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -791,6 +791,72 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
                                     "D/matrix.mtx.gz"
                             );
                 } );
+    }
+
+    @Test
+    public void testGetDatasetSubSetGroups() {
+        BioAssayDimension bad = new BioAssayDimension();
+        List<ExpressionExperimentSubSet> subsets = Collections.singletonList( ExpressionExperimentSubSet.Factory.newInstance( "test", ee ) );
+        when( expressionExperimentService.getSubSetsByDimension( ee ) ).thenReturn( Collections.singletonMap( bad, new HashSet<>( subsets ) ) );
+        ExperimentalFactor factor = new ExperimentalFactor();
+        FactorValue fv = FactorValue.Factory.newInstance( factor );
+        when( expressionExperimentService.getSubSetsByFactorValue( ee, bad ) ).thenReturn( Collections.singletonMap( factor, Collections.singletonMap( fv, subsets.iterator().next() ) ) );
+        assertThat( target( "/datasets/1/subSetGroups" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+    }
+
+    @Test
+    public void testGetDatasetSubSetGroup() {
+        BioAssayDimension bad = new BioAssayDimension();
+        List<ExpressionExperimentSubSet> subsets = Collections.singletonList( ExpressionExperimentSubSet.Factory.newInstance( "test", ee ) );
+        when( expressionExperimentService.getBioAssayDimensionById( ee, 1L ) ).thenReturn( bad );
+        when( expressionExperimentService.getSubSetsByDimension( ee ) ).thenReturn( Collections.singletonMap( bad, new HashSet<>( subsets ) ) );
+        ExperimentalFactor factor = new ExperimentalFactor();
+        FactorValue fv = FactorValue.Factory.newInstance( factor );
+        when( expressionExperimentService.getSubSetsByFactorValue( ee, bad ) ).thenReturn( Collections.singletonMap( factor, Collections.singletonMap( fv, subsets.iterator().next() ) ) );
+        assertThat( target( "/datasets/1/subSetGroups/1" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+    }
+
+
+    @Test
+    public void testGetDatasetSubSets() {
+        BioAssayDimension bad = new BioAssayDimension();
+        List<ExpressionExperimentSubSet> subsets = Collections.singletonList( ExpressionExperimentSubSet.Factory.newInstance( "test", ee ) );
+        when( expressionExperimentService.getSubSetsByDimension( ee ) ).thenReturn( Collections.singletonMap( bad, new HashSet<>( subsets ) ) );
+        ExperimentalFactor factor = new ExperimentalFactor();
+        FactorValue fv = FactorValue.Factory.newInstance( factor );
+        when( expressionExperimentService.getSubSetsByFactorValue( ee, bad ) ).thenReturn( Collections.singletonMap( factor, Collections.singletonMap( fv, subsets.iterator().next() ) ) );
+        assertThat( target( "/datasets/1/subSets" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+    }
+
+    @Test
+    public void testGetDatasetSubSet() {
+        BioAssayDimension bad = new BioAssayDimension();
+        List<ExpressionExperimentSubSet> subsets = Collections.singletonList( ExpressionExperimentSubSet.Factory.newInstance( "test", ee ) );
+        when( expressionExperimentService.getSubSetsByDimension( ee ) ).thenReturn( Collections.singletonMap( bad, new HashSet<>( subsets ) ) );
+        when( expressionExperimentService.getSubSetByIdWithCharacteristics( ee, 1L ) ).thenReturn( subsets.iterator().next() );
+        assertThat( target( "/datasets/1/subSets/1" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+    }
+
+    @Test
+    public void testGetDatasetSubSetSamples() {
+        BioAssayDimension bad = new BioAssayDimension();
+        when( expressionExperimentService.getBioAssayDimensionById( ee, 1L ) ).thenReturn( bad );
+        List<ExpressionExperimentSubSet> subsets = Collections.singletonList( ExpressionExperimentSubSet.Factory.newInstance( "test", ee ) );
+        when( expressionExperimentService.getSubSetByIdWithCharacteristicsAndBioAssays( ee, 1L ) ).thenReturn( subsets.iterator().next() );
+        ExperimentalFactor factor = new ExperimentalFactor();
+        FactorValue fv = FactorValue.Factory.newInstance( factor );
+        when( expressionExperimentService.getSubSetsByFactorValue( ee, bad ) ).thenReturn( Collections.singletonMap( factor, Collections.singletonMap( fv, subsets.iterator().next() ) ) );
+        assertThat( target( "/datasets/1/subSets/1/samples" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
     }
 
     private static class DummyLockedPath implements LockedPath {
