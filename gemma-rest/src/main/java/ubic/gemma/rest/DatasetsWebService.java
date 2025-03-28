@@ -2043,15 +2043,7 @@ public class DatasetsWebService {
     public ResponseDataObject<List<ExpressionExperimentSubSetWithGroupsValueObject>> getDatasetSubSets(
             @PathParam("dataset") DatasetArg<?> datasetArg
     ) {
-        Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> ss2bad = expressionExperimentService.getSubSetsByDimension( datasetArgService.getEntity( datasetArg ) );
-        Map<ExpressionExperimentSubSet, List<Long>> subSetGroups = new HashMap<>();
-        for ( Map.Entry<BioAssayDimension, Set<ExpressionExperimentSubSet>> entry : ss2bad.entrySet() ) {
-            for ( ExpressionExperimentSubSet s : entry.getValue() ) {
-                subSetGroups.computeIfAbsent( s, k -> new ArrayList<>() )
-                        .add( entry.getKey().getId() );
-            }
-        }
-        subSetGroups.values().forEach( list -> list.sort( Comparator.naturalOrder() ) );
+        Map<ExpressionExperimentSubSet, List<Long>> subSetGroups = datasetArgService.getSubSetsGroupIds( datasetArg );
         return respond( datasetArgService.getSubSets( datasetArg ).stream()
                 .map( subset -> new ExpressionExperimentSubSetWithGroupsValueObject( subset, subSetGroups.getOrDefault( subset, Collections.emptyList() ) ) )
                 .collect( Collectors.toList() ) );
@@ -2065,17 +2057,9 @@ public class DatasetsWebService {
             @PathParam("dataset") DatasetArg<?> datasetArg,
             @PathParam("subSet") Long subSetId
     ) {
-        Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> ss2bad = expressionExperimentService.getSubSetsByDimension( datasetArgService.getEntity( datasetArg ) );
-        Map<ExpressionExperimentSubSet, List<Long>> subSetGroups = new HashMap<>();
-        for ( Map.Entry<BioAssayDimension, Set<ExpressionExperimentSubSet>> entry : ss2bad.entrySet() ) {
-            for ( ExpressionExperimentSubSet s : entry.getValue() ) {
-                subSetGroups.computeIfAbsent( s, k -> new ArrayList<>() )
-                        .add( entry.getKey().getId() );
-            }
-        }
-        subSetGroups.values().forEach( list -> list.sort( Comparator.naturalOrder() ) );
         ExpressionExperimentSubSet subset = datasetArgService.getSubSet( datasetArg, subSetId );
-        return respond( new ExpressionExperimentSubSetWithGroupsValueObject( subset, subSetGroups.getOrDefault( subset, Collections.emptyList() ) ) );
+        List<Long> subSetGroups = datasetArgService.getSubSetGroupIds( datasetArg, subset );
+        return respond( new ExpressionExperimentSubSetWithGroupsValueObject( subset, subSetGroups ) );
     }
 
     @GET

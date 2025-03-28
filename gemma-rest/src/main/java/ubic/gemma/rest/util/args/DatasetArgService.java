@@ -14,6 +14,7 @@ import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -211,6 +212,24 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
             throw new NotFoundException( "No subset found with ID " + subSetId );
         }
         return subset;
+    }
+
+    public List<Long> getSubSetGroupIds( DatasetArg<?> datasetArg, ExpressionExperimentSubSet subset ) {
+        // TODO: only retrieve the subset groups for the given subset
+        return getSubSetsGroupIds( datasetArg ).getOrDefault( subset, Collections.emptyList() );
+    }
+
+    public Map<ExpressionExperimentSubSet, List<Long>> getSubSetsGroupIds( DatasetArg<?> datasetArg ) {
+        Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> ss2bad = service.getSubSetsByDimension( getEntity( datasetArg ) );
+        Map<ExpressionExperimentSubSet, List<Long>> subSetGroups = new HashMap<>();
+        for ( Map.Entry<BioAssayDimension, Set<ExpressionExperimentSubSet>> entry : ss2bad.entrySet() ) {
+            for ( ExpressionExperimentSubSet s : entry.getValue() ) {
+                subSetGroups.computeIfAbsent( s, k -> new ArrayList<>() )
+                        .add( entry.getKey().getId() );
+            }
+        }
+        subSetGroups.values().forEach( list -> list.sort( Comparator.naturalOrder() ) );
+        return subSetGroups;
     }
 
     public List<BioAssayValueObject> getSubSetSamples( DatasetArg<?> datasetArg, Long subSetId ) {

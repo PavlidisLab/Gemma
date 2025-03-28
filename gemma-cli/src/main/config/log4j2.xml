@@ -125,7 +125,7 @@
         <Logger name="ubic.basecode.ontology.providers" level="WARN"/>
 
         <Logger name="ubic.gemma" level="INFO"/>
-        <Logger name="ubic.gemma.core.util.BatchLogger" level="INFO">
+        <Logger name="ubic.gemma.core.util.BatchLogger" level="INFO" additivity="false">
             <AppenderRef ref="console"/>
             <AppenderRef ref="file"/>
             <AppenderRef ref="warningFile" level="WARN"/>
