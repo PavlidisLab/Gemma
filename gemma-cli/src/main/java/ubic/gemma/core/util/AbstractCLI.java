@@ -37,6 +37,7 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -80,6 +81,7 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
     private static final String BATCH_FORMAT_OPTION = "batchFormat";
     private static final String BATCH_OUTPUT_FILE_OPTION = "batchOutputFile";
     private static final String BATCH_REPORT_FREQUENCY_OPTION = "batchReportFrequency";
+    private static final String BATCH_LOG_CATEGORY = "ubic.gemma.core.util.BatchLogger";
 
     /**
      * Application context
@@ -566,20 +568,24 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
             switch ( batchFormat ) {
                 case TEXT:
                     try {
-                        summaryWriter = new TextBatchTaskSummaryWriter( openBatchTaskSummaryDestination() );
+                        summaryWriter = new CompositeBatchTaskSummaryWriter( Arrays.asList(
+                                new TextBatchTaskSummaryWriter( openBatchTaskSummaryDestination() ),
+                                new LoggingBatchTaskSummaryWriter( BATCH_LOG_CATEGORY ) ) );
                     } catch ( IOException e ) {
                         throw new RuntimeException( "Failed to open destination for writing batch task results.", e );
                     }
                     break;
                 case TSV:
                     try {
-                        summaryWriter = new TsvBatchTaskSummaryWriter( openBatchTaskSummaryDestination() );
+                        summaryWriter = new CompositeBatchTaskSummaryWriter( Arrays.asList(
+                                new TsvBatchTaskSummaryWriter( openBatchTaskSummaryDestination() ),
+                                new LoggingBatchTaskSummaryWriter( BATCH_LOG_CATEGORY ) ) );
                     } catch ( IOException e ) {
                         throw new RuntimeException( "Failed to open destination for writing batch task results.", e );
                     }
                     break;
                 case LOG:
-                    summaryWriter = new LoggingBatchTaskSummaryWriter();
+                    summaryWriter = new LoggingBatchTaskSummaryWriter( BATCH_LOG_CATEGORY );
                     break;
                 case SUPPRESS:
                     summaryWriter = new SuppressBatchTaskSummaryWriter();

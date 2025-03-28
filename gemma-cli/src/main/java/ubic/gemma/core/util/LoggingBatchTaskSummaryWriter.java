@@ -1,11 +1,17 @@
 package ubic.gemma.core.util;
 
-import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 
-@CommonsLog
 class LoggingBatchTaskSummaryWriter implements BatchTaskSummaryWriter {
+
+    private final Log log;
+
+    LoggingBatchTaskSummaryWriter( String logCategory ) {
+        log = LogFactory.getLog( logCategory );
+    }
 
     @Override
     public void write( BatchTaskProcessingResult result ) throws IOException {

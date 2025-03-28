@@ -110,12 +110,10 @@ class BatchTaskProgressReporter implements AutoCloseable {
 
     void addWarningObject( @Nullable Object warningObject, String message ) {
         addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.WARNING, warningObject, message, null ) );
-        log.warn( "Error while processing " + ( warningObject != null ? warningObject : "unknown object" ) + ":\n\t" + message );
     }
 
     void addWarningObject( @Nullable Object warningObject, String message, Throwable throwable ) {
         addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.WARNING, warningObject, message, throwable ) );
-        log.warn( "Error while processing " + ( warningObject != null ? warningObject : "unknown object" ) + ":\n\t" + message, throwable );
     }
 
     /**
@@ -129,7 +127,6 @@ class BatchTaskProgressReporter implements AutoCloseable {
      */
     void addErrorObject( @Nullable Object errorObject, String message, Throwable throwable ) {
         addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.ERROR, errorObject, message, throwable ) );
-        log.error( "Error while processing " + ( errorObject != null ? errorObject : "unknown object" ) + ":\n\t" + message, throwable );
     }
 
     /**
@@ -139,7 +136,6 @@ class BatchTaskProgressReporter implements AutoCloseable {
      */
     void addErrorObject( @Nullable Object errorObject, String message ) {
         addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.ERROR, errorObject, message, null ) );
-        log.error( "Error while processing " + ( errorObject != null ? errorObject : "unknown object" ) + ":\n\t" + message );
     }
 
     /**
@@ -149,7 +145,6 @@ class BatchTaskProgressReporter implements AutoCloseable {
      */
     void addErrorObject( @Nullable Object errorObject, Exception exception ) {
         addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.ERROR, errorObject, exception.getMessage(), exception ) );
-        log.error( "Error while processing " + ( errorObject != null ? errorObject : "unknown object" ), exception );
     }
 
     private void addBatchProcessingResult( BatchTaskProcessingResult result ) {
@@ -169,7 +164,7 @@ class BatchTaskProgressReporter implements AutoCloseable {
                 summaryWriter.write( result );
             }
         } catch ( IOException e ) {
-            log.error( e );
+            log.error( "Failed to write batch task result to the summary writer.", e );
         }
         reportProgress( completed );
     }
