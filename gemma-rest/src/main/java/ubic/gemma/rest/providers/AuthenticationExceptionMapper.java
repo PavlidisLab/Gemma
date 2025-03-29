@@ -26,9 +26,4 @@ public class AuthenticationExceptionMapper extends AbstractExceptionMapper<Authe
     protected Response.Status getStatus( AuthenticationException exception ) {
         return Response.Status.FORBIDDEN;
     }
-
-    @Override
-    protected boolean logException( AuthenticationException e ) {
-        return true;
-    }
 }
