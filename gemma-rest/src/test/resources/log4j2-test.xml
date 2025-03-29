@@ -4,9 +4,13 @@
                xsi:schemaLocation="
                    https://logging.apache.org/xml/ns
                    https://logging.apache.org/xml/ns/log4j-config-2.xsd">
+    <Properties>
+        <Property name="gemma.log.filter"
+                  value="org.glassfish.jersey,org.springframework.test.context.junit4,org.junit"/>
+    </Properties>
     <Appenders>
         <Console name="console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d %highlight{%p} %style{%pid}{magenta} [%t] %style{%C{1.}.%M(%L)}{cyan} | %m%n"/>
+            <PatternLayout pattern="%d %highlight{%p} %style{%pid}{magenta} [%t] %style{%C{1.}.%M(%L)}{cyan} | %m%n%xEx{filters(${gemma.log.filter})}"/>
         </Console>
     </Appenders>
     <Loggers>
