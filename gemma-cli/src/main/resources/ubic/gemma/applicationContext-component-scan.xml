@@ -15,8 +15,8 @@
     <!-- Standard CLI tools -->
     <context:component-scan base-package="ubic.gemma.apps"
                             name-generator="ubic.gemma.core.context.BeanNameGenerator"
-                            use-default-filters="false">
-        <!-- FIXME: we should use @Component on each CLI, or maybe introduce a @CLI annotation -->
+                            use-default-filters="false"
+                            scope-resolver="ubic.gemma.cli.util.PrototypeScopeResolver">
         <context:include-filter type="assignable" expression="ubic.gemma.cli.util.CLI"/>
         <context:exclude-filter type="annotation" expression="ubic.gemma.core.context.TestComponent"/>
     </context:component-scan>
@@ -24,11 +24,11 @@
     <!-- CLI tools from contrib packages -->
     <context:component-scan base-package="ubic.gemma.contrib.apps"
                             name-generator="ubic.gemma.core.context.BeanNameGenerator"
-                            use-default-filters="false">
+                            use-default-filters="false"
+                            scope-resolver="ubic.gemma.cli.util.PrototypeScopeResolver">
         <context:include-filter type="assignable" expression="ubic.gemma.cli.util.CLI"/>
         <context:exclude-filter type="annotation" expression="ubic.gemma.core.context.TestComponent"/>
     </context:component-scan>
 
     <bean class="ubic.gemma.core.context.LazyInitByDefaultPostProcessor"/>
-    <bean class="ubic.gemma.cli.util.MarkCLIsAsPrototypes"/>
 </beans>
