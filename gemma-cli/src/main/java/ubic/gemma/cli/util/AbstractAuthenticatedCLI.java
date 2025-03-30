@@ -18,25 +18,21 @@
  */
 package ubic.gemma.cli.util;
 
-import gemma.gsec.authentication.ManualAuthenticationService;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.core.env.Environment;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.concurrent.DelegatingSecurityContextExecutorService;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import ubic.gemma.cli.authentication.CLIAuthenticationAware;
+import ubic.gemma.cli.authentication.CLIAuthenticationManager;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -121,7 +117,7 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
     private Authentication authenticate() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if ( authentication != null && authentication.isAuthenticated() ) {
-            setAuth( authentication );
+            // already authenticated
             log.info( String.format( "Logged in as %s", authentication.getPrincipal() ) );
             return authentication;
         } else if ( requireLogin || getCliContext().getEnvironment().containsKey( usernameEnv ) ) {
@@ -136,40 +132,17 @@ public abstract class AbstractAuthenticatedCLI extends AbstractCLI implements In
                 throw new IllegalArgumentException( "Not authenticated. You didn't enter a password" );
             }
 
-            try {
-                Authentication auth = getApplicationContext()
-                        .getBean( ManualAuthenticationService.class )
-                        .authenticate( username, password );
-                // the authentication manager erases credentials, so we need to create it again
-                setAuth( new UsernamePasswordAuthenticationToken( username, password ) );
-                log.info( "Logged in as " + username );
-                return auth;
-            } catch ( AuthenticationException e ) {
-                clearAuth();
-                throw e;
-            }
+            Authentication auth = getApplicationContext()
+                    .getBean( CLIAuthenticationManager.class )
+                    .authenticate( username, password );
+            log.info( "Logged in as " + username );
+            return auth;
         } else {
             Authentication anonymousAuthentication = getApplicationContext()
-                    .getBean( ManualAuthenticationService.class ).authenticateAnonymously();
-            setAuth( anonymousAuthentication );
+                    .getBean( CLIAuthenticationManager.class )
+                    .authenticateAnonymously();
             log.info( "Logged in as anonymous guest with limited privileges" );
             return anonymousAuthentication;
-        }
-    }
-
-    private void setAuth( Authentication authentication ) {
-        Collection<CLIAuthenticationAware> cliAuthenticationAwareComponents = getApplicationContext()
-                .getBeansOfType( CLIAuthenticationAware.class ).values();
-        for ( CLIAuthenticationAware comp : cliAuthenticationAwareComponents ) {
-            comp.setAuthentication( authentication );
-        }
-    }
-
-    private void clearAuth() {
-        Collection<CLIAuthenticationAware> cliAuthenticationAwareComponents = getApplicationContext()
-                .getBeansOfType( CLIAuthenticationAware.class ).values();
-        for ( CLIAuthenticationAware comp : cliAuthenticationAwareComponents ) {
-            comp.clearAuthentication();
         }
     }
 

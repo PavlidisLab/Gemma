@@ -1,14 +1,14 @@
 package ubic.gemma.apps;
 
-import gemma.gsec.authentication.ManualAuthenticationService;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
-import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.cli.authentication.CLIAuthenticationManager;
 import ubic.gemma.cli.util.EntityLocator;
 import ubic.gemma.cli.util.test.BaseCliTest;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.persistence.service.common.protocol.ProtocolService;
 
@@ -41,7 +41,7 @@ public class ProtocolDeleterCliTest extends BaseCliTest {
         }
 
         @Bean
-        public ManualAuthenticationService manualAuthenticationService() {
+        public CLIAuthenticationManager cliAuthenticationManager() {
             return mock();
         }
     }
