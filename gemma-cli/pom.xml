@@ -25,7 +25,7 @@
                     <programs>
                         <program>
                             <id>gemma-cli</id>
-                            <mainClass>ubic.gemma.core.apps.GemmaCLI</mainClass>
+                            <mainClass>ubic.gemma.cli.main.GemmaCLI</mainClass>
                         </program>
                     </programs>
                     <!-- this allows Log4j 2 to lookup for Log4j 1.2 configuration -->

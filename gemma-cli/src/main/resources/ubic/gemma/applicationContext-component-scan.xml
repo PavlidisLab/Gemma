@@ -6,26 +6,18 @@
    http://www.springframework.org/schema/context  http://www.springframework.org/schema/context/spring-context.xsd"
        profile="cli">
 
-    <!-- Standard CLI tools -->
-    <context:component-scan base-package="ubic.gemma.core.apps"
-                            name-generator="ubic.gemma.core.context.BeanNameGenerator"
-                            use-default-filters="false">
-        <!-- FIXME: we should use @Component on each CLI, or maybe introduce a @CLI annotation -->
-        <context:include-filter type="assignable" expression="ubic.gemma.core.util.CLI"/>
+    <!-- CLI-specific components -->
+    <context:component-scan base-package="ubic.gemma.cli"
+                            name-generator="ubic.gemma.core.context.BeanNameGenerator">
         <context:exclude-filter type="annotation" expression="ubic.gemma.core.context.TestComponent"/>
     </context:component-scan>
 
-    <!-- Non-standard CLI tools used to load data into Gemma database -->
-    <context:component-scan base-package="ubic.gemma.core.loader.association.phenotype"
+    <!-- Standard CLI tools -->
+    <context:component-scan base-package="ubic.gemma.apps"
                             name-generator="ubic.gemma.core.context.BeanNameGenerator"
                             use-default-filters="false">
-        <context:include-filter type="assignable" expression="ubic.gemma.core.util.CLI"/>
-        <context:exclude-filter type="annotation" expression="ubic.gemma.core.context.TestComponent"/>
-    </context:component-scan>
-    <context:component-scan base-package="ubic.gemma.core.loader.entrez.pubmed"
-                            name-generator="ubic.gemma.core.context.BeanNameGenerator"
-                            use-default-filters="false">
-        <context:include-filter type="assignable" expression="ubic.gemma.core.util.CLI"/>
+        <!-- FIXME: we should use @Component on each CLI, or maybe introduce a @CLI annotation -->
+        <context:include-filter type="assignable" expression="ubic.gemma.cli.util.CLI"/>
         <context:exclude-filter type="annotation" expression="ubic.gemma.core.context.TestComponent"/>
     </context:component-scan>
 
@@ -33,10 +25,10 @@
     <context:component-scan base-package="ubic.gemma.contrib.apps"
                             name-generator="ubic.gemma.core.context.BeanNameGenerator"
                             use-default-filters="false">
-        <context:include-filter type="assignable" expression="ubic.gemma.core.util.CLI"/>
+        <context:include-filter type="assignable" expression="ubic.gemma.cli.util.CLI"/>
         <context:exclude-filter type="annotation" expression="ubic.gemma.core.context.TestComponent"/>
     </context:component-scan>
 
     <bean class="ubic.gemma.core.context.LazyInitByDefaultPostProcessor"/>
-    <bean class="ubic.gemma.core.util.MarkCLIsAsPrototypes"/>
+    <bean class="ubic.gemma.cli.util.MarkCLIsAsPrototypes"/>
 </beans>
