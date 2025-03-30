@@ -161,7 +161,7 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
         for ( int i = 0; i < 4; i++ ) {
             ee.getBioAssays().add( BioAssay.Factory.newInstance( "ba" + i ) );
         }
-        rpkmFile = new ClassPathResource( "ubic/gemma/core/apps/test.rpkm.txt" ).getFile().getAbsolutePath();
+        rpkmFile = new ClassPathResource( "ubic/gemma/apps/test.rpkm.txt" ).getFile().getAbsolutePath();
         when( entityLocator.locateExpressionExperiment( "GSE000001", false ) ).thenReturn( ee );
         when( expressionExperimentService.thawLite( any() ) ).thenAnswer( a -> a.getArgument( 0 ) );
         when( entityLocator.locateArrayDesign( "test" ) ).thenReturn( ad );

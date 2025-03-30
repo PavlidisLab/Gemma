@@ -121,7 +121,7 @@ public class FactorValueMigratorCLITest extends BaseCliTest {
     public void testMigrateFactorValues() throws IOException {
         assertThat( cli )
                 .withArguments(
-                        "-migrationFile", new ClassPathResource( "ubic/gemma/core/apps/factor-value-migration.tsv" ).getFile().getAbsolutePath(),
+                        "-migrationFile", new ClassPathResource( "ubic/gemma/apps/factor-value-migration.tsv" ).getFile().getAbsolutePath(),
                         "-batchFormat", "suppress" )
                 .succeeds();
         verify( factorValueService, times( 8 ) ).loadWithOldStyleCharacteristics( any(), eq( false ) );
