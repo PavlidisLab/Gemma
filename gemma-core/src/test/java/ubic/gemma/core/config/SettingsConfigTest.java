@@ -112,4 +112,10 @@ public class SettingsConfigTest extends AbstractJUnit4SpringContextTests {
         assertThat( filterSystemProperties( props ) )
                 .containsEntry( "fastaCmd.exe", "foo" );
     }
+
+    @Test
+    public void testSettingsDescriptions() throws IOException {
+        assertThat( SettingsConfig.settingsDescriptions() )
+                .containsEntry( "ga.tracker", "Google Analytics 4" );
+    }
 }

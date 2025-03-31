@@ -27,9 +27,7 @@ import org.springframework.beans.BeanInstantiationException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.*;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
-import ubic.gemma.cli.completion.BashCompletionGenerator;
-import ubic.gemma.cli.completion.CompletionGenerator;
-import ubic.gemma.cli.completion.FishCompletionGenerator;
+import ubic.gemma.cli.completion.*;
 import ubic.gemma.cli.logging.LoggingConfigurer;
 import ubic.gemma.cli.logging.log4j.Log4jConfigurer;
 import ubic.gemma.cli.util.*;
@@ -73,6 +71,7 @@ public class GemmaCLI {
             COMPLETION_EXECUTABLE_OPTION = "ce",
             COMPLETION_SHELL_OPTION = "cs",
             COMPLETE_LOGGERS = "cl",
+            COMPLETE_CONFIG = "cc",
             VERSION_OPTION = "version",
             LOGGER_OPTION = "logger",
             VERBOSITY_OPTION = "v",
@@ -115,6 +114,7 @@ public class GemmaCLI {
                         .desc( "Indicate which shell to generate completion for. Only fish and bash are supported" )
                         .build() )
                 .addOption( COMPLETE_LOGGERS, "complete-loggers", false, "List all available logger that can be used for -" + LOGGER_OPTION + "." )
+                .addOption( COMPLETE_CONFIG, "complete-config", false, "List all available configuration properties" )
                 .addOption( VERSION_OPTION, "version", false, "Show Gemma version" )
                 .addOption( otherLogOpt )
                 .addOption( logOpt )
@@ -143,9 +143,13 @@ public class GemmaCLI {
         }
 
         if ( commandLine.hasOption( COMPLETE_LOGGERS ) ) {
-            // TODO: descriptions for CLI options
-            loggingConfigurer.getAllLoggerNames()
-                    .forEach( x -> System.out.printf( "%s\t%s%n", x, x.isEmpty() ? "Root logger" : "" ) );
+            CompletionUtils.writeCompletions( new LoggerCompletionSource( loggingConfigurer ), System.out );
+            System.exit( 0 );
+            return;
+        }
+
+        if ( commandLine.hasOption( COMPLETE_CONFIG ) ) {
+            CompletionUtils.writeCompletions( new SettingsCompletionSource( true ), System.out );
             System.exit( 0 );
             return;
         }

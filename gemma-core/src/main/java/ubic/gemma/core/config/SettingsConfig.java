@@ -1,6 +1,7 @@
 package ubic.gemma.core.config;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,12 +15,17 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.support.ResourcePropertySource;
 import org.springframework.format.support.DefaultFormattingConversionService;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -175,6 +181,52 @@ public class SettingsConfig {
         }
 
         cachedSettingsPropertySources = result;
+
+        return result;
+    }
+
+    private static Map<String, String> cachedSettingsDescriptions = null;
+
+    @Bean
+    public static synchronized Map<String, String> settingsDescriptions() throws IOException {
+        if ( cachedSettingsDescriptions != null ) {
+            return cachedSettingsDescriptions;
+        }
+
+        Map<String, String> result = new HashMap<>();
+        for ( String configFile : DEFAULT_CONFIGURATIONS ) {
+            try ( BufferedReader br = new BufferedReader( new InputStreamReader( new ClassPathResource( configFile ).getInputStream(), StandardCharsets.UTF_8 ) ) ) {
+                String description = null;
+                String line;
+                while ( ( line = br.readLine() ) != null ) {
+                    if ( line.startsWith( "#" ) ) {
+                        if ( line.contains( "suppress inspection" ) ) {
+                            continue;
+                        }
+                        description = StringUtils.stripStart( line, "#" );
+                    } else if ( line.contains( "=" ) ) {
+                        String[] pieces = line.split( "=", 2 );
+                        String prop = StringUtils.strip( pieces[0] );
+                        String defaultValue = pieces[1];
+                        String desc = "";
+                        if ( description != null ) {
+                            desc = StringUtils.capitalize( StringUtils.strip( description ) );
+                        }
+                        if ( StringUtils.isNotBlank( defaultValue ) ) {
+                            if ( !desc.isEmpty() ) {
+                                desc = StringUtils.appendIfMissing( desc, "." ) + " ";
+                            }
+                            // TODO: use the placeholder resolver
+                            desc += "Default value is '" + defaultValue + "'.";
+                        }
+                        result.put( prop, desc );
+                        description = null;
+                    }
+                }
+            }
+        }
+
+        cachedSettingsDescriptions = result;
 
         return result;
     }
