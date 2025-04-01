@@ -46,6 +46,6 @@ if [ ! -f "$gemma_web_war" ]; then
 fi
 
 echo "Deploying Gemma to $deploy_dest..."
-rsync -v --mkpath "$gemma_web_log4j" "$deploy_dest/lib/"
-rsync -v --mkpath "$gemma_web_war" "$deploy_dest/"
+rsync -v --chmod g+w --mkpath "$gemma_web_log4j" "$deploy_dest/lib/"
+rsync -v --chmod g+w --mkpath "$gemma_web_war" "$deploy_dest/"
 echo "Deployment completed!"

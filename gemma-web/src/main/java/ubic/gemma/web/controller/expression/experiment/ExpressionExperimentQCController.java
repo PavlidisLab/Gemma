@@ -503,7 +503,7 @@ public class ExpressionExperimentQCController extends BaseController {
         if ( dimension == null ) {
             throw new EntityNotFoundException( "No dimension found for " + qt + "." );
         }
-        Collection<ExpressionExperimentSubSet> subSets = expressionExperimentService.getSubSets( ee, dimension );
+        Collection<ExpressionExperimentSubSet> subSets = expressionExperimentService.getSubSetsWithBioAssays( ee, dimension );
         Map<BioAssay, Long> designElementsPerSample = expressionExperimentService.getNumberOfDesignElementsPerSample( ee );
         SingleCellSparsityHeatmap heatmap = new SingleCellSparsityHeatmap( ee, singleCellDimension, dimension, subSets, designElementsPerSample, SingleCellSparsityHeatmap.SingleCellHeatmapType.valueOf( type.toUpperCase() ) );
         if ( cellSize != null ) {

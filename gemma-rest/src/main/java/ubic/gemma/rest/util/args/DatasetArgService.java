@@ -14,7 +14,9 @@ import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -24,6 +26,7 @@ import ubic.gemma.rest.util.MalformedArgException;
 import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.ServiceUnavailableException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -194,5 +197,69 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     public Set<AnnotationValueObject> getAnnotations( DatasetArg<?> arg ) {
         ExpressionExperiment ee = this.getEntity( arg );
         return service.getAnnotations( ee );
+    }
+
+    public List<ExpressionExperimentSubSet> getSubSets( DatasetArg<?> datasetArg ) {
+        return service.getSubSetsWithCharacteristics( getEntity( datasetArg ) ).stream()
+                .sorted( Comparator.comparing( ExpressionExperimentSubSet::getName ) )
+                .collect( Collectors.toList() );
+    }
+
+    public ExpressionExperimentSubSet getSubSet( DatasetArg<?> datasetArg, Long subSetId ) {
+        ExpressionExperiment ee = getEntity( datasetArg );
+        ExpressionExperimentSubSet subset = service.getSubSetByIdWithCharacteristics( ee, subSetId );
+        if ( subset == null ) {
+            throw new NotFoundException( "No subset found with ID " + subSetId );
+        }
+        return subset;
+    }
+
+    public List<Long> getSubSetGroupIds( DatasetArg<?> datasetArg, ExpressionExperimentSubSet subset ) {
+        // TODO: only retrieve the subset groups for the given subset
+        return getSubSetsGroupIds( datasetArg ).getOrDefault( subset, Collections.emptyList() );
+    }
+
+    public Map<ExpressionExperimentSubSet, List<Long>> getSubSetsGroupIds( DatasetArg<?> datasetArg ) {
+        Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> ss2bad = service.getSubSetsByDimension( getEntity( datasetArg ) );
+        Map<ExpressionExperimentSubSet, List<Long>> subSetGroups = new HashMap<>();
+        for ( Map.Entry<BioAssayDimension, Set<ExpressionExperimentSubSet>> entry : ss2bad.entrySet() ) {
+            for ( ExpressionExperimentSubSet s : entry.getValue() ) {
+                subSetGroups.computeIfAbsent( s, k -> new ArrayList<>() )
+                        .add( entry.getKey().getId() );
+            }
+        }
+        subSetGroups.values().forEach( list -> list.sort( Comparator.naturalOrder() ) );
+        return subSetGroups;
+    }
+
+    public List<BioAssayValueObject> getSubSetSamples( DatasetArg<?> datasetArg, Long subSetId ) {
+        ExpressionExperiment ee = getEntity( datasetArg );
+        ExpressionExperimentSubSet subset = service.getSubSetByIdWithCharacteristicsAndBioAssays( ee, subSetId );
+        if ( subset == null ) {
+            throw new NotFoundException( "No subset found with ID " + subSetId );
+        }
+        return subset.getBioAssays().stream()
+                .map( ba -> {
+                    BioAssay sourceAssay;
+                    if ( ba.getSampleUsed().getSourceBioMaterial() != null ) {
+                        Set<BioAssay> sourceAssays = ba.getSampleUsed().getSourceBioMaterial().getBioAssaysUsedIn().stream()
+                                .filter( subset.getSourceExperiment().getBioAssays()::contains )
+                                .collect( Collectors.toSet() );
+                        if ( sourceAssays.size() == 1 ) {
+                            sourceAssay = sourceAssays.iterator().next();
+                        } else if ( sourceAssays.isEmpty() ) {
+                            log.warn( ba + " does not have a source assay in " + subset.getSourceExperiment() + "." );
+                            sourceAssay = null;
+                        } else {
+                            log.warn( ba + " has more than one source assay in " + subset.getSourceExperiment() + "." );
+                            sourceAssay = null;
+                        }
+                    } else {
+                        log.warn( ba + " does not have a source assay in " + subset.getSourceExperiment() + "." );
+                        sourceAssay = null;
+                    }
+                    return new BioAssayValueObject( ba, null, sourceAssay, false, true );
+                } )
+                .collect( Collectors.toList() );
     }
 }

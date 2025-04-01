@@ -436,7 +436,7 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         } else if ( vec.getExpressionExperiment() instanceof ExpressionExperimentSubsetValueObject ) {
             ExpressionExperimentSubsetValueObject eesvo = ( ExpressionExperimentSubsetValueObject ) vec
                     .getExpressionExperiment();
-            eeId = eesvo.getSourceExperiment();
+            eeId = eesvo.getSourceExperimentId();
         } else {
             throw new UnsupportedOperationException();
         }

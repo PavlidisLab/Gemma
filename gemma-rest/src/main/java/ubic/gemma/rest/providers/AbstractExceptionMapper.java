@@ -48,13 +48,6 @@ public abstract class AbstractExceptionMapper<E extends Throwable> implements Ex
         return new WellComposedErrorBody( getStatus( exception ).getStatusCode(), exception.getMessage() );
     }
 
-    /**
-     * Indicate if the given exception should be logged.
-     */
-    protected boolean logException( E exception ) {
-        return false;
-    }
-
     protected Response.ResponseBuilder getResponseBuilder( ContainerRequest request, E exception ) {
         return Response.status( isXmlHttpRequest( request ) ? Response.Status.OK : getStatus( exception ) );
     }
@@ -75,15 +68,6 @@ public abstract class AbstractExceptionMapper<E extends Throwable> implements Ex
         } else {
             requestMethod = null;
             requestUri = null;
-        }
-        if ( logException( exception ) ) {
-            String m;
-            if ( request != null ) {
-                m = String.format( "Unhandled exception was raised for %s %s", requestMethod, requestUri );
-            } else {
-                m = "Unhandled exception was raised, but there is no current request.";
-            }
-            log.error( m, exception );
         }
         String version;
         if ( spec.getInfo() != null ) {

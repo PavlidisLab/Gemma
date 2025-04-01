@@ -100,16 +100,22 @@ public class SettingsConfigTest extends AbstractJUnit4SpringContextTests {
         assertThat( filterSystemProperties( props ) )
                 .containsEntry( "fastaCmd.exe", "foo" );
 
-        // this is deprecated and will be removed in the future
+        // support for these has been dropped in 1.32, a warning is still emitted.
         props = new Properties();
         props.setProperty( "fastaCmd.exe", "foo" );
         assertThat( filterSystemProperties( props ) )
-                .containsEntry( "fastaCmd.exe", "foo" );
+                .doesNotContainKey( "fastaCmd.exe" );
 
         props = new Properties();
         props.setProperty( "gemma.fastaCmd.exe", "foo" );
         props.setProperty( "fastaCmd.exe", "bar" );
         assertThat( filterSystemProperties( props ) )
                 .containsEntry( "fastaCmd.exe", "foo" );
+    }
+
+    @Test
+    public void testSettingsDescriptions() throws IOException {
+        assertThat( SettingsConfig.settingsDescriptions() )
+                .containsEntry( "ga.tracker", "Google Analytics 4" );
     }
 }

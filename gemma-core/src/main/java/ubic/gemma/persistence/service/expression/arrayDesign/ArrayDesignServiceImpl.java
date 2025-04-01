@@ -61,6 +61,12 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<ArrayDesign> loadAllGenericGenePlatforms() {
+        return arrayDesignDao.loadAllGenericGenePlatforms();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ArrayDesign loadAndThaw( Long id ) {
         ArrayDesign ad = load( id );
         if ( ad != null ) {

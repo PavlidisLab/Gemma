@@ -19,6 +19,7 @@ import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 
 import javax.annotation.Nullable;
@@ -67,6 +68,8 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
     // to hold state change, initialized as this.outlier
     private Boolean userFlaggedOutlier = false;
 
+    private Long sourceBioAssayId;
+
     /**
      * Required when using the class as a spring bean.
      */
@@ -74,11 +77,32 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
         super();
     }
 
+    public BioAssayValueObject( BioAssay bioAssay ) {
+        this( bioAssay, null, null, false, false );
+    }
+
+    public BioAssayValueObject( BioAssay bioAssay, boolean basic ) {
+        this( bioAssay, null, null, basic, false );
+    }
+
+    public BioAssayValueObject( BioAssay bioAssay, boolean basic, boolean predictedOutlier ) {
+        this( bioAssay, null, null, basic, false );
+        this.predictedOutlier = predictedOutlier;
+    }
+
     /**
      * @param arrayDesignValueObjectsById pre-populated array design VOs by ID, or null to ignore and the VOs will be
      *                                    initialized via {@link ArrayDesignValueObject#ArrayDesignValueObject(ArrayDesign)}
+     * @param sourceBioAssay              the source {@link BioAssay} if known, this corresponds to the assay of the
+     *                                    source sample, but since there might be more than one, it must be picked
+     *                                    explicitly based on the context
+     * @param basic                       if true, produce basic factor values in the corresponding biomaterial, see
+     *                                    {@link BioMaterialValueObject#BioMaterialValueObject(BioMaterial, boolean, boolean)}
+     *                                    for more details
+     * @param allFactorValues             include all FVs, including those inherited from the source biomaterial in the
+     *                                    corresponding biomaterial
      */
-    public BioAssayValueObject( BioAssay bioAssay, @Nullable Map<Long, ArrayDesignValueObject> arrayDesignValueObjectsById, boolean basic ) {
+    public BioAssayValueObject( BioAssay bioAssay, @Nullable Map<Long, ArrayDesignValueObject> arrayDesignValueObjectsById, @Nullable BioAssay sourceBioAssay, boolean basic, boolean allFactorValues ) {
         super( bioAssay );
         this.name = bioAssay.getName();
         this.description = bioAssay.getDescription();
@@ -112,7 +136,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
         }
 
         if ( bioAssay.getSampleUsed() != null ) {
-            this.sample = new BioMaterialValueObject( bioAssay.getSampleUsed(), basic );
+            this.sample = new BioMaterialValueObject( bioAssay.getSampleUsed(), basic, allFactorValues );
             sample.getBioAssayIds().add( this.getId() );
         }
 
@@ -121,15 +145,10 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
         }
 
         this.userFlaggedOutlier = this.outlier;
-    }
 
-    public BioAssayValueObject( BioAssay bioAssay, boolean basic ) {
-        this( bioAssay, null, basic );
-    }
-
-    public BioAssayValueObject( BioAssay bioAssay, boolean basic, boolean predictedOutlier ) {
-        this( bioAssay, null, basic );
-        this.predictedOutlier = predictedOutlier;
+        if ( sourceBioAssay != null ) {
+            this.sourceBioAssayId = sourceBioAssay.getId();
+        }
     }
 
     public BioAssayValueObject( Long id ) {
@@ -155,6 +174,10 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
             return other.name == null;
         }
         return name.equals( other.name );
+    }
+
+    public Long getSourceBioAssayId() {
+        return sourceBioAssayId;
     }
 
     public DatabaseEntryValueObject getAccession() {
@@ -222,6 +245,10 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
 
     public boolean isOutlier() {
         return outlier;
+    }
+
+    public void setSourceBioAssayId( Long sourceBioAssayId ) {
+        this.sourceBioAssayId = sourceBioAssayId;
     }
 
     public void setAccession( DatabaseEntryValueObject accession ) {

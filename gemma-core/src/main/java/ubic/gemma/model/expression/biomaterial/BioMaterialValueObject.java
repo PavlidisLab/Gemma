@@ -34,6 +34,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.*;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -62,6 +63,9 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
      */
     private Collection<Long> bioAssayIds = new HashSet<>();
     private Collection<CharacteristicValueObject> characteristics = new HashSet<>();
+
+    @Nullable
+    private Long sourceBioMaterialId;
 
     /*
      * Map of (informative) categories to values (for this biomaterial). This is only used for display so we don't need ids as well.
@@ -122,10 +126,30 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
     }
 
     public BioMaterialValueObject( BioMaterial bm ) {
-        this( bm, false );
+        this( bm, false, false );
     }
 
-    public BioMaterialValueObject( BioMaterial bm, boolean basic ) {
+    public BioMaterialValueObject( BioMaterial bm, BioAssay ba ) {
+        this( bm, false, false );
+        BioAssayValueObject baVo = new BioAssayValueObject( ba, false );
+        this.bioAssayIds.add( baVo.getId() );
+        this.assayName = ba.getName();
+        this.assayDescription = ba.getDescription();
+        this.assayName = ba.getName();
+        this.assayDescription = ba.getDescription();
+        this.assayProcessingDate = ba.getProcessingDate();
+        this.fastqHeaders = ba.getFastqHeaders() == null ? "" : ba.getFastqHeaders();
+    }
+
+    /**
+     *
+     * @param basic                             if true, populate {@link #fVBasicVOs} instead of {@link #factorValueObjects}.
+     *                                          Note that basic FVs should be preferred for new code.
+     * @param allFactorValuesAndCharacteristics whether to include all factor values and characteristics, including
+     *                                          those inherited from the source biomaterial, otherwise only those from
+     *                                          the sample will be included
+     */
+    public BioMaterialValueObject( BioMaterial bm, boolean basic, boolean allFactorValuesAndCharacteristics ) {
         super( bm );
         this.name = bm.getName();
         this.description = bm.getDescription();
@@ -138,7 +162,8 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         this.factors = new HashMap<>();
         this.factorValues = new HashMap<>();
         this.factorIdToFactorValueId = new HashMap<>();
-        for ( FactorValue fv : bm.getFactorValues() ) {
+        Set<FactorValue> fvs = allFactorValuesAndCharacteristics ? bm.getAllFactorValues() : bm.getFactorValues();
+        for ( FactorValue fv : fvs ) {
             if ( basicFVs ) {
                 this.fVBasicVOs.add( new FactorValueBasicValueObject( fv ) );
             } else {
@@ -162,7 +187,8 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
         }
 
         // used for display of characteristics in the biomaterial experimental design editor view.
-        for ( Characteristic c : bm.getCharacteristics() ) {
+        Set<Characteristic> cs = allFactorValuesAndCharacteristics ? bm.getAllCharacteristics() : bm.getCharacteristics();
+        for ( Characteristic c : cs ) {
             if ( StringUtils.isBlank( c.getCategory() ) ) {
                 continue;
             }
@@ -171,18 +197,8 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
                 this.characteristicOriginalValues.put( c.getCategory(), c.getOriginalValue() );
             }
         }
-    }
 
-    public BioMaterialValueObject( BioMaterial bm, BioAssay ba ) {
-        this( bm );
-        BioAssayValueObject baVo = new BioAssayValueObject( ba, false );
-        this.bioAssayIds.add( baVo.getId() );
-        this.assayName = ba.getName();
-        this.assayDescription = ba.getDescription();
-        this.assayName = ba.getName();
-        this.assayDescription = ba.getDescription();
-        this.assayProcessingDate = ba.getProcessingDate();
-        this.fastqHeaders = ba.getFastqHeaders() == null ? "" : ba.getFastqHeaders();
+        this.sourceBioMaterialId = bm.getSourceBioMaterial() != null ? bm.getSourceBioMaterial().getId() : null;
     }
 
     @JsonProperty("factorValues")

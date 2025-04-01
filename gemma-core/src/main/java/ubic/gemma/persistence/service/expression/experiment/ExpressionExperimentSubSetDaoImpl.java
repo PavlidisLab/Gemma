@@ -71,7 +71,6 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
     public ExpressionExperimentSubSet loadWithBioAssays( Long id ) {
         ExpressionExperimentSubSet subSet = load( id );
         if ( subSet != null ) {
-            Hibernate.initialize( subSet.getAccession() );
             Hibernate.initialize( subSet.getBioAssays() );
             Hibernate.initialize( subSet.getCharacteristics() );
             Hibernate.initialize( subSet.getSourceExperiment().getAccession() );

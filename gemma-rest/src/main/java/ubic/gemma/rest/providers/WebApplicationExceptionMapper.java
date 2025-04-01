@@ -30,11 +30,6 @@ public class WebApplicationExceptionMapper extends AbstractExceptionMapper<WebAp
     }
 
     @Override
-    protected boolean logException( WebApplicationException e ) {
-        return e instanceof InternalServerErrorException;
-    }
-
-    @Override
     protected Response.Status getStatus( WebApplicationException exception ) {
         return Response.Status.fromStatusCode( exception.getResponse().getStatus() );
     }

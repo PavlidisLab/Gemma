@@ -65,7 +65,7 @@ else
 fi
 
 echo "Copying $gemma_cli_dir to $build_dir_dest..."
-rsync -av --mkpath --link-dest "$build_ref_dir" "$gemma_cli_dir/" "$build_dir_dest/"
+rsync -av --chmod g+w --mkpath --link-dest "$build_ref_dir" "$gemma_cli_dir/" "$build_dir_dest/"
 
 echo "Creating a symlink from $build_dir to $build_ref_dest..."
 if [ -z "$deploy_server" ]; then

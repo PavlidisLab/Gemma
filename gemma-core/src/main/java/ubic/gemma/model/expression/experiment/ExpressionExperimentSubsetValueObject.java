@@ -1,6 +1,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.Hibernate;
@@ -8,23 +9,43 @@ import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Getter
 @Setter
 public class ExpressionExperimentSubsetValueObject extends IdentifiableValueObject<ExpressionExperimentSubSet> implements BioAssaySetValueObject {
 
-    private Long sourceExperiment;
+    /**
+     * The ID of the {@link ExpressionExperiment} this is a subset of.
+     */
+    private Long sourceExperimentId;
+    /**
+     * The short name of the {@link ExpressionExperiment} this is a subset of.
+     */
     private String sourceExperimentShortName;
 
     private String name;
     private String description;
+    /**
+     * @deprecated Do not use, there's never been an accession field in the data model.
+     */
+    @Deprecated
+    @GemmaWebOnly
     private String accession;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Integer numberOfBioAssays;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Collection<CharacteristicValueObject> characteristics;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Collection<BioAssayValueObject> bioAssays;
 
     // these are populated by gsec
     @JsonIgnore
@@ -45,19 +66,30 @@ public class ExpressionExperimentSubsetValueObject extends IdentifiableValueObje
     }
 
     public ExpressionExperimentSubsetValueObject( ExpressionExperimentSubSet ees ) {
+        this( ees, null, null, false, false, false );
+    }
+
+    /**
+     * @param bioAssay2SourceBioAssayMap mapping of assays to their source assays
+     * @param includeAssays              whether to include assays in the serialization
+     */
+    public ExpressionExperimentSubsetValueObject( ExpressionExperimentSubSet ees, @Nullable Map<Long, ArrayDesignValueObject> arrayDesignValueObjectsById, @Nullable Map<BioAssay, BioAssay> bioAssay2SourceBioAssayMap, boolean includeAssays, boolean basic, boolean allFactorValues ) {
         super( ees.getId() );
-        this.sourceExperiment = ees.getSourceExperiment().getId();
+        this.sourceExperimentId = ees.getSourceExperiment().getId();
         if ( Hibernate.isInitialized( ees.getSourceExperiment() ) ) {
             this.sourceExperimentShortName = ees.getSourceExperiment().getShortName();
         }
-        this.numberOfBioAssays = ees.getBioAssays() != null ? ees.getBioAssays().size() : null;
         this.name = ees.getName();
         this.description = ees.getDescription();
-        if ( ees.getAccession() != null && Hibernate.isInitialized( ees.getAccession() ) ) {
-            this.accession = ees.getAccession().getAccession();
-        }
         if ( Hibernate.isInitialized( ees.getBioAssays() ) ) {
             this.numberOfBioAssays = ees.getBioAssays().size();
+            if ( includeAssays ) {
+                bioAssays = ees.getBioAssays().stream()
+                        .map( ba -> new BioAssayValueObject( ba, arrayDesignValueObjectsById, bioAssay2SourceBioAssayMap != null ? bioAssay2SourceBioAssayMap.get( ba ) : null, basic, allFactorValues ) )
+                        .collect( Collectors.toSet() );
+            }
+        } else {
+            this.numberOfBioAssays = null;
         }
         if ( Hibernate.isInitialized( ees.getCharacteristics() ) ) {
             characteristics = ees.getCharacteristics().stream()
@@ -66,7 +98,17 @@ public class ExpressionExperimentSubsetValueObject extends IdentifiableValueObje
         }
     }
 
+    /**
+     * @deprecated use {@link #getSourceExperimentId()} instead
+     */
+    @Deprecated
+    @GemmaWebOnly
+    public Long getSourceExperiment() {
+        return sourceExperimentId;
+    }
+
     @Override
+    @JsonIgnore
     public Class<? extends Securable> getSecurableClass() {
         return ExpressionExperimentSubSet.class;
     }

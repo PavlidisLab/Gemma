@@ -50,6 +50,14 @@ public interface ExpressionExperimentDao
      */
     ExpressionExperiment load( Long id, CacheMode cacheMode );
 
+    SortedMap<Long, String> loadAllIdAndName();
+
+    SortedMap<String, String> loadAllShortNameAndName();
+
+    SortedSet<String> loadAllName();
+
+    SortedMap<String, String> loadAllAccessionAndName();
+
     @Nullable
     BioAssaySet loadBioAssaySet( Long id );
 
@@ -260,6 +268,9 @@ public interface ExpressionExperimentDao
     Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment, BioAssayDimension bad );
 
     Map<BioAssayDimension, Set<ExpressionExperimentSubSet>> getSubSetsByDimension( ExpressionExperiment expressionExperiment );
+
+    @Nullable
+    ExpressionExperimentSubSet getSubSetById( ExpressionExperiment ee, Long subSetId );
 
     <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets );
 

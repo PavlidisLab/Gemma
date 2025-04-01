@@ -55,8 +55,7 @@ public class BaseCodeConfigurer implements BeanFactoryPostProcessor {
                     if ( prop.startsWith( BASECODE_PROPERTY_PREFIX ) ) {
                         props.add( prop );
                     } else if ( basecodeProps.containsKey( prop ) ) {
-                        log.warn( "Property " + prop + " in " + ps.getName() + " should be prefixed with 'basecode.'." );
-                        props.add( prop );
+                        log.warn( "Property " + prop + " in " + ps.getName() + " matches a baseCode property, but is not prefixed with 'basecode.'. It will be ignored." );
                     }
                 }
             } else {
@@ -66,11 +65,9 @@ public class BaseCodeConfigurer implements BeanFactoryPostProcessor {
         PropertySourcesPropertyResolver resolver = new PropertySourcesPropertyResolver( propertySources );
         for ( String prop : props ) {
             String val = resolver.getRequiredProperty( prop );
-            if ( prop.startsWith( BASECODE_PROPERTY_PREFIX ) ) {
-                prop = prop.substring( BASECODE_PROPERTY_PREFIX.length() );
-            }
-            log.debug( String.format( "Setting baseCode configuration %s to %s.", prop, val ) );
-            Configuration.setString( prop, val );
+            String baseCodeProp = prop.substring( BASECODE_PROPERTY_PREFIX.length() );
+            log.debug( String.format( "Setting baseCode configuration %s to %s.", baseCodeProp, val ) );
+            Configuration.setString( baseCodeProp, val );
         }
     }
 }

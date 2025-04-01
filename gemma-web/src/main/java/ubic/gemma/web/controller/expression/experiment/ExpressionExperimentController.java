@@ -1061,10 +1061,10 @@ public class ExpressionExperimentController {
             if ( dim == null ) {
                 throw new EntityNotFoundException( ee.getShortName() + " does not have a dimension with ID " + dimensionId + "." );
             }
-            subsetsByDimension = Collections.singletonMap( dim, new HashSet<>( expressionExperimentService.getSubSets( ee, dim ) ) );
+            subsetsByDimension = Collections.singletonMap( dim, new HashSet<>( expressionExperimentService.getSubSetsWithBioAssays( ee, dim ) ) );
         } else {
             dim = null;
-            subsetsByDimension = expressionExperimentService.getSubSetsByDimension( ee );
+            subsetsByDimension = expressionExperimentService.getSubSetsByDimensionWithBioAssays( ee );
         }
         Map<BioAssayDimension, List<QuantitationType>> quantitationTypesByDimension = new LinkedHashMap<>();
         for ( BioAssayDimension bad : subsetsByDimension.keySet() ) {
@@ -1553,7 +1553,7 @@ public class ExpressionExperimentController {
         if ( dimension == null ) {
             throw new EntityNotFoundException( "No dimension found for " + qt + "." );
         }
-        Collection<ExpressionExperimentSubSet> subSets = expressionExperimentService.getSubSets( expressionExperiment, dimension );
+        Collection<ExpressionExperimentSubSet> subSets = expressionExperimentService.getSubSetsWithBioAssays( expressionExperiment, dimension );
         Map<BioAssay, Long> designElementsPerSample = expressionExperimentService.getNumberOfDesignElementsPerSample( expressionExperiment );
         SingleCellSparsityHeatmap singleCellSparsityHeatmap = new SingleCellSparsityHeatmap( expressionExperiment, singleCellDimension, dimension, subSets, designElementsPerSample, null );
         singleCellSparsityHeatmap.setTranspose( transpose );

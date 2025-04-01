@@ -31,6 +31,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -41,8 +42,8 @@ import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
-import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.Filter;
 
 import javax.annotation.Nullable;
 import java.math.BigInteger;
@@ -79,6 +80,15 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Autowired
     public ArrayDesignDaoImpl( SessionFactory sessionFactory ) {
         super( ArrayDesignDao.OBJECT_ALIAS, ArrayDesign.class, sessionFactory );
+    }
+
+    @Override
+    public Collection<ArrayDesign> loadAllGenericGenePlatforms() {
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select ad from ArrayDesign ad where ad.name like 'Generic%' and ad.technologyType = :tt" )
+                .setParameter( "tt", TechnologyType.GENELIST )
+                .list();
     }
 
     @Override

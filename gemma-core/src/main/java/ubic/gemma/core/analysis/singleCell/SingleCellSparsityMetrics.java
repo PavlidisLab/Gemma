@@ -196,8 +196,10 @@ public class SingleCellSparsityMetrics {
                 return value > thresholdCount;
             case PERCENT:
             case PERCENT1:
-                if ( threshold == 0 ) {
+                if ( threshold == 0.0 ) {
                     return value > 0;
+                } else {
+                    throw new IllegalArgumentException( "Cannot determine if data on scale " + scaleType + " is expressed for a non-zero threshold." );
                 }
             case LOG1P:
                 return value > thresholdLog1p;
@@ -210,6 +212,8 @@ public class SingleCellSparsityMetrics {
             case LOGBASEUNKNOWN:
                 if ( threshold == 0.0 ) {
                     return value > Double.NEGATIVE_INFINITY;
+                } else {
+                    throw new IllegalArgumentException( "Cannot determine if data on scale " + scaleType + " is expressed for a non-zero threshold." );
                 }
             default:
                 throw new IllegalArgumentException( "Cannot determine if data on scale " + scaleType + " is expressed." );

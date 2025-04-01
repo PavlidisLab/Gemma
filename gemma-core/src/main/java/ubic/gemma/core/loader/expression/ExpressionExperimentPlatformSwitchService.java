@@ -132,7 +132,7 @@ public class ExpressionExperimentPlatformSwitchService {
         // remove stuff that will be in the way.
         processedExpressionDataVectorService.removeProcessedDataVectors( ee );
         sampleCoexpressionAnalysisService.removeForExperiment( ee );
-        for ( ExpressionExperimentSubSet subset : expressionExperimentService.getSubSets( ee ) ) {
+        for ( ExpressionExperimentSubSet subset : expressionExperimentService.getSubSetsWithBioAssays( ee ) ) {
             subsetService.remove( subset );
         }
         analysisUtilService.deleteOldAnalyses( ee );

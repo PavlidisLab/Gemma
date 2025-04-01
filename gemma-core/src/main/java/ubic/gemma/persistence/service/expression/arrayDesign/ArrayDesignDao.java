@@ -33,6 +33,8 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
 
     String OBJECT_ALIAS = "ad";
 
+    Collection<ArrayDesign> loadAllGenericGenePlatforms();
+
     void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes );
 
     void deleteAlignmentData( ArrayDesign arrayDesign );
