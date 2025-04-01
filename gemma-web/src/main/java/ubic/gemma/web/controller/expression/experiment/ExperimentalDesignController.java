@@ -220,7 +220,7 @@ public class ExperimentalDesignController extends BaseController {
                         s.setCategoryUri( ef.getCategory().getCategoryUri() );
                     }
                     s.setSubject( cvo.getValue() );
-                    s.setSubjectUri( cvo.getValueUri() ); // can be null
+                    s.setSubjectUri( StringUtils.stripToNull( cvo.getValueUri() ) ); // can be null
                     fv.getCharacteristics().add( s );
                     fv = expressionExperimentService.addFactorValue( ee, fv );
 
@@ -362,8 +362,6 @@ public class ExperimentalDesignController extends BaseController {
             Statement newC = new Statement();
             newC.setCategory( c.getCategory() );
             newC.setCategoryUri( c.getCategoryUri() );
-            newC.setValue( c.getValue() ); // deprecated
-            newC.setValueUri( c.getOriginalValue() );// deprecated
             newC.setSubject( c.getSubject() );
             newC.setSubjectUri( c.getSubjectUri() );
             newC.setPredicate( c.getPredicate() );
@@ -860,7 +858,7 @@ public class ExperimentalDesignController extends BaseController {
                 c.setPredicate( fvvo.getPredicate() );
                 c.setPredicateUri( fvvo.getPredicateUri() );
                 c.setObject( fvvo.getObject() );
-                c.setObjectUri( fvvo.getObjectUri() );
+                c.setObjectUri( StringUtils.stripToNull( fvvo.getObjectUri() ) );
             } else {
                 c.setPredicate( null );
                 c.setPredicateUri( null );
@@ -872,7 +870,7 @@ public class ExperimentalDesignController extends BaseController {
                 c.setSecondPredicate( fvvo.getSecondPredicate() );
                 c.setSecondPredicateUri( fvvo.getSecondPredicateUri() );
                 c.setSecondObject( fvvo.getSecondObject() );
-                c.setSecondObjectUri( fvvo.getSecondObjectUri() );
+                c.setSecondObjectUri( StringUtils.stripToNull( fvvo.getSecondObjectUri() ) );
             } else {
                 c.setSecondPredicate( null );
                 c.setSecondPredicateUri( null );

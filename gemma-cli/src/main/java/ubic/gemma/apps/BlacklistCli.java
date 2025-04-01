@@ -25,9 +25,11 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
-import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
+import ubic.gemma.core.loader.expression.geo.service.GeoBrowserImpl;
+import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.blacklist.BlacklistedExperiment;
 import ubic.gemma.model.blacklist.BlacklistedPlatform;
@@ -250,7 +252,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
      *
      */
     private void proactivelyBlacklistExperiments( ExternalDatabase geo ) throws Exception {
-        GeoBrowser gbs = new GeoBrowser( ncbiApiKey );
+        GeoBrowser gbs = new GeoBrowserImpl( ncbiApiKey );
 
         Collection<String> candidates = new ArrayList<>();
         int numChecked = 0;
@@ -294,7 +296,7 @@ public class BlacklistCli extends AbstractAuthenticatedCLI {
             List<GeoRecord> recs;
 
             try {
-                recs = gbs.searchGeoRecords( null, null, null, candidates, null, start, 100, false /* details */ );
+                recs = gbs.searchAndRetrieveGeoRecords( GeoRecordType.SERIES, null, null, null, candidates, null, start, 100, false /* details */ );
                 retries = 0;
             } catch ( IOException e ) {
                 // this definitely can happen, occasional 500s from NCBI

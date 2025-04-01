@@ -73,11 +73,11 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
 
         assertNotNull( ee );
 
-        SVDValueObject svd = svdService.svd( ee );
+        SVDResult svd = svdService.svd( ee );
 
         assertNotNull( svd );
 
-        assertNotNull( svd.getvMatrix() );
+        assertNotNull( svd.getVMatrix() );
         assertEquals( 5, svd.getFactorCorrelations().size() );
 
         analysisUtilService.deleteOldAnalyses( ee );
@@ -112,12 +112,12 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
 
         assertNotNull( ee );
 
-        SVDValueObject svd = svdService.svd( ee );
+        SVDResult svd = svdService.svd( ee );
 
         assertNotNull( svd );
-        assertNotNull( svd.getvMatrix() );
+        assertNotNull( svd.getVMatrix() );
 
-        assertEquals( 10, svd.getBioMaterialIds().length );
+        assertEquals( 10, svd.getBioMaterials().size() );
     }
 
     @After

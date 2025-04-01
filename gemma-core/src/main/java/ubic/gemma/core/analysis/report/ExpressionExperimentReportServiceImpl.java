@@ -63,18 +63,18 @@ import static ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectUtils.
 @Service("expressionExperimentReportService")
 public class ExpressionExperimentReportServiceImpl implements ExpressionExperimentReportService, InitializingBean {
 
+    private static final Log log = LogFactory.getLog( ExpressionExperimentReportServiceImpl.class );
+
     private static final String NOTE_UPDATED_CONFOUND = "Updated batch confound";
     private static final String NOTE_UPDATED_EFFECT = "Updated batch effect";
     private static final String EESTATS_CACHE_NAME = "ExpressionExperimentReportsCache";
-    private final Log log = LogFactory.getLog( this.getClass() );
     /**
      * Batch of classes we can get events for all at once.
      */
-    @SuppressWarnings("unchecked")
-    private final Class<? extends AuditEventType>[] eventTypes = new Class[] { LinkAnalysisEvent.class,
-            MissingValueAnalysisEvent.class, ProcessedVectorComputationEvent.class,
+    private static final List<Class<? extends AuditEventType>> eventTypes = Arrays.asList(
+            LinkAnalysisEvent.class, MissingValueAnalysisEvent.class, ProcessedVectorComputationEvent.class,
             DifferentialExpressionAnalysisEvent.class, BatchInformationFetchingEvent.class,
-            PCAAnalysisEvent.class, BatchInformationMissingEvent.class };
+            PCAAnalysisEvent.class, BatchInformationMissingEvent.class );
 
     @Autowired
     private AuditTrailService auditTrailService;
@@ -85,13 +85,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     @Autowired
-    private ExperimentalDesignVisualizationService experimentalDesignVisualizationService;
-    @Autowired
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
-    @Autowired
-    private BeanFactory beanFactory;
 
     /**
      * Cache to hold stats in memory. This is used to avoid hittinig the disk for reports too often.
@@ -188,9 +184,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         Map<Long, ExpressionExperiment> eeMap = IdentifiableUtils.getIdMap( ees );
         Map<Long, Date> lastArrayDesignUpdates = expressionExperimentService.getLastArrayDesignUpdate( ees );
-        Collection<Class<? extends AuditEventType>> typesToGet = Arrays.asList( eventTypes );
 
-        Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> events = auditEventService.getLastEvents( ees, typesToGet );
+        Map<Class<? extends AuditEventType>, Map<ExpressionExperiment, AuditEvent>> events = auditEventService.getLastEvents( ees, eventTypes );
 
         Map<ExpressionExperiment, AuditEvent> linkAnalysisEvents = events.get( LinkAnalysisEvent.class );
         Map<ExpressionExperiment, AuditEvent> missingValueAnalysisEvents = events.get( MissingValueAnalysisEvent.class );

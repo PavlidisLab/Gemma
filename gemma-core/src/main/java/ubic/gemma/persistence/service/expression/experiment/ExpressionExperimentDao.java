@@ -341,50 +341,50 @@ public interface ExpressionExperimentDao
      */
     void thawLite( ExpressionExperiment expressionExperiment );
 
-    Collection<Characteristic> getAnnotationsBySubSets( ExpressionExperiment ee );
-
-    /**
-     * Obtain sample-level annotations for an experiment.
-     */
-    Collection<Characteristic> getAnnotationsByBioMaterials( ExpressionExperiment ee );
-
-    /**
-     * Obtain sample-level annotations for a given subset.
-     */
-    Collection<Characteristic> getAnnotationsByBioMaterials( ExpressionExperimentSubSet subset );
-
-    /**
-     * Obtain all the statements in the experimental design of an experiment.
-     */
-    Collection<Statement> getAnnotationsByFactorValues( ExpressionExperiment ee );
-
     /**
      * Obtain all annotations, grouped by applicable level.
-     * <p>
-     * This uses the {@code EE2C} table under the hood.
+     * @param useEe2c use the {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} table to retrieve annotations
      */
-    Map<Class<? extends Identifiable>, List<Characteristic>> getAllAnnotations( ExpressionExperiment expressionExperiment );
+    Map<Class<? extends Identifiable>, List<Characteristic>> getAllAnnotations( ExpressionExperiment expressionExperiment, boolean useEe2c );
 
     /**
      * Obtain experiment-level annotations.
-     * <p>
-     * This uses the {@code EE2C} table under the hood.
+     *
+     * @param useEe2c use the {@code EXPRESSION_EXPERIMENTE2CHARACTERISTIC} table, {@link ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil}
      */
-    List<Characteristic> getExperimentAnnotations( ExpressionExperiment expressionExperiment );
+    Collection<Characteristic> getExperimentAnnotations( ExpressionExperiment expressionExperiment, boolean useEe2c );
+
+    /**
+     * Obtain the subset annotations.
+     */
+    Collection<Characteristic> getExperimentSubSetAnnotations( ExpressionExperiment ee );
 
     /**
      * Obtain sample-level annotations.
      * <p>
      * This uses the {@code EE2C} table under the hood.
      */
-    List<Characteristic> getBioMaterialAnnotations( ExpressionExperiment expressionExperiment );
+    List<Characteristic> getBioMaterialAnnotations( ExpressionExperiment expressionExperiment, boolean useEe2c );
+
+    List<Characteristic> getBioMaterialAnnotations( ExpressionExperimentSubSet expressionExperiment );
 
     /**
      * Obtain experimental design-level annotations.
      * <p>
-     * This uses the {@code EE2C} table under the hood.
+     * This is equivalent to the subject components of {@link #getFactorValueAnnotations(ExpressionExperiment)} for now,
+     * but other annotations from the experimental design might be included in the future.
      */
-    List<Characteristic> getExperimentalDesignAnnotations( ExpressionExperiment expressionExperiment );
+    List<Characteristic> getExperimentalDesignAnnotations( ExpressionExperiment expressionExperiment, boolean useEe2c );
+
+    /**
+     * Obtain factor value-level annotations.
+     */
+    List<Statement> getFactorValueAnnotations( ExpressionExperiment ee );
+
+    /**
+     * Obtain factor value-level annotations for a given subset.
+     */
+    List<Statement> getFactorValueAnnotations( ExpressionExperimentSubSet ee );
 
     /**
      * Special indicator for free-text terms.

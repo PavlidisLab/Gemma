@@ -148,7 +148,7 @@ public class AnalysisResultSetsWebService {
                     + "For interaction terms, `{fvId}` is structured as `{id1}_{id2}`. "
                     + "For continuous factors, `{fvId}` is empty and a single `_` delimiter is used.",
             responses = {
-                    @ApiResponse(content = {
+                    @ApiResponse(responseCode = "200", content = {
                             @Content(mediaType = MediaType.APPLICATION_JSON,
                                     schema = @Schema(implementation = PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject.class)),
                             @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8_Q9,

@@ -8,7 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
-import org.springframework.web.util.UriComponentsBuilder;
+import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -19,6 +19,7 @@ import ubic.gemma.web.util.ServiceUnavailableException;
 
 import javax.servlet.ServletContext;
 import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -53,7 +54,7 @@ public class OntologyController {
     @Autowired
     private ServletContext servletContext;
 
-    @RequestMapping(value = "/TGEMO.OWL", method = { RequestMethod.GET, RequestMethod.HEAD })
+    @RequestMapping(value = { "/TGEMO", "/TGEMO.OWL" }, method = { RequestMethod.GET, RequestMethod.HEAD })
     public RedirectView getOntology() {
         String gemmaOntologyUrl = gemmaOntologyService.getOntologyUrl();
         RedirectView redirectView = new RedirectView( gemmaOntologyUrl );
@@ -61,8 +62,9 @@ public class OntologyController {
         return redirectView;
     }
 
-    @RequestMapping(value = "/{termId}", method = { RequestMethod.GET, RequestMethod.HEAD })
-    public RedirectView getTerm( @PathVariable("termId") String termId ) {
+    @ResponseBody
+    @RequestMapping(value = "/{termId:TGEMO_.*}", method = { RequestMethod.GET, RequestMethod.HEAD })
+    public String getTerm( @PathVariable("termId") String termId ) {
         if ( !gemmaOntologyService.isOntologyLoaded() ) {
             throw new ServiceUnavailableException( "TGEMO is not loaded." );
         }
@@ -71,14 +73,35 @@ public class OntologyController {
         if ( term == null ) {
             throw new EntityNotFoundException( String.format( "No term with IRI %s in TGEMO.", iri ) );
         }
-        String gemmaOntologyUrl = gemmaOntologyService.getOntologyUrl();
-        String urlWithFragment = UriComponentsBuilder.fromHttpUrl( gemmaOntologyUrl )
-                .fragment( iri )
-                .build()
-                .toUriString();
-        RedirectView redirectView = new RedirectView( urlWithFragment );
-        redirectView.setStatusCode( HttpStatus.FOUND );
-        return redirectView;
+
+        StringBuilder s = new StringBuilder( String.format( "<title>%s</title>", escapeHtml4( term.getLabel() ) ) +
+                "<div class=\"padded\"><ul style=\"padding-bottom:0.5em\">" +
+                String.format( "<h2 style=\"padding-bottom:0.5em\">%s: %s</h2>",
+                        escapeHtml4( term.getLocalName() ),
+                        escapeHtml4( term.getLabel() ) ) );
+        if ( term.getUri() != null ) {
+            s.append( String.format( "<li><a href=%s>%s</a></li>",
+                    escapeHtml4( term.getUri()
+                            .replaceFirst( "^" + Pattern.quote( TGEMO_URI_PREFIX ), servletContext.getContextPath() + "/ont/" ) ),
+                    escapeHtml4( TGEMO_URI_PREFIX + term.getLocalName() ) ) );
+        }
+
+        for ( AnnotationProperty annot : term.getAnnotations() ) {
+            if ( Arrays.asList( "hasDefinition", "definition" ).contains( annot.getProperty() ) ) {
+                s.append( "<li>" )
+                        .append( annot.getContents() )
+                        .append( "</li>" );
+            }
+        }
+
+
+        s.append( "</ul>" );
+        s.append( String.format( "<p>Ontology IRI: <a href=%s>%s</a></p>",
+                servletContext.getContextPath() + "/ont/TGEMO",
+                TGEMO_URI_PREFIX + "TGEMO" ) );
+        s.append( "</div>" );
+        return s.toString();
+
     }
 
     @ResponseBody
@@ -102,7 +125,7 @@ public class OntologyController {
         StringBuilder s = new StringBuilder();
         s.append( String.format( "<title>FactorValue #%d: %s</title>", factorValueId, escapeHtml4( oi.getLabel() ) ) );
         s.append( "<div class=\"padded\">" );
-        s.append( String.format( "<h2>FactorValue #%d: %s</h2>", factorValueId, renderOntologyResource( oi ) ) );
+        s.append( String.format( "<h2 style=\"padding-bottom:0.5em\">FactorValue #%d: %s</h2>", factorValueId, renderOntologyResource( oi ) ) );
         s.append( "<ul>" );
         if ( oi.getInstanceOf() != null ) {
             s.append( "<li>instance of " ).append( renderOntologyResource( oi.getInstanceOf() ) ).append( "</li>" );
@@ -114,7 +137,7 @@ public class OntologyController {
             s.append( String.format( "<li>%s %s %s</li>", renderOntologyResource( st.getSubject() ), renderOntologyResource( st.getPredicate() ), renderOntologyResource( st.getObject() ) ) );
         }
         s.append( "</ul>" );
-        s.append( "<p>Retrieve this in RDF/XML:</p>" );
+        s.append( "<p style=\"margin-bottom: 0em;\">Retrieve this in RDF/XML:</p>" );
         s.append( String.format( "<pre>curl -H Accept:application/rdf+xml %s/ont/TGFVO/%d</pre>", hostUrl, factorValueId ) );
         s.append( "</div>" );
         return s.toString();

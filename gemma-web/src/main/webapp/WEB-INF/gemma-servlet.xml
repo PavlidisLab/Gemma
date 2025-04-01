@@ -73,7 +73,6 @@
                 <prop key="/diff/diffExpressionAnalysis.html">differentialExpressionAnalysisController</prop>
                 <prop key="/diff/diffExpressionSearch.html">differentialExpressionSearchController</prop>
                 <prop key="/home.html">homePageController</prop>
-                <prop key="/gemmaClassic.html">gemmaClassicHomePageController</prop>
             </props>
         </property>
     </bean>

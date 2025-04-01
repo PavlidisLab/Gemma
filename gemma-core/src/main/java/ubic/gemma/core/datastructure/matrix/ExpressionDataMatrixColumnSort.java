@@ -47,7 +47,6 @@ public class ExpressionDataMatrixColumnSort {
 
     private static final Log log = LogFactory.getLog( ExpressionDataMatrixColumnSort.class.getName() );
 
-
     public static <R> DoubleMatrix<R, BioAssay> orderByExperimentalDesign( DoubleMatrix<R, BioAssay> mat ) {
         return ExpressionDataMatrixColumnSort.orderByExperimentalDesign( mat, null );
     }

@@ -10,14 +10,18 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.basecode.ontology.model.OntologyIndividual;
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.gemma.core.ontology.FactorValueOntologyService;
 import ubic.gemma.core.ontology.OntologyIndividualSimple;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
+import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.web.util.BaseWebTest;
 import ubic.gemma.web.util.EntityNotFoundException;
+
+import java.util.Collections;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -68,8 +72,18 @@ public class OntologyControllerTest extends BaseWebTest {
     public void setUp() throws InterruptedException {
         when( gemmaOntology.isOntologyLoaded() ).thenReturn( true );
         when( gemmaOntology.getOntologyUrl() ).thenReturn( "http://gemma.msl.ubc.ca/ont/TGEMO.OWL" );
+
+        AnnotationProperty annot = mock(AnnotationProperty.class);
+        when(annot.getContents()).thenReturn("Double negative allele. Refers both to genetic null (missing gene/knock out) and phenotypic/functional null (inactive gene product). May be overloaded for severe loss-of-function alleles also.");
+        when(annot.getProperty()).thenReturn("definition");
+
+        OntologyTerm term = mock( OntologyTerm.class );
+        when(term.getLabel()).thenReturn("Homozygous negative");
+        when(term.getUri()).thenReturn("http://gemma.msl.ubc.ca/ont/TGEMO_00001");
+        when(term.getLocalName()).thenReturn("TGEMO_00001");
+        when(term.getAnnotations()).thenReturn( Collections.singletonList( annot ) );
         when( gemmaOntology.getTerm( "http://gemma.msl.ubc.ca/ont/TGEMO_00001" ) )
-                .thenReturn( new OntologyTermSimple( "http://gemma.msl.ubc.ca/ont/TGEMO_00001", "Homozygous negative" ) );
+                .thenReturn( term );
     }
 
     @After
@@ -94,8 +108,10 @@ public class OntologyControllerTest extends BaseWebTest {
     @Test
     public void testGetTerm() throws Exception {
         perform( get( "/ont/TGEMO_00001" ) )
-                .andExpect( status().isFound() )
-                .andExpect( redirectedUrl( gemmaOntologyUrl + "#http://gemma.msl.ubc.ca/ont/TGEMO_00001" ) );
+                .andExpect( status().isOk() )
+                .andExpect( content().string( containsString( "TGEMO_00001: Homozygous negative" ) ) )
+                .andExpect( content().string( containsString( "Double negative allele" ) ) )
+                .andExpect( content().string( containsString( "http://gemma.msl.ubc.ca/ont/TGEMO" ) ) );
     }
 
     @Test

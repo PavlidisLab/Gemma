@@ -482,7 +482,7 @@ function __gemma_cli_sc_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.ExperimentalDesignWriterCLI ' ]]; then
         if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--outFilePrefix|--taxon|-batchFormat|-batchOutputFile|-batchReportFrequency|-e|-eeset|-f|-o|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --help --outFilePrefix --taxon -all -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -h -o -q -t -x" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --force --help --outFilePrefix --standard-location --taxon -all -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -force -h -o -q -standardLocation -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--batch-output-file|--eeListfile|--excludeEEFile|--outFilePrefix|-batchOutputFile|-f|-o|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -490,7 +490,7 @@ function __gemma_cli_sc_complete() {
     fi
     if [[ " $words " =~ ' printExperimentalDesign ' ]]; then
         if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--outFilePrefix|--taxon|-batchFormat|-batchOutputFile|-batchReportFrequency|-e|-eeset|-f|-o|-q|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --help --outFilePrefix --taxon -all -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -h -o -q -t -x" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --force --help --outFilePrefix --standard-location --taxon -all -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -force -h -o -q -standardLocation -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--batch-output-file|--eeListfile|--excludeEEFile|--outFilePrefix|-batchOutputFile|-f|-o|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -947,18 +947,18 @@ function __gemma_cli_sc_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.GeoGrabberCli ' ]]; then
-        if ! [[ "$current_option" =~ (--acc|--file|-chunkSize|-date|-e|-f|-gselimit|-output|-platformLimit|-startat|-startdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--acc --file --help -chunkSize -date -e -f -gselimit -h -output -platformLimit -startat -startdate -y" -- "$2")
+        if ! [[ "$current_option" =~ (--acc|--chunk-size|--file|--output|-chunkSize|-date|-e|-f|-gselimit|-output|-platformLimit|-startat|-startdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--acc --chunk-size --file --help --output -chunkSize -date -e -f -gselimit -h -output -platformLimit -raw -startat -startdate -y" -- "$2")
         fi
-        if [[ "$current_option" =~ (--file|-f|-output) ]]; then
+        if [[ "$current_option" =~ (--file|--output|-f|-output) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' listGEOData ' ]]; then
-        if ! [[ "$current_option" =~ (--acc|--file|-chunkSize|-date|-e|-f|-gselimit|-output|-platformLimit|-startat|-startdate) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--acc --file --help -chunkSize -date -e -f -gselimit -h -output -platformLimit -startat -startdate -y" -- "$2")
+        if ! [[ "$current_option" =~ (--acc|--chunk-size|--file|--output|-chunkSize|-date|-e|-f|-gselimit|-output|-platformLimit|-startat|-startdate) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--acc --chunk-size --file --help --output -chunkSize -date -e -f -gselimit -h -output -platformLimit -raw -startat -startdate -y" -- "$2")
         fi
-        if [[ "$current_option" =~ (--file|-f|-output) ]]; then
+        if [[ "$current_option" =~ (--file|--output|-f|-output) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi

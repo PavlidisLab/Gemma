@@ -148,11 +148,8 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
     @Override
     public FactorValue find( FactorValue factorValue ) {
         Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( FactorValue.class );
-
         BusinessKey.checkKey( factorValue );
-
         BusinessKey.createQueryObject( queryObject, factorValue );
-
         return ( FactorValue ) queryObject.uniqueResult();
     }
 

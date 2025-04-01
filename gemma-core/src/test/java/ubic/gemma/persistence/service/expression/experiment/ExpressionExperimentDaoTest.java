@@ -538,15 +538,22 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     @Test
     public void testGetAllAnnotations() {
         ee = createExpressionExperiment();
-        expressionExperimentDao.getAllAnnotations( ee );
+        expressionExperimentDao.getAllAnnotations( ee, true );
+        expressionExperimentDao.getAllAnnotations( ee, false );
     }
 
     @Test
     public void testGetAnnotationsByLevel() {
         ee = createExpressionExperiment();
-        expressionExperimentDao.getExperimentAnnotations( ee );
-        expressionExperimentDao.getBioMaterialAnnotations( ee );
-        expressionExperimentDao.getExperimentalDesignAnnotations( ee );
+        // via the EE2C table
+        expressionExperimentDao.getExperimentAnnotations( ee, true );
+        expressionExperimentDao.getBioMaterialAnnotations( ee, true );
+        expressionExperimentDao.getExperimentalDesignAnnotations( ee, true );
+        // directly
+        expressionExperimentDao.getExperimentAnnotations( ee, false );
+        expressionExperimentDao.getBioMaterialAnnotations( ee, false );
+        expressionExperimentDao.getExperimentalDesignAnnotations( ee, false );
+        expressionExperimentDao.getFactorValueAnnotations( ee );
     }
 
     @Test

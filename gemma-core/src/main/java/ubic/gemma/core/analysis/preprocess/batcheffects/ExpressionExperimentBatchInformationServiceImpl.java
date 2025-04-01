@@ -5,8 +5,8 @@ import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.analysis.preprocess.svd.SVDResult;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
-import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -218,7 +218,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
 
         ExperimentalFactor ef = ee.getExperimentalDesign().getExperimentalFactors()
                 .stream()
-                .filter( ef1 -> ExperimentalDesignUtils.isBatchFactor( ef1 ) )
+                .filter( ExperimentalDesignUtils::isBatchFactor )
                 .findFirst()
                 .orElse( null );
 
@@ -227,7 +227,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
             return details;
         }
 
-        SVDValueObject svd = svdService.svdFactorAnalysis( ee );
+        SVDResult svd = svdService.getSvdFactorAnalysis( ee );
         if ( svd == null ) {
             log.warn( "SVD was null for " + ef + ", can't compute batch effect statistics." );
             return details;
@@ -236,9 +236,9 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
         // Use the "date run" information as a first pass to decide if there is a batch association.
         // This won't always be present.
         double minP = 1.0;
-        if ( svd.getDatePvals() != null ) {
-            for ( Integer component : svd.getDatePvals().keySet() ) {
-                Double pVal = svd.getDatePvals().get( component );
+        if ( svd.getDatePVals() != null ) {
+            for ( Integer component : svd.getDatePVals().keySet() ) {
+                Double pVal = svd.getDatePVals().get( component );
                 if ( pVal != null && pVal < minP ) {
                     details.setBatchEffectStatistics( pVal, component + 1, svd.getVariances()[component] );
                     minP = pVal;
@@ -248,13 +248,13 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
 
         // we can override the date-based p-value with the factor-based p-value if it is lower.
         // The reason to do this is it can be underpowered. The date-based one is more sensitive.
-        for ( Integer component : svd.getFactorPvals().keySet() ) {
-            Map<Long, Double> cmpEffects = svd.getFactorPvals().get( component );
+        for ( Integer component : svd.getFactorPVals().keySet() ) {
+            Map<ExperimentalFactor, Double> cmpEffects = svd.getFactorPVals().get( component );
 
             // could use the effect size instead of the p-values (or in addition)
             //Map<Long, Double> cmpEffectSizes = svd.getFactorCorrelations().get( component );
 
-            Double pVal = cmpEffects.get( ef.getId() );
+            Double pVal = cmpEffects.get( ef );
             if ( pVal != null && pVal < minP ) {
                 details.setBatchEffectStatistics( pVal, component + 1, svd.getVariances()[component] );
                 minP = pVal;

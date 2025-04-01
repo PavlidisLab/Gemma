@@ -47,8 +47,8 @@ import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.filter.NoRowsLeftAfterFilteringException;
+import ubic.gemma.core.analysis.preprocess.svd.SVDResult;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
-import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.DifferentialExpressionAnalysisResultListFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
@@ -72,6 +72,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.*;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -228,7 +229,7 @@ public class DatasetsWebService {
     @CacheControl(isPrivate = true, authorities = { "GROUP_USER" })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all datasets", responses = {
-            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public QueriedAndFilteredAndInferredAndPaginatedResponseDataObject<ExpressionExperimentWithSearchResultValueObject> getDatasets( // Params:
@@ -307,7 +308,7 @@ public class DatasetsWebService {
     @Path("/count")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Count datasets matching the provided query and filter", responses = {
-            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public ResponseDataObject<Long> getNumberOfDatasets(
@@ -338,7 +339,7 @@ public class DatasetsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve usage statistics of platforms among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.", responses = {
-            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public QueriedAndFilteredAndInferredAndLimitedResponseDataObject<ArrayDesignWithUsageStatisticsValueObject> getDatasetsPlatformsUsageStatistics(
@@ -406,7 +407,7 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve usage statistics of categories among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.",
             responses = {
-                    @ApiResponse(useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredAndInferredAndLimitedResponseDataObject<CategoryWithUsageStatisticsValueObject> getDatasetsCategoriesUsageStatistics(
@@ -471,7 +472,7 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve usage statistics of annotations among datasets matching the provided query and filter",
             description = "Usage statistics are aggregated across experiment tags, samples and factor values mentioned in the experimental design.",
             responses = {
-                    @ApiResponse(useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public QueriedAndFilteredAndInferredAndLimitedResponseDataObject<AnnotationWithUsageStatisticsValueObject> getDatasetsAnnotationsUsageStatistics(
@@ -658,7 +659,7 @@ public class DatasetsWebService {
     @CacheControl(isPrivate = true, authorities = { "GROUP_USER" })
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve taxa usage statistics for datasets matching the provided query and filter", responses = {
-            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "503", description = SEARCH_TIMEOUT_DESCRIPTION, content = @Content(schema = @Schema(implementation = ResponseErrorObject.class)))
     })
     public QueriedAndFilteredAndInferredResponseDataObject<TaxonWithUsageStatisticsValueObject> getDatasetsTaxaUsageStatistics(
@@ -756,7 +757,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/platforms")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the platforms of a dataset", responses = {
-            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<ArrayDesignValueObject>> getDatasetPlatforms( // Params:
@@ -775,7 +776,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/samples")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the samples of a dataset", responses = {
-            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<BioAssayValueObject>> getDatasetSamples( // Params:
@@ -794,7 +795,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/analyses/differential")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve annotations and surface level stats for a dataset's differential analyses", responses = {
-            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<DifferentialExpressionAnalysisValueObject>> getDatasetDifferentialExpressionAnalyses( // Params:
@@ -857,7 +858,7 @@ public class DatasetsWebService {
             summary = "Retrieve the differential expression results for a given gene among datasets matching the provided query and filter",
             description = GET_DATASETS_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION,
             responses = {
-                    @ApiResponse(content = {
+                    @ApiResponse(responseCode = "200", content = {
                             @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectDifferentialExpressionAnalysisResultByGeneValueObject.class)),
                             @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8 + "; q=0.9", schema = @Schema(type = "string", format = "binary"))
                     })
@@ -894,7 +895,7 @@ public class DatasetsWebService {
             summary = "Retrieve the differential expression results for a given gene and taxa among datasets matching the provided query and filter",
             description = GET_DATASETS_DIFFERENTIAL_ANALYSIS_EXPRESSION_RESULTS_DESCRIPTION,
             responses = {
-                    @ApiResponse(content = {
+                    @ApiResponse(responseCode = "200", content = {
                             @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = QueriedAndFilteredAndInferredAndPaginatedResponseDataObjectDifferentialExpressionAnalysisResultByGeneValueObject.class)),
                             @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string", format = "binary"))
                     })
@@ -1060,7 +1061,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/annotations")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the annotations of a dataset", responses = {
-            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<Set<AnnotationValueObject>> getDatasetAnnotations( // Params:
@@ -1263,7 +1264,7 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve processed expression data of a dataset",
             description = "This endpoint is deprecated and getDatasetProcessedExpression() should be used instead. " + DATA_TSV_OUTPUT_DESCRIPTION,
             responses = {
-                    @ApiResponse(content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8,
+                    @ApiResponse(responseCode = "200", content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8,
                             schema = @Schema(type = "string", format = "binary"),
                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-data.tsv") })),
                     @ApiResponse(responseCode = "204", description = "The dataset expression matrix is empty."),
@@ -1292,7 +1293,7 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve processed expression data of a dataset",
             description = DATA_TSV_OUTPUT_DESCRIPTION,
             responses = {
-                    @ApiResponse(content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8,
+                    @ApiResponse(responseCode = "200", content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8,
                             schema = @Schema(type = "string", format = "binary"),
                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-processed-data.tsv") })),
                     @ApiResponse(responseCode = "204", description = "The dataset expression matrix is empty. Only applicable if filter is set to true."),
@@ -1356,7 +1357,7 @@ public class DatasetsWebService {
     @Operation(summary = "Retrieve raw expression data of a dataset",
             description = DATA_TSV_OUTPUT_DESCRIPTION,
             responses = {
-                    @ApiResponse(content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8,
+                    @ApiResponse(responseCode = "200", content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8,
                             schema = @Schema(type = "string", format = "binary"),
                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-raw-data.tsv") })),
                     @ApiResponse(responseCode = "404", description = "Either the dataset or the quantitation type do not exist.",
@@ -1499,7 +1500,7 @@ public class DatasetsWebService {
     @Path("/{dataset}/design")
     @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8)
     @Operation(summary = "Retrieve the design of a dataset", responses = {
-            @ApiResponse(content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string", format = "binary"),
+            @ApiResponse(responseCode = "200", content = @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, schema = @Schema(type = "string", format = "binary"),
                     examples = @ExampleObject("classpath:/restapidocs/examples/dataset-design.tsv"))),
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
@@ -1656,18 +1657,18 @@ public class DatasetsWebService {
     @Path("/{dataset}/svd")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve the singular value decomposition (SVD) of a dataset expression data", responses = {
-            @ApiResponse(useReturnTypeSchema = true, content = @Content()),
-            @ApiResponse(responseCode = "404", description = "The dataset does not exist or does not have an SVD.",
+            @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+            @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<SimpleSVDValueObject> getDatasetSvd( // Params:
             @PathParam("dataset") DatasetArg<?> datasetArg // Required
     ) {
         ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
-        SVDValueObject svd = svdService.retrieveSvd( ee );
+        SVDResult svd = svdService.getSvd( ee );
         if ( svd == null ) {
             throw new NotFoundException( ee.getShortName() + " does not have an SVD." );
         }
-        return respond( new SimpleSVDValueObject( Arrays.asList( svd.getBioMaterialIds() ), svd.getVariances(), svd.getvMatrix().getRawMatrix() ) );
+        return respond( new SimpleSVDValueObject( svd.getBioMaterials().stream().map( BioMaterial::getId ).collect( Collectors.toList() ), svd.getVariances(), svd.getVMatrix().getRawMatrix() ) );
     }
 
     /**

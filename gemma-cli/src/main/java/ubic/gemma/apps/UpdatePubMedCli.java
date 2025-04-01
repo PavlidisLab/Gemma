@@ -18,11 +18,13 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
+import ubic.gemma.cli.util.CLI;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
-import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
-import ubic.gemma.cli.util.CLI;
+import ubic.gemma.core.loader.expression.geo.service.GeoBrowserImpl;
+import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -86,8 +88,8 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
         }
         log.info( "Found " + toFetch.size() + " experiments lacking publications in Gemma.." );
 
-        GeoBrowser gbs = new GeoBrowser( ncbiApiKey );
-        Collection<GeoRecord> geoRecords = gbs.getGeoRecords( toFetch.keySet(), false );
+        GeoBrowser gbs = new GeoBrowserImpl( ncbiApiKey );
+        Collection<GeoRecord> geoRecords = gbs.getGeoRecords( GeoRecordType.SERIES, toFetch.keySet() );
 
         int numFound = 0;
         for ( GeoRecord rec : geoRecords ) {

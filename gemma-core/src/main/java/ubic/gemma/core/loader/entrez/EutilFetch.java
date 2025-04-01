@@ -19,15 +19,14 @@
 package ubic.gemma.core.loader.entrez;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.core.util.XMLUtils;
 
+import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
@@ -37,7 +36,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.core.util.XMLUtils.createDocumentBuilder;
+import static ubic.gemma.core.loader.entrez.NcbiXmlUtils.createDocumentBuilder;
 
 /**
  * @author paul
@@ -67,59 +66,43 @@ public class EutilFetch {
      * @param limit        - Maximum number of records to return.
      * @throws IOException if there is a problem while manipulating the file
      */
+    @Nullable
     public String fetch( String db, String searchString, int limit ) throws IOException {
         URL searchUrl = new URL( EutilFetch.ESEARCH + urlEncode( db )
                 + "&usehistory=y"
                 + "&term=" + urlEncode( searchString )
                 + ( StringUtils.isNotBlank( apiKey ) ? "&api_key=" + urlEncode( apiKey ) : "" ) );
-        Document document = retryTemplate.execute( ( attempt, lastAttempt ) -> {
+        return retryTemplate.execute( ( attempt, lastAttempt ) -> {
+            Document document;
             try ( InputStream is = searchUrl.openStream() ) {
                 DocumentBuilder builder = createDocumentBuilder();
-                return builder.parse( is );
+                document = builder.parse( is );
             } catch ( SAXException | ParserConfigurationException e ) {
                 throw new RuntimeException( e );
             }
-        }, "retrieve " + searchUrl );
 
-        NodeList countNode = document.getElementsByTagName( "Count" );
-        Node countEl = countNode.item( 0 );
-
-        int count;
-        try {
-            count = Integer.parseInt( XMLUtils.getTextValue( ( Element ) countEl ) );
-        } catch ( NumberFormatException e ) {
-            throw new IOException( "Could not parse count from: " + searchUrl );
-        }
-
-        if ( count == 0 )
-            throw new IOException( "Got no records from: " + searchUrl );
-
-        NodeList qnode = document.getElementsByTagName( "QueryKey" );
-
-        Element queryIdEl = ( Element ) qnode.item( 0 );
-
-        NodeList cknode = document.getElementsByTagName( "WebEnv" );
-        Element cookieEl = ( Element ) cknode.item( 0 );
-
-        String queryId = XMLUtils.getTextValue( queryIdEl );
-        String cookie = XMLUtils.getTextValue( cookieEl );
-
-        URL fetchUrl = new URL( EutilFetch.EFETCH + urlEncode( db )
-                + "&mode=text"
-                + "&query_key=" + urlEncode( queryId )
-                + "&WebEnv=" + urlEncode( cookie )
-                + "&retmax=" + limit
-                + ( StringUtils.isNotBlank( apiKey ) ? "&api_key=" + urlEncode( apiKey ) : "" ) );
-        return retryTemplate.execute( ( attempt, lastAttempt ) -> {
-            try ( BufferedReader br = new BufferedReader( new InputStreamReader( fetchUrl.openStream() ) ) ) {
-                StringBuilder buf = new StringBuilder();
-                String line;
-                while ( ( line = br.readLine() ) != null ) {
-                    buf.append( line );
-                }
-                return buf.toString();
+            int count;
+            try {
+                count = Integer.parseInt( XMLUtils.getTextValue( document.getElementsByTagName( "Count" ).item( 0 ) ) );
+            } catch ( NumberFormatException e ) {
+                throw new IOException( "Could not parse count from: " + searchUrl );
             }
-        }, "retrieve " + fetchUrl );
+
+            if ( count == 0 ) {
+                return null;
+            }
+
+            String queryId = XMLUtils.getTextValue( document.getElementsByTagName( "QueryKey" ).item( 0 ) );
+            String cookie = XMLUtils.getTextValue( document.getElementsByTagName( "WebEnv" ).item( 0 ) );
+
+            URL fetchUrl = new URL( EutilFetch.EFETCH + urlEncode( db )
+                    + "&mode=text"
+                    + "&query_key=" + urlEncode( queryId )
+                    + "&WebEnv=" + urlEncode( cookie )
+                    + "&retmax=" + limit
+                    + ( StringUtils.isNotBlank( apiKey ) ? "&api_key=" + urlEncode( apiKey ) : "" ) );
+            return IOUtils.toString( fetchUrl, StandardCharsets.UTF_8 );
+        }, "retrieve " + searchUrl );
     }
 
     public Collection<String> query( String db, String query ) throws IOException {

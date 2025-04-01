@@ -12,7 +12,7 @@ import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationServiceImpl;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
-import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
+import ubic.gemma.core.analysis.preprocess.svd.SVDResult;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -83,15 +83,15 @@ public class ExpressionExperimentBatchInformationServiceTest extends AbstractJUn
 
     @Test
     public void test() {
-        SVDValueObject svdResult = mock();
-        when( svdResult.getDatePvals() ).thenReturn( Collections.singletonMap( 0, 0.0000001 ) );
+        SVDResult svdResult = mock();
+        when( svdResult.getDatePVals() ).thenReturn( Collections.singletonMap( 0, 0.0000001 ) );
         when( svdResult.getVariances() ).thenReturn( new double[] { 0.99 } );
         ExperimentalFactor batchFactor = ExperimentalFactor.Factory.newInstance( ExperimentalDesignUtils.BATCH_FACTOR_NAME, FactorType.CATEGORICAL );
         Characteristic c = Characteristic.Factory.newInstance( Categories.BLOCK );
         batchFactor.setCategory( c );
         ExpressionExperiment ee = new ExpressionExperiment();
         ee.setId( 1L );
-        when( svdService.svdFactorAnalysis( ee ) ).thenReturn( svdResult );
+        when( svdService.getSvdFactorAnalysis( ee ) ).thenReturn( svdResult );
         ee.setExperimentalDesign( new ExperimentalDesign() );
         ee.getExperimentalDesign().getExperimentalFactors().add( batchFactor );
         assertTrue( eeBatchService.checkHasBatchInfo( ee ) );

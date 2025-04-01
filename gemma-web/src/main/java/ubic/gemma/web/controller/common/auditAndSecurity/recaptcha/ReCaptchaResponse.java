@@ -18,16 +18,20 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity.recaptcha;
 
+import javax.annotation.Nullable;
+
 public class ReCaptchaResponse {
 
-    private boolean valid;
-    private String errorMessage;
+    private final boolean valid;
+    @Nullable
+    private final String errorMessage;
 
-    public ReCaptchaResponse(boolean valid, String errorMessage) {
+    public ReCaptchaResponse( boolean valid, @Nullable String errorMessage ) {
         this.valid = valid;
         this.errorMessage = errorMessage;
     }
 
+    @Nullable
     public String getErrorMessage() {
         return errorMessage;
     }

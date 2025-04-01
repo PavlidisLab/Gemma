@@ -31,7 +31,6 @@ pipeline {
         string(name: 'MAVEN_SITES_DIR', defaultValue: '/space/web/maven-sites', description: 'Directory where Maven sites are deployed.')
         string(name: 'CLI_DIR_PREFIX', defaultValue: '/space/opt/gemma-cli', description: 'Prefix for Gemma CLI deployment directory.')
         string(name: 'DEPLOY_DIR_PREFIX', defaultValue: '/var/local/tomcat', description: 'Prefix for Gemma Web deployment directories.')
-
         // either hotfix or release, we only have one staging server & CLI symlink
         choice(name: 'STAGING_BRANCH', choices: ['hotfix', 'release'], description: 'Branch deployed to the staging server and CLI symlink.')
         // whether or not to force integration tests
@@ -80,7 +79,6 @@ pipeline {
                             cliRef = 'staging'
                         } else {
                             cliRef = gemmaVersion
-
                         }
                     }
                 }
@@ -214,7 +212,7 @@ pipeline {
                     steps {
                         setBuildStatus "SonarQube Analysis", "SonarQube analysis for build #${env.BUILD_NUMBER} has started...", 'PENDING'
                         withSonarQubeEnv('UBC SonarQube') {
-                            sh "mvn sonar:sonar -Dsonar.projectKey=mslg -Dsonar.projectName='MSL - Gemma'"
+                            sh "mvn dependency-check:check sonar:sonar -Dsonar.projectKey=mslg -Dsonar.projectName='MSL - Gemma'"
                         }
                     }
                     post {
@@ -289,7 +287,6 @@ pipeline {
                     }
                     steps {
                         sh "env GEMMA_CLI_PREFIX=${params.CLI_DIR_PREFIX} ./gemma-cli/deploy.sh ${cliRef}"
-
                     }
                 }
             }

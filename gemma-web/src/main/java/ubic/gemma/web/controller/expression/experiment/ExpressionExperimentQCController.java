@@ -68,13 +68,12 @@ import ubic.basecode.graphics.MatrixDisplay;
 import ubic.basecode.io.writer.MatrixWriter;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.distribution.Histogram;
-import ubic.basecode.util.DateUtil;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationHelperServiceImpl;
 import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
+import ubic.gemma.core.analysis.preprocess.svd.SVDResult;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
-import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.visualization.ExpressionDataHeatmap;
@@ -87,6 +86,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.*;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
@@ -116,8 +116,8 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -257,9 +257,9 @@ public class ExpressionExperimentQCController extends BaseController {
     public void pcaFactors( @RequestParam("id") Long id, HttpServletResponse response ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
 
-        SVDValueObject svdo = null;
+        SVDResult svdo = null;
         try {
-            svdo = svdService.svdFactorAnalysis( ee );
+            svdo = svdService.getSvdFactorAnalysis( ee );
         } catch ( Exception e ) {
             // if there is no pca
             log.error( e, e );
@@ -275,7 +275,7 @@ public class ExpressionExperimentQCController extends BaseController {
     @RequestMapping(value = "/expressionExperiment/pcaScree.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public void pcaScree( @RequestParam("id") Long id, HttpServletResponse response ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( id, EntityNotFoundException::new );
-        SVDValueObject svdo = svdService.retrieveSvd( ee );
+        SVDResult svdo = svdService.getSvd( ee );
         if ( svdo != null ) {
             this.writePCAScree( svdo, response );
         } else {
@@ -466,9 +466,13 @@ public class ExpressionExperimentQCController extends BaseController {
     public ModelAndView writeEigenGenes( @RequestParam("eeid") Long eeid ) throws IOException {
         ExpressionExperiment ee = expressionExperimentService.loadOrFail( eeid,
                 EntityNotFoundException::new, "Could not load experiment with id " + eeid );// or access deined.
-        SVDValueObject svdo = svdService.retrieveSvd( ee );
+        SVDResult svdo = svdService.getSvd( ee );
 
-        DoubleMatrix<Long, Integer> vMatrix = svdo.getvMatrix();
+        if ( svdo == null ) {
+            throw new EntityNotFoundException( ee.getShortName() + " does not have a SVD." );
+        }
+
+        DoubleMatrix<BioMaterial, Integer> vMatrix = svdo.getVMatrix();
 
         /*
          * FIXME put the biomaterial names in there instead of the IDs.
@@ -478,7 +482,7 @@ public class ExpressionExperimentQCController extends BaseController {
          * String>( omatrix.getRawMatrix() ); matrix.setRowNames( stringNames ); matrix.setColumnNames( stringNames );
          */
         StringWriter s = new StringWriter();
-        MatrixWriter<Long, Integer> mw = new MatrixWriter<>( s, new DecimalFormat( "#.######" ) );
+        MatrixWriter<BioMaterial, Integer> mw = new MatrixWriter<>( s, new DecimalFormat( "#.######" ) );
         mw.writeMatrix( vMatrix, true );
         TextView tv = new TextView( "tab-separated-values" );
         tv.setContentDisposition( "attachment; filename=\"" + FilenameUtils.removeExtension( getEigenGenesFilename( ee ) ) + "\"" );
@@ -690,8 +694,7 @@ public class ExpressionExperimentQCController extends BaseController {
      *
      * @param categories map of factor ID to text value. Strings will be unique, but possibly abbreviated and/or munged.
      */
-    private void getCategories( Map<Long, ExperimentalFactor> efIdMap, Long efId, Map<Long, String> categories ) {
-        ExperimentalFactor ef = efIdMap.get( efId );
+    private void getCategories( ExperimentalFactor ef, Map<Long, String> categories ) {
         if ( ef == null )
             return;
         int maxCategoryLabelLength = 10;
@@ -817,19 +820,18 @@ public class ExpressionExperimentQCController extends BaseController {
      * Get the eigengene for the given component.
      * The values are rescaled so that jfreechart can cope. Small numbers give it fits.
      */
-    private Double[] getEigenGene( SVDValueObject svdo, Integer component ) {
+    private Double[] getEigenGene( SVDResult svdo, Integer component ) {
         DoubleArrayList eigenGeneL = new DoubleArrayList(
-                ArrayUtils.toPrimitive( svdo.getvMatrix().getColObj( component ) ) );
+                ArrayUtils.toPrimitive( svdo.getVMatrix().getColObj( component ) ) );
         DescriptiveWithMissing.standardize( eigenGeneL );
         return ArrayUtils.toObject( eigenGeneL.elements() );
     }
 
-    private Map<Long, String> getFactorNames( ExpressionExperiment ee, int maxWidth ) {
+    private Map<ExperimentalFactor, String> getFactorNames( ExpressionExperiment ee, int maxWidth ) {
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
-
-        Map<Long, String> efs = new HashMap<>();
+        Map<ExperimentalFactor, String> efs = new HashMap<>();
         for ( ExperimentalFactor ef : factors ) {
-            efs.put( ef.getId(), StringUtils.abbreviate( StringUtils.capitalize( ef.getName() ), maxWidth ) );
+            efs.put( ef, StringUtils.abbreviate( StringUtils.capitalize( ef.getName() ), maxWidth ) );
         }
         return efs;
     }
@@ -863,7 +865,7 @@ public class ExpressionExperimentQCController extends BaseController {
         return dataset;
     }
 
-    private CategoryDataset getPCAScree( SVDValueObject svdo ) {
+    private CategoryDataset getPCAScree( SVDResult svdo ) {
         DefaultCategoryDataset series = new DefaultCategoryDataset();
 
         double[] variances = svdo.getVariances();
@@ -910,7 +912,7 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     private void writeDetailedFactorAnalysis( ExpressionExperiment ee, HttpServletResponse os ) throws Exception {
-        SVDValueObject svdo = svdService.svdFactorAnalysis( ee );
+        SVDResult svdo = svdService.getSvdFactorAnalysis( ee );
         if ( svdo == null ) {
             writePlaceholderImage( os, DEFAULT_QC_IMAGE_SIZE_PX );
             return;
@@ -920,22 +922,20 @@ public class ExpressionExperimentQCController extends BaseController {
             writePlaceholderImage( os, DEFAULT_QC_IMAGE_SIZE_PX );
             return;
         }
-        Map<Integer, Map<Long, Double>> factorCorrelations = svdo.getFactorCorrelations();
+        Map<Integer, Map<ExperimentalFactor, Double>> factorCorrelations = svdo.getFactorCorrelations();
         // Map<Integer, Map<Long, Double>> factorPvalues = svdo.getFactorPvalues();
         Map<Integer, Double> dateCorrelations = svdo.getDateCorrelations();
 
-        assert ee.getId().equals( svdo.getId() );
+        assert ee.equals( svdo.getExperimentAnalyzed() );
 
         ee = expressionExperimentService.thawLite( ee ); // need the experimental design
         int maxWidth = 30;
-        Map<Long, String> efs = this.getFactorNames( ee, maxWidth );
-        Map<Long, ExperimentalFactor> efIdMap = IdentifiableUtils
-                .getIdMap( ee.getExperimentalDesign().getExperimentalFactors() );
-        Collection<Long> continuousFactors = new HashSet<>();
+        Map<ExperimentalFactor, String> efs = this.getFactorNames( ee, maxWidth );
+        Collection<ExperimentalFactor> continuousFactors = new HashSet<>();
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             boolean isContinous = ef.getType().equals( FactorType.CONTINUOUS );
             if ( isContinous ) {
-                continuousFactors.add( ef.getId() );
+                continuousFactors.add( ef );
             }
         }
 
@@ -956,7 +956,7 @@ public class ExpressionExperimentQCController extends BaseController {
                 break;
             String xaxisLabel = componentShorthand + ( component + 1 );
 
-            for ( Long efId : factorCorrelations.get( component ).keySet() ) {
+            for ( ExperimentalFactor efId : factorCorrelations.get( component ).keySet() ) {
 
                 /*
                  * Should not happen.
@@ -976,11 +976,11 @@ public class ExpressionExperimentQCController extends BaseController {
                 Map<Long, String> categories = new HashMap<>();
 
                 if ( isCategorical ) {
-                    this.getCategories( efIdMap, efId, categories );
+                    this.getCategories( efId, categories );
                 }
 
-                if ( !charts.containsKey( efId ) ) {
-                    charts.put( efId, new ArrayList<>() );
+                if ( !charts.containsKey( efId.getId() ) ) {
+                    charts.put( efId.getId(), new ArrayList<>() );
                 }
 
                 Double a = factorCorrelations.get( component ).get( efId );
@@ -988,7 +988,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
                 if ( a != null && !Double.isNaN( a ) ) {
                     String title = plotname + " " + String.format( "%.2f", a );
-                    List<Double> values = svdo.getFactors().get( efId );
+                    List<Number> values = svdo.getFactors().get( efId );
                     Double[] eigenGene = this.getEigenGene( svdo, component );
                     assert values.size() == eigenGene.length;
 
@@ -1087,7 +1087,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
                     chart.getTitle().setFont( new Font( "SansSerif", Font.BOLD, 12 ) );
 
-                    charts.get( efId ).add( chart );
+                    charts.get( efId.getId() ).add( chart );
                 }
             }
         }
@@ -1100,29 +1100,37 @@ public class ExpressionExperimentQCController extends BaseController {
             String xaxisLabel = componentShorthand + ( component + 1 );
 
             List<Date> dates = svdo.getDates();
-            if ( dates.isEmpty() )
+
+            List<Date> nonNullDates = dates.stream()
+                    .filter( Objects::nonNull )
+                    .collect( Collectors.toList() );
+
+            if ( nonNullDates.isEmpty() )
                 break;
 
-            long secspan = DateUtil.numberOfSecondsBetweenDates( dates );
+            long secspan = ubic.basecode.util.DateUtil.numberOfSecondsBetweenDates( nonNullDates );
 
             if ( component >= MAX_COMP )
                 break;
             Double a = dateCorrelations.get( component );
 
             if ( a != null && !Double.isNaN( a ) ) {
-                Double[] eigenGene = svdo.getvMatrix().getColObj( component );
+                Double[] eigenGene = svdo.getVMatrix().getColObj( component );
 
                 /*
                  * Plot eigengene vs values, add correlation to the plot
                  */
                 TimeSeries series = new TimeSeries( "Dates vs. eigen" + ( component + 1 ) );
-                int i = 0;
-                for ( Date d : dates ) {
+                for ( int i = 0; i < dates.size(); i++ ) {
+                    Date d = dates.get( i );
+                    if ( d == null ) {
+                        continue;
+                    }
                     // if span is less than an hour, retain the minute.
                     if ( secspan < 60 * 60 ) {
-                        series.addOrUpdate( new Minute( d ), eigenGene[i++] );
+                        series.addOrUpdate( new Minute( d ), eigenGene[i] );
                     } else {
-                        series.addOrUpdate( new Hour( d ), eigenGene[i++] );
+                        series.addOrUpdate( new Hour( d ), eigenGene[i] );
                     }
 
                 }
@@ -1317,12 +1325,12 @@ public class ExpressionExperimentQCController extends BaseController {
      *
      * @param svdo SVD value object
      */
-    private void writePCAFactors( ExpressionExperiment ee, SVDValueObject svdo, HttpServletResponse response ) throws Exception {
-        Map<Integer, Map<Long, Double>> factorCorrelations = svdo.getFactorCorrelations();
+    private void writePCAFactors( ExpressionExperiment ee, SVDResult svdo, HttpServletResponse response ) throws Exception {
+        Map<Integer, Map<ExperimentalFactor, Double>> factorCorrelations = svdo.getFactorCorrelations();
         // Map<Integer, Map<Long, Double>> factorPvalues = svdo.getFactorPvalues();
         Map<Integer, Double> dateCorrelations = svdo.getDateCorrelations();
 
-        assert ee.getId().equals( svdo.getId() );
+        assert ee.equals( svdo.getExperimentAnalyzed() );
 
         if ( factorCorrelations.isEmpty() && dateCorrelations.isEmpty() ) {
             this.writePlaceholderImage( response, DEFAULT_QC_IMAGE_SIZE_PX );
@@ -1331,7 +1339,7 @@ public class ExpressionExperimentQCController extends BaseController {
         ee = expressionExperimentService.thawLite( ee ); // need the experimental design
         int maxWidth = 10;
 
-        Map<Long, String> efs = this.getFactorNames( ee, maxWidth );
+        Map<ExperimentalFactor, String> efs = this.getFactorNames( ee, maxWidth );
 
         DefaultCategoryDataset series = new DefaultCategoryDataset();
 
@@ -1343,7 +1351,7 @@ public class ExpressionExperimentQCController extends BaseController {
         for ( Integer component : factorCorrelations.keySet() ) {
             if ( component >= MAX_COMP )
                 break;
-            for ( Long efId : factorCorrelations.get( component ).keySet() ) {
+            for ( ExperimentalFactor efId : factorCorrelations.get( component ).keySet() ) {
                 Double a = factorCorrelations.get( component ).get( efId );
                 String facname = efs.get( efId ) == null ? "?" : efs.get( efId );
                 if ( a != null && !Double.isNaN( a ) ) {
@@ -1398,7 +1406,7 @@ public class ExpressionExperimentQCController extends BaseController {
         ChartUtils.writeChartAsPNG( response.getOutputStream(), chart, width, ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX );
     }
 
-    private void writePCAScree( SVDValueObject svdo, HttpServletResponse response ) throws Exception {
+    private void writePCAScree( SVDResult svdo, HttpServletResponse response ) throws Exception {
         /*
          * Make a scree plot.
          */

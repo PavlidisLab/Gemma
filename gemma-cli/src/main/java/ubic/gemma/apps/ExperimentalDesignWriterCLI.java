@@ -19,15 +19,16 @@
 package ubic.gemma.apps;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
+import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.PrintWriter;
 
@@ -38,9 +39,18 @@ import java.io.PrintWriter;
  */
 public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatingCLI {
 
+    private static final String
+            STANDARD_LOCATION_OPTION = "standardLocation",
+            OUT_FILE_PREFIX_OPTION = "o";
+
     @Autowired
     private BuildInfo buildInfo;
 
+    @Autowired
+    private ExpressionDataFileService expressionDataFileService;
+
+    private boolean standardLocation;
+    @Nullable
     private String outFileName;
 
     @Override
@@ -55,25 +65,33 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
 
     @Override
     protected void buildExperimentOptions( Options options ) {
-        Option outputFileOption = Option.builder( "o" ).hasArg().required().argName( "outFilePrefix" )
-                .desc( "File prefix for saving the output (short name will be appended)" )
-                .longOpt( "outFilePrefix" ).build();
-        options.addOption( outputFileOption );
+        options.addOption( STANDARD_LOCATION_OPTION, "standard-location", false, "Write the experimental design to the standard location." );
+        options.addOption( OUT_FILE_PREFIX_OPTION, "outFilePrefix", true, "File prefix for saving the output (short name will be appended)" );
+        addForceOption( options );
     }
 
     @Override
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
-        outFileName = commandLine.getOptionValue( 'o' );
+        standardLocation = commandLine.hasOption( STANDARD_LOCATION_OPTION );
+        outFileName = commandLine.getOptionValue( OUT_FILE_PREFIX_OPTION );
     }
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
-        ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo );
-        try ( PrintWriter writer = new PrintWriter( outFileName + "_" + FileTools.cleanForFileName( ee.getShortName() ) + ".txt" ) ) {
-            edWriter.write( writer, ee, true );
-            writer.flush();
-        } catch ( IOException exception ) {
-            throw new RuntimeException( exception );
+        if ( standardLocation ) {
+            try {
+                expressionDataFileService.writeOrLocateDesignFile( ee, isForce() );
+            } catch ( IOException e ) {
+                addErrorObject( ee, e );
+            }
+        } else {
+            ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo );
+            try ( PrintWriter writer = new PrintWriter( outFileName + "_" + FileTools.cleanForFileName( ee.getShortName() ) + ".txt" ) ) {
+                edWriter.write( writer, ee, true );
+                writer.flush();
+            } catch ( IOException e ) {
+                addErrorObject( ee, e );
+            }
         }
     }
 }

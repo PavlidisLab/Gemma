@@ -55,7 +55,8 @@ public class BaselineSelection {
             "untreated",
             "wild type control",
             "wild type genotype",
-            "wild type"
+            "wild type",
+            "female" // alphabetically before male.
     );
     /**
      * Ontology terms we treat as baseline. Checked: 2024-08-12
@@ -73,7 +74,8 @@ public class BaselineSelection {
             "http://purl.org/nbirn/birnlex/ontology/BIRNLex-Investigation.owl#birnlex_2201", // control group, old
             "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#wild_type", // retired
             "http://ontology.neuinfo.org/NIF/DigitalEntities/NIF-Investigation.owl#birnlex_2001", // normal control_group (retired)
-            "http://ontology.neuinfo.org/NIF/DigitalEntities/NIF-Investigation.owl#birnlex_2201" // control_group, new version (retired)
+            "http://ontology.neuinfo.org/NIF/DigitalEntities/NIF-Investigation.owl#birnlex_2201", // control_group, new version (retired)
+            "http://purl.obolibrary.org/obo/PATO_0000383" // female
     );
 
     /**

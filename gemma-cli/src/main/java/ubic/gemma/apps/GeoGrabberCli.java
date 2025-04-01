@@ -25,10 +25,10 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
+import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeriesType;
-import ubic.gemma.core.loader.expression.geo.service.GeoBrowser;
-import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
+import ubic.gemma.core.loader.expression.geo.service.*;
 import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
@@ -46,6 +46,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Scans GEO for experiments that are not in Gemma, subject to some filtering criteria, outputs to a file for further
@@ -71,7 +73,15 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
      */
     private static final SimpleRetry<IOException> retryTemplate = new SimpleRetry<>( 5, 500, 1.5, IOException.class, GeoGrabberCli.class.getName() );
 
-    private static final int NCBI_CHUNK_SIZE = 100;
+    /**
+     * Default chunk size to use when querying GEO records.
+     */
+    private static final int DEFAULT_CHUNK_SIZE = 100;
+    /**
+     * Chunk size to use when rewinding.
+     */
+    private static final int REWIND_CHUNK_SIZE = 10 * DEFAULT_CHUNK_SIZE;
+
     private static final DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd", Locale.ENGLISH );
 
     private static final GeoSeriesType[] SERIES_TYPES = new GeoSeriesType[] {
@@ -83,6 +93,31 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
             GeoSeriesType.EXPRESSION_PROFILING_BY_SNP_ARRAY,
             GeoSeriesType.EXPRESSION_PROFILING_BY_TILING_ARRAY
     };
+
+    /**
+     * Header used when browsing or obtaining datasets.
+     */
+    private static final String[] DATASET_HEADER = { "Acc", "ReleaseDate", "Taxa", "Platforms", "AllPlatformsInGemma",
+            "Affy", "NumSamples", "Type", "SuperSeries", "SubSeriesOf", "PubMed", "Title", "Summary", "MeSH",
+            "SampleTerms", "LibraryStrategy", "LibrarySource", "OverallDesign", "Keywords" };
+
+    /**
+     * Preset when seeking records.
+     */
+    public static final GeoRetrieveConfig MINIMAL = GeoRetrieveConfig.builder().build();
+
+    /**
+     * Detailed preset for this CLI used when fetching GEO records.
+     * @see GeoRetrieveConfig#DETAILED
+     */
+    private static final GeoRetrieveConfig DETAILED = GeoRetrieveConfig.builder()
+            .subSeriesStatus( true )
+            .meshHeadings( true )
+            .libraryStrategy( true )
+            .sampleDetails( true )
+            // ignore errors when fetching additional information
+            .ignoreErrors( true )
+            .build();
 
     // operating mode
     private Mode mode;
@@ -105,7 +140,10 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
     private String startFrom = null;
     @Nullable
     private Date startDate = null;
-    private int chunkSize = NCBI_CHUNK_SIZE;
+    private int chunkSize = DEFAULT_CHUNK_SIZE;
+    private boolean ignoreBlacklisted = true;
+    private boolean ignoreAlreadyInGemma = true;
+    private boolean ignoreNoPlatform = true;
 
     @Autowired
     private ExpressionExperimentService ees;
@@ -121,7 +159,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
 
     @Override
     public void afterPropertiesSet() {
-        gbs = new GeoBrowser( ncbiApiKey );
+        gbs = new GeoBrowserImpl( ncbiApiKey );
     }
 
     @Override
@@ -141,33 +179,36 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
 
     @Override
     protected void buildOptions( Options options ) {
-        options.addOption( Option.builder( "output" ).desc( "File path for output (defaults to standard output)" ).argName( "path" ).hasArg().type( Path.class ).build() );
+        options.addOption( Option.builder( "output" )
+                .longOpt( "output" )
+                .hasArg().type( Path.class )
+                .desc( "File path for output (defaults to standard output)" )
+                .build() );
 
         // for retrieving platforms
-        options.addOption( Option.builder( PLATFORMS_OPTION ).desc( "Fetch a list of all platforms instead of experiments (-startdate, -date, -startat and -gselimit are ignored)" ).build() );
+        options.addOption( PLATFORMS_OPTION, false, "Fetch a list of all platforms instead of experiments (-startdate, -date, -startat and -gselimit are ignored)" );
 
         // for retrieving datasets
-        options.addOption( Option.builder( ACCESSION_OPTION ).longOpt( "acc" ).hasArg().desc( "A comma-delimited list of accessions to retrieve from GEO" ).build() );
-        options.addOption( Option.builder( ACCESSION_FILE_OPTION ).longOpt( "file" ).hasArg().desc( "A file containing accessions to retrieve from GEO" ).type( Path.class ).build() );
+        options.addOption( ACCESSION_OPTION, "acc", true, "A comma-delimited list of accessions to retrieve from GEO" );
+        options.addOption( Option.builder( ACCESSION_FILE_OPTION )
+                .longOpt( "file" )
+                .hasArg().type( Path.class )
+                .desc( "A file containing accessions to retrieve from GEO" )
+                .build() );
 
         // for browsing datasets
-        options.addOption(
-                Option.builder( "date" ).longOpt( null ).desc( "A release date to stop the search in format yyyy-MM-dd or yyyy.MM.dd (e.g. 2010.01.12)" )
-                        .argName( "date limit" ).hasArg().build() );
-        options.addOption(
-                Option.builder( "gselimit" ).longOpt( null ).desc( "A GSE at which to stop the search" ).argName( "GSE identifier" ).hasArg()
-                        .build() );
-        options.addOption( Option.builder( "platformLimit" ).longOpt( null ).desc( "Limit to selected platforms" )
-                .argName( "comma-delimited list of GPLs" ).hasArg().build() );
+        options.addOption( "platformLimit", true, "Limit to selected platforms" );
+        options.addOption( "startdate", true, "Attempt to 'fast-rewind' to the given date in format yyyy-MM-dd or yyyy.MM.dd and continue retrieving from there" );
+        options.addOption( "date", true, "A release date to stop the search in format yyyy-MM-dd or yyyy.MM.dd (e.g. 2010.01.12). Records on that date will not be processed." );
+        options.addOption( "startat", true, "Attempt to 'fast-rewind' to the given GSE ID and continue retrieving from there " );
+        options.addOption( "gselimit", true, "A GSE at which to stop the search. Record with the GSE ID will not be processed." );
+        options.addOption( "raw", false, "Display raw, unfiltered results from GEO. Datasets that are blacklisted or already in Gemma will be included in the output." );
 
-        options.addOption(
-                Option.builder( "startat" ).hasArg().argName( "GSE ID" ).desc( "Attempt to 'fast-rewind' to the given GSE ID and continue retrieving from there " ).build() );
-
-        options.addOption(
-                Option.builder( "startdate" ).hasArg().argName( "date" ).desc( "Attempt to 'fast-rewind' to the given date in format yyyy-MM-dd or yyyy.MM.dd " +
-                        "and continue retrieving from there " ).build() );
-
-        options.addOption( Option.builder( "chunkSize" ).hasArg().type( Number.class ).desc( "Chunk size to use when retrieving GEO records (defaults to " + NCBI_CHUNK_SIZE + ")" ).build() );
+        options.addOption( Option.builder( "chunkSize" )
+                .longOpt( "chunk-size" )
+                .hasArg().type( Number.class )
+                .desc( "Chunk size to use when retrieving GEO records (defaults to " + DEFAULT_CHUNK_SIZE + ")" )
+                .build() );
     }
 
     @Override
@@ -192,7 +233,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                 // this is a user input, so we have to respect its locale
                 this.dateLimit = DateUtils.parseDate( commandLine.getOptionValue( "date" ), "yyyy-MM-dd", "yyyy.MM.dd" );
             } catch ( ParseException e ) {
-                throw new IllegalArgumentException( "Could not parse date " + commandLine.getOptionValue( "date" ) + ", use the yyyy-MM-dd or yyyy.MM.dd format." );
+                throw new IllegalArgumentException( "Could not parse -date: " + commandLine.getOptionValue( "date" ) + ", use the yyyy-MM-dd or yyyy.MM.dd format." );
             }
         }
         if ( commandLine.hasOption( "gselimit" ) ) {
@@ -215,13 +256,20 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                 // this is a user input, so we have to respect its locale
                 this.startDate = DateUtils.parseDate( commandLine.getOptionValue( "startdate" ), "yyyy-MM-dd", "yyyy.MM.dd" );
             } catch ( ParseException e ) {
-                throw new IllegalArgumentException( "Could not parse date " + commandLine.getOptionValue( "startdate" ) + ", use the yyyy-MM-dd or yyyy.MM.dd format." );
+                throw new IllegalArgumentException( "Could not parse start date: " + commandLine.getOptionValue( "startdate" ) + ", use the yyyy-MM-dd or yyyy.MM.dd format." );
             }
             if ( dateLimit != null ) {
-                if ( dateLimit.after( startDate ) ) {
-                    throw new IllegalArgumentException( "startdate has to be later than the -date option" );
+                if ( !beforeOrEquals( dateLimit, startDate ) ) {
+                    throw new IllegalArgumentException( "The -date option: " + dateLimit + " has to be earlier than -startdate: " + startDate + "." );
                 }
             }
+        }
+
+        if ( commandLine.hasOption( "raw" ) ) {
+            log.warn( "The -raw option is specified, no filtering will be applied on GEO records. This option is not suitable for a GEO scrape." );
+            ignoreBlacklisted = false;
+            ignoreAlreadyInGemma = false;
+            ignoreNoPlatform = false;
         }
 
         if ( commandLine.hasOption( "chunkSize" ) ) {
@@ -260,20 +308,17 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         CSVFormat tsvFormat = CSVFormat.TDF.builder()
                 .setHeader( "Acc", "ReleaseDate", "Taxa", "Title", "Summary", "TechType" )
                 .build();
-        Collection<GeoRecord> allGEOPlatforms = gbs.getAllGEOPlatforms( getAllowedTaxa() );
+        Collection<GeoRecord> allGEOPlatforms = gbs.getAllGeoRecords( GeoRecordType.PLATFORM, getAllowedTaxa(), 10000 );
         log.info( "Fetched " + allGEOPlatforms.size() + " records" );
         try ( CSVPrinter os = tsvFormat.print( getOutputWriter() ) ) {
             for ( GeoRecord geoRecord : allGEOPlatforms ) {
                 os.printRecord( geoRecord.getGeoAccession(), dateFormat.format( geoRecord.getReleaseDate() ),
                         StringUtils.join( geoRecord.getOrganisms(), "," ), geoRecord.getTitle(),
                         geoRecord.getSummary(), geoRecord.getSeriesType() );
+                os.flush();
             }
         }
     }
-
-    private static final String[] DATASET_HEADER = { "Acc", "ReleaseDate", "Taxa", "Platforms", "AllPlatformsInGemma",
-            "Affy", "NumSamples", "Type", "SuperSeries", "SubSeriesOf", "PubMed", "Title", "Summary", "MeSH",
-            "SampleTerms", "LibraryStrategy", "OverallDesign" };
 
     private void getDatasets( Collection<String> accessions ) throws IOException {
         if ( accessions.isEmpty() ) {
@@ -284,7 +329,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                 .setHeader( DATASET_HEADER )
                 .build();
         try ( CSVPrinter os = tsvFormat.print( getOutputWriter() ) ) {
-            for ( GeoRecord record : gbs.getGeoRecords( accessions, true ) ) {
+            for ( GeoRecord record : gbs.getGeoRecords( GeoRecordType.SERIES, accessions, DETAILED ) ) {
                 writeDataset( record, areAllPlatformsInGemma( record, seenPlatforms ), isAffymetrix( record, seenPlatforms ), os );
             }
         }
@@ -303,7 +348,9 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         searchMessage += "\n\tSeries Types: " + seriesTypes.stream().map( GeoSeriesType::getIdentifier ).collect( Collectors.joining( ", " ) );
         log.info( searchMessage );
 
-        int start = seekRewindPoint( startFrom, gseLimit, startDate, dateLimit, limitPlatform, allowedTaxa, seriesTypes );
+        GeoQuery query = searchGeoSeries( allowedTaxa, limitPlatform, seriesTypes );
+
+        int start = seekRewindPoint( query, startFrom, gseLimit, startDate, dateLimit );
         if ( start == -1 ) {
             log.info( "Could not find the rewind point." );
             return;
@@ -315,60 +362,60 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         try ( CSVPrinter os = tsvFormat.print( getOutputWriter() ) ) {
             int numProcessed = 0;
             int numUsed = 0;
-            for ( ; ; start += chunkSize ) {
+            int totalRecords = Integer.MAX_VALUE;
+            for ( ; start < totalRecords; start += chunkSize ) {
                 log.debug( "Searching from " + start + ", seeking " + chunkSize + " records" );
 
-                List<GeoRecord> recs = getGeoRecords( start, chunkSize, allowedTaxa, true, limitPlatform, seriesTypes );
-
-                if ( recs.isEmpty() ) {
-                    log.info( "Seem to have hit end of records, bailing" );
-                    break;
-                }
+                Slice<GeoRecord> recs = getGeoRecords( query, start, chunkSize, true );
+                totalRecords = requireNonNull( recs.getTotalElements() ).intValue();
 
                 log.debug( "Retrieved " + recs.size() + " GEO records." ); // we skip ones that are not using taxa of interest
 
                 for ( GeoRecord geoRecord : recs ) {
+                    if ( numProcessed > 0 && numProcessed % 50 == 0 ) {
+                        log.info( "Processed " + numProcessed + " GEO records, retained " + numUsed + " so far" );
+                    }
+                    numProcessed++;
+
                     // check ending conditions, especially if we are fast-rewinding
                     if ( dateLimit != null && beforeOrEquals( geoRecord.getReleaseDate(), dateLimit ) ) {
                         log.info( "Stopping as reached date limit" );
-                        break;
+                        return;
                     }
                     if ( gseLimit != null && gseLimit.equals( geoRecord.getGeoAccession() ) ) {
                         log.info( "Stopping as have reached " + gseLimit );
-                        break;
+                        return;
                     }
 
                     log.debug( "Processing " + geoRecord.getGeoAccession() + " released on " + geoRecord.getReleaseDate() + "..." );
-
-                    numProcessed++;
-                    if ( numProcessed % 50 == 0 ) {
-                        log.info( "Processed " + numProcessed + " GEO records, retained " + numUsed + " so far" );
-                    }
 
                     if ( !seen.add( geoRecord.getGeoAccession() ) ) {
                         log.warn( geoRecord + ": skipping, this dataset was already seen." ); // this would be a bug IMO, want to avoid!
                         continue;
                     }
 
-                    if ( ees.isBlackListed( geoRecord.getGeoAccession() ) ) {
+                    if ( ignoreBlacklisted && ees.isBlackListed( geoRecord.getGeoAccession() ) ) {
+                        log.warn( geoRecord + ": skipping, blacklisted." );
                         continue;
                     }
 
-                    if ( ees.findByShortName( geoRecord.getGeoAccession() ) != null ) {
+                    if ( ignoreAlreadyInGemma && ees.findByShortName( geoRecord.getGeoAccession() ) != null ) {
+                        log.debug( geoRecord + ": skipping, already in Gemma (by short name)." );
                         continue;
                     }
 
-                    if ( !ees.findByAccession( geoRecord.getGeoAccession() ).isEmpty() ) {
+                    if ( ignoreAlreadyInGemma && !ees.findByAccession( geoRecord.getGeoAccession() ).isEmpty() ) {
+                        log.debug( geoRecord + ": skipping, already in Gemma (by accession)." );
                         continue;
                     }
 
-                    if ( StringUtils.isBlank( geoRecord.getPlatform() ) ) {
+                    if ( ignoreNoPlatform && StringUtils.isBlank( geoRecord.getPlatform() ) ) {
                         log.warn( geoRecord.getGeoAccession() + ": skipping, does not have any platform." );
                         continue;
                     }
 
                     // we skip if all the platforms for the GSE are blacklisted
-                    if ( areAllPlatformsBlacklisted( geoRecord ) ) {
+                    if ( ignoreBlacklisted && areAllPlatformsBlacklisted( geoRecord ) ) {
                         log.warn( geoRecord.getGeoAccession() + ": skipping, all platforms are blacklisted." );
                         continue;
                     }
@@ -385,24 +432,26 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
      * TODO: use a binary search for date-based rewinding
      * @return the rewind point if found, otherwise -1
      */
-    private int seekRewindPoint( @Nullable String startFrom, @Nullable String gseLimit, @Nullable Date startDate, @Nullable Date dateLimit, @Nullable Collection<String> limitPlatform, Collection<String> allowedTaxa, Collection<GeoSeriesType> seriesTypes ) throws IOException {
+    private int seekRewindPoint( GeoQuery query, @Nullable String startFrom, @Nullable String gseLimit, @Nullable Date startDate, @Nullable Date dateLimit ) throws IOException {
         if ( startFrom == null && startDate == null ) {
             return 0;
         } else if ( startFrom != null ) {
-            log.info( "Seeking rewind point from " + startFrom );
+            return seekRewindPointByAccession( query, startFrom, gseLimit, dateLimit );
         } else {
-            log.info( "Seeking rewind point from " + startDate );
+            return seekRewindPointByDate( query, startDate, dateLimit );
         }
+    }
+
+    private int seekRewindPointByAccession( GeoQuery query, String startFrom, @Nullable String gseLimit, @Nullable Date dateLimit ) throws IOException {
+        log.info( "Seeking rewind point from " + startFrom + " with chunks of " + REWIND_CHUNK_SIZE + " records..." );
         // we're not fetching details, so we can handle larger chunks
-        int rewindChunkSize = 10 * NCBI_CHUNK_SIZE;
-        for ( int start = 0; ; start += rewindChunkSize ) {
-            List<GeoRecord> records = getGeoRecords( start, rewindChunkSize, allowedTaxa, false, limitPlatform, seriesTypes );
-            if ( records.isEmpty() ) {
-                log.info( "Reached end of records while seeking." );
-                return -1;
-            }
+        int totalRecords = Integer.MAX_VALUE;
+        for ( int start = 0; start < totalRecords; start += REWIND_CHUNK_SIZE ) {
+            Slice<GeoRecord> records = getGeoRecords( query, start, REWIND_CHUNK_SIZE, false );
+            totalRecords = requireNonNull( records.getTotalElements() ).intValue();
             GeoRecord firstRecord = records.iterator().next();
-            log.info( "Currently at " + firstRecord.getGeoAccession() + " released on " + firstRecord.getReleaseDate() );
+            log.info( String.format( "Currently at %s (%d/%d) released on %s", firstRecord.getGeoAccession(),
+                    start, totalRecords, firstRecord.getReleaseDate() ) );
             for ( int i = 0; i < records.size(); i++ ) {
                 GeoRecord geoRecord = records.get( i );
                 // check ending conditions, especially if we are fast-rewinding
@@ -415,11 +464,41 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                     return -1;
                 }
                 if ( startFrom != null && startFrom.equals( geoRecord.getGeoAccession() ) ) {
-                    log.info( "Located requested starting point of " + startFrom + ", resuming detailed queries at " + i + "." );
-                    return i;
-                } else if ( startDate != null && beforeOrEquals( geoRecord.getReleaseDate(), startDate ) ) {
-                    log.info( "Located requested starting date of " + startDate + ", resuming detailed queries at " + i + "." );
-                    return i;
+                    log.info( "Located requested starting point of " + startFrom + ", resuming detailed queries at " + ( start + i ) + "." );
+                    return start + i;
+                }
+            }
+        }
+        log.info( "Reached end of records while seeking rewind point." );
+        return -1;
+    }
+
+    private int seekRewindPointByDate( GeoQuery query, Date startDate, @Nullable Date dateLimit ) throws IOException {
+        log.info( "Seeking rewind point from " + startDate + " using a binary search..." );
+        // we're not fetching details, so we can handle larger chunks
+        int start = 0;
+        int end = query.getTotalRecords();
+        while ( true ) {
+            int pos = start + ( ( end - start ) / 2 );
+            Slice<GeoRecord> records = getGeoRecords( query, pos, 1, false );
+            GeoRecord record = records.iterator().next();
+
+            log.info( "Currently at " + record.getGeoAccession() + " (" + pos + "/" + start + ".." + end + ") released on " + record.getReleaseDate() );
+
+            if ( beforeOrEquals( record.getReleaseDate(), startDate ) ) {
+                end = pos;
+            } else {
+                start = pos + 1;
+            }
+
+            if ( start == end ) {
+                // check ending conditions, especially if we are fast-rewinding
+                if ( dateLimit != null && beforeOrEquals( record.getReleaseDate(), dateLimit ) ) {
+                    log.info( "Stopped rewinding as reached date limit." );
+                    return -1;
+                } else {
+                    log.info( "Located requested starting date of " + startDate + ", resuming detailed queries at " + pos + "." );
+                    return start; // done, I guess?
                 }
             }
         }
@@ -441,8 +520,12 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         return a != null && ( a.equals( b ) || a.before( b ) );
     }
 
-    private Slice<GeoRecord> getGeoRecords( int start, int chunkSize, Collection<String> allowedTaxa, boolean fetchDetails, @Nullable Collection<String> limitPlatform, Collection<GeoSeriesType> seriesTypes ) throws IOException {
-        return retryTemplate.execute( ( attempt, lastAttempt ) -> gbs.searchGeoRecords( null, null, allowedTaxa, limitPlatform, seriesTypes, start, chunkSize, fetchDetails ), "fetching GEO records" );
+    private GeoQuery searchGeoSeries( Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatform, Collection<GeoSeriesType> seriesTypes ) throws IOException {
+        return retryTemplate.execute( ( attempt, lastAttempt ) -> gbs.searchGeoRecords( GeoRecordType.SERIES, null, null, allowedTaxa, limitPlatform, seriesTypes ), "searching GEO records" );
+    }
+
+    private Slice<GeoRecord> getGeoRecords( GeoQuery query, int start, int chunkSize, boolean fetchDetails ) throws IOException {
+        return retryTemplate.execute( ( attempt, lastAttempt ) -> gbs.retrieveGeoRecords( query, start, chunkSize, fetchDetails ? DETAILED : MINIMAL ), "fetching GEO records" );
     }
 
     private Appendable getOutputWriter() throws IOException {
@@ -496,12 +579,41 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         return false;
     }
 
+    /**
+     * Stop words to exclude when extracting keywords from GEO records.
+     */
+    private static final Set<String> stopWords = new HashSet<>( Arrays.asList(
+            "a", "an", "and", "are", "as", "at", "be", "but", "by", "for", "if", "in", "into", "is", "it", "no", "not",
+            "of", "on", "or", "such", "that", "the", "their", "then", "there", "these", "they", "this", "to", "was",
+            "will", "with" ) );
+
+    /**
+     * Extract keywords from a GEO record.
+     */
+    Set<String> extractKeywords( GeoRecord geoRecord ) {
+        String allText = geoRecord.getTitle() + "\n"
+                + geoRecord.getSummary() + "\n"
+                + geoRecord.getOverallDesign() + "\n"
+                + geoRecord.getSampleDescriptions() + "\n"
+                + geoRecord.getSampleExtractProtocols() + "\n"
+                + geoRecord.getSampleLabelProtocols() + "\n"
+                + geoRecord.getSampleDataProcessing();
+        HashSet<String> keywords = new HashSet<>( Arrays.asList( StringUtils.split( allText.toLowerCase()
+                // this will split on any punctuation except hyphens
+                .replaceAll( "[^\\P{Punct}-]", " " ) ) ) );
+        keywords.removeAll( stopWords );
+        return keywords;
+    }
+
     private void writeDataset( GeoRecord geoRecord, boolean allPlatformsInGemma, boolean isAffymetrix, CSVPrinter os ) throws IOException {
         os.printRecord( geoRecord.getGeoAccession(), dateFormat.format( geoRecord.getReleaseDate() ),
                 StringUtils.join( geoRecord.getOrganisms(), "," ), geoRecord.getPlatform(), allPlatformsInGemma,
                 isAffymetrix, geoRecord.getNumSamples(), geoRecord.getSeriesType(), geoRecord.isSuperSeries(),
                 geoRecord.getSubSeriesOf(), StringUtils.join( geoRecord.getPubMedIds(), "," ), geoRecord.getTitle(), geoRecord.getSummary(),
-                StringUtils.join( geoRecord.getMeshHeadings(), "," ), geoRecord.getSampleDetails(), geoRecord.getLibraryStrategy(),
-                StringUtils.replace( geoRecord.getOverallDesign(), "\n", "\\n" ) );
+                StringUtils.join( geoRecord.getMeshHeadings(), "," ), geoRecord.getSampleDetails(),
+                geoRecord.getLibraryStrategy(), geoRecord.getLibrarySource(),
+                StringUtils.replace( geoRecord.getOverallDesign(), "\n", "\\n" ),
+                extractKeywords( geoRecord ).stream().sorted().collect( Collectors.joining( ";" ) ) );
+        os.flush();
     }
 }

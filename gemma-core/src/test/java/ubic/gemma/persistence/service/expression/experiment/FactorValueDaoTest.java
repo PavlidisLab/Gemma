@@ -10,6 +10,8 @@ import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseDatabaseTest;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
+import ubic.gemma.model.common.measurement.MeasurementType;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
@@ -37,6 +39,45 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
 
     @Autowired
     private FactorValueDao factorValueDao;
+
+    @Test
+    public void testFind() {
+        ExperimentalDesign ed = new ExperimentalDesign();
+        sessionFactory.getCurrentSession().persist( ed );
+
+        ExperimentalFactor factor = ExperimentalFactor.Factory.newInstance( "test", FactorType.CONTINUOUS );
+        factor.setExperimentalDesign( ed );
+        sessionFactory.getCurrentSession().persist( factor );
+
+        FactorValue fv2 = FactorValue.Factory.newInstance( factor );
+        Measurement m = Measurement.Factory.newInstance( MeasurementType.ABSOLUTE, "1.0", PrimitiveType.DOUBLE );
+        sessionFactory.getCurrentSession().persist( m );
+        fv2.setMeasurement( m );
+        Statement s2 = Statement.Factory.newInstance();
+        s2.setSubject( "test" );
+        fv2.getCharacteristics().add( s2 );
+        fv2.setValue( "1.0" );
+        fv2 = factorValueDao.create( fv2 );
+
+        FactorValue fv;
+
+        // by measurement
+        fv = FactorValue.Factory.newInstance( factor );
+        fv.setMeasurement( fv2.getMeasurement() );
+        assertEquals( fv2, factorValueDao.find( fv ) );
+
+        // by statements
+        fv = FactorValue.Factory.newInstance( factor );
+        Statement s = Statement.Factory.newInstance();
+        s.setSubject( "test" );
+        fv.getCharacteristics().add( s );
+        assertEquals( fv2, factorValueDao.find( fv ) );
+
+        // by value (deprecated)
+        fv = FactorValue.Factory.newInstance( factor );
+        fv.setValue( "1.0" );
+        assertEquals( fv2, factorValueDao.find( fv ) );
+    }
 
     @Test
     public void testFactorValueStatementsNotListedInOldStyleCharacteristics() {

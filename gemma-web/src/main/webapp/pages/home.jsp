@@ -26,7 +26,7 @@
             standardized
             procedures. We have especially good coverage of experiments relevant to the nervous system. See the <a
                 href="https://pavlidislab.github.io/Gemma/">documentation</a> for more information.
-            Gemma was and developed and is maintained by the <a href="https://pavlab.msl.ubc.ca/">Pavlidis
+            Gemma was developed and is maintained by the <a href="https://pavlab.msl.ubc.ca/">Pavlidis
             group at UBC</a>.
         </div>
 

@@ -136,6 +136,8 @@ public class OpenApiTest extends AbstractJUnit4SpringContextTests {
         }
         assertThat( config.getResourcePackages() )
                 .containsExactly( getClass().getPackage().getName() );
+        assertThat( config.getDefaultResponseCode() )
+                .isEqualTo( "200" );
         assertThat( spec.getInfo().getVersion() )
                 .isNotBlank()
                 .isEqualTo( config.getOpenAPI().getInfo().getVersion() );
@@ -144,6 +146,7 @@ public class OpenApiTest extends AbstractJUnit4SpringContextTests {
     @Data
     private static class OpenApiConfiguration {
         private String[] resourcePackages;
+        private String defaultResponseCode;
         private OpenAPI openAPI;
     }
 
@@ -158,7 +161,7 @@ public class OpenApiTest extends AbstractJUnit4SpringContextTests {
             PathItem operations = spec.getPaths().get( path );
             assertions.assertThat( operations.getGet().getResponses() )
                     .describedAs( "GET %s (%s)", path, operations.getGet().getOperationId() )
-                    .hasKeySatisfying( new Condition<>( entry -> entry.equals( "default" )
+                    .hasKeySatisfying( new Condition<>( entry -> entry.equals( "200" )
                             || entry.equals( "201" )
                             || entry.equals( "204" )
                             || entry.startsWith( "3" ),
@@ -214,7 +217,7 @@ public class OpenApiTest extends AbstractJUnit4SpringContextTests {
     @Test
     public void testGetDatasetsCategories() {
         assertThat( spec.getPaths().get( "/datasets/categories" ).getGet().getResponses() )
-                .hasEntrySatisfying( "default", response -> {
+                .hasEntrySatisfying( "200", response -> {
                     assertThat( response.getContent().get( "application/json" ).getSchema().get$ref() )
                             .isEqualTo( "#/components/schemas/QueriedAndFilteredAndInferredAndLimitedResponseDataObjectCategoryWithUsageStatisticsValueObject" );
                 } )
@@ -281,10 +284,10 @@ public class OpenApiTest extends AbstractJUnit4SpringContextTests {
     @Test
     public void testExamplesFromClasspath() throws IOException {
         assertThat( spec.getPaths().get( "/resultSets/{resultSet}" ).getGet().getResponses()
-                .get( "default" )
+                .get( "200" )
                 .getContent()
                 .get( "text/tab-separated-values; charset=UTF-8; q=0.9" )
                 .getExample() )
-                .isEqualTo( IOUtils.resourceToString(  "/restapidocs/examples/result-set.tsv" , StandardCharsets.UTF_8 ) );
+                .isEqualTo( IOUtils.resourceToString( "/restapidocs/examples/result-set.tsv", StandardCharsets.UTF_8 ) );
     }
 }

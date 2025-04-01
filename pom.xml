@@ -35,7 +35,7 @@
 	</issueManagement>
 	<ciManagement>
 		<system>Jenkins</system>
-		<url>https://jenkins.pavlab.msl.ubc.ca/job/Gemma</url>
+		<url>https://jenkins.pavlab.msl.ubc.ca/job/Gemma/</url>
 	</ciManagement>
 	<licenses>
 		<license>
@@ -608,6 +608,7 @@
 				<version>12.1.0</version>
 				<configuration>
 					<assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
+					<yarnAuditAnalyzerEnabled>false</yarnAuditAnalyzerEnabled>
 				</configuration>
 			</plugin>
 			<plugin>

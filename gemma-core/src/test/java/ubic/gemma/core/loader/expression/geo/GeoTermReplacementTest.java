@@ -108,6 +108,10 @@ public class GeoTermReplacementTest {
                 if ( valueUri.startsWith( "http://purl.obolibrary.org/obo/HANCESTRO_" ) ) {
                     continue;
                 }
+                // FIXME: enable AFPO
+                if ( valueUri.startsWith( "http://purl.obolibrary.org/obo/AfPO_" ) ) {
+                    continue;
+                }
                 // FIXME: enable GO
                 if ( valueUri.startsWith( "http://purl.obolibrary.org/obo/GO_" ) ) {
                     continue;

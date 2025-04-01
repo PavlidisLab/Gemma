@@ -21,6 +21,7 @@ import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -35,16 +36,35 @@ import java.util.Set;
 public interface SVDService {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    SVDValueObject retrieveSvd( ExpressionExperiment ee );
-
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    SVDValueObject svd( ExpressionExperiment ee ) throws SVDException;
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Map<ProbeLoading, DoubleVectorValueObject> getTopLoadedVectors( ExpressionExperiment ee, int component, int count );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     boolean hasPca( ExpressionExperiment ee );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    SVDResult getSvd( ExpressionExperiment ee );
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    SVDResult svd( ExpressionExperiment ee ) throws SVDException;
+
+    /**
+     * Compare ExperimentalFactors and BioAssay.processingDates to the PCs.
+     *
+     * @param ee the experiment
+     * @return SVD VO
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    SVDResult getSvdFactorAnalysis( ExpressionExperiment ee );
+
+    /**
+     * Compare ExperimentalFactors and BioAssay.processingDates to the PCs.
+     *
+     * @param pca PCA
+     * @return SVD VO
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    SVDResult getSvdFactorAnalysis( PrincipalComponentAnalysis pca );
 
     /**
      * @param experimentalFactors to consider
@@ -55,22 +75,4 @@ public interface SVDService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Set<ExperimentalFactor> getImportantFactors( ExpressionExperiment ee,
             Collection<ExperimentalFactor> experimentalFactors, Double importanceThreshold );
-
-    /**
-     * Compare ExperimentalFactors and BioAssay.processingDates to the PCs.
-     *
-     * @param pca PCA
-     * @return SVD VO
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    SVDValueObject svdFactorAnalysis( PrincipalComponentAnalysis pca );
-
-    /**
-     * Compare ExperimentalFactors and BioAssay.processingDates to the PCs.
-     *
-     * @param ee the experiment
-     * @return SVD VO
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    SVDValueObject svdFactorAnalysis( ExpressionExperiment ee );
 }
