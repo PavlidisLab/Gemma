@@ -447,6 +447,7 @@
             <dwr:include method="findTerm"/>
             <dwr:include method="getCategoryTerms"/>
             <dwr:include method="getRelationTerms"/>
+            <dwr:include method="getExperimentTags"/>
             <dwr:include method="createExperimentTag"/>
             <dwr:include method="removeExperimentTag"/>
             <dwr:include method="createBioMaterialTag"/>
@@ -681,7 +682,8 @@
                      javascript="FreeTextGeneResultsValueObject">
             <dwr:exclude method="securableClass"/>
         </dwr:convert>
-        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GOGroupValueObject" javascript="GOGroupValueObject">
+        <dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GOGroupValueObject"
+                     javascript="GOGroupValueObject">
             <dwr:exclude method="securableClass"/>
         </dwr:convert>
 

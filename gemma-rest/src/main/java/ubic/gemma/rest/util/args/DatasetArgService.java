@@ -1,6 +1,5 @@
 package ubic.gemma.rest.util.args;
 
-import lombok.Builder;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +19,6 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.MalformedArgException;
 
 import javax.annotation.Nullable;
@@ -30,7 +28,6 @@ import javax.ws.rs.ServiceUnavailableException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Service

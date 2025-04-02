@@ -1622,7 +1622,7 @@ public class ExpressionExperimentController {
                 ExpressionExperimentController.log.info( "Searching pubmed on line .." );
 
                 // search for pubmedId
-                PubMedSearch pms = new PubMedSearch( Settings.getString( "entrez.efetch.apikey" ));
+                PubMedSearch pms = new PubMedSearch( Settings.getString( "entrez.efetch.apikey" ) );
                 Collection<String> searchTerms = new ArrayList<>();
                 searchTerms.add( pubmedId );
                 Collection<BibliographicReference> publications;

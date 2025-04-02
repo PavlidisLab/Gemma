@@ -31,6 +31,7 @@ import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.search.ParseSearchException;
 import ubic.gemma.core.search.SearchException;
+import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -40,6 +41,7 @@ import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.annotation.Nullable;
@@ -49,6 +51,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 /**
  * Controller for methods involving annotation of experiments (and potentially other things); delegates to
@@ -94,6 +97,16 @@ public class AnnotationController {
                 EntityNotFoundException::new, "No such BioMaterial with id=" + id );
         bm = bioMaterialService.thaw( bm );
         bioMaterialService.addCharacteristic( bm, vc );
+    }
+
+    /**
+     * Ajax
+     */
+    public Set<AnnotationValueObject> getExperimentTags( EntityDelegator<ExpressionExperiment> e ) {
+        ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( e.getId(), EntityNotFoundException::new, "No such experiment with ID " + e.getId() );
+        return ee.getCharacteristics().stream()
+                .map( c -> new AnnotationValueObject( c, ExpressionExperiment.class ) )
+                .collect( Collectors.toSet() );
     }
 
     /**

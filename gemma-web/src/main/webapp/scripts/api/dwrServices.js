@@ -21,6 +21,9 @@ AnnotationController._path = ctxBasePath + '/dwr';
 AnnotationController.findTerm = function( p0, p1, callback ) {
     dwr.engine._execute( AnnotationController._path, 'AnnotationController', 'findTerm', p0, p1, callback );
 };
+AnnotationController.getExperimentTags = function( p0, callback ) {
+    dwr.engine._execute( AnnotationController._path, 'AnnotationController', 'getExperimentTags', p0, callback );
+};
 AnnotationController.createExperimentTag = function( p0, p1, callback ) {
     dwr.engine._execute( AnnotationController._path, 'AnnotationController', 'createExperimentTag', p0, p1, callback );
 };

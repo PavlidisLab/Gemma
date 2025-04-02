@@ -237,7 +237,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
             layout: 'fit',
             items: [new Gemma.AnnotationGrid({
                 id: 'annotator-grid',
-                readMethod: ExpressionExperimentController.getAnnotation,
+                readMethod: AnnotationController.getExperimentTags,
                 writeMethod: AnnotationController.createExperimentTag,
                 removeMethod: AnnotationController.removeExperimentTag,
                 readParams: [{
