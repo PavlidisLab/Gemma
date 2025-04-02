@@ -548,7 +548,7 @@ public class ExpressionExperimentServiceImpl
         Set<String> seenTerms = new HashSet<>();
 
         expressionExperimentDao.getExperimentAnnotations( expressionExperiment, false ).stream()
-                .filter( this::filterBioMaterialAnnotation )
+                .filter( this::filterAnnotation )
                 .map( c -> new AnnotationValueObject( c, ExpressionExperiment.class ) )
                 .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
 

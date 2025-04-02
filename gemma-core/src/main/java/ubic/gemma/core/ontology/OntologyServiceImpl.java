@@ -333,7 +333,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         searchForCharacteristics.stop();
 
         StopWatch searchForGenesTimer = StopWatch.createStarted();
-        this.searchForGenes( queryString, taxon, results );
+        // this.searchForGenes( queryString, taxon, results );
         searchForGenesTimer.stop();
 
         // get ontology terms
