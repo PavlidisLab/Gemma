@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,20 +19,18 @@
 package ubic.gemma.core.loader.expression.geo.fetcher;
 
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.loader.expression.geo.GeoMetadataFormat;
+import ubic.gemma.core.loader.expression.geo.util.GeoFilePaths;
 
 public class SeriesFetcher extends GeoFetcher {
 
     @Override
     protected String formRemoteFilePath( String identifier ) {
-        // ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE56nnn/GSE56785/soft/GSE56785_family.soft.gz
-        // the GSE ID is changed to GSEnnn; if the GSE ID has more than three digits, then the previous digits are retained.
-        String idroot = identifier.replaceFirst( "(GSE[0-9]*?)[0-9]{1,3}$", "$1nnn" );
-        return remoteBaseDir + "/" + idroot + "/" + identifier + "/soft/" + identifier + "_family.soft.gz";
+        return GeoFilePaths.getSeriesFamilyFilePath( identifier, GeoMetadataFormat.SOFT );
     }
 
     @Override
     protected void initConfig() {
         this.localBasePath = Settings.getString( "geo.local.datafile.basepath" );
-        this.remoteBaseDir = Settings.getString( "geo.remote.seriesDir" );
     }
 }

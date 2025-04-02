@@ -18,9 +18,9 @@
  */
 package ubic.gemma.core.loader.expression.geo.fetcher;
 
-import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.loader.expression.geo.GeoMetadataFormat;
+import ubic.gemma.core.loader.expression.geo.util.GeoFilePaths;
 
 /**
  * Fetch GEO "GPLXXX_family.soft.gz" files
@@ -31,19 +31,11 @@ public class PlatformFetcher extends GeoFetcher {
 
     @Override
     protected String formRemoteFilePath( String identifier ) {
-        String idroot = identifier.replaceFirst( "(GPL[0-9]*?)[0-9]{1,3}$", "$1nnn" );
-        return remoteBaseDir + "/" + idroot + "/" + identifier + "/soft/" + identifier + "_family.soft.gz";
+        return GeoFilePaths.getPlatformFamilyFilePath( identifier, GeoMetadataFormat.SOFT );
     }
 
     @Override
     protected void initConfig() {
         this.localBasePath = Settings.getString( "geo.local.datafile.basepath" );
-        this.remoteBaseDir = Settings.getString( "geo.remote.platformDir" );
-        if ( StringUtils.isBlank( remoteBaseDir ) ) {
-            throw new RuntimeException(
-                    new ConfigurationException( "geo.remote.platformDir was not defined in resource bundle" ) );
-        }
-
     }
-
 }

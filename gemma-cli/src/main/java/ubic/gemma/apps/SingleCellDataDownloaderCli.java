@@ -18,16 +18,18 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import ubic.gemma.cli.util.AbstractCLI;
 import ubic.gemma.core.loader.expression.geo.GeoFamilyParser;
+import ubic.gemma.core.loader.expression.geo.GeoMetadataFormat;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
+import ubic.gemma.core.loader.expression.geo.util.GeoFilePaths;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactoryImpl;
-import ubic.gemma.cli.util.AbstractCLI;
 import ubic.gemma.core.util.ProgressInputStream;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -474,8 +476,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
 
     @Nullable
     private GeoSeries readSeriesFromGeo( String accession ) throws IOException {
-        String remoteFile = String.format( "geo/series/%snnn/%s/soft/%s_family.soft.gz",
-                accession.substring( 0, accession.length() - 3 ), accession, accession );
+        String remoteFile = GeoFilePaths.getSeriesFamilyFilePath( accession, GeoMetadataFormat.SOFT );
         URL softFileUrl = new URL( "ftp://ftp.ncbi.nlm.nih.gov/" + remoteFile );
         Path dest = geoSeriesDownloadPath.toPath().resolve( accession ).resolve( accession + ".soft.gz" );
         boolean download = true;

@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,9 +18,8 @@
  */
 package ubic.gemma.core.loader.genome.gene.ncbi;
 
-import org.apache.commons.configuration2.ex.ConfigurationException;
-import ubic.gemma.core.loader.util.fetcher.FtpArchiveFetcher;
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.loader.util.fetcher.FtpArchiveFetcher;
 
 import java.io.File;
 
@@ -31,6 +30,8 @@ import java.io.File;
  * @author pavlidis
  */
 public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
+
+    private String remoteBaseDir;
 
     public NCBIGeneFileFetcher() {
         super();
@@ -43,12 +44,6 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
     public void initConfig() {
         this.localBasePath = Settings.getString( "ncbi.local.datafile.basepath" );
         this.remoteBaseDir = Settings.getString( "ncbi.remote.gene.basedir" );
-
-        if ( remoteBaseDir == null )
-            throw new RuntimeException( new ConfigurationException( "Failed to get basedir" ) );
-        if ( localBasePath == null )
-            throw new RuntimeException( new ConfigurationException( "Failed to get localBasePath" ) );
-
     }
 
     @Override
