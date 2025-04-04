@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.util.SimpleRetry;
+import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.model.common.description.BibliographicReference;
 
 import javax.annotation.Nullable;
@@ -46,7 +47,7 @@ public class PubMedXMLFetcher {
     private final static int MAX_TRIES = 2;
     private final String uri;
     private final PubMedXMLParser pubMedXMLParser = new PubMedXMLParser();
-    private final SimpleRetry<IOException> retryTemplate = new SimpleRetry<>( MAX_TRIES, 1000, 1.5, IOException.class, PubMedSearch.class.getName() );
+    private final SimpleRetry<IOException> retryTemplate = new SimpleRetry<>( new SimpleRetryPolicy( MAX_TRIES, 1000, 1.5 ), IOException.class, PubMedSearch.class.getName() );
 
     public PubMedXMLFetcher( String apiKey ) {
         uri = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&rettype=full" + ( StringUtils.isNotBlank( apiKey ) ? "&api_key=" + apiKey : "" );
@@ -58,7 +59,7 @@ public class PubMedXMLFetcher {
         }
         URL toBeGotten = new URL( uri + "&id=" + urlEncode( pubMedIds.stream().map( String::valueOf ).collect( Collectors.joining( "," ) ) ) );
         log.debug( "Fetching " + toBeGotten );
-        return retryTemplate.execute( ( attempt, lastAttempt ) -> {
+        return retryTemplate.execute( ( ctx ) -> {
             try ( InputStream is = toBeGotten.openStream() ) {
                 return pubMedXMLParser.parse( is );
             }
@@ -69,7 +70,7 @@ public class PubMedXMLFetcher {
     public BibliographicReference retrieveByHTTP( int pubMedId ) throws IOException {
         URL toBeGotten = new URL( uri + "&id=" + pubMedId );
         log.debug( "Fetching " + toBeGotten );
-        Collection<BibliographicReference> results = retryTemplate.execute( ( attempt, lastAttempt ) -> {
+        Collection<BibliographicReference> results = retryTemplate.execute( ( ctx ) -> {
             try ( InputStream is = toBeGotten.openStream() ) {
                 return pubMedXMLParser.parse( is );
             }

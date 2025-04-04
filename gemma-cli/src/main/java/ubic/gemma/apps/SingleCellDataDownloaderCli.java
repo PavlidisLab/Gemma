@@ -6,19 +6,15 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.lang3.time.StopWatch;
-import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import ubic.gemma.cli.util.AbstractCLI;
 import ubic.gemma.core.loader.expression.geo.GeoFamilyParser;
+import ubic.gemma.core.loader.expression.geo.fetcher2.GeoFetcher;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
@@ -27,8 +23,8 @@ import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactoryImpl;
-import ubic.gemma.cli.util.AbstractCLI;
-import ubic.gemma.core.util.ProgressInputStream;
+import ubic.gemma.core.util.SimpleRetry;
+import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -38,8 +34,6 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -59,6 +53,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             SUMMARY_OUTPUT_FILE_OPTION = "s",
             RESUME_OPTION = "r",
             RETRY_OPTION = "retry",
+            RETRY_COUNT_OPTION = "retryCount",
             FETCH_THREADS_OPTION = "fetchThreads",
             SKIP_DOWNLOAD_OPTION = "skipDownload";
 
@@ -116,6 +111,9 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
     @Nullable
     private String matrixFileSuffix;
 
+    private SimpleRetryPolicy retryPolicy;
+    private SimpleRetry<IOException> retryTemplate;
+
     @Nullable
     @Override
     public String getCommandName() {
@@ -129,11 +127,6 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
     }
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.MISC;
-    }
-
-    @Override
     protected void buildOptions( Options options ) {
         // options are consistent with those of LoadExpressionDataCli
         options.addOption( Option.builder( ACCESSIONS_FILE_OPTION ).longOpt( "file" ).type( File.class ).hasArg().desc( "File containing accessions to download." ).build() );
@@ -141,6 +134,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         options.addOption( Option.builder( SUMMARY_OUTPUT_FILE_OPTION ).longOpt( "summary-output-file" ).type( File.class ).hasArg().desc( "File to write the summary output to. This is used to keep track of progress and resume download with -r/--resume." ).build() );
         options.addOption( Option.builder( RESUME_OPTION ).longOpt( "resume" ).desc( "Resume download from a previous invocation of this command. Requires -s/--summary-output-file to be set and refer to an existing file." ).build() );
         options.addOption( Option.builder( RETRY_OPTION ).longOpt( "retry" ).hasArg().desc( "Retry problematic datasets. Possible values are: '" + UNSUPPORTED_INDICATOR + "', '" + UNKNOWN_INDICATOR + "' or '" + FAILED_INDICATOR + "', or any combination delimited by ','. Requires -r/--resume option to be set." ).build() );
+        options.addOption( Option.builder( RETRY_COUNT_OPTION ).longOpt( "retry-count" ).hasArg().type( Integer.class ).desc( "Number of times to retry a download operation." ).build() );
         options.addOption( SKIP_DOWNLOAD_OPTION, "skip-download", false, "Skip download of single-cell data." );
         options.addOption( Option.builder( FETCH_THREADS_OPTION ).longOpt( "fetch-threads" ).hasArg().type( Number.class ).desc( "Number of threads to use for downloading files. Default is " + GeoSingleCellDetector.DEFAULT_NUMBER_OF_FETCH_THREADS + ". Use -threads/--threads for processing series in parallel." ).build() );
         options.addOption( Option.builder( SAMPLE_ACCESSIONS_OPTION ).longOpt( "sample-accessions" ).hasArg().desc( "Comma-delimited list of sample accessions to download." ).build() );
@@ -212,6 +206,13 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         } else {
             retry = null;
         }
+        Integer retryCount = commandLine.getParsedOptionValue( RETRY_COUNT_OPTION );
+        if ( retryCount != null ) {
+            retryPolicy = new SimpleRetryPolicy( retryCount, 1000, 1.5 );
+        } else {
+            retryPolicy = new SimpleRetryPolicy( 3, 1000, 1.5 );
+        }
+        retryTemplate = new SimpleRetry<>( retryPolicy, IOException.class, SingleCellDataDownloaderCli.class.getName() );
         if ( resume ) {
             if ( singleAccessionMode ) {
                 throw new IllegalArgumentException( "The -" + RESUME_OPTION + " option cannot be used in single accession mode." );
@@ -310,6 +311,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                 CSVPrinter writer = getSummaryOutputFilePrinter() ) {
             detector.setFTPClientFactory( ftpClientFactory );
             detector.setDownloadDirectory( singleCellDataBasePath.toPath() );
+            detector.setRetryPolicy( retryPolicy );
             if ( barcodesFileSuffix != null && featuresFileSuffix != null && matrixFileSuffix != null ) {
                 detector.setMexFileSuffixes( barcodesFileSuffix, featuresFileSuffix, matrixFileSuffix );
             }
@@ -469,50 +471,13 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         if ( !resume ) {
             csvFormatBuilder.setHeader( SUMMARY_HEADER );
         }
-        return csvFormatBuilder.build().print( Files.newBufferedWriter( summaryOutputFile, resume ? StandardOpenOption.APPEND : StandardOpenOption.CREATE ) );
+        return csvFormatBuilder.get().print( Files.newBufferedWriter( summaryOutputFile, resume ? StandardOpenOption.APPEND : StandardOpenOption.CREATE ) );
     }
 
     @Nullable
     private GeoSeries readSeriesFromGeo( String accession ) throws IOException {
-        String remoteFile = String.format( "geo/series/%snnn/%s/soft/%s_family.soft.gz",
-                accession.substring( 0, accession.length() - 3 ), accession, accession );
-        URL softFileUrl = new URL( "ftp://ftp.ncbi.nlm.nih.gov/" + remoteFile );
-        Path dest = geoSeriesDownloadPath.toPath().resolve( accession ).resolve( accession + ".soft.gz" );
-        boolean download = true;
-        if ( Files.exists( dest ) ) {
-            FTPClient client = ftpClientFactory.getFtpClient( softFileUrl );
-            try {
-                FTPFile res = client.mlistFile( remoteFile );
-                long expectedLength = res != null ? res.getSize() : -1;
-                if ( expectedLength != -1 && dest.toFile().length() == expectedLength ) {
-                    log.info( accession + ": Using existing SOFT file " + dest + "." );
-                    download = false;
-                }
-                ftpClientFactory.recycleClient( softFileUrl, client );
-            } catch ( Exception e ) {
-                ftpClientFactory.destroyClient( softFileUrl, client );
-                throw e;
-            }
-        }
-        if ( download ) {
-            log.info( accession + ": Downloading SOFT file to " + dest + "..." );
-            PathUtils.createParentDirectories( dest );
-            StopWatch timer = StopWatch.createStarted();
-            try ( InputStream in = new ProgressInputStream( ftpClientFactory.openStream( softFileUrl ), accession + ".soft.gz", SingleCellDataDownloaderCli.class.getName() ); OutputStream out = Files.newOutputStream( dest ) ) {
-                int downloadedBytes = IOUtils.copy( in, out );
-                if ( downloadedBytes > 0 ) {
-                    log.info( String.format( "%s: Done downloading SOFT file (%s in %s @ %.3f MB/s).", accession,
-                            FileUtils.byteCountToDisplaySize( downloadedBytes ), timer,
-                            ( 1000.0 / ( 1000.0 * 1000.0 ) ) * ( downloadedBytes / timer.getTime() ) ) );
-                }
-            } catch ( IOException e ) {
-                if ( Files.exists( dest ) ) {
-                    log.warn( accession + ": An I/O error occurred while downloading the SOFT file, removing " + dest + "...", e );
-                    PathUtils.deleteDirectory( dest.getParent() );
-                }
-                throw e;
-            }
-        }
+        GeoFetcher geoFetcher = new GeoFetcher( ftpClientFactory, retryPolicy, geoSeriesDownloadPath.toPath() );
+        Path dest = geoFetcher.fetchSeriesFamilySoftFile( accession );
         try ( InputStream is = new GZIPInputStream( Files.newInputStream( dest ) ) ) {
             GeoFamilyParser parser = new GeoFamilyParser();
             parser.parse( is );

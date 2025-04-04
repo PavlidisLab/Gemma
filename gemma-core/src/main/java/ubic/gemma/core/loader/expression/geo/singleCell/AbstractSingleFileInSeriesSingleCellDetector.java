@@ -119,10 +119,10 @@ public abstract class AbstractSingleFileInSeriesSingleCellDetector extends Abstr
         }
 
         log.info( series.getGeoAccession() + ": Retrieving " + name + " file " + file + " to " + dest + "..." );
-        return retry( ( attempt, lastAttempt ) -> {
+        return retry( ( ctx ) -> {
             PathUtils.createParentDirectories( dest );
             StopWatch timer = StopWatch.createStarted();
-            try ( InputStream is = openSupplementaryFileAsStream( file, attempt, true );
+            try ( InputStream is = openSupplementaryFileAsStream( file, ctx.getAttempt(), true );
                     OutputStream os = Files.newOutputStream( dest ); ) {
                 long downloadedBytes = IOUtils.copyLarge( is, os );
                 // make sure we're done with the file I/O before checking its size

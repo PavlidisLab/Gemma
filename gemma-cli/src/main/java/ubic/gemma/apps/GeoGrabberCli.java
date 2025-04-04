@@ -30,6 +30,7 @@ import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeriesType;
 import ubic.gemma.core.loader.expression.geo.service.*;
 import ubic.gemma.core.util.SimpleRetry;
+import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -71,7 +72,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
     /**
      * Retry policy for retrieving GEO records.
      */
-    private static final SimpleRetry<IOException> retryTemplate = new SimpleRetry<>( 5, 500, 1.5, IOException.class, GeoGrabberCli.class.getName() );
+    private static final SimpleRetry<IOException> retryTemplate = new SimpleRetry<>( new SimpleRetryPolicy( 5, 500, 1.5 ), IOException.class, GeoGrabberCli.class.getName() );
 
     /**
      * Default chunk size to use when querying GEO records.
@@ -521,11 +522,11 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
     }
 
     private GeoQuery searchGeoSeries( Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatform, Collection<GeoSeriesType> seriesTypes ) throws IOException {
-        return retryTemplate.execute( ( attempt, lastAttempt ) -> gbs.searchGeoRecords( GeoRecordType.SERIES, null, null, allowedTaxa, limitPlatform, seriesTypes ), "searching GEO records" );
+        return retryTemplate.execute( ( ctx ) -> gbs.searchGeoRecords( GeoRecordType.SERIES, null, null, allowedTaxa, limitPlatform, seriesTypes ), "searching GEO records" );
     }
 
     private Slice<GeoRecord> getGeoRecords( GeoQuery query, int start, int chunkSize, boolean fetchDetails ) throws IOException {
-        return retryTemplate.execute( ( attempt, lastAttempt ) -> gbs.retrieveGeoRecords( query, start, chunkSize, fetchDetails ? DETAILED : MINIMAL ), "fetching GEO records" );
+        return retryTemplate.execute( ( ctx ) -> gbs.retrieveGeoRecords( query, start, chunkSize, fetchDetails ? DETAILED : MINIMAL ), "fetching GEO records" );
     }
 
     private Appendable getOutputWriter() throws IOException {

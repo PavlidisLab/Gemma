@@ -9,6 +9,7 @@ import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.util.ProgressInputStream;
 import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.core.util.SimpleRetryCallable;
+import ubic.gemma.core.util.SimpleRetryPolicy;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -26,7 +27,7 @@ public abstract class AbstractSingleCellDetector implements SingleCellDetector {
 
     private FTPClientFactory ftpClientFactory;
     private Path downloadDirectory;
-    private final SimpleRetry<IOException> retryTemplate = new SimpleRetry<>( 3, 1000, 1.5, IOException.class, getClass().getName() );
+    private SimpleRetry<IOException> retryTemplate = new SimpleRetry<>( new SimpleRetryPolicy( 3, 1000, 1.5 ), IOException.class, getClass().getName() );
 
     /**
      * Set the FTP client factory to use for downloading data over FTP.
@@ -47,6 +48,11 @@ public abstract class AbstractSingleCellDetector implements SingleCellDetector {
     @Override
     public void setDownloadDirectory( Path downloadDirectory ) {
         this.downloadDirectory = downloadDirectory;
+    }
+
+    @Override
+    public void setRetryPolicy( SimpleRetryPolicy retryPolicy ) {
+        this.retryTemplate = new SimpleRetry<>( retryPolicy, IOException.class, getClass().getName() );
     }
 
     /**
@@ -109,7 +115,7 @@ public abstract class AbstractSingleCellDetector implements SingleCellDetector {
         URL url = new URL( remoteFile );
         long expectedContentLength;
         if ( url.getProtocol().equals( "ftp" ) ) {
-            expectedContentLength = retry( ( attempt, lastAttempt ) -> {
+            expectedContentLength = retry( ( ctx ) -> {
                 FTPClient client = ftpClientFactory.getFtpClient( url );
                 try {
                     FTPFile res = client.mlistFile( url.getPath() );

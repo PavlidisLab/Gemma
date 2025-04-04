@@ -24,6 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 import ubic.gemma.core.util.SimpleRetry;
+import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.XMLUtils;
 
 import javax.annotation.Nullable;
@@ -50,7 +51,7 @@ public class EutilFetch {
     private static final int MAX_TRIES = 3;
 
     private final String apiKey;
-    private final SimpleRetry<IOException> retryTemplate = new SimpleRetry<>( MAX_TRIES, 1000, 1.5, IOException.class, EutilFetch.class.getName() );
+    private final SimpleRetry<IOException> retryTemplate = new SimpleRetry<>( new SimpleRetryPolicy( MAX_TRIES, 1000, 1.5 ), IOException.class, EutilFetch.class.getName() );
 
     public EutilFetch( String apiKey ) {
         this.apiKey = apiKey;
@@ -72,7 +73,7 @@ public class EutilFetch {
                 + "&usehistory=y"
                 + "&term=" + urlEncode( searchString )
                 + ( StringUtils.isNotBlank( apiKey ) ? "&api_key=" + urlEncode( apiKey ) : "" ) );
-        return retryTemplate.execute( ( attempt, lastAttempt ) -> {
+        return retryTemplate.execute( ( ctx ) -> {
             Document document;
             try ( InputStream is = searchUrl.openStream() ) {
                 DocumentBuilder builder = createDocumentBuilder();
@@ -110,7 +111,7 @@ public class EutilFetch {
                 + "&term=" + urlEncode( query )
                 + "&cmd=search"
                 + ( StringUtils.isNotBlank( apiKey ) ? "&api_key=" + urlEncode( apiKey ) : "" ) );
-        return retryTemplate.execute( ( attempt, lastAttempt ) -> {
+        return retryTemplate.execute( ( ctx ) -> {
             try ( BufferedReader br = new BufferedReader( new InputStreamReader( url.openStream() ) ) ) {
                 return br.lines().collect( Collectors.toList() );
             }

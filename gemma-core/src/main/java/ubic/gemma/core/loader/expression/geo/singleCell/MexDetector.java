@@ -160,12 +160,12 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
                 }
                 log.info( "Looking up the content of " + file + " for MEX data..." );
                 try {
-                    Boolean done = retry( ( attempt, lastAttempt ) -> {
+                    Boolean done = retry( ( ctx ) -> {
                         String barcodesT = null;
                         String featuresT = null;
                         String matrixT = null;
                         // we just have to read the header of the archive and not its content
-                        try ( ArchiveInputStream<?> tis = openSupplementaryFileAsArchiveStream( file, attempt ) ) {
+                        try ( ArchiveInputStream<?> tis = openSupplementaryFileAsArchiveStream( file, ctx.getAttempt() ) ) {
                             int skipped = 0;
                             ArchiveEntry te;
                             while ( ( te = tis.getNextEntry() ) != null ) {
@@ -359,11 +359,11 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
                             geoAccession, file, dest ) );
                 }
                 try {
-                    retry( ( attempt, lastAttempt ) -> {
+                    retry( ( ctx ) -> {
                         StopWatch timer = StopWatch.createStarted();
                         log.info( String.format( "%s: Downloading %s to %s...", geoAccession, file, dest ) );
                         PathUtils.createParentDirectories( dest );
-                        try ( InputStream is = openSupplementaryFileAsStream( file, attempt, false );
+                        try ( InputStream is = openSupplementaryFileAsStream( file, ctx.getAttempt(), false );
                                 OutputStream os = openGzippedOutputStream( file, dest ) ) {
                             long downloadedBytes = IOUtils.copyLarge( is, os );
                             // make sure we're done with the file I/O before checking its size
@@ -403,8 +403,8 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
                 continue;
             }
             try {
-                Boolean found = retry( ( attempt, lastAttempt ) -> {
-                    try ( ArchiveInputStream<?> tis = openSupplementaryFileAsArchiveStream( file, attempt ) ) {
+                Boolean found = retry( ( ctx ) -> {
+                    try ( ArchiveInputStream<?> tis = openSupplementaryFileAsArchiveStream( file, ctx.getAttempt() ) ) {
                         StopWatch timer = StopWatch.createStarted();
                         String barcodesT = null;
                         String featuresT = null;
@@ -469,8 +469,8 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
                             PathUtils.createParentDirectories( dest );
                             try ( OutputStream os = openGzippedOutputStream( te.getName(), dest ) ) {
                                 String what = fullEntryName;
-                                if ( attempt > 0 ) {
-                                    what += " (attempt #" + ( attempt + 1 ) + ")";
+                                if ( ctx.getAttempt() > 0 ) {
+                                    what += " (attempt #" + ( ctx.getAttempt() + 1 ) + ")";
                                 }
                                 long c = IOUtils.copyLarge( new ProgressInputStream( tis, what, MexDetector.class.getName(), te.getSize() ), os );
                                 os.close();
@@ -549,8 +549,8 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
                     }
                     //extract files in tar
                     try {
-                        return retry( ( attempt, lastAttempt ) -> {
-                            try ( ArchiveInputStream<?> tis = openSupplementaryFileAsArchiveStream( file, attempt ) ) {
+                        return retry( ( ctx ) -> {
+                            try ( ArchiveInputStream<?> tis = openSupplementaryFileAsArchiveStream( file, ctx.getAttempt() ) ) {
                                 List<String> files = new ArrayList<>();
                                 ArchiveEntry entry;
                                 while ( ( entry = tis.getNextEntry() ) != null ) {

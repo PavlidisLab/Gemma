@@ -14,6 +14,7 @@ import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
+import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.SimpleThreadFactory;
 
 import javax.annotation.Nullable;
@@ -126,6 +127,13 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         this.downloadDirectory = dir;
         for ( SingleCellDetector detector : detectors ) {
             detector.setDownloadDirectory( dir );
+        }
+    }
+
+    @Override
+    public void setRetryPolicy( SimpleRetryPolicy retryPolicy ) {
+        for ( SingleCellDetector detector : this.detectors ) {
+            detector.setRetryPolicy( retryPolicy );
         }
     }
 

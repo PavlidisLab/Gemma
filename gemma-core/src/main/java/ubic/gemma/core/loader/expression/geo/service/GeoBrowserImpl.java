@@ -41,6 +41,7 @@ import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeriesType;
 import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.core.util.SimpleRetryCallable;
+import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
 import ubic.gemma.persistence.util.Slice;
@@ -70,7 +71,7 @@ public class GeoBrowserImpl implements GeoBrowser {
     /**
      * Retry policy for I/O exception.
      */
-    private static final SimpleRetry<IOException> retryTemplate = new SimpleRetry<>( 3, 1001, 1.5, IOException.class, GeoBrowserImpl.class.getName() );
+    private static final SimpleRetry<IOException> retryTemplate = new SimpleRetry<>( new SimpleRetryPolicy( 3, 1001, 1.5 ), IOException.class, GeoBrowserImpl.class.getName() );
 
     /**
      * Maximum size of a MINiML record in bytes.
@@ -739,7 +740,7 @@ public class GeoBrowserImpl implements GeoBrowser {
     @Nullable
     Document fetchDetailedGeoSeriesFamilyFromGeoFtp( String geoAccession ) throws IOException, SAXParseException {
         URL documentUrl = getUrlForSeriesFamily( geoAccession, GeoSource.FTP_VIA_HTTPS, GeoFormat.MINIML );
-        return execute( ( attempt, lastAttempt ) -> {
+        return execute( ( ctx ) -> {
             try ( TarInputStream tis = new TarInputStream( new GZIPInputStream( documentUrl.openStream() ) ) ) {
                 TarEntry entry;
                 while ( ( entry = tis.getNextEntry() ) != null ) {
@@ -763,7 +764,7 @@ public class GeoBrowserImpl implements GeoBrowser {
     @Nullable
     Document fetchDetailedGeoSeriesFamilyFromGeoQuery( String geoAccession ) throws IOException, SAXParseException {
         URL documentUrl = getUrlForSeriesFamily( geoAccession, GeoSource.QUERY, GeoFormat.MINIML );
-        return execute( ( attempt, lastAttempt ) -> {
+        return execute( ( ctx ) -> {
             try ( InputStream tis = documentUrl.openStream() ) {
                 return parseDetailedGeoSeriesDocument( geoAccession, documentUrl.toString(), tis );
             } catch ( FileNotFoundException e ) {
@@ -791,7 +792,7 @@ public class GeoBrowserImpl implements GeoBrowser {
      * exceeds {@link #MAX_MINIML_RECORD_SIZE}
      */
     Document parseMiniMLDocument( URL url ) throws IOException, SAXParseException {
-        return execute( ( retries, lastAttempt ) -> {
+        return execute( ( ctx ) -> {
             try ( InputStream is = openUrlWithMaxSize( url, MAX_MINIML_RECORD_SIZE ) ) {
                 return NcbiXmlUtils.createDocumentBuilder().parse( is );
             } catch ( SAXParseException e ) {

@@ -4,6 +4,7 @@ import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
+import ubic.gemma.core.util.SimpleRetryPolicy;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -19,6 +20,11 @@ public interface SingleCellDetector {
      * Set the download directory single cell data.
      */
     void setDownloadDirectory( Path dir );
+
+    /**
+     * Set the retry policy to use when downloading single-cell data.
+     */
+    void setRetryPolicy( SimpleRetryPolicy retryPolicy );
 
     /**
      * Indicate if the given GEO series has single cell data.

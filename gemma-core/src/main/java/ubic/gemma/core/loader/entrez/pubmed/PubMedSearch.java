@@ -24,6 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.xml.sax.SAXException;
 import ubic.gemma.core.util.SimpleRetry;
+import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.model.common.description.BibliographicReference;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -48,7 +49,7 @@ public class PubMedSearch {
     private static final int MAX_TRIES = 3;
 
     private final String uri;
-    private final SimpleRetry<IOException> retryTemplate = new SimpleRetry<>( MAX_TRIES, 1000, 1.5, IOException.class, PubMedSearch.class.getName() );
+    private final SimpleRetry<IOException> retryTemplate = new SimpleRetry<>( new SimpleRetryPolicy( MAX_TRIES, 1000, 1.5 ), IOException.class, PubMedSearch.class.getName() );
     private final ESearchXMLParser parser = new ESearchXMLParser();
     private final PubMedXMLFetcher fetcher;
 
@@ -67,7 +68,7 @@ public class PubMedSearch {
     public Collection<BibliographicReference> searchAndRetrieveByHTTP( Collection<String> searchTerms ) throws IOException {
         URL toBeGotten = new URL( uri + "&term=" + urlEncode( StringUtils.join( " ", searchTerms ) ) );
         log.info( "Fetching " + toBeGotten );
-        Collection<String> ids = retryTemplate.execute( ( retryCount, lastAttempt ) -> {
+        Collection<String> ids = retryTemplate.execute( ( ctx ) -> {
             try ( InputStream is = toBeGotten.openStream() ) {
                 return parser.parse( is );
             } catch ( ParserConfigurationException | ESearchException | SAXException e ) {
@@ -119,7 +120,7 @@ public class PubMedSearch {
         // build URL
         String URLString = uri + "&term=" + urlEncode( searchQuery );
 
-        int count = retryTemplate.execute( ( attempt, lastAttempt ) -> {
+        int count = retryTemplate.execute( ( ctx ) -> {
             // log.info( "Fetching " + toBeGotten );
             // builder.append("&retmax=" + 70000);
             URL toBeGotten = new URL( URLString );
@@ -139,7 +140,7 @@ public class PubMedSearch {
             return Collections.emptyList();
         }
 
-        return retryTemplate.execute( ( attempt, lastAttempt ) -> {
+        return retryTemplate.execute( ( ctx ) -> {
             // now get them all
             URL toBeGotten = new URL( URLString + "&retmax=" + count );
             log.info( "Fetching " + count + " IDs from:" + toBeGotten );

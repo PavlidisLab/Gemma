@@ -12,5 +12,5 @@ public interface SimpleRetryCallable<T, E extends Exception> {
      * @param lastAttempt indicate if this is the last attempt, any raised exception will bubble up to
      *                    {@link SimpleRetry#execute(SimpleRetryCallable, Object what)}
      */
-    T call( int attempt, boolean lastAttempt ) throws E;
+    T call( SimpleRetryContext retryContext ) throws E;
 }
