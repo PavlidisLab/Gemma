@@ -298,15 +298,15 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
                 }
                 // this needs to be set after each connect()
                 client.enterLocalPassiveMode();
+                if ( authenticator != null ) {
+                    authenticator.authenticate( client, authority );
+                }
                 // always treat files as binary to avoid transformation of EOLs
                 client.setFileType( FTP.BINARY_FILE_TYPE );
                 log.debug( client.getReplyString() );
                 if ( !FTPReply.isPositiveCompletion( client.getReplyCode() ) ) {
                     throw new IOException( String.format( "Failed to set file type to BINARY for %s: %s",
                             authority, client.getReplyString() ) );
-                }
-                if ( authenticator != null ) {
-                    authenticator.authenticate( client, authority );
                 }
             }
         }
