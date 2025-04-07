@@ -193,12 +193,20 @@ public interface ExpressionExperimentDao
     Collection<BioAssayDimension> getBioAssayDimensionsFromSubSets( ExpressionExperiment expressionExperiment );
 
     /**
+     * Retrieve a dimension for a given experiment and quantitation type.
      * @param dataVectorType the type of data vectors to consider, this is necessary because otherwise all the vector
-     *                       tables would have to be looked at
+     *                       tables would have to be looked at. If you do nto know the type of vector, use {@link #getBioAssayDimension(ExpressionExperiment, QuantitationType)}.
      * @throws org.hibernate.NonUniqueResultException if there is more than one dimension for the given set of vectors
      */
     @Nullable
     BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt, Class<? extends BulkExpressionDataVector> dataVectorType );
+
+    /**
+     * Retrieve a dimension for a given experiment and quantitation type.
+     * @throws org.hibernate.NonUniqueResultException if there is more than one dimension for the given set of vectors
+     */
+    @Nullable
+    BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt );
 
     /**
      * Obtain a bioassay dimension by ID.

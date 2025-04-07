@@ -564,6 +564,10 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
 
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     BioAssayDimension getBioAssayDimensionById( ExpressionExperiment ee, Long dimensionId, Class<? extends BulkExpressionDataVector> dataVectorType );
 
     /**

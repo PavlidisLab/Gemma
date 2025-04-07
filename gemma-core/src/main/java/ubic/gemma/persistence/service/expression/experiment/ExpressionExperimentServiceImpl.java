@@ -1239,6 +1239,13 @@ public class ExpressionExperimentServiceImpl
         return expressionExperimentDao.getBioAssayDimension( ee, qt, dataVectorType );
     }
 
+    @Nullable
+    @Override
+    @Transactional(readOnly = true)
+    public BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt ) {
+        return expressionExperimentDao.getBioAssayDimension( ee, qt );
+    }
+
     @Override
     @Transactional(readOnly = true)
     public BioAssayDimension getBioAssayDimensionById( ExpressionExperiment ee, Long dimensionId, Class<? extends BulkExpressionDataVector> dataVectorType ) {

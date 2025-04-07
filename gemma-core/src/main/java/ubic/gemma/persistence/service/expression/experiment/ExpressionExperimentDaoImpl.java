@@ -1230,6 +1230,21 @@ public class ExpressionExperimentDaoImpl
         return ( BioAssayDimension ) getSessionFactory().getCurrentSession().get( BioAssayDimension.class, id );
     }
 
+    @Override
+    public BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt ) {
+        Set<BioAssayDimension> dimensions = bulkDataVectorTypes.stream()
+                .map( vectorType -> this.getBioAssayDimension( ee, qt, vectorType ) )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toSet() );
+        if ( dimensions.size() == 1 ) {
+            return dimensions.iterator().next();
+        } else if ( dimensions.size() > 1 ) {
+            throw new NonUniqueResultException( dimensions.size() );
+        } else {
+            return null;
+        }
+    }
+
     @Nullable
     @Override
     public BioAssayDimension getBioAssayDimensionById( ExpressionExperiment ee, Long dimensionId, Class<? extends BulkExpressionDataVector> dataVectorType ) {
