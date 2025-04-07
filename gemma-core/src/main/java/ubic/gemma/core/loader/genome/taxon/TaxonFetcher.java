@@ -34,8 +34,6 @@ import java.util.Collection;
  */
 public class TaxonFetcher extends FtpArchiveFetcher {
 
-    private String remoteBaseDir;
-
     public TaxonFetcher() {
         super();
         this.setExcludePattern( ".gz" );

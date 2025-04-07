@@ -11,11 +11,9 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.config.SettingsConfig;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.expression.geo.GeoFamilyParser;
-import ubic.gemma.core.loader.expression.geo.GeoMetadataFormat;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
 import ubic.gemma.core.loader.expression.geo.singleCell.NoSingleCellDataFoundException;
-import ubic.gemma.core.loader.expression.geo.util.GeoFilePaths;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPConfig;
@@ -315,7 +313,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
     }
 
     private GeoSeries readSeriesFromGeo( String accession ) throws IOException {
-        URL url = new URL( "ftp://ftp.ncbi.nlm.nih.gov/" + GeoFilePaths.getSeriesFamilyFilePath( accession, GeoMetadataFormat.SOFT ) );
+        URL url = new URL( "ftp://ftp.ncbi.nlm.nih.gov/geo/series/" + accession.substring( 0, 6 ) + "nnn/" + accession + "/soft/" + accession + "_family.soft.gz" );
         try ( InputStream is = new GZIPInputStream( ftpClientFactory.openStream( url ) ) ) {
             GeoFamilyParser parser = new GeoFamilyParser();
             parser.parse( is );

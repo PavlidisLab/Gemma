@@ -37,10 +37,8 @@ import org.xml.sax.SAXParseException;
 import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
-import ubic.gemma.core.loader.expression.geo.GeoMetadataFormat;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeriesType;
-import ubic.gemma.core.loader.expression.geo.util.GeoFilePaths;
 import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.core.util.SimpleRetryCallable;
 import ubic.gemma.core.util.XMLUtils;
@@ -804,7 +802,7 @@ public class GeoBrowser {
      * Parse a MINiML document for given GEO series accession.
      */
     private Document parseMINiMLDocument( String geoAccession ) throws IOException {
-        URL documentUrl = new URL( GEO_FTP + GeoFilePaths.getSeriesFamilyFilePath( geoAccession, GeoMetadataFormat.MINIML ) );
+        URL documentUrl = new URL( GEO_FTP + geoAccession.substring( 0, geoAccession.length() - 3 ) + "nnn/" + geoAccession + "/miniml/" + geoAccession + "_family.xml.tgz" );
         return execute( ( attempt, lastAttempt ) -> {
             try ( TarInputStream tis = new TarInputStream( new GZIPInputStream( documentUrl.openStream() ) ) ) {
                 TarEntry entry;

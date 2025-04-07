@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- *
+ * 
  * Copyright (c) 2006 University of British Columbia
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,21 +19,19 @@
 package ubic.gemma.core.loader.expression.arrayExpress;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.expression.arrayExpress.util.ArrayExpressUtil;
 import ubic.gemma.core.loader.util.fetcher.FtpFetcher;
+import ubic.gemma.core.config.Settings;
 
 import java.io.File;
 
 /**
  * Fetch the SRDF file
- *
+ * 
  * @author paul
  *
  */
 public class SDRFFetcher extends FtpFetcher {
-
-    private String remoteBaseDir = null;
 
     @Override
     public void setNetDataSourceUtil() {

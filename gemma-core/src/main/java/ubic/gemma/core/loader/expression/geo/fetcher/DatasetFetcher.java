@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- *
+ * 
  * Copyright (c) 2006 University of British Columbia
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,8 +19,6 @@
 package ubic.gemma.core.loader.expression.geo.fetcher;
 
 import ubic.gemma.core.config.Settings;
-import ubic.gemma.core.loader.expression.geo.GeoMetadataFormat;
-import ubic.gemma.core.loader.expression.geo.util.GeoFilePaths;
 
 /**
  * Retrieve GEO GDS files from the NCBI FTP server.
@@ -29,13 +27,21 @@ import ubic.gemma.core.loader.expression.geo.util.GeoFilePaths;
  */
 public class DatasetFetcher extends GeoFetcher {
 
+    public DatasetFetcher() {
+        super();
+
+    }
+
     @Override
     protected String formRemoteFilePath( String identifier ) {
-        return GeoFilePaths.getDatasetFilePath( identifier, GeoMetadataFormat.SOFT );
+        String idroot = identifier.replaceFirst( "(GDS[0-9]*?)[0-9]{1,3}$", "$1nnn" );
+        return remoteBaseDir + "/" + idroot + "/" + identifier + "/soft/" + identifier  + SOFT_GZ;
     }
 
     @Override
     protected void initConfig() {
         this.localBasePath = Settings.getString( "geo.local.datafile.basepath" );
+        this.remoteBaseDir = Settings.getString( "geo.remote.datasetDir" );
     }
+
 }

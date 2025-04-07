@@ -54,6 +54,8 @@ public abstract class AbstractFetcher implements Fetcher {
 
     protected String localBasePath = null;
 
+    protected String remoteBaseDir = null;
+
     public AbstractFetcher() {
         super();
         this.initConfig();

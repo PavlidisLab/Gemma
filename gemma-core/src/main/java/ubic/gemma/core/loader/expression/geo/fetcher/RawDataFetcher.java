@@ -18,13 +18,13 @@
  */
 package ubic.gemma.core.loader.expression.geo.fetcher;
 
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.net.ftp.FTP;
 import ubic.basecode.util.NetUtils;
-import ubic.gemma.core.config.Settings;
-import ubic.gemma.core.loader.expression.geo.util.GeoFilePaths;
 import ubic.gemma.core.loader.expression.geo.util.GeoUtil;
 import ubic.gemma.core.loader.util.fetcher.AbstractFetcher;
 import ubic.gemma.core.loader.util.fetcher.FtpArchiveFetcher;
+import ubic.gemma.core.config.Settings;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -66,7 +66,7 @@ public class RawDataFetcher extends FtpArchiveFetcher {
 
     /**
      * @param  identifier The url for the supplementary file.
-     * @return local files
+     * @return            local files
      */
     @Override
     public Collection<File> fetch( String identifier ) {
@@ -128,11 +128,20 @@ public class RawDataFetcher extends FtpArchiveFetcher {
      */
     @Override
     protected String formRemoteFilePath( String identifier ) {
-        return GeoFilePaths.getSeriesRawDataFilePath( identifier );
+        String idroot = identifier.replaceFirst( "(GSE[0-9]*?)[0-9]{1,3}$", "$1nnn" );
+        return remoteBaseDir + "/" + idroot + "/" + identifier + "/suppl/" + identifier + "_RAW.tar";
     }
 
     @Override
     public void initConfig() {
         localBasePath = Settings.getString( "geo.local.datafile.basepath" );
+        remoteBaseDir = Settings.getString( "geo.remote.rawDataDir" );
+
+        if ( localBasePath == null || localBasePath.length() == 0 )
+            throw new RuntimeException( new ConfigurationException( "localBasePath was null or empty" ) );
+        if ( remoteBaseDir == null || remoteBaseDir.length() == 0 )
+            throw new RuntimeException( new ConfigurationException( "baseDir was null or empty" ) );
+
     }
+
 }
