@@ -1,5 +1,21 @@
 /* Override for Ext.js */
 
+.x-btn button {
+    font-family: Avenir, Helvetica, Arial, sans-serif;
+}
+
+.x-form-textarea {
+    font-family: Avenir, Helvetica, Arial, sans-serif;
+}
+
+.x-tab-strip span.x-tab-strip-text {
+    font-family: Avenir, Helvetica, Arial, sans-serif;
+}
+
+.x-window-mc {
+    font-family: Avenir, Helvetica, Arial, sans-serif;
+}
+
 .x-form-field-wrap .x-go-trigger {
     background-image: url('../../images/icons/search-trigger.gif');
     cursor: pointer;
