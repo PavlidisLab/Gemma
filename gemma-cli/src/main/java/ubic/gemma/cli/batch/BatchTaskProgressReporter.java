@@ -1,4 +1,4 @@
-package ubic.gemma.cli.util;
+package ubic.gemma.cli.batch;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.time.StopWatch;
@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author poirigui
  */
 @CommonsLog
-class BatchTaskProgressReporter implements AutoCloseable {
+public class BatchTaskProgressReporter implements AutoCloseable {
 
     private final BatchTaskSummaryWriter summaryWriter;
 
@@ -28,7 +28,7 @@ class BatchTaskProgressReporter implements AutoCloseable {
     private int estimatedMaxTasks = -1;
     private int reportFrequencyMillis = 30000;
 
-    BatchTaskProgressReporter( BatchTaskSummaryWriter summaryWriter ) {
+    public BatchTaskProgressReporter( BatchTaskSummaryWriter summaryWriter ) {
         this.summaryWriter = summaryWriter;
     }
 
@@ -65,7 +65,7 @@ class BatchTaskProgressReporter implements AutoCloseable {
      * <p>
      * The default is to report task progress every 30 seconds.
      */
-    void setReportFrequencyMillis( int reportFrequencyMillis ) {
+    public void setReportFrequencyMillis( int reportFrequencyMillis ) {
         Assert.isTrue( reportFrequencyMillis >= 0, "Report frequency must be non-negative." );
         this.reportFrequencyMillis = reportFrequencyMillis;
     }
@@ -73,21 +73,21 @@ class BatchTaskProgressReporter implements AutoCloseable {
     /**
      * Indicate if error objects have been reported.
      */
-    boolean hasErrorObjects() {
+    public boolean hasErrorObjects() {
         return hasErrorObjects;
     }
 
     /**
      * Obtain the number of completed tasks (either with a success or failure result).
      */
-    int getCompletedTasks() {
+    public int getCompletedTasks() {
         return numberOfSuccessOrErrorObjects.get();
     }
 
     /**
      * Set the maximum number of tasks that are expected to be run.
      */
-    void setEstimatedMaxTasks( int estimatedMaxTasks ) {
+    public void setEstimatedMaxTasks( int estimatedMaxTasks ) {
         this.estimatedMaxTasks = estimatedMaxTasks;
     }
 
@@ -97,22 +97,22 @@ class BatchTaskProgressReporter implements AutoCloseable {
      * @param successObject object that was processed
      * @param message       success message
      */
-    void addSuccessObject( Object successObject, String message ) {
+    public void addSuccessObject( Object successObject, String message ) {
         addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.SUCCESS, successObject, message, null ) );
     }
 
     /**
      * @see #addSuccessObject(Object, String)
      */
-    void addSuccessObject( Object successObject ) {
+    public void addSuccessObject( Object successObject ) {
         addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.SUCCESS, successObject, null, null ) );
     }
 
-    void addWarningObject( @Nullable Object warningObject, String message ) {
+    public void addWarningObject( @Nullable Object warningObject, String message ) {
         addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.WARNING, warningObject, message, null ) );
     }
 
-    void addWarningObject( @Nullable Object warningObject, String message, Throwable throwable ) {
+    public void addWarningObject( @Nullable Object warningObject, String message, Throwable throwable ) {
         addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.WARNING, warningObject, message, throwable ) );
     }
 
@@ -125,7 +125,7 @@ class BatchTaskProgressReporter implements AutoCloseable {
      * @param message     error message
      * @param throwable   throwable to produce a stacktrace
      */
-    void addErrorObject( @Nullable Object errorObject, String message, Throwable throwable ) {
+    public void addErrorObject( @Nullable Object errorObject, String message, Throwable throwable ) {
         addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.ERROR, errorObject, message, throwable ) );
     }
 
@@ -134,7 +134,7 @@ class BatchTaskProgressReporter implements AutoCloseable {
      *
      * @see #addErrorObject(Object, String)
      */
-    void addErrorObject( @Nullable Object errorObject, String message ) {
+    public void addErrorObject( @Nullable Object errorObject, String message ) {
         addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.ERROR, errorObject, message, null ) );
     }
 
@@ -143,7 +143,7 @@ class BatchTaskProgressReporter implements AutoCloseable {
      *
      * @see #addErrorObject(Object, String, Throwable)
      */
-    void addErrorObject( @Nullable Object errorObject, Exception exception ) {
+    public void addErrorObject( @Nullable Object errorObject, Exception exception ) {
         addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.ERROR, errorObject, exception.getMessage(), exception ) );
     }
 
@@ -169,7 +169,7 @@ class BatchTaskProgressReporter implements AutoCloseable {
         reportProgress( completed );
     }
 
-    void reportProgress() {
+    public void reportProgress() {
         reportProgress( numberOfSuccessOrErrorObjects.get() );
     }
 

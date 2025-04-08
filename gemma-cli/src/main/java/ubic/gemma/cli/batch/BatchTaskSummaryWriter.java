@@ -1,4 +1,4 @@
-package ubic.gemma.cli.util;
+package ubic.gemma.cli.batch;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -6,7 +6,7 @@ import java.io.IOException;
 /**
  * @author poirigui
  */
-interface BatchTaskSummaryWriter extends Closeable {
+public interface BatchTaskSummaryWriter extends Closeable {
 
     /**
      * Write the result of a batch task.

@@ -1,4 +1,4 @@
-package ubic.gemma.cli.util;
+package ubic.gemma.cli.batch;
 
 import lombok.SneakyThrows;
 import lombok.extern.apachecommons.CommonsLog;
@@ -7,11 +7,11 @@ import java.io.IOException;
 import java.util.List;
 
 @CommonsLog
-class CompositeBatchTaskSummaryWriter implements BatchTaskSummaryWriter {
+public class CompositeBatchTaskSummaryWriter implements BatchTaskSummaryWriter {
 
     private final List<BatchTaskSummaryWriter> writers;
 
-    CompositeBatchTaskSummaryWriter( List<BatchTaskSummaryWriter> writers ) {
+    public CompositeBatchTaskSummaryWriter( List<BatchTaskSummaryWriter> writers ) {
         this.writers = writers;
     }
 

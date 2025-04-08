@@ -1,4 +1,4 @@
-package ubic.gemma.cli.util;
+package ubic.gemma.cli.batch;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -9,11 +9,11 @@ import java.io.IOException;
 /**
  * @author poirigui
  */
-class TsvBatchTaskSummaryWriter implements BatchTaskSummaryWriter {
+public class TsvBatchTaskSummaryWriter implements BatchTaskSummaryWriter {
 
     private final CSVPrinter printer;
 
-    TsvBatchTaskSummaryWriter( Appendable dest ) throws IOException {
+    public TsvBatchTaskSummaryWriter( Appendable dest ) throws IOException {
         this.printer = new CSVPrinter( dest, CSVFormat.TDF );
     }
 

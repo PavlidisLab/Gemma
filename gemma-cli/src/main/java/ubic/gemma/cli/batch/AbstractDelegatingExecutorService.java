@@ -1,4 +1,4 @@
-package ubic.gemma.cli.util;
+package ubic.gemma.cli.batch;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
  * A delegating executor service inspired by {@link org.springframework.security.concurrent.DelegatingSecurityContextExecutorService}.
  * @author poirigui
  */
-abstract class AbstractDelegatingExecutorService implements ExecutorService {
+public abstract class AbstractDelegatingExecutorService implements ExecutorService {
 
     protected abstract Runnable wrap( Runnable runnable );
 

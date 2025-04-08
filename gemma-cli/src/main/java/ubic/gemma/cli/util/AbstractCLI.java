@@ -28,6 +28,7 @@ import org.ocpsoft.prettytime.shade.edu.emory.mathcs.backport.java.util.Collecti
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.Assert;
+import ubic.gemma.cli.batch.*;
 import ubic.gemma.core.util.SimpleThreadFactory;
 
 import javax.annotation.Nullable;
@@ -571,7 +572,7 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
                     try {
                         summaryWriter = new CompositeBatchTaskSummaryWriter( Arrays.asList(
                                 new TextBatchTaskSummaryWriter( openBatchTaskSummaryDestination() ),
-                                new LoggingBatchTaskSummaryWriter( BATCH_LOG_CATEGORY ) ) );
+                                new LoggingBatchTaskSummaryWriter( BATCH_LOG_CATEGORY, true ) ) );
                     } catch ( IOException e ) {
                         throw new RuntimeException( "Failed to open destination for writing batch task results.", e );
                     }
@@ -580,7 +581,7 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
                     try {
                         summaryWriter = new CompositeBatchTaskSummaryWriter( Arrays.asList(
                                 new TsvBatchTaskSummaryWriter( openBatchTaskSummaryDestination() ),
-                                new LoggingBatchTaskSummaryWriter( BATCH_LOG_CATEGORY ) ) );
+                                new LoggingBatchTaskSummaryWriter( BATCH_LOG_CATEGORY, true ) ) );
                     } catch ( IOException e ) {
                         throw new RuntimeException( "Failed to open destination for writing batch task results.", e );
                     }

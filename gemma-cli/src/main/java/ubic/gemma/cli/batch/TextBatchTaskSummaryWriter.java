@@ -1,4 +1,6 @@
-package ubic.gemma.cli.util;
+package ubic.gemma.cli.batch;
+
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -10,12 +12,12 @@ import java.util.stream.Collectors;
 /**
  * @author poirigui
  */
-class TextBatchTaskSummaryWriter implements BatchTaskSummaryWriter {
+public class TextBatchTaskSummaryWriter implements BatchTaskSummaryWriter {
 
     private final List<BatchTaskProcessingResult> batchProcessingResults = Collections.synchronizedList( new ArrayList<>() );
     private final Appendable dest;
 
-    TextBatchTaskSummaryWriter( Appendable dest ) {
+    public TextBatchTaskSummaryWriter( Appendable dest ) {
         this.dest = dest;
     }
 
@@ -48,7 +50,7 @@ class TextBatchTaskSummaryWriter implements BatchTaskSummaryWriter {
                     .append( String.valueOf( successObjects.size() ) )
                     .append( " objects:\n" );
             for ( BatchTaskProcessingResult result : successObjects ) {
-                dest.append( String.valueOf( result ) ).append( "\n" );
+                dest.append( formatResult( result ) ).append( "\n" );
             }
             dest.append( "---------------------\n" );
         }
@@ -64,7 +66,7 @@ class TextBatchTaskSummaryWriter implements BatchTaskSummaryWriter {
                     .append( String.valueOf( warningObjects.size() ) )
                     .append( " objects:\n" );
             for ( BatchTaskProcessingResult result : warningObjects ) {
-                dest.append( String.valueOf( result ) ).append( "\n" );
+                dest.append( formatResult( result ) ).append( "\n" );
             }
             dest.append( "---------------------\n" );
         }
@@ -80,10 +82,26 @@ class TextBatchTaskSummaryWriter implements BatchTaskSummaryWriter {
                     .append( String.valueOf( errorObjects.size() ) )
                     .append( " objects:\n" );
             for ( BatchTaskProcessingResult result : errorObjects ) {
-                dest.append( String.valueOf( result ) ).append( "\n" );
+                dest.append( formatResult( result ) ).append( "\n" );
             }
             dest.append( "---------------------\n" );
         }
 
+    }
+
+    private String formatResult( BatchTaskProcessingResult result ) {
+        StringBuilder buf = new StringBuilder();
+        buf.append( result.getSource() != null ? result.getSource() : "Unknown object" );
+        if ( result.getMessage() != null ) {
+            buf.append( "\t" )
+                    // FIXME We don't want newlines here at all, but I'm not sure what condition this is meant to fix exactly.
+                    .append( result.getMessage().replace( "\n", "\n\t" ) );
+        }
+        if ( result.getThrowable() != null ) {
+            buf.append( "\t" )
+                    .append( "Reason: " )
+                    .append( ExceptionUtils.getRootCauseMessage( result.getThrowable() ) );
+        }
+        return buf.toString();
     }
 }

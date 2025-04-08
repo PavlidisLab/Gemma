@@ -1,4 +1,4 @@
-package ubic.gemma.cli.util;
+package ubic.gemma.cli.batch;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.util.Assert;
@@ -11,14 +11,14 @@ import java.util.concurrent.atomic.AtomicInteger;
  * A task executor that automatically reports errors in batch tasks.
  */
 @CommonsLog
-class BatchTaskExecutorService extends AbstractDelegatingExecutorService {
+public class BatchTaskExecutorService extends AbstractDelegatingExecutorService {
 
     private final BatchTaskProgressReporter progressReporter;
 
     private final AtomicInteger batchTaskCounter = new AtomicInteger( 0 );
     private final AtomicInteger completedBatchTasks = new AtomicInteger( 0 );
 
-    BatchTaskExecutorService( ExecutorService delegate, BatchTaskProgressReporter progressReporter ) {
+    public BatchTaskExecutorService( ExecutorService delegate, BatchTaskProgressReporter progressReporter ) {
         super( delegate );
         this.progressReporter = progressReporter;
     }
@@ -69,7 +69,7 @@ class BatchTaskExecutorService extends AbstractDelegatingExecutorService {
     /**
      * Obtain the number of completed batch tasks.
      */
-    int getRemainingTasks() {
+    public int getRemainingTasks() {
         Assert.state( isShutdown(), "Executor service is still running, cannot calculate the number of remaining tasks." );
         return batchTaskCounter.get() - completedBatchTasks.get();
     }

@@ -1,11 +1,11 @@
-package ubic.gemma.cli.util;
+package ubic.gemma.cli.batch;
 
 import java.io.IOException;
 
 /**
  * @author poirigui
  */
-class SuppressBatchTaskSummaryWriter implements BatchTaskSummaryWriter {
+public class SuppressBatchTaskSummaryWriter implements BatchTaskSummaryWriter {
 
     @Override
     public void write( BatchTaskProcessingResult result ) throws IOException {
