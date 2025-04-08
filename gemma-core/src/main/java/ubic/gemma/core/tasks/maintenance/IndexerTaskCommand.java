@@ -19,6 +19,7 @@
 
 package ubic.gemma.core.tasks.maintenance;
 
+import ubic.gemma.core.job.Task;
 import ubic.gemma.core.job.TaskCommand;
 
 /**
@@ -46,7 +47,7 @@ public class IndexerTaskCommand extends TaskCommand {
     }
 
     @Override
-    public Class<?> getTaskClass() {
+    public Class<? extends Task<?>> getTaskClass() {
         return IndexerTask.class;
     }
 

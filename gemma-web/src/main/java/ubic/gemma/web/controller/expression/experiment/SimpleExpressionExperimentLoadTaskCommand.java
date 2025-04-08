@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,73 +18,38 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.genome.Taxon;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import ubic.gemma.core.job.TaskCommand;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
 
-import java.util.HashSet;
+import java.util.Collection;
+import java.util.Locale;
 
 /**
- * Extends a SimpleExpressionExperimentMetaData with information about the file
+ * Extends a SimpleExpressionExperimentMetaData with information about the file and provide simplified taxon/platform
+ * information.
  *
  * @author pavlidis
  */
-public class SimpleExpressionExperimentLoadTaskCommand extends SimpleExpressionExperimentMetaData {
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class SimpleExpressionExperimentLoadTaskCommand extends TaskCommand {
 
     private static final long serialVersionUID = 1L;
-    boolean validateOnly;
+
+    private String shortName;
+    private String name;
+    private String description;
+    private Long taxonId;
+    private Collection<Long> arrayDesignIds;
+    private String quantitationTypeName;
+    private String quantitationTypeDescription;
+    private Boolean isRatio = Boolean.FALSE;
+    private ScaleType scale;
+    private Integer pubMedId;
+
+    private boolean validateOnly;
     private String serverFilePath;
     private String originalFileName;
-    private String arrayDesignName;
-    private String taxonName;
-
-    public SimpleExpressionExperimentLoadTaskCommand() {
-
-        this.setArrayDesigns( new HashSet<ArrayDesign>() );
-        this.setTaxon( Taxon.Factory.newInstance() );
-    }
-
-    public String getArrayDesignName() {
-        return this.arrayDesignName;
-    }
-
-    public void setArrayDesignName( String arrayDesign ) {
-        this.arrayDesignName = arrayDesign;
-    }
-
-    public String getOriginalFileName() {
-        return originalFileName;
-    }
-
-    public void setOriginalFileName( String originalFileName ) {
-        this.originalFileName = originalFileName;
-    }
-
-    public String getServerFilePath() {
-        return serverFilePath;
-    }
-
-    public void setServerFilePath( String serverFilePath ) {
-        this.serverFilePath = serverFilePath;
-    }
-
-    public String getTaxonName() {
-        return this.taxonName;
-    }
-
-    public void setTaxonName( String taxonName ) {
-        this.taxonName = taxonName;
-    }
-
-    /**
-     * @return Whether the command object should be validated or actually processed.
-     */
-    protected boolean isValidateOnly() {
-        return validateOnly;
-    }
-
-    protected void setValidateOnly( boolean validateOnly ) {
-        this.validateOnly = validateOnly;
-    }
-
 }

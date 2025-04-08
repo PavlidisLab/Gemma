@@ -47,11 +47,11 @@ class SubmittedTaskLocal implements SubmittedTask {
     private CompletableFuture<TaskResult> future;
 
     public SubmittedTaskLocal( TaskCommand taskCommand, TaskPostProcessing taskPostProcessing, Executor executor ) {
-        this.taskId = taskCommand.getTaskId();
+        this.taskId = getTaskCommand().getTaskId();
         this.taskCommand = taskCommand;
 
         // This can be changed by the user AFTER the task was submitted.
-        this.emailAlert = taskCommand.isEmailAlert();
+        this.emailAlert = getTaskCommand().isEmailAlert();
 
         this.status = Status.QUEUED;
         this.submissionTime = new Date();
@@ -110,8 +110,8 @@ class SubmittedTaskLocal implements SubmittedTask {
         emailAlert = true;
         assert taskPostProcessing != null : "Task postprocessing was null";
         taskPostProcessing.addEmailNotification( future,
-                new EmailNotificationContext( taskCommand.getTaskId(), taskCommand.getSubmitter(),
-                        taskCommand.getTaskClass().getSimpleName() ), executor );
+                new EmailNotificationContext( getTaskCommand().getTaskId(), getTaskCommand().getSubmitter(),
+                        getTaskCommand().getTaskClass().getSimpleName() ), executor );
     }
 
     @Override

@@ -25,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceProcessingServiceImpl;
 import ubic.gemma.core.loader.expression.geo.model.*;
@@ -59,16 +58,13 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.core.loader.expression.geo.model.GeoSeriesType.EXPRESSION_PROFILING_BY_ARRAY;
+import static ubic.gemma.core.ontology.ValueStringToOntologyMapping.lookup;
 
 /**
  * Convert GEO domain objects into Gemma objects.
@@ -862,7 +858,7 @@ public class GeoConverterImpl implements GeoConverter {
                 assert !vartype.equals( VariableType.other );
                 this.convertVariableType( gemmaChar, vartype );
 
-                CharacteristicValueObject mappedValueTerm = ontologyLookupSampleCharacteristic( value, gemmaChar.getCategory() );
+                Characteristic mappedValueTerm = lookup( value, gemmaChar.getCategory() );
 
                 try {
                     if ( mappedValueTerm != null ) {
@@ -886,75 +882,6 @@ public class GeoConverterImpl implements GeoConverter {
             }
         }
     }
-
-    /**
-     * Attempt to identify a preset value (ontology term) for certain strings found in GEO data sets. The presets are
-     * stored in valueStringToOntologyTermMappings.txt.
-     *
-     */
-    private CharacteristicValueObject ontologyLookupSampleCharacteristic( String value, String category ) {
-        if ( term2OntologyMappings.isEmpty() ) {
-            initializeTerm2OntologyMappings();
-        }
-
-        if ( category == null || !term2OntologyMappings.containsKey( category ) ) {
-            return null;
-        }
-
-        return term2OntologyMappings.get( category ).get( value.toLowerCase() );
-    }
-
-    /**
-     * See also GeoChannel, in which we have canned values for some sample characteristics.
-     * See also convertVariableType where we map some to some categories.
-     */
-    private void initializeTerm2OntologyMappings() {
-        try ( BufferedReader in = new BufferedReader( new InputStreamReader( new ClassPathResource( "/ubic/gemma/core/ontology/valueStringToOntologyTermMappings.txt" ).getInputStream() ) ) ) {
-            while ( in.ready() ) {
-                String line = in.readLine().trim();
-                if ( line.startsWith( "#" ) ) {
-                    continue;
-                }
-                if ( line.isEmpty() ) continue;
-
-                String[] split = StringUtils.split( line, "\t" );
-
-                if ( split.length < 5 ) {
-                    log.warn( "Did not get expected fields for line: " + line );
-                    continue;
-                }
-
-                String inputValue = split[0].toLowerCase();
-
-                String value = split[1];
-                String valueUri = split[2];
-                String category = split[3];
-                String categoryUri = split[4];
-
-                if ( StringUtils.isBlank( value ) || StringUtils.isBlank( valueUri ) || StringUtils.isBlank( category ) || StringUtils.isBlank( categoryUri ) ) {
-                    throw new IllegalArgumentException( "Invalid line had blank field(s): " + line );
-                }
-
-                if ( !term2OntologyMappings.containsKey( category ) ) {
-                    term2OntologyMappings.put( category, new HashMap<String, CharacteristicValueObject>() );
-                }
-
-                if ( term2OntologyMappings.get( category ).containsKey( inputValue ) ) {
-                    log.warn( "Duplicate value: " + inputValue + ", ignoring" );
-                    continue;
-                }
-
-                // NOTE: extensions via modifiers is not to be supported here, as GEO only has key-value pairs.
-                CharacteristicValueObject c = new CharacteristicValueObject( value, valueUri, category, categoryUri );
-                term2OntologyMappings.get( category ).put( inputValue, c );
-            }
-        } catch ( IOException e ) {
-            log.error( "Ontology terms mapped from strings failed to initialize from file" );
-        }
-
-    }
-
-    private static Map<String, Map<String, CharacteristicValueObject>> term2OntologyMappings = new ConcurrentHashMap<>();
 
     /**
      * Take contact and contributer information from a GeoSeries and put it in the ExpressionExperiment.

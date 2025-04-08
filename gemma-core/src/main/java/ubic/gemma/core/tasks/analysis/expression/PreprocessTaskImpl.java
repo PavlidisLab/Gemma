@@ -41,17 +41,17 @@ public class PreprocessTaskImpl
 
     @Override
     public TaskResult call() {
-        ExpressionExperiment ee = taskCommand.getExpressionExperiment();
+        ExpressionExperiment ee = getTaskCommand().getExpressionExperiment();
         ee = expressionExperimentService.thaw( ee );
-        if ( taskCommand.diagnosticsOnly() ) {
+        if ( getTaskCommand().diagnosticsOnly() ) {
             preprocessorService.processDiagnostics( ee );
-            return new TaskResult( taskCommand, "Diagnostics updated" );
+            return newTaskResult( "Diagnostics updated" );
         }
         try {
             preprocessorService.process( ee );
-            return new TaskResult( taskCommand, "Preprocessing completed" );
+            return newTaskResult( "Preprocessing completed" );
         } catch ( PreprocessingException e ) {
-            return new TaskResult( taskCommand, "Failed: " + e.getMessage() );
+            return newTaskResult( "Failed: " + e.getMessage() );
         }
     }
 }

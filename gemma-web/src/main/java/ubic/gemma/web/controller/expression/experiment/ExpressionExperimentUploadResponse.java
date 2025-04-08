@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,9 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-public class ExpressionExperimentUploadResponse {
+import java.io.Serializable;
+
+public class ExpressionExperimentUploadResponse implements Serializable {
 
     private Long taskId;
 

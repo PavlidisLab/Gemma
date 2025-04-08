@@ -49,12 +49,12 @@ import ubic.gemma.core.analysis.report.WhatsNew;
 import ubic.gemma.core.analysis.report.WhatsNewService;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.job.AbstractTask;
-import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.TaskRunningService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResultDisplayObject;
+import ubic.gemma.core.tasks.EntityTaskCommand;
 import ubic.gemma.core.tasks.analysis.expression.UpdateEEDetailsCommand;
 import ubic.gemma.core.tasks.analysis.expression.UpdatePubMedCommand;
 import ubic.gemma.core.util.BuildInfo;
@@ -281,7 +281,7 @@ public class ExpressionExperimentController {
     @Secured("GROUP_USER")
     public String deleteById( Long id ) {
         if ( id == null ) return null;
-        RemoveExpressionExperimentTask task = new RemoveExpressionExperimentTask( new TaskCommand( id ) );
+        RemoveExpressionExperimentTask task = new RemoveExpressionExperimentTask( new EntityTaskCommand<>( ExpressionExperiment.class, id ) );
         return taskRunningService.submitTask( task );
     }
 
@@ -880,7 +880,7 @@ public class ExpressionExperimentController {
     @SuppressWarnings("UnusedReturnValue") // AJAX method - Possibly used in JS
     @Secured("GROUP_USER")
     public String removePrimaryPublication( Long eeId ) {
-        RemovePubMed task = new RemovePubMed( new TaskCommand( eeId ) );
+        RemovePubMed task = new RemovePubMed( new EntityTaskCommand<>( ExpressionExperiment.class, eeId ) );
         return taskRunningService.submitTask( task );
     }
 
@@ -1854,33 +1854,32 @@ public class ExpressionExperimentController {
      *
      * @author pavlidis
      */
-    private class RemoveExpressionExperimentTask extends AbstractTask<TaskCommand> {
+    private class RemoveExpressionExperimentTask extends AbstractTask<EntityTaskCommand<ExpressionExperiment>> {
 
-        public RemoveExpressionExperimentTask( TaskCommand command ) {
+        public RemoveExpressionExperimentTask( EntityTaskCommand<ExpressionExperiment> command ) {
             super( command );
         }
 
         @Override
         public TaskResult call() {
-            expressionExperimentService.remove( taskCommand.getEntityId() );
+            expressionExperimentService.remove( getTaskCommand().getEntityId() );
             String url = entityUrlBuilder.fromRoot().all( ExpressionExperiment.class ).toUriString();
-            return new TaskResult( taskCommand, new ModelAndView( new RedirectView( url, true ) )
-                    .addObject( "message", "Dataset id: " + taskCommand.getEntityId() + " removed from Database" ) );
+            return newTaskResult( "Dataset id: " + getTaskCommand().getEntityId() + " removed from Database" );
         }
     }
 
-    private class RemovePubMed extends AbstractTask<TaskCommand> {
+    private class RemovePubMed extends AbstractTask<EntityTaskCommand<ExpressionExperiment>> {
 
-        public RemovePubMed( TaskCommand command ) {
+        public RemovePubMed( EntityTaskCommand<ExpressionExperiment> command ) {
             super( command );
         }
 
         @Override
         public TaskResult call() {
-            ExpressionExperiment ee = getExperimentById( taskCommand.getEntityId(), true );
+            ExpressionExperiment ee = getExperimentById( getTaskCommand().getEntityId(), true );
 
             if ( ee.getPrimaryPublication() == null ) {
-                return new TaskResult( taskCommand, false );
+                return newTaskResult( false );
             }
 
             ExpressionExperimentController.log.info( "Removing reference" );
@@ -1888,7 +1887,7 @@ public class ExpressionExperimentController {
 
             expressionExperimentService.update( ee );
 
-            return new TaskResult( taskCommand, true );
+            return newTaskResult( true );
         }
 
     }
@@ -1901,12 +1900,12 @@ public class ExpressionExperimentController {
 
         @Override
         public TaskResult call() {
-            Long eeId = taskCommand.getEntityId();
+            Long eeId = getTaskCommand().getEntityId();
             ExpressionExperiment expressionExperiment = expressionExperimentService.loadWithPrimaryPublication( eeId );
             if ( expressionExperiment == null )
                 throw new EntityNotFoundException( "Cannot access experiment with id=" + eeId );
 
-            String pubmedId = taskCommand.getPubmedId();
+            String pubmedId = getTaskCommand().getPubmedId();
             BibliographicReference publication = bibliographicReferenceService.findByExternalId( pubmedId );
 
             if ( publication != null ) {
@@ -1968,7 +1967,7 @@ public class ExpressionExperimentController {
             result.setPubmedId( Integer.parseInt( pubmedId ) );
             publication = bibliographicReferenceService.thaw( publication );
             result.setPrimaryCitation( CitationValueObject.convert2CitationValueObject( publication ) );
-            return new TaskResult( taskCommand, result );
+            return newTaskResult( result );
         }
 
     }

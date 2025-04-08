@@ -46,7 +46,7 @@ function __gemma_cli_staging_complete() {
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.LoadSimpleExpressionDataCli ' ]]; then
         if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--dir|--file|-batchFormat|-batchOutputFile|-batchReportFrequency|-d|-f) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --dir --file --help -batchFormat -batchOutputFile -batchReportFrequency -d -f -h" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --create-image-clones --dir --file --help --legacy -batchFormat -batchOutputFile -batchReportFrequency -createImageClones -d -f -h -legacy" -- "$2")
         fi
         if [[ "$current_option" =~ (--batch-output-file|--dir|--file|-batchOutputFile|-d|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
@@ -54,7 +54,7 @@ function __gemma_cli_staging_complete() {
     fi
     if [[ " $words " =~ ' addTSVData ' ]]; then
         if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--dir|--file|-batchFormat|-batchOutputFile|-batchReportFrequency|-d|-f) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --dir --file --help -batchFormat -batchOutputFile -batchReportFrequency -d -f -h" -- "$2")
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --create-image-clones --dir --file --help --legacy -batchFormat -batchOutputFile -batchReportFrequency -createImageClones -d -f -h -legacy" -- "$2")
         fi
         if [[ "$current_option" =~ (--batch-output-file|--dir|--file|-batchOutputFile|-d|-f) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")

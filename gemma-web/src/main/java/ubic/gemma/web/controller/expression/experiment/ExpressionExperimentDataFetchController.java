@@ -32,8 +32,6 @@ import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.job.AbstractTask;
@@ -227,8 +225,7 @@ public class ExpressionExperimentDataFetchController {
             StopWatch watch = new StopWatch();
             watch.start();
 
-            assert this.taskCommand != null;
-            Long eeId = this.taskCommand.getExpressionExperimentId();
+            Long eeId = this.getTaskCommand().getExpressionExperimentId();
             ExpressionExperiment ee = expressionExperimentService.load( eeId );
 
             if ( ee == null ) {
@@ -246,9 +243,7 @@ public class ExpressionExperimentDataFetchController {
             watch.stop();
             log.debug( "Finished getting co-expression file; done in " + watch.getTime() + " milliseconds" );
 
-            ModelAndView mav = new ModelAndView( new RedirectView( "/getData.html?file=" + f.getFileName(), true ) );
-
-            return new TaskResult( taskCommand, mav );
+            return newTaskResult( null );
         }
     }
 
@@ -269,14 +264,11 @@ public class ExpressionExperimentDataFetchController {
             StopWatch watch = new StopWatch();
             watch.start();
 
-            /* 'do yer thang' */
-            assert this.taskCommand != null;
-
-            Long qtId = taskCommand.getQuantitationTypeId();
-            Long eeId = taskCommand.getExpressionExperimentId();
-            Long eedId = taskCommand.getExperimentalDesignId();
-            String format = taskCommand.getFormat();
-            boolean filtered = taskCommand.isFilter();
+            Long qtId = getTaskCommand().getQuantitationTypeId();
+            Long eeId = getTaskCommand().getExpressionExperimentId();
+            Long eedId = getTaskCommand().getExperimentalDesignId();
+            String format = getTaskCommand().getFormat();
+            boolean filtered = getTaskCommand().isFilter();
 
             String usedFormat = "text";
 
@@ -391,10 +383,7 @@ public class ExpressionExperimentDataFetchController {
             watch.stop();
             log.debug( "Finished writing and downloading a file; done in " + watch.getTime() + " milliseconds" );
 
-            ModelAndView mav = new ModelAndView( new RedirectView( "/getData.html?file=" + f.getFileName(), true ) );
-
-            return new TaskResult( taskCommand, mav );
-
+            return newTaskResult( null );
         }
 
     }
@@ -414,12 +403,10 @@ public class ExpressionExperimentDataFetchController {
             watch.start();
             Collection<Path> files = new HashSet<>();
 
-            assert this.taskCommand != null;
-
-            if ( this.taskCommand.getAnalysisId() != null ) {
+            if ( this.getTaskCommand().getAnalysisId() != null ) {
 
                 Path f;
-                try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateDiffExArchiveFile( taskCommand.getAnalysisId(), taskCommand.isForceRewrite() ) ) {
+                try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateDiffExArchiveFile( getTaskCommand().getAnalysisId(), getTaskCommand().isForceRewrite() ) ) {
                     f = lockedPath.getPath();
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );
@@ -455,12 +442,8 @@ public class ExpressionExperimentDataFetchController {
             //     throw new UnsupportedOperationException( "Sorry, you can't get multiple analyses at once using this method." );
             // }
 
-            ModelAndView mav = new ModelAndView(
-                    new RedirectView( "/getData.html?file=" + files.iterator().next().getFileName(), true ) );
-            return new TaskResult( taskCommand, mav );
-
+            return newTaskResult( null );
         }
-
     }
 }
 

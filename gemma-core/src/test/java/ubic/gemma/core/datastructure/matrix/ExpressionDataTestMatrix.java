@@ -20,16 +20,18 @@
 package ubic.gemma.core.datastructure.matrix;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderServiceImpl;
-import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
+import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimplePlatformMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimpleQuantitationTypeMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimpleTaxonMetadata;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Taxon;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,33 +49,28 @@ public class ExpressionDataTestMatrix extends ExpressionDataDoubleMatrix {
 
     public ExpressionDataTestMatrix() throws IOException {
         super();
-        Collection<ArrayDesign> ads = new HashSet<>();
         SimpleExpressionDataLoaderService service = new SimpleExpressionDataLoaderServiceImpl();
 
-        SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
+        SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
 
-        Taxon taxon = Taxon.Factory.newInstance();
-        taxon.setCommonName( "mouse" );
-        taxon.setIsGenesUsable( true );
-
-        ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setName( "new ad" );
-        ad.setPrimaryTaxon( taxon );
-        ads.add( ad );
+        Collection<SimplePlatformMetadata> ads = new HashSet<>();
+        ads.add( SimplePlatformMetadata.forName( "new ad" ) );
         metaData.setArrayDesigns( ads );
 
-        metaData.setTaxon( taxon );
+        metaData.setTaxon( SimpleTaxonMetadata.forName( "mouse" ) );
         metaData.setName( "ee" );
 
-        metaData.setQuantitationTypeName( "testing" );
-        metaData.setGeneralType( GeneralType.QUANTITATIVE );
-        metaData.setScale( ScaleType.LOG2 );
-        metaData.setType( StandardQuantitationType.AMOUNT );
-        metaData.setIsRatio( true );
+        SimpleQuantitationTypeMetadata qtMetadata = new SimpleQuantitationTypeMetadata();
+        qtMetadata.setName( "testing" );
+        qtMetadata.setGeneralType( GeneralType.QUANTITATIVE );
+        qtMetadata.setScale( ScaleType.LOG2 );
+        qtMetadata.setType( StandardQuantitationType.AMOUNT );
+        qtMetadata.setIsRatio( true );
+        metaData.setQuantitationType( qtMetadata );
 
         try ( InputStream data = this.getClass()
                 .getResourceAsStream( "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" ) ) {
-            DoubleMatrix<String, String> matrix = service.parse( data );
+            DoubleMatrix<String, String> matrix = new DoubleMatrixReader().read( data );
             ExpressionExperiment ee = service.convert( metaData, matrix );
             super.init();
             Collection<BulkExpressionDataVector> selectedVectors = super.selectVectors( ee, ee.getQuantitationTypes().iterator().next() );

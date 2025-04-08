@@ -27,17 +27,17 @@ public class BatchInfoFetchTaskImpl extends AbstractTask<BatchInfoFetchTaskComma
 
     @Override
     public TaskResult call() {
-        TaskResult result = new TaskResult( taskCommand, null );
+        TaskResult result = newTaskResult( null );
 
-        if ( taskCommand.doAll() ) {
+        if ( getTaskCommand().doAll() ) {
             throw new UnsupportedOperationException(
                     "Doing all Batch fetches in task not implemented, sorry, you must configure one" );
-        } else if ( taskCommand.getExpressionExperiment() != null ) {
-            taskCommand.setMaxRuntime( 30 ); // time to download files etc.
+        } else if ( getTaskCommand().getExpressionExperiment() != null ) {
+            getTaskCommand().setMaxRuntime( 30 ); // time to download files etc.
             try {
-                batchInfoService.fillBatchInformation( taskCommand.getExpressionExperiment(), true );
+                batchInfoService.fillBatchInformation( getTaskCommand().getExpressionExperiment(), true );
             } catch ( BatchInfoPopulationException e ) {
-                log.warn( "Could not fill batch information for " + taskCommand.getExpressionExperiment() + ".", e );
+                log.warn( "Could not fill batch information for " + getTaskCommand().getExpressionExperiment() + ".", e );
             }
         } else {
             log.warn( "TaskCommand was not valid, nothing being done" );

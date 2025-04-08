@@ -22,25 +22,43 @@ package ubic.gemma.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
-import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
+import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
+import ubic.gemma.cli.util.EnumConverter;
+import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
+import ubic.gemma.core.loader.expression.simple.model.*;
+import ubic.gemma.core.ontology.ValueStringToOntologyMapping;
+import ubic.gemma.core.util.TsvUtils;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import java.io.*;
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Command Line tools for loading the expression experiment in flat files
@@ -48,34 +66,43 @@ import java.util.HashSet;
  * @author xiangwan
  */
 public class LoadSimpleExpressionDataCli extends AbstractAuthenticatedCLI {
-    private final static String SPLIT_CHAR = "\t";
-    private final static int NAME_I = 0;
-    private final static int SHORT_NAME_I = LoadSimpleExpressionDataCli.NAME_I + 1;
-    private final static int DESCRIPTION_I = LoadSimpleExpressionDataCli.SHORT_NAME_I + 1;
-    private final static int AD_SHORT_NAME_I = LoadSimpleExpressionDataCli.DESCRIPTION_I + 1; // The short name of the arrayDesign
-    private final static int DATA_FILE_I = LoadSimpleExpressionDataCli.AD_SHORT_NAME_I + 1;
-    private final static int SPECIES_I = LoadSimpleExpressionDataCli.DATA_FILE_I + 1;
-    private final static int Q_NAME_I = LoadSimpleExpressionDataCli.SPECIES_I + 1;
-    private final static int Q_DESCRIPTION_I = LoadSimpleExpressionDataCli.Q_NAME_I + 1;
-    private final static int Q_TYPE_I = LoadSimpleExpressionDataCli.Q_DESCRIPTION_I + 1;
-    private final static int Q_SCALE_I = LoadSimpleExpressionDataCli.Q_TYPE_I + 1;
-    private final static int PUBMED_I = LoadSimpleExpressionDataCli.Q_SCALE_I + 1;
-    private final static int SOURCE_I = LoadSimpleExpressionDataCli.PUBMED_I + 1;
-    private final static int ARRAY_DESIGN_NAME_I = LoadSimpleExpressionDataCli.SOURCE_I + 1;
-    private final static int TECHNOLOGY_TYPE_I = LoadSimpleExpressionDataCli.ARRAY_DESIGN_NAME_I + 1;
-    private final static int TOTAL_FIELDS = LoadSimpleExpressionDataCli.TECHNOLOGY_TYPE_I + 1;
+
+    private static final String[] LEGACY_HEADER = new String[] {
+            "name", "short_name", "description", "array_design_short_name", "data_file", "species", "qt_name",
+            "qt_description", "qt_type", "qt_scale", "pubmed_id", "source", "array_design_name", "technology_type"
+    };
+
+    // For historical reason, this is the header assumed in the TSV file if unspecified. Please do not alter!
+    private static final CSVFormat LEGACY_TSV_FORMAT = CSVFormat.TDF.builder()
+            .setHeader( LEGACY_HEADER )
+            .setCommentMarker( '#' )
+            .setIgnoreEmptyLines( true )
+            .get();
+
+    private static final String[] HEADER = ArrayUtils.addAll( LEGACY_HEADER, "samples_metadata_file" );
+
+    private static final CSVFormat TSV_FORMAT = CSVFormat.TDF.builder()
+            .setHeader()
+            .setSkipHeaderRecord( true )
+            .setCommentMarker( '#' )
+            .setIgnoreEmptyLines( true )
+            .get();
 
     @Autowired
     private ExpressionExperimentService eeService;
     @Autowired
-    private ArrayDesignService adService;
-    @Autowired
     private SimpleExpressionDataLoaderService eeLoaderService;
-    @Autowired
-    private TaxonService taxonService;
 
-    private String dirName = "./";
-    private String fileName = null;
+    private Path metadataFile;
+    @Nullable
+    private Path dataDir;
+    private boolean legacy;
+    private boolean createImageClones;
+
+    @Override
+    public String getCommandName() {
+        return "addTSVData";
+    }
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -88,193 +115,302 @@ public class LoadSimpleExpressionDataCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) {
-        if ( commandLine.hasOption( 'f' ) ) {
-            fileName = commandLine.getOptionValue( 'f' );
-        }
-
-        if ( commandLine.hasOption( 'd' ) ) {
-            dirName = commandLine.getOptionValue( 'd' );
-        }
-    }
-
-    @Override
-    public String getCommandName() {
-        return "addTSVData";
-    }
-
-    @Override
     protected void buildOptions( Options options ) {
-        Option fileOption = Option.builder( "f" ).required().hasArg().argName( "File Name" )
-                .desc( "the list of experiments in flat file" ).longOpt( "file" ).build();
-        options.addOption( fileOption );
-
-        Option dirOption = Option.builder( "d" ).hasArg().argName( "File Folder" )
-                .desc( "The folder for containing the experiment files" ).longOpt( "dir" ).build();
-        options.addOption( dirOption );
+        options.addOption( Option.builder( "f" )
+                .longOpt( "file" )
+                .required().hasArg()
+                .argName( "FILE" )
+                .type( Path.class )
+                .desc( "List of experiments to load with their basic metadata. It is a tabular file containing the following columns: " + String.join( ", ", HEADER ) + "." )
+                .build() );
+        options.addOption( Option.builder( "d" )
+                .longOpt( "dir" )
+                .hasArg().type( Path.class )
+                .argName( "DIRECTORY" )
+                .type( Path.class )
+                .desc( "If supplied, resolve data files mentioned in the metadata file via -f/--file relative to that directory." )
+                .build() );
+        options.addOption( Option.builder( "legacy" )
+                .longOpt( "legacy" )
+                .desc( "Load pre-1.32 metadata files lacking a header. The following columns are assumed: " + String.join( ", ", LEGACY_HEADER ) + "." )
+                .build() );
+        options.addOption( Option.builder( "createImageClones" )
+                .longOpt( "create-image-clones" )
+                .desc( "When populating a platform from the data file, also create biological characteristics for the design elements." )
+                .build() );
         addBatchOption( options );
     }
 
     @Override
+    protected void processOptions( CommandLine commandLine ) throws ParseException {
+        metadataFile = commandLine.getParsedOptionValue( 'f' );
+        dataDir = commandLine.getParsedOptionValue( 'd' );
+        legacy = commandLine.hasOption( "legacy" );
+        createImageClones = commandLine.hasOption( "createImageClones" );
+    }
+
+    @Override
     protected void doAuthenticatedWork() throws Exception {
-        if ( this.fileName != null ) {
-            log.info( "Loading experiments from " + this.fileName );
-            InputStream is = new FileInputStream( new File( this.dirName, this.fileName ) );
-            try ( BufferedReader br = new BufferedReader( new InputStreamReader( is ) ) ) {
-                String conf;
-                while ( ( conf = br.readLine() ) != null ) {
-
-                    if ( StringUtils.isBlank( conf ) ) {
-                        continue;
-                    }
-
-                    /* Comments in the list file */
-                    if ( conf.startsWith( "#" ) )
-                        continue;
-
-                    String expName = conf.split( LoadSimpleExpressionDataCli.SPLIT_CHAR )[0];
-
-                    try {
-                        this.loadExperiment( conf );
-                        addSuccessObject( expName );
-                    } catch ( Exception e ) {
-                        addErrorObject( expName, e );
-                    }
+        log.info( "Loading experiments from " + this.metadataFile );
+        try ( CSVParser parser = CSVParser.parse( metadataFile, StandardCharsets.UTF_8, legacy ? LEGACY_TSV_FORMAT : TSV_FORMAT ) ) {
+            for ( CSVRecord record : parser ) {
+                String expName = getRequiredRecordField( record, "name" );
+                try {
+                    loadExperiment( record );
+                    addSuccessObject( expName );
+                } catch ( Exception e ) {
+                    addErrorObject( expName, e );
                 }
             }
         }
     }
 
-    private void checkForArrayDesignName( String[] fields ) {
-        if ( StringUtils.isBlank( fields[LoadSimpleExpressionDataCli.ARRAY_DESIGN_NAME_I] ) ) {
-            throw new IllegalArgumentException( "Array design must be given if array design is new." );
-        }
-    }
-
-    private void configureArrayDesigns( String[] fields, SimpleExpressionExperimentMetaData metaData ) {
-        int i;
-        TechnologyType techType = TechnologyType.valueOf( fields[LoadSimpleExpressionDataCli.TECHNOLOGY_TYPE_I] );
-        Collection<ArrayDesign> ads = new HashSet<>();
-        if ( StringUtils.isBlank( fields[LoadSimpleExpressionDataCli.AD_SHORT_NAME_I] ) ) {
-            // that's okay, so long as we get an array design name
-            ArrayDesign ad = this.getNewArrayDesignFromName( fields );
-            ad.setTechnologyType( techType );
-            ad.setPrimaryTaxon( metaData.getTaxon() );
-            ads.add( ad );
-        } else if ( fields[LoadSimpleExpressionDataCli.AD_SHORT_NAME_I].trim().equals( "IMAGE" ) ) {
-            ArrayDesign ad = this.getNewArrayDesignFromName( fields );
-            ad.setTechnologyType( techType );
-            ad.setPrimaryTaxon( metaData.getTaxon() );
-            ads.add( ad );
-            metaData.setProbeIdsAreImageClones( true );
-        } else if ( StringUtils.isNotBlank( fields[LoadSimpleExpressionDataCli.ARRAY_DESIGN_NAME_I] ) ) {
-            // allow for the case where there is an additional new array design to be added.
-            ArrayDesign ad = this.getNewArrayDesignFromName( fields );
-            ad.setTechnologyType( techType );
-            ad.setPrimaryTaxon( metaData.getTaxon() );
-            ads.add( ad );
-        } else {
-            String allADs[] = fields[LoadSimpleExpressionDataCli.AD_SHORT_NAME_I].split( "\\+" );
-
-            for ( i = 0; i < allADs.length; i++ ) {
-                ArrayDesign ad = adService.findByShortName( allADs[i] );
-
-                if ( ad == null ) {
-                    Collection<ArrayDesign> existingAds = adService.findByAlternateName( allADs[i] );
-                    if ( existingAds.size() == 1 ) {
-                        ad = existingAds.iterator().next();
-                    } else if ( existingAds.size() > 1 ) {
-                        throw new IllegalStateException( "Array Design " + allADs[i]
-                                + " is ambiguous, it is an alternate name of more than one array design" );
-                    }
-                }
-
-                if ( ad == null ) {
-                    throw new IllegalStateException( "Array Design " + allADs[i]
-                            + " is not loaded into the system yet; load it and try again." );
-                }
-                ads.add( ad );
-            }
-        }
-        metaData.setArrayDesigns( ads );
-
-    }
-
-    private void configureQuantitationType( String[] fields, SimpleExpressionExperimentMetaData metaData ) {
-        metaData.setQuantitationTypeName( fields[LoadSimpleExpressionDataCli.Q_NAME_I] );
-        metaData.setQuantitationTypeDescription( fields[LoadSimpleExpressionDataCli.Q_DESCRIPTION_I] );
-        metaData.setGeneralType( GeneralType.QUANTITATIVE );
-
-        StandardQuantitationType sQType = StandardQuantitationType
-                .valueOf( fields[LoadSimpleExpressionDataCli.Q_TYPE_I] );
-        metaData.setType( sQType );
-
-        ScaleType sType = ScaleType.valueOf( fields[LoadSimpleExpressionDataCli.Q_SCALE_I] );
-        metaData.setScale( sType );
-    }
-
-    private void configureTaxon( String[] fields, SimpleExpressionExperimentMetaData metaData ) {
-        Taxon existing = taxonService.findByCommonName( fields[LoadSimpleExpressionDataCli.SPECIES_I] );
-        if ( existing == null ) {
-            throw new IllegalArgumentException(
-                    "There is no taxon with scientific name " + fields[LoadSimpleExpressionDataCli.SPECIES_I]
-                            + " in the system; please add it first before loading data." );
-        }
-        metaData.setTaxon( existing );
-    }
-
-    private ArrayDesign getNewArrayDesignFromName( String[] fields ) {
-        this.checkForArrayDesignName( fields );
-        ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setName( fields[LoadSimpleExpressionDataCli.ARRAY_DESIGN_NAME_I] );
-        ad.setShortName( ad.getName() );
-        return ad;
-    }
-
-    private void loadExperiment( String configurationLine ) throws Exception {
-        int i;
-        String fields[] = configurationLine.split( LoadSimpleExpressionDataCli.SPLIT_CHAR );
-        if ( fields.length != LoadSimpleExpressionDataCli.TOTAL_FIELDS ) {
-            throw new IllegalArgumentException( "Field Missing Got[" + fields.length + "]: " + configurationLine );
-        }
-        for ( i = 0; i < fields.length; i++ )
-            fields[i] = StringUtils.strip( fields[i] );
-
-        SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
-
-        String shortName = fields[LoadSimpleExpressionDataCli.SHORT_NAME_I];
+    private void loadExperiment( CSVRecord record ) throws IOException {
+        String shortName = getRequiredRecordField( record, "short_name" );
 
         ExpressionExperiment existing = eeService.findByShortName( shortName );
-
         if ( existing != null ) {
             throw new IllegalArgumentException( "There is already an experiment with short name " + shortName
                     + "; please choose something unique." );
         }
 
-        metaData.setName( fields[LoadSimpleExpressionDataCli.NAME_I] );
-
+        SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
         metaData.setShortName( shortName );
-        metaData.setDescription( fields[LoadSimpleExpressionDataCli.DESCRIPTION_I] );
+        metaData.setName( getRequiredRecordField( record, "name" ) );
+        metaData.setDescription( getRecordField( record, "description" ) );
 
-        this.configureTaxon( fields, metaData );
-
-        this.configureArrayDesigns( fields, metaData );
-
-        try ( InputStream data = new FileInputStream(
-                new File( this.dirName, fields[LoadSimpleExpressionDataCli.DATA_FILE_I] ) ) ) {
-
-            metaData.setSourceUrl( fields[LoadSimpleExpressionDataCli.SOURCE_I] );
-
-            String pubMedId = fields[LoadSimpleExpressionDataCli.PUBMED_I];
-            if ( StringUtils.isNotBlank( pubMedId ) ) {
-                metaData.setPubMedId( Integer.parseInt( pubMedId ) );
+        String accession;
+        if ( ( accession = getRecordField( record, "accession" ) ) != null ) {
+            String[] pieces = accession.split( ":", 2 );
+            if ( pieces.length != 2 ) {
+                throw new IllegalArgumentException( "Invalid value for the 'accession' column, must be of the form <database>:<accession>." );
             }
+            metaData.setAccession( SimpleDatabaseEntry.fromAccession( pieces[1], pieces[0] ) );
+        }
 
-            this.configureQuantitationType( fields, metaData );
+        this.configureTaxon( record, metaData );
 
-            ExpressionExperiment ee = eeLoaderService.create( metaData, data );
-            this.eeService.thawLite( ee );
+        Map<String, SimplePlatformMetadata> id2ad = new HashMap<>();
+        this.configureArrayDesigns( record, metaData, id2ad );
+
+        metaData.setSource( getRecordField( record, "source" ) );
+        String pubMedId = getRecordField( record, "pubmed_id" );
+        if ( pubMedId != null ) {
+            metaData.setPubMedId( Integer.parseInt( pubMedId ) );
+        }
+
+        String samplesMetadataFile;
+        if ( ( samplesMetadataFile = getRecordField( record, "samples_metadata_file" ) ) != null ) {
+            configureSamplesMetadata( samplesMetadataFile, metaData, id2ad );
+        }
+
+        String dataFile;
+        if ( ( dataFile = getRecordField( record, "data_file" ) ) != null ) {
+            this.configureQuantitationType( record, metaData );
+            try ( InputStream data = openDataFile( shortName, dataFile ) ) {
+                eeLoaderService.create( metaData, new DoubleMatrixReader().read( data ) );
+            }
+        } else {
+            // only create with metadata
+            eeLoaderService.create( metaData, null );
         }
     }
 
+    private void configureTaxon( CSVRecord record, SimpleExpressionExperimentMetadata metaData ) {
+        String species = getRequiredRecordField( record, "species" );
+        try {
+            metaData.setTaxon( SimpleTaxonMetadata.forNcbiId( Integer.parseInt( species ) ) );
+        } catch ( NumberFormatException e ) {
+            metaData.setTaxon( SimpleTaxonMetadata.forName( species ) );
+        }
+    }
+
+    private void configureArrayDesigns( CSVRecord record, SimpleExpressionExperimentMetadata metaData, Map<String, SimplePlatformMetadata> id2ad ) {
+        String shortName = getRecordField( record, "array_design_short_name" );
+        String name = getRecordField( record, "array_design_name" );
+        if ( shortName == null ) {
+            SimplePlatformMetadata ad = new SimplePlatformMetadata();
+            // that's okay, so long as we get an array design name
+            ad.setName( requireNonNull( name, "A name must be provided if the 'array_design_short_name' is left blank or omitted." ) );
+            ad.setShortName( name );
+            TechnologyType techType = EnumConverter.of( TechnologyType.class )
+                    .apply( getRequiredRecordField( record, "technology_type" ) );
+            ad.setTechnologyType( techType );
+            metaData.getArrayDesigns().add( ad );
+            id2ad.put( name, ad );
+        } else if ( ( legacy && shortName.equalsIgnoreCase( "IMAGE" ) ) ) {
+            log.info( "Treating the 'IMAGE' array design short name as a special case since legacy mode is enabled." );
+            SimplePlatformMetadata ad = new SimplePlatformMetadata();
+            ad.setName( requireNonNull( name, "A name must be provided if 'IMAGE' is used as platform short name." ) );
+            ad.setShortName( name ); // don't use IMAGE as short name
+            TechnologyType techType = EnumConverter.of( TechnologyType.class )
+                    .apply( getRequiredRecordField( record, "technology_type" ) );
+            ad.setTechnologyType( techType );
+            metaData.getArrayDesigns().add( ad );
+            metaData.setProbeIdsAreImageClones( true );
+            id2ad.put( name, ad );
+        } else if ( name != null ) {
+            // allow for the case where there is an additional new array design to be added.
+            SimplePlatformMetadata ad = new SimplePlatformMetadata();
+            ad.setName( name );
+            ad.setShortName( shortName );
+            TechnologyType techType = EnumConverter.of( TechnologyType.class )
+                    .apply( getRequiredRecordField( record, "technology_type" ) );
+            ad.setTechnologyType( techType );
+            metaData.getArrayDesigns().add( ad );
+            metaData.setProbeIdsAreImageClones( createImageClones );
+            id2ad.put( shortName, ad );
+            id2ad.put( name, ad );
+        } else {
+            // existing ADs
+            String[] arrayDesignShortNames = StringUtils.split( getRequiredRecordField( record, "array_design_short_name" ), legacy ? '+' : TsvUtils.SUB_DELIMITER );
+            for ( String arrayDesignShortName : arrayDesignShortNames ) {
+                SimplePlatformMetadata ad = new SimplePlatformMetadata();
+                ad.setShortName( arrayDesignShortName );
+                metaData.getArrayDesigns().add( ad );
+                id2ad.put( arrayDesignShortName, ad );
+            }
+        }
+    }
+
+    private void configureSamplesMetadata( String sampleFile, SimpleExpressionExperimentMetadata metaData, Map<String, SimplePlatformMetadata> id2ad ) throws IOException {
+        try ( CSVParser parser = CSVParser.parse( openSampleMetadataFile( metaData.getName(), sampleFile ), StandardCharsets.UTF_8, TSV_FORMAT ) ) {
+            for ( CSVRecord sampleRecord : parser ) {
+                String name = getRequiredRecordField( sampleRecord, "name" );
+                String description = getRecordField( sampleRecord, "description" );
+                SimpleSampleMetadata bm = new SimpleSampleMetadata();
+                bm.setName( name );
+                bm.setDescription( description );
+                String accession;
+                if ( ( accession = getRecordField( sampleRecord, "accession" ) ) != null ) {
+                    String[] pieces = accession.split( ":", 2 );
+                    if ( pieces.length != 2 ) {
+                        throw new IllegalArgumentException( "Invalid value for the 'accession' column for sample with name '" + name + "', must be of the form <database>:<accession>." );
+                    }
+                    bm.setAccession( SimpleDatabaseEntry.fromAccession( pieces[1], pieces[0] ) );
+                }
+                configureSampleCharacteristics( sampleRecord, bm );
+                SimplePlatformMetadata ad = id2ad.get( getRecordField( sampleRecord, "array_design_used" ) );
+                if ( ad == null ) {
+                    throw new IllegalArgumentException( "Invalid value for the 'array_design_used' column, must be one of: " + id2ad.keySet().stream().sorted().collect( Collectors.joining( ", " ) ) + "." );
+                }
+                bm.setPlatformUsed( ad );
+                metaData.getSamples().add( bm );
+            }
+        }
+    }
+
+    private void configureSampleCharacteristics( CSVRecord sampleRecord, SimpleSampleMetadata bm ) throws IOException {
+        String c = getRecordField( sampleRecord, "characteristics" );
+        if ( c != null ) {
+            for ( String piece : StringUtils.split( c, TsvUtils.SUB_DELIMITER ) ) {
+                bm.getCharacteristics().add( parseCharacteristic( piece ) );
+            }
+        }
+        String cf = getRecordField( sampleRecord, "characteristics_file" );
+        if ( cf != null ) {
+            try ( CSVParser parser = CSVParser.parse( openSampleCharacteristicsFile( bm.getName(), cf ), StandardCharsets.UTF_8, TSV_FORMAT ) ) {
+                for ( CSVRecord record : parser ) {
+                    bm.getCharacteristics().add( parseCharacteristic( record ) );
+                }
+            }
+        }
+    }
+
+    private SimpleCharacteristic parseCharacteristic( String s ) {
+        String[] pieces = s.split( ":", 2 );
+        String category, value;
+        if ( pieces.length == 2 ) {
+            category = StringUtils.strip( pieces[0] );
+            value = StringUtils.strip( pieces[1] );
+        } else {
+            category = null;
+            value = s;
+        }
+        Collection<Characteristic> results;
+        if ( category != null ) {
+            Characteristic c = ValueStringToOntologyMapping.lookup( value, category );
+            if ( c != null ) {
+                return new SimpleCharacteristic( c.getCategory(), c.getCategoryUri(), c.getValue(), c.getValueUri() );
+            } else {
+                return new SimpleCharacteristic( category, null, value, null );
+            }
+        } else {
+            results = ValueStringToOntologyMapping.lookup( value );
+            if ( results.isEmpty() ) {
+                return new SimpleCharacteristic( null, null, s, null );
+            } else if ( results.size() == 1 ) {
+                Characteristic c = results.iterator().next();
+                return new SimpleCharacteristic( c.getCategory(), c.getCategoryUri(), c.getValue(), c.getValueUri() );
+            } else {
+                log.warn( "More than one characteristic found for " + s + ": " + results + ", will treat it as uncategorized." );
+                return new SimpleCharacteristic( null, null, s, null );
+            }
+        }
+    }
+
+    private SimpleCharacteristic parseCharacteristic( CSVRecord record ) {
+        return new SimpleCharacteristic(
+                getRecordField( record, "category" ), getRecordField( record, "category_uri" ),
+                getRequiredRecordField( record, "value" ), getRecordField( record, "value_uri" ) );
+    }
+
+    private void configureQuantitationType( CSVRecord record, SimpleExpressionExperimentMetadata metaData ) {
+        SimpleQuantitationTypeMetadata qtMetadata = new SimpleQuantitationTypeMetadata();
+        qtMetadata.setName( getRequiredRecordField( record, "qt_name" ) );
+        qtMetadata.setDescription( getRecordField( record, "qt_description" ) );
+        qtMetadata.setGeneralType( GeneralType.QUANTITATIVE );
+
+        StandardQuantitationType sQType = EnumConverter.of( StandardQuantitationType.class ).apply( getRequiredRecordField( record, "qt_type" ) );
+        qtMetadata.setType( sQType );
+
+        ScaleType sType = EnumConverter.of( ScaleType.class ).apply( getRequiredRecordField( record, "qt_scale" ) );
+        qtMetadata.setScale( sType );
+        qtMetadata.setRepresentation( PrimitiveType.DOUBLE );
+
+        metaData.setQuantitationType( qtMetadata );
+    }
+
+    private InputStream openDataFile( String expName, String dataFile ) throws IOException {
+        Path p = resolveDataFile( dataFile );
+        log.info( "Reading data for " + expName + " from " + p + "..." );
+        return openFile( p );
+    }
+
+    private InputStream openSampleMetadataFile( String expName, String sampleMetadataFile ) throws IOException {
+        Path p = resolveDataFile( sampleMetadataFile );
+        log.info( "Reading sample metadata data for " + expName + " from " + p + "..." );
+        return openFile( p );
+    }
+
+    private InputStream openSampleCharacteristicsFile( String sampleName, String characteristicFile ) throws IOException {
+        Path p = resolveDataFile( characteristicFile );
+        log.info( "Reading sample characteristics data for " + sampleName + " from " + p + "..." );
+        return openFile( p );
+    }
+
+    private Path resolveDataFile( String dataFile ) {
+        if ( dataDir != null ) {
+            return dataDir.resolve( dataFile );
+        } else {
+            return Paths.get( dataFile );
+        }
+    }
+
+    private InputStream openFile( Path p ) throws IOException {
+        if ( p.getFileName().toString().endsWith( ".gz" ) ) {
+            return new GZIPInputStream( Files.newInputStream( p ) );
+        } else {
+            return Files.newInputStream( p );
+        }
+    }
+
+    @Nullable
+    private String getRecordField( CSVRecord record, String field ) {
+        return record.isMapped( field ) ? StringUtils.stripToNull( record.get( field ) ) : null;
+    }
+
+    private String getRequiredRecordField( CSVRecord record, String field ) {
+        return requireNonNull( getRecordField( record, field ), () -> String.format( "Required value for field %s not found.", field ) );
+    }
 }

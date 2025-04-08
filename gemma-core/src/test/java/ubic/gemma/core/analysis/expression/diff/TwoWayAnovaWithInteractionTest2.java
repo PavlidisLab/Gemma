@@ -19,18 +19,22 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
-import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
+import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimplePlatformMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimpleQuantitationTypeMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimpleTaxonMetadata;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -83,29 +87,32 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
+        SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
+        metaData.setShortName( RandomStringUtils.randomAlphabetic( 10 ) );
+        metaData.setTaxon( SimpleTaxonMetadata.forName( "mouse" ) );
+        SimpleQuantitationTypeMetadata qtMetadata = new SimpleQuantitationTypeMetadata();
+        qtMetadata.setName( "whatever" );
+        // metaData.setScale( ScaleType.LOG2 ); // this is actually wrong!
+        qtMetadata.setScale( ScaleType.LINEAR );
+        metaData.setQuantitationType( qtMetadata );
+
+        SimplePlatformMetadata f = new SimplePlatformMetadata();
+        f.setShortName( "GSE8441_test" );
+        f.setTechnologyType( TechnologyType.ONECOLOR );
+        metaData.getArrayDesigns().add( f );
+
+        DoubleMatrix<String, String> matrix;
         try ( InputStream io = this.getClass()
                 .getResourceAsStream( "/data/analysis/expression/GSE8441_expmat_8probes.txt" ) ) {
-
-            SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
-            metaData.setShortName( RandomStringUtils.randomAlphabetic( 10 ) );
-            metaData.setTaxon( taxonService.findByCommonName( "mouse" ) );
-            metaData.setQuantitationTypeName( "whatever" );
-            // metaData.setScale( ScaleType.LOG2 ); // this is actually wrong!
-            metaData.setScale( ScaleType.LINEAR );
-
-            ArrayDesign f = ArrayDesign.Factory.newInstance();
-            f.setShortName( "GSE8441_test" );
-            f.setTechnologyType( TechnologyType.ONECOLOR );
-            f.setPrimaryTaxon( metaData.getTaxon() );
-            metaData.getArrayDesigns().add( f );
-
-            ee = dataLoaderService.create( metaData, io );
-
-            designImporter.importDesign( ee,
-                    this.getClass().getResourceAsStream( "/data/analysis/expression/606_GSE8441_expdesign.data.txt" ) );
-
-            ee = expressionExperimentService.thaw( ee );
+            matrix = new DoubleMatrixReader().read( io );
         }
+
+        ee = dataLoaderService.create( metaData, matrix );
+
+        designImporter.importDesign( ee,
+                this.getClass().getResourceAsStream( "/data/analysis/expression/606_GSE8441_expdesign.data.txt" ) );
+
+        ee = expressionExperimentService.thaw( ee );
     }
 
     /*

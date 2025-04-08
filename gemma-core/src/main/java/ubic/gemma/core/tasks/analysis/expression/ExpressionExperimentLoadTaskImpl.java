@@ -7,9 +7,9 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
+import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
-import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -34,11 +34,11 @@ public class ExpressionExperimentLoadTaskImpl extends AbstractTask<ExpressionExp
     @SuppressWarnings("unchecked")
     @Override
     public TaskResult call() {
-        String accession = taskCommand.getAccession();
-        boolean loadPlatformOnly = taskCommand.isLoadPlatformOnly();
-        boolean doSampleMatching = !taskCommand.isSuppressMatching();
-        boolean splitByPlatform = taskCommand.isSplitByPlatform();
-        boolean allowSuperSeriesLoad = taskCommand.isAllowSuperSeriesLoad();
+        String accession = getTaskCommand().getAccession();
+        boolean loadPlatformOnly = getTaskCommand().isLoadPlatformOnly();
+        boolean doSampleMatching = !getTaskCommand().isSuppressMatching();
+        boolean splitByPlatform = getTaskCommand().isSplitByPlatform();
+        boolean allowSuperSeriesLoad = getTaskCommand().isAllowSuperSeriesLoad();
         boolean allowSubSeriesLoad = true;
 
         TaskResult result;
@@ -58,10 +58,10 @@ public class ExpressionExperimentLoadTaskImpl extends AbstractTask<ExpressionExp
                     minimalDesigns.add( minimalDesign );
                 }
             }
-            result = new TaskResult( this.taskCommand, minimalDesigns );
+            result = newTaskResult( minimalDesigns );
         } else {
             @SuppressWarnings("ConstantConditions") // Better readability
-                    Collection<ExpressionExperiment> datasets = ( Collection<ExpressionExperiment> ) geoDatasetService
+            Collection<ExpressionExperiment> datasets = ( Collection<ExpressionExperiment> ) geoDatasetService
                     .fetchAndLoad( accession, loadPlatformOnly, doSampleMatching, splitByPlatform, allowSuperSeriesLoad,
                             allowSubSeriesLoad );
 
@@ -84,7 +84,7 @@ public class ExpressionExperimentLoadTaskImpl extends AbstractTask<ExpressionExp
                 minimalDatasets.add( minimalDataset );
             }
 
-            result = new TaskResult( this.taskCommand, minimalDatasets );
+            result = newTaskResult( minimalDatasets );
         }
 
         return result;

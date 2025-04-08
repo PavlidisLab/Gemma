@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.OutlierFlaggingService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -32,7 +33,10 @@ import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
-import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
+import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimplePlatformMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimpleQuantitationTypeMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimpleTaxonMetadata;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -46,7 +50,6 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
@@ -65,7 +68,7 @@ import static org.junit.Assert.*;
  */
 public class TwoChannelExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
-    private SimpleExpressionExperimentMetaData metaData = null;
+    private SimpleExpressionExperimentMetadata metaData = null;
 
     private ExpressionExperiment ee = null;
     private ExpressionExperiment newee = null;
@@ -94,28 +97,25 @@ public class TwoChannelExpressionDataDoubleMatrixTest extends AbstractGeoService
     @Before
     public void setUp() throws Exception {
 
-        Collection<ArrayDesign> ads = new HashSet<>();
 
-        metaData = new SimpleExpressionExperimentMetaData();
-        ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        ad.setName( "new ad" );
-        ads.add( ad );
+        metaData = new SimpleExpressionExperimentMetadata();
+        Collection<SimplePlatformMetadata> ads = new HashSet<>();
+        ads.add( SimplePlatformMetadata.forName( "new ad" ) );
         metaData.setArrayDesigns( ads );
 
-        Taxon taxon = Taxon.Factory.newInstance();
-        taxon.setCommonName( "mouse" );
-        taxon.setIsGenesUsable( true );
-        metaData.setTaxon( taxon );
+        metaData.setTaxon( SimpleTaxonMetadata.forName( "mouse" ) );
         metaData.setName( "ee" );
-        metaData.setQuantitationTypeName( "testing" );
-        metaData.setGeneralType( GeneralType.QUANTITATIVE );
-        metaData.setScale( ScaleType.LOG2 );
-        metaData.setType( StandardQuantitationType.AMOUNT );
-        metaData.setIsRatio( true );
+        SimpleQuantitationTypeMetadata qtMetadata = new SimpleQuantitationTypeMetadata();
+        qtMetadata.setName( "testing" );
+        qtMetadata.setGeneralType( GeneralType.QUANTITATIVE );
+        qtMetadata.setScale( ScaleType.LOG2 );
+        qtMetadata.setType( StandardQuantitationType.AMOUNT );
+        qtMetadata.setIsRatio( true );
+        metaData.setQuantitationType( qtMetadata );
 
         try ( InputStream data = this.getClass()
                 .getResourceAsStream( "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" ) ) {
-            DoubleMatrix<String, String> matrix = simpleExpressionDataLoaderService.parse( data );
+            DoubleMatrix<String, String> matrix = new DoubleMatrixReader().read( data );
             ee = simpleExpressionDataLoaderService.convert( metaData, matrix );
         }
 
@@ -143,7 +143,7 @@ public class TwoChannelExpressionDataDoubleMatrixTest extends AbstractGeoService
 
         /* test creating the ExpressionDataDoubleMatrix */
         QuantitationType quantitationType = QuantitationType.Factory.newInstance();
-        quantitationType.setName( metaData.getQuantitationTypeName() );
+        quantitationType.setName( metaData.getQuantitationType().getName() );
         quantitationType.setIsPreferred( true );
         quantitationType.setRepresentation( PrimitiveType.DOUBLE );
         quantitationType.setIsMaskedPreferred( false );

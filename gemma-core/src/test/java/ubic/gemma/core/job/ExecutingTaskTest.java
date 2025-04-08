@@ -16,8 +16,6 @@ package ubic.gemma.core.job;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Assume;
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.concurrent.DelegatingSecurityContextCallable;
@@ -25,7 +23,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 
-import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -43,12 +40,12 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
 
     @Test
     public void testOrderOfExecutionFailure() {
-        TaskCommand taskCommand = new TaskCommand();
+        TaskCommand taskCommand = new TestTaskCommand();
         Task<TaskCommand> task = new FailureTestTask();
         task.setTaskCommand( taskCommand );
 
-        ExecutingTask executingTask = new ExecutingTask( task, taskCommand.getTaskId() );
-        ExecutingTask.TaskLifecycleHandler lifecycleHandler = mock( ExecutingTask.TaskLifecycleHandler.class );
+        ExecutingTask executingTask = new ExecutingTask( task );
+        TaskLifecycleHandler lifecycleHandler = mock( TaskLifecycleHandler.class );
         executingTask.setLifecycleHandler( lifecycleHandler );
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -61,7 +58,8 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
             e.printStackTrace();
             fail();
         }
-        Throwable exception = taskResult.getException();
+        Exception exception = taskResult.getException();
+        assertNotNull( exception );
         assertEquals( AccessDeniedException.class, exception.getClass() );
         assertEquals( "Test!", exception.getMessage() );
 
@@ -77,12 +75,12 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
     // - exception in progress appender setup/teardown hook
     @Test
     public void testOrderOfExecutionSuccess() {
-        TaskCommand taskCommand = new TaskCommand();
+        TaskCommand taskCommand = new TestTaskCommand();
         Task<TaskCommand> task = new SuccessTestTask();
         task.setTaskCommand( taskCommand );
 
-        ExecutingTask executingTask = new ExecutingTask( task, taskCommand.getTaskId() );
-        ExecutingTask.TaskLifecycleHandler lifecycleHandler = mock( ExecutingTask.TaskLifecycleHandler.class );
+        ExecutingTask executingTask = new ExecutingTask( task );
+        TaskLifecycleHandler lifecycleHandler = mock( TaskLifecycleHandler.class );
         executingTask.setLifecycleHandler( lifecycleHandler );
 
         ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -99,7 +97,7 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
     public void testSecurityContextManagement() {
 
         this.runAsUser( "ExecutingTaskTestUser" );
-        TaskCommand taskCommand = new TaskCommand();
+        TaskCommand taskCommand = new TestTaskCommand();
         Authentication executingUserAuth = SecurityContextHolder.getContext().getAuthentication();
         assertSame( SecurityContextHolder.getContext(), taskCommand.getSecurityContext() );
 
@@ -116,8 +114,8 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         final Authentication[] authenticationAfterSuccess = new Authentication[1];
         final Authentication[] authenticationAfterComplete = new Authentication[1];
 
-        ExecutingTask executingTask = new ExecutingTask( task, taskCommand.getTaskId() );
-        executingTask.setLifecycleHandler( new ExecutingTask.TaskLifecycleHandler() {
+        ExecutingTask executingTask = new ExecutingTask( task );
+        executingTask.setLifecycleHandler( new TaskLifecycleHandler() {
 
             @Override
             public void onStart() {
@@ -183,7 +181,11 @@ public class ExecutingTaskTest extends BaseSpringContextTest {
         @Override
         public TaskResult call() {
             log.info( "Executing a success task." );
-            return new TaskResult( this.getTaskCommand(), "SUCCESS" );
+            return newTaskResult( "SUCCESS" );
         }
+    }
+
+    private static class TestTaskCommand extends TaskCommand {
+
     }
 }

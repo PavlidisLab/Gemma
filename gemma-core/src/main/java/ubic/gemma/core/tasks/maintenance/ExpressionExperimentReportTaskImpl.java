@@ -21,12 +21,12 @@ public class ExpressionExperimentReportTaskImpl extends AbstractTask<ExpressionE
 
     @Override
     public TaskResult call() {
-        TaskResult result = new TaskResult( taskCommand, null );
+        TaskResult result = newTaskResult( null );
 
-        if ( taskCommand.doAll() ) {
+        if ( getTaskCommand().doAll() ) {
             expressionExperimentReportService.generateSummaryObjects();
-        } else if ( taskCommand.getExpressionExperiment() != null ) {
-            expressionExperimentReportService.generateSummary( taskCommand.getExpressionExperiment().getId() );
+        } else if ( getTaskCommand().getExpressionExperiment() != null ) {
+            expressionExperimentReportService.generateSummary( getTaskCommand().getExpressionExperiment().getId() );
         } else {
             log.warn( "TaskCommand was not valid, nothing being done" );
         }

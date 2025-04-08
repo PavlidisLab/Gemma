@@ -22,14 +22,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.servlet.ModelAndView;
+import ubic.gemma.core.job.AbstractTask;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.TaskRunningService;
-import ubic.gemma.core.job.AbstractTask;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Controller that does nothing except wait a while. Used for tests.
@@ -40,7 +36,7 @@ import java.util.Map;
 public class MockLongJobController {
 
     public static final int JOB_LENGTH = 2000;
-   
+
     @Autowired
     private TaskRunningService taskRunningService;
 
@@ -65,16 +61,14 @@ public class MockLongJobController {
                 } catch ( InterruptedException e ) {
                 }
                 // we're using this as a test to pass in a 'die' signal, abuse of api
-                if ( !this.taskCommand.getPersistJobDetails() ) {
+                if ( !this.getTaskCommand().getPersistJobDetails() ) {
                     throw new RuntimeException( "Exception thrown on purpose." );
                 }
             }
 
             log.info( "Done doin sumpin'" );
 
-            Map<String, Object> model = new HashMap<>();
-            model.put( "answer", "42" );
-            return new TaskResult( taskCommand, new ModelAndView( "view", model ) );
+            return newTaskResult( "42" );
         }
     }
 

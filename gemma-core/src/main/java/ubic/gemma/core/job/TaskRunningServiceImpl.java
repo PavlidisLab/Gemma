@@ -103,9 +103,9 @@ public class TaskRunningServiceImpl implements TaskRunningService, InitializingB
 
         final SubmittedTaskLocal submittedTask = new SubmittedTaskLocal( task.getTaskCommand(), taskPostProcessing, executorService );
 
-        final ExecutingTask executingTask = new ExecutingTask( task, taskCommand.getTaskId() );
+        final ExecutingTask executingTask = new ExecutingTask( task );
 
-        executingTask.setLifecycleHandler( new ExecutingTask.TaskLifecycleHandler() {
+        executingTask.setLifecycleHandler( new TaskLifecycleHandler() {
             @Override
             public void onFailure( Exception e ) {
                 TaskRunningServiceImpl.log.error( e, e );
@@ -115,11 +115,6 @@ public class TaskRunningServiceImpl implements TaskRunningService, InitializingB
             @Override
             public void onSuccess() {
                 submittedTask.updateStatus( SubmittedTask.Status.COMPLETED, new Date() );
-            }
-
-            @Override
-            public void onComplete() {
-
             }
 
             @Override
@@ -159,7 +154,7 @@ public class TaskRunningServiceImpl implements TaskRunningService, InitializingB
     @Override
     public <C extends TaskCommand> String submitTaskCommand( final C taskCommand ) {
         this.checkTaskCommand( taskCommand );
-        final Task<? extends TaskCommand> task = taskCommandToTaskMatcher.match( taskCommand );
+        final Task<C> task = taskCommandToTaskMatcher.match( taskCommand );
         return this.submitTask( task );
     }
 

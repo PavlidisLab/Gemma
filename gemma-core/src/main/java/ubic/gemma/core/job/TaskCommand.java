@@ -23,6 +23,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 
 /**
@@ -35,7 +36,7 @@ import java.io.Serializable;
  * @author keshav
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public class TaskCommand implements Serializable {
+public abstract class TaskCommand implements Serializable {
 
     // How long we will wait for a started task before giving up waiting for it. Tasks running longer than this will be
     // cancelled. This does not include time spent queued.
@@ -49,10 +50,6 @@ public class TaskCommand implements Serializable {
      * Should an email be sent to the user when the job is done?
      */
     private boolean emailAlert = false;
-    /**
-     * Convenience field to handle the common case where a primary key is all that is needed.
-     */
-    private Long entityId = null;
     /**
      * If true, the jobDetails associated with this task will be persisted in the database. Consider setting to false
      * for test jobs or other super-frequent maintenance tasks.
@@ -83,24 +80,6 @@ public class TaskCommand implements Serializable {
         // can happen in test situations.
         if ( authentication != null )
             this.submitter = authentication.getName();
-    }
-
-    /**
-     * Convenience constructor for case where all the job needs to know is the id.
-     *
-     * @param entityId entity id
-     */
-    public TaskCommand( Long entityId ) {
-        this();
-        this.entityId = entityId;
-    }
-
-    public Long getEntityId() {
-        return entityId;
-    }
-
-    public void setEntityId( Long entityId ) {
-        this.entityId = entityId;
     }
 
     public Integer getMaxQueueMinutes() {
@@ -159,7 +138,8 @@ public class TaskCommand implements Serializable {
     // We have to have this mapping somewhere until we make Tasks themselves serializable. Tasks are not readily
     // serializable because they have dependencies to spring services.
     // at which point TaskCommand can be deprecated(or remain as TaskContext).
-    public Class<?> getTaskClass() {
+    @Nullable
+    public Class<? extends Task<?>> getTaskClass() {
         return null;
     }
 

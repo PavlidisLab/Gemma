@@ -313,12 +313,12 @@ public class CoexpressionSearchController {
         @Override
         public TaskResult call() {
 
-            CoexSearchTaskCommand coexCommand = ( CoexSearchTaskCommand ) taskCommand;
+            CoexSearchTaskCommand coexCommand = ( CoexSearchTaskCommand ) getTaskCommand();
 
             CoexpressionMetaValueObject results = CoexpressionSearchController.this
                     .doSearch( coexCommand.getSearchOptions() );
 
-            return new TaskResult( taskCommand, results );
+            return newTaskResult( results );
 
         }
     }

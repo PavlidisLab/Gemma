@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,64 +18,63 @@
  */
 package ubic.gemma.core.job;
 
+import org.springframework.util.Assert;
+
+import javax.annotation.Nullable;
 import java.io.Serializable;
 
 /**
  * This class describes the result of long-running task. Like a Future, constructed at the time of task completion.
- * 
+ *
  * @author keshav
  *
  */
 public final class TaskResult implements Serializable {
+
     private static final long serialVersionUID = 1L;
-
-    /**
-     * The actual result object
-     */
-    private Object answer;
-
-    /**
-     * Set if failed.
-     */
-    private Exception exception;
 
     /**
      * The task id
      */
-    private final String taskID;
+    private final String taskId;
 
-    public TaskResult( String taskId ) {
-        assert taskId != null;
-        this.taskID = taskId;
-    }
+    /**
+     * The actual result object
+     */
+    @Nullable
+    private final Serializable answer;
 
-    public TaskResult( TaskCommand command, Object answer ) {
-        assert command != null;
-        assert command.getTaskId() != null;
-        this.taskID = command.getTaskId();
+    /**
+     * Set if failed.
+     */
+    private final Exception exception;
+
+    public TaskResult( String taskId, @Nullable Serializable answer ) {
+        Assert.notNull( taskId );
+        this.taskId = taskId;
         this.answer = answer;
+        this.exception = null;
     }
 
-    public Object getAnswer() {
-        return answer;
-    }
-
-    /**
-     * @return the exception
-     */
-    public Exception getException() {
-        return exception;
-    }
-
-    public String getTaskId() {
-        return taskID;
-    }
-
-    /**
-     * @param exception the exception to set
-     */
-    public void setException( Exception exception ) {
+    public TaskResult( String taskId, Exception exception ) {
+        Assert.notNull( taskId );
+        Assert.notNull( exception );
+        this.taskId = taskId;
+        this.answer = null;
         this.exception = exception;
     }
 
+    public String getTaskId() {
+        return taskId;
+    }
+
+    @Nullable
+    public Serializable getAnswer() {
+        return answer;
+    }
+
+    @Nullable
+    public Exception getException() {
+        return exception;
+    }
 }

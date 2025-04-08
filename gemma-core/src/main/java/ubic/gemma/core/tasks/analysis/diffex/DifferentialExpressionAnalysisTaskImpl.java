@@ -35,8 +35,6 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import java.util.Collection;
 import java.util.HashSet;
 
-import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.determineAnalysisType;
-
 /**
  * A differential expression analysis spaces task
  *
@@ -60,8 +58,8 @@ public class DifferentialExpressionAnalysisTaskImpl
     @Override
     public TaskResult call() {
 
-        if ( taskCommand instanceof DifferentialExpressionAnalysisRemoveTaskCommand ) {
-            DifferentialExpressionAnalysis toRemove = ( ( DifferentialExpressionAnalysisRemoveTaskCommand ) taskCommand )
+        if ( getTaskCommand() instanceof DifferentialExpressionAnalysisRemoveTaskCommand ) {
+            DifferentialExpressionAnalysis toRemove = ( ( DifferentialExpressionAnalysisRemoveTaskCommand ) getTaskCommand() )
                     .getToRemove();
 
             if ( toRemove == null ) {
@@ -71,12 +69,12 @@ public class DifferentialExpressionAnalysisTaskImpl
             log.info( "Removing analysis ..." );
             this.differentialExpressionAnalysisService.remove( toRemove );
 
-            return new TaskResult( taskCommand, true );
+            return newTaskResult( true );
         }
 
         Collection<DifferentialExpressionAnalysis> results = doAnalysis();
 
-        Collection<DifferentialExpressionAnalysis> minimalResults = new HashSet<>();
+        HashSet<DifferentialExpressionAnalysis> minimalResults = new HashSet<>();
         for ( DifferentialExpressionAnalysis r : results ) {
 
             /* Don't send the full analysis to the space. Instead, create a minimal result. */
@@ -86,16 +84,16 @@ public class DifferentialExpressionAnalysisTaskImpl
             minimalResults.add( minimalResult );
         }
 
-        return new TaskResult( taskCommand, minimalResults );
+        return newTaskResult( minimalResults );
     }
 
     private Collection<DifferentialExpressionAnalysis> doAnalysis() {
-        ExpressionExperiment ee = taskCommand.getExpressionExperiment();
+        ExpressionExperiment ee = getTaskCommand().getExpressionExperiment();
         ee = expressionExperimentService.thawLite( ee );
 
-        if ( taskCommand.getToRedo() != null ) {
+        if ( getTaskCommand().getToRedo() != null ) {
             log.info( "Redoing existing analysis" );
-            return differentialExpressionAnalyzerService.redoAnalysis( ee, taskCommand.getToRedo(), true );
+            return differentialExpressionAnalyzerService.redoAnalysis( ee, getTaskCommand().getToRedo(), true );
         }
 
         Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
@@ -108,14 +106,14 @@ public class DifferentialExpressionAnalysisTaskImpl
 
         Collection<DifferentialExpressionAnalysis> results;
 
-        Collection<ExperimentalFactor> factors = taskCommand.getFactors();
+        Collection<ExperimentalFactor> factors = getTaskCommand().getFactors();
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         boolean rnaSeq = expressionExperimentService.isRNASeq( ee );
         config.setUseWeights( rnaSeq );
         config.addFactorsToInclude( factors );
-        config.setSubsetFactor( taskCommand.getSubsetFactor() );
-        if ( taskCommand.isIncludeInteractions() && factors.size() == 2 ) {
+        config.setSubsetFactor( getTaskCommand().getSubsetFactor() );
+        if ( getTaskCommand().isIncludeInteractions() && factors.size() == 2 ) {
             /*
              * We should not include 'batch' in an interaction. But I don't want to enforce that here.
              */

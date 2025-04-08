@@ -90,25 +90,25 @@ Gemma.DatasetUploadTool = Ext
                   html : "Congratulations! You data was successfully loaded and assigned internal Gemma id "
                      + payload.taskId + ". Click 'ok' to view the details of your new data set, or 'Load another'.",
                   buttons : [
-                             {
-                                text : "OK",
-                                handler : function( button ) {
-                                   w.hide();
-                                   w.destroy();
-                                   window.location = Gemma.CONTEXT_PATH + "/expressionExperiment/showExpressionExperiment.html?id="
-                                      + payload.taskId;
+                     {
+                        text : "OK",
+                        handler : function( button ) {
+                           w.hide();
+                           w.destroy();
+                           window.location = Gemma.CONTEXT_PATH + "/expressionExperiment/showExpressionExperiment.html?id="
+                              + payload.taskId;
 
-                                }
-                             }, {
-                                text : "Load another",
-                                handler : function( button ) {
-                                   Ext.getCmp( 'main-form' ).getForm().reset();
-                                   Ext.getCmp( 'upload-form' ).reset();
-                                   w.hide(); // button.container?
-                                   w.destroy();
-                                },
-                                scope : this
-                             } ]
+                        }
+                     }, {
+                        text : "Load another",
+                        handler : function( button ) {
+                           Ext.getCmp( 'main-form' ).getForm().reset();
+                           Ext.getCmp( 'upload-form' ).reset();
+                           w.hide(); // button.container?
+                           w.destroy();
+                        },
+                        scope : this
+                     } ]
                } );
 
                w.show();
@@ -203,25 +203,28 @@ Gemma.DatasetUploadTool = Ext
                 * Display a summary of the problems
                 */
 
-               var summary = "Problems: ";
-
+               let problems = [];
                if ( !result.shortNameIsUnique ) {
-                  summary = "The short name you selected already has been used;";
+                  problems.push( "The short name you selected already has been used" );
                }
 
                if ( !result.dataFileIsValidFormat && result.dataFileFormatProblemMessage ) {
-                  summary = summary + result.dataFileFormatProblemMessage + "; ";
+                  problems.push( result.dataFileFormatProblemMessage );
                }
 
                if ( !result.arrayDesignMatchesDataFile && result.arrayDesignMismatchProblemMessage ) {
-                  summary = summary + result.arrayDesignMismatchProblemMessage + "; ";
+                  problems.push( result.arrayDesignMismatchProblemMessage );
                }
 
                if ( !result.quantitationTypeIsValid && result.quantitationTypeProblemMessage ) {
-                  summary = summary + result.quantitationTypeProblemMessage + "; ";
+                  problems.push( result.quantitationTypeProblemMessage );
                }
 
-               Ext.Msg.alert( "Data not valid", summary );
+               if ( result.otherProblemMessage ) {
+                  problems.push( result.otherProblemMessage );
+               }
+
+               Ext.Msg.alert( "Data not valid", "Problems: " + problems.join( "; " ) );
 
                /*
                 * re-enable the form.
@@ -296,164 +299,164 @@ Ext
             frame : true,
             title : "Enter expression experiment details",
             items : [
+               {
+                  xtype : 'panel',
+                  collapsible : true,
+                  title : 'Instructions',
+                  collapsed : false,
+                  frame : false,
+                  border : true,
+                  html : Gemma.HelpText.WidgetDefaults.ExpressionDataUpload.instructions
+               },
+               {
+
+                  xtype : 'form',
+                  id : 'main-form',
+                  autoHeight : true,
+                  items : [
                      {
-                        xtype : 'panel',
-                        collapsible : true,
-                        title : 'Instructions',
-                        collapsed : false,
-                        frame : false,
-                        border : true,
-                        html : Gemma.HelpText.WidgetDefaults.ExpressionDataUpload.instructions
+                        xtype : 'fieldset',
+                        title : 'The basics',
+                        autoHeight : true,
+                        style : 'margin : 5px',
+                        bodyStyle : "padding : 10px",
+                        items : [
+                           {
+                              xtype : 'textfield',
+                              id : 'shortName',
+                              fieldLabel : 'Short name',
+                              emptyText : 'For example, "jones-liver". Must be unique, no spaces please. ',
+                              width : 400,
+                              allowBlank : false,
+                              maxLength : 100,
+                              minLength : 4,
+                              listeners : {
+                                 blur : function( value ) {
+                                    if ( value.getValue().match( /^GSE\d{3,6}$/i ) ) {
+                                       Ext.Msg
+                                          .alert(
+                                             Gemma.HelpText.WidgetDefaults.ExpressionDataUpload.loadingGEOWarningTitle,
+                                             Gemma.HelpText.WidgetDefaults.ExpressionDataUpload.loadingGEOWarningText );
+                                    }
+                                 }
+                              },
+                              validator : function( value ) {
+                                 if ( value.match( /\s/ ) ) {
+                                    return "Short name must not contain blanks.";
+                                 }
+                                 return true;
+
+                              }.createDelegate( this )
+                           },
+                           {
+                              xtype : 'textfield',
+                              fieldLabel : 'Name',
+                              id : 'name',
+                              emptyText : 'Enter a longer descriptive name here',
+                              width : 400,
+                              maxLength : 255,
+                              allowBlank : false,
+                              listeners : {
+                                 blur : function( value ) {
+                                    if ( value.getValue().match( /^GSE\d{3,6}$/i ) ) {
+                                       Ext.Msg
+                                          .alert(
+                                             Gemma.HelpText.WidgetDefaults.ExpressionDataUpload.loadingGEOWarningTitle,
+                                             Gemma.HelpText.WidgetDefaults.ExpressionDataUpload.loadingGEOWarningText );
+                                    }
+                                 }
+                              }
+                           },
+                           {
+                              xtype : 'textarea',
+                              id : 'description',
+                              height : 70,
+                              width : 400,
+                              fieldLabel : 'Description',
+                              allowBlank : true,
+                              maxLength : 5000,
+                              emptyText : 'Optionally enter a brief abstract describing your experiment'
+                           }, taxonCombo ]
                      },
                      {
+                        xtype : 'fieldset',
+                        style : 'margin : 5px',
+                        height : 'auto',
+                        title : "Select the platform you used",
 
-                        xtype : 'form',
-                        id : 'main-form',
+                        layout : 'table',
+                        layoutConfig : {
+                           columns : 1
+                        },
+
+                        items : [
+                           arrayDesignCombo,
+                           {
+                              // create form layout for taxon array combo cell otherwise field label
+                              // not displayed
+                              xtype : 'panel',
+                              layout : 'form',
+                              items : [ taxonArrayCombo ]
+                           },
+                           {
+                              id : 'array-design-info-area',
+                              xtype : 'panel',
+                              html : "<div style='width:400px,height:100px;overflow :auto;margin: 4px 0px 4px 0px;border:1px #CCC solid ;'"
+                                 + " id='array-design-info-inner-html'>"
+                                 + "<p style='color:grey;'>Platform details will be displayed here</p></div>"
+                              // ,width : 500,
+                              // style : 'overflow :scroll;margin: 4px 0px 4px 0px;border:solid 1px;',
+                              // height : 100,
+                              // readOnly : true
+                           },
+                           {
+                              xtype : 'label',
+                              html : "Don't see your platform listed? Please see "
+                                 + "<a target='_blank' href='" + Gemma.CONTEXT_PATH + "/arrays/showAllArrayDesigns.html'>the platform list</a>"
+                                 + " for more information, "
+                                 + "or <a href='mailto:gemma@ubic.ca'>let us know</a> about your platform."
+                           } ]
+                     },
+                     new Gemma.QuantitationTypePanel( {
+                        id : 'quantitation-type-panel',
+                        style : 'margin : 5px'
+                     } ),
+                     {
+                        xtype : 'fieldset',
+                        id : 'availability-form',
+                        title : 'Security/availability information',
+                        labelWidth : 200,
                         autoHeight : true,
                         items : [
-                                 {
-                                    xtype : 'fieldset',
-                                    title : 'The basics',
-                                    autoHeight : true,
-                                    style : 'margin : 5px',
-                                    bodyStyle : "padding : 10px",
-                                    items : [
-                                             {
-                                                xtype : 'textfield',
-                                                id : 'shortName',
-                                                fieldLabel : 'Short name',
-                                                emptyText : 'For example, "jones-liver". Must be unique, no spaces please. ',
-                                                width : 400,
-                                                allowBlank : false,
-                                                maxLength : 100,
-                                                minLength : 4,
-                                                listeners : {
-                                                   blur : function( value ) {
-                                                      if ( value.getValue().match( /^GSE\d{3,6}$/i ) ) {
-                                                         Ext.Msg
-                                                            .alert(
-                                                               Gemma.HelpText.WidgetDefaults.ExpressionDataUpload.loadingGEOWarningTitle,
-                                                               Gemma.HelpText.WidgetDefaults.ExpressionDataUpload.loadingGEOWarningText );
-                                                      }
-                                                   }
-                                                },
-                                                validator : function( value ) {
-                                                   if ( value.match( /\s/ ) ) {
-                                                      return "Short name must not contain blanks.";
-                                                   }
-                                                   return true;
+                           {
+                              xtype : 'numberfield',
+                              enableKeyEvents : true,
+                              minLength : 7,
+                              maxLength : 9,
+                              allowNegative : false,
+                              id : 'pubmedid',
+                              allowDecimals : false,
+                              fieldLabel : 'Pubmed ID',
+                              boxLabel : "If provided, your data will be made publicly viewable"
+                           },
+                           {
+                              xtype : 'label',
+                              style : 'color: #800000;',
+                              text : (Ext.get( 'hasAdmin' ) !== null) ? (Ext.get( 'hasAdmin' )
+                                 .getValue() ? adminDataAvailabilityMessage
+                                 : userDataAvailabilityMessage) : userDataAvailabilityMessage
+                           },
+                           {
+                              xtype : 'checkbox',
+                              id : 'agree',
+                              enabled : false,
+                              handler : tool.agree,
+                              scope : tool,
+                              fieldLabel : "I have read the '<a target=\'_blank\' href='" + Gemma.CONTEXT_PATH + "/static/termsAndConditions.html'>terms and conditions</a>'"
+                           } ]
+                     } ]
 
-                                                }.createDelegate( this )
-                                             },
-                                             {
-                                                xtype : 'textfield',
-                                                fieldLabel : 'Name',
-                                                id : 'name',
-                                                emptyText : 'Enter a longer descriptive name here',
-                                                width : 400,
-                                                maxLength : 255,
-                                                allowBlank : false,
-                                                listeners : {
-                                                   blur : function( value ) {
-                                                      if ( value.getValue().match( /^GSE\d{3,6}$/i ) ) {
-                                                         Ext.Msg
-                                                            .alert(
-                                                               Gemma.HelpText.WidgetDefaults.ExpressionDataUpload.loadingGEOWarningTitle,
-                                                               Gemma.HelpText.WidgetDefaults.ExpressionDataUpload.loadingGEOWarningText );
-                                                      }
-                                                   }
-                                                }
-                                             },
-                                             {
-                                                xtype : 'textarea',
-                                                id : 'description',
-                                                height : 70,
-                                                width : 400,
-                                                fieldLabel : 'Description',
-                                                allowBlank : true,
-                                                maxLength : 5000,
-                                                emptyText : 'Optionally enter a brief abstract describing your experiment'
-                                             }, taxonCombo ]
-                                 },
-                                 {
-                                    xtype : 'fieldset',
-                                    style : 'margin : 5px',
-                                    height : 'auto',
-                                    title : "Select the platform you used",
-
-                                    layout : 'table',
-                                    layoutConfig : {
-                                       columns : 1
-                                    },
-
-                                    items : [
-                                             arrayDesignCombo,
-                                             {
-                                                // create form layout for taxon array combo cell otherwise field label
-                                                // not displayed
-                                                xtype : 'panel',
-                                                layout : 'form',
-                                                items : [ taxonArrayCombo ]
-                                             },
-                                             {
-                                                id : 'array-design-info-area',
-                                                xtype : 'panel',
-                                                html : "<div style='width:400px,height:100px;overflow :auto;margin: 4px 0px 4px 0px;border:1px #CCC solid ;'"
-                                                   + " id='array-design-info-inner-html'>"
-                                                   + "<p style='color:grey;'>Platform details will be displayed here</p></div>"
-                                             // ,width : 500,
-                                             // style : 'overflow :scroll;margin: 4px 0px 4px 0px;border:solid 1px;',
-                                             // height : 100,
-                                             // readOnly : true
-                                             },
-                                             {
-                                                xtype : 'label',
-                                                html : "Don't see your platform listed? Please see "
-                                                   + "<a target='_blank' href='" + Gemma.CONTEXT_PATH + "/arrays/showAllArrayDesigns.html'>the platform list</a>"
-                                                   + " for more information, "
-                                                   + "or <a href='mailto:gemma@ubic.ca'>let us know</a> about your platform."
-                                             } ]
-                                 },
-                                 new Gemma.QuantitationTypePanel( {
-                                    id : 'quantitation-type-panel',
-                                    style : 'margin : 5px'
-                                 } ),
-                                 {
-                                    xtype : 'fieldset',
-                                    id : 'availability-form',
-                                    title : 'Security/availability information',
-                                    labelWidth : 200,
-                                    autoHeight : true,
-                                    items : [
-                                             {
-                                                xtype : 'numberfield',
-                                                enableKeyEvents : true,
-                                                minLength : 7,
-                                                maxLength : 9,
-                                                allowNegative : false,
-                                                id : 'pubmedid',
-                                                allowDecimals : false,
-                                                fieldLabel : 'Pubmed ID',
-                                                boxLabel : "If provided, your data will be made publicly viewable"
-                                             },
-                                             {
-                                                xtype : 'label',
-                                                style : 'color: #800000;',
-                                                text : (Ext.get( 'hasAdmin' ) !== null) ? (Ext.get( 'hasAdmin' )
-                                                   .getValue() ? adminDataAvailabilityMessage
-                                                   : userDataAvailabilityMessage) : userDataAvailabilityMessage
-                                             },
-                                             {
-                                                xtype : 'checkbox',
-                                                id : 'agree',
-                                                enabled : false,
-                                                handler : tool.agree,
-                                                scope : tool,
-                                                fieldLabel : "I have read the '<a target=\'_blank\' href='" + Gemma.CONTEXT_PATH + "/static/termsAndConditions.html'>terms and conditions</a>'"
-                                             } ]
-                                 } ]
-
-                     }, uploadForm ],
+               }, uploadForm ],
             buttons : [ {
                id : 'validate-data-button',
                value : 'Validate data',
@@ -493,12 +496,12 @@ Ext
                   .overwrite(
                      'array-design-info-inner-html',
                      "<div style='padding:5px;'><a target='_blank' style='text-decoration:underline' href='" + Gemma.CONTEXT_PATH + "/arrays/showArrayDesign.html?id="
-                        + arrayDesign.data.id
-                        + "'>"
-                        + arrayDesign.data.shortName
-                        + " details</a> (opens in new window)<p>Description: "
-                        + arrayDesign.data.description
-                        + "</p></div>" );
+                     + arrayDesign.data.id
+                     + "'>"
+                     + arrayDesign.data.shortName
+                     + " details</a> (opens in new window)<p>Description: "
+                     + arrayDesign.data.description
+                     + "</p></div>" );
                tool.commandObject.arrayDesignIds = [ arrayDesign.data.id ];
             } );
 
@@ -510,7 +513,7 @@ Ext
 
          if ( k >= 0 ) {
             taxonArrayCombo.setTaxon( taxon.id );
-            arrayDesignCombo.taxonChanged( taxon.data ); 
+            arrayDesignCombo.taxonChanged( taxon.data );
          } else {
             Ext.Msg.alert( "Sorry", "There are no arrays for that taxon" );
          }

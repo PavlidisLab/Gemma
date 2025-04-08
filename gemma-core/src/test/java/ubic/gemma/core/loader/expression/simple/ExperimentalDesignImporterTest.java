@@ -24,14 +24,18 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimplePlatformMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimpleQuantitationTypeMetadata;
+import ubic.gemma.core.loader.expression.simple.model.SimpleTaxonMetadata;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -39,7 +43,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.InputStream;
@@ -87,39 +90,38 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
     @Before
     public void setUp() throws Exception {
-        SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
+        SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
 
-        Taxon human = taxonService.findByCommonName( "human" );
-
-        String eeShortName = RandomStringUtils.randomAlphabetic( 10 );
+        String eeShortName = RandomStringUtils.randomAlphabetic( 11 );
         metaData.setShortName( eeShortName );
         metaData.setDescription( "bar" );
-        metaData.setIsRatio( false );
-        metaData.setTaxon( human );
-        metaData.setQuantitationTypeName( "rma" );
-        metaData.setScale( ScaleType.LOG2 );
-        metaData.setType( StandardQuantitationType.AMOUNT );
+        metaData.setTaxon( SimpleTaxonMetadata.forName( "human" ) );
+        SimpleQuantitationTypeMetadata qtMetadata = new SimpleQuantitationTypeMetadata();
+        qtMetadata.setName( "rma" );
+        qtMetadata.setType( StandardQuantitationType.AMOUNT );
+        qtMetadata.setScale( ScaleType.LOG2 );
+        qtMetadata.setIsRatio( false );
+        metaData.setQuantitationType( qtMetadata );
 
-        ArrayDesign ad = ArrayDesign.Factory.newInstance();
-
+        SimplePlatformMetadata ad = new SimplePlatformMetadata();
         ad.setShortName( adName );
         ad.setName( "foobly foo" );
-        ad.setPrimaryTaxon( human );
         ad.setTechnologyType( TechnologyType.ONECOLOR );
 
         metaData.getArrayDesigns().add( ad );
-        try (InputStream data = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/experimentalDesignTestData.txt" )) {
-
-            ee = simpleExpressionDataLoaderService.create( metaData, data );
+        DoubleMatrix<String, String> matrix;
+        try ( InputStream data = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/experimentalDesignTestData.txt" ) ) {
+            matrix = new DoubleMatrixReader().read( data );
         }
+        ee = simpleExpressionDataLoaderService.create( metaData, matrix );
         ee = this.eeService.thawLite( ee );
     }
 
     @Test
     public final void testParse() throws Exception {
-        try (InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" )) {
+        try ( InputStream is = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" ) ) {
 
             experimentalDesignImporter.importDesign( ee, is );
         }
@@ -136,8 +138,8 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     @Test
     public final void testParseDryRun() throws Exception {
 
-        try (InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" )) {
+        try ( InputStream is = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" ) ) {
 
             experimentalDesignImporter.importDesign( ee, is );
         }
@@ -150,8 +152,8 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     @Test(expected = Exception.class)
     public final void testParseFailedDryRun() throws Exception {
 
-        try (InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/experimentalDesignTestBad.txt" )) {
+        try ( InputStream is = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/experimentalDesignTestBad.txt" ) ) {
 
             experimentalDesignImporter.importDesign( ee, is );
             fail( "Should have gotten an Exception" );
@@ -166,8 +168,8 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     @Test
     public final void testParseWhereExtraValue() throws Exception {
 
-        try (InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/experimentalDesignTestExtra.txt" )) {
+        try ( InputStream is = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/experimentalDesignTestExtra.txt" ) ) {
 
             experimentalDesignImporter.importDesign( ee, is );
         }
