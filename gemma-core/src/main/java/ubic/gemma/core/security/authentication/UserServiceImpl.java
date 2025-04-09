@@ -24,7 +24,6 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -48,7 +47,7 @@ import static java.util.Objects.requireNonNull;
  */
 @Service
 @CommonsLog
-public class UserServiceImpl implements UserService, InitializingBean, ApplicationContextAware {
+public class UserServiceImpl implements UserService, ApplicationContextAware {
 
     private static final String ADMINISTRATOR_USER_NAME = "administrator";
 
@@ -64,12 +63,6 @@ public class UserServiceImpl implements UserService, InitializingBean, Applicati
     // FIXME: remove SecurityService from here, it depends on UserService, we're using afterPropertiesSet() as a
     //        workaround to prevent circular dependency
     private ApplicationContext applicationContext;
-    private SecurityService securityService;
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        this.securityService = applicationContext.getBean( SecurityService.class );
-    }
 
     @Override
     public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
@@ -153,6 +146,8 @@ public class UserServiceImpl implements UserService, InitializingBean, Applicati
                 .equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
             throw new IllegalArgumentException( "Cannot remove that group, it is required for system operation." );
         }
+
+        SecurityService securityService = applicationContext.getBean( SecurityService.class );
 
         if ( !securityService.isOwnedByCurrentUser( this.findGroupByName( groupName ) ) && !SecurityUtil
                 .isUserAdmin() ) {
