@@ -1088,7 +1088,7 @@ public class DatasetsWebService {
     @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @Path("/{dataset}/singleCellDimension")
     @Operation(summary = "Retrieve a single-cell dimension of a single-cell dataset", responses = {
-            @ApiResponse(content = {
+            @ApiResponse(responseCode = "200", content = {
                     @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectSingleCellDimensionValueObject.class)),
                     @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-single-cell-dimension.tsv") })
             })
@@ -1146,7 +1146,7 @@ public class DatasetsWebService {
     @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @Path("/{dataset}/cellTypeAssignment")
     @Operation(summary = "Retrieve a cell-type assignment of a single-cell dataset", responses = {
-            @ApiResponse(content = {
+            @ApiResponse(responseCode = "200", content = {
                     @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectCellTypeAssignmentValueObject.class)),
                     @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-cell-type-assignment.tsv") })
             })
@@ -1197,7 +1197,7 @@ public class DatasetsWebService {
     @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @Path("/{dataset}/cellLevelCharacteristics")
     @Operation(summary = "Retrieve all other cell-level characteristics of a single-cell dataset", responses = {
-            @ApiResponse(content = {
+            @ApiResponse(responseCode = "200", content = {
                     @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectListCellLevelCharacteristicsValueObject.class)),
                     @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8, examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-cell-level-characteristics.tsv") })
             })
@@ -1408,7 +1408,7 @@ public class DatasetsWebService {
     @Produces({ APPLICATION_10X_MEX, TEXT_TAB_SEPARATED_VALUES_UTF8 + ";q=0.9" })
     @Operation(summary = "Retrieve single-cell expression data of a dataset",
             responses = {
-                    @ApiResponse(
+                    @ApiResponse(responseCode = "200",
                             content = {
                                     @Content(mediaType = APPLICATION_10X_MEX, schema = @Schema(description = "Sample files are bundled in a TAR archive according to the 10x MEX format.", type = "string", format = "binary", externalDocs = @ExternalDocumentation(url = "https://www.10xgenomics.com/support/software/cell-ranger/latest/analysis/outputs/cr-outputs-mex-matrices")),
                                             examples = { @ExampleObject("classpath:/restapidocs/examples/dataset-single-cell-data.mex") }),
