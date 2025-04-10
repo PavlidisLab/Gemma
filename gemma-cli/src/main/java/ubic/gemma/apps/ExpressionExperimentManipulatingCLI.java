@@ -414,7 +414,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
 
     @Override
     protected final Serializable toBatchObject( @Nullable ExpressionExperiment object ) {
-        return object != null ? object.getShortName() : null;
+        return toBatchObject( ( BioAssaySet ) object );
     }
 
     protected final Serializable toBatchObject( @Nullable BioAssaySet object ) {
@@ -422,11 +422,15 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
             return null;
         }
         if ( object instanceof ExpressionExperiment ) {
-            return ( ( ExpressionExperiment ) object ).getShortName();
-        } else if ( object.getId() != null ) {
-            return object.getClass().getSimpleName() + "Id=" + object.getId();
+            if ( Hibernate.isInitialized( object ) ) {
+                return ( ( ExpressionExperiment ) object ).getShortName();
+            } else {
+                return "ExpressionExperiment Id=" + object.getId();
+            }
+        } else if ( object instanceof ExpressionExperimentSubSet ) {
+            return "ExpressionExperimentSubSet Id=" + object.getId();
         } else {
-            return "Transient " + object.getClass().getSimpleName();
+            return "BioAssaySet Id=" + object.getId();
         }
     }
 
