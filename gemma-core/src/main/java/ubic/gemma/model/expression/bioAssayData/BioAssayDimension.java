@@ -76,6 +76,11 @@ public class BioAssayDimension extends AbstractIdentifiable {
         return Objects.equals( getBioAssays(), that.getBioAssays() );
     }
 
+    @Override
+    public String toString() {
+        return super.toString() + ( merged != null && merged ? " [Merged]" : "" );
+    }
+
     public static final class Factory {
 
         public static BioAssayDimension newInstance() {
