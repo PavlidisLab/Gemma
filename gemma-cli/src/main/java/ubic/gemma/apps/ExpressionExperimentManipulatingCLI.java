@@ -52,6 +52,7 @@ import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -364,7 +365,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
             try {
                 processBioAssaySet( bas );
             } catch ( Exception e ) {
-                addErrorObject( bas, e );
+                addErrorObject( toBatchObject( bas ), e );
                 if ( abortOnError ) {
                     throw new RuntimeException( "Aborted processing due to error.", e );
                 }
@@ -377,7 +378,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      * <p>
      * This method delegates to one of {@link #processExpressionExperiment(ExpressionExperiment)},
      * {@link #processExpressionExperimentSubSet(ExpressionExperimentSubSet)} or {@link #processOtherBioAssaySet(BioAssaySet)}.
-     * @throws Exception if an error occurs, it will be collected via {@link #addErrorObject(Object, String, Throwable)}
+     * @throws Exception if an error occurs, it will be collected via {@link #addErrorObject(Serializable, String, Throwable)}
      */
     protected void processBioAssaySet( BioAssaySet bas ) throws Exception {
         Assert.notNull( bas, "Cannot process a null BioAssaySet." );
@@ -409,6 +410,24 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      */
     protected void processOtherBioAssaySet( @SuppressWarnings("unused") BioAssaySet bas ) throws Exception {
         throw new UnsupportedOperationException( "This command line does support other kinds of BioAssaySet." );
+    }
+
+    @Override
+    protected final Serializable toBatchObject( @Nullable ExpressionExperiment object ) {
+        return object != null ? object.getShortName() : null;
+    }
+
+    protected final Serializable toBatchObject( @Nullable BioAssaySet object ) {
+        if ( object == null ) {
+            return null;
+        }
+        if ( object instanceof ExpressionExperiment ) {
+            return ( ( ExpressionExperiment ) object ).getShortName();
+        } else if ( object.getId() != null ) {
+            return object.getClass().getSimpleName() + "Id=" + object.getId();
+        } else {
+            return "Transient " + object.getClass().getSimpleName();
+        }
     }
 
     private void excludeFromFile( Collection<BioAssaySet> expressionExperiments, Path excludeEeFileName ) throws IOException {

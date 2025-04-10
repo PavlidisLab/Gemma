@@ -51,6 +51,6 @@ public class ProtocolDeleterCli extends AbstractAuthenticatedCLI {
         Protocol protocol = entityLocator.locateProtocol( identifier );
         promptConfirmationOrAbort( "Delete " + protocol + "?" );
         protocolService.remove( protocol );
-        addSuccessObject( protocol, "Deleted" );
+        addSuccessObject( protocol.getName(), "Deleted" );
     }
 }

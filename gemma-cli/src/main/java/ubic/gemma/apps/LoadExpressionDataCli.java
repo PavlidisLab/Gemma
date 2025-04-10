@@ -24,10 +24,10 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
-import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -139,7 +139,9 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
         if ( softFile != null ) {
             Collection<?> ees = geoService.loadFromSoftFile( accessions, softFile, platformOnly, doMatching, splitByPlatform );
             for ( Object object : ees ) {
-                addSuccessObject( object );
+                if ( object instanceof ExpressionExperiment ) {
+                    addSuccessObject( ( ( ExpressionExperiment ) object ).getShortName() );
+                }
             }
             return;
         }
@@ -163,7 +165,7 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
                         ArrayDesign ad = ( ArrayDesign ) object;
                         ad = ads.thawLite( ad );
 
-                        addSuccessObject( ad );
+                        addSuccessObject( ad.getShortName() );
                     }
                 } else {
                     this.processAccession( accession );
@@ -267,7 +269,7 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
             }
 
             for ( ExpressionExperiment object : ees ) {
-                addSuccessObject( object );
+                addSuccessObject( object.getShortName() );
             }
         } catch ( Exception e ) {
             addErrorObject( accession, e );
@@ -307,10 +309,8 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
             try {
                 preprocessorService.process( ee );
             } catch ( PreprocessingException e ) {
-                addErrorObject( ee, "Experiment was loaded, but there was an error during postprocessing, make sure additional steps are completed", e );
+                addErrorObject( ee.getShortName(), "Experiment was loaded, but there was an error during postprocessing, make sure additional steps are completed", e );
             }
-
         }
     }
-
 }

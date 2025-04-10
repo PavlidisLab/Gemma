@@ -24,10 +24,10 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.cli.util.AbstractAutoSeekingCLI;
 import ubic.gemma.cli.util.EntityLocator;
 import ubic.gemma.cli.util.FileUtils;
+import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -37,8 +37,10 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
+import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.*;
 
 import static ubic.gemma.cli.util.EntityOptionsUtils.addPlatformOption;
@@ -115,6 +117,10 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
 
     protected ArrayDesignService getArrayDesignService() {
         return arrayDesignService;
+    }
+
+    protected Serializable toBatchObject( @Nullable ArrayDesign object ) {
+        return object != null ? object.getShortName() : null;
     }
 
     /**
@@ -320,11 +326,11 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
                     Long id = Long.parseLong( eeName );
                     ee = arrayDesignService.load( id );
                     if ( ee == null ) {
-                        addErrorObject( null, "No ArrayDesign found with ID " + eeName );
+                        addErrorObject( ( ArrayDesign ) null, "No ArrayDesign found with ID " + eeName );
                         continue;
                     }
                 } catch ( NumberFormatException e ) {
-                    addErrorObject( null, "No ArrayDesign found with ID " + eeName );
+                    addErrorObject( ( ArrayDesign ) null, "No ArrayDesign found with ID " + eeName );
                     continue;
                 }
 

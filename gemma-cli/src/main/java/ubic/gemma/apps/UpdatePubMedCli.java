@@ -125,10 +125,10 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
 
                 eeserv.update( expressionExperiment );
                 numFound++;
-                addSuccessObject( expressionExperiment, "Publication(s) added" );
+                addSuccessObject( expressionExperiment.getShortName(), "Publication(s) added" );
             } catch ( Exception e ) {
                 log.error( e.getMessage() + " while processing " + rec.getGeoAccession() );
-                addErrorObject( expressionExperiment, e.getMessage() );
+                addErrorObject( expressionExperiment.getShortName(), e.getMessage() );
             }
 
 

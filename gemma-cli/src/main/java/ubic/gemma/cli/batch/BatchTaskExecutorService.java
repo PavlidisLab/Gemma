@@ -25,7 +25,7 @@ public class BatchTaskExecutorService extends AbstractDelegatingExecutorService 
 
     @Override
     protected Runnable wrap( Runnable runnable ) {
-        Object batchObject = String.format( "Batch task #%d", batchTaskCounter.incrementAndGet() );
+        String batchObject = String.format( "Batch task #%d", batchTaskCounter.incrementAndGet() );
         return () -> {
             try {
                 runnable.run();
@@ -46,7 +46,7 @@ public class BatchTaskExecutorService extends AbstractDelegatingExecutorService 
 
     @Override
     protected <T> Callable<T> wrap( Callable<T> callable ) {
-        Object batchObject = String.format( "Batch task #%d", batchTaskCounter.incrementAndGet() );
+        String batchObject = String.format( "Batch task #%d", batchTaskCounter.incrementAndGet() );
         return () -> {
             try {
                 T result = callable.call();

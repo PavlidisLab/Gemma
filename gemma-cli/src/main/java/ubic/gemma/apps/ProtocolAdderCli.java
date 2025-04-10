@@ -53,9 +53,9 @@ public class ProtocolAdderCli extends AbstractAuthenticatedCLI {
         Protocol existingProtocol;
         if ( ( existingProtocol = protocolService.findByName( protocol.getName() ) ) == null ) {
             protocol = protocolService.create( protocol );
-            addSuccessObject( protocol, "Created a new protocol object." );
+            addSuccessObject( protocol.getName(), "Created a new protocol object." );
         } else {
-            addErrorObject( protocol, "There is already a protocol object with this name: " + existingProtocol + "." );
+            addErrorObject( protocol.getName(), "There is already a protocol object with this name: " + existingProtocol + "." );
         }
     }
 }

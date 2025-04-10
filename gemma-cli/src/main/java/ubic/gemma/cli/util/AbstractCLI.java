@@ -32,10 +32,7 @@ import ubic.gemma.cli.batch.*;
 import ubic.gemma.core.util.SimpleThreadFactory;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.Writer;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -477,21 +474,21 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
      * @param successObject object that was processed
      * @param message       success message
      */
-    protected final void addSuccessObject( Object successObject, String message ) {
+    protected final void addSuccessObject( Serializable successObject, String message ) {
         getBatchTaskProgressReporter().addSuccessObject( successObject, message );
     }
 
     /**
-     * @see #addSuccessObject(Object, String)
+     * @see #addSuccessObject(Serializable, String)
      */
-    protected final void addSuccessObject( Object successObject ) {
+    protected final void addSuccessObject( Serializable successObject ) {
         getBatchTaskProgressReporter().addSuccessObject( successObject );
     }
 
     /**
-     * @see #addWarningObject(Object, String, Throwable)
+     * @see #addWarningObject(Serializable, String, Throwable)
      */
-    protected final void addWarningObject( @Nullable Object warningObject, String message ) {
+    protected final void addWarningObject( @Nullable Serializable warningObject, String message ) {
         getBatchTaskProgressReporter().addWarningObject( warningObject, message );
     }
 
@@ -502,7 +499,7 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
      * @param message       error message
      * @param throwable     throwable to produce a stacktrace
      */
-    protected final void addWarningObject( @Nullable Object warningObject, String message, Throwable throwable ) {
+    protected final void addWarningObject( @Nullable Serializable warningObject, String message, Throwable throwable ) {
         getBatchTaskProgressReporter().addWarningObject( warningObject, message, throwable );
     }
 
@@ -515,25 +512,25 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
      * @param message     error message
      * @param throwable   throwable to produce a stacktrace
      */
-    protected final void addErrorObject( @Nullable Object errorObject, String message, Throwable throwable ) {
+    protected final void addErrorObject( @Nullable Serializable errorObject, String message, Throwable throwable ) {
         getBatchTaskProgressReporter().addErrorObject( errorObject, message, throwable );
     }
 
     /**
      * Add an error object without a cause stacktrace.
      *
-     * @see #addErrorObject(Object, String)
+     * @see #addErrorObject(Serializable, String)
      */
-    protected final void addErrorObject( @Nullable Object errorObject, String message ) {
+    protected final void addErrorObject( @Nullable Serializable errorObject, String message ) {
         getBatchTaskProgressReporter().addErrorObject( errorObject, message );
     }
 
     /**
      * Add an error object based on an exception.
      *
-     * @see #addErrorObject(Object, String, Throwable)
+     * @see #addErrorObject(Serializable, String, Throwable)
      */
-    protected final void addErrorObject( @Nullable Object errorObject, Exception exception ) {
+    protected final void addErrorObject( @Nullable Serializable errorObject, Exception exception ) {
         getBatchTaskProgressReporter().addErrorObject( errorObject, exception );
     }
 
@@ -542,7 +539,7 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
      * <p>
      * The CLI will await any pending batch tasks before exiting. You may only submit batch tasks inside {@link #doWork()}.
      * <p>
-     * Successes and errors are reported automatically if {@link #addSuccessObject(Object, String)} or {@link #addErrorObject(Object, String)}
+     * Successes and errors are reported automatically if {@link #addSuccessObject(Serializable, String)} or {@link #addErrorObject(Serializable, String)}
      * haven't been invoked during the execution of the callable/runnable.
      */
     protected final ExecutorService getBatchTaskExecutor() {

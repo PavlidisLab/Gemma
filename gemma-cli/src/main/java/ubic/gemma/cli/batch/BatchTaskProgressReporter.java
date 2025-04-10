@@ -6,6 +6,7 @@ import org.springframework.util.Assert;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -97,22 +98,22 @@ public class BatchTaskProgressReporter implements AutoCloseable {
      * @param successObject object that was processed
      * @param message       success message
      */
-    public void addSuccessObject( Object successObject, String message ) {
+    public void addSuccessObject( Serializable successObject, String message ) {
         addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.SUCCESS, successObject, message, null ) );
     }
 
     /**
-     * @see #addSuccessObject(Object, String)
+     * @see #addSuccessObject(Serializable, String)
      */
-    public void addSuccessObject( Object successObject ) {
+    public void addSuccessObject( Serializable successObject ) {
         addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.SUCCESS, successObject, null, null ) );
     }
 
-    public void addWarningObject( @Nullable Object warningObject, String message ) {
+    public void addWarningObject( @Nullable Serializable warningObject, String message ) {
         addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.WARNING, warningObject, message, null ) );
     }
 
-    public void addWarningObject( @Nullable Object warningObject, String message, Throwable throwable ) {
+    public void addWarningObject( @Nullable Serializable warningObject, String message, Throwable throwable ) {
         addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.WARNING, warningObject, message, throwable ) );
     }
 
@@ -125,25 +126,25 @@ public class BatchTaskProgressReporter implements AutoCloseable {
      * @param message     error message
      * @param throwable   throwable to produce a stacktrace
      */
-    public void addErrorObject( @Nullable Object errorObject, String message, Throwable throwable ) {
+    public void addErrorObject( @Nullable Serializable errorObject, String message, Throwable throwable ) {
         addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.ERROR, errorObject, message, throwable ) );
     }
 
     /**
      * Add an error object without a cause stacktrace.
      *
-     * @see #addErrorObject(Object, String)
+     * @see #addErrorObject(Serializable, String)
      */
-    public void addErrorObject( @Nullable Object errorObject, String message ) {
+    public void addErrorObject( @Nullable Serializable errorObject, String message ) {
         addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.ERROR, errorObject, message, null ) );
     }
 
     /**
      * Add an error object based on an exception.
      *
-     * @see #addErrorObject(Object, String, Throwable)
+     * @see #addErrorObject(Serializable, String, Throwable)
      */
-    public void addErrorObject( @Nullable Object errorObject, Exception exception ) {
+    public void addErrorObject( @Nullable Serializable errorObject, Exception exception ) {
         addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.ERROR, errorObject, exception.getMessage(), exception ) );
     }
 

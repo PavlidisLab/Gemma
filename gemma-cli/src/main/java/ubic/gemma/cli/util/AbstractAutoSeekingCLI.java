@@ -13,6 +13,7 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 
 import javax.annotation.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
@@ -163,6 +164,39 @@ public abstract class AbstractAutoSeekingCLI<T extends Auditable> extends Abstra
             this.force = true;
         }
     }
+
+    protected final void addSuccessObject( T successObject, String message ) {
+        addSuccessObject( toBatchObject( successObject ), message );
+    }
+
+    protected final void addSuccessObject( T successObject ) {
+        addSuccessObject( toBatchObject( successObject ) );
+    }
+
+    protected final void addWarningObject( @Nullable T warningObject, String message ) {
+        addWarningObject( toBatchObject( warningObject ), message );
+    }
+
+    protected final void addWarningObject( @Nullable T warningObject, String message, Throwable throwable ) {
+        addWarningObject( toBatchObject( warningObject ), message, throwable );
+    }
+
+    protected final void addErrorObject( @Nullable T errorObject, String message, Throwable throwable ) {
+        addErrorObject( toBatchObject( errorObject ), message, throwable );
+    }
+
+    protected final void addErrorObject( @Nullable T errorObject, String message ) {
+        addErrorObject( toBatchObject( errorObject ), message );
+    }
+
+    protected final void addErrorObject( @Nullable T errorObject, Exception exception ) {
+        addErrorObject( toBatchObject( errorObject ), exception );
+    }
+
+    /**
+     * Convert the given object to a serializable object for batch processing.
+     */
+    protected abstract Serializable toBatchObject( @Nullable T object );
 
     /**
      * Check if the given auditable can be skipped.

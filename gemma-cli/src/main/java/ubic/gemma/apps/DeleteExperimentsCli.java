@@ -101,9 +101,9 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
                 try {
                     log.info( "--------- Deleting " + a + " --------" );
                     ads.remove( a );
-                    addSuccessObject( a );
+                    addSuccessObject( a.getShortName() );
                 } catch ( Exception e ) {
-                    addErrorObject( a, e );
+                    addErrorObject( a.getShortName(), e );
                 }
             }
         } else {

@@ -32,11 +32,6 @@ public class ExternalDatabaseOverviewCli extends AbstractAuthenticatedCLI {
     }
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CLI.CommandGroup.MISC;
-    }
-
-    @Override
     protected void buildOptions( Options options ) {
         addBatchOption( options );
     }
@@ -50,7 +45,7 @@ public class ExternalDatabaseOverviewCli extends AbstractAuthenticatedCLI {
     protected void doAuthenticatedWork() throws Exception {
         externalDatabaseService.loadAllWithAuditTrail().stream()
                 .sorted( Comparator.comparing( ExternalDatabase::getLastUpdated, Comparator.nullsLast( Comparator.reverseOrder() ) ) )
-                .forEachOrdered( ed -> addSuccessObject( ed, summarize( ed ) ) );
+                .forEachOrdered( ed -> addSuccessObject( ed.getName(), summarize( ed ) ) );
     }
 
     private String summarize( ExternalDatabase ed ) {
