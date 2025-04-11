@@ -9,7 +9,7 @@
          <generator class="native">
          </generator>
       </id>
-      <property name="name" type="java.lang.String">
+      <property name="name" type="java.lang.String" index="BIO_ASSAY_NAME">
          <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>
       <property name="description" type="org.hibernate.type.MaterializedClobType">
