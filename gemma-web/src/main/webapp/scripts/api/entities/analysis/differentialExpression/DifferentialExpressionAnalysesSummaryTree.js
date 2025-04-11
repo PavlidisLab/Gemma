@@ -120,7 +120,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                     // make node for analysis
                     parentNode = new Ext.tree.TreeNode({
                         id: 'node' + this.ee.id + '-' + (nodeId++),
-                        expanded: true /* PP changed */,
+                        expanded: analyses.length<2,
                         singleClickExpand: true,
                         text: downloadDiffDataLink,
                         subsetIdent: subsetIdent,
@@ -278,6 +278,12 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                     });
                     sorter.doSort(parentNode);
                 }
+                var sorter = new Ext.tree.TreeSorter(this, {
+                    dir: 'ASC',
+                    property: 'text'
+                });
+                sorter.doSort(root)
+                root.firstChild.expanded = true
             },
 
             getSubsetText: function (analysis) {
