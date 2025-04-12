@@ -1,33 +1,16 @@
 package ubic.gemma.core.ontology.providers;
 
-import ubic.basecode.ontology.providers.AbstractOntologyService;
+import ubic.basecode.ontology.jena.UrlOntologyService;
+import ubic.basecode.ontology.providers.AbstractDelegatingOntologyService;
 import ubic.gemma.core.config.Settings;
-
-import javax.annotation.Nullable;
 
 /**
  * <a href="https://obofoundry.org/ontology/pato.html">Phenotype And Trait Ontology</a>
  */
-public class PatoOntologyService extends AbstractOntologyService {
+public class PatoOntologyService extends AbstractDelegatingOntologyService {
 
-    @Override
-    protected String getOntologyName() {
-        return "Phenotype And Trait Ontology";
-    }
-
-    @Override
-    protected String getOntologyUrl() {
-        return Settings.getString( "url.patoOntology" );
-    }
-
-    @Override
-    protected boolean isOntologyEnabled() {
-        return Settings.getBoolean( "load.patoOntology" );
-    }
-
-    @Nullable
-    @Override
-    protected String getCacheName() {
-        return "patoOntology";
+    public PatoOntologyService() {
+        super( new UrlOntologyService( "Phenotype And Trait Ontology", Settings.getString( "url.patoOntology" ),
+                Settings.getBoolean( "load.patoOntology" ), "patoOntology" ) );
     }
 }

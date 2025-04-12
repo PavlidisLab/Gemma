@@ -97,12 +97,6 @@ public class OntologyServiceTest extends AbstractJUnit4SpringContextTests {
             return mock();
         }
 
-        @Deprecated
-        @Bean
-        public NIFSTDOntologyService nifstdOntologyService() {
-            return mock();
-        }
-
         @Bean
         public ObiService obiService() {
             return mock();

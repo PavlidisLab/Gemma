@@ -64,12 +64,12 @@ public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests im
 
         @Bean
         public static TestPropertyPlaceholderConfigurer testPropertyPlaceholderConfigurer() {
-            return new TestPropertyPlaceholderConfigurer( "load.ontologies=false", "load.geneOntology=true", "url.geneOntology=dummy" );
+            return new TestPropertyPlaceholderConfigurer( "load.ontologies=false" );
         }
 
         @Bean
         public GeneOntologyService geneOntologyService() throws IOException, InterruptedException {
-            return new GeneOntologyServiceImpl();
+            return new GeneOntologyServiceImpl( "dummy", true );
         }
 
         @Bean

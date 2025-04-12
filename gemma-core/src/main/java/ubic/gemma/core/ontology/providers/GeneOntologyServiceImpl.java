@@ -30,11 +30,12 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
+import ubic.basecode.ontology.jena.UrlOntologyService;
 import ubic.basecode.ontology.model.AnnotationProperty;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.AbstractOntologyService;
+import ubic.basecode.ontology.providers.AbstractDelegatingOntologyService;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.gemma.core.ontology.OntologyUtils;
@@ -61,34 +62,13 @@ import static ubic.gemma.core.ontology.providers.GeneOntologyUtils.asRegularGoId
  */
 @Service
 @ParametersAreNonnullByDefault
-public class GeneOntologyServiceImpl extends AbstractOntologyService implements GeneOntologyService, InitializingBean {
+public class GeneOntologyServiceImpl extends AbstractDelegatingOntologyService implements GeneOntologyService, InitializingBean {
 
     public enum GOAspect {
         BIOLOGICAL_PROCESS, CELLULAR_COMPONENT, MOLECULAR_FUNCTION
     }
 
     private static final Log log = LogFactory.getLog( GeneOntologyServiceImpl.class.getName() );
-
-    @Override
-    protected String getOntologyName() {
-        return "Gene Ontology";
-    }
-
-    @Override
-    protected String getOntologyUrl() {
-        return ontologyUrl;
-    }
-
-    @Override
-    protected boolean isOntologyEnabled() {
-        return loadOntology;
-    }
-
-    @Nullable
-    @Override
-    protected String getCacheName() {
-        return "geneOntology";
-    }
 
     @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
@@ -105,12 +85,6 @@ public class GeneOntologyServiceImpl extends AbstractOntologyService implements 
     @Value("${load.ontologies}")
     private boolean autoLoadOntologies;
 
-    @Value("${url.geneOntology}")
-    private String ontologyUrl;
-
-    @Value("${load.geneOntology}")
-    private boolean loadOntology;
-
     /**
      * Cache of gene -> go terms.
      */
@@ -121,6 +95,10 @@ public class GeneOntologyServiceImpl extends AbstractOntologyService implements 
      */
     private Cache term2Aspect;
 
+    @Autowired
+    public GeneOntologyServiceImpl( @Value("${url.geneOntology}") String ontologyUrl, @Value("${load.geneOntology}") boolean loadOntology ) {
+        super( new UrlOntologyService( "Gene Ontology", ontologyUrl, loadOntology, "geneOntology" ) );
+    }
 
     @Override
     public void afterPropertiesSet() {
