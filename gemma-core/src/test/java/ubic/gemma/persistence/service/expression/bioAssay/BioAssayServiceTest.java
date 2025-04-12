@@ -21,7 +21,6 @@ package ubic.gemma.persistence.service.expression.bioAssay;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.util.test.BaseSpringContextTest;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -52,6 +51,7 @@ public class BioAssayServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testFindByAccession() {
+        assertNotNull( ba.getAccession() );
         assertEquals( 1, bioAssayService.findByAccession( ba.getAccession().getAccession() ).size() );
     }
 

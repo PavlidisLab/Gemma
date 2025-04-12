@@ -47,6 +47,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -541,7 +542,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         return clone;
     }
 
-    private DatabaseEntry cloneAccession( DatabaseEntry de ) {
+    private DatabaseEntry cloneAccession( @Nullable DatabaseEntry de ) {
         if ( de == null ) return null;
         DatabaseEntry clone = DatabaseEntry.Factory.newInstance();
         clone.setAccession( de.getAccession() );

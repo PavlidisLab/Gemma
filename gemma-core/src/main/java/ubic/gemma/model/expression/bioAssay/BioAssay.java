@@ -18,9 +18,9 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import org.hibernate.search.annotations.*;
 import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -58,6 +58,11 @@ public class BioAssay extends AbstractDescribable implements SecuredChild, Seria
     private ArrayDesign originalPlatform;
 
     private BioMaterial sampleUsed;
+
+    /**
+     * Accession for this assay.
+     */
+    @Nullable
     private DatabaseEntry accession;
     private String metadata;
 
@@ -118,12 +123,13 @@ public class BioAssay extends AbstractDescribable implements SecuredChild, Seria
         return super.getDescription();
     }
 
+    @Nullable
     @IndexedEmbedded
     public DatabaseEntry getAccession() {
         return this.accession;
     }
 
-    public void setAccession( DatabaseEntry accession ) {
+    public void setAccession( @Nullable DatabaseEntry accession ) {
         this.accession = accession;
     }
 

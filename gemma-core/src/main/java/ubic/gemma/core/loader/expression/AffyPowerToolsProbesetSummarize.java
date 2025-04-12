@@ -60,6 +60,8 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.core.config.Settings;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * @author paul
  */
@@ -263,13 +265,14 @@ public class AffyPowerToolsProbesetSummarize {
             // this is to help us match results to bioassays
             Map<String, BioAssay> bmap = new HashMap<>();
             for ( BioAssay bioAssay : bioAssaysToUse ) {
-                if ( bmap.containsKey( bioAssay.getAccession().getAccession() ) || bmap
-                        .containsKey( bioAssay.getName() ) ) {
+                if ( bmap.containsKey( bioAssay.getName() ) || ( bioAssay.getAccession() != null && bmap.containsKey( bioAssay.getAccession().getAccession() ) ) ) {
                     // defensive.
-                    throw new IllegalStateException( "Name or accesion was duplicated for : " + bioAssay );
+                    throw new IllegalStateException( "Name or accession was duplicated for : " + bioAssay + ", other : " + bmap.get( bioAssay.getName() ) );
                 }
-                bmap.put( bioAssay.getAccession().getAccession(), bioAssay );
                 bmap.put( bioAssay.getName(), bioAssay );
+                if ( bioAssay.getAccession() != null ) {
+                    bmap.put( bioAssay.getAccession().getAccession(), bioAssay );
+                }
             }
 
             AffyPowerToolsProbesetSummarize.log
@@ -297,14 +300,13 @@ public class AffyPowerToolsProbesetSummarize {
                     continue;
                 }
 
-                AffyPowerToolsProbesetSummarize.log
-                        .info( "Matching CEL sample " + sampleName + " to bioassay " + assay + " [" + assay
-                                .getAccession().getAccession() + "]" );
+                AffyPowerToolsProbesetSummarize.log.info( String.format( "Matching CEL sample %s to bioassay %s%s",
+                        sampleName, assay, assay.getAccession() != null ? " [" + assay.getAccession().getAccession() + "]" : "" ) );
 
                 if ( bad.getBioAssays().contains( assay ) ) {
                     // this is a fatal error, but we throw it later.
-                    log.warn( "** Ambiguous match: There is already a column matched to " + assay + " [" + assay
-                            .getAccession().getAccession() + "]" );
+                    log.warn( String.format( "** Ambiguous match: There is already a column matched to %s%s", assay,
+                            assay.getAccession() != null ? " [" + assay.getAccession().getAccession() + "]" : "" ) );
                 }
 
                 columnsToKeep.add( sampleName );
@@ -607,7 +609,7 @@ public class AffyPowerToolsProbesetSummarize {
 
         Collection<String> accessionsOfInterest = new HashSet<>();
         for ( BioAssay ba : bioAssays ) {
-            accessionsOfInterest.add( ba.getAccession().getAccession() );
+            accessionsOfInterest.add( requireNonNull( ba.getAccession() ).getAccession() );
         }
 
         List<String> celFiles = this.getCelFiles( files, accessionsOfInterest );

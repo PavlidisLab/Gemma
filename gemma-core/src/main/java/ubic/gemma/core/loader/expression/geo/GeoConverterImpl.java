@@ -66,6 +66,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Convert GEO domain objects into Gemma objects. Usually we trigger this by passing in GeoSeries objects.
  * GEO has four basic kinds of objects: Platforms (ArrayDesigns), Samples (BioAssays), Series (Experiments) and DataSets
@@ -477,15 +479,12 @@ public class GeoConverterImpl implements GeoConverter {
     private void addFactorValueToBioMaterial( ExpressionExperiment expExp, GeoSubset geoSubSet, FactorValue factorValue ) {
         // fill in biomaterial-->factorvalue.
         for ( GeoSample sample : geoSubSet.getSamples() ) {
-
             // find the matching biomaterial(s) in the expression experiment.
             for ( BioAssay bioAssay : expExp.getBioAssays() ) {
-                if ( bioAssay.getAccession().getAccession().equals( sample.getGeoAccession() ) ) {
+                if ( requireNonNull( bioAssay.getAccession() ).getAccession().equals( sample.getGeoAccession() ) ) {
                     addFactorValueToBioMaterial( bioAssay.getSampleUsed(), factorValue );
                 }
-
             }
-
         }
     }
 
@@ -2886,7 +2885,7 @@ public class GeoConverterImpl implements GeoConverter {
     private boolean matchSampleToBioAssay( ExpressionExperiment expExp, BioAssayDimension bioAssayDimension, String sampleAcc ) {
 
         for ( BioAssay bioAssay : expExp.getBioAssays() ) {
-            if ( sampleAcc.equals( bioAssay.getAccession().getAccession() ) ) {
+            if ( sampleAcc.equals( requireNonNull( bioAssay.getAccession() ).getAccession() ) ) {
                 bioAssayDimension.getBioAssays().add( bioAssay );
                 GeoConverterImpl.log.debug( "Found sample match for bioAssay " + bioAssay.getAccession().getAccession() );
                 return true;
