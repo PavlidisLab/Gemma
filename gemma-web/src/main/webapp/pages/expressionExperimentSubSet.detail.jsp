@@ -53,9 +53,6 @@
             <td class="label">Accession:</td>
             <td>
                 <c:choose>
-                    <c:when test="${subSet.accession != null}">
-                        <Gemma:databaseEntry databaseEntry="${subSet.accession}" />
-                    </c:when>
                     <c:when test="${subSet.sourceExperiment.accession != null}">
                         <Gemma:databaseEntry databaseEntry="${subSet.sourceExperiment.accession}" />&nbsp;<b>(inherited)</b>
                     </c:when>
