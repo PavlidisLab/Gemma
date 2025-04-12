@@ -59,6 +59,7 @@ public class BioAssay extends AbstractDescribable implements SecuredChild {
     /**
      * Accession for this assay.
      */
+    @Nullable
     private DatabaseEntry accession;
 
     /**
@@ -175,12 +176,13 @@ public class BioAssay extends AbstractDescribable implements SecuredChild {
         return super.getDescription();
     }
 
+    @Nullable
     @IndexedEmbedded
     public DatabaseEntry getAccession() {
         return this.accession;
     }
 
-    public void setAccession( DatabaseEntry accession ) {
+    public void setAccession( @Nullable DatabaseEntry accession ) {
         this.accession = accession;
     }
 

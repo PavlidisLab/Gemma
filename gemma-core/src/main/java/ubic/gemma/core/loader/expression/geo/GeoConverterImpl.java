@@ -63,6 +63,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
 import static ubic.gemma.core.loader.expression.geo.model.GeoSeriesType.EXPRESSION_PROFILING_BY_ARRAY;
 import static ubic.gemma.core.ontology.ValueStringToOntologyMapping.lookup;
 
@@ -528,15 +529,12 @@ public class GeoConverterImpl implements GeoConverter {
     private void addFactorValueToBioMaterial( ExpressionExperiment expExp, GeoSubset geoSubSet, FactorValue factorValue ) {
         // fill in biomaterial-->factorvalue.
         for ( GeoSample sample : geoSubSet.getSamples() ) {
-
             // find the matching biomaterial(s) in the expression experiment.
             for ( BioAssay bioAssay : expExp.getBioAssays() ) {
-                if ( bioAssay.getAccession().getAccession().equals( sample.getGeoAccession() ) ) {
+                if ( requireNonNull( bioAssay.getAccession() ).getAccession().equals( sample.getGeoAccession() ) ) {
                     addFactorValueToBioMaterial( bioAssay.getSampleUsed(), factorValue );
                 }
-
             }
-
         }
     }
 
@@ -2947,9 +2945,8 @@ public class GeoConverterImpl implements GeoConverter {
      *                   the BioAssay
      */
     private boolean matchSampleToBioAssay( ExpressionExperiment expExp, List<BioAssay> bioAssays, String sampleAcc ) {
-
         for ( BioAssay bioAssay : expExp.getBioAssays() ) {
-            if ( sampleAcc.equals( bioAssay.getAccession().getAccession() ) ) {
+            if ( sampleAcc.equals( requireNonNull( bioAssay.getAccession() ).getAccession() ) ) {
                 bioAssays.add( bioAssay );
                 GeoConverterImpl.log.debug( "Found sample match for bioAssay " + bioAssay.getAccession().getAccession() );
                 return true;

@@ -32,6 +32,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Parse information on batch from raw data files. This will typically correspond to "scan date" for an array.
  *
@@ -51,7 +53,7 @@ public class BatchInfoParser {
         Map<String, BioAssay> assayAccessions = new HashMap<>();
         for ( BioAssay ba : ee.getBioAssays() ) {
             DatabaseEntry accession = ba.getAccession();
-            if ( StringUtils.isBlank( accession.getAccession() ) ) {
+            if ( accession == null || StringUtils.isBlank( accession.getAccession() ) ) {
                 throw new IllegalStateException(
                         "Must have accession for each bioassay to get batch information from source for " + ee
                                 .getShortName() );
@@ -79,12 +81,12 @@ public class BatchInfoParser {
          */
         if ( bioAssays2Files.size() < assayAccessions.size() ) {
 
-            if ( bioAssays2Files.size() > 0 ) {
+            if ( !bioAssays2Files.isEmpty() ) {
                 /*
                  * Missing a few for some reason.
                  */
                 for ( BioAssay ba : bioAssays2Files.keySet() ) {
-                    if ( !assayAccessions.containsKey( ba.getAccession().getAccession() ) ) {
+                    if ( !assayAccessions.containsKey( requireNonNull( ba.getAccession() ).getAccession() ) ) {
                         BatchInfoParser.log.warn( "Missing raw data file for " + ba + " on " + ee.getShortName() );
                     }
                 }
@@ -151,7 +153,7 @@ public class BatchInfoParser {
             throw new IllegalStateException( "Dates were not found for any of the files." );
         }
 
-        if ( missingDate.size() > 0 ) {
+        if ( !missingDate.isEmpty() ) {
             BatchInfoParser.log.warn( "Dates were not obtained for " + missingDate + " files: " );
             for ( File f : missingDate ) {
                 BatchInfoParser.log.info( "Missing date for: " + f.getName() );

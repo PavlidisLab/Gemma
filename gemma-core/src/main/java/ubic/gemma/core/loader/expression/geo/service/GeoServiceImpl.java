@@ -59,6 +59,8 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import java.io.File;
 import java.util.*;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Non-interactive fetching, processing and persisting of GEO data.
  *
@@ -390,13 +392,19 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
             // make map of characteristics by GSM ID for bioassays
             Map<String, BioAssay> freshBAsByGSM = new HashMap<>();
             for ( BioAssay ba : freshFromGEO.getBioAssays() ) {
-                String acc = ba.getAccession().getAccession();
-                freshBAsByGSM.put( acc, ba );
+                // this BA is from GEO, it must have an accession
+                freshBAsByGSM.put( requireNonNull( ba.getAccession() ).getAccession(), ba );
             }
 
             for ( BioAssay ba : ee.getBioAssays() ) {
-                BioMaterial bm = ba.getSampleUsed();
+                // this BA is from Gemma, it might lack an accession (although very unlikely!)
+                if ( ba.getAccession() == null || ba.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
+                    log.warn( ba + " does not have a GEO accession, ignoring." );
+                    continue;
+                }
                 String gsmID = ba.getAccession().getAccession();
+
+                BioMaterial bm = ba.getSampleUsed();
 
                 if ( !freshBAsByGSM.containsKey( gsmID ) ) { // sanity check ...
                     // suppress this warning, because if we split up front, then this is expected.
@@ -564,7 +572,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
 
                 String sampleId = sample.getGeoAccession();
                 String existingAcc = acc.getAccession();
-                if ( existingAcc.equals( sampleId ) && ba.getAccession().getExternalDatabase().getName()
+                if ( existingAcc.equals( sampleId ) && acc.getExternalDatabase().getName()
                         .equals( GeoServiceImpl.GEO_DB_NAME ) ) {
                     GeoServiceImpl.log
                             .debug( sampleId + " appears in an expression experiment already in the system, skipping" );

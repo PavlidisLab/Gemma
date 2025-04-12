@@ -272,6 +272,9 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         if ( rawHeaders == null || rawHeaders.isEmpty() ) return null;
 
         for ( BioAssay ba : ee.getBioAssays() ) {
+            if ( ba.getAccession() == null ) {
+                throw new IllegalStateException( "There is no accession for " + ba );
+            }
             String gsm = ba.getAccession().getAccession();
 
             if ( !rawHeaders.containsKey( gsm ) ) {

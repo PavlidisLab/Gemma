@@ -452,6 +452,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
             BioAssayDimension bad = vector.getBioAssayDimension();
             for ( BioAssay ba : bad.getBioAssays() ) {
+                assertNotNull( ba.getAccession() );
                 if ( ba.getAccession().getAccession().equals( sampleToTest ) ) {
                     soughtBioAssay = ba;
                 }
