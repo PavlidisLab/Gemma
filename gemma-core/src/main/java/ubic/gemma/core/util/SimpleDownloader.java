@@ -1,5 +1,6 @@
 package ubic.gemma.core.util;
 
+import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.file.PathUtils;
@@ -17,6 +18,11 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 /**
  * A simple downloader for FTP and HTTP(s) URLs.
@@ -27,14 +33,16 @@ public class SimpleDownloader {
 
     private final SimpleRetry<IOException> retry;
     private final FTPClientFactory ftpClientFactory;
+    private final ExecutorService taskExecutor;
 
     /**
      * @param retryPolicy      policy for retrying failed downloads
      * @param ftpClientFactory factory for creating FTP clients
      */
-    public SimpleDownloader( SimpleRetryPolicy retryPolicy, FTPClientFactory ftpClientFactory ) {
+    public SimpleDownloader( SimpleRetryPolicy retryPolicy, FTPClientFactory ftpClientFactory, ExecutorService taskExecutor ) {
         this.retry = new SimpleRetry<>( retryPolicy, IOException.class, getClass().getName() );
         this.ftpClientFactory = ftpClientFactory;
+        this.taskExecutor = taskExecutor;
     }
 
     /**
@@ -44,14 +52,53 @@ public class SimpleDownloader {
      * @param force download even if the file exists, has the same size and is up to date
      * @return the number of bytes that were downloaded
      */
-    public long download( URL url, Path dest, boolean force ) throws IOException {
-        return retry.execute( ( ctx ) -> {
+    public long download( URL url, Path dest, boolean force ) throws IOException, InterruptedException {
+        try {
+            return downloadAsync( url, dest, force ).get();
+        } catch ( ExecutionException e ) {
+            if ( e.getCause() instanceof IOException ) {
+                throw ( IOException ) e.getCause();
+            } else if ( e.getCause() instanceof RuntimeException ) {
+                throw ( RuntimeException ) e.getCause();
+            } else {
+                throw new RuntimeException( e.getCause() );
+            }
+        }
+    }
+
+    @Value
+    public static class URLAndDestination {
+        URL url;
+        Path dest;
+    }
+
+    public void downloadInParallel( List<URLAndDestination> urls2dest, boolean force ) throws IOException, InterruptedException {
+        List<Future<?>> futures = urls2dest.stream()
+                .map( entry -> downloadAsync( entry.getUrl(), entry.getDest(), force ) )
+                .collect( Collectors.toList() );
+        for ( Future<?> future : futures ) {
+            try {
+                future.get();
+            } catch ( ExecutionException e ) {
+                if ( e.getCause() instanceof IOException ) {
+                    throw ( IOException ) e.getCause();
+                } else if ( e.getCause() instanceof RuntimeException ) {
+                    throw ( RuntimeException ) e.getCause();
+                } else {
+                    throw new RuntimeException( e.getCause() );
+                }
+            }
+        }
+    }
+
+    public Future<Long> downloadAsync( URL url, Path dest, boolean force ) {
+        return taskExecutor.submit( () -> retry.execute( ( ctx ) -> {
             if ( url.getProtocol().equalsIgnoreCase( "ftp" ) ) {
                 return downloadFtp( url, dest, force );
             } else {
                 return downloadHttp( url, dest, force );
             }
-        }, "download " + url + " to " + dest );
+        }, "download " + url + " to " + dest ) );
     }
 
     private long downloadFtp( URL url, Path dest, boolean force ) throws IOException {
@@ -81,7 +128,7 @@ public class SimpleDownloader {
                 PathUtils.createParentDirectories( dest );
                 CopyStreamListener previousCSL = client.getCopyStreamListener();
                 try ( OutputStream out = Files.newOutputStream( dest ) ) {
-                    ProgressReporter pr = new ProgressReporter( url.getFile(), SimpleDownloader.class.getName() );
+                    ProgressReporter pr = new ProgressReporter( url.toString(), SimpleDownloader.class.getName() );
                     client.setCopyStreamListener( new CopyStreamListener() {
                         @Override
                         public void bytesTransferred( CopyStreamEvent event ) {
@@ -136,7 +183,7 @@ public class SimpleDownloader {
             }
             if ( download ) {
                 PathUtils.createParentDirectories( dest );
-                try ( InputStream in = new ProgressInputStream( connection.getInputStream(), url.getFile(), SimpleDownloader.class.getName(), connection.getContentLengthLong() );
+                try ( InputStream in = new ProgressInputStream( connection.getInputStream(), url.toString(), SimpleDownloader.class.getName(), connection.getContentLengthLong() );
                         OutputStream out = Files.newOutputStream( dest ) ) {
                     return IOUtils.copyLarge( in, out );
                 }

@@ -1059,7 +1059,7 @@ complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.RefreshExp
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.RefreshExperimentCli' -o batchReportFrequency -l batch-report-frequency -r -f --description 'Frequency at which to report batch task progress in seconds (default is every 30 seconds)'
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.RefreshExperimentCli' -s v -l refreshVectors -f --description 'Refresh cache of raw and processed data vectors'
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.RefreshExperimentCli' -s r -l refreshReports -f --description 'Refresh cache of experiment reports (i.e. batch information, diff ex. analyses, etc.)'
-complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.RefreshExperimentCli' -o threads -l threads -r -f --description 'Number of threads to use for batch processing.'
+complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.RefreshExperimentCli' -o threads -l threads -r -f --description 'Number of threads to use for parallel processing'
 complete -c gemma-cli -n "not __fish_seen_subcommand_from $gemma_all_subcommands" -f -a refreshExperiment --description 'Refresh the cache for experiments on the Gemma Website'
 complete -c gemma-cli -n '__fish_seen_subcommand_from refreshExperiment' -f
 complete -c gemma-cli -n '__fish_seen_subcommand_from refreshExperiment' -s h -l help -f --description 'Print this message'
@@ -1075,7 +1075,7 @@ complete -c gemma-cli -n '__fish_seen_subcommand_from refreshExperiment' -o batc
 complete -c gemma-cli -n '__fish_seen_subcommand_from refreshExperiment' -o batchReportFrequency -l batch-report-frequency -r -f --description 'Frequency at which to report batch task progress in seconds (default is every 30 seconds)'
 complete -c gemma-cli -n '__fish_seen_subcommand_from refreshExperiment' -s v -l refreshVectors -f --description 'Refresh cache of raw and processed data vectors'
 complete -c gemma-cli -n '__fish_seen_subcommand_from refreshExperiment' -s r -l refreshReports -f --description 'Refresh cache of experiment reports (i.e. batch information, diff ex. analyses, etc.)'
-complete -c gemma-cli -n '__fish_seen_subcommand_from refreshExperiment' -o threads -l threads -r -f --description 'Number of threads to use for batch processing.'
+complete -c gemma-cli -n '__fish_seen_subcommand_from refreshExperiment' -o threads -l threads -r -f --description 'Number of threads to use for parallel processing'
 complete -c gemma-cli -n "not __fish_seen_subcommand_from $gemma_all_subcommands" -f -a ubic.gemma.apps.ReplaceDataCli --description 'Replace expression data for non-Affymetrix and non-RNA-seq data sets'
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.ReplaceDataCli' -f
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.ReplaceDataCli' -s h -l help -f --description 'Print this message'
@@ -1885,7 +1885,7 @@ complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.IndexGemma
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.IndexGemmaCLI' -s q -f --description 'Index sequences'
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.IndexGemmaCLI' -s x -f --description 'Index datasets groups'
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.IndexGemmaCLI' -s y -f --description 'Index gene sets'
-complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.IndexGemmaCLI' -o threads -l threads -r -f --description 'Number of threads to use for batch processing.'
+complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.IndexGemmaCLI' -o threads -l threads -r -f --description 'Number of threads to use for parallel processing'
 complete -c gemma-cli -n "not __fish_seen_subcommand_from $gemma_all_subcommands" -f -a searchIndex --description 'Create or update the searchable indexes for a Gemma production system'
 complete -c gemma-cli -n '__fish_seen_subcommand_from searchIndex' -f
 complete -c gemma-cli -n '__fish_seen_subcommand_from searchIndex' -s h -l help -f --description 'Print this message'
@@ -1897,7 +1897,7 @@ complete -c gemma-cli -n '__fish_seen_subcommand_from searchIndex' -s s -f --des
 complete -c gemma-cli -n '__fish_seen_subcommand_from searchIndex' -s q -f --description 'Index sequences'
 complete -c gemma-cli -n '__fish_seen_subcommand_from searchIndex' -s x -f --description 'Index datasets groups'
 complete -c gemma-cli -n '__fish_seen_subcommand_from searchIndex' -s y -f --description 'Index gene sets'
-complete -c gemma-cli -n '__fish_seen_subcommand_from searchIndex' -o threads -l threads -r -f --description 'Number of threads to use for batch processing.'
+complete -c gemma-cli -n '__fish_seen_subcommand_from searchIndex' -o threads -l threads -r -f --description 'Number of threads to use for parallel processing'
 complete -c gemma-cli -n "not __fish_seen_subcommand_from $gemma_all_subcommands" -f -a ubic.gemma.apps.ExternalDatabaseUpdaterCli --description 'Update an external database and optionally perform a release.'
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.ExternalDatabaseUpdaterCli' -f
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.ExternalDatabaseUpdaterCli' -s h -l help -f --description 'Print this message'
@@ -1978,7 +1978,7 @@ complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.SingleCell
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.SingleCellDataDownloaderCli' -o batchFormat -l batch-format -r -a '(echo -e "TEXT\t\nTSV\t\nLOG\t\nSUPPRESS\t" 2>/dev/null)' -f --description 'Format to use to the batch summary (default to TEXT or TSV if a file is specified via -batchOutputFile). Possible values are: TEXT, TSV, LOG, SUPPRESS.'
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.SingleCellDataDownloaderCli' -o batchOutputFile -l batch-output-file -r -F --description 'Output file to use for the batch summary (default is standard output)'
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.SingleCellDataDownloaderCli' -o batchReportFrequency -l batch-report-frequency -r -f --description 'Frequency at which to report batch task progress in seconds (default is every 30 seconds)'
-complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.SingleCellDataDownloaderCli' -o threads -l threads -r -f --description 'Number of threads to use for batch processing.'
+complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.SingleCellDataDownloaderCli' -o threads -l threads -r -f --description 'Number of threads to use for parallel processing'
 complete -c gemma-cli -n "not __fish_seen_subcommand_from $gemma_all_subcommands" -f -a downloadSingleCellData --description 'Download single cell data from GEO.\nFor the moment, only GEO series accessions are supported.'
 complete -c gemma-cli -n '__fish_seen_subcommand_from downloadSingleCellData' -f
 complete -c gemma-cli -n '__fish_seen_subcommand_from downloadSingleCellData' -s h -l help -f --description 'Print this message'
@@ -1999,7 +1999,7 @@ complete -c gemma-cli -n '__fish_seen_subcommand_from downloadSingleCellData' -o
 complete -c gemma-cli -n '__fish_seen_subcommand_from downloadSingleCellData' -o batchFormat -l batch-format -r -a '(echo -e "TEXT\t\nTSV\t\nLOG\t\nSUPPRESS\t" 2>/dev/null)' -f --description 'Format to use to the batch summary (default to TEXT or TSV if a file is specified via -batchOutputFile). Possible values are: TEXT, TSV, LOG, SUPPRESS.'
 complete -c gemma-cli -n '__fish_seen_subcommand_from downloadSingleCellData' -o batchOutputFile -l batch-output-file -r -F --description 'Output file to use for the batch summary (default is standard output)'
 complete -c gemma-cli -n '__fish_seen_subcommand_from downloadSingleCellData' -o batchReportFrequency -l batch-report-frequency -r -f --description 'Frequency at which to report batch task progress in seconds (default is every 30 seconds)'
-complete -c gemma-cli -n '__fish_seen_subcommand_from downloadSingleCellData' -o threads -l threads -r -f --description 'Number of threads to use for batch processing.'
+complete -c gemma-cli -n '__fish_seen_subcommand_from downloadSingleCellData' -o threads -l threads -r -f --description 'Number of threads to use for parallel processing'
 complete -c gemma-cli -n "not __fish_seen_subcommand_from $gemma_all_subcommands" -f -a ubic.gemma.apps.MeshTermFetcherCli --description 'Gets MESH headings for a set of pubmed ids'
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.MeshTermFetcherCli' -f
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.MeshTermFetcherCli' -s h -l help -f --description 'Print this message'
@@ -2087,11 +2087,17 @@ complete -c gemma-cli -n '__fish_seen_subcommand_from updateGene2Cs' -s f -l for
 complete -c gemma-cli -n "not __fish_seen_subcommand_from $gemma_all_subcommands" -f -a ubic.gemma.apps.UnifiedOntologyUpdaterCli --description 'Update or initialize the unified ontology'
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.UnifiedOntologyUpdaterCli' -f
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.UnifiedOntologyUpdaterCli' -s h -l help -f --description 'Print this message'
+complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.UnifiedOntologyUpdaterCli' -o sourcesDir -l sources-dir -r -F --description 'Destination where ontology source files are downloaded. Default is null.'
+complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.UnifiedOntologyUpdaterCli' -o destDir -l dest-dir -r -F --description 'Destination where to generate the TDB dataset. Default is null.'
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.UnifiedOntologyUpdaterCli' -o skipDownload -l skip-download -f --description 'Skip download of ontology files'
 complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.UnifiedOntologyUpdaterCli' -o force -l force -f --description 'Force download of ontology files, even if they are up-to-date.'
+complete -c gemma-cli -n '__fish_seen_subcommand_from ubic.gemma.apps.UnifiedOntologyUpdaterCli' -o threads -l threads -r -f --description 'Number of threads to use for parallel processing'
 complete -c gemma-cli -n "not __fish_seen_subcommand_from $gemma_all_subcommands" -f -a updateUnifiedOntology --description 'Update or initialize the unified ontology'
 complete -c gemma-cli -n '__fish_seen_subcommand_from updateUnifiedOntology' -f
 complete -c gemma-cli -n '__fish_seen_subcommand_from updateUnifiedOntology' -s h -l help -f --description 'Print this message'
+complete -c gemma-cli -n '__fish_seen_subcommand_from updateUnifiedOntology' -o sourcesDir -l sources-dir -r -F --description 'Destination where ontology source files are downloaded. Default is null.'
+complete -c gemma-cli -n '__fish_seen_subcommand_from updateUnifiedOntology' -o destDir -l dest-dir -r -F --description 'Destination where to generate the TDB dataset. Default is null.'
 complete -c gemma-cli -n '__fish_seen_subcommand_from updateUnifiedOntology' -o skipDownload -l skip-download -f --description 'Skip download of ontology files'
 complete -c gemma-cli -n '__fish_seen_subcommand_from updateUnifiedOntology' -o force -l force -f --description 'Force download of ontology files, even if they are up-to-date.'
+complete -c gemma-cli -n '__fish_seen_subcommand_from updateUnifiedOntology' -o threads -l threads -r -f --description 'Number of threads to use for parallel processing'
 set -e gemma_all_subcommands

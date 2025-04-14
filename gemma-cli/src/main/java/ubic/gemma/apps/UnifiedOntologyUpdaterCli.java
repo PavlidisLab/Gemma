@@ -6,6 +6,7 @@ import com.hp.hpl.jena.tdb.setup.StoreParams;
 import com.hp.hpl.jena.tdb.store.DatasetGraphTDB;
 import com.hp.hpl.jena.tdb.sys.TDBMaker;
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.file.PathUtils;
@@ -15,11 +16,13 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import ubic.basecode.ontology.jena.TdbOntologyService;
 import ubic.basecode.ontology.providers.OntologyService;
 import ubic.gemma.cli.util.AbstractCLI;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.util.SimpleDownloader;
 import ubic.gemma.core.util.SimpleRetryPolicy;
+import ubic.gemma.core.util.SimpleThreadFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -33,6 +36,8 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -45,9 +50,16 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
     @Qualifier("unifiedOntologyService")
     private OntologyService unifiedOntologyService;
 
-    @Value("${gemma.ontology.unified.dir}")
-    private Path tdbDir;
+    @Value("${gemma.ontology.unified.sources.dir}")
+    private Path sourcesDir;
 
+    @Value("${gemma.ontology.unified.dir}")
+    private Path destDir;
+
+    /**
+     * Indicate that the destination directory is not the default one.
+     */
+    private boolean differentDestDir = false;
     private boolean skipDownload = false;
     private boolean force = false;
 
@@ -63,12 +75,22 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
 
     @Override
     protected void buildOptions( Options options ) {
+        options.addOption( Option.builder( "sourcesDir" ).longOpt( "sources-dir" ).hasArg( true ).type( Path.class )
+                .desc( "Destination where ontology source files are downloaded. Default is " + sourcesDir + "." ).build() );
+        options.addOption( Option.builder( "destDir" ).longOpt( "dest-dir" ).hasArg( true ).type( Path.class )
+                .desc( "Destination where to generate the TDB dataset. Default is " + destDir + "." ).build() );
         options.addOption( "skipDownload", "skip-download", false, "Skip download of ontology files" );
         options.addOption( "force", "force", false, "Force download of ontology files, even if they are up-to-date." );
+        addThreadsOption( options );
     }
 
     @Override
     protected void processOptions( CommandLine commandLine ) throws ParseException {
+        if ( commandLine.hasOption( "destDir" ) ) {
+            Path dir = Paths.get( commandLine.getOptionValue( "destDir" ) );
+            differentDestDir = !destDir.equals( dir );
+            destDir = dir;
+        }
         skipDownload = commandLine.hasOption( "skipDownload" );
         force = commandLine.hasOption( "force" );
         if ( skipDownload && force ) {
@@ -88,41 +110,56 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
             for ( String urlS : urls ) {
                 URL url = new URL( urlS );
                 String fileName = Paths.get( url.getFile() ).getFileName().toString();
-                Path dest = tdbDir.getParent().resolve( "sources" ).resolve( fileName );
+                Path dest = sourcesDir.resolve( fileName );
                 if ( Files.exists( dest ) ) {
                     downloadedFiles.add( dest.toString() );
+                } else {
+                    log.warn( "There is no downloaded file for " + url + ", it will not be included in the TDB dataset." );
                 }
             }
         } else {
-            SimpleDownloader downloader = new SimpleDownloader( new SimpleRetryPolicy( 3, 1000, 1.5 ), ftpClientFactory );
-            for ( String urlS : urls ) {
-                URL url = new URL( urlS );
-                String fileName = Paths.get( url.getFile() ).getFileName().toString();
-                Path dest = tdbDir.getParent().resolve( "sources" ).resolve( fileName );
-                downloader.download( url, dest, force );
-                downloadedFiles.add( dest.toString() );
+            ExecutorService executor = Executors.newFixedThreadPool( getNumThreads(), new SimpleThreadFactory( "gemma-unified-ontology-downloader-thread-" ) );
+            try {
+                SimpleDownloader downloader = new SimpleDownloader( new SimpleRetryPolicy( 3, 1000, 1.5 ), ftpClientFactory, executor );
+                for ( String urlS : urls ) {
+                    URL url = new URL( urlS );
+                    String fileName = Paths.get( url.getFile() ).getFileName().toString();
+                    Path dest = sourcesDir.resolve( fileName );
+                    downloader.download( url, dest, force );
+                    downloadedFiles.add( dest.toString() );
+                }
+            } finally {
+                executor.shutdown();
             }
         }
         if ( downloadedFiles.isEmpty() ) {
             throw new IllegalStateException( "No ontology files to use for creating the TDB dataset." );
         }
         // update sources
-        Path newDir = tdbDir.resolveSibling( tdbDir.getFileName() + ".new" );
+        Path newDir = destDir.resolveSibling( destDir.getFileName() + ".new" );
         if ( Files.exists( newDir ) ) {
             throw new IllegalStateException( "There is a already a directory at " + newDir + ", remove it first." );
         }
         try {
             createTdbDataset( newDir, downloadedFiles );
-            removeWritePermissions( newDir );
+            // FIXME: Jena cannot open a TDB directory in read-only mode, so we can't really use this right now.
+            // removeWritePermissions( newDir );
+            // make sure it works
+            verifyTdbDataset( newDir );
             moveToFinalLocation( newDir );
             rebuildSearchIndex();
         } catch ( Exception e ) {
             if ( Files.exists( newDir ) ) {
-                Files.delete( newDir );
+                try {
+                    PathUtils.deleteDirectory( newDir );
+                } catch ( IOException e2 ) {
+                    log.error( "Failed to delete " + newDir + ".", e2 );
+                }
             }
             throw e;
         }
     }
+
 
     private void createTdbDataset( Path newDir, List<String> downloadedFiles ) {
         Location loc = Location.create( newDir.toString() );
@@ -135,6 +172,16 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
         }
     }
 
+    private void verifyTdbDataset( Path newDir ) {
+        log.info( "Verifying TDB dataset at " + newDir + "..." );
+        try ( TdbOntologyService os = new TdbOntologyService( "Test", newDir, null, true, null ) ) {
+            os.initialize( false, false );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    @SuppressWarnings("unused")
     private void removeWritePermissions( Path newDir ) throws IOException {
         // remove write permissions
         log.info( "Removing write permissions on " + newDir + "..." );
@@ -154,21 +201,25 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
     }
 
     private void moveToFinalLocation( Path newDir ) throws IOException {
-        log.info( "Moving " + newDir + " to " + tdbDir + "..." );
-        if ( Files.exists( tdbDir ) ) {
-            Path oldDir = tdbDir.resolveSibling( tdbDir.getFileName() + ".old" );
+        log.info( "Moving " + newDir + " to " + destDir + "..." );
+        if ( Files.exists( destDir ) ) {
+            Path oldDir = destDir.resolveSibling( destDir.getFileName() + ".old" );
             if ( Files.exists( oldDir ) ) {
                 throw new IllegalStateException( "There is a already a directory at " + oldDir + ", remove it first." );
             }
-            Files.move( tdbDir, oldDir );
-            Files.move( newDir, tdbDir );
+            Files.move( destDir, oldDir );
+            Files.move( newDir, destDir );
             PathUtils.deleteDirectory( oldDir, StandardDeleteOption.OVERRIDE_READ_ONLY );
         } else {
-            Files.move( newDir, tdbDir );
+            Files.move( newDir, destDir );
         }
     }
 
     private void rebuildSearchIndex() {
+        if ( differentDestDir ) {
+            log.warn( "Destination directory is not standard, will not re-build the search index." );
+            return;
+        }
         log.info( "Reindexing the unified ontology..." );
         unifiedOntologyService.initialize( true, true );
     }
