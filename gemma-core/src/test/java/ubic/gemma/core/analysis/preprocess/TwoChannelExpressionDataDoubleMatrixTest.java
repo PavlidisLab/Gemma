@@ -42,6 +42,7 @@ import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -100,10 +101,15 @@ public class TwoChannelExpressionDataDoubleMatrixTest extends AbstractGeoService
 
         metaData = new SimpleExpressionExperimentMetadata();
         Collection<SimplePlatformMetadata> ads = new HashSet<>();
-        ads.add( SimplePlatformMetadata.forName( "new ad" ) );
+        SimplePlatformMetadata ad = new SimplePlatformMetadata();
+        ad.setShortName( "test" );
+        ad.setName( "new ad" );
+        ad.setTechnologyType( TechnologyType.GENELIST );
+        ads.add( ad );
         metaData.setArrayDesigns( ads );
 
         metaData.setTaxon( SimpleTaxonMetadata.forName( "mouse" ) );
+        metaData.setShortName( "ee" );
         metaData.setName( "ee" );
         SimpleQuantitationTypeMetadata qtMetadata = new SimpleQuantitationTypeMetadata();
         qtMetadata.setName( "testing" );

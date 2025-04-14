@@ -6,16 +6,25 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.task.AsyncTaskExecutor;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.providers.*;
 import ubic.basecode.ontology.providers.OntologyService;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.core.util.test.category.SlowTest;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,9 +41,31 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author poirigui
  */
 @CommonsLog
-@ActiveProfiles("production")
 @ContextConfiguration
-public class OntologyLoadingTest extends BaseTest {
+public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
+
+    @Configuration
+    @TestComponent
+    @Import(OntologyConfig.class)
+    static class CC {
+
+        @Bean
+        public static PropertyPlaceholderConfigurer propertyConfigurer() {
+            return new TestPropertyPlaceholderConfigurer(
+                    "load.ontologies=false",
+                    "gemma.ontology.unified.enabled=false",
+                    "gemma.ontology.unified.dir=",
+                    "gemma.ontology.loader.corePoolSize=4"
+            );
+        }
+
+        @Bean
+        public ConversionService conversionService() {
+            DefaultFormattingConversionService service = new DefaultFormattingConversionService();
+            service.addConverter( String.class, Path.class, source -> Paths.get( ( String ) source ) );
+            return service;
+        }
+    }
 
     @Autowired
     private List<OntologyService> ontologyServices;

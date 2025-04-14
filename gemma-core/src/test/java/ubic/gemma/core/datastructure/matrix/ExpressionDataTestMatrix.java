@@ -47,36 +47,7 @@ public class ExpressionDataTestMatrix extends ExpressionDataDoubleMatrix {
 
     private static final long serialVersionUID = 1L;
 
-    public ExpressionDataTestMatrix() throws IOException {
+    public ExpressionDataTestMatrix() {
         super();
-        SimpleExpressionDataLoaderService service = new SimpleExpressionDataLoaderServiceImpl();
-
-        SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
-
-        Collection<SimplePlatformMetadata> ads = new HashSet<>();
-        ads.add( SimplePlatformMetadata.forName( "new ad" ) );
-        metaData.setArrayDesigns( ads );
-
-        metaData.setTaxon( SimpleTaxonMetadata.forName( "mouse" ) );
-        metaData.setName( "ee" );
-
-        SimpleQuantitationTypeMetadata qtMetadata = new SimpleQuantitationTypeMetadata();
-        qtMetadata.setName( "testing" );
-        qtMetadata.setGeneralType( GeneralType.QUANTITATIVE );
-        qtMetadata.setScale( ScaleType.LOG2 );
-        qtMetadata.setType( StandardQuantitationType.AMOUNT );
-        qtMetadata.setIsRatio( true );
-        metaData.setQuantitationType( qtMetadata );
-
-        try ( InputStream data = this.getClass()
-                .getResourceAsStream( "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" ) ) {
-            DoubleMatrix<String, String> matrix = new DoubleMatrixReader().read( data );
-            ExpressionExperiment ee = service.convert( metaData, matrix );
-            super.init();
-            Collection<BulkExpressionDataVector> selectedVectors = super.selectVectors( ee, ee.getQuantitationTypes().iterator().next() );
-            this.vectorsToMatrix( selectedVectors );
-        }
-
     }
-
 }
