@@ -33,40 +33,30 @@ public class InitializeContext implements ApplicationContextInitializer<Configur
 
     @Override
     public void initialize( ConfigurableWebApplicationContext applicationContext ) {
-        enableActiveProfiles( applicationContext );
+        activateWebProfile( applicationContext );
         initializeConfiguration( applicationContext );
         prepareContext( applicationContext );
     }
 
     /**
-     * Activate the Spring profiles declared in {@code spring.profiles.active} servlet init parameter.
-     * <p>
-     * FIXME: I think this is added in a later version of Spring (maybe <a href="https://github.com/PavlidisLab/Gemma/pull/508">#508<a> will fix this?)
-     * @author poirigui
+     * Activate the {@code web} profile.
      */
-    private void enableActiveProfiles( ConfigurableWebApplicationContext cac ) {
-        ServletContext servletContext = cac.getServletContext();
-        // setup active profiles
-        if ( servletContext.getInitParameter( "spring.profiles.active" ) != null ) {
-            String[] profiles = servletContext.getInitParameter( "spring.profiles.active" ).split( "," );
-            log.debug( "The spring.profiles.active parameter is set, activating the following profiles: " + String.join( ", ", profiles ) + "." );
-            for ( String activeProfile : profiles ) {
-                cac.getEnvironment().addActiveProfile( activeProfile.trim() );
-            }
-        }
+    private void activateWebProfile( ConfigurableWebApplicationContext cac ) {
+        cac.getEnvironment().addActiveProfile( "web" );
     }
 
     /**
      * Fills in parameters used by the application:
      * <ul>
-     * <li>Theme (for styling pages) available under {@code theme}</li>
      * <li>All the settings from {@link Settings} available as a mapping under {@code appConfig[...]}</li>
+     * <li>Theme (for styling pages) available under {@code theme}</li>
+     * <li>Analytics tracker</li>
      * </ul>
      */
     private void initializeConfiguration( ConfigurableWebApplicationContext applicationContext ) {
         ServletContext servletContext = applicationContext.getServletContext();
-        Map<String, Object> config = new HashMap<>();
         lintConfiguration();
+        Map<String, Object> config = new HashMap<>();
         loadSettings( config );
         loadTheme( servletContext, config );
         loadTrackerInformation( config );
