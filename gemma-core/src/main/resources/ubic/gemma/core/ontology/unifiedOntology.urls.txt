@@ -14,3 +14,7 @@ https://purl.obolibrary.org/obo/obi.owl
 https://purl.obolibrary.org/obo/pato/pato.owl
 https://purl.obolibrary.org/obo/so.owl
 https://purl.obolibrary.org/obo/uberon.owl
+https://www.ebi.ac.uk/efo/efo.owl
+https://purl.obolibrary.org/obo/ro.owl
+https://purl.obolibrary.org/obo/go.owl
+https://gemma.msl.ubc.ca/ont/TGEMO.OWL
