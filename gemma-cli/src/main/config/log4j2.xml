@@ -86,6 +86,7 @@
 
         <!-- Jena -->
         <Logger name="com.hp.hpl.jena.rdf.model.impl.RDFDefaultErrorHandler" level="ERROR"/>
+        <Logger name="org.apache.jena.tdb.loader" level="INFO"/>
 
         <Logger name="com.opensymphony.oscache" level="WARN"/>
 

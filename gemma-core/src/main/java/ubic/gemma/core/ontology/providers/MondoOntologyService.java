@@ -1,34 +1,17 @@
 package ubic.gemma.core.ontology.providers;
 
-import ubic.basecode.ontology.providers.AbstractOntologyService;
+import ubic.basecode.ontology.jena.UrlOntologyService;
+import ubic.basecode.ontology.providers.AbstractDelegatingOntologyService;
 import ubic.gemma.core.config.Settings;
-
-import javax.annotation.Nullable;
 
 /**
  * <a href="https://obofoundry.org/ontology/mondo.html">Mondo Disease Ontology</a>
  * @author poirigui
  */
-public class MondoOntologyService extends AbstractOntologyService {
+public class MondoOntologyService extends AbstractDelegatingOntologyService {
 
-    @Override
-    protected String getOntologyName() {
-        return "Mondo Disease Ontology";
-    }
-
-    @Override
-    protected String getOntologyUrl() {
-        return Settings.getString( "url.mondoOntology" );
-    }
-
-    @Override
-    protected boolean isOntologyEnabled() {
-        return Settings.getBoolean( "load.mondoOntology" );
-    }
-
-    @Nullable
-    @Override
-    protected String getCacheName() {
-        return "mondoOntology";
+    public MondoOntologyService() {
+        super( new UrlOntologyService( "Mondo Disease Ontology", Settings.getString( "url.mondoOntology" ),
+                Settings.getBoolean( "load.mondoOntology" ), "mondoOntology" ) );
     }
 }

@@ -315,7 +315,7 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
         options.addOption( Option.builder( THREADS_OPTION )
                 .longOpt( "threads" )
                 .argName( "numThreads" ).hasArg()
-                .desc( "Number of threads to use for batch processing." )
+                .desc( "Number of threads to use for parallel processing" )
                 .type( Number.class ) // FIXME: this should be an Integer.class
                 .build() );
     }

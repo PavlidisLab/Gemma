@@ -27,13 +27,13 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.core.util.test.category.SlowTest;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl.GOAspect;
 import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
+import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
-import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -59,12 +59,12 @@ public class GeneOntologyService2Test extends BaseTest implements InitializingBe
 
         @Bean
         public static TestPropertyPlaceholderConfigurer testPropertyPlaceholderConfigurer() {
-            return new TestPropertyPlaceholderConfigurer( "load.ontologies=false", "load.geneOntology=true", "url.geneOntology=dummy" );
+            return new TestPropertyPlaceholderConfigurer( "load.ontologies=false" );
         }
 
         @Bean
         public GeneOntologyService geneOntologyService() throws IOException, InterruptedException {
-            return new GeneOntologyServiceImpl();
+            return new GeneOntologyServiceImpl( "dummy", true );
         }
 
         @Bean
