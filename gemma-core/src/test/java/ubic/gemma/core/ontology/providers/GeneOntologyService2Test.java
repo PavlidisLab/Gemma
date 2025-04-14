@@ -30,6 +30,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.ontology.providers.GeneOntologyServiceImpl.GOAspect;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.core.context.TestComponent;
@@ -50,7 +51,7 @@ import static org.mockito.Mockito.mock;
  */
 @Category(SlowTest.class)
 @ContextConfiguration
-public class GeneOntologyService2Test extends AbstractJUnit4SpringContextTests implements InitializingBean {
+public class GeneOntologyService2Test extends BaseTest implements InitializingBean {
 
     @Configuration
     @TestComponent

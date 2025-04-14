@@ -14,6 +14,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.context.EnvironmentProfiles;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.util.test.BaseTest;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -24,7 +25,7 @@ import static ubic.gemma.core.config.SettingsConfig.filterSystemProperties;
 
 @ActiveProfiles(EnvironmentProfiles.TEST)
 @ContextConfiguration
-public class SettingsConfigTest extends AbstractJUnit4SpringContextTests {
+public class SettingsConfigTest extends BaseTest {
 
     @Configuration
     @TestComponent

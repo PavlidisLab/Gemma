@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -18,7 +19,7 @@ import java.util.Collections;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration
-public class GeneArgServiceTest extends AbstractJUnit4SpringContextTests {
+public class GeneArgServiceTest extends BaseTest {
 
     @Configuration
     @TestComponent

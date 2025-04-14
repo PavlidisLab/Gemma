@@ -28,11 +28,11 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.gemma.persistence.service.genome.gene.GeneService;
-import ubic.gemma.core.util.test.category.SlowTest;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.Collection;
 import java.util.concurrent.Future;
@@ -52,7 +52,7 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailabl
  */
 @ContextConfiguration
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class HomologeneServiceTest extends AbstractJUnit4SpringContextTests {
+public class HomologeneServiceTest extends BaseTest {
 
     @Configuration
     @TestComponent

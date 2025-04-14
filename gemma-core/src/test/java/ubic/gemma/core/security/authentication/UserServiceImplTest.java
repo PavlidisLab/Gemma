@@ -27,8 +27,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.persistence.service.common.auditAndSecurity.UserDao;
@@ -43,7 +43,7 @@ import static org.mockito.Mockito.*;
  * @author pavlidis
  */
 @ContextConfiguration
-public class UserServiceImplTest extends AbstractJUnit4SpringContextTests {
+public class UserServiceImplTest extends BaseTest {
 
     @Configuration
     @TestComponent

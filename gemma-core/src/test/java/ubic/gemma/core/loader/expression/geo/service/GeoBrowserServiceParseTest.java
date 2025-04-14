@@ -23,10 +23,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -48,7 +48,7 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatExceptionIsDueToNe
  * @author paul
  */
 @ContextConfiguration
-public class GeoBrowserServiceParseTest extends AbstractJUnit4SpringContextTests {
+public class GeoBrowserServiceParseTest extends BaseTest {
 
     @Configuration
     @TestComponent

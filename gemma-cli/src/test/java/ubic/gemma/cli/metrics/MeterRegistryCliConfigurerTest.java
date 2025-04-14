@@ -14,13 +14,14 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.cli.metrics.MeterRegistryCliConfigurer;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.util.test.BaseTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ContextConfiguration
-public class MeterRegistryCliConfigurerTest extends AbstractJUnit4SpringContextTests {
+public class MeterRegistryCliConfigurerTest extends BaseTest {
 
     @Configuration
     @TestComponent

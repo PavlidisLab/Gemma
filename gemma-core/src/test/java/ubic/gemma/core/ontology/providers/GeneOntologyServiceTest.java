@@ -36,6 +36,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologySearchException;
 import ubic.basecode.ontology.search.OntologySearchResult;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
@@ -55,7 +56,7 @@ import static ubic.gemma.core.ontology.providers.GeneOntologyUtils.asRegularGoId
  */
 @Category(SlowTest.class)
 @ContextConfiguration
-public class GeneOntologyServiceTest extends AbstractJUnit4SpringContextTests implements InitializingBean {
+public class GeneOntologyServiceTest extends BaseTest implements InitializingBean {
     private static final Log log = LogFactory.getLog( GeneOntologyServiceTest.class.getName() );
 
     @Configuration

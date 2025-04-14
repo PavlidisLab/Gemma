@@ -9,11 +9,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.basecode.ontology.providers.OntologyService;
 import ubic.basecode.ontology.providers.*;
+import ubic.basecode.ontology.providers.OntologyService;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.time.Duration;
@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @CommonsLog
 @ActiveProfiles("production")
 @ContextConfiguration
-public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
+public class OntologyLoadingTest extends BaseTest {
 
     @Autowired
     private List<OntologyService> ontologyServices;

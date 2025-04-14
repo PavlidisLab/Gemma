@@ -15,6 +15,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import ubic.gemma.core.config.SettingsConfig;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.category.IntegrationTest;
 
 import javax.sql.DataSource;
@@ -28,7 +29,7 @@ import static org.junit.Assert.assertEquals;
 
 @Category(IntegrationTest.class)
 @ContextConfiguration
-public class DateStorageTest extends AbstractJUnit4SpringContextTests {
+public class DateStorageTest extends BaseTest {
 
     @Import(SettingsConfig.class)
     @Configuration

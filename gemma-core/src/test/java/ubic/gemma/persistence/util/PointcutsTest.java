@@ -13,16 +13,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.persistence.retry.Retryable;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.persistence.retry.Retryable;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration
-public class PointcutsTest extends AbstractJUnit4SpringContextTests {
+public class PointcutsTest extends BaseTest {
 
     @Configuration
     @TestComponent

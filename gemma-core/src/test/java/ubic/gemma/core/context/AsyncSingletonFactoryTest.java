@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+import ubic.gemma.core.util.test.BaseTest;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -16,7 +16,7 @@ import java.util.concurrent.Future;
 
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ContextConfiguration
-public class AsyncSingletonFactoryTest extends AbstractJUnit4SpringContextTests {
+public class AsyncSingletonFactoryTest extends BaseTest {
 
     public static class MyService {
         public MyService() throws InterruptedException {
