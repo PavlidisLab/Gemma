@@ -26,6 +26,7 @@ import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import javax.annotation.Nullable;
 import javax.persistence.Transient;
@@ -180,7 +181,7 @@ public class FactorValue extends AbstractIdentifiable implements SecuredChild {
          * at this point, we know we have two FactorValues, at least one of which is transient, so we have to look at
          * the fields; pain in butt
          */
-        return Objects.equals( getExperimentalFactor(), that.getExperimentalFactor() )
+        return IdentifiableUtils.equals( getExperimentalFactor(), that.getExperimentalFactor() )
                 && Objects.equals( getMeasurement(), that.getMeasurement() )
                 && Objects.equals( getCharacteristics(), that.getCharacteristics() )
                 && Objects.equals( getValue(), that.getValue() );

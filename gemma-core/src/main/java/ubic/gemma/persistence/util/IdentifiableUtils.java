@@ -3,6 +3,7 @@ package ubic.gemma.persistence.util;
 import org.hibernate.Hibernate;
 import ubic.gemma.model.common.Identifiable;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collector;
@@ -72,6 +73,23 @@ public class IdentifiableUtils {
             return Objects.toString( identifiable );
         } else {
             return clazz.getSimpleName() + ( identifiable.getId() != null ? " Id=" + identifiable.getId() : "" );
+        }
+    }
+
+    /**
+     * Compare two identifiables of the same type without risking initializing them.
+     * @return true if they have the same ID or are equal according to {@link Objects#equals(Object, Object)}.
+     */
+    public static <T extends Identifiable> boolean equals( @Nullable T a, @Nullable T b ) {
+        if ( a == b ) {
+            return true;
+        } else if ( a == null ^ b == null ) {
+            return false;
+        } else if ( a.getId() != null || b.getId() != null ) {
+            return Objects.equals( b.getId(), b.getId() );
+        } else {
+            // both IDs are null, objects can be compared directly
+            return Objects.equals( a, b );
         }
     }
 }
