@@ -151,7 +151,7 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
         } catch ( Exception e ) {
             if ( Files.exists( newDir ) ) {
                 try {
-                    PathUtils.deleteDirectory( newDir );
+                    PathUtils.deleteDirectory( newDir, StandardDeleteOption.OVERRIDE_READ_ONLY );
                 } catch ( IOException e2 ) {
                     log.error( "Failed to delete " + newDir + ".", e2 );
                 }
@@ -209,7 +209,11 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
             }
             Files.move( destDir, oldDir );
             Files.move( newDir, destDir );
-            PathUtils.deleteDirectory( oldDir, StandardDeleteOption.OVERRIDE_READ_ONLY );
+            try {
+                PathUtils.deleteDirectory( oldDir, StandardDeleteOption.OVERRIDE_READ_ONLY );
+            } catch ( IOException e ) {
+                log.error( "Failed to delete " + oldDir + ".", e );
+            }
         } else {
             Files.move( newDir, destDir );
         }
