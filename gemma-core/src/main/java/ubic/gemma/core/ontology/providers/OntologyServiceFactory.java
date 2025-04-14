@@ -179,7 +179,11 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
             if ( loadInBackground ) {
                 if ( ontologyTaskExecutor != null ) {
                     ontologyTaskExecutor.execute( () -> {
-                        service.initialize( forceLoad, forceIndexing );
+                        try {
+                            service.initialize( forceLoad, forceIndexing );
+                        } catch ( Exception e ) {
+                            log.error( "Failed to initialize " + service + ".", e );
+                        }
                     } );
                 } else {
                     service.startInitializationThread( forceLoad, forceIndexing );
@@ -192,10 +196,14 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
     }
 
     @Override
-    protected void destroyInstance( T instance ) {
-        if ( instance.isInitializationThreadAlive() ) {
-            log.info( String.format( "Cancelling initialization thread for %s...", instance ) );
-            instance.cancelInitializationThread();
+    protected void destroyInstance( T instance ) throws Exception {
+        try {
+            if ( instance.isInitializationThreadAlive() ) {
+                log.info( String.format( "Cancelling initialization thread for %s...", instance ) );
+                instance.cancelInitializationThread();
+            }
+        } finally {
+            instance.close();
         }
     }
 }
