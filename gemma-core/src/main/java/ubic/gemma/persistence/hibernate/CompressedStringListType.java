@@ -67,11 +67,7 @@ public class CompressedStringListType implements UserType, ParameterizedType {
         Assert.notNull( delimiter, "The 'delimiter' parameter must be set." );
         InputStream gzippedStream = rs.getBinaryStream( names[0] );
         if ( gzippedStream != null ) {
-            try ( InputStream is = new GZIPInputStream( gzippedStream ) ) {
-                return Arrays.asList( StringUtils.split( IOUtils.toString( is, StandardCharsets.UTF_8 ), delimiter ) );
-            } catch ( IOException e ) {
-                throw new HibernateException( e );
-            }
+            return decompress( gzippedStream, delimiter, charset );
         } else {
             return null;
         }
@@ -85,7 +81,7 @@ public class CompressedStringListType implements UserType, ParameterizedType {
             List<String> s = ( List<String> ) value;
             Assert.isTrue( s.stream().noneMatch( k -> k.contains( delimiter ) ),
                     String.format( "The list of strings may not contain the delimiter %s.", delimiter ) );
-            st.setBlob( index, compress( s ) );
+            st.setBlob( index, compress( s, delimiter, charset ) );
         } else {
             st.setBlob( index, ( InputStream ) null );
         }
@@ -139,7 +135,7 @@ public class CompressedStringListType implements UserType, ParameterizedType {
      * connection.
      * FIXME: replace this by a compressing input stream
      */
-    private InputStream compress( List<String> s ) {
+    private InputStream compress( List<String> s, String delimiter, Charset charset ) {
         PipedInputStream is;
         PipedOutputStream out;
         try {
@@ -163,5 +159,13 @@ public class CompressedStringListType implements UserType, ParameterizedType {
             }
         } ).start();
         return is;
+    }
+
+    private List<String> decompress( InputStream gzippedStream, String delimiter, Charset charset ) {
+        try ( InputStream in = new GZIPInputStream( gzippedStream ) ) {
+            return Arrays.asList( StringUtils.splitByWholeSeparatorPreserveAllTokens( IOUtils.toString( in, charset ), delimiter ) );
+        } catch ( IOException e ) {
+            throw new HibernateException( e );
+        }
     }
 }

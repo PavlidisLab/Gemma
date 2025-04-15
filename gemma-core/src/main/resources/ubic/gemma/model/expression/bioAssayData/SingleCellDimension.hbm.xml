@@ -14,6 +14,8 @@
             <!-- stored as a compressed blob -->
             <column name="CELL_IDS" not-null="true" sql-type="LONGBLOB"/>
             <type name="ubic.gemma.persistence.hibernate.CompressedStringListType">
+                <!-- FIXME: this is not a real newline, but a backslash followed by a n, we would need to rewrite all
+                            the cell IDs we have to fix this, see https://github.com/PavlidisLab/Gemma/issues/1365 -->
                 <param name="delimiter">\n</param>
             </type>
         </property>
