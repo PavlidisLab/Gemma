@@ -30,6 +30,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 /**
@@ -48,6 +49,12 @@ public class BioAssayDaoImpl extends AbstractNoopFilteringVoEnabledDao<BioAssay,
         return ( BioAssay ) BusinessKey
                 .createQueryObject( this.getSessionFactory().getCurrentSession(), bioAssay )
                 .uniqueResult();
+    }
+
+    @Nullable
+    @Override
+    public BioAssay findByShortName( String shortName ) {
+        return findOneByProperty( "shortName", shortName );
     }
 
     @Override

@@ -41,6 +41,16 @@ public class BioAssay extends AbstractDescribable implements SecuredChild {
     public static final int MAX_NAME_LENGTH = 255;
 
     /**
+     * A unique and recognizable identifier for this assay.
+     * <p>
+     * This is generally the same as the accession.
+     * <p>
+     * It is null for now, but in the future, it will become non-null.
+     */
+    @Nullable
+    private String shortName;
+
+    /**
      * Platform used in this assay.
      */
     private ArrayDesign arrayDesignUsed;
@@ -162,6 +172,16 @@ public class BioAssay extends AbstractDescribable implements SecuredChild {
     @DocumentId
     public Long getId() {
         return super.getId();
+    }
+
+    @Nullable
+    @Field
+    public String getShortName() {
+        return shortName;
+    }
+
+    public void setShortName( @Nullable String shortName ) {
+        this.shortName = shortName;
     }
 
     @Override

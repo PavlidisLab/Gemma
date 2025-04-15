@@ -9,6 +9,10 @@
          <generator class="native">
          </generator>
       </id>
+      <property name="shortName" type="java.lang.String" index="BIO_ASSAY_SHORT_NAME">
+         <!-- TODO: mark this as non-null -->
+         <column name="SHORT_NAME" not-null="false" unique="true" sql-type="VARCHAR(255)"/>
+      </property>
       <property name="name" type="java.lang.String" index="BIO_ASSAY_NAME">
          <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255)"/>
       </property>

@@ -14,7 +14,6 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssay;
 
-import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +36,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.persistence.util.Thaws.thawBioAssay;
-import static ubic.gemma.persistence.util.Thaws.thawBioMaterial;
 
 /**
  * @author pavlidis
@@ -78,7 +76,12 @@ public class BioAssayServiceImpl extends AbstractFilteringVoEnabledService<BioAs
     @Transactional(readOnly = true)
     public java.util.Collection<BioAssayDimension> findBioAssayDimensions( final BioAssay bioAssay ) {
         return this.handleFindBioAssayDimensions( bioAssay );
+    }
 
+    @Override
+    @Transactional(readOnly = true)
+    public BioAssay findByShortName( String shortName ) {
+        return bioAssayDao.findByShortName( shortName );
     }
 
     @Override

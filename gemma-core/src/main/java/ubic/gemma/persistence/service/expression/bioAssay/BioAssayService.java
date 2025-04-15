@@ -31,6 +31,7 @@ import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 
 import javax.annotation.CheckReturnValue;
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 
@@ -57,6 +58,10 @@ public interface BioAssayService extends BaseService<BioAssay>, FilteringVoEnabl
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    BioAssay findByShortName( String shortName );
 
     /**
      * @param accession eg GSM12345.

@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,9 @@ import java.util.Map;
 public interface BioAssayDao extends FilteringVoEnabledDao<BioAssay, BioAssayValueObject> {
 
     String OBJECT_ALIAS = "ba";
+
+    @Nullable
+    BioAssay findByShortName( String shortName );
 
     Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay );
 
