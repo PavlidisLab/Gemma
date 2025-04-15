@@ -44,6 +44,8 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
         return result;
     }
 
+    @Nullable
+    private String shortName;
     private DatabaseEntryValueObject accession = null;
     private ArrayDesignValueObject arrayDesign;
     private String description = "";
@@ -104,6 +106,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
      */
     public BioAssayValueObject( BioAssay bioAssay, @Nullable Map<Long, ArrayDesignValueObject> arrayDesignValueObjectsById, @Nullable BioAssay sourceBioAssay, boolean basic, boolean allFactorValues ) {
         super( bioAssay );
+        this.shortName = bioAssay.getShortName();
         this.name = bioAssay.getName();
         this.description = bioAssay.getDescription();
 
@@ -155,25 +158,9 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
         super( id );
     }
 
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( this.getClass() != obj.getClass() )
-            return false;
-        BioAssayValueObject other = ( BioAssayValueObject ) obj;
-        if ( id == null ) {
-            if ( other.id != null )
-                return false;
-        } else if ( !id.equals( other.id ) )
-            return false;
-
-        if ( name == null ) {
-            return other.name == null;
-        }
-        return name.equals( other.name );
+    @Nullable
+    public String getShortName() {
+        return shortName;
     }
 
     public Long getSourceBioAssayId() {
@@ -232,19 +219,12 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
         return userFlaggedOutlier;
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
-        if ( id == null ) {
-            result = prime * result + ( ( name == null ) ? 0 : name.hashCode() );
-        }
-        return result;
-    }
-
     public boolean isOutlier() {
         return outlier;
+    }
+
+    public void setShortName( @Nullable String shortName ) {
+        this.shortName = shortName;
     }
 
     public void setSourceBioAssayId( Long sourceBioAssayId ) {
@@ -305,6 +285,38 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
 
     public void setUserFlaggedOutlier( Boolean userFlaggedOutlier ) {
         this.userFlaggedOutlier = userFlaggedOutlier;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( this.getClass() != obj.getClass() )
+            return false;
+        BioAssayValueObject other = ( BioAssayValueObject ) obj;
+        if ( id == null ) {
+            if ( other.id != null )
+                return false;
+        } else if ( !id.equals( other.id ) )
+            return false;
+
+        if ( name == null ) {
+            return other.name == null;
+        }
+        return name.equals( other.name );
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
+        if ( id == null ) {
+            result = prime * result + ( ( name == null ) ? 0 : name.hashCode() );
+        }
+        return result;
     }
 
     @Override
