@@ -2,14 +2,14 @@ package ubic.gemma.apps;
 
 import org.apache.commons.cli.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
 import ubic.gemma.cli.completion.CompletionType;
 import ubic.gemma.cli.completion.CompletionUtils;
-import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
-import ubic.gemma.core.loader.expression.singleCell.*;
 import ubic.gemma.cli.util.EnumeratedByCommandStringConverter;
 import ubic.gemma.cli.util.OptionsUtils;
+import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.analysis.service.ExpressionExperimentDataFileType;
+import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
+import ubic.gemma.core.loader.expression.singleCell.*;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -400,7 +400,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
                 }
                 if ( qt.getIsSingleCellPreferred() ) {
                     log.info( "Generating MEX data files for preferred QT: " + qt + "..." );
-                    try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, true, 500, true ) ) {
+                    try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, false, -1, true ) ) {
                         log.info( "Generated MEX data file for " + qt + " at " + lockedPath.getPath() + "." );
                     } catch ( IOException e ) {
                         throw new RuntimeException( "Failed to generate MEX data files for " + qt + ".", e );
