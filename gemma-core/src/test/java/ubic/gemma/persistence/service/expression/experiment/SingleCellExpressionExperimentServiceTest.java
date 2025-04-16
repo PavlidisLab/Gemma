@@ -302,14 +302,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
 
         assertThat( scExpressionExperimentService.getSingleCellExpressionDataMatrix( ee, qt ) )
                 .satisfies( matrix -> {
-                    assertThat( matrix.getQuantitationType().getId() )
-                            .isNull();
-                    assertThat( matrix.getQuantitationType().getName() )
-                            .isEqualTo( qt.getName() );
-                    assertThat( matrix.getQuantitationType().getDescription() )
-                            .endsWith( "Data was converted from INT to DOUBLE." );
-                    assertThat( matrix.getQuantitationType().getRepresentation() )
-                            .isEqualTo( PrimitiveType.DOUBLE );
+                    assertThat( matrix.getQuantitationType() ).isEqualTo( qt );
                 } );
 
         verify( auditTrailService ).addUpdateEvent( ee, DataAddedEvent.class, "Added 10 vectors for " + qt + " with dimension " + scd + ".", ( String ) null );
