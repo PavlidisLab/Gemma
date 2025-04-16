@@ -442,7 +442,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                         if ( valToIndex.containsKey( val ) ) {
                             j = valToIndex.get( val );
                         } else {
-                            Characteristic c = Characteristic.Factory.newInstance( Categories.UNCATEGORIZED, val, null );
+                            Characteristic c = Characteristic.Factory.newInstance( new Category( factorName, null ), val, null );
                             c.setDescription( "Imported from column " + factorName + " in AnnData file " + h5File + "." );
                             j = characteristics.size();
                             characteristics.add( c );
