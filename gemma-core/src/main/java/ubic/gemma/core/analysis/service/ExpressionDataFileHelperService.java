@@ -1,6 +1,7 @@
 package ubic.gemma.core.analysis.service;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,6 +69,7 @@ class ExpressionDataFileHelperService {
     private ExpressionExperimentBatchInformationService expressionExperimentBatchInformationService;
 
     public Collection<BulkExpressionDataVector> getVectors( ExpressionExperiment ee, QuantitationType type ) {
+        log.info( "Retrieving bulk expression data vectors for " + type + "..." );
         Collection<BulkExpressionDataVector> vectors = rawAndProcessedExpressionDataVectorService.findAndThaw( type );
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( "No vectors for " + type + " in " + ee + "." );
@@ -76,6 +78,7 @@ class ExpressionDataFileHelperService {
     }
 
     public ExpressionDataDoubleMatrix getDataMatrix( ExpressionExperiment ee, boolean filtered ) throws FilteringException {
+        log.info( "Retrieving processed data matrix for " + ee + "..." );
         ee = expressionExperimentService.thawLite( ee );
         if ( filtered ) {
             FilterConfig filterConfig = new FilterConfig();
@@ -97,6 +100,7 @@ class ExpressionDataFileHelperService {
     }
 
     public ExpressionDataDoubleMatrix getDataMatrix( ExpressionExperiment ee, QuantitationType qt, Map<CompositeSequence, String[]> geneAnnotations ) {
+        log.info( "Retrieving raw data matrix for " + qt + "..." );
         ee = expressionExperimentService.thawLite( ee );
         ExpressionDataDoubleMatrix matrix = expressionDataMatrixService.getRawExpressionDataMatrix( ee, qt );
         Set<ArrayDesign> ads = matrix.getDesignElements().stream()
@@ -117,6 +121,7 @@ class ExpressionDataFileHelperService {
     }
 
     public Collection<SingleCellExpressionDataVector> getSingleCellVectors( ExpressionExperiment ee, QuantitationType qt, Map<CompositeSequence, Set<Gene>> cs2gene ) {
+        log.info( "Retrieving single-cell data vectors for " + qt + "..." );
         Collection<SingleCellExpressionDataVector> vectors = singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt );
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( "There are no vectors associated to " + qt + " in " + ee + "." );
@@ -138,9 +143,12 @@ class ExpressionDataFileHelperService {
         return singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, fetchSize );
     }
 
-    public SingleCellExpressionDataMatrix<Double> getSingleCellMatrix( ExpressionExperiment ee, QuantitationType qt, Map<CompositeSequence, Set<Gene>> cs2gene ) {
-        SingleCellExpressionDataMatrix<Double> matrix = singleCellExpressionExperimentService.getSingleCellExpressionDataMatrix( ee, qt );
+    public SingleCellExpressionDataMatrix<?> getSingleCellMatrix( ExpressionExperiment ee, QuantitationType qt, Map<CompositeSequence, Set<Gene>> cs2gene ) {
+        StopWatch timer = StopWatch.createStarted();
+        log.info( "Retrieving single-cell data matrix for " + qt + "..." );
+        SingleCellExpressionDataMatrix<?> matrix = singleCellExpressionExperimentService.getSingleCellExpressionDataMatrix( ee, qt );
         cs2gene.putAll( getCs2Gene( ee, qt ) );
+        log.info( "Retrieving single-cell data matrix for " + qt + " took " + timer + "." );
         return matrix;
     }
 

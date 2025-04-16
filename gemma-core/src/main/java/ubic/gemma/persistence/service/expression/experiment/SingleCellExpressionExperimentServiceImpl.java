@@ -9,6 +9,7 @@ import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.preprocess.convert.RepresentationConversionUtils;
 import ubic.gemma.core.analysis.singleCell.SingleCellSparsityMetrics;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
+import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataIntMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.description.Categories;
@@ -34,6 +35,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static ubic.gemma.core.analysis.preprocess.convert.RepresentationConversionUtils.convertVectors;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.createStreamMonitor;
 
 @Service
@@ -147,16 +149,19 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
-    public SingleCellExpressionDataMatrix<Double> getSingleCellExpressionDataMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
+    public SingleCellExpressionDataMatrix<?> getSingleCellExpressionDataMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
         Collection<SingleCellExpressionDataVector> vectors = expressionExperimentDao.getSingleCellDataVectors( expressionExperiment, quantitationType );
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( "No vector for " + quantitationType + " in " + expressionExperiment );
         }
-        if ( quantitationType.getRepresentation() != PrimitiveType.DOUBLE ) {
+        if ( quantitationType.getRepresentation() == PrimitiveType.DOUBLE ) {
+            return new SingleCellExpressionDataDoubleMatrix( vectors );
+        } else if ( quantitationType.getRepresentation() == PrimitiveType.INT ) {
+            return new SingleCellExpressionDataIntMatrix( vectors );
+        } else {
             log.warn( "Data for " + quantitationType + " will be converted from " + quantitationType.getRepresentation() + " to " + PrimitiveType.DOUBLE + "." );
-            vectors = RepresentationConversionUtils.convertVectors( vectors, PrimitiveType.DOUBLE, SingleCellExpressionDataVector.class );
+            return new SingleCellExpressionDataDoubleMatrix( convertVectors( vectors, PrimitiveType.DOUBLE, SingleCellExpressionDataVector.class ) );
         }
-        return new SingleCellExpressionDataDoubleMatrix( vectors );
     }
 
     @Override

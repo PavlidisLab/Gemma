@@ -99,7 +99,7 @@ public class DetectQuantitationTypeCli extends ExpressionExperimentManipulatingC
 
     private void detectSingleCellQuantitationType( ExpressionExperiment ee, QuantitationType quantitationType ) {
         log.info( "Loading data for " + quantitationType + "..." );
-        SingleCellExpressionDataMatrix<Double> matrix = singleCellExpressionExperimentService.getSingleCellExpressionDataMatrix( ee, quantitationType );
+        SingleCellExpressionDataMatrix<?> matrix = singleCellExpressionExperimentService.getSingleCellExpressionDataMatrix( ee, quantitationType );
         log.info( "Got data!" );
         QuantitationType qt = inferQuantitationType( matrix );
         log.info( "Detected quantitation type: " + qt );

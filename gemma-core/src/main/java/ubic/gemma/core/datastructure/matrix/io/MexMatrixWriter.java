@@ -8,10 +8,10 @@ import no.uib.cipr.matrix.io.MatrixVectorWriter;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.springframework.util.Assert;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
+import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataIntMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
-import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.convertData;
 import static ubic.gemma.core.util.TsvUtils.SUB_DELIMITER;
 import static ubic.gemma.core.util.TsvUtils.format;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.getSampleEnd;
@@ -102,6 +101,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
                     aos.write( baos.toByteArray() );
                     aos.closeArchiveEntry();
                 }
+                log.info( String.format( "Wrote MEX files for %s (%d/%d).", ba, i + 1, bioAssays.size() ) );
             }
         }
         return matrix.rows();
@@ -128,6 +128,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
             try ( OutputStream baos = new GZIPOutputStream( Files.newOutputStream( sampleDir.resolve( "matrix.mtx.gz" ) ) ) ) {
                 writeMatrix( matrix, i, baos );
             }
+            log.info( String.format( "Wrote MEX files for %s to %s (%d/%d).", ba, sampleDir, i + 1, bioAssays.size() ) );
         }
         return matrix.rows();
     }
@@ -270,18 +271,24 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
     }
 
     private void writeMatrix( SingleCellExpressionDataMatrix<?> mat, int sampleIndex, OutputStream out ) {
-        Assert.isInstanceOf( SingleCellExpressionDataDoubleMatrix.class, mat );
-        writeDoubleMatrix( ( SingleCellExpressionDataDoubleMatrix ) mat, sampleIndex, out );
+        if ( mat instanceof SingleCellExpressionDataDoubleMatrix ) {
+            int sampleOffset = mat.getSingleCellDimension().getBioAssaysOffset()[sampleIndex];
+            int numberOfCells = mat.getSingleCellDimension().getNumberOfCellsBySample( sampleIndex );
+            writeDoubleMatrix( ( ( SingleCellExpressionDataDoubleMatrix ) mat ).getMatrix(), sampleOffset, numberOfCells, out );
+        } else if ( mat instanceof SingleCellExpressionDataIntMatrix ) {
+            int sampleOffset = mat.getSingleCellDimension().getBioAssaysOffset()[sampleIndex];
+            int numberOfCells = mat.getSingleCellDimension().getNumberOfCellsBySample( sampleIndex );
+            writeIntMatrix( ( ( SingleCellExpressionDataIntMatrix ) mat ).getMatrix(), sampleOffset, numberOfCells, out );
+        } else {
+            throw new UnsupportedOperationException( "Unsupported matrix type " + mat.getClass().getName() );
+        }
     }
 
-    private void writeDoubleMatrix( SingleCellExpressionDataDoubleMatrix mat, int sampleIndex, OutputStream out ) {
-        CompRowMatrix matrix = mat.getMatrix();
+    private void writeDoubleMatrix( CompRowMatrix matrix, int sampleOffset, int numberOfCells, OutputStream out ) {
         int[] rowptr = matrix.getRowPointers();
         int[] colind = matrix.getColumnIndices();
         double[] data = matrix.getData();
 
-        int sampleOffset = mat.getSingleCellDimension().getBioAssaysOffset()[sampleIndex];
-        int numberOfCells = mat.getSingleCellDimension().getNumberOfCellsBySample( sampleIndex );
         int nextSampleOffset = sampleOffset + numberOfCells;
 
         int sampleNnz = 0;
@@ -314,6 +321,48 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
 
         try ( MatrixVectorWriter writer = new MatrixVectorWriter( out ) ) {
             writer.printMatrixInfo( new MatrixInfo( true, MatrixInfo.MatrixField.Real, MatrixInfo.MatrixSymmetry.General ) );
+            writer.printMatrixSize( new MatrixSize( matrix.numRows(), numberOfCells, sampleData.length ) );
+            writer.printCoordinate( sampleRows, sampleCols, sampleData );
+        }
+    }
+
+    private void writeIntMatrix( CompRowMatrix matrix, int sampleOffset, int numberOfCells, OutputStream out ) {
+        int[] rowptr = matrix.getRowPointers();
+        int[] colind = matrix.getColumnIndices();
+        double[] data = matrix.getData();
+
+        int nextSampleOffset = sampleOffset + numberOfCells;
+
+        int sampleNnz = 0;
+        for ( int j : colind ) {
+            if ( j >= sampleOffset && j < nextSampleOffset ) {
+                sampleNnz++;
+            }
+        }
+
+        int[] sampleRows = new int[sampleNnz];
+        int[] sampleCols = new int[sampleNnz];
+        int[] sampleData = new int[sampleNnz];
+
+        // populate
+        int k = 0;
+        int l = 0;
+        for ( int i = 0; i < colind.length; i++ ) {
+            int j = colind[i];
+            while ( !( i >= rowptr[k] && i < rowptr[k + 1] ) ) {
+                k++;
+            }
+            if ( j >= sampleOffset && j < nextSampleOffset ) {
+                // rows/cols are 1-based in MTX
+                sampleRows[l] = k + 1;
+                sampleCols[l] = j - sampleOffset + 1; // adjust the column index to start at zero
+                sampleData[l] = ( int ) Math.rint( data[i] );
+                l++;
+            }
+        }
+
+        try ( MatrixVectorWriter writer = new MatrixVectorWriter( out ) ) {
+            writer.printMatrixInfo( new MatrixInfo( true, MatrixInfo.MatrixField.Integer, MatrixInfo.MatrixSymmetry.General ) );
             writer.printMatrixSize( new MatrixSize( matrix.numRows(), numberOfCells, sampleData.length ) );
             writer.printCoordinate( sampleRows, sampleCols, sampleData );
         }

@@ -90,7 +90,7 @@ public interface SingleCellExpressionExperimentService {
      * Obtain a single-cell expression data matrix for the given quantitation type.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    SingleCellExpressionDataMatrix<Double> getSingleCellExpressionDataMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType );
+    SingleCellExpressionDataMatrix<?> getSingleCellExpressionDataMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType );
 
     /**
      * Add single-cell data vectors.

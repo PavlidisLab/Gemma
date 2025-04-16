@@ -190,7 +190,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         QuantitationType qt = vectors.iterator().next().getQuantitationType();
         SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
         scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null );
-        SingleCellExpressionDataMatrix<Double> matrix = scExpressionExperimentService.getSingleCellExpressionDataMatrix( ee, qt );
+        SingleCellExpressionDataMatrix<?> matrix = scExpressionExperimentService.getSingleCellExpressionDataMatrix( ee, qt );
         assertThat( matrix.getQuantitationType() ).isEqualTo( qt );
         assertThat( matrix.getSingleCellDimension() ).isEqualTo( scd );
         assertThat( matrix.columns() ).isEqualTo( 100 );
