@@ -1084,6 +1084,7 @@ public class DatasetsWebService {
     /**
      * Retrieve the single-cell dimension for a given quantitation type.
      */
+    @GZIP
     @GET
     @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @Path("/{dataset}/singleCellDimension")
@@ -1142,6 +1143,7 @@ public class DatasetsWebService {
         }
     }
 
+    @GZIP
     @GET
     @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @Path("/{dataset}/cellTypeAssignment")
@@ -1193,6 +1195,7 @@ public class DatasetsWebService {
         }
     }
 
+    @GZIP
     @GET
     @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8 })
     @Path("/{dataset}/cellLevelCharacteristics")
