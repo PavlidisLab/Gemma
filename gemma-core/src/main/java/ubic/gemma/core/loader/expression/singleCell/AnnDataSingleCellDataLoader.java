@@ -15,6 +15,7 @@ import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.DesignElementMapper;
 import ubic.gemma.core.loader.util.mapper.EntityMapper;
 import ubic.gemma.model.common.description.Categories;
+import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -58,6 +59,12 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
      * Prefix used for naming the QT derived from a specific layer.
      */
     private static final String LAYERED_QT_NAME_PREFIX = QT_NAME_PREFIX + " from layer ";
+
+
+    /**
+     * Maximum number of characteristics to consider when loading a cell-level characteristic.
+     */
+    private static final int MAX_CHARACTERISTICS = 100;
 
     /**
      * Path to the HDF5 file.
@@ -420,7 +427,11 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 if ( extractSingleValueBySampleName( sampleNames, values ).isPresent() ) {
                     continue;
                 }
-                // conclusion, this is a cell-type factor
+                // conclusion, this is a cell-level characteristic
+                if ( values.length > MAX_CHARACTERISTICS ) {
+                    log.warn( "The " + factorName + " column has too too many values (" + values.length + ") for importing into a cell-level characteristic, ignoring." );
+                    continue;
+                }
                 int[] indices = new int[values.length];
                 Map<String, Integer> valToIndex = new HashMap<>();
                 List<Characteristic> characteristics = new ArrayList<>();
