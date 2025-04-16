@@ -470,20 +470,20 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public int writeTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useStreaming, int fetchSize, Writer writer ) throws IOException {
+    public int writeTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, Writer writer ) throws IOException {
         log.info( "Will write tabular data for " + qt + " to a stream." );
-        return writeTabularSingleCellExpressionDataInternal( ee, qt, scaleType, useStreaming, fetchSize, writer );
+        return writeTabularSingleCellExpressionDataInternal( ee, qt, scaleType, fetchSize, writer );
     }
 
     @Override
-    public LockedPath writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) throws IOException {
+    public LockedPath writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean forceWrite ) throws IOException {
         try ( LockedPath dest = getOutputFile( getDataOutputFilename( ee, qt, TABULAR_SC_DATA_SUFFIX ), false ) ) {
             if ( !forceWrite && Files.exists( dest.getPath() ) ) {
                 return dest.steal();
             }
             try ( LockedPath lockedPath = dest.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
                 log.info( "Will write tabular data for " + qt + " to " + lockedPath.getPath() + "." );
-                int written = writeTabularSingleCellExpressionDataInternal( ee, qt, null, useStreaming, fetchSize, writer );
+                int written = writeTabularSingleCellExpressionDataInternal( ee, qt, null, fetchSize, writer );
                 log.info( "Wrote " + written + " vectors to " + lockedPath.getPath() + "." );
                 return lockedPath.toShared();
             } catch ( Exception e ) {
@@ -494,22 +494,22 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public Future<Path> writeOrLocateTabularSingleCellExpressionDataAsync( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) {
+    public Future<Path> writeOrLocateTabularSingleCellExpressionDataAsync( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean forceWrite ) {
         return expressionDataFileTaskExecutor.submit( () -> {
-            try ( LockedPath lockedPath = writeOrLocateMexSingleCellExpressionData( ee, qt, useStreaming, fetchSize, forceWrite ) ) {
+            try ( LockedPath lockedPath = writeOrLocateMexSingleCellExpressionData( ee, qt, fetchSize, forceWrite ) ) {
                 return lockedPath.getPath();
             }
         } );
     }
 
-    private int writeTabularSingleCellExpressionDataInternal( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useStreaming, int fetchSize, Writer writer ) throws IOException {
+    private int writeTabularSingleCellExpressionDataInternal( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, Writer writer ) throws IOException {
         Map<CompositeSequence, Set<Gene>> cs2gene = new HashMap<>();
         TabularMatrixWriter matrixWriter = new TabularMatrixWriter( entityUrlBuilder, buildInfo );
         matrixWriter.setScaleType( scaleType );
         if ( scaleType != null && qt.getScale() != scaleType ) {
             log.info( "Data will be converted from " + qt.getScale() + " to " + scaleType + "." );
         }
-        if ( useStreaming ) {
+        if ( fetchSize > 0 ) {
             AtomicLong numVecs = new AtomicLong();
             try ( Stream<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, qt, cs2gene, numVecs, fetchSize ) ) {
                 return matrixWriter.write( vectors.peek( createStreamMonitor( ExpressionDataFileServiceImpl.class.getName(), numVecs.get() ) ), cs2gene, writer );
@@ -537,7 +537,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public int writeMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, boolean useStreaming, int fetchSize, boolean forceWrite, Path destDir ) throws IOException {
+    public int writeMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, int fetchSize, boolean forceWrite, Path destDir ) throws IOException {
         if ( !forceWrite && Files.exists( destDir ) ) {
             throw new IllegalArgumentException( "Output directory " + destDir + " already exists." );
         }
@@ -547,7 +547,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             writer.setScaleType( scaleType );
             writer.setUseEnsemblIds( useEnsemblIds );
             writer.setExecutorService( taskExecutor );
-            if ( useStreaming ) {
+            if ( fetchSize > 0 ) {
                 Map<BioAssay, Long> nnzBySample = new HashMap<>();
                 AtomicLong numVecs = new AtomicLong();
                 try ( Stream<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, qt, cs2gene, numVecs, nnzBySample, fetchSize ) ) {
@@ -576,13 +576,13 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public LockedPath writeOrLocateMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) throws IOException {
+    public LockedPath writeOrLocateMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean forceWrite ) throws IOException {
         try ( LockedPath dest = getOutputFile( getDataOutputFilename( ee, qt, MEX_SC_DATA_SUFFIX ), false ) ) {
             if ( !forceWrite && Files.exists( dest.getPath() ) ) {
                 return dest.steal();
             }
             try ( LockedPath lockedPath = dest.toExclusive() ) {
-                int written = writeMexSingleCellExpressionData( ee, qt, null, false, useStreaming, fetchSize, forceWrite, lockedPath.getPath() );
+                int written = writeMexSingleCellExpressionData( ee, qt, null, false, fetchSize, forceWrite, lockedPath.getPath() );
                 log.info( "Wrote " + written + " vectors for " + qt + " to " + lockedPath.getPath() + "." );
                 return lockedPath.toShared();
             }
@@ -590,9 +590,9 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public Future<Path> writeOrLocateMexSingleCellExpressionDataAsync( ExpressionExperiment ee, QuantitationType qt, boolean useStreaming, int fetchSize, boolean forceWrite ) {
+    public Future<Path> writeOrLocateMexSingleCellExpressionDataAsync( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean forceWrite ) {
         return expressionDataFileTaskExecutor.submit( () -> {
-            try ( LockedPath lockedPath = writeOrLocateMexSingleCellExpressionData( ee, qt, useStreaming, fetchSize, forceWrite ) ) {
+            try ( LockedPath lockedPath = writeOrLocateMexSingleCellExpressionData( ee, qt, fetchSize, forceWrite ) ) {
                 return lockedPath.getPath();
             }
         } );

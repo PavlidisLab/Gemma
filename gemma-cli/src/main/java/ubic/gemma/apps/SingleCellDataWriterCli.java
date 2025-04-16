@@ -216,19 +216,19 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
             switch ( format ) {
                 case TABULAR:
                     if ( standardLocation ) {
-                        try ( LockedPath path = expressionDataFileService.writeOrLocateTabularSingleCellExpressionData( ee, qt, useStreaming, fetchSize, isForce() ) ) {
+                        try ( LockedPath path = expressionDataFileService.writeOrLocateTabularSingleCellExpressionData( ee, qt, useStreaming ? fetchSize : -1, isForce() ) ) {
                             addSuccessObject( ee, "Written vectors for " + qt + " to " + path.getPath() + "." );
                         }
                     } else {
                         try ( Writer writer = new OutputStreamWriter( openOutputFile( isForce() ), StandardCharsets.UTF_8 ) ) {
-                            int written = expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, scaleType, useStreaming, fetchSize, writer );
+                            int written = expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, scaleType, useStreaming ? fetchSize : -1, writer );
                             addSuccessObject( ee, "Wrote " + written + " vectors for " + qt + "." );
                         }
                     }
                     break;
                 case MEX:
                     if ( standardLocation ) {
-                        try ( LockedPath path = expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, useStreaming, fetchSize, isForce() ) ) {
+                        try ( LockedPath path = expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, useStreaming ? fetchSize : -1, isForce() ) ) {
                             addSuccessObject( ee, "Successfully written vectors for " + qt + " to " + path.getPath() + "." );
                         }
                     } else if ( outputFile == null || outputFile.toString().endsWith( ".tar" ) || outputFile.toString().endsWith( ".tar.gz" ) ) {
@@ -241,7 +241,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                         if ( !isForce() && Files.exists( outputFile ) ) {
                             throw new RuntimeException( outputFile + " already exists, use -force/--force to override." );
                         }
-                        int written = expressionDataFileService.writeMexSingleCellExpressionData( ee, qt, scaleType, useEnsemblIds, useStreaming, fetchSize, isForce(), outputFile );
+                        int written = expressionDataFileService.writeMexSingleCellExpressionData( ee, qt, scaleType, useEnsemblIds, useStreaming ? fetchSize : -1, isForce(), outputFile );
                         addSuccessObject( ee, "Wrote " + written + " vectors for " + qt + ( useEnsemblIds ? " using Ensembl IDs " : "" ) + "." );
                     }
                     break;

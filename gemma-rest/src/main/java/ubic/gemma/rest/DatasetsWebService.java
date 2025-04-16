@@ -1447,7 +1447,7 @@ public class DatasetsWebService {
                             .header( "Content-Disposition", "attachment; filename=\"" + p.getPath().getFileName() + ".tar\"" )
                             .build();
                 } else {
-                    expressionDataFileService.writeOrLocateMexSingleCellExpressionDataAsync( ee, qt, true, 30, false );
+                    expressionDataFileService.writeOrLocateMexSingleCellExpressionDataAsync( ee, qt, 30, false );
                     throw new ServiceUnavailableException( "MEX single-cell data for " + qt + " is still being generated.", 30L );
                 }
             } catch ( TimeoutException e ) {
@@ -1468,7 +1468,7 @@ public class DatasetsWebService {
                     // generate the file in the background and stream it
                     // TODO: limit the number of threads writing SC data to disk to not overwhelm the short-lived task pool
                     log.info( "Single-cell data for " + qt + " is not available, will generate it in the background and stream it in the meantime." );
-                    expressionDataFileService.writeOrLocateTabularSingleCellExpressionDataAsync( ee, qt, true, 30, force );
+                    expressionDataFileService.writeOrLocateTabularSingleCellExpressionDataAsync( ee, qt, 30, force );
                     return streamTabularDatasetSingleCellExpression( ee, qt, download );
                 }
             } catch ( TimeoutException e ) {
@@ -1486,7 +1486,7 @@ public class DatasetsWebService {
 
     private Response streamTabularDatasetSingleCellExpression( ExpressionExperiment ee, QuantitationType qt, Boolean download ) {
         String filename = getDataOutputFilename( ee, qt, TABULAR_SC_DATA_SUFFIX );
-        return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, null, true, 30, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ) ) )
+        return Response.ok( ( StreamingOutput ) stream -> expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, null, 30, new OutputStreamWriter( new GZIPOutputStream( stream ), StandardCharsets.UTF_8 ) ) )
                 .type( download ? MediaType.APPLICATION_OCTET_STREAM_TYPE : TEXT_TAB_SEPARATED_VALUES_UTF8_TYPE )
                 .header( "Content-Disposition", "attachment; filename=\"" + ( download ? filename : FilenameUtils.removeExtension( filename ) ) + "\"" )
                 .build();
