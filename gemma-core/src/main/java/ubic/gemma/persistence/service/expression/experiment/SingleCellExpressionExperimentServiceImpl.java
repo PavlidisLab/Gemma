@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import ubic.gemma.core.analysis.preprocess.convert.RepresentationConversionUtils;
 import ubic.gemma.core.analysis.singleCell.SingleCellSparsityMetrics;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataIntMatrix;
@@ -539,6 +538,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
+    public SingleCellDimension getSingleCellDimensionWithCellLevelCharacteristicsWithoutCellIdsAndIndices( ExpressionExperiment ee, QuantitationType qt ) {
+        return expressionExperimentDao.getSingleCellDimensionWithCellLevelCharacteristicsWithoutCellIdsAndIndices( ee, qt );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<SingleCellDimension> getSingleCellDimensions( ExpressionExperiment ee ) {
         return expressionExperimentDao.getSingleCellDimensions( ee );
     }
@@ -582,6 +587,42 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                     Hibernate.initialize( scd.getCellLevelCharacteristics() );
                     return scd;
                 } );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Stream<String>> streamCellIds( ExpressionExperiment ee, boolean createNewSession ) {
+        return getPreferredSingleCellDimensionWithoutCellIds( ee )
+                .map( ( SingleCellDimension dimension ) -> expressionExperimentDao.streamCellIds( dimension, createNewSession ) );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Stream<String> streamCellIds( ExpressionExperiment ee, QuantitationType qt, boolean createNewSession ) {
+        SingleCellDimension scd = getSingleCellDimensionWithoutCellIds( ee, qt );
+        if ( scd != null ) {
+            return expressionExperimentDao.streamCellIds( scd, createNewSession );
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Stream<Characteristic> streamCellTypes( ExpressionExperiment ee, CellTypeAssignment cta, boolean createNewSession ) {
+        return expressionExperimentDao.streamCellTypes( cta, createNewSession );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Category getCellLevelCharacteristicsCategory( ExpressionExperiment ee, CellLevelCharacteristics clc ) {
+        return expressionExperimentDao.getCellLevelCharacteristicsCategory( clc );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Stream<Characteristic> streamCellLevelCharacteristics( ExpressionExperiment ee, CellLevelCharacteristics clc, boolean createNewSession ) {
+        return expressionExperimentDao.streamCellLevelCharacteristics( clc, createNewSession );
     }
 
     @Override

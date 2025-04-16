@@ -152,6 +152,10 @@ public interface SingleCellExpressionExperimentService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     SingleCellDimension getSingleCellDimensionWithCellLevelCharacteristicsWithoutCellIds( ExpressionExperiment ee, QuantitationType qt );
 
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    SingleCellDimension getSingleCellDimensionWithCellLevelCharacteristicsWithoutCellIdsAndIndices( ExpressionExperiment ee, QuantitationType qt );
+
     /**
      * Obtain the preferred single-cell dimension.
      * <p>
@@ -175,6 +179,25 @@ public interface SingleCellExpressionExperimentService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Optional<SingleCellDimension> getPreferredSingleCellDimensionWithCellLevelCharacteristics( ExpressionExperiment ee );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Optional<Stream<String>> streamCellIds( ExpressionExperiment ee, boolean createNewSession );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Stream<String> streamCellIds( ExpressionExperiment ee, QuantitationType qt, boolean createNewSession );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Stream<Characteristic> streamCellTypes( ExpressionExperiment ee, CellTypeAssignment cta, boolean createNewSession );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Category getCellLevelCharacteristicsCategory( ExpressionExperiment ee, CellLevelCharacteristics clc );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Stream<Characteristic> streamCellLevelCharacteristics( ExpressionExperiment ee, CellLevelCharacteristics clc, boolean createNewSession );
 
     /**
      * Relabel the cell types of an existing set of single-cell vectors.

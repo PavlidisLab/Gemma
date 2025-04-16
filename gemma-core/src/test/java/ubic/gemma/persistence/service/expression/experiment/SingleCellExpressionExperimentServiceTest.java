@@ -174,6 +174,10 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
             assertThat( Hibernate.isInitialized( scd2.getCellTypeAssignments() ) ).isFalse();
             assertThat( Hibernate.isInitialized( scd2.getCellLevelCharacteristics() ) ).isFalse();
         };
+        assertThat( scExpressionExperimentService.streamCellIds( ee, qt, false ) )
+                .hasSize( 100 );
+        assertThat( scExpressionExperimentService.streamCellTypes( ee, scd.getCellTypeAssignments().iterator().next(), false ) )
+                .hasSize( 100 );
         assertThat( scExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt ) )
                 .satisfies( t );
         assertThat( scExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee ) )

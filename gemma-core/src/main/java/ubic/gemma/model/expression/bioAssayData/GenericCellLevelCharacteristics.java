@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  */
 @Getter
 @Setter
-class GenericCellLevelCharacteristics extends AbstractIdentifiable implements CellLevelCharacteristics {
+public class GenericCellLevelCharacteristics extends AbstractIdentifiable implements CellLevelCharacteristics {
 
     private List<Characteristic> characteristics;
 
@@ -66,6 +66,8 @@ class GenericCellLevelCharacteristics extends AbstractIdentifiable implements Ce
     @Override
     public String toString() {
         return super.toString()
-                + ( characteristics != null ? " Characteristics=" + characteristics.stream().map( Characteristic::getValue ).collect( Collectors.joining( ", " ) ) : "" );
+                + ( characteristics != null ? " Characteristics=" + characteristics.stream().map( Characteristic::getValue ).collect( Collectors.joining( ", " ) ) : "" )
+                + ( " Number of characteristics=" + numberOfCharacteristics )
+                + ( numberOfAssignedCells != null ? " Number of assigned cells=" + numberOfAssignedCells : "" );
     }
 }

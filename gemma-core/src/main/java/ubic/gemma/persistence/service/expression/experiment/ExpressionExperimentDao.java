@@ -525,6 +525,9 @@ public interface ExpressionExperimentDao
     @Nullable
     SingleCellDimension getSingleCellDimensionWithCellLevelCharacteristicsWithoutCellIds( ExpressionExperiment ee, QuantitationType qt );
 
+    @Nullable
+    SingleCellDimension getSingleCellDimensionWithCellLevelCharacteristicsWithoutCellIdsAndIndices( ExpressionExperiment ee, QuantitationType qt );
+
     /**
      * Obtain the preferred single cell dimension, that is the dimension associated to the preferred set of single-cell vectors.
      */
@@ -553,6 +556,25 @@ public interface ExpressionExperimentDao
      * Delete the given single cell dimension.
      */
     void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
+
+    /**
+     * Stream the cell IDs of a dimension.
+     * @param createNewSession create a new session held by the stream, allowing to use the stream beyond the lifetime
+     *                         current session. If you set this to true, make absolutely sure that the resulting stream
+     *                         is closed.
+     * @return a stream of cell IDs, or null if the dimension is not found
+     */
+    @Nullable
+    Stream<String> streamCellIds( SingleCellDimension dimension, boolean createNewSession );
+
+    @Nullable
+    Stream<Characteristic> streamCellTypes( CellTypeAssignment cta, boolean createNewSession );
+
+    @Nullable
+    Category getCellLevelCharacteristicsCategory( CellLevelCharacteristics clc );
+
+    @Nullable
+    Stream<Characteristic> streamCellLevelCharacteristics( CellLevelCharacteristics clc, boolean createNewSession );
 
     List<CellTypeAssignment> getCellTypeAssignments( ExpressionExperiment ee );
 

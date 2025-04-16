@@ -22,6 +22,7 @@ import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclSid;
 import lombok.Value;
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.stream.Streams;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.collection.internal.PersistentSet;
@@ -31,7 +32,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.transform.ResultTransformer;
+import org.hibernate.type.CustomType;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.Type;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
@@ -52,6 +55,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.hibernate.CompressedStringListType;
 import ubic.gemma.persistence.hibernate.TypedResultTransformer;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
 import ubic.gemma.persistence.service.common.description.CharacteristicDao;
@@ -62,8 +66,14 @@ import ubic.gemma.persistence.util.*;
 import ubic.gemma.persistence.util.Filter;
 
 import javax.annotation.Nullable;
+import java.io.DataInputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -107,6 +117,8 @@ public class ExpressionExperimentDaoImpl
      */
     private final Set<Class<? extends BulkExpressionDataVector>> bulkDataVectorTypes;
 
+    private final CompressedStringListType cellIdsUserType;
+
     @Autowired
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
         super( ExpressionExperimentDao.OBJECT_ALIAS, ExpressionExperiment.class, sessionFactory );
@@ -116,6 +128,9 @@ public class ExpressionExperimentDaoImpl
                 .filter( BulkExpressionDataVector.class::isAssignableFrom )
                 .map( clazz -> ( Class<? extends BulkExpressionDataVector> ) clazz )
                 .collect( Collectors.toSet() );
+        Type type = getSessionFactory().getClassMetadata( SingleCellDimension.class )
+                .getPropertyType( "cellIds" );
+        cellIdsUserType = ( CompressedStringListType ) ( ( CustomType ) type ).getUserType();
     }
 
     @Override
@@ -2238,14 +2253,51 @@ public class ExpressionExperimentDaoImpl
         if ( result != null ) {
             initializeSingleCellDimensionWithoutCellIds( result );
             // FIXME: fix lazy initialization and use Hibernate.initialize() instead
+            //noinspection unchecked
             List<CellTypeAssignment> ctas = getSessionFactory().getCurrentSession()
                     .createQuery( "select cta from SingleCellDimension scd join scd.cellTypeAssignments cta where scd = :scd" )
                     .setParameter( "scd", result )
                     .list();
             result.setCellTypeAssignments( new HashSet<>( ctas ) );
+            //noinspection unchecked
             List<CellLevelCharacteristics> clcs = getSessionFactory().getCurrentSession()
                     .createQuery( "select clc from SingleCellDimension scd join scd.cellLevelCharacteristics clc where scd = :scd" )
                     .setParameter( "scd", result )
+                    .list();
+            result.setCellLevelCharacteristics( new HashSet<>( clcs ) );
+        }
+        return result;
+    }
+
+    @Nullable
+    @Override
+    public SingleCellDimension getSingleCellDimensionWithCellLevelCharacteristicsWithoutCellIdsAndIndices( ExpressionExperiment ee, QuantitationType qt ) {
+        SingleCellDimension result = ( SingleCellDimension ) getSessionFactory().getCurrentSession()
+                .createQuery( "select dimension.id as id, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
+                        + "join scedv.singleCellDimension dimension "
+                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt "
+                        + "group by dimension" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", qt )
+                .setResultTransformer( aliasToBean( SingleCellDimension.class ) )
+                .uniqueResult();
+        if ( result != null ) {
+            initializeSingleCellDimensionWithoutCellIds( result );
+            // FIXME: fix lazy initialization and use Hibernate.initialize() instead
+            //noinspection unchecked
+            List<CellTypeAssignment> ctas = getSessionFactory().getCurrentSession()
+                    .createQuery( "select cta.id as id, cta.name as name, cta.description as description, cta.numberOfCellTypes as numberOfCellTypes, cta.numberOfAssignedCells as numberOfAssignedCells, cta.preferred as preferred, cta.protocol as protocol from SingleCellDimension scd "
+                            + "join scd.cellTypeAssignments cta where scd = :scd" )
+                    .setParameter( "scd", result )
+                    .setResultTransformer( aliasToBean( CellTypeAssignment.class ) )
+                    .list();
+            result.setCellTypeAssignments( new HashSet<>( ctas ) );
+            //noinspection unchecked
+            List<CellLevelCharacteristics> clcs = getSessionFactory().getCurrentSession()
+                    .createQuery( "select clc.id as id, clc.numberOfCharacteristics as numberOfCharacteristics, clc.numberOfAssignedCells as numberOfAssignedCells from SingleCellDimension scd"
+                            + " join scd.cellLevelCharacteristics clc where scd = :scd" )
+                    .setParameter( "scd", result )
+                    .setResultTransformer( aliasToBean( GenericCellLevelCharacteristics.class ) )
                     .list();
             result.setCellLevelCharacteristics( new HashSet<>( clcs ) );
         }
@@ -2397,6 +2449,203 @@ public class ExpressionExperimentDaoImpl
     public void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
         log.info( "Removing " + singleCellDimension + " from " + ee + "..." );
         getSessionFactory().getCurrentSession().delete( singleCellDimension );
+    }
+
+    @Override
+    public Stream<String> streamCellIds( SingleCellDimension dimension, boolean createNewSession ) {
+        Session session;
+        if ( createNewSession ) {
+            session = getSessionFactory().openSession();
+        } else {
+            session = getSessionFactory().getCurrentSession();
+        }
+        try {
+            Stream<String> stream = session.doReturningWork( work -> {
+                PreparedStatement stmt = work.prepareStatement( "select CELL_IDS from SINGLE_CELL_DIMENSION where ID = ?" );
+                stmt.setLong( 1, dimension.getId() );
+                ResultSet rs = stmt.executeQuery();
+                if ( rs.next() ) {
+                    return cellIdsUserType.decompressToStream( rs.getBinaryStream( 1 ) );
+                } else {
+                    return null;
+                }
+            } );
+            if ( createNewSession ) {
+                if ( stream != null ) {
+                    return stream.onClose( session::close );
+                } else {
+                    session.close();
+                    return null;
+                }
+            } else {
+                return stream;
+            }
+        } catch ( Exception e ) {
+            if ( createNewSession ) {
+                session.close();
+            }
+            throw e;
+        }
+    }
+
+    @Nullable
+    @Override
+    public Stream<Characteristic> streamCellTypes( CellTypeAssignment cta, boolean createNewSession ) {
+        Session session;
+        if ( createNewSession ) {
+            session = getSessionFactory().openSession();
+        } else {
+            session = getSessionFactory().getCurrentSession();
+        }
+        try {
+            Stream<Characteristic> stream = session.doReturningWork( work -> {
+                PreparedStatement stmt = work.prepareStatement( "select CELL_TYPE_INDICES from ANALYSIS where ID = ?" );
+                stmt.setLong( 1, cta.getId() );
+                ResultSet rs = stmt.executeQuery();
+                if ( rs.next() ) {
+                    Map<Integer, Characteristic> cache = new HashMap<>();
+                    return fromDataStream( new DataInputStream( rs.getBinaryStream( 1 ) ) )
+                            .mapToObj( i -> getCellTypeAt( cta, i, session, cache ) );
+                } else {
+                    return null;
+                }
+            } );
+            if ( createNewSession ) {
+                if ( stream != null ) {
+                    return stream.onClose( session::close );
+                } else {
+                    session.close();
+                    return null;
+                }
+            } else {
+                return stream;
+            }
+        } catch ( Exception e ) {
+            if ( createNewSession ) {
+                session.close();
+            }
+            throw e;
+        }
+    }
+
+    private Characteristic getCellTypeAt( CellTypeAssignment cta, int i, Session session, Map<Integer, Characteristic> cache ) {
+        if ( i == -1 ) {
+            return null;
+        }
+        if ( cta.getCellTypes() != null ) {
+            return cta.getCellTypes().get( i );
+        }
+        return cache.computeIfAbsent( i, j -> ( Characteristic ) session
+                .createSQLQuery( "select * from CHARACTERISTIC where CELL_TYPE_ASSIGNMENT_FK = :id and CELL_TYPE_ASSIGNMENT_ORDERING = :i" )
+                .addEntity( Characteristic.class )
+                .setParameter( "id", cta.getId() )
+                .setParameter( "i", i )
+                .uniqueResult() );
+    }
+
+    @Override
+    public Category getCellLevelCharacteristicsCategory( CellLevelCharacteristics clc ) {
+        Characteristic result = ( Characteristic ) getSessionFactory().getCurrentSession()
+                .createQuery( "select c from GenericCellLevelCharacteristics clc join clc.characteristics c "
+                        + "where clc = :clc" )
+                .setParameter( "clc", clc )
+                .setMaxResults( 1 )
+                .uniqueResult();
+        return new Category( result.getCategory(), result.getCategoryUri() );
+    }
+
+    @Override
+    public Stream<Characteristic> streamCellLevelCharacteristics( CellLevelCharacteristics clc, boolean createNewSession ) {
+        Session session;
+        if ( createNewSession ) {
+            session = getSessionFactory().openSession();
+        } else {
+            session = getSessionFactory().getCurrentSession();
+        }
+        try {
+            Stream<Characteristic> stream = session.doReturningWork( work -> {
+                PreparedStatement stmt = work.prepareStatement( "select INDICES from CELL_LEVEL_CHARACTERISTICS where ID = ?" );
+                stmt.setLong( 1, clc.getId() );
+                ResultSet rs = stmt.executeQuery();
+                if ( rs.next() ) {
+                    Map<Integer, Characteristic> cache = new HashMap<>();
+                    return fromDataStream( new DataInputStream( rs.getBinaryStream( 1 ) ) )
+                            .mapToObj( i -> getCharacteristicAt( clc, i, session, cache ) );
+                } else {
+                    return null;
+                }
+            } );
+            if ( createNewSession ) {
+                if ( stream != null ) {
+                    return stream.onClose( session::close );
+                } else {
+                    session.close();
+                    return null;
+                }
+            } else {
+                return stream;
+            }
+        } catch ( Exception e ) {
+            if ( createNewSession ) {
+                session.close();
+            }
+            throw e;
+        }
+    }
+
+    @Nullable
+    private Characteristic getCharacteristicAt( CellLevelCharacteristics clc, int i, Session work, Map<Integer, Characteristic> cache ) {
+        if ( i == -1 ) {
+            return null;
+        }
+        if ( clc.getCharacteristics() != null ) {
+            return clc.getCharacteristics().get( i );
+        }
+        return cache.computeIfAbsent( i, j -> ( Characteristic ) work
+                .createSQLQuery( "select * from CHARACTERISTIC where CELL_LEVEL_CHARACTERISTICS_FK = :id and CELL_LEVEL_CHARACTERISTICS_ORDERING = :i" )
+                .addEntity( Characteristic.class )
+                .setParameter( "id", clc.getId() )
+                .setParameter( "i", i )
+                .uniqueResult() );
+    }
+
+
+    private IntStream fromDataStream( DataInputStream dis ) {
+        return Streams.of( new Iterator<Integer>() {
+
+            private Integer _next;
+
+            @Override
+            public boolean hasNext() {
+                fetchNextIfNecessary();
+                return _next != null;
+            }
+
+            @Override
+            public Integer next() {
+                fetchNextIfNecessary();
+                if ( _next == null ) {
+                    throw new NoSuchElementException();
+                }
+                try {
+                    return _next;
+                } finally {
+                    _next = null;
+                }
+            }
+
+            private void fetchNextIfNecessary() {
+                if ( _next == null ) {
+                    try {
+                        _next = dis.readInt();
+                    } catch ( EOFException e ) {
+                        _next = null;
+                    } catch ( IOException e ) {
+                        throw new RuntimeException( e );
+                    }
+                }
+            }
+        } ).mapToInt( i -> i );
     }
 
     @Override

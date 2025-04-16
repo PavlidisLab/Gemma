@@ -2,6 +2,7 @@ package ubic.gemma.persistence.hibernate;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.stream.Streams;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.usertype.ParameterizedType;
@@ -17,6 +18,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -67,7 +70,7 @@ public class CompressedStringListType implements UserType, ParameterizedType {
         Assert.notNull( delimiter, "The 'delimiter' parameter must be set." );
         InputStream gzippedStream = rs.getBinaryStream( names[0] );
         if ( gzippedStream != null ) {
-            return decompress( gzippedStream, delimiter, charset );
+            return decompress( gzippedStream );
         } else {
             return null;
         }
@@ -78,10 +81,7 @@ public class CompressedStringListType implements UserType, ParameterizedType {
         Assert.notNull( delimiter, "The 'delimiter' parameter must be set." );
         if ( value != null ) {
             //noinspection unchecked
-            List<String> s = ( List<String> ) value;
-            Assert.isTrue( s.stream().noneMatch( k -> k.contains( delimiter ) ),
-                    String.format( "The list of strings may not contain the delimiter %s.", delimiter ) );
-            st.setBlob( index, compress( s, delimiter, charset ) );
+            st.setBlob( index, compress( ( List<String> ) value ) );
         } else {
             st.setBlob( index, ( InputStream ) null );
         }
@@ -135,7 +135,9 @@ public class CompressedStringListType implements UserType, ParameterizedType {
      * connection.
      * FIXME: replace this by a compressing input stream
      */
-    private InputStream compress( List<String> s, String delimiter, Charset charset ) {
+    public InputStream compress( List<String> s ) {
+        Assert.isTrue( s.stream().noneMatch( k -> k.contains( delimiter ) ),
+                String.format( "The list of strings may not contain the delimiter %s.", delimiter ) );
         PipedInputStream is;
         PipedOutputStream out;
         try {
@@ -161,9 +163,19 @@ public class CompressedStringListType implements UserType, ParameterizedType {
         return is;
     }
 
-    private List<String> decompress( InputStream gzippedStream, String delimiter, Charset charset ) {
+    public List<String> decompress( InputStream gzippedStream ) {
         try ( InputStream in = new GZIPInputStream( gzippedStream ) ) {
             return Arrays.asList( StringUtils.splitByWholeSeparatorPreserveAllTokens( IOUtils.toString( in, charset ), delimiter ) );
+        } catch ( IOException e ) {
+            throw new HibernateException( e );
+        }
+    }
+
+    public Stream<String> decompressToStream( InputStream gzippedStream ) {
+        try {
+            Scanner scanner = new Scanner( new InputStreamReader( new GZIPInputStream( gzippedStream ), charset ) );
+            scanner.useDelimiter( Pattern.quote( delimiter ) );
+            return Streams.of( scanner ).onClose( scanner::close );
         } catch ( IOException e ) {
             throw new HibernateException( e );
         }
