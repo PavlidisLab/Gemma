@@ -117,6 +117,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     private AsyncTaskExecutor expressionDataFileTaskExecutor;
     @Autowired
     private FileLockManager fileLockManager;
+    @Autowired
+    private AsyncTaskExecutor taskExecutor;
 
     @Value("${gemma.appdata.home}/metadata")
     private Path metadataDir;
@@ -530,6 +532,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         MexMatrixWriter writer = new MexMatrixWriter();
         writer.setScaleType( scaleType );
         writer.setUseEnsemblIds( useEnsemblIds );
+        writer.setExecutorService( taskExecutor );
         return writer.write( matrix, cs2gene, stream );
     }
 
@@ -543,6 +546,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             MexMatrixWriter writer = new MexMatrixWriter();
             writer.setScaleType( scaleType );
             writer.setUseEnsemblIds( useEnsemblIds );
+            writer.setExecutorService( taskExecutor );
             if ( useStreaming ) {
                 Map<BioAssay, Long> nnzBySample = new HashMap<>();
                 AtomicLong numVecs = new AtomicLong();

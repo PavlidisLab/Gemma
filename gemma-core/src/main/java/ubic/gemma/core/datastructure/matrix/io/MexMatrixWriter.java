@@ -8,6 +8,7 @@ import no.uib.cipr.matrix.io.MatrixVectorWriter;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.springframework.util.Assert;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
@@ -30,6 +31,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorCompletionService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -58,6 +62,11 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
      * Use Ensembl gene IDs instead of gene symbols.
      */
     private boolean useEnsemblIds = false;
+
+    /**
+     * Executor to use to write MEX files in parallel.
+     */
+    private Executor executorService;
 
     @Override
     public int write( SingleCellExpressionDataMatrix<?> matrix, Writer stream ) throws IOException {
@@ -111,24 +120,48 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
      * Write a matrix to a directory.
      */
     public int write( SingleCellExpressionDataMatrix<?> matrix, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Path outputDir ) throws IOException {
+        Assert.notNull( executorService, "An executor must be set before writing to a directory." );
         if ( Files.exists( outputDir ) ) {
             throw new IllegalArgumentException( "Output directory " + outputDir + " already exists." );
         }
+        ExecutorCompletionService<BioAssay> completionService = new ExecutorCompletionService<>( executorService );
         List<BioAssay> bioAssays = matrix.getSingleCellDimension().getBioAssays();
         for ( int i = 0; i < bioAssays.size(); i++ ) {
             BioAssay ba = bioAssays.get( i );
             Path sampleDir = outputDir.resolve( ba.getId() + "_" + FileTools.cleanForFileName( ba.getName() ) );
             Files.createDirectories( sampleDir );
-            try ( OutputStream baos = new GZIPOutputStream( Files.newOutputStream( sampleDir.resolve( "barcodes.tsv.gz" ) ) ) ) {
-                writeBarcodes( matrix.getSingleCellDimension(), i, baos );
+            int finalI = i;
+            completionService.submit( () -> {
+                try {
+                    try ( OutputStream baos = new GZIPOutputStream( Files.newOutputStream( sampleDir.resolve( "barcodes.tsv.gz" ) ) ) ) {
+                        writeBarcodes( matrix.getSingleCellDimension(), finalI, baos );
+                    }
+                    try ( OutputStream baos = new GZIPOutputStream( Files.newOutputStream( sampleDir.resolve( "features.tsv.gz" ) ) ) ) {
+                        writeFeatures( matrix, cs2gene, baos );
+                    }
+                    try ( OutputStream baos = new GZIPOutputStream( Files.newOutputStream( sampleDir.resolve( "matrix.mtx.gz" ) ) ) ) {
+                        writeMatrix( matrix, finalI, baos );
+                    }
+                    return ba;
+                } catch ( IOException e ) {
+                    throw new RuntimeException( e );
+                }
+            } );
+        }
+        try {
+            for ( int i = 0; i < bioAssays.size(); i++ ) {
+                BioAssay ba = completionService.take().get();
+                Path sampleDir = outputDir.resolve( ba.getId() + "_" + FileTools.cleanForFileName( ba.getName() ) );
+                log.info( String.format( "Wrote MEX files for %s to %s (%d/%d).", ba, sampleDir, i + 1, bioAssays.size() ) );
             }
-            try ( OutputStream baos = new GZIPOutputStream( Files.newOutputStream( sampleDir.resolve( "features.tsv.gz" ) ) ) ) {
-                writeFeatures( matrix, cs2gene, baos );
+        } catch ( ExecutionException e ) {
+            if ( e.getCause() instanceof IOException ) {
+                throw ( IOException ) e.getCause();
+            } else {
+                throw new RuntimeException( e.getCause() );
             }
-            try ( OutputStream baos = new GZIPOutputStream( Files.newOutputStream( sampleDir.resolve( "matrix.mtx.gz" ) ) ) ) {
-                writeMatrix( matrix, i, baos );
-            }
-            log.info( String.format( "Wrote MEX files for %s to %s (%d/%d).", ba, sampleDir, i + 1, bioAssays.size() ) );
+        } catch ( InterruptedException e ) {
+            throw new RuntimeException( e );
         }
         return matrix.rows();
     }
