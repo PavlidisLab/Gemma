@@ -54,6 +54,7 @@ public class ProtocolAdderCliTest extends BaseCliTest {
     @Test
     @WithMockUser
     public void test() {
+        when( protocolService.create( any( Protocol.class ) ) ).thenAnswer( a -> a.getArgument( 0 ) );
         assertThat( protocolAdderCli )
                 .withArguments( "--name", "foo" )
                 .succeeds();
