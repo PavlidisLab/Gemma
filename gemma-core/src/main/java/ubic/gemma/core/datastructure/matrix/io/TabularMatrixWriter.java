@@ -29,7 +29,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils.convertData;
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.appendBaseHeader;
 import static ubic.gemma.core.datastructure.matrix.io.ExpressionDataWriterUtils.constructSampleName;
 import static ubic.gemma.core.util.TsvUtils.SUB_DELIMITER;

@@ -212,8 +212,13 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
             @Nullable Map<CompositeSequence, ?> geneAnnotations, Writer writer ) throws IOException {
 
         ExpressionExperiment experiment = matrix.getExpressionExperiment();
-        String experimentUrl = entityUrlBuilder.fromHostUrl().entity( matrix.getExpressionExperiment() ).web().toUriString();
-        appendBaseHeader( experiment, "Expression data", experimentUrl, buildInfo, writer );
+        if ( experiment != null ) {
+            String experimentUrl = entityUrlBuilder.fromHostUrl().entity( experiment ).web().toUriString();
+            appendBaseHeader( experiment, "Expression data", experimentUrl, buildInfo, writer );
+        } else {
+            log.warn( "Provided matrix does not have an ExpressionExperiment, omitting it from the base header." );
+            appendBaseHeader( "Expression data", buildInfo, writer );
+        }
 
         for ( QuantitationType qt : matrix.getQuantitationTypes() ) {
             writer.append( "# Quantitation type: " ).append( qt.toString() ).append( "\n" );
