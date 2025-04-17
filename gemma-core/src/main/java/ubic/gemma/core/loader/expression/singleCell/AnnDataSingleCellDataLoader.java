@@ -15,7 +15,6 @@ import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.DesignElementMapper;
 import ubic.gemma.core.loader.util.mapper.EntityMapper;
 import ubic.gemma.model.common.description.Categories;
-import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -60,12 +59,6 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
      */
     private static final String LAYERED_QT_NAME_PREFIX = QT_NAME_PREFIX + " from layer ";
 
-
-    /**
-     * Maximum number of characteristics to consider when loading a cell-level characteristic.
-     */
-    private static final int MAX_CHARACTERISTICS = 100;
-
     /**
      * Path to the HDF5 file.
      */
@@ -108,18 +101,13 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
      */
     private boolean transpose = false;
 
+    /**
+     * Maximum number of characteristics to consider when loading a cell-level characteristic.
+     */
+    private int maxCharacteristics = 100;
+
     public AnnDataSingleCellDataLoader( Path file ) {
         this.file = file;
-    }
-
-    @Override
-    public void setIgnoreUnmatchedSamples( boolean ignoreUnmatchedSamples ) {
-        this.ignoreUnmatchedSamples = ignoreUnmatchedSamples;
-    }
-
-    @Override
-    public void setIgnoreUnmatchedDesignElements( boolean ignoreUnmatchedDesignElements ) {
-        this.ignoreUnmatchedDesignElements = ignoreUnmatchedDesignElements;
     }
 
     @Override
@@ -428,7 +416,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                     continue;
                 }
                 // conclusion, this is a cell-level characteristic
-                if ( values.length > MAX_CHARACTERISTICS ) {
+                if ( values.length > maxCharacteristics ) {
                     log.warn( "The " + factorName + " column has too too many values (" + values.length + ") for importing into a cell-level characteristic, ignoring." );
                     continue;
                 }
@@ -442,8 +430,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                         if ( valToIndex.containsKey( val ) ) {
                             j = valToIndex.get( val );
                         } else {
-                            Characteristic c = Characteristic.Factory.newInstance( new Category( factorName, null ), val, null );
-                            c.setDescription( "Imported from column " + factorName + " in AnnData file " + h5File + "." );
+                            Characteristic c = createCharacteristic( h5File, factorName, val );
                             j = characteristics.size();
                             characteristics.add( c );
                             valToIndex.put( val, j );
@@ -617,11 +604,17 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                     extractSingleValueBySampleName( sampleNames, values )
                             .ifPresent( fvs -> fvs.forEach( ( sampleName, value ) -> bioAssayToSampleNameMapper.matchAll( samples, sampleName )
                                     .forEach( ba -> result.computeIfAbsent( ba.getSampleUsed(), k -> new HashSet<>() )
-                                            .add( Characteristic.Factory.newInstance( factorName, null, value, null ) ) ) ) );
+                                            .add( createCharacteristic( h5File, factorName, value ) ) ) ) );
                 }
             }
         }
         return result;
+    }
+
+    private Characteristic createCharacteristic( AnnData h5File, String factorName, String value ) {
+        Characteristic c = Characteristic.Factory.newInstance( factorName, null, value, null );
+        c.setDescription( "Imported from column " + factorName + " in AnnData file " + h5File + "." );
+        return c;
     }
 
     private String[] categoricalArrayToStringVector( CategoricalArray<?> c ) {

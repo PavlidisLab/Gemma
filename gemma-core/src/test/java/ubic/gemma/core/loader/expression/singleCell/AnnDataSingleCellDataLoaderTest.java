@@ -12,7 +12,6 @@ import ubic.gemma.core.loader.util.mapper.RenamingBioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.SimpleBioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.SimpleDesignElementMapper;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -76,14 +75,14 @@ public class AnnDataSingleCellDataLoaderTest {
                                 .startsWith( 7, 6, 6, 3, 4, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 6, 4, 6, 6, 0, 6 );
                     } );
 
+            loader.setMaxCharacteristics( 1000 );
             assertThat( loader.getOtherCellLevelCharacteristics( dimension ) )
-                    .hasSize( 15 )
+                    .hasSize( 17 )
                     .allSatisfy( s -> {
                         assertThat( s.getCharacteristics() )
                                 .allSatisfy( c -> {
-                                    assertThat( c )
-                                            .satisfies( CharacteristicUtils::isUncategorized )
-                                            .satisfies( CharacteristicUtils::isFreeText );
+                                    assertThat( c.getCategory() ).isNotNull();
+                                    assertThat( c.getValue() ).isNotNull();
                                 } );
                     } );
 
