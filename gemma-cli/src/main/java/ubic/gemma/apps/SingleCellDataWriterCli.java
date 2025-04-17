@@ -24,15 +24,13 @@ import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeSe
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
 import static ubic.gemma.cli.util.OptionsUtils.*;
@@ -50,7 +48,8 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
 
     enum MatrixFormat {
         TABULAR,
-        MEX
+        MEX,
+        CELL_IDS
     }
 
     @Autowired
@@ -245,6 +244,19 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                         addSuccessObject( ee, "Wrote " + written + " vectors for " + qt + ( useEnsemblIds ? " using Ensembl IDs " : "" ) + "." );
                     }
                     break;
+                case CELL_IDS:
+                    try ( PrintStream printer = new PrintStream( openOutputFile( isForce() ), true, StandardCharsets.UTF_8.name() ) ) {
+                        try ( Stream<String> stream = singleCellExpressionExperimentService.streamCellIds( ee, qt, true ) ) {
+                            if ( stream != null ) {
+                                stream.forEach( printer::println );
+                            } else {
+                                addErrorObject( ee, "Could not find cell IDs for " + qt + "." );
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    throw new IllegalArgumentException( "Unsupported format: " + format );
             }
         } catch ( IOException e ) {
             addErrorObject( ee, e );
