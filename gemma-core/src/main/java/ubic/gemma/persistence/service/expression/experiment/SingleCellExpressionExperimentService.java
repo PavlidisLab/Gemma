@@ -192,6 +192,22 @@ public interface SingleCellExpressionExperimentService {
 
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Characteristic getCellTypeAt( ExpressionExperiment ee, QuantitationType qt, Long ctaId, int cellIndex );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Characteristic[] getCellTypeAt( ExpressionExperiment ee, QuantitationType qt, Long ctaId, int startIndex, int endIndexExclusive );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Characteristic getCellTypeAt( ExpressionExperiment ee, QuantitationType qt, String ctaName, int cellIndex );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Characteristic[] getCellTypeAt( ExpressionExperiment ee, QuantitationType qt, String ctaName, int startIndex, int endIndexExclusive );
+
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Category getCellLevelCharacteristicsCategory( ExpressionExperiment ee, CellLevelCharacteristics clc );
 
     @Nullable

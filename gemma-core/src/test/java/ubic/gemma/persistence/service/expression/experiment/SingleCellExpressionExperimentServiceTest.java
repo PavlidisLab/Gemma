@@ -177,6 +177,22 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
             assertThat( scd2.getCellTypeAssignments() ).hasSize( 1 );
             assertThat( scd2.getCellLevelCharacteristics() ).isEmpty();
         };
+        assertThat( scExpressionExperimentService.getCellTypeAt( ee, qt, scd.getCellTypeAssignments().iterator().next().getId(), 0 ) )
+                .isNotNull();
+        assertThat( scExpressionExperimentService.getCellTypeAt( ee, qt, scd.getCellTypeAssignments().iterator().next().getId(), 0, 100 ) )
+                .isNotNull()
+                .hasSize( 100 );
+        assertThat( scExpressionExperimentService.getCellTypeAt( ee, qt, "test", 0 ) )
+                .isNotNull();
+        assertThat( scExpressionExperimentService.getCellTypeAt( ee, qt, "test", 99 ) )
+                .isNotNull();
+        assertThat( scExpressionExperimentService.getCellTypeAt( ee, qt, "test", 0, 100 ) )
+                .isNotNull()
+                .hasSize( 100 );
+        assertThatThrownBy( () -> scExpressionExperimentService.getCellTypeAt( ee, qt, "test", 100 ) )
+                .isInstanceOf( IndexOutOfBoundsException.class );
+        assertThatThrownBy( () -> scExpressionExperimentService.getCellTypeAt( ee, qt, "test", 100, 200 ) )
+                .isInstanceOf( IndexOutOfBoundsException.class );
         assertThat( scExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt ) )
                 .satisfies( t );
         assertThat( scExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee ) )
@@ -621,6 +637,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
             ct[i] = i < 50 ? 0 : 1;
         }
         CellTypeAssignment labelling = new CellTypeAssignment();
+        labelling.setName( "test" );
         labelling.setPreferred( true );
         labelling.setCellTypeIndices( ct );
         labelling.setNumberOfAssignedCells( 100 );

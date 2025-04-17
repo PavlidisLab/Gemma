@@ -569,11 +569,32 @@ public interface ExpressionExperimentDao
     @Nullable
     Stream<Characteristic> streamCellTypes( CellTypeAssignment cta, boolean createNewSession );
 
+    /**
+     * Obtain the category of a cell-level characteristic.
+     * <p>
+     * This handles the case where the characteristics were not loaded (i.e. using {@link #getSingleCellDimensionsWithoutCellIds(ExpressionExperiment, boolean, boolean, boolean, boolean, boolean)}).
+     */
     @Nullable
     Category getCellLevelCharacteristicsCategory( CellLevelCharacteristics clc );
 
+    Characteristic[] getCellLevelCharacteristicAt( CellLevelCharacteristics clc, int startIndex, int endIndexExclusive );
+
     @Nullable
     Stream<Characteristic> streamCellLevelCharacteristics( CellLevelCharacteristics clc, boolean createNewSession );
+
+    /**
+     * Obtain the cell type at a given cell index.
+     */
+    @Nullable
+    Characteristic getCellTypeAt( CellTypeAssignment cta, int cellIndex );
+
+    Characteristic[] getCellTypeAt( CellTypeAssignment cta, int startIndex, int endIndexExclusive );
+
+    /**
+     * Obtain the characteristic at a given cell index.
+     */
+    @Nullable
+    Characteristic getCellLevelCharacteristicAt( CellLevelCharacteristics clc, int cellIndex );
 
     List<CellTypeAssignment> getCellTypeAssignments( ExpressionExperiment ee );
 
@@ -594,10 +615,22 @@ public interface ExpressionExperimentDao
     CellTypeAssignment getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, Long ctaId );
 
     /**
+     * Obtain a cell type assignment by ID without loading the indices.
+     */
+    @Nullable
+    CellTypeAssignment getCellTypeAssignmentWithoutIndices( ExpressionExperiment expressionExperiment, QuantitationType qt, Long ctaId );
+
+    /**
      * Obtain a cell type assignment by name.
      */
     @Nullable
     CellTypeAssignment getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, String ctaName );
+
+    /**
+     * Obtain a cell type assignment by name without loading the indices.
+     */
+    @Nullable
+    CellTypeAssignment getCellTypeAssignmentWithoutIndices( ExpressionExperiment expressionExperiment, QuantitationType qt, String ctaName );
 
     /**
      * Obtain all cell-level characteristics from all single cell dimensions.

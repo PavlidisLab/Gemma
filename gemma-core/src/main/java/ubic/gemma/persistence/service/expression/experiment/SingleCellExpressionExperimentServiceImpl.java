@@ -34,6 +34,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.Objects.requireNonNull;
 import static ubic.gemma.core.analysis.preprocess.convert.RepresentationConversionUtils.convertVectors;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.createStreamMonitor;
 
@@ -610,6 +611,42 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Transactional(readOnly = true)
     public Stream<Characteristic> streamCellTypes( ExpressionExperiment ee, CellTypeAssignment cta, boolean createNewSession ) {
         return expressionExperimentDao.streamCellTypes( cta, createNewSession );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Characteristic getCellTypeAt( ExpressionExperiment ee, QuantitationType qt, Long ctaId, int cellIndex ) {
+        CellTypeAssignment cta = requireNonNull( expressionExperimentDao.getCellTypeAssignmentWithoutIndices( ee, qt, ctaId ),
+                "No cell type assignment with ID " + ctaId + " found." );
+        return expressionExperimentDao.getCellTypeAt( cta, cellIndex );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Characteristic[] getCellTypeAt( ExpressionExperiment ee, QuantitationType qt, Long ctaId, int startIndex, int endIndexExclusive ) {
+        CellTypeAssignment cta = expressionExperimentDao.getCellTypeAssignmentWithoutIndices( ee, qt, ctaId );
+        if ( cta == null ) {
+            return null;
+        }
+        return expressionExperimentDao.getCellTypeAt( cta, startIndex, endIndexExclusive );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Characteristic getCellTypeAt( ExpressionExperiment ee, QuantitationType qt, String ctaName, int cellIndex ) {
+        CellTypeAssignment cta = requireNonNull( expressionExperimentDao.getCellTypeAssignmentWithoutIndices( ee, qt, ctaName ),
+                "No cell type assignment with name " + ctaName + " found." );
+        return expressionExperimentDao.getCellTypeAt( cta, cellIndex );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Characteristic[] getCellTypeAt( ExpressionExperiment ee, QuantitationType qt, String ctaName, int startIndex, int endIndexExclusive ) {
+        CellTypeAssignment cta = expressionExperimentDao.getCellTypeAssignmentWithoutIndices( ee, qt, ctaName );
+        if ( cta == null ) {
+            return null;
+        }
+        return expressionExperimentDao.getCellTypeAt( cta, startIndex, endIndexExclusive );
     }
 
     @Override

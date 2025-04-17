@@ -68,6 +68,8 @@ import javax.annotation.Nullable;
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.*;
@@ -2535,13 +2537,86 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Category getCellLevelCharacteristicsCategory( CellLevelCharacteristics clc ) {
-        Characteristic result = ( Characteristic ) getSessionFactory().getCurrentSession()
-                .createQuery( "select c from GenericCellLevelCharacteristics clc join clc.characteristics c "
-                        + "where clc = :clc" )
-                .setParameter( "clc", clc )
-                .setMaxResults( 1 )
+        Characteristic result;
+        if ( clc.getCharacteristics() != null ) {
+            result = clc.getCharacteristics().stream().findFirst().orElse( null );
+        } else {
+            result = ( Characteristic ) getSessionFactory().getCurrentSession()
+                    .createQuery( "select c from GenericCellLevelCharacteristics clc join clc.characteristics c "
+                            + "where clc = :clc" )
+                    .setParameter( "clc", clc )
+                    .setMaxResults( 1 )
+                    .uniqueResult();
+        }
+        return result != null ? new Category( result.getCategory(), result.getCategoryUri() ) : null;
+    }
+
+    @Override
+    public Characteristic getCellTypeAt( CellTypeAssignment cta, int cellIndex ) {
+        return getCellLevelCharacteristicAt( cta, cellIndex, "ANALYSIS", "CELL_TYPE_INDICES" );
+    }
+
+    @Override
+    public Characteristic[] getCellTypeAt( CellTypeAssignment cta, int startIndex, int endIndexExclusive ) {
+        return getCellLevelCharacteristicAt( cta, startIndex, endIndexExclusive, "ANALYSIS", "CELL_TYPE_INDICES" );
+    }
+
+    @Override
+    public Characteristic getCellLevelCharacteristicAt( CellLevelCharacteristics clc, int cellIndex ) {
+        return getCellLevelCharacteristicAt( clc, cellIndex, "CELL_LEVEL_CHARACTERISTICS", "INDICES" );
+    }
+
+    @Override
+    public Characteristic[] getCellLevelCharacteristicAt( CellLevelCharacteristics clc, int startIndex, int endIndexExclusive ) {
+        return getCellLevelCharacteristicAt( clc, startIndex, endIndexExclusive, "CELL_LEVEL_CHARACTERISTICS", "INDICES" );
+    }
+
+    @Nullable
+    private Characteristic getCellLevelCharacteristicAt( CellLevelCharacteristics clc, int cellIndex, String tableName, String indicesColumn ) {
+        if ( clc.getIndices() != null ) {
+            return clc.getCharacteristic( cellIndex );
+        }
+        byte[] result = ( byte[] ) getSessionFactory().getCurrentSession()
+                .createSQLQuery( "select substring(" + indicesColumn + ", (4 * :offset) + 1, 4) from " + tableName + " cta where cta.ID = :id" )
+                .setParameter( "id", clc.getId() )
+                .setParameter( "offset", cellIndex )
                 .uniqueResult();
-        return new Category( result.getCategory(), result.getCategoryUri() );
+        if ( result == null ) {
+            return null;
+        }
+        int resultI = ByteBuffer.wrap( result ).asIntBuffer().get( 0 );
+        return resultI != CellLevelCharacteristics.UNKNOWN_CHARACTERISTIC ? clc.getCharacteristics().get( resultI ) : null;
+    }
+
+    @Nullable
+    private Characteristic[] getCellLevelCharacteristicAt( CellLevelCharacteristics clc, int startIndex, int endIndexExclusive, String tableName, String indicesColumn ) {
+        if ( clc.getIndices() != null ) {
+            Characteristic[] result = new Characteristic[endIndexExclusive - startIndex];
+            int j = 0;
+            for ( int i = startIndex; i < endIndexExclusive; i++ ) {
+                result[j++] = clc.getCharacteristic( i );
+            }
+            return result;
+        }
+        byte[] result = ( byte[] ) getSessionFactory().getCurrentSession()
+                .createSQLQuery( "select substring(" + indicesColumn + ", (4 * :offset) + 1, 4 * :len) from " + tableName + " cta where cta.ID = :id" )
+                .setParameter( "id", clc.getId() )
+                .setParameter( "offset", startIndex )
+                .setParameter( "len", endIndexExclusive - startIndex )
+                .uniqueResult();
+        if ( result == null ) {
+            return null;
+        }
+        if ( result.length != 4 * ( endIndexExclusive - startIndex ) ) {
+            throw new IndexOutOfBoundsException( "Unexpected length of result: " + result.length );
+        }
+        IntBuffer bufferI = ByteBuffer.wrap( result ).asIntBuffer();
+        Characteristic[] resultC = new Characteristic[endIndexExclusive - startIndex];
+        for ( int i = 0; i < endIndexExclusive - startIndex; i++ ) {
+            int resultI = bufferI.get( i );
+            resultC[i] = resultI != CellLevelCharacteristics.UNKNOWN_CHARACTERISTIC ? clc.getCharacteristics().get( resultI ) : null;
+        }
+        return resultC;
     }
 
     @Override
@@ -2686,6 +2761,21 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public CellTypeAssignment getCellTypeAssignmentWithoutIndices( ExpressionExperiment expressionExperiment, QuantitationType qt, Long ctaId ) {
+        return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
+                .createQuery( "select cta.id as id, cta.name as name, cta.description as description, cta.preferred as preferred, cta.numberOfCellTypes as numberOfCellTypes from SingleCellExpressionDataVector scedv "
+                        + "join scedv.singleCellDimension scd "
+                        + "join scd.cellTypeAssignments cta "
+                        + "where scedv.quantitationType = :qt and cta.id = :ctaId and scedv.expressionExperiment = :ee "
+                        + "group by cta" )
+                .setParameter( "ee", expressionExperiment )
+                .setParameter( "qt", qt )
+                .setParameter( "ctaId", ctaId )
+                .setResultTransformer( new CtaInitializer( true ) )
+                .uniqueResult();
+    }
+
+    @Override
     public CellTypeAssignment getCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, String ctaName ) {
         return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
                 .createQuery( "select cta from SingleCellExpressionDataVector scedv "
@@ -2696,6 +2786,21 @@ public class ExpressionExperimentDaoImpl
                 .setParameter( "ee", expressionExperiment )
                 .setParameter( "qt", qt )
                 .setParameter( "ctaName", ctaName )
+                .uniqueResult();
+    }
+
+    @Override
+    public CellTypeAssignment getCellTypeAssignmentWithoutIndices( ExpressionExperiment expressionExperiment, QuantitationType qt, String ctaName ) {
+        return ( CellTypeAssignment ) getSessionFactory().getCurrentSession()
+                .createQuery( "select cta.id as id, cta.name as name, cta.description as description, cta.preferred as preferred, cta.numberOfCellTypes as numberOfCellTypes from SingleCellExpressionDataVector scedv "
+                        + "join scedv.singleCellDimension scd "
+                        + "join scd.cellTypeAssignments cta "
+                        + "where scedv.quantitationType = :qt and cta.name = :ctaName and scedv.expressionExperiment = :ee "
+                        + "group by cta" )
+                .setParameter( "ee", expressionExperiment )
+                .setParameter( "qt", qt )
+                .setParameter( "ctaName", ctaName )
+                .setResultTransformer( new CtaInitializer( true ) )
                 .uniqueResult();
     }
 
