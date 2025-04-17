@@ -16,13 +16,6 @@ import java.util.List;
 public interface CellLevelCharacteristics extends Identifiable {
 
     /**
-     * Maximum number of characteristics.
-     * <p>
-     * This is not strictly enforced.
-     */
-    int MAX_CHARACTERISTICS = 100;
-
-    /**
      * Indicator for an unknown characteristic.
      */
     int UNKNOWN_CHARACTERISTIC = -1;

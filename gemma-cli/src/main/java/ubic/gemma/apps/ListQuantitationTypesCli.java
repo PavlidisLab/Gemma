@@ -69,7 +69,7 @@ public class ListQuantitationTypesCli extends ExpressionExperimentVectorsManipul
         SingleCellDimension scd;
         if ( ( dimension = eeService.getBioAssayDimension( ee, qt ) ) != null ) {
             getCliContext().getOutputStream().println( "\t\t" + dimension );
-        } else if ( ( scd = singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristicsWithoutCellIdsAndIndices( ee, qt ) ) != null ) {
+        } else if ( ( scd = singleCellExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, true, true, true, false, false ) ) != null ) {
             getCliContext().getOutputStream().println( "\t\t" + scd );
             try ( Stream<String> cellIds = singleCellExpressionExperimentService.streamCellIds( ee, qt, true ) ) {
                 if ( cellIds != null ) {
@@ -80,7 +80,10 @@ public class ListQuantitationTypesCli extends ExpressionExperimentVectorsManipul
                 getCliContext().getOutputStream().println( "\t\tCell Type Assignments:" );
                 for ( CellTypeAssignment cta : scd.getCellTypeAssignments() ) {
                     getCliContext().getOutputStream().println( "\t\t\t" + cta );
-                    getCliContext().getOutputStream().printf( "\t\t\t\tCell types: %s, ...%n",
+                    if ( cta.getProtocol() != null ) {
+                        getCliContext().getOutputStream().println( "\t\t\t\tProtocol: " + cta.getProtocol().getName() );
+                    }
+                    getCliContext().getOutputStream().printf( "\t\t\t\tCell Types: %s, ...%n",
                             requireNonNull( singleCellExpressionExperimentService.streamCellTypes( ee, cta, true ) )
                                     .limit( 10 )
                                     .map( c -> c != null ? c.getValue() : "<unassigned>" )

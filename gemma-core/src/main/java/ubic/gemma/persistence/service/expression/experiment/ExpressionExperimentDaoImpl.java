@@ -25,11 +25,9 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.stream.Streams;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
-import org.hibernate.collection.internal.PersistentSet;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.CustomType;
@@ -44,6 +42,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.common.description.*;
+import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -2198,17 +2197,20 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee ) {
+        return getSingleCellDimensionsWithoutCellIds( ee, true, true, true, true, true );
+    }
+
+    @Override
+    public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices ) {
         //noinspection unchecked
-        List<SingleCellDimension> results = getSessionFactory().getCurrentSession()
+        return ( List<SingleCellDimension> ) getSessionFactory().getCurrentSession()
                 .createQuery( "select dimension.id as id, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension dimension "
                         + "where scedv.expressionExperiment = :ee "
                         + "group by dimension" )
                 .setParameter( "ee", ee )
-                .setResultTransformer( aliasToBean( SingleCellDimension.class ) )
+                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeCharacteristics, includeIndices ) )
                 .list();
-        results.forEach( this::initializeSingleCellDimensionWithoutCellIds );
-        return results;
     }
 
     @Override
@@ -2224,84 +2226,20 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt ) {
-        SingleCellDimension result = ( SingleCellDimension ) getSessionFactory().getCurrentSession()
-                .createQuery( "select dimension.id as id, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension dimension "
-                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt "
-                        + "group by dimension" )
-                .setParameter( "ee", ee )
-                .setParameter( "qt", qt )
-                .setResultTransformer( aliasToBean( SingleCellDimension.class ) )
-                .uniqueResult();
-        if ( result != null ) {
-            initializeSingleCellDimensionWithoutCellIds( result );
-        }
-        return result;
+        return getSingleCellDimensionWithoutCellIds( ee, qt, true, true, true, true, true );
     }
 
     @Override
-    public SingleCellDimension getSingleCellDimensionWithCellLevelCharacteristicsWithoutCellIds( ExpressionExperiment ee, QuantitationType qt ) {
-        SingleCellDimension result = ( SingleCellDimension ) getSessionFactory().getCurrentSession()
+    public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices ) {
+        return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
                 .createQuery( "select dimension.id as id, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension dimension "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt "
                         + "group by dimension" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
-                .setResultTransformer( aliasToBean( SingleCellDimension.class ) )
+                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeCharacteristics, includeIndices ) )
                 .uniqueResult();
-        if ( result != null ) {
-            initializeSingleCellDimensionWithoutCellIds( result );
-            // FIXME: fix lazy initialization and use Hibernate.initialize() instead
-            //noinspection unchecked
-            List<CellTypeAssignment> ctas = getSessionFactory().getCurrentSession()
-                    .createQuery( "select cta from SingleCellDimension scd join scd.cellTypeAssignments cta where scd = :scd" )
-                    .setParameter( "scd", result )
-                    .list();
-            result.setCellTypeAssignments( new HashSet<>( ctas ) );
-            //noinspection unchecked
-            List<CellLevelCharacteristics> clcs = getSessionFactory().getCurrentSession()
-                    .createQuery( "select clc from SingleCellDimension scd join scd.cellLevelCharacteristics clc where scd = :scd" )
-                    .setParameter( "scd", result )
-                    .list();
-            result.setCellLevelCharacteristics( new HashSet<>( clcs ) );
-        }
-        return result;
-    }
-
-    @Nullable
-    @Override
-    public SingleCellDimension getSingleCellDimensionWithCellLevelCharacteristicsWithoutCellIdsAndIndices( ExpressionExperiment ee, QuantitationType qt ) {
-        SingleCellDimension result = ( SingleCellDimension ) getSessionFactory().getCurrentSession()
-                .createQuery( "select dimension.id as id, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
-                        + "join scedv.singleCellDimension dimension "
-                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt "
-                        + "group by dimension" )
-                .setParameter( "ee", ee )
-                .setParameter( "qt", qt )
-                .setResultTransformer( aliasToBean( SingleCellDimension.class ) )
-                .uniqueResult();
-        if ( result != null ) {
-            initializeSingleCellDimensionWithoutCellIds( result );
-            // FIXME: fix lazy initialization and use Hibernate.initialize() instead
-            //noinspection unchecked
-            List<CellTypeAssignment> ctas = getSessionFactory().getCurrentSession()
-                    .createQuery( "select cta.id as id, cta.name as name, cta.description as description, cta.numberOfCellTypes as numberOfCellTypes, cta.numberOfAssignedCells as numberOfAssignedCells, cta.preferred as preferred, cta.protocol as protocol from SingleCellDimension scd "
-                            + "join scd.cellTypeAssignments cta where scd = :scd" )
-                    .setParameter( "scd", result )
-                    .setResultTransformer( aliasToBean( CellTypeAssignment.class ) )
-                    .list();
-            result.setCellTypeAssignments( new HashSet<>( ctas ) );
-            //noinspection unchecked
-            List<CellLevelCharacteristics> clcs = getSessionFactory().getCurrentSession()
-                    .createQuery( "select clc.id as id, clc.numberOfCharacteristics as numberOfCharacteristics, clc.numberOfAssignedCells as numberOfAssignedCells from SingleCellDimension scd"
-                            + " join scd.cellLevelCharacteristics clc where scd = :scd" )
-                    .setParameter( "scd", result )
-                    .setResultTransformer( aliasToBean( GenericCellLevelCharacteristics.class ) )
-                    .list();
-            result.setCellLevelCharacteristics( new HashSet<>( clcs ) );
-        }
-        return result;
     }
 
     @Override
@@ -2316,44 +2254,166 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public SingleCellDimension getPreferredSingleCellDimensionWithoutCellIds( ExpressionExperiment ee ) {
-        SingleCellDimension result = ( SingleCellDimension ) getSessionFactory().getCurrentSession()
+        return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
                 .createQuery( "select dimension.id as id, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension dimension "
                         + "where scedv.quantitationType.isSingleCellPreferred = true and scedv.expressionExperiment = :ee "
                         + "group by dimension" )
                 .setParameter( "ee", ee )
-                .setResultTransformer( aliasToBean( SingleCellDimension.class ) )
+                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( true, true, true, true, true ) )
                 .uniqueResult();
-        if ( result != null ) {
-            initializeSingleCellDimensionWithoutCellIds( result );
+    }
+
+    private class SingleCellDimensionWithoutCellIdsInitializer implements TypedResultTransformer<SingleCellDimension> {
+
+        private final boolean includeBioAssays;
+        private final boolean includeCtas;
+        private final boolean includeClcs;
+        private final boolean includeCharacteristics;
+        private final boolean includeIndices;
+
+        private SingleCellDimensionWithoutCellIdsInitializer( boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices ) {
+            this.includeBioAssays = includeBioAssays;
+            this.includeCtas = includeCtas;
+            this.includeClcs = includeClcs;
+            this.includeCharacteristics = includeCharacteristics;
+            this.includeIndices = includeIndices;
         }
-        return result;
+
+        @Override
+        public SingleCellDimension transformTuple( Object[] tuple, String[] aliases ) {
+            SingleCellDimension result = ( SingleCellDimension ) aliasToBean( SingleCellDimension.class ).transformTuple( tuple, aliases );
+            result.setCellIds( null );
+            if ( includeBioAssays ) {
+                //noinspection unchecked
+                List<BioAssay> bas = getSessionFactory().getCurrentSession()
+                        .createQuery( "select ba from SingleCellDimension dimension join dimension.bioAssays ba where dimension = :scd order by index(ba)" )
+                        .setParameter( "scd", result )
+                        .list();
+                result.setBioAssays( bas );
+            } else {
+                result.setBioAssays( null );
+            }
+            // FIXME: fix lazy initialization and use Hibernate.initialize() instead
+            if ( includeCtas ) {
+                if ( includeCharacteristics && includeIndices ) {
+                    //noinspection unchecked
+                    List<CellTypeAssignment> ctas = getSessionFactory().getCurrentSession()
+                            .createQuery( "select cta from SingleCellDimension scd join scd.cellTypeAssignments cta where scd = :scd" )
+                            .setParameter( "scd", result )
+                            .list();
+                    result.setCellTypeAssignments( new HashSet<>( ctas ) );
+                } else {
+                    //noinspection unchecked
+                    List<CellTypeAssignment> ctas = getSessionFactory().getCurrentSession()
+                            .createQuery( "select cta.id as id, cta.name as name, cta.description as description, cta.numberOfCellTypes as numberOfCellTypes, cta.numberOfAssignedCells as numberOfAssignedCells, cta.preferred as preferred"
+                                    + ( includeIndices ? ", cta.cellTypeIndices as indices" : "" ) + " "
+                                    + "from SingleCellDimension scd "
+                                    + "join scd.cellTypeAssignments cta where scd = :scd" )
+                            .setParameter( "scd", result )
+                            .setResultTransformer( new CtaInitializer( includeCharacteristics ) )
+                            .list();
+                    result.setCellTypeAssignments( new HashSet<>( ctas ) );
+                }
+            } else {
+                result.setCellTypeAssignments( null );
+            }
+            if ( includeClcs ) {
+                if ( includeCharacteristics && includeIndices ) {
+                    //noinspection unchecked
+                    List<CellLevelCharacteristics> clcs = getSessionFactory().getCurrentSession()
+                            .createQuery( "select clc from SingleCellDimension scd join scd.cellLevelCharacteristics clc where scd = :scd" )
+                            .setParameter( "scd", result )
+                            .list();
+                    result.setCellLevelCharacteristics( new HashSet<>( clcs ) );
+                } else {
+                    //noinspection unchecked
+                    List<CellLevelCharacteristics> clcs = getSessionFactory().getCurrentSession()
+                            .createQuery( "select clc.id as id, clc.numberOfCharacteristics as numberOfCharacteristics, clc.numberOfAssignedCells as numberOfAssignedCells"
+                                    + ( includeIndices ? ", clc.indices as indices" : "" ) + " "
+                                    + "from SingleCellDimension scd "
+                                    + "join scd.cellLevelCharacteristics clc where scd = :scd" )
+                            .setParameter( "scd", result )
+                            .setResultTransformer( new ClcInitializer( includeCharacteristics ) )
+                            .list();
+                    result.setCellLevelCharacteristics( new HashSet<>( clcs ) );
+                }
+            } else {
+                result.setCellLevelCharacteristics( null );
+            }
+            return result;
+        }
+
+        @Override
+        public List<SingleCellDimension> transformListTyped( List<SingleCellDimension> collection ) {
+            return collection;
+        }
     }
 
-    private void initializeSingleCellDimensionWithoutCellIds( SingleCellDimension result ) {
-        result.setCellIds( null );
-        //noinspection unchecked
-        List<BioAssay> bas = getSessionFactory().getCurrentSession()
-                .createQuery( "select ba from SingleCellDimension dimension join dimension.bioAssays ba where dimension = :scd order by index(ba)" )
-                .setParameter( "scd", result )
-                .list();
-        result.setBioAssays( bas );
-        // TODO: this is not fully working yet, but they will appear as uninitialized proxies, we need to create
-        //       PersistentCollection for each set
-        PersistentSet cta = new PersistentSet( ( SessionImplementor ) getSessionFactory().getCurrentSession() );
-        // ( ( SessionImplementor ) getSessionFactory().getCurrentSession() )
-        //         .getPersistenceContext()
-        //         .addUninitializedDetachedCollection( ctaPersister, cta );
-        //noinspection unchecked
-        result.setCellTypeAssignments( cta );
-        PersistentSet clc = new PersistentSet( ( SessionImplementor ) getSessionFactory().getCurrentSession() );
-        // ( ( SessionImplementor ) getSessionFactory().getCurrentSession() )
-        //         .getPersistenceContext()
-        //         .addUninitializedDetachedCollection( ctaPersister, clc );
-        //noinspection unchecked
-        result.setCellLevelCharacteristics( clc );
+    private class CtaInitializer implements TypedResultTransformer<CellTypeAssignment> {
+
+        private final boolean includeCharacteristics;
+
+        private CtaInitializer( boolean includeCharacteristics ) {
+            this.includeCharacteristics = includeCharacteristics;
+        }
+
+        @Override
+        public CellTypeAssignment transformTuple( Object[] tuple, String[] aliases ) {
+            CellTypeAssignment result = ( CellTypeAssignment ) aliasToBean( CellTypeAssignment.class ).transformTuple( tuple, aliases );
+            Protocol protocol = ( Protocol ) getSessionFactory().getCurrentSession()
+                    .createQuery( "select cta.protocol from CellTypeAssignment cta where cta = :cta" )
+                    .setParameter( "cta", result )
+                    .uniqueResult();
+            result.setProtocol( protocol );
+            if ( includeCharacteristics ) {
+                //noinspection unchecked
+                List<Characteristic> cellTypes = getSessionFactory().getCurrentSession()
+                        .createQuery( "select c from CellTypeAssignment cta join cta.cellTypes c where cta = :cta order by index(c)" )
+                        .setParameter( "cta", result )
+                        .list();
+                result.setCellTypes( cellTypes );
+            } else {
+                result.setCellTypes( null );
+            }
+            return result;
+        }
+
+        @Override
+        public List<CellTypeAssignment> transformListTyped( List<CellTypeAssignment> collection ) {
+            return collection;
+        }
     }
 
+    private class ClcInitializer implements TypedResultTransformer<GenericCellLevelCharacteristics> {
+
+        private final boolean includeCharacteristics;
+
+        private ClcInitializer( boolean includeCharacteristics ) {
+            this.includeCharacteristics = includeCharacteristics;
+        }
+
+        @Override
+        public GenericCellLevelCharacteristics transformTuple( Object[] tuple, String[] aliases ) {
+            GenericCellLevelCharacteristics result = ( GenericCellLevelCharacteristics ) aliasToBean( GenericCellLevelCharacteristics.class ).transformTuple( tuple, aliases );
+            if ( includeCharacteristics ) {
+                //noinspection unchecked
+                List<Characteristic> characteristics = getSessionFactory().getCurrentSession()
+                        .createQuery( "select c from GenericCellLevelCharacteristics clc join clc.characteristics c where clc = :clc order by index(c)" )
+                        .setParameter( "clc", result )
+                        .list();
+                result.setCharacteristics( characteristics );
+            } else {
+                result.setCharacteristics( null );
+            }
+            return result;
+        }
+
+        @Override
+        public List<GenericCellLevelCharacteristics> transformListTyped( List<GenericCellLevelCharacteristics> collection ) {
+            return collection;
+        }
+    }
 
     @Override
     public void createSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {

@@ -1132,7 +1132,10 @@ public class DatasetsWebService {
                 excludedFields = excludeArg.getValue( SCD_ALLOWED_EXCLUDE_FIELDS );
             }
             if ( excludedFields.contains( "cellIds" ) ) {
-                dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristicsWithoutCellIds( ee, qt );
+                boolean includeBioAssays = !excludedFields.contains( "bioAssayIds" );
+                // we can go extra-fast if both are excluded
+                boolean includeIndices = !( excludedFields.contains( "cellTypeAssignments.cellTypeIds" ) && excludedFields.contains( "cellLevelCharacteristics.characteristicIds" ) );
+                dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, includeBioAssays, true, true, true, includeIndices );
             } else {
                 dimension = singleCellExpressionExperimentService.getSingleCellDimensionWithCellLevelCharacteristics( ee, qt );
             }

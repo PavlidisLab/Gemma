@@ -1,7 +1,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.hibernate.Hibernate;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.SessionFactory;
 import org.junit.After;
@@ -163,6 +162,10 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null );
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();
+        assertThat( scExpressionExperimentService.streamCellIds( ee, qt, false ) )
+                .hasSize( 100 );
+        assertThat( scExpressionExperimentService.streamCellTypes( ee, scd.getCellTypeAssignments().iterator().next(), false ) )
+                .hasSize( 100 );
         ThrowingConsumer<SingleCellDimension> t = scd2 -> {
             assertThat( scd2.getCellIds() ).isNull();
             assertThat( scd2.getNumberOfCells() ).isEqualTo( 100 );
@@ -171,13 +174,9 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
             assertThat( scd2.getNumberOfCellsBySample( 1 ) ).isEqualTo( 25 );
             assertThat( scd2.getNumberOfCellsBySample( 2 ) ).isEqualTo( 25 );
             assertThat( scd2.getNumberOfCellsBySample( 3 ) ).isEqualTo( 25 );
-            assertThat( Hibernate.isInitialized( scd2.getCellTypeAssignments() ) ).isFalse();
-            assertThat( Hibernate.isInitialized( scd2.getCellLevelCharacteristics() ) ).isFalse();
+            assertThat( scd2.getCellTypeAssignments() ).hasSize( 1 );
+            assertThat( scd2.getCellLevelCharacteristics() ).isEmpty();
         };
-        assertThat( scExpressionExperimentService.streamCellIds( ee, qt, false ) )
-                .hasSize( 100 );
-        assertThat( scExpressionExperimentService.streamCellTypes( ee, scd.getCellTypeAssignments().iterator().next(), false ) )
-                .hasSize( 100 );
         assertThat( scExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt ) )
                 .satisfies( t );
         assertThat( scExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee ) )
@@ -185,6 +184,19 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThat( scExpressionExperimentService.getSingleCellDimensionsWithoutCellIds( ee ) )
                 .singleElement()
                 .satisfies( t );
+        assertThat( scExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, true, true, true, true, false ) )
+                .satisfies( t )
+                .satisfies( scd2 -> {
+                    assertThat( scd2.getCellTypeAssignments() )
+                            .singleElement()
+                            .satisfies( cta -> {
+                                assertThat( cta.getId() ).isNotNull();
+                                assertThat( cta.getCellTypes() ).hasSize( 2 );
+                                assertThat( cta.getNumberOfCellTypes() ).isEqualTo( 2 );
+                                assertThat( cta.getCellTypeIndices() ).isNull();
+                                assertThat( cta.getProtocol() ).isNull();
+                            } );
+                } );
     }
 
     @Test

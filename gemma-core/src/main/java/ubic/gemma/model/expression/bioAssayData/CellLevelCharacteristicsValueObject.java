@@ -7,6 +7,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -25,9 +26,10 @@ public class CellLevelCharacteristicsValueObject extends IdentifiableValueObject
     private List<Long> characteristicIds;
 
     /**
-     * Indicate how many cells have an assigned characteristic.
+     * Indicate how many cells have an assigned characteristic, or {@code null} if this information is not available.
      */
-    private int numberOfAssignedCells;
+    @Nullable
+    private Integer numberOfAssignedCells;
 
     public CellLevelCharacteristicsValueObject( CellLevelCharacteristics cellLevelCharacteristics, boolean excludeCharacteristicIds ) {
         this.characteristics = cellLevelCharacteristics.getCharacteristics()
@@ -46,10 +48,12 @@ public class CellLevelCharacteristicsValueObject extends IdentifiableValueObject
         }
         if ( cellLevelCharacteristics.getNumberOfAssignedCells() != null ) {
             numberOfAssignedCells = cellLevelCharacteristics.getNumberOfAssignedCells();
-        } else {
+        } else if ( cellLevelCharacteristics.getIndices() != null ) {
             numberOfAssignedCells = ( int ) Arrays.stream( cellLevelCharacteristics.getIndices() )
                     .filter( i -> i != CellLevelCharacteristics.UNKNOWN_CHARACTERISTIC )
                     .count();
+        } else {
+            numberOfAssignedCells = null;
         }
     }
 }

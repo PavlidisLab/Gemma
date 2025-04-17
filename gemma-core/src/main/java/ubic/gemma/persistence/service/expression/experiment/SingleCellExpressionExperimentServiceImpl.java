@@ -532,14 +532,8 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
-    public SingleCellDimension getSingleCellDimensionWithCellLevelCharacteristicsWithoutCellIds( ExpressionExperiment ee, QuantitationType qt ) {
-        return expressionExperimentDao.getSingleCellDimensionWithCellLevelCharacteristicsWithoutCellIds( ee, qt );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public SingleCellDimension getSingleCellDimensionWithCellLevelCharacteristicsWithoutCellIdsAndIndices( ExpressionExperiment ee, QuantitationType qt ) {
-        return expressionExperimentDao.getSingleCellDimensionWithCellLevelCharacteristicsWithoutCellIdsAndIndices( ee, qt );
+    public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices ) {
+        return expressionExperimentDao.getSingleCellDimensionWithoutCellIds( ee, qt, includeBioAssays, includeCtas, includeClcs, includeCharacteristics, includeIndices );
     }
 
     @Override
@@ -549,9 +543,14 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee ) {
         return expressionExperimentDao.getSingleCellDimensionsWithoutCellIds( ee );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices ) {
+        return expressionExperimentDao.getSingleCellDimensionsWithoutCellIds( ee, includeBioAssays, includeCtas, includeClcs, includeCharacteristics, includeIndices );
     }
 
     @Override

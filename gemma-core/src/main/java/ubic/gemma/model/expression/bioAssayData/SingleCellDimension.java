@@ -142,6 +142,8 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
 
     @Override
     public String toString() {
-        return String.format( "SingleCellDimension %s", id != null ? "Id=" + id : "" );
+        return super.toString()
+                + ( bioAssays != null ? " Number of Assays=" + bioAssays.size() : "" )
+                + " Number of Cells=" + ( cellIds != null ? cellIds.size() : numberOfCells );
     }
 }

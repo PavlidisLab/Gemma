@@ -127,6 +127,8 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
     public String toString() {
         return super.toString()
                 + ( cellTypes != null ? " Cell Types=" + cellTypes.stream().map( Characteristic::getValue ).collect( Collectors.joining( ", " ) ) : "" )
+                + ( " Number of Cell Types=" + numberOfCellTypes )
+                + ( numberOfAssignedCells != null ? " Number of Assigned Cells=" + numberOfAssignedCells : null )
                 + ( preferred ? " [Preferred]" : "" );
     }
 

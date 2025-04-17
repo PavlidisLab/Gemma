@@ -7,6 +7,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -36,9 +37,10 @@ public class CellTypeAssignmentValueObject extends AnalysisValueObject<CellTypeA
     private List<Long> cellTypeIds;
 
     /**
-     * Indicate how many cells have an assigned cell type.
+     * Indicate how many cells have an assigned cell type, or {@code null} if this information is not available.
      */
-    private int numberOfAssignedCells;
+    @Nullable
+    private Integer numberOfAssignedCells;
 
     /**
      * Indicate if this assignment is the preferred one.
@@ -63,10 +65,12 @@ public class CellTypeAssignmentValueObject extends AnalysisValueObject<CellTypeA
         }
         if ( cellTypeAssignment.getNumberOfAssignedCells() != null ) {
             numberOfAssignedCells = cellTypeAssignment.getNumberOfAssignedCells();
-        } else {
+        } else if ( cellTypeAssignment.getCellTypeIndices() != null ) {
             numberOfAssignedCells = ( int ) Arrays.stream( cellTypeAssignment.getCellTypeIndices() )
                     .filter( i -> i != CellTypeAssignment.UNKNOWN_CELL_TYPE )
                     .count();
+        } else {
+            numberOfAssignedCells = null;
         }
         isPreferred = cellTypeAssignment.isPreferred();
     }
