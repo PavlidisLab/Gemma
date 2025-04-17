@@ -12,6 +12,9 @@ import ubic.gemma.core.config.SettingsConfig;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.expression.geo.GeoFamilyParser;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.core.loader.expression.geo.service.GeoFormat;
+import ubic.gemma.core.loader.expression.geo.service.GeoSource;
+import ubic.gemma.core.loader.expression.geo.service.GeoUtils;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
 import ubic.gemma.core.loader.expression.geo.singleCell.NoSingleCellDataFoundException;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
@@ -313,7 +316,7 @@ public class MexSingleCellDataLoaderTest extends BaseTest {
     }
 
     private GeoSeries readSeriesFromGeo( String accession ) throws IOException {
-        URL url = new URL( "ftp://ftp.ncbi.nlm.nih.gov/geo/series/" + accession.substring( 0, 6 ) + "nnn/" + accession + "/soft/" + accession + "_family.soft.gz" );
+        URL url = GeoUtils.getUrlForSeriesFamily( accession, GeoSource.FTP, GeoFormat.SOFT );
         try ( InputStream is = new GZIPInputStream( ftpClientFactory.openStream( url ) ) ) {
             GeoFamilyParser parser = new GeoFamilyParser();
             parser.parse( is );
