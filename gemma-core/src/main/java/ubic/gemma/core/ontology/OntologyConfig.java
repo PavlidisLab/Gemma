@@ -55,7 +55,7 @@ public class OntologyConfig {
     @Bean
     public OntologyServiceFactory<?> unifiedOntologyService(
             @Value("${gemma.ontology.unified.enabled}") boolean enabled,
-            @Value("${gemma.ontology.unified.dir}") Path tdbDir,
+            @Value("${gemma.ontology.unified.tdb.dir}") Path tdbDir,
             @Qualifier("ontologyTaskExecutor") TaskExecutor taskExecutor ) {
         TdbOntologyService ontology = new TdbOntologyService( "Gemma Unified Ontology", tdbDir, null, enabled, "unified" );
         OntologyServiceFactory<TdbOntologyService> factory = new OntologyServiceFactory<>( ontology );

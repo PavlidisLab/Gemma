@@ -53,7 +53,7 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
     @Value("${gemma.ontology.unified.sources.dir}")
     private Path sourcesDir;
 
-    @Value("${gemma.ontology.unified.dir}")
+    @Value("${gemma.ontology.unified.tdb.dir}")
     private Path destDir;
 
     /**

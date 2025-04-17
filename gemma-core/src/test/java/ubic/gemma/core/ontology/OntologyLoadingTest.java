@@ -54,7 +54,7 @@ public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
             return new TestPropertyPlaceholderConfigurer(
                     "load.ontologies=false",
                     "gemma.ontology.unified.enabled=false",
-                    "gemma.ontology.unified.dir=",
+                    "gemma.ontology.unified.tdb.dir=",
                     "gemma.ontology.loader.corePoolSize=4"
             );
         }
