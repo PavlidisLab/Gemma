@@ -4,6 +4,8 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.stream.Streams;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.springframework.util.Assert;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.Identifiable;
@@ -11,6 +13,7 @@ import ubic.gemma.model.common.Identifiable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -275,6 +278,32 @@ public class QueryUtils {
                             .list();
                 }
             }
+        }
+    }
+
+    /**
+     * Safely create a {@link Stream} from either the current or a new {@link Session}.
+     * @param streamFactory a function that produces the stream from a given {@link Session}. It may return null, in
+     *                      which case the session will be closed immediately
+     */
+    public static <T> Stream<T> createStream( SessionFactory sessionFactory, Function<Session, Stream<T>> streamFactory, boolean createNewSession ) {
+        Session session;
+        if ( createNewSession ) {
+            session = sessionFactory.openSession();
+            try {
+                Stream<T> stream = streamFactory.apply( session );
+                if ( stream != null ) {
+                    return stream.onClose( session::close );
+                } else {
+                    session.close();
+                    return null;
+                }
+            } catch ( Exception e ) {
+                session.close();
+                throw e;
+            }
+        } else {
+            return streamFactory.apply( sessionFactory.getCurrentSession() );
         }
     }
 

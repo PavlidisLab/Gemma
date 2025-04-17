@@ -2453,13 +2453,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Stream<String> streamCellIds( SingleCellDimension dimension, boolean createNewSession ) {
-        Session session;
-        if ( createNewSession ) {
-            session = getSessionFactory().openSession();
-        } else {
-            session = getSessionFactory().getCurrentSession();
-        }
-        try {
+        return QueryUtils.createStream( getSessionFactory(), session -> {
             Stream<String> stream = session.doReturningWork( work -> {
                 PreparedStatement stmt = work.prepareStatement( "select CELL_IDS from SINGLE_CELL_DIMENSION where ID = ?" );
                 stmt.setLong( 1, dimension.getId() );
@@ -2470,77 +2464,13 @@ public class ExpressionExperimentDaoImpl
                     return null;
                 }
             } );
-            if ( createNewSession ) {
-                if ( stream != null ) {
-                    return stream.onClose( session::close );
-                } else {
-                    session.close();
-                    return null;
-                }
-            } else {
-                return stream;
-            }
-        } catch ( Exception e ) {
-            if ( createNewSession ) {
-                session.close();
-            }
-            throw e;
-        }
+            return stream;
+        }, createNewSession );
     }
 
-    @Nullable
     @Override
     public Stream<Characteristic> streamCellTypes( CellTypeAssignment cta, boolean createNewSession ) {
-        Session session;
-        if ( createNewSession ) {
-            session = getSessionFactory().openSession();
-        } else {
-            session = getSessionFactory().getCurrentSession();
-        }
-        try {
-            Stream<Characteristic> stream = session.doReturningWork( work -> {
-                PreparedStatement stmt = work.prepareStatement( "select CELL_TYPE_INDICES from ANALYSIS where ID = ?" );
-                stmt.setLong( 1, cta.getId() );
-                ResultSet rs = stmt.executeQuery();
-                if ( rs.next() ) {
-                    Map<Integer, Characteristic> cache = new HashMap<>();
-                    return fromDataStream( new DataInputStream( rs.getBinaryStream( 1 ) ) )
-                            .mapToObj( i -> getCellTypeAt( cta, i, session, cache ) );
-                } else {
-                    return null;
-                }
-            } );
-            if ( createNewSession ) {
-                if ( stream != null ) {
-                    return stream.onClose( session::close );
-                } else {
-                    session.close();
-                    return null;
-                }
-            } else {
-                return stream;
-            }
-        } catch ( Exception e ) {
-            if ( createNewSession ) {
-                session.close();
-            }
-            throw e;
-        }
-    }
-
-    private Characteristic getCellTypeAt( CellTypeAssignment cta, int i, Session session, Map<Integer, Characteristic> cache ) {
-        if ( i == -1 ) {
-            return null;
-        }
-        if ( cta.getCellTypes() != null ) {
-            return cta.getCellTypes().get( i );
-        }
-        return cache.computeIfAbsent( i, j -> ( Characteristic ) session
-                .createSQLQuery( "select * from CHARACTERISTIC where CELL_TYPE_ASSIGNMENT_FK = :id and CELL_TYPE_ASSIGNMENT_ORDERING = :i" )
-                .addEntity( Characteristic.class )
-                .setParameter( "id", cta.getId() )
-                .setParameter( "i", i )
-                .uniqueResult() );
+        return streamCellLevelCharacteristics( cta, "ANALYSIS", "CELL_TYPE_INDICES", "CELL_TYPE_ASSIGNMENT_FK", "CELL_TYPE_ASSIGNMENT_ORDERING", createNewSession );
     }
 
     @Override
@@ -2556,59 +2486,53 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Stream<Characteristic> streamCellLevelCharacteristics( CellLevelCharacteristics clc, boolean createNewSession ) {
-        Session session;
-        if ( createNewSession ) {
-            session = getSessionFactory().openSession();
-        } else {
-            session = getSessionFactory().getCurrentSession();
-        }
-        try {
-            Stream<Characteristic> stream = session.doReturningWork( work -> {
-                PreparedStatement stmt = work.prepareStatement( "select INDICES from CELL_LEVEL_CHARACTERISTICS where ID = ?" );
+        return streamCellLevelCharacteristics( clc, "CELL_LEVEL_CHARACTERISTICS", "INDICES", "CELL_LEVEL_CHARACTERISTICS_FK", "CELL_LEVEL_CHARACTERISTICS_ORDERING", createNewSession );
+    }
+
+    /**
+     * Stream the characteristics of a given CLC.
+     * @param clc                    CLC to stream characteristics from
+     * @param tableName              name of the table that stored the CLC
+     * @param indicesColumn          column that contain indices
+     * @param characteristicFk       foreign key in the CHARACTERISTICS table for the CLC
+     * @param characteristicOrdering column in the CHARACTERISTICS table that orders characteristics
+     * @param createNewSession       whether to create a new session tied to the returned stream or simply use the
+     *                               current session
+     * @return a stream over the characteristics or null if not found
+     */
+    @Nullable
+    private Stream<Characteristic> streamCellLevelCharacteristics( CellLevelCharacteristics clc, String tableName, String indicesColumn, String characteristicFk, String characteristicOrdering, boolean createNewSession ) {
+        return QueryUtils.createStream( getSessionFactory(), session -> {
+            return session.doReturningWork( work -> {
+                PreparedStatement stmt = work.prepareStatement( "select " + indicesColumn + " from " + tableName + " where ID = ?" );
                 stmt.setLong( 1, clc.getId() );
                 ResultSet rs = stmt.executeQuery();
                 if ( rs.next() ) {
                     Map<Integer, Characteristic> cache = new HashMap<>();
                     return fromDataStream( new DataInputStream( rs.getBinaryStream( 1 ) ) )
-                            .mapToObj( i -> getCharacteristicAt( clc, i, session, cache ) );
+                            .mapToObj( i -> getCharacteristicAt( clc, characteristicFk, characteristicOrdering, i, session, cache ) );
                 } else {
                     return null;
                 }
             } );
-            if ( createNewSession ) {
-                if ( stream != null ) {
-                    return stream.onClose( session::close );
-                } else {
-                    session.close();
-                    return null;
-                }
-            } else {
-                return stream;
-            }
-        } catch ( Exception e ) {
-            if ( createNewSession ) {
-                session.close();
-            }
-            throw e;
-        }
+        }, createNewSession );
     }
 
     @Nullable
-    private Characteristic getCharacteristicAt( CellLevelCharacteristics clc, int i, Session work, Map<Integer, Characteristic> cache ) {
+    private Characteristic getCharacteristicAt( CellLevelCharacteristics clc, String cfk, String cfo, int i, Session session, Map<Integer, Characteristic> cache ) {
         if ( i == -1 ) {
             return null;
         }
         if ( clc.getCharacteristics() != null ) {
             return clc.getCharacteristics().get( i );
         }
-        return cache.computeIfAbsent( i, j -> ( Characteristic ) work
-                .createSQLQuery( "select * from CHARACTERISTIC where CELL_LEVEL_CHARACTERISTICS_FK = :id and CELL_LEVEL_CHARACTERISTICS_ORDERING = :i" )
+        return cache.computeIfAbsent( i, j -> ( Characteristic ) session
+                .createSQLQuery( "select * from CHARACTERISTIC where " + cfk + " = :id and " + cfo + " = :i" )
                 .addEntity( Characteristic.class )
                 .setParameter( "id", clc.getId() )
                 .setParameter( "i", i )
                 .uniqueResult() );
     }
-
 
     private IntStream fromDataStream( DataInputStream dis ) {
         return Streams.of( new Iterator<Integer>() {

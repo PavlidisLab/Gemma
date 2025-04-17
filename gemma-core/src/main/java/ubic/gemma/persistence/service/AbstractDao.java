@@ -313,18 +313,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
 
     @Override
     public Stream<T> streamAll( boolean createNewSession ) {
-        if ( createNewSession ) {
-            Session session = openSession();
-            try {
-                return QueryUtils.<T>stream( session.createCriteria( elementClass ), batchSize )
-                        .onClose( session::close );
-            } catch ( Exception e ) {
-                session.close();
-                throw e;
-            }
-        } else {
-            return QueryUtils.stream( sessionFactory.getCurrentSession().createCriteria( elementClass ), batchSize );
-        }
+        return QueryUtils.createStream( getSessionFactory(), session -> QueryUtils.stream( session.createCriteria( elementClass ), batchSize ), createNewSession );
     }
 
     /**
