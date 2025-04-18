@@ -25,10 +25,7 @@ import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
-import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
-import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
-import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
@@ -626,6 +623,15 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
             assertThat( ba.getNumberOfDesignElements() ).isNotNull();
             assertThat( ba.getNumberOfCellsByDesignElements() ).isNotNull();
         } );
+    }
+
+    @Test
+    public void testCellLevelMeasurements() {
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
+        QuantitationType qt = vectors.iterator().next().getQuantitationType();
+        CellLevelMeasurements clm = CellLevelMeasurements.Factory.newInstance( Categories.MASK );
+        scExpressionExperimentService.addCellLevelMeasurements( ee, qt, clm );
+        scExpressionExperimentService.removeCellLevelMeasurements( ee, qt, clm );
     }
 
     private SingleCellDimension createSingleCellDimension() {
