@@ -21,10 +21,7 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
-import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
-import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
-import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -1021,6 +1018,30 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Transactional(readOnly = true)
     public List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt ) {
         return expressionExperimentDao.getCellLevelCharacteristics( expressionExperiment, qt );
+    }
+
+    @Override
+    @Transactional
+    public void addCellLevelMeasurements( ExpressionExperiment ee, QuantitationType qt, CellLevelMeasurements clm ) {
+        Assert.isNull( clm.getId(), "Cell-level measurement must not be persistent." );
+        SingleCellDimension dimension = requireNonNull( getSingleCellDimension( ee, qt ),
+                qt + " does not have a single-cell dimension." );
+        if ( !dimension.getCellLevelMeasurements().add( clm ) ) {
+            throw new IllegalStateException( String.format( "%s already has a cell-level measurements equal to %s: %s.",
+                    dimension, clm, dimension.getCellLevelCharacteristics().stream().filter( clm::equals ).findFirst() ) );
+        }
+        expressionExperimentDao.updateSingleCellDimension( ee, dimension );
+    }
+
+    @Override
+    @Transactional
+    public void removeCellLevelMeasurements( ExpressionExperiment ee, QuantitationType qt, CellLevelMeasurements clm ) {
+        SingleCellDimension dimension = requireNonNull( getSingleCellDimension( ee, qt ),
+                qt + " does not have a single-cell dimension." );
+        if ( !dimension.getCellLevelMeasurements().remove( clm ) ) {
+            throw new IllegalArgumentException( clm + " is not associated to " + dimension );
+        }
+        expressionExperimentDao.updateSingleCellDimension( ee, dimension );
     }
 
     @Override
