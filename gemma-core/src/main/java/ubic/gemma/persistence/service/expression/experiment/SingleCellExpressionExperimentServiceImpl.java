@@ -22,13 +22,11 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
-import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
-import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
-import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.common.measurement.UnitService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.util.Thaws;
 
@@ -61,6 +59,9 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Autowired
     private QuantitationTypeService quantitationTypeService;
+
+    @Autowired
+    private UnitService unitService;
 
     @Autowired
     private SingleCellSparsityMetrics metrics;
@@ -712,7 +713,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional(readOnly = true)
     public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, SingleCellDimensionInitializationConfig config ) {
-        return expressionExperimentDao.getSingleCellDimensionWithoutCellIds( ee, qt, config.isIncludeBioAssays(), config.isIncludeCtas(), config.isIncludeClcs(), config.isIncludeProtocol(), config.isIncludeCharacteristics(), config.isIncludeIndices() );
+        return expressionExperimentDao.getSingleCellDimensionWithoutCellIds( ee, qt, config.isIncludeBioAssays(), config.isIncludeCtas(), config.isIncludeClcs(), config.isIncludeClms(), config.isIncludeProtocol(), config.isIncludeCharacteristics(), config.isIncludeIndices(), config.isIncludeValues() );
     }
 
     @Override
@@ -730,7 +731,51 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional(readOnly = true)
     public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, SingleCellDimensionInitializationConfig config ) {
-        return expressionExperimentDao.getSingleCellDimensionsWithoutCellIds( ee, config.isIncludeBioAssays(), config.isIncludeCtas(), config.isIncludeClcs(), config.isIncludeProtocol(), config.isIncludeCharacteristics(), config.isIncludeIndices() );
+        return expressionExperimentDao.getSingleCellDimensionsWithoutCellIds( ee, config.isIncludeBioAssays(),
+                config.isIncludeCtas(), config.isIncludeClcs(), config.isIncludeClms(), config.isIncludeProtocol(),
+                config.isIncludeCharacteristics(), config.isIncludeIndices(), config.isIncludeValues() );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T> T getCellLevelMeasurementAt( ExpressionExperiment ee, QuantitationType qt, Long clmId, int cellIndex ) {
+        CellLevelMeasurements clm = getCellLevelMeasurements( ee, qt, clmId );
+        if ( clm == null ) {
+            return null;
+        }
+        return expressionExperimentDao.getCellLevelMeasurementAt( clm, cellIndex );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T> T[] getCellLevelMeasurementAt( ExpressionExperiment ee, QuantitationType qt, Long clmId,
+            int cellIndex, int endIndexExclusive ) {
+        CellLevelMeasurements clm = getCellLevelMeasurements( ee, qt, clmId );
+        if ( clm == null ) {
+            return null;
+        }
+        return expressionExperimentDao.getCellLevelMeasurementAt( clm, cellIndex, endIndexExclusive );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T> Stream<T> streamCellLevelMeasurements( ExpressionExperiment ee, QuantitationType qt, Long clmId,
+            boolean createNewSession ) {
+        CellLevelMeasurements clm = getCellLevelMeasurements( ee, qt, clmId );
+        if ( clm == null ) {
+            return null;
+        }
+        return expressionExperimentDao.streamCellLevelMeasurements( clm, createNewSession );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CellLevelMeasurements getCellLevelMeasurements( ExpressionExperiment ee, QuantitationType qt, Long clmId ) {
+        SingleCellDimension dim = getSingleCellDimension( ee, qt );
+        if ( dim == null ) {
+            return null;
+        }
+        return expressionExperimentDao.getCellLevelMeasurements( ee, dim, clmId );
     }
 
     @Override
@@ -760,7 +805,11 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional(readOnly = true)
     public Optional<SingleCellDimension> getPreferredSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, SingleCellDimensionInitializationConfig config ) {
-        return Optional.ofNullable( expressionExperimentDao.getPreferredSingleCellDimensionWithoutCellIds( ee, config.isIncludeBioAssays(), config.isIncludeCtas(), config.isIncludeClcs(), config.isIncludeProtocol(), config.isIncludeCharacteristics(), config.isIncludeIndices() ) );
+        return Optional.ofNullable( expressionExperimentDao.getPreferredSingleCellDimensionWithoutCellIds( ee,
+                config.isIncludeBioAssays(), config.isIncludeCtas(), config.isIncludeClcs(), config.isIncludeClms(),
+                config.isIncludeProtocol(), config.isIncludeCharacteristics(), config.isIncludeIndices(),
+                config.isIncludeValues() ) );
+
     }
 
     @Override
@@ -1103,6 +1152,45 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Transactional(readOnly = true)
     public List<CellLevelCharacteristics> getCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt ) {
         return expressionExperimentDao.getCellLevelCharacteristics( expressionExperiment, qt );
+    }
+
+    @Override
+    @Transactional
+    public void addCellLevelMeasurements( ExpressionExperiment ee, QuantitationType qt, CellLevelMeasurements clm ) {
+        Assert.isNull( clm.getId(), "Cell-level measurement must not be persistent." );
+        SingleCellDimension dimension = requireNonNull( getSingleCellDimension( ee, qt ),
+                qt + " does not have a single-cell dimension." );
+        addCellLevelMeasurements( ee, dimension, clm );
+    }
+
+    @Override
+    @Transactional
+    public void addCellLevelMeasurements( ExpressionExperiment ee, SingleCellDimension dimension, CellLevelMeasurements clm ) {
+        if ( !dimension.getCellLevelMeasurements().add( clm ) ) {
+            throw new IllegalStateException( String.format( "%s already has a cell-level measurements equal to %s: %s.",
+                    dimension, clm, dimension.getCellLevelMeasurements().stream().filter( clm::equals ).findFirst() ) );
+        }
+        if ( clm.getUnit() != null && clm.getUnit().getId() == null ) {
+            log.info( "Creating new unit: " + clm.getUnit() + "." );
+            clm.setUnit( unitService.findOrCreate( clm.getUnit() ) );
+        }
+        expressionExperimentDao.updateSingleCellDimension( ee, dimension );
+        log.info( "Added " + clm + " to " + dimension + "." );
+    }
+
+    @Override
+    @Transactional
+    public void removeCellLevelMeasurements( ExpressionExperiment ee, QuantitationType qt, CellLevelMeasurements clm ) {
+        SingleCellDimension dimension = requireNonNull( getSingleCellDimension( ee, qt ),
+                qt + " does not have a single-cell dimension." );
+        if ( !dimension.getCellLevelMeasurements().remove( clm ) ) {
+            throw new IllegalArgumentException( clm + " is not associated to " + dimension );
+        }
+        expressionExperimentDao.updateSingleCellDimension( ee, dimension );
+        if ( clm.getUnit() != null ) {
+            unitService.removeIfUnused( clm.getUnit() );
+        }
+        log.info( "Removed " + clm + " from " + dimension + "." );
     }
 
     @Override

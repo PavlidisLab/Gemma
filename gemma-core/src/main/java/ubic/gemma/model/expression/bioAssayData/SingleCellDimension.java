@@ -84,6 +84,13 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
     private Set<CellLevelCharacteristics> cellLevelCharacteristics = new HashSet<>();
 
     /**
+     * Set of cell-level measurements.
+     * <p>
+     * This is used to store measurements at the cell-level.
+     */
+    private Set<CellLevelMeasurements> cellLevelMeasurements = new HashSet<>();
+
+    /**
      * Obtain the {@link BioAssay} for a given cell position.
      *
      * @param cellIndex the cell position in {@link #cellIds}

@@ -34,4 +34,8 @@ public interface UnitDao extends BaseDao<Unit> {
     @Override
     Unit findOrCreate( Unit unit );
 
+    /**
+     * Remove the given unit if unused.
+     */
+    void removeIfUnused( Unit unit );
 }
