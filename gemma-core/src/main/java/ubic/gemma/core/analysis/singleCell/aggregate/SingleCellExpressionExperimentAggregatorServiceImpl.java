@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.core.analysis.singleCell.SingleCellMaskUtils;
 import ubic.gemma.core.analysis.singleCell.SingleCellSparsityMetrics;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
@@ -156,6 +157,13 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
         // we're always aggregating into doubles, regardless of the input representation
         newQt.setRepresentation( PrimitiveType.DOUBLE );
 
+        boolean[] mask;
+        if ( config.getMask() != null ) {
+            mask = SingleCellMaskUtils.parseMask( config.getMask() );
+        } else {
+            mask = null;
+        }
+
         Map<BioAssay, Integer> sourceSampleToIndex = ListUtils.indexOfElements( vectors.iterator().next().getSingleCellDimension().getBioAssays() );
 
         double[] normalizationFactor;
@@ -168,7 +176,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
             // TODO: compute normalization factors from data
             normalizationFactor = new double[cellBAs.size()];
             Arrays.fill( normalizationFactor, 1.0 );
-            librarySize = computeLibrarySize( vectors, newBad, cellLevelCharacteristics, sourceBioAssayMap, sourceSampleToIndex, sourceSampleLibrarySizeAdjustments, cellTypeIndices, method, config.isAdjustLibrarySizes() );
+            librarySize = computeLibrarySize( vectors, newBad, cellLevelCharacteristics, mask, sourceBioAssayMap, sourceSampleToIndex, sourceSampleLibrarySizeAdjustments, cellTypeIndices, method, config.isAdjustLibrarySizes() );
             for ( int i = 0; i < librarySize.length; i++ ) {
                 if ( librarySize[i] == 0 ) {
                     log.warn( "Library size for " + cellBAs.get( i ) + " is zero, this will cause NaN values in the log2cpm transformation." );
@@ -205,7 +213,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
             rawVector.setQuantitationType( newQt );
             rawVector.setBioAssayDimension( newBad );
             rawVector.setDesignElement( v.getDesignElement() );
-            rawVector.setDataAsDoubles( aggregateData( v, newBad, cellLevelCharacteristics, sourceBioAssayMap, sourceSampleToIndex, cellTypeIndices, method, cellsByBioAssay, designElementsByBioAssay, cellByDesignElementByBioAssay, canLog2cpm, normalizationFactor, librarySize ) );
+            rawVector.setDataAsDoubles( aggregateData( v, newBad, cellLevelCharacteristics, mask, sourceBioAssayMap, sourceSampleToIndex, cellTypeIndices, method, cellsByBioAssay, designElementsByBioAssay, cellByDesignElementByBioAssay, canLog2cpm, normalizationFactor, librarySize ) );
             rawVectors.add( rawVector );
             if ( rawVectors.size() % 1000 == 0 ) {
                 log.info( String.format( "Aggregated %d/%d single-cell vectors.", rawVectors.size(), vectors.size() ) );
@@ -259,6 +267,9 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
                     }
                 }
             }
+        }
+        if ( config.getMask() != null ) {
+            details.append( "\n" ).append( " Mask: " ).append( config.getMask() );
         }
         log.info( note + "\n" + details );
         auditTrailService.addUpdateEvent( ee, DataAddedEvent.class, note, details.toString() );
@@ -315,7 +326,10 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
     /**
      * Compute the library size for each sample.
      */
-    private double[] computeLibrarySize( Collection<SingleCellExpressionDataVector> vectors, BioAssayDimension bad, CellLevelCharacteristics cta, Map<BioAssay, BioAssay> sourceBioAssayMap, Map<BioAssay, Integer> sourceSampleToIndex, Map<BioAssay, Double> sourceSampleLibrarySizeAdjustments, Map<BioAssay, Integer> cellTypeIndices, SingleCellExpressionAggregationMethod method, boolean adjustLibrarySizes ) throws IllegalStateException {
+    private double[] computeLibrarySize( Collection<SingleCellExpressionDataVector> vectors,
+            BioAssayDimension bad, CellLevelCharacteristics cta,
+            @Nullable boolean[] mask,
+            Map<BioAssay, BioAssay> sourceBioAssayMap, Map<BioAssay, Integer> sourceSampleToIndex, Map<BioAssay, Double> sourceSampleLibrarySizeAdjustments, Map<BioAssay, Integer> cellTypeIndices, SingleCellExpressionAggregationMethod method, boolean adjustLibrarySizes ) throws IllegalStateException {
         List<BioAssay> samples = bad.getBioAssays();
         int numSamples = samples.size();
         int numSourceSamples = sourceSampleToIndex.size();
@@ -337,6 +351,10 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
                 int start = getSampleStart( scv, sourceSampleIndex, 0 );
                 int end = getSampleEnd( scv, sourceSampleIndex, start );
                 for ( int k = start; k < end; k++ ) {
+                    int cellIndex = scv.getDataIndices()[k];
+                    if ( mask != null && mask[cellIndex] ) {
+                        continue;
+                    }
                     double unscaledValue;
                     if ( method == SingleCellExpressionAggregationMethod.SUM ) {
                         unscaledValue = getDouble( scrv, k, representation );
@@ -347,7 +365,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
                     } else {
                         throw new UnsupportedOperationException( "Unsupported aggregation method: " + method );
                     }
-                    if ( cellTypeIndex == cta.getIndices()[scv.getDataIndices()[k]] ) {
+                    if ( cellTypeIndex == cta.getIndices()[cellIndex] ) {
                         librarySize[i] += unscaledValue;
                     }
                     sourceLibrarySize[sourceSampleIndex] += unscaledValue;
@@ -395,6 +413,7 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
             SingleCellExpressionDataVector scv,
             BioAssayDimension bad,
             CellLevelCharacteristics cta,
+            @Nullable boolean[] mask,
             Map<BioAssay, BioAssay> sourceBioAssayMap,
             Map<BioAssay, Integer> sourceSampleToIndex,
             Map<BioAssay, Integer> cellTypeIndices,
@@ -423,7 +442,11 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
             int end = getSampleEnd( scv, sourceSampleIndex, start );
             rv[i] = 0;
             for ( int k = start; k < end; k++ ) {
-                if ( cellTypeIndex == cta.getIndices()[scv.getDataIndices()[k]] ) {
+                int cellIndex = scv.getDataIndices()[k];
+                if ( mask != null && mask[cellIndex] ) {
+                    continue;
+                }
+                if ( cellTypeIndex == cta.getIndices()[cellIndex] ) {
                     if ( method == SingleCellExpressionAggregationMethod.SUM ) {
                         rv[i] += getDouble( scrv, k, representation );
                     } else if ( method == SingleCellExpressionAggregationMethod.LOG_SUM ) {

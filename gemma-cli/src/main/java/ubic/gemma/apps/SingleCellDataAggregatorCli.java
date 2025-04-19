@@ -41,6 +41,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
     private static final String
             CTA_OPTION = "cta",
             CLC_OPTION = "clc",
+            MASK_OPTION = "mask",
             FACTOR_OPTION = "factor",
             MAKE_PREFERRED_OPTION = "p",
             SKIP_POST_PROCESSING_OPTION = "nopost",
@@ -73,6 +74,8 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
     private String factorName;
     @Nullable
     private Path mappingFile;
+    @Nullable
+    private String maskIdentifier;
     private boolean allowUnmappedCharacteristics;
     private boolean allowUnmappedFactorValues;
     private boolean makePreferred;
@@ -106,6 +109,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
     protected void buildExperimentVectorsOptions( Options options ) {
         options.addOption( CTA_OPTION, "cell-type-assignment", true, "Name of the cell type assignment to use (defaults to the preferred one). Incompatible with -" + CLC_OPTION + "." );
         addSingleExperimentOption( options, CLC_OPTION, "cell-level-characteristics", true, "Identifier of the cell-level characteristics to use. Incompatible with -" + CTA_OPTION + "." );
+        addSingleExperimentOption( options, MASK_OPTION, "mask", true, "Identifier of the cell-level characteristics to use to mask." );
         options.addOption( FACTOR_OPTION, "factor", true, "Identifier of the factor to use (defaults to the cell type factor)" );
         addSingleExperimentOption( options, Option.builder( MAPPING_FILE_OPTION ).longOpt( "mapping-file" ).hasArg().type( Path.class ).desc( "File containing explicit mapping between cell-level characteristics and factor values" ).build() );
         options.addOption( ALLOW_UNMAPPED_CHARACTERISTICS_OPTION, "allow-unmapped-characteristics", false, "Allow unmapped characteristics from the cell-level characteristics." );
@@ -127,6 +131,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
         if ( ctaIdentifier != null && clcIdentifier != null ) {
             throw new ParseException( "Only one of -cta or -clc can be set at a time." );
         }
+        maskIdentifier = commandLine.getOptionValue( MASK_OPTION );
         factorName = commandLine.getOptionValue( FACTOR_OPTION );
         allowUnmappedCharacteristics = commandLine.hasOption( ALLOW_UNMAPPED_CHARACTERISTICS_OPTION );
         allowUnmappedFactorValues = commandLine.hasOption( ALLOW_UNMAPPED_FACTOR_VALUES_OPTION );
@@ -159,6 +164,13 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
                     .orElseThrow( () -> new IllegalStateException( finalExpressionExperiment + " does not have a preferred cell-type assignment for " + qt + "." ) );
         }
 
+        CellLevelCharacteristics mask;
+        if ( maskIdentifier != null ) {
+            mask = entityLocator.locateCellLevelCharacteristics( expressionExperiment, qt, maskIdentifier );
+        } else {
+            mask = null;
+        }
+
         ExpressionExperiment finalExpressionExperiment1 = expressionExperiment;
 
         ExperimentalFactor cellTypeFactor;
@@ -175,6 +187,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
                 .build();
 
         AggregateConfig config = AggregateConfig.builder()
+                .mask( mask )
                 .makePreferred( makePreferred )
                 .adjustLibrarySizes( adjustLibrarySizes )
                 .build();

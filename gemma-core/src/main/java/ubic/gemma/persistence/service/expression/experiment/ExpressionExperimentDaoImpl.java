@@ -37,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
+import ubic.gemma.core.analysis.singleCell.SingleCellMaskUtils;
 import ubic.gemma.core.profiling.StopWatchUtils;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -2487,6 +2488,7 @@ public class ExpressionExperimentDaoImpl
             Assert.isTrue( clc.getIndices().length == scbad.getNumberOfCells(),
                     "The number of cell-level characteristics must match the number of cell IDs." );
             int numberOfCharacteristics = clc.getCharacteristics().size();
+            Assert.isTrue( numberOfCharacteristics > 0, "There must be at least one cell-level characteristic." );
             Assert.isTrue( numberOfCharacteristics == clc.getNumberOfCharacteristics(),
                     "The number of cell-level characteristics must match the size of the characteristics collection." );
             int N = 0;
@@ -2500,6 +2502,13 @@ public class ExpressionExperimentDaoImpl
             }
             Assert.isTrue( clc.getNumberOfAssignedCells() == null || clc.getNumberOfAssignedCells() == N,
                     "The number of assigned cells must match the number of assigned values in indices." );
+            Category category = CharacteristicUtils.getCategory( clc.getCharacteristics().iterator().next() );
+            for ( Characteristic c : clc.getCharacteristics() ) {
+                Assert.isTrue( CharacteristicUtils.hasCategory( c, category ), "All characteristics must have the " + category + " category." );
+            }
+            if ( category.equals( Categories.MASK ) ) {
+                SingleCellMaskUtils.validateMask( clc );
+            }
         }
     }
 
