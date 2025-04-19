@@ -640,6 +640,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
         QuantitationType qt = vectors.iterator().next().getQuantitationType();
         scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, "" );
+
         CellLevelMeasurements clm = CellLevelMeasurements.Factory.newInstance( Categories.MASK );
         clm.setType( MeasurementType.ABSOLUTE );
         clm.setRepresentation( PrimitiveType.BITSET );
@@ -649,15 +650,48 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertEquals( 128, bs.size() );
         clm.setDataAsBitSet( bs );
         scExpressionExperimentService.addCellLevelMeasurements( ee, qt, clm );
+
+        CellLevelMeasurements clm3 = CellLevelMeasurements.Factory.newInstance( Categories.UNCATEGORIZED );
+        clm3.setType( MeasurementType.ABSOLUTE );
+        clm3.setRepresentation( PrimitiveType.DOUBLE );
+        clm3.setDataAsDoubles( new double[100] );
+        scExpressionExperimentService.addCellLevelMeasurements( ee, qt, clm3 );
+
         sessionFactory.getCurrentSession().flush();
         SingleCellDimension dim = scExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt );
         assertNotNull( dim );
         assertThat( dim.getCellLevelMeasurements() )
-                .singleElement()
-                .satisfies( clm2 -> {
+                .hasSize( 2 )
+                .satisfiesOnlyOnce( clm2 -> {
+                    assertThat( clm2.getRepresentation() ).isEqualTo( PrimitiveType.BITSET );
                     assertThat( clm2.getDataAsBitSet() ).isEqualTo( bs );
+                } )
+                .satisfiesOnlyOnce( clm2 -> {
+                    assertThat( clm2.getRepresentation() ).isEqualTo( PrimitiveType.DOUBLE );
+                    assertThat( clm2.getDataAsDoubles() ).isEqualTo( new double[100] );
                 } );
-        scExpressionExperimentService.removeCellLevelMeasurements( ee, qt, clm );
+
+        SingleCellExpressionExperimentService.SingleCellDimensionConfig config = SingleCellExpressionExperimentService.SingleCellDimensionConfig.builder()
+                .includeCellLevelMeasurements( true )
+                .includeValues( false )
+                .build();
+        SingleCellDimension dim2 = scExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, config );
+        assertThat( dim2 ).isNotNull();
+        assertThat( dim2.getCellLevelMeasurements() )
+                .hasSize( 2 )
+                .allSatisfy( clm2 -> {
+                    assertThat( clm2.getCategory() ).isNotNull();
+                    assertThat( clm2.getData() ).isNull();
+                } );
+
+        assertThat( ( Double ) scExpressionExperimentService.getCellLevelMeasurementAt( ee, qt, clm3.getId(), 50 ) )
+                .isEqualTo( 0.0 );
+        assertThat( ( Double[] ) scExpressionExperimentService.getCellLevelMeasurementAt( ee, qt, clm3.getId(), 50, 60 ) )
+                .containsExactly( 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 );
+        assertThat( scExpressionExperimentService.streamCellLevelMeasurements( ee, qt, clm3.getId(), false ) )
+                .hasSize( 100 );
+
+        scExpressionExperimentService.removeCellLevelMeasurements( ee, qt, clm3 );
     }
 
     private SingleCellDimension createSingleCellDimension() {

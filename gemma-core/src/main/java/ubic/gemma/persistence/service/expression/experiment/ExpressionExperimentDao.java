@@ -510,7 +510,7 @@ public interface ExpressionExperimentDao
      */
     List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee );
 
-    List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeClms, boolean includeCharacteristics, boolean includeIndices );
+    List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeClms, boolean includeCharacteristics, boolean includeIndices, boolean includeValues );
 
     /**
      * Obtain the single-cell dimension used by a specific QT.
@@ -525,7 +525,7 @@ public interface ExpressionExperimentDao
     SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt );
 
     @Nullable
-    SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeClms, boolean includeCharacteristics, boolean includeIndices );
+    SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeClms, boolean includeCharacteristics, boolean includeIndices, boolean includeValues );
 
     /**
      * Obtain the preferred single cell dimension, that is the dimension associated to the preferred set of single-cell vectors.
@@ -595,6 +595,31 @@ public interface ExpressionExperimentDao
      */
     @Nullable
     Characteristic getCellLevelCharacteristicAt( CellLevelCharacteristics clc, int cellIndex );
+
+    /**
+     * Obtain a cell-level measurements by ID.
+     */
+    @Nullable
+    CellLevelMeasurements getCellLevelMeasurements( ExpressionExperiment ee, SingleCellDimension dim, Long clmId );
+
+    /**
+     * Obtain a measurement at a given cell index.
+     */
+    @Nullable
+    <T> T getCellLevelMeasurementAt( CellLevelMeasurements clm, int cellIndex );
+
+    @Nullable
+    <T> T[] getCellLevelMeasurementAt( CellLevelMeasurements clm, int startIndex, int endIndexExclusive );
+
+    /**
+     * Stream a cell-level measurement.
+     * <p>
+     * The type held in the stream depends on the representation of the cell-level measurement. Refer to
+     * {@link ubic.gemma.persistence.util.ByteArrayUtils#byteArrayToObjects(byte[], Class)} for more details on the
+     * conversions.
+     */
+    @Nullable
+    <T> Stream<T> streamCellLevelMeasurements( CellLevelMeasurements clm, boolean createNewSession );
 
     List<CellTypeAssignment> getCellTypeAssignments( ExpressionExperiment ee );
 
