@@ -10,12 +10,12 @@ import ubic.gemma.model.common.measurement.MeasurementType;
 import ubic.gemma.model.common.measurement.Unit;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Objects;
 
-import static ubic.gemma.persistence.util.ByteArrayUtils.booleanArrayToBytes;
-import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToBooleans;
+import static ubic.gemma.persistence.util.ByteArrayUtils.*;
 
 @Getter
 @Setter
@@ -27,13 +27,26 @@ public class CellLevelMeasurements extends AbstractIdentifiable {
 
     private MeasurementType type;
 
+    @Nullable
     private MeasurementKind kindCV;
 
+    @Nullable
     private String otherKind;
 
     private PrimitiveType representation;
 
+    @Nullable
     private Unit unit;
+
+    public double[] getDataAsDoubles() {
+        ensureRepresentation( PrimitiveType.DOUBLE );
+        return byteArrayToDoubles( data );
+    }
+
+    public void setDataAsDoubles( double[] data ) {
+        ensureRepresentation( PrimitiveType.DOUBLE );
+        setData( doubleArrayToBytes( data ) );
+    }
 
     public boolean[] getDataAsBooleans() {
         ensureRepresentation( PrimitiveType.BOOLEAN );
@@ -77,6 +90,15 @@ public class CellLevelMeasurements extends AbstractIdentifiable {
                 && Objects.equals( getOtherKind(), other.getOtherKind() )
                 && Objects.equals( getUnit(), other.getUnit() )
                 && Arrays.equals( getData(), other.getData() );
+    }
+
+    @Override
+    public String toString() {
+        return super.toString()
+                + ( category != null ? " Category=" + category : "" )
+                + ( type != null ? " Type=" + type : "" )
+                + ( representation != null ? " Representation=" + representation : "" )
+                + ( unit != null ? " Unit=" + unit : "" );
     }
 
     private void ensureRepresentation( PrimitiveType primitiveType ) {

@@ -22,6 +22,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignUpda
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
+import ubic.gemma.model.common.measurement.MeasurementType;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -42,6 +43,7 @@ import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils.randomSingleCellVector;
 
@@ -197,7 +199,15 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThat( scExpressionExperimentService.getSingleCellDimensionsWithoutCellIds( ee ) )
                 .singleElement()
                 .satisfies( t );
-        assertThat( scExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, true, true, true, true, false ) )
+        SingleCellExpressionExperimentService.SingleCellDimensionConfig config = SingleCellExpressionExperimentService.SingleCellDimensionConfig.builder()
+                .includeBioAssays( true )
+                .includeCellTypeAssignments( true )
+                .includeCellLevelCharacteristics( true )
+                .includeCellLevelMeasurements( true )
+                .includeCharacteristics( true )
+                .includeIndices( false )
+                .build();
+        assertThat( scExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, config ) )
                 .satisfies( t )
                 .satisfies( scd2 -> {
                     assertThat( scd2.getCellTypeAssignments() )
@@ -629,8 +639,24 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
     public void testCellLevelMeasurements() {
         Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( true );
         QuantitationType qt = vectors.iterator().next().getQuantitationType();
+        scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, "" );
         CellLevelMeasurements clm = CellLevelMeasurements.Factory.newInstance( Categories.MASK );
+        clm.setType( MeasurementType.ABSOLUTE );
+        clm.setRepresentation( PrimitiveType.BITSET );
+        BitSet bs = new BitSet();
+        bs.set( 99 );
+        assertFalse( bs.get( 256 ) );
+        assertEquals( 128, bs.size() );
+        clm.setDataAsBitSet( bs );
         scExpressionExperimentService.addCellLevelMeasurements( ee, qt, clm );
+        sessionFactory.getCurrentSession().flush();
+        SingleCellDimension dim = scExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt );
+        assertNotNull( dim );
+        assertThat( dim.getCellLevelMeasurements() )
+                .singleElement()
+                .satisfies( clm2 -> {
+                    assertThat( clm2.getDataAsBitSet() ).isEqualTo( bs );
+                } );
         scExpressionExperimentService.removeCellLevelMeasurements( ee, qt, clm );
     }
 
