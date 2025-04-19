@@ -533,7 +533,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, SingleCellDimensionConfig config ) {
         return expressionExperimentDao.getSingleCellDimensionWithoutCellIds( ee, qt,
                 config.isIncludeBioAssays(), config.isIncludeCellTypeAssignments(), config.isIncludeCellLevelCharacteristics(), config.isIncludeCellLevelMeasurements(),
-                config.isIncludeCharacteristics(), config.isIncludeIndices() );
+                config.isIncludeCharacteristics(), config.isIncludeIndices(), config.isIncludeValues() );
     }
 
     @Override
@@ -549,10 +549,50 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
+    public <T> T getCellLevelMeasurementAt( ExpressionExperiment ee, QuantitationType qt, Long clmId, int cellIndex ) {
+        CellLevelMeasurements clm = getCellLevelMeasurements( ee, qt, clmId );
+        if ( clm == null ) {
+            return null;
+        }
+        return expressionExperimentDao.getCellLevelMeasurementAt( clm, cellIndex );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T> T[] getCellLevelMeasurementAt( ExpressionExperiment ee, QuantitationType qt, Long clmId, int cellIndex, int endIndexExclusive ) {
+        CellLevelMeasurements clm = getCellLevelMeasurements( ee, qt, clmId );
+        if ( clm == null ) {
+            return null;
+        }
+        return expressionExperimentDao.getCellLevelMeasurementAt( clm, cellIndex, endIndexExclusive );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T> Stream<T> streamCellLevelMeasurements( ExpressionExperiment ee, QuantitationType qt, Long clmId, boolean createNewSession ) {
+        CellLevelMeasurements clm = getCellLevelMeasurements( ee, qt, clmId );
+        if ( clm == null ) {
+            return null;
+        }
+        return expressionExperimentDao.streamCellLevelMeasurements( clm, createNewSession );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CellLevelMeasurements getCellLevelMeasurements( ExpressionExperiment ee, QuantitationType qt, Long clmId ) {
+        SingleCellDimension dim = getSingleCellDimension( ee, qt );
+        if ( dim == null ) {
+            return null;
+        }
+        return expressionExperimentDao.getCellLevelMeasurements( ee, dim, clmId );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, SingleCellDimensionConfig config ) {
         return expressionExperimentDao.getSingleCellDimensionsWithoutCellIds( ee,
                 config.isIncludeBioAssays(), config.isIncludeCellTypeAssignments(), config.isIncludeCellLevelCharacteristics(), config.isIncludeCellLevelMeasurements(),
-                config.isIncludeCharacteristics(), config.isIncludeIndices() );
+                config.isIncludeCharacteristics(), config.isIncludeIndices(), config.isIncludeValues() );
     }
 
     @Override
