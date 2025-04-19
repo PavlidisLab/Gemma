@@ -2199,11 +2199,11 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee ) {
-        return getSingleCellDimensionsWithoutCellIds( ee, true, true, true, true, true );
+        return getSingleCellDimensionsWithoutCellIds( ee, true, true, true, true, true, true );
     }
 
     @Override
-    public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices ) {
+    public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeClms, boolean includeCharacteristics, boolean includeIndices ) {
         //noinspection unchecked
         return ( List<SingleCellDimension> ) getSessionFactory().getCurrentSession()
                 .createQuery( "select dimension.id as id, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
@@ -2211,7 +2211,7 @@ public class ExpressionExperimentDaoImpl
                         + "where scedv.expressionExperiment = :ee "
                         + "group by dimension" )
                 .setParameter( "ee", ee )
-                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeCharacteristics, includeIndices ) )
+                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeClms, includeCharacteristics, includeIndices ) )
                 .list();
     }
 
@@ -2228,11 +2228,11 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt ) {
-        return getSingleCellDimensionWithoutCellIds( ee, qt, true, true, true, true, true );
+        return getSingleCellDimensionWithoutCellIds( ee, qt, true, true, true, true, true, true );
     }
 
     @Override
-    public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices ) {
+    public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeClms, boolean includeCharacteristics, boolean includeIndices ) {
         return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
                 .createQuery( "select dimension.id as id, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension dimension "
@@ -2240,7 +2240,7 @@ public class ExpressionExperimentDaoImpl
                         + "group by dimension" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
-                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeCharacteristics, includeIndices ) )
+                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeClms, includeCharacteristics, includeIndices ) )
                 .uniqueResult();
     }
 
@@ -2262,7 +2262,7 @@ public class ExpressionExperimentDaoImpl
                         + "where scedv.quantitationType.isSingleCellPreferred = true and scedv.expressionExperiment = :ee "
                         + "group by dimension" )
                 .setParameter( "ee", ee )
-                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( true, true, true, true, true ) )
+                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( true, true, true, true, true, true ) )
                 .uniqueResult();
     }
 
@@ -2271,13 +2271,15 @@ public class ExpressionExperimentDaoImpl
         private final boolean includeBioAssays;
         private final boolean includeCtas;
         private final boolean includeClcs;
+        private final boolean includeClms;
         private final boolean includeCharacteristics;
         private final boolean includeIndices;
 
-        private SingleCellDimensionWithoutCellIdsInitializer( boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices ) {
+        private SingleCellDimensionWithoutCellIdsInitializer( boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeClms, boolean includeCharacteristics, boolean includeIndices ) {
             this.includeBioAssays = includeBioAssays;
             this.includeCtas = includeCtas;
             this.includeClcs = includeClcs;
+            this.includeClms = includeClms;
             this.includeCharacteristics = includeCharacteristics;
             this.includeIndices = includeIndices;
         }
@@ -2342,6 +2344,14 @@ public class ExpressionExperimentDaoImpl
                 }
             } else {
                 result.setCellLevelCharacteristics( null );
+            }
+            if ( includeClms ) {
+                //noinspection unchecked
+                List<CellLevelMeasurements> clms = getSessionFactory().getCurrentSession()
+                        .createQuery( "select clm from SingleCellDimension scd join scd.cellLevelMeasurements clm where scd = :scd" )
+                        .setParameter( "scd", result )
+                        .list();
+                result.setCellLevelMeasurements( new HashSet<>( clms ) );
             }
             return result;
         }
@@ -2446,6 +2456,7 @@ public class ExpressionExperimentDaoImpl
                 "There must be at most one preferred cell type labelling." );
         validateCellTypeAssignments( scbad );
         validateCellLevelCharacteristics( scbad );
+        validateCellLevelMeasurements( scbad );
         Assert.isTrue( !scbad.getBioAssays().isEmpty(), "There must be at least one BioAssay." );
         Assert.isTrue( ee.getBioAssays().containsAll( scbad.getBioAssays() ), "Not all supplied BioAssays belong to " + ee );
         validateSparseRangeArray( scbad.getBioAssays(), scbad.getBioAssaysOffset(), scbad.getNumberOfCells() );
@@ -2504,6 +2515,24 @@ public class ExpressionExperimentDaoImpl
             }
             Assert.isTrue( clc.getNumberOfAssignedCells() == null || clc.getNumberOfAssignedCells() == N,
                     "The number of assigned cells must match the number of assigned values in indices." );
+        }
+    }
+
+    private void validateCellLevelMeasurements( SingleCellDimension scd ) {
+        if ( !Hibernate.isInitialized( scd.getCellLevelMeasurements() ) ) {
+            return; // no need to validate if not initialized
+        }
+        for ( CellLevelMeasurements clm : scd.getCellLevelMeasurements() ) {
+            Assert.notNull( clm.getCategory(), "A measurement must have a category." );
+            Assert.notNull( clm.getType(), "A measurement must have a type." );
+            Assert.notNull( clm.getRepresentation(), "A measurement must have a representation." );
+            int sizeInBytes = clm.getRepresentation().getSizeInBytes();
+            if ( sizeInBytes != -1 ) {
+                int numberOfMeasurement = clm.getData().length / sizeInBytes;
+                Assert.isTrue( numberOfMeasurement == scd.getNumberOfCells(),
+                        String.format( "The number of measurements (%d) must match the number of cells (%d).",
+                                numberOfMeasurement, scd.getNumberOfCells() ) );
+            }
         }
     }
 
