@@ -687,8 +687,10 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
-    public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices ) {
-        return expressionExperimentDao.getSingleCellDimensionWithoutCellIds( ee, qt, includeBioAssays, includeCtas, includeClcs, includeCharacteristics, includeIndices );
+    public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, SingleCellDimensionConfig config ) {
+        return expressionExperimentDao.getSingleCellDimensionWithoutCellIds( ee, qt,
+                config.isIncludeBioAssays(), config.isIncludeCellTypeAssignments(), config.isIncludeCellLevelCharacteristics(), config.isIncludeCellLevelMeasurements(),
+                config.isIncludeCharacteristics(), config.isIncludeIndices() );
     }
 
     @Override
@@ -705,8 +707,10 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
-    public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices ) {
-        return expressionExperimentDao.getSingleCellDimensionsWithoutCellIds( ee, includeBioAssays, includeCtas, includeClcs, includeCharacteristics, includeIndices );
+    public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, SingleCellDimensionConfig config ) {
+        return expressionExperimentDao.getSingleCellDimensionsWithoutCellIds( ee,
+                config.isIncludeBioAssays(), config.isIncludeCellTypeAssignments(), config.isIncludeCellLevelCharacteristics(), config.isIncludeCellLevelMeasurements(),
+                config.isIncludeCharacteristics(), config.isIncludeIndices() );
     }
 
     @Override
@@ -1033,9 +1037,10 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 qt + " does not have a single-cell dimension." );
         if ( !dimension.getCellLevelMeasurements().add( clm ) ) {
             throw new IllegalStateException( String.format( "%s already has a cell-level measurements equal to %s: %s.",
-                    dimension, clm, dimension.getCellLevelCharacteristics().stream().filter( clm::equals ).findFirst() ) );
+                    dimension, clm, dimension.getCellLevelMeasurements().stream().filter( clm::equals ).findFirst() ) );
         }
         expressionExperimentDao.updateSingleCellDimension( ee, dimension );
+        log.info( "Added " + clm + " to " + dimension + "." );
     }
 
     @Override
@@ -1047,6 +1052,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             throw new IllegalArgumentException( clm + " is not associated to " + dimension );
         }
         expressionExperimentDao.updateSingleCellDimension( ee, dimension );
+        log.info( "Removed " + clm + " from " + dimension + "." );
     }
 
     @Override

@@ -11,7 +11,7 @@
             <generator class="native"/>
         </id>
         <property name="type">
-            <column name="TYPE" not-null="true" unique="false" sql-type="VARCHAR(255)" index="MEASUREMENT_TYPE"/>
+            <column name="TYPE" not-null="true" unique="false" sql-type="VARCHAR(255)" index="CELL_LEVEL_MEASUREMENTS_TYPE"/>
             <type name="org.hibernate.type.EnumType">
                 <param name="enumClass">ubic.gemma.model.common.measurement.MeasurementType</param>
                 <param name="useNamed">true</param>
@@ -19,7 +19,7 @@
         </property>
         <property name="kindCV">
             <column name="KIND_C_V" not-null="false" unique="false" sql-type="VARCHAR(255)"
-                    index="MEASUREMENT_KIND_CV"/>
+                    index="CELL_LEVEL_MEASUREMENTS_KIND_CV"/>
             <type name="org.hibernate.type.EnumType">
                 <param name="enumClass">ubic.gemma.model.common.measurement.MeasurementKind</param>
                 <param name="useNamed">true</param>
@@ -27,11 +27,11 @@
         </property>
         <property name="otherKind" type="java.lang.String">
             <column name="OTHER_KIND" not-null="false" unique="false" sql-type="VARCHAR(255)"
-                    index="MEASUREMENT_OTHER_KIND"/>
+                    index="CELL_LEVEL_MEASUREMENTS_OTHER_KIND"/>
         </property>
         <property name="representation">
             <column name="REPRESENTATION" not-null="true" unique="false" sql-type="VARCHAR(255)"
-                    index="MEASUREMENT_REPRESENTATION"/>
+                    index="CELL_LEVEL_MEASUREMENTS_REPRESENTATION"/>
             <type name="org.hibernate.type.EnumType">
                 <param name="enumClass">ubic.gemma.model.common.quantitationtype.PrimitiveType</param>
                 <param name="useNamed">true</param>
