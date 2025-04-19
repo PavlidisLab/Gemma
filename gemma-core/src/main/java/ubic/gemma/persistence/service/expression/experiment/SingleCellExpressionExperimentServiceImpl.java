@@ -953,7 +953,10 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 }
             }
         }
-        dimension.getCellTypeAssignments().add( cta );
+        if ( !dimension.getCellTypeAssignments().add( cta ) ) {
+            throw new IllegalStateException( String.format( "%s already has a cell-type assignment equal to %s: %s.",
+                    dimension, cta, dimension.getCellTypeAssignments().stream().filter( cta::equals ).findFirst() ) );
+        }
         expressionExperimentDao.updateSingleCellDimension( ee, dimension );
         auditTrailService.addUpdateEvent( ee, CellTypeAssignmentAddedEvent.class, "Added " + cta + " to " + dimension + "." );
         log.info( "Relabelled single-cell vectors for " + ee + " with: " + cta );
@@ -1081,8 +1084,10 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 }
             }
         }
-        Assert.isTrue( !scd.getCellLevelCharacteristics().contains( clc ), scd + " already has a cell-level characteristics matching " + clc + "." );
-        scd.getCellLevelCharacteristics().add( clc );
+        if ( !scd.getCellLevelCharacteristics().add( clc ) ) {
+            throw new IllegalStateException( String.format( "%s already has a cell-level characteristics equal to %s: %s.",
+                    scd, clc, scd.getCellLevelCharacteristics().stream().filter( clc::equals ).findFirst() ) );
+        }
         expressionExperimentDao.updateSingleCellDimension( ee, scd );
         auditTrailService.addUpdateEvent( ee, CellLevelCharacteristicsAddedEvent.class, "Added " + clc + " to " + scd + "." );
         return clc;
