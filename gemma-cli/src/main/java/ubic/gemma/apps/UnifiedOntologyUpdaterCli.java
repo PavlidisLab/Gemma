@@ -104,7 +104,7 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
         Set<String> urls = new BufferedReader( new InputStreamReader( res.getInputStream(), StandardCharsets.UTF_8 ) ).lines()
                 .filter( line -> !line.startsWith( "#" ) )
                 .collect( Collectors.toSet() );
-        List<String> downloadedFiles = new ArrayList<>();
+        List<Path> downloadedFiles = new ArrayList<>();
         if ( skipDownload ) {
             log.info( "Skipping download of ontology files, will only create the TDB dataset from existing files." );
             for ( String urlS : urls ) {
@@ -112,7 +112,7 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
                 String fileName = Paths.get( url.getFile() ).getFileName().toString();
                 Path dest = sourcesDir.resolve( fileName );
                 if ( Files.exists( dest ) ) {
-                    downloadedFiles.add( dest.toString() );
+                    downloadedFiles.add( dest );
                 } else {
                     log.warn( "There is no downloaded file for " + url + ", it will not be included in the TDB dataset." );
                 }
@@ -120,14 +120,19 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
         } else {
             ExecutorService executor = Executors.newFixedThreadPool( getNumThreads(), new SimpleThreadFactory( "gemma-unified-ontology-downloader-thread-" ) );
             try {
-                SimpleDownloader downloader = new SimpleDownloader( new SimpleRetryPolicy( 3, 1000, 1.5 ), ftpClientFactory, executor );
+                SimpleDownloader downloader = new SimpleDownloader( new SimpleRetryPolicy( 3, 1000, 1.5 ) );
+                downloader.setFtpClientFactory( ftpClientFactory );
+                downloader.setTaskExecutor( executor );
+                List<SimpleDownloader.URLAndDestination> url2dest = new ArrayList<>();
                 for ( String urlS : urls ) {
                     URL url = new URL( urlS );
                     String fileName = Paths.get( url.getFile() ).getFileName().toString();
                     Path dest = sourcesDir.resolve( fileName );
-                    downloader.download( url, dest, force );
-                    downloadedFiles.add( dest.toString() );
+                    url2dest.add( new SimpleDownloader.URLAndDestination( url, dest ) );
                 }
+                downloader.downloadInParallel( url2dest, force );
+                url2dest.stream().map( SimpleDownloader.URLAndDestination::getDest )
+                        .forEach( downloadedFiles::add );
             } finally {
                 executor.shutdown();
             }
@@ -160,13 +165,12 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
         }
     }
 
-
-    private void createTdbDataset( Path newDir, List<String> downloadedFiles ) {
+    private void createTdbDataset( Path newDir, List<Path> downloadedFiles ) {
         Location loc = Location.create( newDir.toString() );
         try {
             log.info( "Creating TDB dataset at " + newDir + "..." );
             DatasetGraphTDB dataset = TDBMaker.createDatasetGraphTDB( loc, StoreParams.getDftStoreParams() );
-            TDBLoader.load( dataset, downloadedFiles, true );
+            TDBLoader.load( dataset, downloadedFiles.stream().map( Path::toString ).collect( Collectors.toList() ), true );
         } finally {
             TDBMaker.releaseLocation( loc );
         }
