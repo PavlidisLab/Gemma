@@ -1,5 +1,35 @@
 ## Updates
 
+### Update 2.9.0
+
+#### Single-cell data in Gemma
+
+The following endpoints were added to access single-cell data:
+
+- `/datasets/{datasetId}/singleCellDimension`
+- `/datasets/{datasetId}/cellTypeAssignment`
+- `/datasets/{datasetId}/cellLevelCharacteristics`
+- `/datasets/{datasetId}/data/singleCell`
+
+The `singleCellDimension` endpoint returns useful high-level metadata about the single-cell data such as cell IDs, cell
+type assignments, etc.
+
+Two formats are exposed: tabular or MEX. If MEX is picked, the `Accept` header should be set to
+`application/vnd.10xgenomics.mex`. The REST API will produce a TAR archive with MEX files organized by samples.
+
+#### Subset and subset groups
+
+The REST API now expose subset structure. This used to be hidden as it was only used for subset DE analysis. However,
+with the arrival of single-cell data in Gemma that uses this feature to organize assays, it makes sense to expose it.
+
+Subsets can be grouped together in a subset group which is attached to a set of vectors.
+
+- `/datasets/{datasetId}/subSets`
+- `/datasets/{datasetId}/subSets/{subSetId}`
+- `/datasets/{datasetId}/subSets/{subSetId}/samples`
+- `/datasets/{datasetId}/subSetGroups`
+- `/datasets/{datasetId}/subSetGroups/{subSetGroupId}`
+
 ### Update 2.8.5
 
 Use 200 as a default response code.
