@@ -2,6 +2,8 @@ package ubic.gemma.core.util;
 
 import lombok.Value;
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.net.ftp.FTPClient;
@@ -10,6 +12,8 @@ import org.apache.commons.net.io.CopyStreamEvent;
 import org.apache.commons.net.io.CopyStreamListener;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
+import ubic.gemma.core.util.locking.FileLockManager;
+import ubic.gemma.core.util.locking.LockedPath;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -29,6 +33,8 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
+import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
+
 /**
  * A simple downloader for FTP and HTTP(s) URLs.
  * @author poirigui
@@ -36,21 +42,35 @@ import java.util.zip.GZIPInputStream;
 @CommonsLog
 public class SimpleDownloader {
 
+    @Nullable
     private final SimpleRetry<IOException> retry;
+    /**
+     * Factory to use for FTP downloads.
+     */
     @Nullable
     private FTPClientFactory ftpClientFactory;
+    /**
+     * Task executor to use for parallel and async downloads.
+     */
     @Nullable
     private ExecutorService taskExecutor;
 
-    public SimpleDownloader() {
-        this( new SimpleRetryPolicy( 3, 1000, 1.5 ) );
-    }
+    /**
+     * Set the file lock manager to use to lock files while downloading.
+     */
+    @Nullable
+    private FileLockManager fileLockManager;
 
     /**
-     * @param retryPolicy      policy for retrying failed downloads
+     * If enabled, the integrity of archive (i.e. ZIP, TAR and Gzipped files) will be checked after downloading.
      */
-    public SimpleDownloader( SimpleRetryPolicy retryPolicy ) {
-        this.retry = new SimpleRetry<>( retryPolicy, IOException.class, getClass().getName() );
+    private boolean checkArchiveIntegrity;
+
+    /**
+     * @param retryPolicy policy for retrying failed downloads, or {@code null} to only attempt downloads once
+     */
+    public SimpleDownloader( @Nullable SimpleRetryPolicy retryPolicy ) {
+        this.retry = retryPolicy != null ? new SimpleRetry<>( retryPolicy, IOException.class, SimpleDownloader.class.getName() ) : null;
     }
 
     /**
@@ -61,35 +81,21 @@ public class SimpleDownloader {
     }
 
     /**
-     * Set the task executor for performing asychronous downloads.
+     * Set the task executor for performing asynchronous downloads.
      */
     public void setTaskExecutor( @Nullable ExecutorService taskExecutor ) {
         this.taskExecutor = taskExecutor;
     }
 
+    public void setFileLockManager( @Nullable FileLockManager fileLockManager ) {
+        this.fileLockManager = fileLockManager;
+    }
+
     /**
-     * Download a file from a URL to a local destination.
-     * @param url   URL to download
-     * @param dest  destination for the download
-     * @param force download even if the file exists, has the same size and is up to date
-     * @return the number of bytes that were downloaded
+     * Set whether to check the integrity of gzipped files after downloading.
      */
-    public long download( URL url, Path dest, boolean force ) throws IOException, InterruptedException {
-        try {
-            if ( taskExecutor != null ) {
-                return downloadAsync( url, dest, force ).get();
-            } else {
-                return download( url, dest, force );
-            }
-        } catch ( ExecutionException e ) {
-            if ( e.getCause() instanceof IOException ) {
-                throw ( IOException ) e.getCause();
-            } else if ( e.getCause() instanceof RuntimeException ) {
-                throw ( RuntimeException ) e.getCause();
-            } else {
-                throw new RuntimeException( e.getCause() );
-            }
-        }
+    public void setCheckArchiveIntegrity( boolean checkArchiveIntegrity ) {
+        this.checkArchiveIntegrity = checkArchiveIntegrity;
     }
 
     @Value
@@ -98,16 +104,21 @@ public class SimpleDownloader {
         Path dest;
     }
 
-    public void downloadInParallel( List<URLAndDestination> urls2dest, boolean force ) throws IOException, InterruptedException {
-        List<Future<?>> futures = urls2dest.stream()
+    /**
+     * Download a file from a URL to a local destination asynchronously.
+     */
+    public long downloadInParallel( List<URLAndDestination> urls2dest, boolean force ) throws IOException, InterruptedException {
+        Assert.notNull( taskExecutor, "A task executor must be set to perform parallel downloads." );
+        List<Future<Long>> futures = urls2dest.stream()
                 .map( entry -> downloadAsync( entry.getUrl(), entry.getDest(), force ) )
                 .collect( Collectors.toList() );
+        long downloadedBytes = 0;
         List<ExecutionException> errors = new ArrayList<>();
         for ( int i = 0; i < futures.size(); i++ ) {
             URLAndDestination u2d = urls2dest.get( i );
-            Future<?> future = futures.get( i );
+            Future<Long> future = futures.get( i );
             try {
-                future.get();
+                downloadedBytes += future.get();
             } catch ( InterruptedException e ) {
                 // cancel remaining downloads
                 for ( int j = i; j < futures.size(); j++ ) {
@@ -133,17 +144,49 @@ public class SimpleDownloader {
                 throw new RuntimeException( e.getCause() );
             }
         }
+        return downloadedBytes;
     }
 
+    /**
+     * Download a file from a URL to a local destination asynchronously.
+     */
     public Future<Long> downloadAsync( URL url, Path dest, boolean force ) {
         Assert.notNull( taskExecutor, "A task executor must be set to perform asynchronous downloads." );
-        return taskExecutor.submit( () -> retry.execute( ( ctx ) -> {
-            if ( url.getProtocol().equalsIgnoreCase( "ftp" ) ) {
-                return downloadFtp( url, dest, force );
-            } else {
-                return downloadHttp( url, dest, force );
+        return taskExecutor.submit( () -> download( url, dest, force ) );
+    }
+
+    /**
+     * Download a file from a URL to a local destination.
+     * @param url   URL to download
+     * @param dest  destination for the download
+     * @param force download even if the file exists, has the same size and is up to date
+     * @return the number of bytes that were downloaded
+     */
+    public long download( URL url, Path dest, boolean force ) throws IOException {
+        if ( retry != null ) {
+            return retry.execute( ( ctx ) -> downloadWithLock( url, dest, force ),
+                    "download " + url + " to " + dest );
+        } else {
+            return downloadWithLock( url, dest, force );
+        }
+    }
+
+    private long downloadWithLock( URL url, Path dest, boolean force ) throws IOException {
+        if ( fileLockManager != null ) {
+            try ( LockedPath lock = fileLockManager.acquirePathLock( dest, true ) ) {
+                return downloadMultiProtocol( url, lock.getPath(), force );
             }
-        }, "download " + url + " to " + dest ) );
+        } else {
+            return downloadMultiProtocol( url, dest, force );
+        }
+    }
+
+    private long downloadMultiProtocol( URL url, Path dest, boolean force ) throws IOException {
+        if ( url.getProtocol().equalsIgnoreCase( "ftp" ) ) {
+            return downloadFtp( url, dest, force );
+        } else {
+            return downloadHttp( url, dest, force );
+        }
     }
 
     private long downloadFtp( URL url, Path dest, boolean force ) throws IOException {
@@ -157,16 +200,16 @@ public class SimpleDownloader {
             FTPFile ftpFile = client.mlistFile( remoteFile );
             long remoteFileSize = ftpFile.getSize();
             if ( force ) {
-                log.info( "Force download requested, downloading." );
+                log.info( "Force download requested, downloading " + url + " to " + dest + "." );
                 download = true;
             } else if ( !Files.exists( dest ) ) {
-                log.info( "File does not exist, downloading." );
+                log.info( "File does not exist, downloading " + url + " to " + dest + "." );
                 download = true;
             } else if ( remoteFileSize != -1 && ftpFile.getSize() != Files.size( dest ) ) {
-                log.info( "File differ in size, re-downloading." );
+                log.info( "File differ in size, re-downloading " + url + " to " + dest + "." );
                 download = true;
             } else if ( ftpFile.getTimestampInstant().isAfter( Files.getLastModifiedTime( dest ).toInstant() ) ) {
-                log.info( "File is newer, re-downloading." );
+                log.info( "File is newer, re-downloading " + url + " to " + dest + "." );
                 download = true;
             } else {
                 log.info( "Skipping download of " + url + " to " + dest + ": same size and modification time." );
@@ -225,16 +268,16 @@ public class SimpleDownloader {
             long size = connection.getContentLengthLong();
             boolean download;
             if ( force ) {
-                log.info( "Force download requested, downloading." );
+                log.info( "Force download requested, downloading " + url + " to " + dest + "." );
                 download = true;
             } else if ( !Files.exists( dest ) ) {
-                log.info( "File does not exist, downloading." );
+                log.info( "File does not exist, downloading " + url + " to " + dest + "." );
                 download = true;
             } else if ( size != -1 && size != Files.size( dest ) ) {
-                log.info( "File differ in size, re-downloading." );
+                log.info( "File differ in size, re-downloading " + url + " to " + dest + "." );
                 download = true;
             } else if ( connection.getLastModified() > Files.getLastModifiedTime( dest ).toMillis() ) {
-                log.info( "File is newer, re-downloading." );
+                log.info( "File is newer, re-downloading " + url + " to " + dest + "." );
                 download = true;
             } else {
                 log.info( "Skipping download of " + url + " to " + dest + ": same size and modification time." );
@@ -275,13 +318,25 @@ public class SimpleDownloader {
             log.warn( "Downloaded file " + dest + " has size " + Files.size( dest ) + ", expected " + expectedSize );
             throw new IOException( "Downloaded file " + dest + " has size " + Files.size( dest ) + ", expected " + expectedSize );
         }
-        if ( dest.toString().endsWith( ".gz" ) ) {
-            // check integrity
+        if ( checkArchiveIntegrity ) {
             long decompressedSize;
-            try ( GZIPInputStream in = new GZIPInputStream( Files.newInputStream( dest ) ) ) {
-                decompressedSize = in.skip( Long.MAX_VALUE );
+            if ( dest.toString().toLowerCase().endsWith( ".tar.gz" ) ) {
+                try ( TarArchiveInputStream tis = new TarArchiveInputStream( new GZIPInputStream( Files.newInputStream( dest ) ) ) ) {
+                    decompressedSize = tis.skip( Long.MAX_VALUE );
+                }
+            } else if ( dest.toString().toLowerCase().endsWith( ".gz" ) ) {
+                try ( GZIPInputStream in = new GZIPInputStream( Files.newInputStream( dest ) ) ) {
+                    decompressedSize = in.skip( Long.MAX_VALUE );
+                }
+            } else if ( dest.toString().toLowerCase().endsWith( ".zip" ) ) {
+                try ( ZipArchiveInputStream is = new ZipArchiveInputStream( Files.newInputStream( dest ) ) ) {
+                    decompressedSize = is.skip( Long.MAX_VALUE );
+                }
+            } else {
+                return;
             }
-            log.info( "Gzipped file " + dest + " appears to be correct, it has a decompressed size of " + decompressedSize + "." );
+            log.info( String.format( "Archive file %s appears to be correct, it has a decompressed size of %s.",
+                    dest, byteCountToDisplaySize( decompressedSize ) ) );
         }
     }
 }

@@ -20,13 +20,13 @@ package ubic.gemma.core.loader.expression.geo.service;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.fileupload.util.LimitedInputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.tools.tar.TarEntry;
-import org.apache.tools.tar.TarInputStream;
 import org.springframework.util.Assert;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -741,8 +741,8 @@ public class GeoBrowserImpl implements GeoBrowser {
     Document fetchDetailedGeoSeriesFamilyFromGeoFtp( String geoAccession ) throws IOException, SAXParseException {
         URL documentUrl = getUrlForSeriesFamily( geoAccession, GeoSource.FTP_VIA_HTTPS, GeoFormat.MINIML );
         return execute( ( ctx ) -> {
-            try ( TarInputStream tis = new TarInputStream( new GZIPInputStream( documentUrl.openStream() ) ) ) {
-                TarEntry entry;
+            try ( TarArchiveInputStream tis = new TarArchiveInputStream( new GZIPInputStream( documentUrl.openStream() ) ) ) {
+                TarArchiveEntry entry;
                 while ( ( entry = tis.getNextEntry() ) != null ) {
                     if ( entry.getName().equals( geoAccession + "_family.xml" ) ) {
                         String entryUrl = documentUrl + "!" + entry.getName();

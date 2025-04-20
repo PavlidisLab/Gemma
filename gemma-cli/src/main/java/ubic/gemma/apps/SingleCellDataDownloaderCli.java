@@ -23,8 +23,8 @@ import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactoryImpl;
-import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.core.util.SimpleRetryPolicy;
+import ubic.gemma.core.util.locking.FileLockManager;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -80,11 +80,14 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
     @Autowired
     private FTPClientFactory ftpClientFactory;
 
+    @Autowired
+    private FileLockManager fileLockManager;
+
     @Value("${geo.local.datafile.basepath}")
-    private File geoSeriesDownloadPath;
+    private Path geoSeriesDownloadPath;
 
     @Value("${geo.local.singleCellData.basepath}")
-    private File singleCellDataBasePath;
+    private Path singleCellDataBasePath;
 
     private final Set<String> accessions = new HashSet<>();
     @Nullable
@@ -112,7 +115,6 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
     private String matrixFileSuffix;
 
     private SimpleRetryPolicy retryPolicy;
-    private SimpleRetry<IOException> retryTemplate;
 
     @Nullable
     @Override
@@ -212,7 +214,6 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         } else {
             retryPolicy = new SimpleRetryPolicy( 3, 1000, 1.5 );
         }
-        retryTemplate = new SimpleRetry<>( retryPolicy, IOException.class, SingleCellDataDownloaderCli.class.getName() );
         if ( resume ) {
             if ( singleAccessionMode ) {
                 throw new IllegalArgumentException( "The -" + RESUME_OPTION + " option cannot be used in single accession mode." );
@@ -310,7 +311,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         try ( GeoSingleCellDetector detector = new GeoSingleCellDetector();
                 CSVPrinter writer = getSummaryOutputFilePrinter() ) {
             detector.setFTPClientFactory( ftpClientFactory );
-            detector.setDownloadDirectory( singleCellDataBasePath.toPath() );
+            detector.setDownloadDirectory( singleCellDataBasePath );
             detector.setRetryPolicy( retryPolicy );
             if ( barcodesFileSuffix != null && featuresFileSuffix != null && matrixFileSuffix != null ) {
                 detector.setMexFileSuffixes( barcodesFileSuffix, featuresFileSuffix, matrixFileSuffix );
@@ -476,7 +477,9 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
 
     @Nullable
     private GeoSeries readSeriesFromGeo( String accession ) throws IOException {
-        GeoFetcher geoFetcher = new GeoFetcher( ftpClientFactory, retryPolicy, geoSeriesDownloadPath.toPath() );
+        GeoFetcher geoFetcher = new GeoFetcher( retryPolicy, geoSeriesDownloadPath );
+        geoFetcher.setFtpClientFactory( ftpClientFactory );
+        geoFetcher.setFileLockManager( fileLockManager );
         Path dest = geoFetcher.fetchSeriesFamilySoftFile( accession );
         try ( InputStream is = new GZIPInputStream( Files.newInputStream( dest ) ) ) {
             GeoFamilyParser parser = new GeoFamilyParser();

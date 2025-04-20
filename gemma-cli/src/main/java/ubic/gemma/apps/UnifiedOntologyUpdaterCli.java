@@ -9,8 +9,10 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.io.file.StandardDeleteOption;
+import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +25,7 @@ import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.util.SimpleDownloader;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.SimpleThreadFactory;
+import ubic.gemma.core.util.locking.FileLockManager;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -41,10 +44,15 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static ubic.gemma.core.util.NetUtils.bytePerSecondToDisplaySize;
+
 public class UnifiedOntologyUpdaterCli extends AbstractCLI {
 
     @Autowired
     private FTPClientFactory ftpClientFactory;
+
+    @Autowired
+    private FileLockManager fileLockManager;
 
     @Autowired
     @Qualifier("unifiedOntologyService")
@@ -123,6 +131,7 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
                 SimpleDownloader downloader = new SimpleDownloader( new SimpleRetryPolicy( 3, 1000, 1.5 ) );
                 downloader.setFtpClientFactory( ftpClientFactory );
                 downloader.setTaskExecutor( executor );
+                downloader.setFileLockManager( fileLockManager );
                 List<SimpleDownloader.URLAndDestination> url2dest = new ArrayList<>();
                 for ( String urlS : urls ) {
                     URL url = new URL( urlS );
@@ -130,7 +139,10 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
                     Path dest = sourcesDir.resolve( fileName );
                     url2dest.add( new SimpleDownloader.URLAndDestination( url, dest ) );
                 }
-                downloader.downloadInParallel( url2dest, force );
+                StopWatch timer = StopWatch.createStarted();
+                long downloadedBytes = downloader.downloadInParallel( url2dest, force );
+                log.info( String.format( "Downloaded %s in %d @ %s.", FileUtils.byteCountToDisplaySize( downloadedBytes ),
+                        timer.getTime(), bytePerSecondToDisplaySize( 1000.0 * downloadedBytes / timer.getTime() ) ) );
                 url2dest.stream().map( SimpleDownloader.URLAndDestination::getDest )
                         .forEach( downloadedFiles::add );
             } finally {

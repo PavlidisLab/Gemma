@@ -18,7 +18,7 @@ public class SimpleDownloaderTest {
 
     @Before
     public void setUp() throws IOException {
-        downloader = new SimpleDownloader();
+        downloader = new SimpleDownloader( null );
         tempDir = createTempDirectory( "test" );
     }
 
