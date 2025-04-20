@@ -10,9 +10,8 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
-import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
-import ubic.gemma.model.expression.bioAssayData.DataVector;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
@@ -315,6 +314,60 @@ public class EntityLocatorImpl implements EntityLocator {
         }
     }
 
+    @Override
+    public BioAssay locateBioAssay( ExpressionExperiment ee, String sampleId ) {
+        ee = eeService.thawLite( ee );
+        return requireNonNull( locateBioAssay( ee.getBioAssays(), sampleId ),
+                "Could not locate any assay matching '" + sampleId + "' in " + ee.getShortName() + "." + formatPossibleValues( ee.getBioAssays(), true ) );
+    }
+
+    @Override
+    public BioAssay locateBioAssay( ExpressionExperiment ee, QuantitationType qt, String sampleId ) {
+        BioAssayDimension bad = eeService.getBioAssayDimension( ee, qt );
+        if ( bad != null ) {
+            return requireNonNull( locateBioAssay( bad.getBioAssays(), sampleId ),
+                    "Could not locate any assay matching '" + sampleId + "' in " + ee.getShortName() + " for " + qt + "." + formatPossibleValues( bad.getBioAssays(), true ) );
+        }
+        SingleCellDimension scd = singleCellExpressionExperimentService.getSingleCellDimension( ee, qt );
+        if ( scd != null ) {
+            return requireNonNull( locateBioAssay( scd.getBioAssays(), sampleId ),
+                    "Could not locate any assay matching '" + sampleId + "' in " + ee.getShortName() + " for " + qt + "." + formatPossibleValues( scd.getBioAssays(), true ) );
+        }
+        throw new NullPointerException();
+    }
+
+    @Nullable
+    private BioAssay locateBioAssay( Collection<BioAssay> ee, String sampleId ) {
+        BioAssay ba;
+        try {
+            Long id = Long.parseLong( sampleId );
+            if ( ( ba = matchOneAssay( ee, ba2 -> ba2.getId().equals( id ) ) ) != null ) {
+                return ba;
+            }
+        } catch ( NumberFormatException e ) {
+            // ignore
+        }
+        if ( ( ba = matchOneAssay( ee, ba2 -> ba2.getShortName() != null && ba2.getShortName().equalsIgnoreCase( sampleId ) ) ) != null ) {
+            return ba;
+        }
+        if ( ( ba = matchOneAssay( ee, ba2 -> ba2.getName().equalsIgnoreCase( sampleId ) ) ) != null ) {
+            return ba;
+        }
+        if ( ( ba = matchOneAssay( ee, ba2 -> ba2.getAccession() != null && ba2.getAccession().getAccession().equalsIgnoreCase( sampleId ) ) ) != null ) {
+            return ba;
+        }
+        return null;
+    }
+
+    private BioAssay matchOneAssay( Collection<BioAssay> bioAssays, Predicate<BioAssay> ba ) {
+        Set<BioAssay> bas = bioAssays.stream().filter( ba ).collect( Collectors.toSet() );
+        if ( bas.size() == 1 ) {
+            return bas.iterator().next();
+        } else {
+            return null;
+        }
+    }
+
     private String formatPossibleValues( Collection<? extends Identifiable> possibleValues, boolean allowAmbiguousIds ) {
         if ( possibleValues.isEmpty() ) {
             return "";
@@ -334,10 +387,19 @@ public class EntityLocatorImpl implements EntityLocator {
     private LinkedHashSet<String> getPossibleIdentifiers( Identifiable identifiable, boolean allowAmbiguousIds ) {
         LinkedHashSet<String> candidates = new LinkedHashSet<>();
         candidates.add( String.valueOf( identifiable.getId() ) );
+        if ( identifiable instanceof BioAssay ) {
+            candidates.add( ( ( BioAssay ) identifiable ).getShortName() );
+        }
         if ( allowAmbiguousIds ) {
             if ( identifiable instanceof Describable ) {
                 Describable d = ( Describable ) identifiable;
                 candidates.add( d.getName() );
+            }
+            if ( identifiable instanceof BioAssay ) {
+                BioAssay ba = ( BioAssay ) identifiable;
+                if ( ba.getAccession() != null ) {
+                    candidates.add( ba.getAccession().getAccession() );
+                }
             }
             if ( identifiable instanceof Taxon ) {
                 Taxon t = ( Taxon ) identifiable;

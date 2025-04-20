@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.core.analysis.singleCell.SingleCellSlicerUtils;
 import ubic.gemma.core.analysis.singleCell.SingleCellSparsityMetrics;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataIntMatrix;
@@ -36,6 +37,8 @@ import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.core.analysis.preprocess.convert.RepresentationConversionUtils.convertVectors;
+import static ubic.gemma.core.analysis.singleCell.SingleCellSlicerUtils.createSlicer;
+import static ubic.gemma.core.analysis.singleCell.SingleCellSlicerUtils.sliceCellIds;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.createStreamMonitor;
 
 @Service
@@ -79,26 +82,163 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, boolean includeCellIds, boolean includeData, boolean includeDataIndices ) {
-        if ( includeCellIds && includeData && includeDataIndices ) {
-            return expressionExperimentDao.getSingleCellDataVectors( ee, quantitationType );
+    public Collection<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, SingleCellVectorInitializationConfig config ) {
+        if ( config.isIncludeCellIds() && config.isIncludeData() && config.isIncludeDataIndices() ) {
+            return getSingleCellDataVectors( ee, quantitationType );
         }
-        return expressionExperimentDao.getSingleCellDataVectors( ee, quantitationType, includeCellIds, includeData, includeDataIndices );
+        return expressionExperimentDao.getSingleCellDataVectors( ee, quantitationType, config.isIncludeCellIds(), config.isIncludeData(), config.isIncludeDataIndices() );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize ) {
-        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, true );
+    public Collection<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType quantitationType ) {
+        SingleCellDimension scd = getSingleCellDimensionWithoutCellIds( ee, quantitationType, true, true, true, true, false );
+        if ( scd == null ) {
+            return null;
+        }
+        if ( scd.getBioAssays().equals( samples ) ) {
+            log.info( "The requested slices is the same as the original dimension, returning the original vectors." );
+            return getSingleCellDataVectors( ee, quantitationType );
+        }
+        int[] sampleStarts = new int[samples.size()];
+        int[] sampleEnds = new int[samples.size()];
+        int totalCells = 0;
+        for ( int i = 0; i < samples.size(); i++ ) {
+            BioAssay bioAssay = samples.get( i );
+            int sampleIndex = scd.getBioAssays().indexOf( bioAssay );
+            if ( sampleIndex == -1 ) {
+                throw new IllegalArgumentException( bioAssay + " is not a sample of " + scd );
+            }
+            sampleStarts[i] = scd.getBioAssaysOffset()[sampleIndex];
+            sampleEnds[i] = sampleStarts[i] + scd.getNumberOfCellsBySample( sampleIndex );
+            totalCells += sampleEnds[i] - sampleStarts[i];
+        }
+        return expressionExperimentDao.getSingleCellDataVectors( ee, quantitationType ).stream()
+                .map( createSlicer( samples,
+                        sliceCellIds( scd, samples, sampleStarts, sampleEnds, totalCells ),
+                        sliceCtas( scd, samples, sampleStarts, sampleEnds, totalCells ),
+                        sliceClcs( scd, samples, sampleStarts, sampleEnds, totalCells ) ) )
+                .collect( Collectors.toList() );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean includeCellIds, boolean includeData, boolean includeDataIndices ) {
-        if ( includeCellIds && includeData && includeDataIndices ) {
-            return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, true );
+    public Collection<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType quantitationType, SingleCellVectorInitializationConfig config ) {
+        SingleCellDimension scd = getSingleCellDimensionWithoutCellIds( ee, quantitationType, true, true, true, true, false );
+        if ( scd == null ) {
+            return null;
         }
-        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, true, includeCellIds, includeData, includeDataIndices );
+        if ( scd.getBioAssays().equals( samples ) ) {
+            log.info( "The requested slices is the same as the original dimension, returning the original vectors." );
+            return getSingleCellDataVectors( ee, quantitationType, config );
+        }
+        int[] sampleStarts = new int[samples.size()];
+        int[] sampleEnds = new int[samples.size()];
+        int totalCells = 0;
+        for ( int i = 0; i < samples.size(); i++ ) {
+            BioAssay bioAssay = samples.get( i );
+            int sampleIndex = scd.getBioAssays().indexOf( bioAssay );
+            if ( sampleIndex == -1 ) {
+                throw new IllegalArgumentException( bioAssay + " is not a sample of " + scd );
+            }
+            sampleStarts[i] = scd.getBioAssaysOffset()[sampleIndex];
+            sampleEnds[i] = sampleStarts[i] + scd.getNumberOfCellsBySample( sampleIndex );
+            totalCells += sampleEnds[i] - sampleStarts[i];
+        }
+        return expressionExperimentDao.getSingleCellDataVectors( ee, quantitationType, config.isIncludeCellIds(), config.isIncludeData(), config.isIncludeDataIndices() ).stream()
+                .map( createSlicer( samples,
+                        config.isIncludeCellIds() ? sliceCellIds( scd, samples, sampleStarts, sampleEnds, totalCells ) : null,
+                        sliceCtas( scd, samples, sampleStarts, sampleEnds, totalCells ),
+                        sliceClcs( scd, samples, sampleStarts, sampleEnds, totalCells ) ) )
+                .collect( Collectors.toList() );
+    }
+
+    /**
+     * In-database version of {@link SingleCellSlicerUtils#sliceCtas(SingleCellDimension, List, int[], int[], int)}.
+     */
+    private Set<CellTypeAssignment> sliceCtas( SingleCellDimension scd, List<BioAssay> bioAssays, int[] sampleStarts, int[] sampleEnds, int totalCells ) {
+        Set<CellTypeAssignment> slicedCtas = new HashSet<>();
+        for ( CellTypeAssignment cta : scd.getCellTypeAssignments() ) {
+            Characteristic[] csi = new Characteristic[totalCells];
+            int offset = 0;
+            for ( int i = 0; i < bioAssays.size(); i++ ) {
+                System.arraycopy( expressionExperimentDao.getCellTypeAt( cta, sampleStarts[i], sampleEnds[i] ), 0,
+                        csi, offset, sampleEnds[i] - sampleStarts[i] );
+                offset += sampleEnds[i] - sampleStarts[i];
+            }
+            List<Characteristic> c = new ArrayList<>();
+            int[] i = new int[csi.length];
+            populate( csi, c, i );
+            slicedCtas.add( CellTypeAssignment.Factory.newInstance( cta.getName(), c, i ) );
+        }
+        return slicedCtas;
+    }
+
+    /**
+     * In-database version of {@link SingleCellSlicerUtils#sliceClcs(SingleCellDimension, List, int[], int[], int)}.
+     */
+    private Set<CellLevelCharacteristics> sliceClcs( SingleCellDimension scd, List<BioAssay> bioAssays, int[] sampleStarts, int[] sampleEnds, int totalCells ) {
+        Set<CellLevelCharacteristics> slicedClcs = new HashSet<>();
+        for ( CellLevelCharacteristics clc : scd.getCellLevelCharacteristics() ) {
+            Characteristic[] csi = new Characteristic[totalCells];
+            int offset = 0;
+            for ( int i = 0; i < bioAssays.size(); i++ ) {
+                System.arraycopy( expressionExperimentDao.getCellLevelCharacteristicAt( clc, sampleStarts[i], sampleEnds[i] ),
+                        0, csi, offset, sampleEnds[i] - sampleStarts[i] );
+                offset += sampleEnds[i] - sampleStarts[i];
+            }
+            List<Characteristic> c = new ArrayList<>();
+            int[] i = new int[csi.length];
+            populate( csi, c, i );
+            slicedClcs.add( CellLevelCharacteristics.Factory.newInstance( c, i ) );
+        }
+        return slicedClcs;
+    }
+
+    private void populate( Characteristic[] cs, List<Characteristic> c, int[] i ) {
+        for ( int j = 0; j < i.length; j++ ) {
+            if ( cs[j] == null ) {
+                i[j] = -1;
+            } else if ( c.contains( cs[j] ) ) {
+                i[j] = c.indexOf( cs[j] );
+            } else {
+                i[j] = c.size();
+                c.add( cs[j] );
+            }
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean createNewSession ) {
+        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, createNewSession );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean createNewSession, SingleCellVectorInitializationConfig config ) {
+        if ( config.isIncludeCellIds() && config.isIncludeData() && config.isIncludeDataIndices() ) {
+            return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, createNewSession );
+        }
+        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, createNewSession, config.isIncludeCellIds(), config.isIncludeData(), config.isIncludeDataIndices() );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType quantitationType, int fetchSize, boolean createNewSession, SingleCellVectorInitializationConfig config ) {
+        if ( config.isIncludeCellIds() && config.isIncludeData() && config.isIncludeDataIndices() ) {
+            return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, createNewSession )
+                    .map( createSlicer( samples ) );
+        }
+        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, createNewSession, config.isIncludeCellIds(), config.isIncludeData(), config.isIncludeDataIndices() )
+                .map( createSlicer( samples ) );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType quantitationType, int fetchSize, boolean createNewSession ) {
+        return expressionExperimentDao.streamSingleCellDataVectors( ee, quantitationType, fetchSize, createNewSession )
+                .map( createSlicer( samples ) );
     }
 
     @Override
@@ -149,8 +289,25 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional(readOnly = true)
+    public SingleCellExpressionDataMatrix<?> getSingleCellExpressionDataMatrix( ExpressionExperiment expressionExperiment, List<BioAssay> samples, QuantitationType quantitationType ) {
+        Collection<SingleCellExpressionDataVector> vectors = getSingleCellDataVectors( expressionExperiment, samples, quantitationType );
+        if ( vectors.isEmpty() ) {
+            throw new IllegalStateException( "No vector for " + quantitationType + " in " + expressionExperiment );
+        }
+        if ( quantitationType.getRepresentation() == PrimitiveType.DOUBLE ) {
+            return new SingleCellExpressionDataDoubleMatrix( vectors );
+        } else if ( quantitationType.getRepresentation() == PrimitiveType.INT ) {
+            return new SingleCellExpressionDataIntMatrix( vectors );
+        } else {
+            log.warn( "Data for " + quantitationType + " will be converted from " + quantitationType.getRepresentation() + " to " + PrimitiveType.DOUBLE + "." );
+            return new SingleCellExpressionDataDoubleMatrix( convertVectors( vectors, PrimitiveType.DOUBLE, SingleCellExpressionDataVector.class ) );
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public SingleCellExpressionDataMatrix<?> getSingleCellExpressionDataMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
-        Collection<SingleCellExpressionDataVector> vectors = expressionExperimentDao.getSingleCellDataVectors( expressionExperiment, quantitationType );
+        Collection<SingleCellExpressionDataVector> vectors = getSingleCellDataVectors( expressionExperiment, quantitationType );
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( "No vector for " + quantitationType + " in " + expressionExperiment );
         }

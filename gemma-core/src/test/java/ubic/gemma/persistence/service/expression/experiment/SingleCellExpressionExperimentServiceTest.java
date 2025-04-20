@@ -213,6 +213,40 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
                                 assertThat( cta.getProtocol() ).isNull();
                             } );
                 } );
+        SingleCellExpressionExperimentService.SingleCellVectorInitializationConfig config = SingleCellExpressionExperimentService.SingleCellVectorInitializationConfig
+                .builder()
+                .includeCellIds( false )
+                .includeData( true )
+                .includeDataIndices( true )
+                .build();
+        assertThat( scExpressionExperimentService.getSingleCellDataVectors( ee, scd.getBioAssays().subList( 0, 1 ), qt, config ) )
+                .hasSize( 10 )
+                .allSatisfy( vec -> {
+                    assertThat( vec.getSingleCellDimension().getCellIds() ).isNull();
+                    assertThat( vec.getData() ).isNotNull();
+                    assertThat( vec.getDataIndices() ).isNotNull();
+                } );
+        assertThat( scExpressionExperimentService.getSingleCellDataVectors( ee, scd.getBioAssays().subList( 0, 1 ), qt ) )
+                .hasSize( 10 )
+                .allSatisfy( vec -> {
+                    assertThat( vec.getSingleCellDimension().getCellIds() ).isNotNull();
+                    assertThat( vec.getData() ).isNotNull();
+                    assertThat( vec.getDataIndices() ).isNotNull();
+                } );
+        assertThat( scExpressionExperimentService.streamSingleCellDataVectors( ee, scd.getBioAssays().subList( 0, 1 ), qt, 30, false, config ) )
+                .hasSize( 10 )
+                .allSatisfy( vec -> {
+                    assertThat( vec.getSingleCellDimension().getCellIds() ).isNull();
+                    assertThat( vec.getData() ).isNotNull();
+                    assertThat( vec.getDataIndices() ).isNotNull();
+                } );
+        assertThat( scExpressionExperimentService.streamSingleCellDataVectors( ee, scd.getBioAssays().subList( 0, 1 ), qt, 30, false ) )
+                .hasSize( 10 )
+                .allSatisfy( vec -> {
+                    assertThat( vec.getSingleCellDimension().getCellIds() ).isNotNull();
+                    assertThat( vec.getData() ).isNotNull();
+                    assertThat( vec.getDataIndices() ).isNotNull();
+                } );
     }
 
     @Test
@@ -227,7 +261,7 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThat( matrix.getSingleCellDimension() ).isEqualTo( scd );
         assertThat( matrix.columns() ).isEqualTo( 100 );
         assertThat( matrix.rows() ).isEqualTo( 10 );
-        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30 )
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true )
                 .forEach( System.out::println );
         assertThat( scExpressionExperimentService.getNumberOfNonZeroes( ee, qt ) )
                 .isEqualTo( 100L ); // 90% sparsity
@@ -244,18 +278,27 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
         scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null );
         scExpressionExperimentService.getSingleCellDataVectors( ee, qt );
-        scExpressionExperimentService.getSingleCellDataVectors( ee, qt, true, true, true );
-        scExpressionExperimentService.getSingleCellDataVectors( ee, qt, true, true, false );
-        scExpressionExperimentService.getSingleCellDataVectors( ee, qt, true, false, true );
-        scExpressionExperimentService.getSingleCellDataVectors( ee, qt, false, true, true );
-        scExpressionExperimentService.getSingleCellDataVectors( ee, qt, false, false, false );
+        scExpressionExperimentService.getSingleCellDataVectors( ee, qt, createConfig( true, true, true ) );
+        scExpressionExperimentService.getSingleCellDataVectors( ee, qt, createConfig( true, true, false ) );
+        scExpressionExperimentService.getSingleCellDataVectors( ee, qt, createConfig( true, false, true ) );
+        scExpressionExperimentService.getSingleCellDataVectors( ee, qt, createConfig( false, true, true ) );
+        scExpressionExperimentService.getSingleCellDataVectors( ee, qt, createConfig( false, false, false ) );
 
-        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30 ).collect( Collectors.toList() );
-        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true, true, true ).collect( Collectors.toList() );
-        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true, true, false ).collect( Collectors.toList() );
-        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true, false, true ).collect( Collectors.toList() );
-        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, false, true, true ).collect( Collectors.toList() );
-        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, false, false, false ).collect( Collectors.toList() );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true ).collect( Collectors.toList() );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true, createConfig( true, true, true ) ).collect( Collectors.toList() );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true, createConfig( true, true, false ) ).collect( Collectors.toList() );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true, createConfig( true, false, true ) ).collect( Collectors.toList() );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true, createConfig( false, true, true ) ).collect( Collectors.toList() );
+        scExpressionExperimentService.streamSingleCellDataVectors( ee, qt, 30, true, createConfig( false, false, false ) ).collect( Collectors.toList() );
+    }
+
+    private SingleCellExpressionExperimentService.SingleCellVectorInitializationConfig createConfig( boolean includeCellIds, boolean includeData, boolean includeDataIndices ) {
+        return SingleCellExpressionExperimentService.SingleCellVectorInitializationConfig
+                .builder()
+                .includeCellIds( includeCellIds )
+                .includeData( includeData )
+                .includeDataIndices( includeDataIndices )
+                .build();
     }
 
     @Test

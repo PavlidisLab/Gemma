@@ -29,7 +29,6 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
@@ -2266,6 +2265,7 @@ public class ExpressionExperimentDaoImpl
                 .uniqueResult();
     }
 
+
     private class SingleCellDimensionWithoutCellIdsInitializer implements TypedResultTransformer<SingleCellDimension> {
 
         private final boolean includeBioAssays;
@@ -2897,13 +2897,14 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public List<SingleCellExpressionDataVector> getSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, boolean includeCellIds, boolean includeData, boolean includeDataIndices ) {
+        SingleCellDimension dimension = includeCellIds ? getSingleCellDimension( ee, quantitationType ) : getSingleCellDimensionWithoutCellIds( ee, quantitationType );
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
                 .createQuery( createSelectSingleCellDataVector( true, includeData, includeDataIndices ) + " "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", quantitationType )
-                .setResultTransformer( aliasToSingleCellDataVector( ee, quantitationType, null, includeCellIds ) )
+                .setResultTransformer( new SingleCellDataVectorInitializer( ee, null, quantitationType, dimension, includeData, includeDataIndices ) )
                 .list();
     }
 
@@ -2917,24 +2918,26 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Stream<SingleCellExpressionDataVector> streamSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, int fetchSize, boolean createNewSession, boolean includeCellIds, boolean includeData, boolean includeDataIndices ) {
+        SingleCellDimension dimension = includeCellIds ? getSingleCellDimension( ee, quantitationType ) : getSingleCellDimensionWithoutCellIds( ee, quantitationType );
         return streamQuery( session ->
                         session.createQuery( createSelectSingleCellDataVector( true, includeData, includeDataIndices ) + " "
                                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
                                 .setParameter( "ee", ee )
                                 .setParameter( "qt", quantitationType )
-                                .setResultTransformer( aliasToSingleCellDataVector( ee, quantitationType, null, includeCellIds ) ),
+                                .setResultTransformer( new SingleCellDataVectorInitializer( ee, null, quantitationType, dimension, includeData, includeDataIndices ) ),
                 createNewSession );
     }
 
     @Override
     public SingleCellExpressionDataVector getSingleCellDataVectorWithoutCellIds( ExpressionExperiment ee, QuantitationType quantitationType, CompositeSequence designElement ) {
+        SingleCellDimension dimension = getSingleCellDimensionWithoutCellIds( ee, quantitationType );
         return ( SingleCellExpressionDataVector ) getSessionFactory().getCurrentSession()
                 .createQuery( createSelectSingleCellDataVector( false, true, true ) + " "
                         + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt and scedv.designElement = :de" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", quantitationType )
                 .setParameter( "de", designElement )
-                .setResultTransformer( aliasToSingleCellDataVector( ee, quantitationType, designElement, false ) )
+                .setResultTransformer( new SingleCellDataVectorInitializer( ee, designElement, quantitationType, dimension, true, true ) )
                 .uniqueResult();
     }
 
@@ -2946,28 +2949,47 @@ public class ExpressionExperimentDaoImpl
                 + "scedv.originalDesignElement as originalDesignElement from SingleCellExpressionDataVector scedv";
     }
 
-    private ResultTransformer aliasToSingleCellDataVector( ExpressionExperiment ee, QuantitationType qt, @Nullable CompositeSequence designElement, boolean includeCellIds ) {
-        SingleCellDimension dimension = includeCellIds ? getSingleCellDimension( ee, qt ) : getSingleCellDimensionWithoutCellIds( ee, qt );
-        return new ResultTransformer() {
-            private final ResultTransformer delegate = aliasToBean( SingleCellExpressionDataVector.class );
+    private static class SingleCellDataVectorInitializer implements TypedResultTransformer<SingleCellExpressionDataVector> {
 
-            @Override
-            public Object transformTuple( Object[] tuple, String[] aliases ) {
-                SingleCellExpressionDataVector vector = ( SingleCellExpressionDataVector ) delegate.transformTuple( tuple, aliases );
-                vector.setExpressionExperiment( ee );
-                if ( designElement != null ) {
-                    vector.setDesignElement( designElement );
-                }
-                vector.setQuantitationType( qt );
-                vector.setSingleCellDimension( dimension );
-                return vector;
-            }
+        private final ExpressionExperiment ee;
+        @Nullable
+        private final CompositeSequence designElement;
+        private final QuantitationType qt;
+        private final SingleCellDimension dimension;
+        private final boolean includeData;
+        private final boolean includeDataIndices;
 
-            @Override
-            public List transformList( List collection ) {
-                return delegate.transformList( collection );
+        public SingleCellDataVectorInitializer( ExpressionExperiment ee, @Nullable CompositeSequence designElement, QuantitationType qt, SingleCellDimension dimension, boolean includeData, boolean includeDataIndices ) {
+            this.ee = ee;
+            this.designElement = designElement;
+            this.qt = qt;
+            this.dimension = dimension;
+            this.includeData = includeData;
+            this.includeDataIndices = includeDataIndices;
+        }
+
+        @Override
+        public SingleCellExpressionDataVector transformTuple( Object[] tuple, String[] aliases ) {
+            SingleCellExpressionDataVector vector = ( SingleCellExpressionDataVector ) aliasToBean( SingleCellExpressionDataVector.class ).transformTuple( tuple, aliases );
+            vector.setExpressionExperiment( ee );
+            if ( designElement != null ) {
+                vector.setDesignElement( designElement );
             }
-        };
+            vector.setQuantitationType( qt );
+            vector.setSingleCellDimension( dimension );
+            if ( !includeData ) {
+                vector.setData( null );
+            }
+            if ( !includeDataIndices ) {
+                vector.setDataIndices( null );
+            }
+            return vector;
+        }
+
+        @Override
+        public List<SingleCellExpressionDataVector> transformListTyped( List<SingleCellExpressionDataVector> collection ) {
+            return collection;
+        }
     }
 
     @Override

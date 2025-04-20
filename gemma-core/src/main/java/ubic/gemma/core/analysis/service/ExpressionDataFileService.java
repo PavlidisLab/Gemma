@@ -21,6 +21,7 @@ import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 
@@ -30,6 +31,7 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
@@ -187,6 +189,8 @@ public interface ExpressionDataFileService {
      */
     int writeTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, Writer writer ) throws IOException;
 
+    int writeTabularSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, Writer writer ) throws IOException;
+
     /**
      * Write single-cell expression data to a standard location for a given quantitation type in tabular format.
      * @return a path where the vectors were written
@@ -215,6 +219,8 @@ public interface ExpressionDataFileService {
      */
     int writeMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, OutputStream stream ) throws IOException;
 
+    int writeMexSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, OutputStream stream ) throws IOException;
+
     /**
      * Write single-cell expression data to a given output stream for a given quantitation type.
      *
@@ -227,6 +233,8 @@ public interface ExpressionDataFileService {
      * @see ubic.gemma.core.datastructure.matrix.io.MexMatrixWriter
      */
     int writeMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, int fetchSize, boolean forceWrite, Path destDir ) throws IOException;
+
+    int writeMexSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, int fetchSize, boolean forceWrite, Path destDir ) throws IOException;
 
     /**
      * Write single-cell expression data to a standard location for a given quantitation type.

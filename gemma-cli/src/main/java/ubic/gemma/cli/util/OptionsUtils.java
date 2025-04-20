@@ -193,6 +193,16 @@ public class OptionsUtils {
         }
     }
 
+    @Nullable
+    public static String[] getOptionValues( CommandLine commandLine, String
+            optionName, Predicate<CommandLine> predicate ) throws org.apache.commons.cli.ParseException {
+        if ( hasOption( commandLine, optionName, predicate ) ) {
+            return commandLine.getOptionValues( optionName );
+        } else {
+            return null;
+        }
+    }
+
     /**
      * @see #getOptionValue(CommandLine, String, Predicate)
      */

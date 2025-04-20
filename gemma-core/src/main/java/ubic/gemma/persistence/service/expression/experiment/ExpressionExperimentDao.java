@@ -577,8 +577,6 @@ public interface ExpressionExperimentDao
     @Nullable
     Category getCellLevelCharacteristicsCategory( CellLevelCharacteristics clc );
 
-    Characteristic[] getCellLevelCharacteristicAt( CellLevelCharacteristics clc, int startIndex, int endIndexExclusive );
-
     @Nullable
     Stream<Characteristic> streamCellLevelCharacteristics( CellLevelCharacteristics clc, boolean createNewSession );
 
@@ -595,6 +593,8 @@ public interface ExpressionExperimentDao
      */
     @Nullable
     Characteristic getCellLevelCharacteristicAt( CellLevelCharacteristics clc, int cellIndex );
+
+    Characteristic[] getCellLevelCharacteristicAt( CellLevelCharacteristics clc, int startIndex, int endIndexExclusive );
 
     List<CellTypeAssignment> getCellTypeAssignments( ExpressionExperiment ee );
 

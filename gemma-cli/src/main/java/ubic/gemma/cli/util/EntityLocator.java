@@ -3,6 +3,7 @@ package ubic.gemma.cli.util;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
@@ -35,4 +36,8 @@ public interface EntityLocator {
     CellLevelCharacteristics locateCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt, String clcIdentifier );
 
     ExperimentalFactor locateExperimentalFactor( ExpressionExperiment expressionExperiment, String ctfName );
+
+    BioAssay locateBioAssay( ExpressionExperiment ee, String sampleId );
+
+    BioAssay locateBioAssay( ExpressionExperiment ee, QuantitationType quantitationType, String sampleId );
 }

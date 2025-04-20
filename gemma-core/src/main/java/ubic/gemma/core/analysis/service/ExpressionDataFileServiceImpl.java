@@ -472,7 +472,13 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Override
     public int writeTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, Writer writer ) throws IOException {
         log.info( "Will write tabular data for " + qt + " to a stream." );
-        return writeTabularSingleCellExpressionDataInternal( ee, qt, scaleType, fetchSize, writer );
+        return writeTabularSingleCellExpressionDataInternal( ee, null, qt, scaleType, fetchSize, writer );
+    }
+
+    @Override
+    public int writeTabularSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, Writer writer ) throws IOException {
+        log.info( "Will write tabular data for " + qt + " to a stream." );
+        return writeTabularSingleCellExpressionDataInternal( ee, samples, qt, scaleType, fetchSize, writer );
     }
 
     @Override
@@ -483,7 +489,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             }
             try ( LockedPath lockedPath = dest.toExclusive(); Writer writer = openCompressedFile( lockedPath.getPath() ) ) {
                 log.info( "Will write tabular data for " + qt + " to " + lockedPath.getPath() + "." );
-                int written = writeTabularSingleCellExpressionDataInternal( ee, qt, null, fetchSize, writer );
+                int written = writeTabularSingleCellExpressionDataInternal( ee, null, qt, null, fetchSize, writer );
                 log.info( "Wrote " + written + " vectors to " + lockedPath.getPath() + "." );
                 return lockedPath.toShared();
             } catch ( Exception e ) {
@@ -502,7 +508,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         } );
     }
 
-    private int writeTabularSingleCellExpressionDataInternal( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, Writer writer ) throws IOException {
+    private int writeTabularSingleCellExpressionDataInternal( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, Writer writer ) throws IOException {
         Map<CompositeSequence, Set<Gene>> cs2gene = new HashMap<>();
         TabularMatrixWriter matrixWriter = new TabularMatrixWriter( entityUrlBuilder, buildInfo );
         matrixWriter.setScaleType( scaleType );
@@ -511,19 +517,28 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         }
         if ( fetchSize > 0 ) {
             AtomicLong numVecs = new AtomicLong();
-            try ( Stream<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, qt, cs2gene, numVecs, fetchSize ) ) {
+            try ( Stream<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, samples, qt, cs2gene, numVecs, fetchSize ) ) {
                 return matrixWriter.write( vectors.peek( createStreamMonitor( ExpressionDataFileServiceImpl.class.getName(), numVecs.get() ) ), cs2gene, writer );
             }
         } else {
-            Collection<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, qt, cs2gene );
+            Collection<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, samples, qt, cs2gene );
             return matrixWriter.write( vectors.stream().peek( createStreamMonitor( ExpressionDataFileServiceImpl.class.getName(), vectors.size() ) ), cs2gene, writer );
         }
     }
 
     @Override
     public int writeMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, OutputStream stream ) throws IOException {
+        return writeMexSingleCellExpressionDataInternal( ee, null, qt, scaleType, useEnsemblIds, stream );
+    }
+
+    @Override
+    public int writeMexSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, OutputStream stream ) throws IOException {
+        return writeMexSingleCellExpressionDataInternal( ee, samples, qt, scaleType, useEnsemblIds, stream );
+    }
+
+    private int writeMexSingleCellExpressionDataInternal( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, OutputStream stream ) throws IOException {
         Map<CompositeSequence, Set<Gene>> cs2gene = new HashMap<>();
-        Collection<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, qt, cs2gene );
+        Collection<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, samples, qt, cs2gene );
         log.info( "Will write MEX data for " + qt + " to a stream " + ( useEnsemblIds ? " using Ensembl IDs" : "" ) + "." );
         if ( scaleType != null && qt.getScale() != scaleType ) {
             log.info( "Data will be converted from " + qt.getScale() + " to " + scaleType + "." );
@@ -538,6 +553,15 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public int writeMexSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, int fetchSize, boolean forceWrite, Path destDir ) throws IOException {
+        return writeMexSingleCellExpressionDataInternal( ee, null, qt, scaleType, useEnsemblIds, fetchSize, forceWrite, destDir );
+    }
+
+    @Override
+    public int writeMexSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, int fetchSize, boolean forceWrite, Path destDir ) throws IOException {
+        return writeMexSingleCellExpressionDataInternal( ee, samples, qt, scaleType, useEnsemblIds, fetchSize, forceWrite, destDir );
+    }
+
+    private int writeMexSingleCellExpressionDataInternal( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, boolean useEnsemblIds, int fetchSize, boolean forceWrite, Path destDir ) throws IOException {
         if ( !forceWrite && Files.exists( destDir ) ) {
             throw new IllegalArgumentException( "Output directory " + destDir + " already exists." );
         }
@@ -550,7 +574,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             if ( fetchSize > 0 ) {
                 Map<BioAssay, Long> nnzBySample = new HashMap<>();
                 AtomicLong numVecs = new AtomicLong();
-                try ( Stream<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, qt, cs2gene, numVecs, nnzBySample, fetchSize ) ) {
+                try ( Stream<SingleCellExpressionDataVector> vectors = helperService.getSingleCellVectors( ee, samples, qt, cs2gene, numVecs, nnzBySample, fetchSize ) ) {
                     if ( Files.exists( destDir ) ) {
                         log.info( destDir + " already exists, removing..." );
                         PathUtils.deleteDirectory( destDir );
@@ -562,7 +586,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                     return writer.write( vectors.peek( createStreamMonitor( ExpressionDataFileServiceImpl.class.getName(), numVecs.get() ) ), ( int ) numVecs.get(), nnzBySample, cs2gene, destDir );
                 }
             } else {
-                SingleCellExpressionDataMatrix<?> matrix = helperService.getSingleCellMatrix( ee, qt, cs2gene );
+                SingleCellExpressionDataMatrix<?> matrix = helperService.getSingleCellMatrix( ee, samples, qt, cs2gene );
                 log.info( "Will write MEX data for " + qt + " to " + destDir + ( useEnsemblIds ? " using Ensembl IDs" : "" ) + "." );
                 if ( scaleType != null && qt.getScale() != scaleType ) {
                     log.info( "Data will be converted from " + qt.getScale() + " to " + scaleType + "." );
