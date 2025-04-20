@@ -173,7 +173,8 @@ public class FileLockManagerImpl implements FileLockManager {
         Path lockPath = resolveLockPath( path );
         try {
             PathUtils.createParentDirectories( lockPath );
-            return ReadWriteFileLock.open( lockPath );
+            // delete on close only if the lock file is not the same as the path
+            return ReadWriteFileLock.open( lockPath, !lockPath.equals( path ) );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }

@@ -20,7 +20,7 @@ public class ReadWriteFileLockTest {
     @Test
     public void test() throws IOException, InterruptedException {
         Path tempDir = Files.createTempDirectory( "test" );
-        ReadWriteFileLock lock = ReadWriteFileLock.open( tempDir.resolve( "test.txt" ) );
+        ReadWriteFileLock lock = ReadWriteFileLock.open( tempDir.resolve( "test.txt" ), false );
 
         assertThat( tryLockInSubprocess( tempDir.resolve( "test.txt" ), true ) )
                 .isTrue();
@@ -64,10 +64,10 @@ public class ReadWriteFileLockTest {
     @Test
     public void testOverlappingLocks() throws IOException {
         Path tempDir = Files.createTempDirectory( "test" );
-        ReadWriteFileLock lock = ReadWriteFileLock.open( tempDir.resolve( "test.txt" ) );
+        ReadWriteFileLock lock = ReadWriteFileLock.open( tempDir.resolve( "test.txt" ), false );
         lock.readLock().lock();
 
-        ReadWriteFileLock lock2 = ReadWriteFileLock.open( tempDir.resolve( "test.txt" ) );
+        ReadWriteFileLock lock2 = ReadWriteFileLock.open( tempDir.resolve( "test.txt" ), false );
         assertThatThrownBy( () -> lock2.readLock().lock() )
                 .isInstanceOf( OverlappingFileLockException.class );
 
@@ -80,7 +80,7 @@ public class ReadWriteFileLockTest {
     @Test
     public void testConcurrentReadWriteAccess() throws IOException, InterruptedException {
         Path tempDir = Files.createTempDirectory( "test" );
-        ReadWriteFileLock lock = ReadWriteFileLock.open( tempDir.resolve( "test.txt" ) );
+        ReadWriteFileLock lock = ReadWriteFileLock.open( tempDir.resolve( "test.txt" ), false );
         lock.writeLock().lock();
         Files.write( lock.getPath(), Collections.singleton( "Hello world!" ), StandardCharsets.UTF_8 );
 
@@ -138,7 +138,7 @@ public class ReadWriteFileLockTest {
     @Test
     public void testReentrantLocking() throws IOException {
         Path tempDir = Files.createTempDirectory( "test" );
-        ReadWriteFileLock lock = ReadWriteFileLock.open( tempDir.resolve( "test.txt" ) );
+        ReadWriteFileLock lock = ReadWriteFileLock.open( tempDir.resolve( "test.txt" ), false );
         lock.writeLock().lock();
         lock.writeLock().lock();
         lock.writeLock().unlock();
@@ -150,7 +150,7 @@ public class ReadWriteFileLockTest {
     @Test
     public void testReentrantLockingWithConcurrency() throws IOException, InterruptedException {
         Path tempDir = Files.createTempDirectory( "test" );
-        ReadWriteFileLock lock = ReadWriteFileLock.open( tempDir.resolve( "test.txt" ) );
+        ReadWriteFileLock lock = ReadWriteFileLock.open( tempDir.resolve( "test.txt" ), false );
         lock.readLock().lock();
         lock.readLock().lock();
 

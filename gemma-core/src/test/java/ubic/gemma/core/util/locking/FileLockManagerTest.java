@@ -57,6 +57,7 @@ public class FileLockManagerTest {
     public void testReentrant() throws IOException {
         Path dir = Files.createTempDirectory( "test" );
         try ( LockedPath lock = fileLockManager.acquirePathLock( dir.resolve( "foo" ), false ) ) {
+            assertThat( dir.resolve( "foo.lock" ) ).exists();
             assertThat( lock.isValid() ).isTrue();
             assertThat( fileLockManager.getAllLockInfos() )
                     .extracting( FileLockInfo::getPath )
@@ -71,6 +72,8 @@ public class FileLockManagerTest {
             }
             assertThat( fileLockManager.getLockInfo( dir.resolve( "foo" ) ).getReadLockCount() ).isEqualTo( 1 );
         }
+        assertThat( dir.resolve( "foo" ) ).doesNotExist();
+        assertThat( dir.resolve( "foo.lock" ) ).doesNotExist();
 
         assertThat( fileLockManager.getAllLockInfos() )
                 .isEmpty();
