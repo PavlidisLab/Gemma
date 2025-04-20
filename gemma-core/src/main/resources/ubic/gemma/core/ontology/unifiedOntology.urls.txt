@@ -2,7 +2,7 @@
 # Java URL.openConnection() cannot follow redirects if there is a change of protocol (i.e. https -> http), so some of
 # these are unfortunately using insecure http
 # TGEMO, GO and EFO are loaded separately
-http://purl.obolibrary.org/obo/chebi.owl
+http://purl.obolibrary.org/obo/chebi.owl.gz
 https://purl.obolibrary.org/obo/cl.owl
 https://purl.obolibrary.org/obo/clo.owl
 http://purl.obolibrary.org/obo/ehdaa2.owl
