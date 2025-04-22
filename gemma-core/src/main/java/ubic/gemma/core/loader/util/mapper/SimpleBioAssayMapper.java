@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.util.mapper;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 import java.util.*;
@@ -24,6 +25,18 @@ public class SimpleBioAssayMapper extends AbstractBioAssayMapper implements Hint
         // BioAssay ID
         if ( matchWithFunction( bas, BioAssay::getId, this::matchId, n, results ) ) {
             log.info( "Matched '" + n + "' by assay ID" );
+            return results;
+        }
+
+        // BioAssay short name
+        if ( matchWithFunction( bas, BioAssay::getShortName, StringUtils::equals, n, results ) ) {
+            log.info( "Matched '" + n + "' by assay short name" );
+            return results;
+        }
+
+        // BioAssay short name (case insensitive)
+        if ( matchWithFunction( bas, BioAssay::getShortName, StringUtils::equalsIgnoreCase, n, results ) ) {
+            log.info( "Matched '" + n + "' by assay short name (case-insensitive)" );
             return results;
         }
 

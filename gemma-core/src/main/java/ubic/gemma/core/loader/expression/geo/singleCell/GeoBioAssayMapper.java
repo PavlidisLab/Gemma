@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.expression.geo.singleCell;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.loader.util.mapper.AbstractBioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.HintingEntityMapper;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -38,6 +39,18 @@ public class GeoBioAssayMapper extends AbstractBioAssayMapper implements Hinting
         // BioAssay ID
         if ( matchWithFunction( bas, BioAssay::getId, this::matchId, sampleName, results ) ) {
             log.info( "Matched '" + sampleName + "' by assay ID" );
+            return results;
+        }
+
+        // BioAssay short name
+        if ( matchWithFunction( bas, BioAssay::getShortName, StringUtils::equals, sampleName, results ) ) {
+            log.info( "Matched '" + sampleName + "' by assay short name" );
+            return results;
+        }
+
+        // BioAssay short name (case-insensitive)
+        if ( matchWithFunction( bas, BioAssay::getShortName, StringUtils::equalsIgnoreCase, sampleName, results ) ) {
+            log.info( "Matched '" + sampleName + "' by assay short name (case-insensitive)" );
             return results;
         }
 
