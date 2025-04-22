@@ -5,10 +5,7 @@ import ubic.gemma.core.loader.expression.sequencing.SequencingDataLoader;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
-import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
-import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
-import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.io.IOException;
@@ -46,6 +43,11 @@ public interface SingleCellDataLoader extends DataLoader, SequencingDataLoader {
      * Load cell-level characteristics that are not cell type assignments present in the data.
      */
     Set<CellLevelCharacteristics> getOtherCellLevelCharacteristics( SingleCellDimension dimension ) throws IOException;
+
+    /**
+     * Load cell-level measurements that are not cell type assignments present in the data.
+     */
+    Set<CellLevelMeasurements> getOtherCellLevelMeasurements( SingleCellDimension dimension ) throws IOException;
 
     Map<BioAssay, SequencingMetadata> getSequencingMetadata( SingleCellDimension dimension ) throws IOException;
 

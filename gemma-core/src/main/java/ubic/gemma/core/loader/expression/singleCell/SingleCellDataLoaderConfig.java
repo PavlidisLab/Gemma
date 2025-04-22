@@ -57,6 +57,12 @@ public class SingleCellDataLoaderConfig extends SequencingDataLoaderConfig {
     private Path otherCellLevelCharacteristicsFile;
 
     /**
+     * A location where additional cell-level measurements can be loaded.
+     */
+    @Nullable
+    private Path otherCellLevelMeasurementsFile;
+
+    /**
      * When parsing {@link #cellTypeAssignmentFile} and {@link #otherCellLevelCharacteristicsFile}, use the overlap
      * between the cell IDs from the file and those from the {@link ubic.gemma.model.expression.bioAssayData.SingleCellDimension}
      * to infer sample associations.

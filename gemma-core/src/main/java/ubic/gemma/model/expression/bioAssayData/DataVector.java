@@ -75,6 +75,7 @@ public abstract class DataVector extends AbstractIdentifiable {
         setData( floatArrayToBytes( data ) );
     }
 
+    @Transient
     public FloatBuffer getDataAsFloatBuffer() {
         ensureRepresentation( PrimitiveType.FLOAT );
         return ByteBuffer.wrap( data ).asFloatBuffer();
@@ -92,6 +93,7 @@ public abstract class DataVector extends AbstractIdentifiable {
      * The underlying data is not copied, so this is the most efficient way to perform arbitrary access or slice parts
      * of the vector.
      */
+    @Transient
     public DoubleBuffer getDataAsDoubleBuffer() {
         ensureRepresentation( PrimitiveType.DOUBLE );
         return ByteBuffer.wrap( data ).asDoubleBuffer();

@@ -624,7 +624,7 @@ public interface ExpressionExperimentDao
     Characteristic getCellLevelCharacteristicAt( CellLevelCharacteristics clc, int cellIndex );
 
     Characteristic[] getCellLevelCharacteristicAt( CellLevelCharacteristics clc, int startIndex, int endIndexExclusive );
-   
+
     /**
      * Obtain a cell-level measurements by ID.
      */

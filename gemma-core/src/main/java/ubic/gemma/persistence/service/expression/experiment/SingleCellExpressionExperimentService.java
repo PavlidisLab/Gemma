@@ -399,6 +399,9 @@ public interface SingleCellExpressionExperimentService {
     void addCellLevelMeasurements( ExpressionExperiment ee, QuantitationType qt, CellLevelMeasurements clm );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_EDIT" })
+    void addCellLevelMeasurements( ExpressionExperiment ee, SingleCellDimension dimension, CellLevelMeasurements clm );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_EDIT" })
     void removeCellLevelMeasurements( ExpressionExperiment ee, QuantitationType qt, CellLevelMeasurements clm );
 
     /**

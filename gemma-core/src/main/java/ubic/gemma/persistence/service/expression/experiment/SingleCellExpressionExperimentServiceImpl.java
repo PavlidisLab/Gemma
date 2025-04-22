@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.common.measurement.UnitService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.util.Thaws;
 
@@ -57,6 +58,9 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Autowired
     private QuantitationTypeService quantitationTypeService;
+
+    @Autowired
+    private UnitService unitService;
 
     @Autowired
     private SingleCellSparsityMetrics metrics;
@@ -1075,9 +1079,19 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         Assert.isNull( clm.getId(), "Cell-level measurement must not be persistent." );
         SingleCellDimension dimension = requireNonNull( getSingleCellDimension( ee, qt ),
                 qt + " does not have a single-cell dimension." );
+        addCellLevelMeasurements( ee, dimension, clm );
+    }
+
+    @Override
+    @Transactional
+    public void addCellLevelMeasurements( ExpressionExperiment ee, SingleCellDimension dimension, CellLevelMeasurements clm ) {
         if ( !dimension.getCellLevelMeasurements().add( clm ) ) {
             throw new IllegalStateException( String.format( "%s already has a cell-level measurements equal to %s: %s.",
                     dimension, clm, dimension.getCellLevelMeasurements().stream().filter( clm::equals ).findFirst() ) );
+        }
+        if ( clm.getUnit() != null && clm.getUnit().getId() == null ) {
+            log.info( "Creating new unit: " + clm.getUnit() + "." );
+            clm.setUnit( unitService.findOrCreate( clm.getUnit() ) );
         }
         expressionExperimentDao.updateSingleCellDimension( ee, dimension );
         log.info( "Added " + clm + " to " + dimension + "." );
@@ -1092,6 +1106,9 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             throw new IllegalArgumentException( clm + " is not associated to " + dimension );
         }
         expressionExperimentDao.updateSingleCellDimension( ee, dimension );
+        if ( clm.getUnit() != null ) {
+            unitService.removeIfUnused( clm.getUnit() );
+        }
         log.info( "Removed " + clm + " from " + dimension + "." );
     }
 

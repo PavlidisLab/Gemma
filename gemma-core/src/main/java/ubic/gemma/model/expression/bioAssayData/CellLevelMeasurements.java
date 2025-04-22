@@ -11,6 +11,7 @@ import ubic.gemma.model.common.measurement.Unit;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 
 import javax.annotation.Nullable;
+import javax.persistence.Transient;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Objects;
@@ -38,6 +39,7 @@ public class CellLevelMeasurements extends AbstractIdentifiable {
     @Nullable
     private Unit unit;
 
+    @Transient
     public double[] getDataAsDoubles() {
         ensureRepresentation( PrimitiveType.DOUBLE );
         return byteArrayToDoubles( data );
@@ -48,6 +50,40 @@ public class CellLevelMeasurements extends AbstractIdentifiable {
         setData( doubleArrayToBytes( data ) );
     }
 
+    @Transient
+    public float[] getDataAsFloats() {
+        ensureRepresentation( PrimitiveType.FLOAT );
+        return byteArrayToFloats( data );
+    }
+
+    public void setDataAsFloats( float[] data ) {
+        ensureRepresentation( PrimitiveType.FLOAT );
+        setData( floatArrayToBytes( data ) );
+    }
+
+    @Transient
+    public long[] getDataAsLongs() {
+        ensureRepresentation( PrimitiveType.LONG );
+        return byteArrayToLongs( data );
+    }
+
+    public void setDataAsLongs( long[] data ) {
+        ensureRepresentation( PrimitiveType.LONG );
+        setData( longArrayToBytes( data ) );
+    }
+
+    @Transient
+    public int[] getDataAsInts() {
+        ensureRepresentation( PrimitiveType.INT );
+        return byteArrayToInts( data );
+    }
+
+    public void setDataAsInts( int[] data ) {
+        ensureRepresentation( PrimitiveType.INT );
+        setData( intArrayToBytes( data ) );
+    }
+
+    @Transient
     public boolean[] getDataAsBooleans() {
         ensureRepresentation( PrimitiveType.BOOLEAN );
         return byteArrayToBooleans( data );
@@ -58,6 +94,7 @@ public class CellLevelMeasurements extends AbstractIdentifiable {
         setData( booleanArrayToBytes( data ) );
     }
 
+    @Transient
     public BitSet getDataAsBitSet() {
         ensureRepresentation( PrimitiveType.BITSET );
         return BitSet.valueOf( data );
