@@ -1,7 +1,6 @@
 package ubic.gemma.core.loader.expression.singleCell.metadata;
 
 import lombok.Setter;
-import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -35,9 +34,11 @@ import static ubic.gemma.model.expression.bioAssayData.SingleCellDimensionUtils.
  * @author poirigui
  */
 @Setter
-abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLevelCharacteristics> {
+abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLevelCharacteristics> implements CellLevelFeaturesMetadataParser {
 
     private static final int MAXIMUM_COLLISION_TO_REPORT = 5;
+
+    private static final CSVFormat TSV_FORMAT = CSVFormat.TDF.builder().setHeader().setSkipHeaderRecord( true ).get();
 
     protected final Log log = LogFactory.getLog( getClass() );
 
@@ -338,13 +339,9 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
 
     private CSVParser openMetadataFile( Path metadataFile ) throws IOException {
         if ( metadataFile.toString().endsWith( ".gz" ) ) {
-            return getTsvFormat().parse( new InputStreamReader( new GZIPInputStream( Files.newInputStream( metadataFile ) ) ) );
+            return TSV_FORMAT.parse( new InputStreamReader( new GZIPInputStream( Files.newInputStream( metadataFile ) ) ) );
         } else {
-            return getTsvFormat().parse( Files.newBufferedReader( metadataFile ) );
+            return TSV_FORMAT.parse( Files.newBufferedReader( metadataFile ) );
         }
-    }
-
-    private CSVFormat getTsvFormat() {
-        return CSVFormat.TDF.withFirstRecordAsHeader();
     }
 }
