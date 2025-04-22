@@ -250,11 +250,6 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                         }
                     }
 
-                    var analysisDesc = "";
-                    if( numberOfFactors !== 1 && interaction >0 ){
-                        analysisDesc += " Interactions on "
-                    }
-
 
                     var deleteText = '';
                     var redoText = '';
@@ -265,7 +260,9 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                         refreshStatsText = this.getRefreshStatsLink(analysis);
                     }
 
-                    parentNode.setText(analysisDesc + parentText + subsetText + " " + parentNode.text + deleteText
+                    debugger
+
+                    parentNode.setText(subsetText + parentText + " " + parentNode.text + deleteText
                         + redoText + refreshStatsText);
 
                     // if this parent node has an interaction child,
@@ -293,8 +290,8 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                     subsetText = '<span ext:qtip="Analysis was run by subsetting the data on the factor '
                         + subsetFactor.category + " (" + subsetFactor.description
                         + ") and selecting samples where the value was \'" + subsetFactorValue.factorValue + '\'">'
-                        + " on subset: <b>" + subsetFactor.category + " = " + analysis.subsetFactorValue.factorValue
-                        + '</b></span>';
+                        + "[Subset: <b>" + analysis.subsetFactorValue.factorValue
+                        + '</b>]</span>';
                 }
                 return subsetText;
             },
