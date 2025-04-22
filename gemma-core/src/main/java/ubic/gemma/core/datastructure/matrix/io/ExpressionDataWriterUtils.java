@@ -56,7 +56,6 @@ public class ExpressionDataWriterUtils {
         }
         buf.append( "#\n" );
         buf.append( "# " ).append( Constants.GEMMA_LICENSE_NOTICE ).append( "\n" );
-        buf.append( "#\n" );
     }
 
     /**
