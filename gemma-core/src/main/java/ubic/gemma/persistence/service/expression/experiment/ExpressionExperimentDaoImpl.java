@@ -42,6 +42,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.common.description.*;
+import ubic.gemma.model.common.measurement.Unit;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -73,6 +74,7 @@ import java.nio.IntBuffer;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -82,6 +84,7 @@ import static java.util.stream.Collectors.summingLong;
 import static org.hibernate.transform.Transformers.aliasToBean;
 import static ubic.gemma.core.util.ListUtils.validateSparseRangeArray;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.*;
+import static ubic.gemma.persistence.util.ByteArrayUtils.byteArrayToObjects;
 import static ubic.gemma.persistence.util.QueryUtils.*;
 import static ubic.gemma.persistence.util.Thaws.thawBibliographicReference;
 import static ubic.gemma.persistence.util.Thaws.thawDatabaseEntry;
@@ -2199,11 +2202,11 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee ) {
-        return getSingleCellDimensionsWithoutCellIds( ee, true, true, true, true, true );
+        return getSingleCellDimensionsWithoutCellIds( ee, true, true, true, true, true, true, true );
     }
 
     @Override
-    public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices ) {
+    public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeClms, boolean includeCharacteristics, boolean includeIndices, boolean includeValues ) {
         //noinspection unchecked
         return ( List<SingleCellDimension> ) getSessionFactory().getCurrentSession()
                 .createQuery( "select dimension.id as id, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
@@ -2211,7 +2214,7 @@ public class ExpressionExperimentDaoImpl
                         + "where scedv.expressionExperiment = :ee "
                         + "group by dimension" )
                 .setParameter( "ee", ee )
-                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeCharacteristics, includeIndices ) )
+                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeClms, includeCharacteristics, includeIndices, includeValues ) )
                 .list();
     }
 
@@ -2228,11 +2231,11 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt ) {
-        return getSingleCellDimensionWithoutCellIds( ee, qt, true, true, true, true, true );
+        return getSingleCellDimensionWithoutCellIds( ee, qt, true, true, true, true, true, true, true );
     }
 
     @Override
-    public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices ) {
+    public SingleCellDimension getSingleCellDimensionWithoutCellIds( ExpressionExperiment ee, QuantitationType qt, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeClms, boolean includeCharacteristics, boolean includeIndices, boolean includeValues ) {
         return ( SingleCellDimension ) getSessionFactory().getCurrentSession()
                 .createQuery( "select dimension.id as id, dimension.numberOfCells as numberOfCells, dimension.bioAssaysOffset as bioAssaysOffset from SingleCellExpressionDataVector scedv "
                         + "join scedv.singleCellDimension dimension "
@@ -2240,7 +2243,7 @@ public class ExpressionExperimentDaoImpl
                         + "group by dimension" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
-                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeCharacteristics, includeIndices ) )
+                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( includeBioAssays, includeCtas, includeClcs, includeClms, includeCharacteristics, includeIndices, includeValues ) )
                 .uniqueResult();
     }
 
@@ -2262,7 +2265,7 @@ public class ExpressionExperimentDaoImpl
                         + "where scedv.quantitationType.isSingleCellPreferred = true and scedv.expressionExperiment = :ee "
                         + "group by dimension" )
                 .setParameter( "ee", ee )
-                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( true, true, true, true, true ) )
+                .setResultTransformer( new SingleCellDimensionWithoutCellIdsInitializer( true, true, true, true, true, true, true ) )
                 .uniqueResult();
     }
 
@@ -2271,15 +2274,19 @@ public class ExpressionExperimentDaoImpl
         private final boolean includeBioAssays;
         private final boolean includeCtas;
         private final boolean includeClcs;
+        private final boolean includeClms;
         private final boolean includeCharacteristics;
         private final boolean includeIndices;
+        private final boolean includeValues;
 
-        private SingleCellDimensionWithoutCellIdsInitializer( boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeCharacteristics, boolean includeIndices ) {
+        private SingleCellDimensionWithoutCellIdsInitializer( boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeClms, boolean includeCharacteristics, boolean includeIndices, boolean includeValues ) {
             this.includeBioAssays = includeBioAssays;
             this.includeCtas = includeCtas;
             this.includeClcs = includeClcs;
+            this.includeClms = includeClms;
             this.includeCharacteristics = includeCharacteristics;
             this.includeIndices = includeIndices;
+            this.includeValues = includeValues;
         }
 
         @Override
@@ -2343,6 +2350,26 @@ public class ExpressionExperimentDaoImpl
             } else {
                 result.setCellLevelCharacteristics( null );
             }
+            if ( includeClms ) {
+                if ( includeValues ) {
+                    //noinspection unchecked
+                    List<CellLevelMeasurements> clms = getSessionFactory().getCurrentSession()
+                            .createQuery( "select clm from SingleCellDimension scd join scd.cellLevelMeasurements clm where scd = :scd" )
+                            .setParameter( "scd", result )
+                            .list();
+                    result.setCellLevelMeasurements( new HashSet<>( clms ) );
+                } else {
+                    //noinspection unchecked
+                    List<CellLevelMeasurements> clms = getSessionFactory().getCurrentSession()
+                            .createQuery( "select clm.id as id, clm.kindCV as kindCV, clm.otherKind as otherKind, clm.representation as representation, clm.type as type from SingleCellDimension scd join scd.cellLevelMeasurements clm where scd = :scd" )
+                            .setParameter( "scd", result )
+                            .setResultTransformer( new ClmInitializer() )
+                            .list();
+                    result.setCellLevelMeasurements( new HashSet<>( clms ) );
+                }
+            } else {
+                result.setCellLevelMeasurements( null );
+            }
             return result;
         }
 
@@ -2350,6 +2377,7 @@ public class ExpressionExperimentDaoImpl
         public List<SingleCellDimension> transformListTyped( List<SingleCellDimension> collection ) {
             return collection;
         }
+
     }
 
     private class CtaInitializer implements TypedResultTransformer<CellTypeAssignment> {
@@ -2417,6 +2445,28 @@ public class ExpressionExperimentDaoImpl
         }
     }
 
+    private class ClmInitializer implements TypedResultTransformer<CellLevelMeasurements> {
+
+        @Override
+        public CellLevelMeasurements transformTuple( Object[] tuple, String[] aliases ) {
+            CellLevelMeasurements clm = ( CellLevelMeasurements ) aliasToBean( CellLevelMeasurements.class ).transformTuple( tuple, aliases );
+            clm.setCategory( ( Characteristic ) getSessionFactory().getCurrentSession()
+                    .createQuery( "select clm.category from CellLevelMeasurements clm where clm = :clm" )
+                    .setParameter( "clm", clm )
+                    .uniqueResult() );
+            clm.setUnit( ( Unit ) getSessionFactory().getCurrentSession()
+                    .createQuery( "select clm.unit from CellLevelMeasurements clm where clm = :clm" )
+                    .setParameter( "clm", clm )
+                    .uniqueResult() );
+            return clm;
+        }
+
+        @Override
+        public List<CellLevelMeasurements> transformListTyped( List<CellLevelMeasurements> collection ) {
+            return collection;
+        }
+    }
+
     @Override
     public void createSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
         validateSingleCellDimension( ee, singleCellDimension );
@@ -2446,6 +2496,7 @@ public class ExpressionExperimentDaoImpl
                 "There must be at most one preferred cell type labelling." );
         validateCellTypeAssignments( scbad );
         validateCellLevelCharacteristics( scbad );
+        validateCellLevelMeasurements( scbad );
         Assert.isTrue( !scbad.getBioAssays().isEmpty(), "There must be at least one BioAssay." );
         Assert.isTrue( ee.getBioAssays().containsAll( scbad.getBioAssays() ), "Not all supplied BioAssays belong to " + ee );
         validateSparseRangeArray( scbad.getBioAssays(), scbad.getBioAssaysOffset(), scbad.getNumberOfCells() );
@@ -2504,6 +2555,24 @@ public class ExpressionExperimentDaoImpl
             }
             Assert.isTrue( clc.getNumberOfAssignedCells() == null || clc.getNumberOfAssignedCells() == N,
                     "The number of assigned cells must match the number of assigned values in indices." );
+        }
+    }
+
+    private void validateCellLevelMeasurements( SingleCellDimension scd ) {
+        if ( !Hibernate.isInitialized( scd.getCellLevelMeasurements() ) ) {
+            return; // no need to validate if not initialized
+        }
+        for ( CellLevelMeasurements clm : scd.getCellLevelMeasurements() ) {
+            Assert.notNull( clm.getCategory(), "A measurement must have a category." );
+            Assert.notNull( clm.getType(), "A measurement must have a type." );
+            Assert.notNull( clm.getRepresentation(), "A measurement must have a representation." );
+            int sizeInBytes = clm.getRepresentation().getSizeInBytes();
+            if ( sizeInBytes != -1 ) {
+                int numberOfMeasurement = clm.getData().length / sizeInBytes;
+                Assert.isTrue( numberOfMeasurement == scd.getNumberOfCells(),
+                        String.format( "The number of measurements (%d) must match the number of cells (%d).",
+                                numberOfMeasurement, scd.getNumberOfCells() ) );
+            }
         }
     }
 
@@ -2620,6 +2689,93 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public CellLevelMeasurements getCellLevelMeasurements( ExpressionExperiment ee, SingleCellDimension dim, Long clmId ) {
+        return ( CellLevelMeasurements ) getSessionFactory().getCurrentSession().createQuery( "select clm from SingleCellDimension dim join dim.cellLevelMeasurements clm where dim = :dim and clm.id = :clmId" )
+                .setParameter( "dim", dim )
+                .setParameter( "clmId", clmId )
+                .uniqueResult();
+    }
+
+    @Override
+    public <T> T getCellLevelMeasurementAt( CellLevelMeasurements clm, int cellIndex ) {
+        Assert.isTrue( clm.getRepresentation().getSizeInBytes() != -1, "Cannot get measurement for a variable-length representation." );
+        byte[] result = ( byte[] ) getSessionFactory().getCurrentSession().createSQLQuery( "select substring(DATA, (:sizeInBytes * :offset) + 1, :sizeInBytes) from CELL_LEVEL_MEASUREMENTS clm where CLM.ID = :id" )
+                .setParameter( "id", clm.getId() )
+                .setParameter( "offset", cellIndex )
+                .setParameter( "sizeInBytes", clm.getRepresentation().getSizeInBytes() )
+                .uniqueResult();
+        if ( result == null ) {
+            return null;
+        }
+        //noinspection unchecked
+        return ( T ) byteArrayToObjects( result, clm.getRepresentation().getJavaClass() )[0];
+    }
+
+    @Override
+    public <T> T[] getCellLevelMeasurementAt( CellLevelMeasurements clm, int startIndex, int endIndexExclusive ) {
+        Assert.isTrue( clm.getRepresentation().getSizeInBytes() != -1, "Cannot get measurement for a variable-length representation." );
+        byte[] result = ( byte[] ) getSessionFactory().getCurrentSession().createSQLQuery( "select substring(DATA, (:sizeInBytes * :offset) + 1, :sizeInBytes * :len) from CELL_LEVEL_MEASUREMENTS clm where CLM.ID = :id" )
+                .setParameter( "id", clm.getId() )
+                .setParameter( "offset", startIndex )
+                .setParameter( "len", endIndexExclusive - startIndex )
+                .setParameter( "sizeInBytes", clm.getRepresentation().getSizeInBytes() )
+                .uniqueResult();
+        if ( result == null ) {
+            return null;
+        }
+        //noinspection unchecked
+        return ( T[] ) byteArrayToObjects( result, clm.getRepresentation().getJavaClass() );
+    }
+
+    @Override
+    public <T> Stream<T> streamCellLevelMeasurements( CellLevelMeasurements clm, boolean createNewSession ) {
+        return QueryUtils.createStream( getSessionFactory(), session -> {
+            return session.doReturningWork( work -> {
+                PreparedStatement ps = work.prepareStatement( "select DATA from CELL_LEVEL_MEASUREMENTS where ID = ?" );
+                ps.setLong( 1, clm.getId() );
+                ResultSet rs = ps.executeQuery();
+                if ( rs.next() ) {
+                    return streamFromDataStream( new DataInputStream( rs.getBinaryStream( 1 ) ), dis -> {
+                        try {
+                            switch ( clm.getRepresentation() ) {
+                                case INT:
+                                    //noinspection unchecked
+                                    return ( T ) Integer.valueOf( dis.readInt() );
+                                case LONG:
+                                    //noinspection unchecked
+                                    return ( T ) Long.valueOf( dis.readLong() );
+                                case FLOAT:
+                                    //noinspection unchecked
+                                    return ( T ) Float.valueOf( dis.readFloat() );
+                                case DOUBLE:
+                                    //noinspection unchecked
+                                    return ( T ) Double.valueOf( dis.readDouble() );
+                                case BOOLEAN:
+                                    //noinspection unchecked
+                                    return ( T ) Boolean.valueOf( dis.readBoolean() );
+                                case CHAR:
+                                    //noinspection unchecked
+                                    return ( T ) Character.valueOf( dis.readChar() );
+                                case STRING:
+                                    //noinspection unchecked
+                                    return ( T ) dis.readUTF();
+                                default:
+                                    throw new UnsupportedOperationException( "Streaming is not supported for " + clm.getRepresentation() + " data." );
+                            }
+                        } catch ( EOFException e ) {
+                            return null;
+                        } catch ( IOException e ) {
+                            throw new RuntimeException( e );
+                        }
+                    } );
+                } else {
+                    return null;
+                }
+            } );
+        }, createNewSession );
+    }
+
+    @Override
     public Stream<Characteristic> streamCellLevelCharacteristics( CellLevelCharacteristics clc, boolean createNewSession ) {
         return streamCellLevelCharacteristics( clc, "CELL_LEVEL_CHARACTERISTICS", "INDICES", "CELL_LEVEL_CHARACTERISTICS_FK", "CELL_LEVEL_CHARACTERISTICS_ORDERING", createNewSession );
     }
@@ -2644,7 +2800,7 @@ public class ExpressionExperimentDaoImpl
                 ResultSet rs = stmt.executeQuery();
                 if ( rs.next() ) {
                     Map<Integer, Characteristic> cache = new HashMap<>();
-                    return fromDataStream( new DataInputStream( rs.getBinaryStream( 1 ) ) )
+                    return intStreamFromDataStream( new DataInputStream( rs.getBinaryStream( 1 ) ) )
                             .mapToObj( i -> getCharacteristicAt( clc, characteristicFk, characteristicOrdering, i, session, cache ) );
                 } else {
                     return null;
@@ -2669,10 +2825,22 @@ public class ExpressionExperimentDaoImpl
                 .uniqueResult() );
     }
 
-    private IntStream fromDataStream( DataInputStream dis ) {
-        return Streams.of( new Iterator<Integer>() {
+    private IntStream intStreamFromDataStream( DataInputStream dis ) {
+        return streamFromDataStream( dis, dataInputStream -> {
+            try {
+                return dataInputStream.readInt();
+            } catch ( EOFException e ) {
+                return null;
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+        } ).mapToInt( i -> i );
+    }
 
-            private Integer _next;
+    private <T> Stream<T> streamFromDataStream( DataInputStream dis, Function<DataInputStream, T> generator ) {
+        return Streams.of( new Iterator<T>() {
+
+            private T _next;
 
             @Override
             public boolean hasNext() {
@@ -2681,7 +2849,7 @@ public class ExpressionExperimentDaoImpl
             }
 
             @Override
-            public Integer next() {
+            public T next() {
                 fetchNextIfNecessary();
                 if ( _next == null ) {
                     throw new NoSuchElementException();
@@ -2695,16 +2863,10 @@ public class ExpressionExperimentDaoImpl
 
             private void fetchNextIfNecessary() {
                 if ( _next == null ) {
-                    try {
-                        _next = dis.readInt();
-                    } catch ( EOFException e ) {
-                        _next = null;
-                    } catch ( IOException e ) {
-                        throw new RuntimeException( e );
-                    }
+                    _next = generator.apply( dis );
                 }
             }
-        } ).mapToInt( i -> i );
+        } );
     }
 
     @Override

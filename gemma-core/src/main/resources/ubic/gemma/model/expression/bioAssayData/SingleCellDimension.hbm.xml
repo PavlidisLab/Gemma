@@ -34,6 +34,12 @@
             </key>
             <one-to-many class="ubic.gemma.model.expression.bioAssayData.GenericCellLevelCharacteristics"/>
         </set>
+        <set name="cellLevelMeasurements" lazy="true" fetch="select" cascade="all-delete-orphan">
+            <key foreign-key="CELL_LEVEL_MEASUREMENTS_SINGLE_CELL_DIMENSION_FKC">
+                <column name="SINGLE_CELL_DIMENSION_FK" sql-type="BIGINT"/>
+            </key>
+            <one-to-many class="ubic.gemma.model.expression.bioAssayData.CellLevelMeasurements"/>
+        </set>
         <list name="bioAssays" table="BIO_ASSAYS2SINGLE_CELL_DIMENSIONS" lazy="false" fetch="select" mutable="false">
             <cache usage="read-only"/>
             <key foreign-key="SINGLE_CELL_DIMENSIONS_FKC">

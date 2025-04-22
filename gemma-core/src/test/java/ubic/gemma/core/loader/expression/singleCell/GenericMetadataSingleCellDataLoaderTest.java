@@ -35,7 +35,8 @@ public class GenericMetadataSingleCellDataLoaderTest {
         SingleCellDataLoader delegate = mock();
         GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
                 Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata.tsv" ) ).toURI() ),
-                Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/additional-cell-type-metadata.tsv" ) ).toURI() ) );
+                Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/additional-cell-type-metadata.tsv" ) ).toURI() ),
+                null );
         loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
         assertThat( loader.getCellTypeAssignments( dim ) )
                 .singleElement()
@@ -82,7 +83,8 @@ public class GenericMetadataSingleCellDataLoaderTest {
         SingleCellDataLoader delegate = mock();
         GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
                 Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata.tsv" ) ).toURI() ),
-                Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/additional-cell-type-metadata.tsv" ) ).toURI() ) );
+                Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/additional-cell-type-metadata.tsv" ) ).toURI() ),
+                null );
         loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
         // the default behavior is aligned with SingleCellDataLoader in general to ignore extraneous samples
         assertThat( loader.getCellTypeAssignments( dim ) )
@@ -114,7 +116,7 @@ public class GenericMetadataSingleCellDataLoaderTest {
         SingleCellDataLoader delegate = mock();
         GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
                 Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata-without-sample-id.tsv" ) ).toURI() ),
-                null );
+                null, null );
         loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
         loader.setUseCellIdsIfSampleNameIsMissing( true );
         assertThat( loader.getCellTypeAssignments( dim ) )
@@ -143,7 +145,7 @@ public class GenericMetadataSingleCellDataLoaderTest {
         SingleCellDataLoader delegate = mock();
         GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
                 Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata-with-duplicate-cell-ids.tsv" ) ).toURI() ),
-                null );
+                null, null );
         loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
         loader.setUseCellIdsIfSampleNameIsMissing( true );
         assertThat( loader.getCellTypeAssignments( dim ) )
@@ -172,7 +174,7 @@ public class GenericMetadataSingleCellDataLoaderTest {
         SingleCellDataLoader delegate = mock();
         GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
                 Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata-with-duplicate-cell-ids-but-different-values.tsv" ) ).toURI() ),
-                null );
+                null, null );
         loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
         loader.setUseCellIdsIfSampleNameIsMissing( true );
         assertThatThrownBy( () -> loader.getCellTypeAssignments( dim ) )
@@ -190,7 +192,7 @@ public class GenericMetadataSingleCellDataLoaderTest {
         SingleCellDataLoader delegate = mock();
         GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate,
                 Paths.get( Objects.requireNonNull( getClass().getResource( "/data/loader/expression/singleCell/generic-single-cell-metadata-with-barcode-collisions.tsv" ) ).toURI() ),
-                null );
+                null, null );
         loader.setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
         loader.setUseCellIdsIfSampleNameIsMissing( true );
         assertThat( loader.getCellTypeAssignments( dim ) )

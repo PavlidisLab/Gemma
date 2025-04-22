@@ -22,4 +22,8 @@ public final class Categories {
     public static final Category ASSAY = new Category( "assay", "http://purl.obolibrary.org/obo/OBI_0000070" );
     public static final Category TIMEPOINT = new Category( "timepoint", "http://www.ebi.ac.uk/efo/EFO_0000724" );
     public static final Category BLOCK = new Category( "block", "http://www.ebi.ac.uk/efo/EFO_0005067" );
+
+    // other categories
+    // indicate a data mask
+    public static final Category MASK = new Category( "mask", null );
 }
