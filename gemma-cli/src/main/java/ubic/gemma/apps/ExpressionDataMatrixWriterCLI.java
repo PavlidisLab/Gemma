@@ -23,12 +23,13 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.cli.util.OptionsUtils;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
-import ubic.gemma.cli.util.OptionsUtils;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
@@ -40,7 +41,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
 import static ubic.gemma.cli.util.OptionsUtils.addEnumOption;
@@ -55,6 +58,8 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     @Autowired
     private ExpressionDataFileService fs;
 
+    @Nullable
+    private String[] samples;
     @Nullable
     private ScaleType scaleType;
     @Nullable
@@ -73,7 +78,8 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
     @Override
     protected void buildExperimentOptions( Options options ) {
-        options.addOption( Option.builder( "o" ).longOpt( "outputFileName" ).desc( "File name. If omitted, the file name will be based on the short name of the experiment." ).argName( "filename" ).hasArg().type( Path.class ).build() );
+        addSingleExperimentOption( options, Option.builder( "o" ).longOpt( "outputFileName" ).desc( "File name. If omitted, the file name will be based on the short name of the experiment." ).argName( "filename" ).hasArg().type( Path.class ).build() );
+        addSingleExperimentOption( options, Option.builder( "samples" ).longOpt( "samples" ).hasArg().valueSeparator( ',' ).desc( "List of sample identifiers to slice." ).build() );
         options.addOption( "filter", "Filter expression matrix under default parameters" );
         addEnumOption( options, "scaleType", "scale-type", "Scale type to use for the output", ScaleType.class );
         addForceOption( options );
@@ -81,17 +87,10 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
     @Override
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
+        samples = commandLine.getOptionValues( "samples" );
         scaleType = OptionsUtils.getEnumOptionValue( commandLine, "scaleType" );
         outputFile = commandLine.getParsedOptionValue( 'o' );
         filter = commandLine.hasOption( "filter" );
-    }
-
-    @Override
-    protected void processBioAssaySets( Collection<BioAssaySet> expressionExperiments ) {
-        if ( outputFile != null ) {
-            throw new IllegalArgumentException( "Output file name can only be used for single experiment output" );
-        }
-        super.processBioAssaySets( expressionExperiments );
     }
 
     @Override
@@ -103,7 +102,17 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
             fileName = Paths.get( ExpressionDataFileUtils.getDataOutputFilename( ee, filter, ExpressionDataFileUtils.TABULAR_BULK_DATA_FILE_SUFFIX ) );
         }
         try ( Writer writer = new OutputStreamWriter( openOutputFile( fileName, isForce() ), StandardCharsets.UTF_8 ) ) {
-            int written = fs.writeProcessedExpressionData( ee, filter, scaleType, writer, true );
+            int written;
+            if ( samples != null ) {
+                QuantitationType qt = eeService.getProcessedQuantitationType( ee )
+                        .orElseThrow( () -> new IllegalStateException( ee + " does not have processed vectors." ) );
+                List<BioAssay> assays = Arrays.stream( samples )
+                        .map( sampleId -> entityLocator.locateBioAssay( ee, qt, sampleId ) )
+                        .collect( Collectors.toList() );
+                written = fs.writeProcessedExpressionData( ee, assays, filter, scaleType, writer, true );
+            } else {
+                written = fs.writeProcessedExpressionData( ee, filter, scaleType, writer, true );
+            }
             addSuccessObject( ee, "Wrote " + written + " vectors to " + fileName + "." );
         } catch ( IOException | FilteringException e ) {
             throw new RuntimeException( e );

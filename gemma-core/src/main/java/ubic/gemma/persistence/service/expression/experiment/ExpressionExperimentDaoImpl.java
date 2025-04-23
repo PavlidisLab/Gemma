@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclSid;
 import lombok.Value;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.stream.Streams;
 import org.apache.commons.lang3.time.StopWatch;
@@ -36,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 import ubic.gemma.core.profiling.StopWatchUtils;
+import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -76,6 +78,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.summingLong;
 import static org.hibernate.transform.Transformers.aliasToBean;
@@ -3395,6 +3398,56 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, List<BioAssay> assays, QuantitationType qt ) {
+        Assert.isTrue( !assays.isEmpty(), "At least one assay must be requested." );
+        Assert.isTrue( new HashSet<>( assays ).size() == assays.size() );
+        int sizeInBytes = qt.getRepresentation().getSizeInBytes();
+        Assert.isTrue( sizeInBytes != -1, "Variable-length representation " + qt.getRepresentation() + " cannot be sliced." );
+        BioAssayDimension bad = requireNonNull( getBioAssayDimension( ee, qt ), "Could not find a BAD for " + qt + " in " + ee + "." );
+        if ( bad.getBioAssays().equals( assays ) ) {
+            log.info( "Requesting all assays for " + ee + " and " + qt + ", returning the original, unsliced vectors." );
+            return getRawDataVectors( ee, qt );
+        }
+        Map<BioAssay, Integer> assay2index = ListUtils.indexOfElements( bad.getBioAssays() );
+        int[] columns = new int[assays.size()];
+        for ( int i = 0; i < assays.size(); i++ ) {
+            Integer ix = assay2index.get( assays.get( i ) );
+            if ( ix == null ) {
+                throw new IllegalArgumentException( assays.get( i ) + " does not appear in " + bad + "." );
+            }
+            columns[i] = ix;
+        }
+        String[] stuffToConcat = new String[columns.length];
+        for ( int i = 0; i < columns.length; i++ ) {
+            stuffToConcat[i] = "substring(v.data, " + ( sizeInBytes * columns[i] + 1 ) + ", " + sizeInBytes + ")";
+        }
+        //noinspection unchecked
+        List<Object[]> result = getSessionFactory().getCurrentSession()
+                .createQuery( "select v.designElement, cast(concat(" + String.join( ", ", stuffToConcat ) + ") as binary) from RawExpressionDataVector v "
+                        + "where v.expressionExperiment = :ee and v.quantitationType = :qt" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", qt )
+                .list();
+        BioAssayDimension newBad = BioAssayDimension.Factory.newInstance( assays );
+        List<RawExpressionDataVector> vectors = new ArrayList<>( result.size() );
+        for ( Object[] row : result ) {
+            CompositeSequence designElement = ( CompositeSequence ) row[0];
+            byte[] data = Arrays.copyOfRange( ( byte[] ) row[1], 0, columns.length * sizeInBytes );
+            if ( data.length != columns.length * sizeInBytes ) {
+                throw new IndexOutOfBoundsException();
+            }
+            RawExpressionDataVector vector = new RawExpressionDataVector();
+            vector.setExpressionExperiment( ee );
+            vector.setQuantitationType( qt );
+            vector.setBioAssayDimension( newBad );
+            vector.setDesignElement( designElement );
+            vector.setData( data );
+            vectors.add( vector );
+        }
+        return vectors;
+    }
+
+    @Override
     public int addRawDataVectors( ExpressionExperiment ee, QuantitationType newQt, Collection<RawExpressionDataVector> newVectors ) {
         Assert.notNull( ee.getId(), "ExpressionExperiment must be persistent." );
         Assert.notNull( newQt.getId(), "Quantitation type must be persistent." );
@@ -3506,6 +3559,75 @@ public class ExpressionExperimentDaoImpl
             log.info( "Replaced " + deletedVectors + " raw data vectors from " + ee + " for " + qt );
         }
         return deletedVectors;
+    }
+
+    @Override
+    public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee ) {
+        QuantitationType qt = getProcessedQuantitationType( ee );
+        if ( qt == null ) {
+            return null;
+        }
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select vec from ProcessedExpressionDataVector vec where vec.expressionExperiment = :ee and vec.quantitationType = :qt" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", qt )
+                .list();
+    }
+
+    @Override
+    public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee, List<BioAssay> assays ) {
+        Assert.isTrue( !assays.isEmpty(), "At least one assay must be requested." );
+        Assert.isTrue( new HashSet<>( assays ).size() == assays.size() );
+        QuantitationType qt = getProcessedQuantitationType( ee );
+        if ( qt == null ) {
+            return null;
+        }
+        int sizeInBytes = qt.getRepresentation().getSizeInBytes();
+        Assert.isTrue( sizeInBytes != -1, "Variable-length representation " + qt.getRepresentation() + " cannot be sliced." );
+        BioAssayDimension bad = requireNonNull( getBioAssayDimension( ee, qt ), "Could not find a BAD for " + qt + " in " + ee + "." );
+        if ( bad.getBioAssays().equals( assays ) ) {
+            log.info( "Requesting all assays for " + ee + " and " + qt + ", returning the original, unsliced vectors." );
+            return getProcessedDataVectors( ee );
+        }
+        Map<BioAssay, Integer> assay2index = ListUtils.indexOfElements( bad.getBioAssays() );
+        int[] columns = new int[assays.size()];
+        for ( int i = 0; i < assays.size(); i++ ) {
+            Integer ix = assay2index.get( assays.get( i ) );
+            if ( ix == null ) {
+                throw new IllegalArgumentException( assays.get( i ) + " does not appear in " + bad + "." );
+            }
+            columns[i] = ix;
+        }
+        String[] stuffToConcat = new String[columns.length];
+        for ( int i = 0; i < columns.length; i++ ) {
+            stuffToConcat[i] = "substring(v.data, " + ( sizeInBytes * columns[i] + 1 ) + ", " + sizeInBytes + ")";
+        }
+        //noinspection unchecked
+        List<Object[]> result = getSessionFactory().getCurrentSession()
+                .createQuery( "select v.designElement, cast(concat(" + String.join( ", ", stuffToConcat ) + ") as binary), v.rankByMax, v.rankByMean from ProcessedExpressionDataVector v "
+                        + "where v.expressionExperiment = :ee and v.quantitationType = :qt" )
+                .setParameter( "ee", ee )
+                .setParameter( "qt", qt )
+                .list();
+        BioAssayDimension newBad = BioAssayDimension.Factory.newInstance( assays );
+        List<ProcessedExpressionDataVector> vectors = new ArrayList<>( result.size() );
+        for ( Object[] row : result ) {
+            CompositeSequence designElement = ( CompositeSequence ) row[0];
+            byte[] data = ( byte[] ) row[1];
+            Double rankByMax = ( Double ) row[2];
+            Double rankByMean = ( Double ) row[3];
+            ProcessedExpressionDataVector vector = new ProcessedExpressionDataVector();
+            vector.setExpressionExperiment( ee );
+            vector.setQuantitationType( qt );
+            vector.setBioAssayDimension( newBad );
+            vector.setDesignElement( designElement );
+            vector.setData( ArrayUtils.subarray( data, 0, columns.length * sizeInBytes ) );
+            vector.setRankByMax( rankByMax );
+            vector.setRankByMean( rankByMean );
+            vectors.add( vector );
+        }
+        return vectors;
     }
 
     @Override

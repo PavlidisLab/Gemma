@@ -75,21 +75,26 @@ class ExpressionDataFileHelperService {
         return vectors;
     }
 
-    public ExpressionDataDoubleMatrix getDataMatrix( ExpressionExperiment ee, boolean filtered ) throws FilteringException {
+    public ExpressionDataDoubleMatrix getDataMatrix( ExpressionExperiment ee, @Nullable List<BioAssay> samples, boolean filtered ) throws FilteringException {
         log.info( "Retrieving processed data matrix for " + ee + "..." );
         ee = expressionExperimentService.thawLite( ee );
         if ( filtered ) {
             FilterConfig filterConfig = new FilterConfig();
             filterConfig.setIgnoreMinimumSampleThreshold( true );
             filterConfig.setIgnoreMinimumRowsThreshold( true );
+            if ( samples != null ) {
+                throw new UnsupportedOperationException( "Slicing a filtered matrix is not supported yet." );
+            }
             return expressionDataMatrixService.getFilteredMatrix( ee, filterConfig );
         } else {
-            return expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
+            return samples != null ?
+                    expressionDataMatrixService.getProcessedExpressionDataMatrix( ee, samples ) :
+                    expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
         }
     }
 
-    public ExpressionDataDoubleMatrix getDataMatrix( ExpressionExperiment ee, boolean filtered, Map<CompositeSequence, String[]> geneAnnotations ) throws FilteringException {
-        ExpressionDataDoubleMatrix matrix = getDataMatrix( ee, filtered );
+    public ExpressionDataDoubleMatrix getDataMatrix( ExpressionExperiment ee, @Nullable List<BioAssay> samples, boolean filtered, Map<CompositeSequence, String[]> geneAnnotations ) throws FilteringException {
+        ExpressionDataDoubleMatrix matrix = getDataMatrix( ee, samples, filtered );
         Set<ArrayDesign> ads = matrix.getDesignElements().stream()
                 .map( CompositeSequence::getArrayDesign )
                 .collect( Collectors.toSet() );
@@ -97,10 +102,12 @@ class ExpressionDataFileHelperService {
         return matrix;
     }
 
-    public ExpressionDataDoubleMatrix getDataMatrix( ExpressionExperiment ee, QuantitationType qt, Map<CompositeSequence, String[]> geneAnnotations ) {
+    public ExpressionDataDoubleMatrix getDataMatrix( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, Map<CompositeSequence, String[]> geneAnnotations ) {
         log.info( "Retrieving raw data matrix for " + qt + "..." );
         ee = expressionExperimentService.thawLite( ee );
-        ExpressionDataDoubleMatrix matrix = expressionDataMatrixService.getRawExpressionDataMatrix( ee, qt );
+        ExpressionDataDoubleMatrix matrix = samples != null ?
+                expressionDataMatrixService.getRawExpressionDataMatrix( ee, samples, qt ) :
+                expressionDataMatrixService.getRawExpressionDataMatrix( ee, qt );
         Set<ArrayDesign> ads = matrix.getDesignElements().stream()
                 .map( CompositeSequence::getArrayDesign )
                 .collect( Collectors.toSet() );

@@ -83,12 +83,9 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
 
         ArrayDesign targetArrayDesign = arrayDesignsUsed.iterator().next();
 
-        QuantitationType qt = eeService.getPreferredQuantitationType( ee );
-
-        if ( qt == null ) {
-            throw new IllegalArgumentException(
-                    "Experiment must have a preferred quantitation type to replace data for" );
-        }
+        QuantitationType qt = eeService.getPreferredQuantitationType( ee )
+                .orElseThrow( () -> new IllegalArgumentException(
+                        "Experiment must have a preferred quantitation type to replace data for" ) );
 
         DoubleMatrixReader reader = new DoubleMatrixReader();
 

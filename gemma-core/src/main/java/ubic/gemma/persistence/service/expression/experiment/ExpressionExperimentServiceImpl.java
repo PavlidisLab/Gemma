@@ -279,6 +279,12 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt ) {
+        return expressionExperimentDao.getRawDataVectors( ee, samples, qt );
+    }
+
+    @Override
     @Transactional
     public int addRawDataVectors( ExpressionExperiment ee,
             QuantitationType quantitationType,
@@ -362,6 +368,18 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     public int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt, boolean keepDimension ) {
         return expressionExperimentDao.removeRawDataVectors( ee, qt, keepDimension );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Collection<ProcessedExpressionDataVector>> getProcessedDataVectors( ExpressionExperiment ee ) {
+        return Optional.ofNullable( expressionExperimentDao.getProcessedDataVectors( ee ) );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Collection<ProcessedExpressionDataVector>> getProcessedDataVectors( ExpressionExperiment ee, List<BioAssay> assays ) {
+        return Optional.ofNullable( expressionExperimentDao.getProcessedDataVectors( ee, assays ) );
     }
 
     @Override
@@ -1332,14 +1350,14 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public QuantitationType getPreferredQuantitationType( final ExpressionExperiment ee ) {
-        return this.expressionExperimentDao.getPreferredQuantitationType( ee );
+    public Optional<QuantitationType> getPreferredQuantitationType( final ExpressionExperiment ee ) {
+        return Optional.ofNullable( this.expressionExperimentDao.getPreferredQuantitationType( ee ) );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public QuantitationType getProcessedQuantitationType( final ExpressionExperiment ee ) {
-        return this.expressionExperimentDao.getProcessedQuantitationType( ee );
+    public Optional<QuantitationType> getProcessedQuantitationType( final ExpressionExperiment ee ) {
+        return Optional.ofNullable( this.expressionExperimentDao.getProcessedQuantitationType( ee ) );
     }
 
     @Override

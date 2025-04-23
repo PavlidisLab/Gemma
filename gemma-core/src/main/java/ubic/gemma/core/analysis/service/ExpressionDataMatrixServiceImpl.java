@@ -33,6 +33,7 @@ import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -42,10 +43,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressio
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Tools for easily getting data matrices for analysis in a consistent way.
@@ -100,11 +98,16 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     @Override
     @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee ) {
-        Collection<ProcessedExpressionDataVector> dataVectors = this.processedExpressionDataVectorService
-                .getProcessedDataVectorsAndThaw( ee );
-        if ( dataVectors.isEmpty() ) {
-            throw new IllegalStateException( "There are no processed vectors for " + ee + ", they must be created first." );
-        }
+        Collection<ProcessedExpressionDataVector> dataVectors = expressionExperimentService.getProcessedDataVectors( ee )
+                .orElseThrow( () -> new IllegalStateException( "There are no processed vectors for " + ee + ", they must be created first." ) );
+        return new ExpressionDataDoubleMatrix( dataVectors );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee, List<BioAssay> samples ) {
+        Collection<ProcessedExpressionDataVector> dataVectors = expressionExperimentService.getProcessedDataVectors( ee, samples )
+                .orElseThrow( () -> new IllegalStateException( "There are no processed vectors for " + ee + ", they must be created first." ) );
         return new ExpressionDataDoubleMatrix( dataVectors );
     }
 
@@ -112,6 +115,16 @@ public class ExpressionDataMatrixServiceImpl implements ExpressionDataMatrixServ
     @Transactional(readOnly = true)
     public ExpressionDataDoubleMatrix getRawExpressionDataMatrix( ExpressionExperiment ee, QuantitationType quantitationType ) {
         Collection<RawExpressionDataVector> vectors = expressionExperimentService.getRawDataVectors( ee, quantitationType );
+        if ( vectors.isEmpty() ) {
+            throw new IllegalStateException( ee + " does not have any raw data vectors for " + quantitationType + "." );
+        }
+        return new ExpressionDataDoubleMatrix( vectors );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionDataDoubleMatrix getRawExpressionDataMatrix( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType quantitationType ) {
+        Collection<RawExpressionDataVector> vectors = expressionExperimentService.getRawDataVectors( ee, samples, quantitationType );
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( ee + " does not have any raw data vectors for " + quantitationType + "." );
         }

@@ -626,7 +626,17 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Override
     public int writeRawExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, Writer writer, boolean autoFlush ) throws IOException {
         Map<CompositeSequence, String[]> geneAnnotations = new HashMap<>();
-        ExpressionDataDoubleMatrix matrix = helperService.getDataMatrix( ee, qt, geneAnnotations );
+        ExpressionDataDoubleMatrix matrix = helperService.getDataMatrix( ee, null, qt, geneAnnotations );
+        MatrixWriter matrixWriter = new MatrixWriter( entityUrlBuilder, buildInfo );
+        matrixWriter.setAutoFlush( autoFlush );
+        matrixWriter.setScaleType( scaleType );
+        return matrixWriter.writeWithStringifiedGeneAnnotations( writer, matrix, geneAnnotations );
+    }
+
+    @Override
+    public int writeRawExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, Writer writer, boolean autoFlush ) throws IOException {
+        Map<CompositeSequence, String[]> geneAnnotations = new HashMap<>();
+        ExpressionDataDoubleMatrix matrix = helperService.getDataMatrix( ee, samples, qt, geneAnnotations );
         MatrixWriter matrixWriter = new MatrixWriter( entityUrlBuilder, buildInfo );
         matrixWriter.setAutoFlush( autoFlush );
         matrixWriter.setScaleType( scaleType );
@@ -645,7 +655,17 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Override
     public int writeProcessedExpressionData( ExpressionExperiment ee, boolean filtered, @Nullable ScaleType scaleType, Writer writer, boolean autoFlush ) throws FilteringException, IOException {
         Map<CompositeSequence, String[]> geneAnnotations = new HashMap<>();
-        ExpressionDataDoubleMatrix matrix = helperService.getDataMatrix( ee, filtered, geneAnnotations );
+        ExpressionDataDoubleMatrix matrix = helperService.getDataMatrix( ee, null, filtered, geneAnnotations );
+        MatrixWriter matrixWriter = new MatrixWriter( entityUrlBuilder, buildInfo );
+        matrixWriter.setAutoFlush( autoFlush );
+        matrixWriter.setScaleType( scaleType );
+        return matrixWriter.writeWithStringifiedGeneAnnotations( writer, matrix, geneAnnotations );
+    }
+
+    @Override
+    public int writeProcessedExpressionData( ExpressionExperiment ee, List<BioAssay> samples, boolean filtered, @Nullable ScaleType scaleType, Writer writer, boolean autoFlush ) throws FilteringException, IOException {
+        Map<CompositeSequence, String[]> geneAnnotations = new HashMap<>();
+        ExpressionDataDoubleMatrix matrix = helperService.getDataMatrix( ee, samples, filtered, geneAnnotations );
         MatrixWriter matrixWriter = new MatrixWriter( entityUrlBuilder, buildInfo );
         matrixWriter.setAutoFlush( autoFlush );
         matrixWriter.setScaleType( scaleType );
@@ -895,7 +915,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             }
             try ( LockedPath ignored = f.toExclusive();
                     Writer writer = openCompressedFile( ignored.getPath() ) ) {
-                ExpressionDataDoubleMatrix matrix = helperService.getDataMatrix( ee, filtered );
+                ExpressionDataDoubleMatrix matrix = helperService.getDataMatrix( ee, null, filtered );
                 ExpressionDataFileServiceImpl.log.info( "Creating new JSON expression data file: " + ignored.getPath() );
                 int written = new MatrixWriter( entityUrlBuilder, buildInfo ).writeJSON( writer, matrix );
                 log.info( "Wrote " + written + " vectors to " + ignored.getPath() + "." );

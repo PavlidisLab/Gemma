@@ -303,7 +303,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     }
 
     private QuantitationType createOrUpdateQt( ScaleType scale ) {
-        QuantitationType qt = eeService.getPreferredQuantitationType( ee );
+        QuantitationType qt = eeService.getPreferredQuantitationType( ee ).orElse( null );
         if ( qt == null ) {
             qt = QuantitationType.Factory.newInstance();
             qt.setName( "testQt" );

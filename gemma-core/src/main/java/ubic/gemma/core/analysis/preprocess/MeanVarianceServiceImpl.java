@@ -26,7 +26,6 @@ import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionExc
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MeanVarianceUpdateEvent;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -72,8 +71,7 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
             throw new IllegalStateException( "Could not locate intensity matrix, or it was empty, for " + ee.getShortName() );
         }
 
-        QuantitationType qt = expressionExperimentService.getPreferredQuantitationType( ee );
-        if ( qt == null ) {
+        if ( !expressionExperimentService.getPreferredQuantitationType( ee ).isPresent() ) {
             throw new IllegalStateException( "Did not find any preferred quantitation type. Mean-variance relation was not computed." );
         }
         try {

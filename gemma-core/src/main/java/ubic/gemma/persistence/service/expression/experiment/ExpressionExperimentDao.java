@@ -258,7 +258,7 @@ public interface ExpressionExperimentDao
 
     /**
      * Obtain the quantitation type for the processed vectors, if available.
-     * @throws org.hibernate.NonUniqueResultException if there is more than oen set of processed vectors
+     * @throws org.hibernate.NonUniqueResultException if there is more than one set of processed vectors
      */
     @Nullable
     QuantitationType getProcessedQuantitationType( ExpressionExperiment ee );
@@ -439,7 +439,18 @@ public interface ExpressionExperimentDao
      */
     long countBioMaterials( @Nullable Filters filters );
 
+    /**
+     * Obtain raw vectors for a given experiment and QT.
+     * <p>
+     * This is preferable to using {@link ExpressionExperiment#getRawExpressionDataVectors()} as it only loads vectors
+     * relevant to the given QT.
+     */
     Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, QuantitationType qt );
+
+    /**
+     * Obtain a slice of the raw vectors for a given experiment and QT.
+     */
+    Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, List<BioAssay> assays, QuantitationType qt );
 
     /**
      * Add raw data vectors with the given quantitation type.
@@ -471,6 +482,24 @@ public interface ExpressionExperimentDao
      * @return the number of replaced raw vectors
      */
     int replaceRawDataVectors( ExpressionExperiment ee, QuantitationType qt, Collection<RawExpressionDataVector> vectors );
+
+    /**
+     * Retrieve the processed vector for an experiment.
+     * <p>
+     * Unlike {@link ExpressionExperiment#getProcessedExpressionDataVectors()}, this is guaranteed to return only one
+     * set of vectors and will raise a {@link NonUniqueResultException} if there is more than one processed QTs.
+     * @see #getProcessedQuantitationType(ExpressionExperiment)
+     * @return the processed vectors, or null if there are no processed vectors
+     */
+    @Nullable
+    Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee );
+
+    /**
+     * Retrieve a slice of processed vectors for an experiment.
+     * @return the processed vectors, or null if there are no processed vectors
+     */
+    @Nullable
+    Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee, List<BioAssay> assays );
 
     /**
      * Add processed data vectors

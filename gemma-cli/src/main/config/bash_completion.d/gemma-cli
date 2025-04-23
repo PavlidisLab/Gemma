@@ -295,32 +295,32 @@ function __gemma_cli_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.ExpressionDataMatrixWriterCLI ' ]]; then
-        if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--outputFileName|--scale-type|--taxon|-batchFormat|-batchOutputFile|-batchReportFrequency|-e|-eeset|-f|-o|-q|-scaleType|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --force --help --outputFileName --scale-type --taxon -all -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -filter -force -h -o -q -scaleType -t -x" -- "$2")
+        if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--outputFileName|--samples|--scale-type|--taxon|-batchFormat|-batchOutputFile|-batchReportFrequency|-e|-eeset|-f|-o|-q|-samples|-scaleType|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --force --help --outputFileName --samples --scale-type --taxon -all -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -filter -force -h -o -q -samples -scaleType -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--batch-output-file|--eeListfile|--excludeEEFile|--outputFileName|-batchOutputFile|-f|-o|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' getDataMatrix ' ]]; then
-        if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--outputFileName|--scale-type|--taxon|-batchFormat|-batchOutputFile|-batchReportFrequency|-e|-eeset|-f|-o|-q|-scaleType|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --force --help --outputFileName --scale-type --taxon -all -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -filter -force -h -o -q -scaleType -t -x" -- "$2")
+        if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--outputFileName|--samples|--scale-type|--taxon|-batchFormat|-batchOutputFile|-batchReportFrequency|-e|-eeset|-f|-o|-q|-samples|-scaleType|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --force --help --outputFileName --samples --scale-type --taxon -all -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -filter -force -h -o -q -samples -scaleType -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--batch-output-file|--eeListfile|--excludeEEFile|--outputFileName|-batchOutputFile|-f|-o|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.RawExpressionDataWriterCli ' ]]; then
-        if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--output-file|--quantitation-type|--scale-type|--taxon|-batchFormat|-batchOutputFile|-batchReportFrequency|-e|-eeset|-f|-o|-q|-qt|-scaleType|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --force --help --output-file --quantitation-type --scale-type --taxon -all -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -force -h -o -q -qt -scaleType -t -x" -- "$2")
+        if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--output-file|--quantitation-type|--samples|--scale-type|--taxon|-batchFormat|-batchOutputFile|-batchReportFrequency|-e|-eeset|-f|-o|-q|-qt|-samples|-scaleType|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --force --help --output-file --quantitation-type --samples --scale-type --taxon -all -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -force -h -o -q -qt -samples -scaleType -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--batch-output-file|--eeListfile|--excludeEEFile|--output-file|-batchOutputFile|-f|-o|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' getRawDataMatrix ' ]]; then
-        if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--output-file|--quantitation-type|--scale-type|--taxon|-batchFormat|-batchOutputFile|-batchReportFrequency|-e|-eeset|-f|-o|-q|-qt|-scaleType|-t|-x) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --force --help --output-file --quantitation-type --scale-type --taxon -all -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -force -h -o -q -qt -scaleType -t -x" -- "$2")
+        if ! [[ "$current_option" =~ (--batch-format|--batch-output-file|--batch-report-frequency|--eeListfile|--excludeEEFile|--experiment|--experiment-set|--expressionQuery|--output-file|--quantitation-type|--samples|--scale-type|--taxon|-batchFormat|-batchOutputFile|-batchReportFrequency|-e|-eeset|-f|-o|-q|-qt|-samples|-scaleType|-t|-x) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--batch-format --batch-output-file --batch-report-frequency --eeListfile --excludeEEFile --experiment --experiment-set --expressionQuery --force --help --output-file --quantitation-type --samples --scale-type --taxon -all -batchFormat -batchOutputFile -batchReportFrequency -e -eeset -f -force -h -o -q -qt -samples -scaleType -t -x" -- "$2")
         fi
         if [[ "$current_option" =~ (--batch-output-file|--eeListfile|--excludeEEFile|--output-file|-batchOutputFile|-f|-o|-x) ]]; then
             mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")

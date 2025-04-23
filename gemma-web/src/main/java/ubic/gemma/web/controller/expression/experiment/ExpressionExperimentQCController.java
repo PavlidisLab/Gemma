@@ -499,10 +499,8 @@ public class ExpressionExperimentQCController extends BaseController {
         ExpressionExperiment ee = expressionExperimentService.loadAndThawLiteOrFail( id, EntityNotFoundException::new, "No dataset with ID " + id + "." );
         SingleCellDimension singleCellDimension = singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee )
                 .orElseThrow( () -> new EntityNotFoundException( ee.getShortName() + " does not have a preferred single-cell dimension." ) );
-        QuantitationType qt = expressionExperimentService.getProcessedQuantitationType( ee );
-        if ( qt == null ) {
-            throw new EntityNotFoundException( "No processed quantitation type found for " + ee.getShortName() + "." );
-        }
+        QuantitationType qt = expressionExperimentService.getProcessedQuantitationType( ee )
+                .orElseThrow( () -> new EntityNotFoundException( "No processed quantitation type found for " + ee.getShortName() + "." ) );
         BioAssayDimension dimension = expressionExperimentService.getBioAssayDimension( ee, qt, ProcessedExpressionDataVector.class );
         if ( dimension == null ) {
             throw new EntityNotFoundException( "No dimension found for " + qt + "." );
@@ -543,10 +541,8 @@ public class ExpressionExperimentQCController extends BaseController {
                 throw new EntityNotFoundException( ee.getShortName() + " does not have a dimension with ID " + dimensionId + "." );
             }
         } else {
-            QuantitationType preferredQt = expressionExperimentService.getProcessedQuantitationType( ee );
-            if ( preferredQt == null ) {
-                throw new EntityNotFoundException( ee.getShortName() + " does not have a set of processed vectors." );
-            }
+            QuantitationType preferredQt = expressionExperimentService.getProcessedQuantitationType( ee )
+                    .orElseThrow( () -> new EntityNotFoundException( ee.getShortName() + " does not have a set of processed vectors." ) );
             dimension = expressionExperimentService.getBioAssayDimension( ee, preferredQt, ProcessedExpressionDataVector.class );
             if ( dimension == null ) {
                 throw new EntityNotFoundException( preferredQt + " does not have any associated dimension." );
@@ -584,10 +580,8 @@ public class ExpressionExperimentQCController extends BaseController {
             throw new EntityNotFoundException( "No subset with ID " + id );
         }
         ExpressionExperiment ee = subSet.getSourceExperiment();
-        QuantitationType preferredQt = expressionExperimentService.getProcessedQuantitationType( ee );
-        if ( preferredQt == null ) {
-            throw new EntityNotFoundException( ee.getShortName() + " does not have a set of processed vectors." );
-        }
+        QuantitationType preferredQt = expressionExperimentService.getProcessedQuantitationType( ee )
+                .orElseThrow( () -> new EntityNotFoundException( ee.getShortName() + " does not have a set of processed vectors." ) );
         BioAssayDimension dimension = expressionExperimentService.getBioAssayDimension( ee, preferredQt, ProcessedExpressionDataVector.class );
         if ( dimension == null ) {
             throw new EntityNotFoundException( preferredQt + " does not have any associated dimension." );

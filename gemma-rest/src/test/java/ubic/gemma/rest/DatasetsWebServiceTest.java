@@ -583,7 +583,7 @@ public class DatasetsWebServiceTest extends BaseJerseyTest {
     public void testGetDatasetRawExpression() throws IOException, URISyntaxException, InterruptedException, TimeoutException {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         when( expressionExperimentService.getPreferredQuantitationType( ee ) )
-                .thenReturn( qt );
+                .thenReturn( Optional.of( qt ) );
         when( expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, false, 5, TimeUnit.SECONDS ) )
                 .thenReturn( new DummyLockedPath( Paths.get( requireNonNull( getClass().getResource( "/data.txt.gz" ) ).toURI() ), true ) );
         assertThat( target( "/datasets/1/data/raw" ).request().get() )

@@ -129,15 +129,16 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     void addFactorValues( ExpressionExperiment ee, Map<BioMaterial, FactorValue> fvs );
 
     /**
-     * Obtain raw vectors for a given experiment and QT.
-     * <p>
-     * This is preferable to using {@link ExpressionExperiment#getRawExpressionDataVectors()} as it only loads vectors
-     * relevant to the given QT.
-     * <p>
-     * Vectors are thawed as per {@link ExpressionExperimentDao#thawRawVectors(ExpressionExperiment)}.
+     * @see ExpressionExperimentDao#getRawDataVectors(ExpressionExperiment, QuantitationType)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
     Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, QuantitationType qt );
+
+    /**
+     * @see ExpressionExperimentDao#getRawDataVectors(ExpressionExperiment, List, QuantitationType)
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    Collection<RawExpressionDataVector> getRawDataVectors( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt );
 
     /**
      * Used when we want to add data for a quantitation type. Does not remove any existing vectors.
@@ -184,6 +185,22 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     int removeRawDataVectors( ExpressionExperiment ee, QuantitationType qt, boolean keepDimension );
+
+    /**
+     * @see ExpressionExperimentDao#getProcessedDataVectors(ExpressionExperiment)
+     * @return a collection of processed data vectors for the given experiment and list of assays, or
+     * {@link Optional#empty()} if there are no processed vectors
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    Optional<Collection<ProcessedExpressionDataVector>> getProcessedDataVectors( ExpressionExperiment ee );
+
+    /**
+     * @see ExpressionExperimentDao#getProcessedDataVectors(ExpressionExperiment, List)
+     * @return a collection of processed data vectors for the given experiment and list of assays, or
+     * {@link Optional#empty()} if there are no processed vectors
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
+    Optional<Collection<ProcessedExpressionDataVector>> getProcessedDataVectors( ExpressionExperiment ee, List<BioAssay> assays );
 
     /**
      * Create a new set of processed vectors for an experiment.
@@ -655,13 +672,11 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * @param ee experiment
      * @return quantitation types
      */
-    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    QuantitationType getPreferredQuantitationType( ExpressionExperiment ee );
+    Optional<QuantitationType> getPreferredQuantitationType( ExpressionExperiment ee );
 
-    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    QuantitationType getProcessedQuantitationType( ExpressionExperiment ee );
+    Optional<QuantitationType> getProcessedQuantitationType( ExpressionExperiment ee );
 
     /**
      * Test if the given experiment has processed data vectors.

@@ -2,6 +2,7 @@ package ubic.gemma.core.analysis.singleCell;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.lang3.ArrayUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.description.Characteristic;
@@ -9,6 +10,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.*;
 
 import javax.annotation.Nullable;
+import java.beans.PropertyDescriptor;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -16,28 +18,24 @@ import java.util.stream.Collectors;
 /**
  * Utilities for slicing single cell data.
  * @author poirigui
+ * @see ubic.gemma.core.analysis.preprocess.slice.BulkDataSlicerUtils
  */
 @CommonsLog
 public class SingleCellSlicerUtils {
 
     /**
-     * Slice a vector by a given list of assays.
+     * List of ignored properties when copying properties from a {@link SingleCellExpressionDataVector} to another.
      */
-    public static Function<SingleCellExpressionDataVector, SingleCellExpressionDataVector> createSlicer( List<BioAssay> assays ) {
-        return createSlicer( assays, null, null, null );
-    }
+    private static final String[] IGNORED_PROPERTIES;
 
-    /**
-     * Unlike sparse vectors, these structures can be sliced in the database.
-     * @param cellIds   pre-sliced cell IDs
-     * @param ctas      pre-sliced CTAs
-     * @param clcs      pre-sliced CLCs
-     */
-    public static Function<SingleCellExpressionDataVector, SingleCellExpressionDataVector> createSlicer( List<BioAssay> assays,
-            @Nullable List<String> cellIds, @Nullable Set<CellTypeAssignment> ctas, @Nullable Set<CellLevelCharacteristics> clcs ) {
-        Map<SingleCellDimension, SingleCellDimension> scdCache = new HashMap<>();
-        Map<SingleCellDimension, int[]> sampleIndicesCache = new HashMap<>();
-        return vec -> sliceVector( vec, assays, cellIds, ctas, clcs, scdCache, sampleIndicesCache );
+    static {
+        List<String> ignoredPropertiesList = new ArrayList<>();
+        for ( PropertyDescriptor pd : BeanUtils.getPropertyDescriptors( SingleCellExpressionDataVector.class ) ) {
+            if ( pd.getName().equals( "singleCellDimension" ) || ( pd.getName().startsWith( "data" ) && !pd.getName().equals( "dataIndices" ) ) ) {
+                ignoredPropertiesList.add( pd.getName() );
+            }
+        }
+        IGNORED_PROPERTIES = ignoredPropertiesList.toArray( new String[0] );
     }
 
     public static Collection<SingleCellExpressionDataVector> slice( Collection<SingleCellExpressionDataVector> vectors, List<BioAssay> bioAssays ) {
@@ -46,15 +44,34 @@ public class SingleCellSlicerUtils {
                 .collect( Collectors.toList() );
     }
 
+    /**
+     * Create a slicer for single-cell data vectors.
+     */
+    public static Function<SingleCellExpressionDataVector, SingleCellExpressionDataVector> createSlicer( List<BioAssay> assays ) {
+        return createSlicer( assays, null, null, null );
+    }
+
+    /**
+     * Create a slicer for single-cell data vectors whose cell IDs, CTAs, and CLCs are already pre-sliced.
+     * <p>
+     * Unlike sparse vectors, these structures can be sliced in the database.
+     * @param cellIds pre-sliced cell IDs
+     * @param ctas    pre-sliced CTAs
+     * @param clcs    pre-sliced CLCs
+     */
+    public static Function<SingleCellExpressionDataVector, SingleCellExpressionDataVector> createSlicer( List<BioAssay> assays,
+            @Nullable List<String> cellIds, @Nullable Set<CellTypeAssignment> ctas, @Nullable Set<CellLevelCharacteristics> clcs ) {
+        Map<SingleCellDimension, SingleCellDimension> scdCache = new HashMap<>();
+        Map<SingleCellDimension, int[]> sampleIndicesCache = new HashMap<>();
+        return vec -> sliceVector( vec, assays, cellIds, ctas, clcs, scdCache, sampleIndicesCache );
+    }
+
     private static SingleCellExpressionDataVector sliceVector( SingleCellExpressionDataVector vec, List<BioAssay> assays,
             @Nullable List<String> cellIds, @Nullable Set<CellTypeAssignment> ctas, @Nullable Set<CellLevelCharacteristics> clcs,
             Map<SingleCellDimension, SingleCellDimension> scdCache,
             Map<SingleCellDimension, int[]> sampleIndicesCache ) {
         SingleCellExpressionDataVector newVector = new SingleCellExpressionDataVector();
-        newVector.setExpressionExperiment( vec.getExpressionExperiment() );
-        newVector.setDesignElement( vec.getDesignElement() );
-        newVector.setOriginalDesignElement( vec.getOriginalDesignElement() );
-        newVector.setQuantitationType( vec.getQuantitationType() );
+        BeanUtils.copyProperties( vec, newVector, IGNORED_PROPERTIES );
         int[] sampleIndicesInVec = sampleIndicesCache.computeIfAbsent( vec.getSingleCellDimension(), k -> {
             Map<BioAssay, Integer> ba2index = ListUtils.indexOfElements( vec.getSingleCellDimension().getBioAssays() );
             int[] result = new int[assays.size()];

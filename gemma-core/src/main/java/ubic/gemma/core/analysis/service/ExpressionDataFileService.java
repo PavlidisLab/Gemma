@@ -264,6 +264,8 @@ public interface ExpressionDataFileService {
      */
     int writeRawExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, Writer writer, boolean autoFlush ) throws IOException;
 
+    int writeRawExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, Writer writer, boolean autoFlush ) throws IOException;
+
     /**
      * Write processed expression data to a given writer for a given quantitation type.
      * <p>
@@ -275,6 +277,8 @@ public interface ExpressionDataFileService {
      * @throws IOException if operations with the writer fails
      */
     int writeProcessedExpressionData( ExpressionExperiment ee, boolean filtered, @Nullable ScaleType scaleType, Writer writer, boolean autoFlush ) throws FilteringException, IOException;
+
+    int writeProcessedExpressionData( ExpressionExperiment ee, List<BioAssay> samples, boolean filtered, @Nullable ScaleType scaleType, Writer writer, boolean autoFlush ) throws FilteringException, IOException;
 
     /**
      * Writes out the experimental design for the given experiment.

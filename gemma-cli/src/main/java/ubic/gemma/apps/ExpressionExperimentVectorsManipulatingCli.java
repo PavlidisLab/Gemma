@@ -130,7 +130,8 @@ public abstract class ExpressionExperimentVectorsManipulatingCli<T extends DataV
 
     private QuantitationType locatePreferredQuantitationType( ExpressionExperiment expressionExperiment, Class<? extends DataVector> dataVectorType ) {
         if ( RawExpressionDataVector.class.isAssignableFrom( dataVectorType ) ) {
-            return eeService.getPreferredQuantitationType( expressionExperiment );
+            return eeService.getPreferredQuantitationType( expressionExperiment )
+                    .orElseThrow( () -> new IllegalStateException( expressionExperiment + " does not have a preferred set of raw vectors." ) );
         } else if ( ProcessedExpressionDataVector.class.isAssignableFrom( dataVectorType ) ) {
             Collection<QuantitationType> results = quantitationTypeService.findByExpressionExperiment( expressionExperiment, dataVectorType );
             if ( results.isEmpty() ) {

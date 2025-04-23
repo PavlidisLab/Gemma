@@ -1541,9 +1541,9 @@ public class ExpressionExperimentController {
     private SingleCellSparsityHeatmap getSingleCellSparsityHeatmap( ExpressionExperiment expressionExperiment, SingleCellDimension singleCellDimension, boolean transpose ) {
         QuantitationType qt;
         BioAssayDimension dimension;
-        if ( ( qt = expressionExperimentService.getProcessedQuantitationType( expressionExperiment ) ) != null ) {
+        if ( ( qt = expressionExperimentService.getProcessedQuantitationType( expressionExperiment ).orElse( null ) ) != null ) {
             dimension = expressionExperimentService.getBioAssayDimension( expressionExperiment, qt, ProcessedExpressionDataVector.class );
-        } else if ( ( qt = expressionExperimentService.getPreferredQuantitationType( expressionExperiment ) ) != null ) {
+        } else if ( ( qt = expressionExperimentService.getPreferredQuantitationType( expressionExperiment ).orElse( null ) ) != null ) {
             // try using the preferred raw vectors (i.e. if post-processing failed for instance)
             dimension = expressionExperimentService.getBioAssayDimension( expressionExperiment, qt, RawExpressionDataVector.class );
         } else {

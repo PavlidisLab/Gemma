@@ -109,16 +109,16 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         options.addOption( "noStreaming", "no-streaming", false, "Use in-memory storage instead streaming for retrieving and writing vectors (defaults to false)" );
         options.addOption( Option.builder( "fetchSize" ).longOpt( "fetch-size" ).hasArg( true ).type( Integer.class ).desc( "Fetch size to use when retrieving vectors, incompatible with -noStreaming/--no-streaming." ).build() );
         options.addOption( "standardLocation", "standard-location", false, "Write the file to the standard location under, this is incompatible with -scaleType/--scale-type, -useEnsemblIds/--use-ensembl-ids and -o/--output." );
-        options.addOption( Option.builder( "o" ).longOpt( "output" ).hasArg( true ).type( Path.class ).desc( "Destination for the matrix file, or a directory if -format is set to MEX." ).build() );
+        addSingleExperimentOption( options, Option.builder( "o" ).longOpt( "output" ).hasArg( true ).type( Path.class ).desc( "Destination for the matrix file, or a directory if -format is set to MEX." ).build() );
 
         // slicing individual samples
-        options.addOption( Option.builder( "samples" ).longOpt( "samples" ).hasArg().valueSeparator( ',' ).desc( "List of sample identifiers to slice. This is incompatible with -standardLocation." ).build() );
+        addSingleExperimentOption( options, Option.builder( "samples" ).longOpt( "samples" ).hasArg().valueSeparator( ',' ).desc( "List of sample identifiers to slice. This is incompatible with -standardLocation." ).build() );
 
         // aggregation
         options.addOption( "aggregateByAssay", "aggregate-by-assay", false, "Aggregate by assay. This is incompatible with -format, -useEnsemblIds and -standardLocation." );
         options.addOption( "aggregateByPreferredCta", "aggregate-by-preferred-cell-type-assignment", false, "Aggregate by the preferred cell type assignment. Requires -aggregateByAssay to be set. This is incompatible with -format, -useEnsemblIds and -standardLocation." );
-        options.addOption( "aggregateByCta", "aggregate-by-cell-type-assignment", true, "Cell type assignment to aggregate by. Requires -aggregateByAssay to be set. This is incompatible with -format, -useEnsemblIds and -standardLocation." );
-        options.addOption( "aggregateByClc", "aggregate-by-cell-level-characteristics", true, "Cell-level characteristics to aggregate by. Requires -aggregateByAssay to be set. This is incompatible with -format, -useEnsemblIds and -standardLocation." );
+        addSingleExperimentOption( options, "aggregateByCta", "aggregate-by-cell-type-assignment", true, "Cell type assignment to aggregate by. Requires -aggregateByAssay to be set. This is incompatible with -format, -useEnsemblIds and -standardLocation." );
+        addSingleExperimentOption( options, "aggregateByClc", "aggregate-by-cell-level-characteristics", true, "Cell-level characteristics to aggregate by. Requires -aggregateByAssay to be set. This is incompatible with -format, -useEnsemblIds and -standardLocation." );
         addEnumOption( options, "aggregateMethod", "aggregate-method", "Method to use to aggregate single-cell data. Require at least one -aggregateBy option to be set. This is incompatible with -format, -useEnsemblIds and -standardLocation.", SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.class );
 
         addForceOption( options );

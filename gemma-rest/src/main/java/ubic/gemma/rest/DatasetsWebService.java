@@ -1382,10 +1382,8 @@ public class DatasetsWebService {
         if ( quantitationTypeArg != null ) {
             qt = quantitationTypeArgService.getEntity( quantitationTypeArg, ee, RawExpressionDataVector.class );
         } else {
-            qt = expressionExperimentService.getPreferredQuantitationType( ee );
-            if ( qt == null ) {
-                throw new NotFoundException( String.format( "No preferred quantitation type could be found for raw expression data data of %s.", ee ) );
-            }
+            qt = expressionExperimentService.getPreferredQuantitationType( ee )
+                    .orElseThrow( () -> new NotFoundException( String.format( "No preferred quantitation type could be found for raw expression data data of %s.", ee ) ) );
         }
         try ( LockedPath p = expressionDataFileService.writeOrLocateRawExpressionDataFile( ee, qt, force, 5, TimeUnit.SECONDS ) ) {
             String filename = download ? p.getPath().getFileName().toString() : FilenameUtils.removeExtension( p.getPath().getFileName().toString() );

@@ -204,7 +204,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
     @Test
     public void testGetPreferredQuantitationType() {
         ExpressionExperiment ee = createExpressionExperiment();
-        QuantitationType qt = expressionExperimentService.getPreferredQuantitationType( ee );
+        QuantitationType qt = expressionExperimentService.getPreferredQuantitationType( ee ).orElse( null );
         assertNotNull( qt );
         assertTrue( qt.getIsPreferred() );
     }

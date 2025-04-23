@@ -197,10 +197,9 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
                 if ( redoQt != null ) {
                     previousQt = entityLocator.locateQuantitationType( expressionExperiment, redoQt, RawExpressionDataVector.class );
                 } else {
-                    previousQt = eeService.getPreferredQuantitationType( expressionExperiment );
-                    if ( previousQt == null ) {
-                        throw new IllegalStateException( "No preferred quantitation type found for " + expressionExperiment + "." );
-                    }
+                    ExpressionExperiment finalExpressionExperiment2 = expressionExperiment;
+                    previousQt = eeService.getPreferredQuantitationType( expressionExperiment )
+                            .orElseThrow( () -> new IllegalStateException( "No preferred quantitation type found for " + finalExpressionExperiment2 + "." ) );
                 }
                 dimension = eeService.getBioAssayDimension( expressionExperiment, previousQt, RawExpressionDataVector.class );
                 if ( dimension == null ) {

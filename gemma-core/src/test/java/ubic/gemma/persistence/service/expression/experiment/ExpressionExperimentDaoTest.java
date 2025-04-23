@@ -557,6 +557,50 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest {
     }
 
     @Test
+    public void testGetRawDataVectors() {
+        ee = new ExpressionExperiment();
+        QuantitationType qt1 = new QuantitationType();
+        qt1.setGeneralType( GeneralType.QUANTITATIVE );
+        qt1.setType( StandardQuantitationType.AMOUNT );
+        qt1.setScale( ScaleType.LOG2 );
+        qt1.setRepresentation( PrimitiveType.DOUBLE );
+        ee.getQuantitationTypes().add( qt1 );
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign platform = createPlatform();
+        BioAssayDimension bad = new BioAssayDimension();
+        for ( int i = 0; i < 4; i++ ) {
+            BioMaterial sampleUsed = BioMaterial.Factory.newInstance( "bm" + i, taxon );
+            sessionFactory.getCurrentSession().persist( sampleUsed );
+            BioAssay ba = BioAssay.Factory.newInstance( "ba" + i, platform, sampleUsed );
+            sessionFactory.getCurrentSession().persist( ba );
+            bad.getBioAssays().add( ba );
+        }
+        sessionFactory.getCurrentSession().persist( bad );
+        for ( CompositeSequence cs : platform.getCompositeSequences() ) {
+            RawExpressionDataVector v = new RawExpressionDataVector();
+            v.setBioAssayDimension( bad );
+            v.setDesignElement( cs );
+            v.setExpressionExperiment( ee );
+            v.setQuantitationType( qt1 );
+            v.setDataAsDoubles( new double[] { 0.1, 0.2, 0.3, 0.4 } );
+            ee.getRawExpressionDataVectors().add( v );
+        }
+        ee = expressionExperimentDao.create( ee );
+        QuantitationType qt = ee.getQuantitationTypes().iterator().next();
+        assertThat( expressionExperimentDao.getRawDataVectors( ee, Arrays.asList( bad.getBioAssays().get( 0 ), bad.getBioAssays().get( 2 ) ), qt ) )
+                .allSatisfy( vec -> {
+                    assertThat( vec.getDesignElement() ).isNotNull();
+                    assertThat( vec.getBioAssayDimension().getBioAssays() ).hasSize( 2 );
+                    assertThat( vec.getDataAsDoubles() ).containsExactly( 0.1, 0.3 );
+                } );
+        assertThatThrownBy( () -> expressionExperimentDao.getRawDataVectors( ee, Collections.emptyList(), qt ) )
+                .isInstanceOf( IllegalArgumentException.class );
+        assertThatThrownBy( () -> expressionExperimentDao.getRawDataVectors( ee, Collections.singletonList( BioAssay.Factory.newInstance( "ba37" ) ), qt ) )
+                .isInstanceOf( IllegalArgumentException.class );
+    }
+
+    @Test
     public void testAddRawDataVectors() {
         ee = createExpressionExperiment();
         ArrayDesign platform = createPlatform();
