@@ -225,7 +225,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                 .thenReturn( Optional.of( cta ) );
         when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
                 .thenReturn( Optional.of( qt ) );
-        when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
+        when( singleCellExpressionExperimentService.getSingleCellDataVectors( eq( ee ), eq( qt ), any() ) )
                 .thenReturn( vectors );
 
         AggregateConfig config = AggregateConfig.builder().makePreferred( true ).build();
@@ -310,7 +310,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                 .thenReturn( Optional.of( cta ) );
         when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
                 .thenReturn( Optional.of( qt ) );
-        when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
+        when( singleCellExpressionExperimentService.getSingleCellDataVectors( eq( ee ), eq( qt ), any() ) )
                 .thenReturn( vectors );
 
         AggregateConfig config = AggregateConfig.builder()
@@ -391,7 +391,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                 .thenReturn( Optional.of( cta ) );
         when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
                 .thenReturn( Optional.of( qt ) );
-        when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
+        when( singleCellExpressionExperimentService.getSingleCellDataVectors( eq( ee ), eq( qt ), any() ) )
                 .thenReturn( vectors );
 
         AggregateConfig config = AggregateConfig.builder().makePreferred( true ).build();
@@ -436,7 +436,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                 .thenReturn( Optional.of( cta ) );
         when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
                 .thenReturn( Optional.of( qt ) );
-        when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
+        when( singleCellExpressionExperimentService.getSingleCellDataVectors( eq( ee ), eq( qt ), any() ) )
                 .thenReturn( vectors );
 
         AggregateConfig config = AggregateConfig.builder().makePreferred( true ).build();
@@ -478,7 +478,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                 .thenReturn( Optional.of( cta ) );
         when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
                 .thenReturn( Optional.of( qt ) );
-        when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
+        when( singleCellExpressionExperimentService.getSingleCellDataVectors( eq( ee ), eq( qt ), any() ) )
                 .thenReturn( vectors );
 
         AggregateConfig config = AggregateConfig.builder().makePreferred( false ).build();
@@ -523,7 +523,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                 .thenReturn( Optional.of( cta ) );
         when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
                 .thenReturn( Optional.of( qt ) );
-        when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
+        when( singleCellExpressionExperimentService.getSingleCellDataVectors( eq( ee ), eq( qt ), any() ) )
                 .thenReturn( vectors );
 
         AggregateConfig config = AggregateConfig.builder().makePreferred( true ).build();
@@ -564,7 +564,7 @@ public class SingleCellExpressionExperimentAggregatorServiceTest extends BaseTes
                 .thenReturn( Optional.of( cta ) );
         when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
                 .thenReturn( Optional.of( qt ) );
-        when( singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt ) )
+        when( singleCellExpressionExperimentService.getSingleCellDataVectors( eq( ee ), eq( qt ), any() ) )
                 .thenReturn( vectors );
 
         AggregateConfig config = AggregateConfig.builder().makePreferred( true ).build();

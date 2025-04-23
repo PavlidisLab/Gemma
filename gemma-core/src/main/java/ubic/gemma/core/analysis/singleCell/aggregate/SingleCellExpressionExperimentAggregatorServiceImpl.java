@@ -81,7 +81,12 @@ public class SingleCellExpressionExperimentAggregatorServiceImpl implements Sing
         //        a distinct QT than that of ee.getQuantitationTypes()
         ee = expressionExperimentService.reload( ee );
         qt = quantitationTypeService.reload( qt );
-        Collection<SingleCellExpressionDataVector> vectors = singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt );
+        SingleCellExpressionExperimentService.SingleCellVectorInitializationConfig vectorInitConfig = SingleCellExpressionExperimentService.SingleCellVectorInitializationConfig.builder()
+                .includeCellIds( false )
+                .includeData( true )
+                .includeDataIndices( true )
+                .build();
+        Collection<SingleCellExpressionDataVector> vectors = singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt, vectorInitConfig );
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( ee + " does not have single-cell vectors for " + qt + "." );
         }
