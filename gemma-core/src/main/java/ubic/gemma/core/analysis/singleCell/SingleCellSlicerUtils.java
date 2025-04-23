@@ -130,6 +130,8 @@ public class SingleCellSlicerUtils {
             @Nullable List<String> cellIds, @Nullable Set<CellTypeAssignment> ctas, @Nullable Set<CellLevelCharacteristics> clcs, int[] sampleIndices ) {
         Assert.isTrue( new HashSet<>( singleCellDimension.getBioAssays() ).containsAll( assays ),
                 "All the requested assays must be in " + singleCellDimension + "." );
+        Assert.isTrue( new HashSet<>( assays ).size() == assays.size(),
+                "Requested assays must be unique." );
         SingleCellDimension newDimension = new SingleCellDimension();
         newDimension.setBioAssays( assays );
         int numCells = 0;
@@ -175,6 +177,9 @@ public class SingleCellSlicerUtils {
                 newOffset += end - start;
             }
             CellTypeAssignment newCta = CellTypeAssignment.Factory.newInstance( cta.getName(), cellTypes, indices );
+            newCta.setProtocol( cta.getProtocol() );
+            newCta.setPreferred( cta.isPreferred() );
+            newCta.setDescription( cta.getDescription() );
             log.info( "Sliced " + cta + " to " + newCta + "." );
             ctas.add( newCta );
         }
