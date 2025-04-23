@@ -122,6 +122,7 @@ public class SingleCellDataVectorAggregatorUtils {
             case MAX:
             case MIN:
                 // these operation are scale-preserving
+                qt.setRepresentation( PrimitiveType.DOUBLE );
                 break;
             default:
                 throw new UnsupportedOperationException( "Aggregating " + method + " is not supported for " + scQt );
