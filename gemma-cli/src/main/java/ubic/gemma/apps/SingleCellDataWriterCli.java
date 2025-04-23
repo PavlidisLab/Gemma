@@ -251,6 +251,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         }
         try ( Writer writer = new OutputStreamWriter( openOutputFile( isForce() ), StandardCharsets.UTF_8 ) ) {
             MatrixWriter matrixWriter = new MatrixWriter( entityUrlBuilder, buildInfo );
+            matrixWriter.setAutoFlush( true );
             matrixWriter.setScaleType( scaleType );
             int writtenVectors = matrixWriter.write( matrix, writer );
             addSuccessObject( ee, "Aggregated " + writtenVectors + " vectors for " + qt + "." );
@@ -265,7 +266,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         switch ( format ) {
             case TABULAR:
                 try ( Writer writer = new OutputStreamWriter( openOutputFile( isForce() ), StandardCharsets.UTF_8 ) ) {
-                    expressionDataFileService.writeTabularSingleCellExpressionData( ee, assays, qt, scaleType, useStreaming ? fetchSize : -1, writer );
+                    expressionDataFileService.writeTabularSingleCellExpressionData( ee, assays, qt, scaleType, useStreaming ? fetchSize : -1, writer, true );
                 }
                 break;
             case MEX:
@@ -297,7 +298,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                     }
                 } else {
                     try ( Writer writer = new OutputStreamWriter( openOutputFile( isForce() ), StandardCharsets.UTF_8 ) ) {
-                        int written = expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, scaleType, useStreaming ? fetchSize : -1, writer );
+                        int written = expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, scaleType, useStreaming ? fetchSize : -1, writer, true );
                         addSuccessObject( ee, "Wrote " + written + " vectors for " + qt + "." );
                     }
                 }

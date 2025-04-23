@@ -187,14 +187,14 @@ public interface ExpressionDataFileService {
      * @param fetchSize    retrieve data in a streaming fashion
      * @see ubic.gemma.core.datastructure.matrix.io.TabularMatrixWriter
      */
-    int writeTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, Writer writer ) throws IOException;
+    int writeTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, Writer writer, boolean autoFlush ) throws IOException;
 
-    int writeTabularSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, Writer writer ) throws IOException;
+    int writeTabularSingleCellExpressionData( ExpressionExperiment ee, List<BioAssay> samples, QuantitationType qt, @Nullable ScaleType scaleType, int fetchSize, Writer writer, boolean autoFlush ) throws IOException;
 
     /**
      * Write single-cell expression data to a standard location for a given quantitation type in tabular format.
      * @return a path where the vectors were written
-     * @see #writeTabularSingleCellExpressionData(ExpressionExperiment, QuantitationType, ScaleType, int, Writer)
+     * @see #writeTabularSingleCellExpressionData(ExpressionExperiment, QuantitationType, ScaleType, int, Writer, boolean)
      * @see ubic.gemma.core.datastructure.matrix.io.TabularMatrixWriter
      */
     LockedPath writeOrLocateTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean forceWrite ) throws IOException;
@@ -262,7 +262,7 @@ public interface ExpressionDataFileService {
      * @param writer    the destination for the raw expression data
      * @throws IOException if operations with the writer fails
      */
-    int writeRawExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, Writer writer ) throws IOException;
+    int writeRawExpressionData( ExpressionExperiment ee, QuantitationType qt, @Nullable ScaleType scaleType, Writer writer, boolean autoFlush ) throws IOException;
 
     /**
      * Write processed expression data to a given writer for a given quantitation type.
@@ -274,7 +274,7 @@ public interface ExpressionDataFileService {
      * @param writer the destination for the raw expression data
      * @throws IOException if operations with the writer fails
      */
-    int writeProcessedExpressionData( ExpressionExperiment ee, boolean filtered, @Nullable ScaleType scaleType, Writer writer ) throws FilteringException, IOException;
+    int writeProcessedExpressionData( ExpressionExperiment ee, boolean filtered, @Nullable ScaleType scaleType, Writer writer, boolean autoFlush ) throws FilteringException, IOException;
 
     /**
      * Writes out the experimental design for the given experiment.

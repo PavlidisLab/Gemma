@@ -54,6 +54,11 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
     private final EntityUrlBuilder entityUrlBuilder;
     private final BuildInfo buildInfo;
 
+    /**
+     * Flush every time a complete line is written.
+     */
+    private boolean autoFlush;
+
     @Nullable
     private ScaleType scaleType;
 
@@ -136,6 +141,9 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
                     .append( "\t" ).append( sampleColumnPrefix ).append( "values" );
         }
         pwriter.write( '\n' );
+        if ( autoFlush ) {
+            pwriter.flush();
+        }
     }
 
     private void writeVector( SingleCellExpressionDataVector vector, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, Writer pwriter ) throws IOException {
@@ -214,6 +222,9 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
             start = end;
         }
         pwriter.append( '\n' );
+        if (autoFlush) {
+            pwriter.flush();
+        }
     }
 
     private void writeGene( @Nullable Set<Gene> genes, Writer pwriter ) throws IOException {

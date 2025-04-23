@@ -5,9 +5,9 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.cli.util.OptionsUtils;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
-import ubic.gemma.cli.util.OptionsUtils;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -85,7 +85,7 @@ public class RawExpressionDataWriterCli extends ExpressionExperimentVectorsManip
             throw new RuntimeException( "Output file " + f + " already exists, use -force to overwrite." );
         }
         try ( Writer writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( f ) ), StandardCharsets.UTF_8 ) ) {
-            int written = expressionDataFileService.writeRawExpressionData( ee, qt, scaleType, writer );
+            int written = expressionDataFileService.writeRawExpressionData( ee, qt, scaleType, writer, true );
             addSuccessObject( ee, "Wrote " + written + " vectors for " + qt + " to " + f + "." );
         } catch ( IOException e ) {
             throw new RuntimeException( e );

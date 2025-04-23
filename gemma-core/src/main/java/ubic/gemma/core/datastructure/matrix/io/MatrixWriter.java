@@ -59,12 +59,23 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
     private final EntityUrlBuilder entityUrlBuilder;
     private final BuildInfo buildInfo;
 
+    private boolean autoFlush = false;
+
     @Nullable
     private ScaleType scaleType;
 
     public MatrixWriter( EntityUrlBuilder entityUrlBuilder, BuildInfo buildInfo ) {
         this.entityUrlBuilder = entityUrlBuilder;
         this.buildInfo = buildInfo;
+    }
+
+    /**
+     * Flush every time a complete line is written.
+     * <p>
+     * This is only applicable to the tabular output.
+     */
+    public void setAutoFlush( boolean autoFlush ) {
+        this.autoFlush = autoFlush;
     }
 
     @Override
@@ -106,6 +117,9 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
                 writeValue( matrix.get( j, i ), qt, writer );
             }
             writer.append( "\n" );
+            if ( autoFlush ) {
+                writer.flush();
+            }
         }
         if ( scaleType != null ) {
             // avoid leakage when using convertScalar()
@@ -150,7 +164,9 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
             }
 
             writer.append( "\n" );
-
+            if ( autoFlush ) {
+                writer.flush();
+            }
         }
         log.debug( "Done writing" );
         return rows;
@@ -185,7 +201,6 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
             }
 
             buf.append( "]}\n" );
-
         }
         buf.append( "\n]}" );
         writer.write( buf.toString() );
@@ -222,6 +237,9 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
 
         for ( QuantitationType qt : matrix.getQuantitationTypes() ) {
             writer.append( "# Quantitation type: " ).append( qt.toString() ).append( "\n" );
+            if ( autoFlush ) {
+                writer.flush();
+            }
         }
 
         writer.append( "Probe\tSequence" );
@@ -236,6 +254,9 @@ public class MatrixWriter implements BulkExpressionDataMatrixWriter {
             writer.append( "\t" ).append( format( colName ) );
         }
         writer.append( "\n" );
+        if ( autoFlush ) {
+            writer.flush();
+        }
     }
 
     /**

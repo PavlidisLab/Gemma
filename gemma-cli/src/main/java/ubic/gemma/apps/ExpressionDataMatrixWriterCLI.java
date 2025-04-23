@@ -103,7 +103,7 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
             fileName = Paths.get( ExpressionDataFileUtils.getDataOutputFilename( ee, filter, ExpressionDataFileUtils.TABULAR_BULK_DATA_FILE_SUFFIX ) );
         }
         try ( Writer writer = new OutputStreamWriter( openOutputFile( fileName, isForce() ), StandardCharsets.UTF_8 ) ) {
-            int written = fs.writeProcessedExpressionData( ee, filter, scaleType, writer );
+            int written = fs.writeProcessedExpressionData( ee, filter, scaleType, writer, true );
             addSuccessObject( ee, "Wrote " + written + " vectors to " + fileName + "." );
         } catch ( IOException | FilteringException e ) {
             throw new RuntimeException( e );
