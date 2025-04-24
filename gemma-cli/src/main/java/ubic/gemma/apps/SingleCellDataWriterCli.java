@@ -7,6 +7,7 @@ import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
 import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellDataVectorAggregatorUtils;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -30,6 +31,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -74,6 +76,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
     private boolean useStreaming;
     private int fetchSize;
     private boolean standardLocation;
+    private boolean standardOutput;
     @Nullable
     private Path outputFile;
 
@@ -108,7 +111,8 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         options.addOption( "useEnsemblIds", "use-ensembl-ids", false, "Use Ensembl IDs instead of official gene symbols (only for MEX output)" );
         options.addOption( "noStreaming", "no-streaming", false, "Use in-memory storage instead streaming for retrieving and writing vectors (defaults to false)" );
         options.addOption( Option.builder( "fetchSize" ).longOpt( "fetch-size" ).hasArg( true ).type( Integer.class ).desc( "Fetch size to use when retrieving vectors, incompatible with -noStreaming/--no-streaming." ).build() );
-        options.addOption( "standardLocation", "standard-location", false, "Write the file to the standard location under, this is incompatible with -scaleType/--scale-type, -useEnsemblIds/--use-ensembl-ids and -o/--output." );
+        options.addOption( "standardLocation", "standard-location", false, "Write the file to the standard location under, this is incompatible with -scaleType/--scale-type, -useEnsemblIds/--use-ensembl-ids, -stdout/--stdout or -o/--output." );
+        addSingleExperimentOption( options, "stdout", "stdout", false, "Write to the standard output." );
         addSingleExperimentOption( options, Option.builder( "o" ).longOpt( "output" ).hasArg( true ).type( Path.class ).desc( "Destination for the matrix file, or a directory if -format is set to MEX." ).build() );
 
         // slicing individual samples
@@ -141,9 +145,16 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
             this.scaleType = getEnumOptionValue( commandLine, "scaleType" );
         }
         this.standardLocation = commandLine.hasOption( "standardLocation" );
+        this.standardOutput = commandLine.hasOption( "stdout" );
         this.outputFile = commandLine.getParsedOptionValue( "o" );
+        if ( standardOutput && outputFile != null ) {
+            throw new ParseException( "Cannot set both -stdout/--stdout and -o/--output" );
+        }
         if ( standardLocation && scaleType != null ) {
             throw new ParseException( "Cannot use -standardLocation/--standard-location and -scaleType/--scale-type at the same time." );
+        }
+        if ( standardLocation && standardOutput ) {
+            throw new ParseException( "Cannot use -standardLocation/--standard-location and -stdout/--stdout at the same time." );
         }
         if ( standardLocation && outputFile != null ) {
             throw new ParseException( "Cannot use -standardLocation/--standard-location and -o/--output at the same time." );
@@ -178,19 +189,31 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
     @Override
     protected void processExpressionExperimentVectors( ExpressionExperiment ee, QuantitationType qt ) {
         try {
+            int written;
+            String did;
             if ( aggregateByAssay || aggregateByPreferredCellTypeAssignment || aggregateByCellTypeAssignment != null || aggregateByCellLevelCharacteristics != null ) {
-                aggregate( ee, qt );
+                did = "Aggregated";
+                written = aggregate( ee, qt );
             } else if ( samples != null ) {
-                slice( ee, qt );
+                did = "Sliced";
+                written = slice( ee, qt );
             } else {
-                raw( ee, qt );
+                did = "Wrote";
+                written = raw( ee, qt );
             }
+            addSuccessObject( ee, String.format( "%s%s single-cell vectors%s for %s%s%s.", did,
+                    written > 0 ? " " + written : "",
+                    fileName != null ? " to " + fileName : "",
+                    qt,
+                    useEnsemblIds ? " using Ensembl IDs" : "",
+                    samples != null ? " for the following assays: " + String.join( ", ", samples ) : ""
+            ) );
         } catch ( IOException e ) {
             addErrorObject( ee, e );
         }
     }
 
-    private void aggregate( ExpressionExperiment ee, QuantitationType qt ) throws IOException {
+    private int aggregate( ExpressionExperiment ee, QuantitationType qt ) throws IOException {
         SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod aggregationMethod = this.aggregationMethod != null
                 ? this.aggregationMethod : SingleCellDataVectorAggregatorUtils.SingleCellAggregationMethod.SUM;
         CellLevelCharacteristics cellLevelCharacteristics;
@@ -208,6 +231,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
                 cellLevelCharacteristics != null ? ( " and " + cellLevelCharacteristics ) : "",
                 aggregationMethod,
                 samples != null ? " for the following samples: " + Arrays.toString( samples ) : "" ) );
+        List<BioAssay> assays = null;
         Collection<RawExpressionDataVector> vecs;
         SingleCellExpressionExperimentService.SingleCellVectorInitializationConfig config = SingleCellExpressionExperimentService.SingleCellVectorInitializationConfig.builder()
                 .includeCellIds( false )
@@ -219,7 +243,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
             long numberOfVectors = singleCellExpressionExperimentService.getNumberOfSingleCellDataVectors( ee, qt );
             Stream<SingleCellExpressionDataVector> scVecs;
             if ( samples != null ) {
-                List<BioAssay> assays = Arrays.stream( samples )
+                assays = Arrays.stream( samples )
                         .map( sampleId -> entityLocator.locateBioAssay( ee, qt, sampleId ) )
                         .collect( Collectors.toList() );
                 scVecs = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, assays, qt, fetchSize, true, config );
@@ -233,7 +257,7 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         } else {
             Collection<SingleCellExpressionDataVector> scVecs;
             if ( samples != null ) {
-                List<BioAssay> assays = Arrays.stream( samples )
+                assays = Arrays.stream( samples )
                         .map( sampleId -> entityLocator.locateBioAssay( ee, qt, sampleId ) )
                         .collect( Collectors.toList() );
                 scVecs = singleCellExpressionExperimentService.getSingleCellDataVectors( ee, assays, qt, config );
@@ -249,107 +273,110 @@ public class SingleCellDataWriterCli extends ExpressionExperimentVectorsManipula
         } else {
             matrix = new ExpressionDataDoubleMatrix( vecs );
         }
-        try ( Writer writer = new OutputStreamWriter( openOutputFile( isForce() ), StandardCharsets.UTF_8 ) ) {
+        try ( Writer writer = new OutputStreamWriter( openOutputFile( ee, assays, qt, ".aggregated.tsv.gz", isForce() ), StandardCharsets.UTF_8 ) ) {
             MatrixWriter matrixWriter = new MatrixWriter( entityUrlBuilder, buildInfo );
             matrixWriter.setAutoFlush( true );
             matrixWriter.setScaleType( scaleType );
-            int writtenVectors = matrixWriter.write( matrix, writer );
-            addSuccessObject( ee, "Aggregated " + writtenVectors + " vectors for " + qt + "." );
+            return matrixWriter.write( matrix, writer );
         }
     }
 
-    private void slice( ExpressionExperiment ee, QuantitationType qt ) throws IOException {
+    private int slice( ExpressionExperiment ee, QuantitationType qt ) throws IOException {
         Assert.notNull( samples );
         List<BioAssay> assays = Arrays.stream( samples )
                 .map( sampleId -> entityLocator.locateBioAssay( ee, qt, sampleId ) )
                 .collect( Collectors.toList() );
+        int written;
         switch ( format ) {
             case TABULAR:
-                try ( Writer writer = new OutputStreamWriter( openOutputFile( isForce() ), StandardCharsets.UTF_8 ) ) {
-                    expressionDataFileService.writeTabularSingleCellExpressionData( ee, assays, qt, scaleType, useStreaming ? fetchSize : -1, writer, true );
+                try ( Writer writer = new OutputStreamWriter( openOutputFile( ee, assays, qt, ExpressionDataFileUtils.TABULAR_SC_DATA_SUFFIX, isForce() ), StandardCharsets.UTF_8 ) ) {
+                    return expressionDataFileService.writeTabularSingleCellExpressionData( ee, assays, qt, scaleType, useStreaming ? fetchSize : -1, writer, true );
                 }
-                break;
             case MEX:
                 if ( outputFile == null || outputFile.toString().endsWith( ".tar" ) || outputFile.toString().endsWith( ".tar.gz" ) ) {
                     log.warn( "Writing MEX to a stream requires a lot of memory and cannot be streamed, you can cancel this any anytime with Ctrl-C." );
-                    try ( OutputStream stream = openOutputFile( isForce() ) ) {
-                        int written = expressionDataFileService.writeMexSingleCellExpressionData( ee, assays, qt, scaleType, useEnsemblIds, stream );
-                        addSuccessObject( ee, "Wrote " + written + " vectors for " + qt + ( useEnsemblIds ? " using Ensembl IDs " : "" ) + "." );
+                    try ( OutputStream stream = openOutputFile( ee, assays, qt, ExpressionDataFileUtils.MEX_SC_DATA_SUFFIX, isForce() ) ) {
+                        return expressionDataFileService.writeMexSingleCellExpressionData( ee, assays, qt, scaleType, useEnsemblIds, stream );
                     }
                 } else {
                     if ( !isForce() && Files.exists( outputFile ) ) {
                         throw new RuntimeException( outputFile + " already exists, use -force/--force to override." );
                     }
-                    int written = expressionDataFileService.writeMexSingleCellExpressionData( ee, assays, qt, scaleType, useEnsemblIds, useStreaming ? fetchSize : -1, isForce(), outputFile );
-                    addSuccessObject( ee, "Wrote " + written + " vectors for " + qt + ( useEnsemblIds ? " using Ensembl IDs " : "" ) + "." );
+                    return expressionDataFileService.writeMexSingleCellExpressionData( ee, assays, qt, scaleType, useEnsemblIds, useStreaming ? fetchSize : -1, isForce(), outputFile );
                 }
             default:
                 throw new IllegalArgumentException( "Unsupported format: " + format );
         }
-        addSuccessObject( ee, "Sliced " + assays.size() + " vectors for " + qt + "." );
     }
 
-    private void raw( ExpressionExperiment ee, QuantitationType qt ) throws IOException {
+    private int raw( ExpressionExperiment ee, QuantitationType qt ) throws IOException {
         switch ( format ) {
             case TABULAR:
                 if ( standardLocation ) {
                     try ( LockedPath path = expressionDataFileService.writeOrLocateTabularSingleCellExpressionData( ee, qt, useStreaming ? fetchSize : -1, isForce() ) ) {
-                        addSuccessObject( ee, "Written vectors for " + qt + " to " + path.getPath() + "." );
+                        return 0;
                     }
                 } else {
-                    try ( Writer writer = new OutputStreamWriter( openOutputFile( isForce() ), StandardCharsets.UTF_8 ) ) {
-                        int written = expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, scaleType, useStreaming ? fetchSize : -1, writer, true );
-                        addSuccessObject( ee, "Wrote " + written + " vectors for " + qt + "." );
+                    try ( Writer writer = new OutputStreamWriter( openOutputFile( ee, null, qt, ExpressionDataFileUtils.TABULAR_SC_DATA_SUFFIX, isForce() ), StandardCharsets.UTF_8 ) ) {
+                        return expressionDataFileService.writeTabularSingleCellExpressionData( ee, qt, scaleType, useStreaming ? fetchSize : -1, writer, true );
                     }
                 }
-                break;
             case MEX:
                 if ( standardLocation ) {
                     try ( LockedPath path = expressionDataFileService.writeOrLocateMexSingleCellExpressionData( ee, qt, useStreaming ? fetchSize : -1, isForce() ) ) {
-                        addSuccessObject( ee, "Successfully written vectors for " + qt + " to " + path.getPath() + "." );
+                        return 0;
                     }
                 } else if ( outputFile == null || outputFile.toString().endsWith( ".tar" ) || outputFile.toString().endsWith( ".tar.gz" ) ) {
                     log.warn( "Writing MEX to a stream requires a lot of memory and cannot be streamed, you can cancel this any anytime with Ctrl-C." );
-                    try ( OutputStream stream = openOutputFile( isForce() ) ) {
-                        int written = expressionDataFileService.writeMexSingleCellExpressionData( ee, qt, scaleType, useEnsemblIds, stream );
-                        addSuccessObject( ee, "Wrote " + written + " vectors for " + qt + ( useEnsemblIds ? " using Ensembl IDs " : "" ) + "." );
+                    try ( OutputStream stream = openOutputFile( ee, null, qt, ExpressionDataFileUtils.MEX_SC_DATA_SUFFIX, isForce() ) ) {
+                        return expressionDataFileService.writeMexSingleCellExpressionData( ee, qt, scaleType, useEnsemblIds, stream );
                     }
                 } else {
                     if ( !isForce() && Files.exists( outputFile ) ) {
                         throw new RuntimeException( outputFile + " already exists, use -force/--force to override." );
                     }
-                    int written = expressionDataFileService.writeMexSingleCellExpressionData( ee, qt, scaleType, useEnsemblIds, useStreaming ? fetchSize : -1, isForce(), outputFile );
-                    addSuccessObject( ee, "Wrote " + written + " vectors for " + qt + ( useEnsemblIds ? " using Ensembl IDs " : "" ) + "." );
+                    return expressionDataFileService.writeMexSingleCellExpressionData( ee, qt, scaleType, useEnsemblIds, useStreaming ? fetchSize : -1, isForce(), outputFile );
                 }
-                break;
             case CELL_IDS:
-                try ( PrintStream printer = new PrintStream( openOutputFile( isForce() ), true, StandardCharsets.UTF_8.name() ) ) {
+                try ( PrintStream printer = new PrintStream( openOutputFile( ee, null, qt, ".cellIds.txt.gz", isForce() ), true, StandardCharsets.UTF_8.name() ) ) {
                     try ( Stream<String> stream = singleCellExpressionExperimentService.streamCellIds( ee, qt, true ) ) {
                         if ( stream != null ) {
                             stream.forEach( printer::println );
+                            return 0;
                         } else {
-                            addErrorObject( ee, "Could not find cell IDs for " + qt + "." );
+                            throw new RuntimeException( "Could not find cell IDs for " + qt + "." );
                         }
                     }
                 }
-                break;
             default:
                 throw new IllegalArgumentException( "Unsupported format: " + format );
         }
     }
 
-    private OutputStream openOutputFile( boolean overwriteExisting ) throws IOException {
-        if ( outputFile != null ) {
-            if ( !overwriteExisting && Files.exists( outputFile ) ) {
-                throw new RuntimeException( outputFile + " already exists, use -force/--force to override." );
-            }
-            if ( outputFile.toString().endsWith( ".gz" ) ) {
-                return new GZIPOutputStream( Files.newOutputStream( outputFile ) );
-            } else {
-                return Files.newOutputStream( outputFile );
-            }
-        } else {
+    @Nullable
+    private Path fileName;
+
+    private OutputStream openOutputFile( ExpressionExperiment ee, @Nullable List<BioAssay> assays, QuantitationType qt, String suffix, boolean overwriteExisting ) throws IOException {
+        if ( standardOutput ) {
+            fileName = null;
             return getCliContext().getOutputStream();
+        }
+        if ( this.outputFile != null ) {
+            fileName = this.outputFile;
+        } else {
+            if ( assays != null ) {
+                fileName = Paths.get( ExpressionDataFileUtils.getDataOutputFilename( ee, assays, qt, suffix ) );
+            } else {
+                fileName = Paths.get( ExpressionDataFileUtils.getDataOutputFilename( ee, qt, suffix ) );
+            }
+        }
+        if ( !overwriteExisting && Files.exists( fileName ) ) {
+            throw new RuntimeException( fileName + " already exists, use -force/--force to override." );
+        }
+        if ( fileName.toString().endsWith( ".gz" ) ) {
+            return new GZIPOutputStream( Files.newOutputStream( fileName ) );
+        } else {
+            return Files.newOutputStream( fileName );
         }
     }
 }

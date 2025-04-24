@@ -34,7 +34,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -64,6 +63,10 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     private ScaleType scaleType;
     @Nullable
     private Path outputFile;
+    /**
+     * Write the file to standard output.
+     */
+    private boolean standardOutput;
     private boolean filter;
 
     @Override
@@ -79,6 +82,7 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     @Override
     protected void buildExperimentOptions( Options options ) {
         addSingleExperimentOption( options, Option.builder( "o" ).longOpt( "outputFileName" ).desc( "File name. If omitted, the file name will be based on the short name of the experiment." ).argName( "filename" ).hasArg().type( Path.class ).build() );
+        addSingleExperimentOption( options, "stdout", "stdout", false, "Write to the standard output." );
         addSingleExperimentOption( options, Option.builder( "samples" ).longOpt( "samples" ).hasArg().valueSeparator( ',' ).desc( "List of sample identifiers to slice." ).build() );
         options.addOption( "filter", "Filter expression matrix under default parameters" );
         addEnumOption( options, "scaleType", "scale-type", "Scale type to use for the output", ScaleType.class );
@@ -89,44 +93,66 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         samples = commandLine.getOptionValues( "samples" );
         scaleType = OptionsUtils.getEnumOptionValue( commandLine, "scaleType" );
+        standardOutput = commandLine.hasOption( "stdout" );
         outputFile = commandLine.getParsedOptionValue( 'o' );
+        if ( standardOutput && outputFile != null ) {
+            throw new ParseException( "Cannot set both -stdout/--stdout and -o/--outputFileName" );
+        }
         filter = commandLine.hasOption( "filter" );
     }
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
-        Path fileName;
+        int written;
+        if ( samples != null ) {
+            QuantitationType qt = eeService.getProcessedQuantitationType( ee )
+                    .orElseThrow( () -> new IllegalStateException( ee + " does not have processed vectors." ) );
+            List<BioAssay> assays = Arrays.stream( samples )
+                    .map( sampleId -> entityLocator.locateBioAssay( ee, qt, sampleId ) )
+                    .collect( Collectors.toList() );
+            try ( Writer writer = openOutputFile( ee, assays, filter, isForce() ) ) {
+                written = fs.writeProcessedExpressionData( ee, assays, filter, scaleType, writer, true );
+            } catch ( IOException | FilteringException e ) {
+                throw new RuntimeException( e );
+            }
+        } else {
+            try ( Writer writer = openOutputFile( ee, null, filter, isForce() ) ) {
+                written = fs.writeProcessedExpressionData( ee, filter, scaleType, writer, true );
+            } catch ( IOException | FilteringException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+        addSuccessObject( ee, String.format( "Wrote%s processed vectors%s%s.",
+                written > 0 ? " " + written : "",
+                fileName != null ? " to " + fileName : "",
+                samples != null ? " for the following assays: " + String.join( ", ", samples ) : ""
+        ) );
+    }
+
+    @Nullable
+    private Path fileName;
+
+    private Writer openOutputFile( ExpressionExperiment ee, @Nullable List<BioAssay> assays, boolean filter, boolean overwriteExisting ) throws IOException {
+        if ( standardOutput ) {
+            fileName = null;
+            return new OutputStreamWriter( getCliContext().getOutputStream(), StandardCharsets.UTF_8 );
+        }
         if ( outputFile != null ) {
             fileName = outputFile;
         } else {
-            fileName = Paths.get( ExpressionDataFileUtils.getDataOutputFilename( ee, filter, ExpressionDataFileUtils.TABULAR_BULK_DATA_FILE_SUFFIX ) );
-        }
-        try ( Writer writer = new OutputStreamWriter( openOutputFile( fileName, isForce() ), StandardCharsets.UTF_8 ) ) {
-            int written;
-            if ( samples != null ) {
-                QuantitationType qt = eeService.getProcessedQuantitationType( ee )
-                        .orElseThrow( () -> new IllegalStateException( ee + " does not have processed vectors." ) );
-                List<BioAssay> assays = Arrays.stream( samples )
-                        .map( sampleId -> entityLocator.locateBioAssay( ee, qt, sampleId ) )
-                        .collect( Collectors.toList() );
-                written = fs.writeProcessedExpressionData( ee, assays, filter, scaleType, writer, true );
+            if ( assays != null ) {
+                fileName = Paths.get( ExpressionDataFileUtils.getDataOutputFilename( ee, assays, filter, ExpressionDataFileUtils.TABULAR_BULK_DATA_FILE_SUFFIX ) );
             } else {
-                written = fs.writeProcessedExpressionData( ee, filter, scaleType, writer, true );
+                fileName = Paths.get( ExpressionDataFileUtils.getDataOutputFilename( ee, filter, ExpressionDataFileUtils.TABULAR_BULK_DATA_FILE_SUFFIX ) );
             }
-            addSuccessObject( ee, "Wrote " + written + " vectors to " + fileName + "." );
-        } catch ( IOException | FilteringException e ) {
-            throw new RuntimeException( e );
         }
-    }
-
-    private OutputStream openOutputFile( Path fileName, boolean overwriteExisting ) throws IOException {
         if ( !overwriteExisting && Files.exists( fileName ) ) {
             throw new RuntimeException( fileName + " already exists, use -force/--force to override." );
         }
         if ( fileName.toString().endsWith( ".gz" ) ) {
-            return new GZIPOutputStream( Files.newOutputStream( fileName ) );
+            return new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( fileName ) ), StandardCharsets.UTF_8 );
         } else {
-            return Files.newOutputStream( fileName );
+            return Files.newBufferedWriter( fileName );
         }
     }
 }

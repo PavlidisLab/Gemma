@@ -4,9 +4,13 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Generate filenames for various types of data files.
@@ -31,11 +35,28 @@ public class ExpressionDataFileUtils {
         return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_expmat" + ( filtered ? "" : ".unfilt" ) + suffix;
     }
 
+    public static String getDataOutputFilename( ExpressionExperiment ee, List<BioAssay> assays, boolean filtered, String suffix ) {
+        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_" + formatAssays( assays ) + "_expmat" + ( filtered ? "" : ".unfilt" ) + suffix;
+    }
+
     /**
      * Obtain the filename for writing a specific QT.
      */
     public static String getDataOutputFilename( ExpressionExperiment ee, QuantitationType type, String suffix ) {
         return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_" + type.getId() + "_" + FileTools.cleanForFileName( type.getName() ) + "_expmat.unfilt" + suffix;
+    }
+
+    /**
+     * Obtain the filename for writing a specific QT.
+     */
+    public static String getDataOutputFilename( ExpressionExperiment ee, List<BioAssay> assays, QuantitationType type, String suffix ) {
+        return ee.getId() + "_" + FileTools.cleanForFileName( ee.getShortName() ) + "_" + type.getId() + "_" + FileTools.cleanForFileName( type.getName() ) + "_" + formatAssays( assays ) + "_expmat.unfilt" + suffix;
+    }
+
+    private static String formatAssays( List<BioAssay> assays ) {
+        return assays.stream()
+                .map( ba -> ba.getShortName() != null ? ba.getId() + "_" + FileTools.cleanForFileName( ba.getShortName() ) : ba.getId() + "_" + FileTools.cleanForFileName( ba.getName() ) )
+                .collect( Collectors.joining( "___" ) );
     }
 
     /**
