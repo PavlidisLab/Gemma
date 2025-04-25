@@ -152,17 +152,11 @@ public class SingleCellExpressionDataDoubleMatrix implements SingleCellExpressio
 
     @Override
     public List<String> getCellIds() {
-        if ( singleCellDimension.getCellIds() == null ) {
-            throw new IllegalStateException( "Cell IDs are not loaded in the single-cell dimension." );
-        }
         return singleCellDimension.getCellIds();
     }
 
     @Override
     public String getCellIdForColumn( int j ) {
-        if ( singleCellDimension.getCellIds() == null ) {
-            throw new IllegalStateException( "Cell IDs are not loaded in the single-cell dimension." );
-        }
         return singleCellDimension.getCellIds().get( j );
     }
 

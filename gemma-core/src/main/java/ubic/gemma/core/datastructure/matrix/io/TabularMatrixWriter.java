@@ -171,7 +171,6 @@ public class TabularMatrixWriter implements SingleCellExpressionDataMatrixWriter
     }
 
     private void writeVector( CompositeSequence cs, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, SingleCellDimension dimension, Object vec, PrimitiveType representation, int[] indices, Writer pwriter ) throws IOException {
-        Assert.notNull( dimension.getCellIds() );
         pwriter.append( format( cs.getId() ) )
                 .append( '\t' ).append( format( cs.getName() ) );
         if ( cs2gene != null ) {

@@ -110,7 +110,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
         this.name = bioAssay.getName();
         this.description = bioAssay.getDescription();
 
-        // the platform and original platform are eagerly fetched, so no need for a Hibernate.isInitialized() test:w
+        // the platform and original platform are eagerly fetched, so no need for a Utils.isInitialized() test:w
         ArrayDesign ad = bioAssay.getArrayDesignUsed();
         assert ad != null;
         if ( arrayDesignValueObjectsById != null && arrayDesignValueObjectsById.containsKey( ad.getId() ) ) {

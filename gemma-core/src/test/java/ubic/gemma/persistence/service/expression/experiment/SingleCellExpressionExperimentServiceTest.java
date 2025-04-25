@@ -35,6 +35,8 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.util.UninitializedList;
+import ubic.gemma.model.util.UninitializedSet;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils;
@@ -167,7 +169,9 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThat( scExpressionExperimentService.streamCellTypes( ee, scd.getCellTypeAssignments().iterator().next(), false ) )
                 .hasSize( 100 );
         ThrowingConsumer<SingleCellDimension> t = scd2 -> {
-            assertThat( scd2.getCellIds() ).isNull();
+            assertThat( scd2.getCellIds() )
+                    .isInstanceOf( UninitializedList.class )
+                    .hasSize( 100 );
             assertThat( scd2.getNumberOfCells() ).isEqualTo( 100 );
             assertThat( scd2.getBioAssays() ).containsExactlyElementsOf( scd.getBioAssays() );
             assertThat( scd2.getNumberOfCellsBySample( 0 ) ).isEqualTo( 25 );
@@ -213,6 +217,11 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
                                 assertThat( cta.getProtocol() ).isNull();
                             } );
                 } );
+        assertThat( scExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt, true, false, true, true, false ) )
+                .satisfies( scd2 -> {
+                    assertThat( scd2.getCellTypeAssignments() )
+                            .isInstanceOf( UninitializedSet.class );
+                } );
         SingleCellExpressionExperimentService.SingleCellVectorInitializationConfig config = SingleCellExpressionExperimentService.SingleCellVectorInitializationConfig
                 .builder()
                 .includeCellIds( false )
@@ -222,21 +231,24 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest 
         assertThat( scExpressionExperimentService.getSingleCellDataVectors( ee, scd.getBioAssays().subList( 0, 1 ), qt, config ) )
                 .hasSize( 10 )
                 .allSatisfy( vec -> {
-                    assertThat( vec.getSingleCellDimension().getCellIds() ).isNull();
+                    assertThat( vec.getSingleCellDimension().getCellIds() )
+                            .isInstanceOf( UninitializedList.class );
                     assertThat( vec.getData() ).isNotNull();
                     assertThat( vec.getDataIndices() ).isNotNull();
                 } );
         assertThat( scExpressionExperimentService.getSingleCellDataVectors( ee, scd.getBioAssays().subList( 0, 1 ), qt ) )
                 .hasSize( 10 )
                 .allSatisfy( vec -> {
-                    assertThat( vec.getSingleCellDimension().getCellIds() ).isNotNull();
+                    assertThat( vec.getSingleCellDimension().getCellIds() )
+                            .isInstanceOf( UninitializedList.class );
                     assertThat( vec.getData() ).isNotNull();
                     assertThat( vec.getDataIndices() ).isNotNull();
                 } );
         assertThat( scExpressionExperimentService.streamSingleCellDataVectors( ee, scd.getBioAssays().subList( 0, 1 ), qt, 30, false, config ) )
                 .hasSize( 10 )
                 .allSatisfy( vec -> {
-                    assertThat( vec.getSingleCellDimension().getCellIds() ).isNull();
+                    assertThat( vec.getSingleCellDimension().getCellIds() )
+                            .isInstanceOf( UninitializedList.class );
                     assertThat( vec.getData() ).isNotNull();
                     assertThat( vec.getDataIndices() ).isNotNull();
                 } );

@@ -77,7 +77,6 @@ public class CellLevelCharacteristicsWriter {
     }
 
     private void write( CellTypeAssignment cellTypeAssignment, SingleCellDimension dimension, CSVPrinter printer ) throws IOException {
-        Assert.notNull( dimension.getCellIds(), "The dimension must have cell IDs." );
         int[] cellTypeIndices = cellTypeAssignment.getCellTypeIndices();
         for ( int cellIndex = 0; cellIndex < cellTypeIndices.length; cellIndex++ ) {
             Characteristic cellType = cellTypeAssignment.getCellType( cellIndex );
@@ -91,7 +90,6 @@ public class CellLevelCharacteristicsWriter {
     }
 
     private void write( CellLevelCharacteristics cellLevelCharacteristics, SingleCellDimension dimension, @Nullable String categoryId, CSVPrinter printer ) throws IOException {
-        Assert.notNull( dimension.getCellIds(), "The dimension must have cell IDs." );
         int[] indices = cellLevelCharacteristics.getIndices();
         for ( int cellIndex = 0; cellIndex < indices.length; cellIndex++ ) {
             Characteristic c = cellLevelCharacteristics.getCharacteristic( cellIndex );

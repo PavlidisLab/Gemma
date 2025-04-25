@@ -25,7 +25,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.Hibernate;
+import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
@@ -172,7 +172,7 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
             ExperimentalFactor factor = fv.getExperimentalFactor();
             String factorId = String.format( "factor%d", factor.getId() );
             String factorValueId = String.format( "fv%d", fv.getId() );
-            if ( Hibernate.isInitialized( factor ) ) {
+            if ( ModelUtils.isInitialized( factor ) ) {
                 this.factors.put( factorId, factor.getName() );
             }
             if ( fv.getMeasurement() != null ) {

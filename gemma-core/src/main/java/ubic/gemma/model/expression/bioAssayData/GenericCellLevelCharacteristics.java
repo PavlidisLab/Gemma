@@ -2,6 +2,7 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import lombok.Getter;
 import lombok.Setter;
+import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.description.Characteristic;
 
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 @Setter
 public class GenericCellLevelCharacteristics extends AbstractIdentifiable implements CellLevelCharacteristics {
 
+    @MayBeUninitialized
     private List<Characteristic> characteristics;
 
     private int numberOfCharacteristics;

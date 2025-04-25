@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.Hibernate;
+import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
@@ -76,12 +76,12 @@ public class ExpressionExperimentSubsetValueObject extends IdentifiableValueObje
     public ExpressionExperimentSubsetValueObject( ExpressionExperimentSubSet ees, @Nullable Map<Long, ArrayDesignValueObject> arrayDesignValueObjectsById, @Nullable Map<BioAssay, BioAssay> bioAssay2SourceBioAssayMap, boolean includeAssays, boolean basic, boolean allFactorValues ) {
         super( ees.getId() );
         this.sourceExperimentId = ees.getSourceExperiment().getId();
-        if ( Hibernate.isInitialized( ees.getSourceExperiment() ) ) {
+        if ( ModelUtils.isInitialized( ees.getSourceExperiment() ) ) {
             this.sourceExperimentShortName = ees.getSourceExperiment().getShortName();
         }
         this.name = ees.getName();
         this.description = ees.getDescription();
-        if ( Hibernate.isInitialized( ees.getBioAssays() ) ) {
+        if ( ModelUtils.isInitialized( ees.getBioAssays() ) ) {
             this.numberOfBioAssays = ees.getBioAssays().size();
             if ( includeAssays ) {
                 bioAssays = ees.getBioAssays().stream()
@@ -91,7 +91,7 @@ public class ExpressionExperimentSubsetValueObject extends IdentifiableValueObje
         } else {
             this.numberOfBioAssays = null;
         }
-        if ( Hibernate.isInitialized( ees.getCharacteristics() ) ) {
+        if ( ModelUtils.isInitialized( ees.getCharacteristics() ) ) {
             characteristics = ees.getCharacteristics().stream()
                     .map( CharacteristicValueObject::new )
                     .collect( Collectors.toSet() );

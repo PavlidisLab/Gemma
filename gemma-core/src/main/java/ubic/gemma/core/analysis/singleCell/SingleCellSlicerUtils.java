@@ -8,6 +8,8 @@ import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.*;
+import ubic.gemma.model.util.UninitializedList;
+import ubic.gemma.model.util.UninitializedSet;
 
 import javax.annotation.Nullable;
 import java.beans.PropertyDescriptor;
@@ -171,8 +173,13 @@ public class SingleCellSlicerUtils {
     }
 
     public static List<String> sliceCellIds( SingleCellDimension singleCellDimension, List<BioAssay> assays, int[] starts, int[] ends, int numCells ) {
-        if ( singleCellDimension.getCellIds() == null ) {
-            return null;
+        if ( singleCellDimension.getCellIds() instanceof UninitializedList ) {
+            log.info( "Cell IDs are uninitialized, returning sized uninitialized lists." );
+            int size = 0;
+            for ( int i = 0; i < assays.size(); i++ ) {
+                size += ends[i] - starts[i];
+            }
+            return new UninitializedList<>( size );
         }
         List<String> cellIds = new ArrayList<>( numCells );
         for ( int i = 0; i < assays.size(); i++ ) {
@@ -182,6 +189,10 @@ public class SingleCellSlicerUtils {
     }
 
     public static Set<CellTypeAssignment> sliceCtas( SingleCellDimension singleCellDimension, List<BioAssay> assays, int[] starts, int[] ends, int numCells ) {
+        if ( singleCellDimension.getCellTypeAssignments() instanceof UninitializedSet ) {
+            log.info( "CTAs are uninitialized, returning an uninitialized set." );
+            return new UninitializedSet<>();
+        }
         Set<CellTypeAssignment> ctas = new HashSet<>();
         for ( CellTypeAssignment cta : singleCellDimension.getCellTypeAssignments() ) {
             List<Characteristic> cellTypes = new ArrayList<>( cta.getCellTypes() );
@@ -204,6 +215,10 @@ public class SingleCellSlicerUtils {
     }
 
     public static Set<CellLevelCharacteristics> sliceClcs( SingleCellDimension singleCellDimension, List<BioAssay> assays, int[] starts, int[] ends, int numCells ) {
+        if ( singleCellDimension.getCellTypeAssignments() instanceof UninitializedSet ) {
+            log.info( "CLCs are uninitialized, returning an uninitialized set." );
+            return new UninitializedSet<>();
+        }
         Set<CellLevelCharacteristics> clcs = new HashSet<>();
         for ( CellLevelCharacteristics clc : singleCellDimension.getCellTypeAssignments() ) {
             List<Characteristic> characteristics = new ArrayList<>( clc.getCharacteristics() );

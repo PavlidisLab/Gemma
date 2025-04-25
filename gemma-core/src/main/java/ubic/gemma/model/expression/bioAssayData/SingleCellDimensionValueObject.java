@@ -4,13 +4,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.apachecommons.CommonsLog;
-import org.hibernate.Hibernate;
+import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.util.UninitializedList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,7 +69,11 @@ public class SingleCellDimensionValueObject extends IdentifiableValueObject<Sing
 
     public SingleCellDimensionValueObject( SingleCellDimension singleCellDimension, boolean excludeBioAssayIds, boolean excludeCellTypeIds, boolean excludeCharacteristicIds ) {
         super( singleCellDimension );
-        this.cellIds = singleCellDimension.getCellIds();
+        if ( singleCellDimension.getCellIds() instanceof UninitializedList ) {
+            this.cellIds = null;
+        } else {
+            this.cellIds = singleCellDimension.getCellIds();
+        }
         this.numberOfCells = singleCellDimension.getNumberOfCells();
         if ( !excludeBioAssayIds ) {
             this.bioAssayIds = new ArrayList<>( singleCellDimension.getNumberOfCells() );
@@ -80,12 +85,12 @@ public class SingleCellDimensionValueObject extends IdentifiableValueObject<Sing
                 log.warn( "The bioassays sparse range array is invalid for " + singleCellDimension, e );
             }
         }
-        if ( Hibernate.isInitialized( singleCellDimension.getCellTypeAssignments() ) ) {
+        if ( ModelUtils.isInitialized( singleCellDimension.getCellTypeAssignments() ) ) {
             this.cellTypeAssignments = singleCellDimension.getCellTypeAssignments().stream()
                     .map( cellTypeAssignment -> new CellTypeAssignmentValueObject( cellTypeAssignment, excludeCellTypeIds ) )
                     .collect( Collectors.toSet() );
         }
-        if ( Hibernate.isInitialized( singleCellDimension.getCellLevelCharacteristics() ) ) {
+        if ( ModelUtils.isInitialized( singleCellDimension.getCellLevelCharacteristics() ) ) {
             this.cellLevelCharacteristics = singleCellDimension.getCellLevelCharacteristics().stream()
                     .map( ( CellLevelCharacteristics clc ) -> new CellLevelCharacteristicsValueObject( clc, excludeCharacteristicIds ) )
                     .collect( Collectors.toSet() );

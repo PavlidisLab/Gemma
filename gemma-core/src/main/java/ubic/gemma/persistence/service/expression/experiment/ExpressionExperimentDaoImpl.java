@@ -34,6 +34,7 @@ import org.hibernate.type.CustomType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 import ubic.gemma.core.profiling.StopWatchUtils;
@@ -55,6 +56,8 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.util.UninitializedList;
+import ubic.gemma.model.util.UninitializedSet;
 import ubic.gemma.persistence.hibernate.CompressedStringListType;
 import ubic.gemma.persistence.hibernate.TypedResultTransformer;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
@@ -121,6 +124,7 @@ public class ExpressionExperimentDaoImpl
     private final Set<Class<? extends BulkExpressionDataVector>> bulkDataVectorTypes;
 
     private final CompressedStringListType cellIdsUserType;
+    private SessionRegistryImpl sessionRegistryImpl;
 
     @Autowired
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
@@ -2288,7 +2292,7 @@ public class ExpressionExperimentDaoImpl
         @Override
         public SingleCellDimension transformTuple( Object[] tuple, String[] aliases ) {
             SingleCellDimension result = ( SingleCellDimension ) aliasToBean( SingleCellDimension.class ).transformTuple( tuple, aliases );
-            result.setCellIds( null );
+            result.setCellIds( new UninitializedList<>( result.getNumberOfCells() ) );
             if ( includeBioAssays ) {
                 //noinspection unchecked
                 List<BioAssay> bas = getSessionFactory().getCurrentSession()
@@ -2297,7 +2301,7 @@ public class ExpressionExperimentDaoImpl
                         .list();
                 result.setBioAssays( bas );
             } else {
-                result.setBioAssays( null );
+                result.setBioAssays( new UninitializedList<>( result.getBioAssaysOffset().length ) );
             }
             // FIXME: fix lazy initialization and use Hibernate.initialize() instead
             if ( includeCtas ) {
@@ -2321,7 +2325,7 @@ public class ExpressionExperimentDaoImpl
                     result.setCellTypeAssignments( new HashSet<>( ctas ) );
                 }
             } else {
-                result.setCellTypeAssignments( null );
+                result.setCellTypeAssignments( new UninitializedSet<>() );
             }
             if ( includeClcs ) {
                 if ( includeCharacteristics && includeIndices ) {
@@ -2344,7 +2348,7 @@ public class ExpressionExperimentDaoImpl
                     result.setCellLevelCharacteristics( new HashSet<>( clcs ) );
                 }
             } else {
-                result.setCellLevelCharacteristics( null );
+                result.setCellLevelCharacteristics( new UninitializedSet<>() );
             }
             return result;
         }
@@ -2379,7 +2383,7 @@ public class ExpressionExperimentDaoImpl
                         .list();
                 result.setCellTypes( cellTypes );
             } else {
-                result.setCellTypes( null );
+                result.setCellTypes( new UninitializedList<>() );
             }
             return result;
         }
@@ -2409,7 +2413,7 @@ public class ExpressionExperimentDaoImpl
                         .list();
                 result.setCharacteristics( characteristics );
             } else {
-                result.setCharacteristics( null );
+                result.setCharacteristics( new UninitializedList<>() );
             }
             return result;
         }
@@ -2519,7 +2523,7 @@ public class ExpressionExperimentDaoImpl
     @Override
     public Stream<String> streamCellIds( SingleCellDimension dimension, boolean createNewSession ) {
         return QueryUtils.createStream( getSessionFactory(), session -> {
-            Stream<String> stream = session.doReturningWork( work -> {
+            return session.doReturningWork( work -> {
                 PreparedStatement stmt = work.prepareStatement( "select CELL_IDS from SINGLE_CELL_DIMENSION where ID = ?" );
                 stmt.setLong( 1, dimension.getId() );
                 ResultSet rs = stmt.executeQuery();
@@ -2529,7 +2533,6 @@ public class ExpressionExperimentDaoImpl
                     return null;
                 }
             } );
-            return stream;
         }, createNewSession );
     }
 

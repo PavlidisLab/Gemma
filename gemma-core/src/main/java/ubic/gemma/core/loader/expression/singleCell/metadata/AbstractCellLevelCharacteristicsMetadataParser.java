@@ -75,7 +75,6 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
      * @param bioAssayMapper                  strategy to use to match sample name from the file to bioassays
      */
     protected AbstractCellLevelCharacteristicsMetadataParser( SingleCellDimension singleCellDimension, BioAssayMapper bioAssayMapper ) {
-        Assert.notNull( singleCellDimension.getCellIds() );
         this.singleCellDimension = singleCellDimension;
         this.bioAssayMapper = bioAssayMapper;
         this.cellIds = singleCellDimension.getCellIds();

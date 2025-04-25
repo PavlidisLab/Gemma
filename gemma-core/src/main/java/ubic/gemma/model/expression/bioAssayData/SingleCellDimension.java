@@ -3,13 +3,13 @@ package ubic.gemma.model.expression.bioAssayData;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.util.Assert;
+import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.persistence.hibernate.ByteArrayType;
 import ubic.gemma.persistence.hibernate.CompressedStringListType;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
 import static ubic.gemma.core.util.ListUtils.getSparseRangeArrayElement;
@@ -32,10 +32,8 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      * Those are user-supplied cell identifiers. Each cell from a given {@link BioAssay} must be assigned a unique id.
      * <p>
      * This is stored as a compressed, gzipped blob in the database. See {@link CompressedStringListType} for more details.
-     * <p>
-     * This may be set to {@code null} to keep the model lightweight.
      */
-    @Nullable
+    @MayBeUninitialized(hasSize = true)
     private List<String> cellIds = new ArrayList<>();
 
     /**
@@ -54,6 +52,7 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      * <p>
      * To find the {@link BioAssay} of a given cell, use {@link #getBioAssay(int)}.
      */
+    @MayBeUninitialized
     private List<BioAssay> bioAssays = new ArrayList<>();
 
     /**
@@ -73,6 +72,7 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      * This is empty if no cell types have been assigned and should always contain a preferred assignment as per
      * {@link CellTypeAssignment#isPreferred()} if non-empty.
      */
+    @MayBeUninitialized
     private Set<CellTypeAssignment> cellTypeAssignments = new HashSet<>();
 
     /**
@@ -80,6 +80,7 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      * <p>
      * Cell types have a special treatment and should be added to {@link #cellTypeAssignments}.
      */
+    @MayBeUninitialized
     private Set<CellLevelCharacteristics> cellLevelCharacteristics = new HashSet<>();
 
     /**
@@ -100,7 +101,6 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      * @param sampleIndex the sample position in {@link #bioAssays}
      */
     public List<String> getCellIdsBySample( int sampleIndex ) {
-        Assert.notNull( cellIds, "Cell IDs are not available." );
         Assert.isTrue( sampleIndex >= 0 && sampleIndex < bioAssays.size(), "Sample index must be in range [0, " + bioAssays.size() + "[." );
         return Collections.unmodifiableList( cellIds.subList( bioAssaysOffset[sampleIndex], bioAssaysOffset[sampleIndex] + getNumberOfCellsBySample( sampleIndex ) ) );
     }

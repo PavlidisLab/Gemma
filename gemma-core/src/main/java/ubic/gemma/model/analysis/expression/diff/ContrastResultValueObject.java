@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.Hibernate;
+import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 
@@ -49,7 +49,7 @@ public class ContrastResultValueObject extends IdentifiableValueObject<ContrastR
         this.coefficient = contrastResult.getCoefficient();
         this.logFoldChange = contrastResult.getLogFoldChange();
         if ( contrastResult.getFactorValue() != null ) {
-            if ( includeFactorValue && Hibernate.isInitialized( contrastResult.getFactorValue() ) ) {
+            if ( includeFactorValue && ModelUtils.isInitialized( contrastResult.getFactorValue() ) ) {
                 this.factorValue = new FactorValueBasicValueObject( contrastResult.getFactorValue() );
             } else {
                 this.factorValueId = contrastResult.getFactorValue().getId();
@@ -59,7 +59,7 @@ public class ContrastResultValueObject extends IdentifiableValueObject<ContrastR
         }
         // not all contrast results have a second factor value
         if ( contrastResult.getSecondFactorValue() != null ) {
-            if ( includeFactorValue && Hibernate.isInitialized( contrastResult.getSecondFactorValue() ) ) {
+            if ( includeFactorValue && ModelUtils.isInitialized( contrastResult.getSecondFactorValue() ) ) {
                 this.secondFactorValue = new FactorValueBasicValueObject( contrastResult.getSecondFactorValue() );
             } else {
                 this.secondFactorValueId = contrastResult.getSecondFactorValue().getId();

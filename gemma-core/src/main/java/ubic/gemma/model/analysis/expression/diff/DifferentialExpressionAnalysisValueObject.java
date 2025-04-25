@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.Hibernate;
+import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.analysis.AnalysisValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
@@ -86,9 +86,9 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
         }
         // this is only populated for subsets, but it's safer to always check
         if ( analysis.getSubsetFactorValue() != null ) {
-            if ( Hibernate.isInitialized( analysis.getSubsetFactorValue() ) ) {
+            if ( ModelUtils.isInitialized( analysis.getSubsetFactorValue() ) ) {
                 this.subsetFactorValue = new FactorValueValueObject( analysis.getSubsetFactorValue(), false );
-                if ( Hibernate.isInitialized( analysis.getSubsetFactorValue().getExperimentalFactor() ) ) {
+                if ( ModelUtils.isInitialized( analysis.getSubsetFactorValue().getExperimentalFactor() ) ) {
                     this.subsetFactor = new ExperimentalFactorValueObject(
                             analysis.getSubsetFactorValue().getExperimentalFactor() );
                 }

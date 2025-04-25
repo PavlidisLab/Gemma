@@ -3,6 +3,7 @@ package ubic.gemma.model.expression.bioAssayData;
 import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.model.analysis.Analysis;
+import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.description.Characteristic;
 
 import javax.annotation.Nullable;
@@ -46,6 +47,7 @@ public class CellTypeAssignment extends Analysis implements CellLevelCharacteris
     /**
      * List of cell types.
      */
+    @MayBeUninitialized
     private List<Characteristic> cellTypes = new ArrayList<>();
 
     /**

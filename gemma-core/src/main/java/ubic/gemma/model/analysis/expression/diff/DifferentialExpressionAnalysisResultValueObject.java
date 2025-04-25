@@ -17,7 +17,7 @@ package ubic.gemma.model.analysis.expression.diff;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.hibernate.Hibernate;
+import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.analysis.AnalysisResultValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -54,13 +54,13 @@ public class DifferentialExpressionAnalysisResultValueObject extends AnalysisRes
         super( result );
         // getId() does not initialize proxies
         this.probeId = result.getProbe().getId();
-        if ( Hibernate.isInitialized( result.getProbe() ) ) {
+        if ( ModelUtils.isInitialized( result.getProbe() ) ) {
             this.probeName = result.getProbe().getName();
         }
         this.pValue = result.getPvalue();
         this.correctedPvalue = result.getCorrectedPvalue();
         this.rank = result.getRank();
-        if ( Hibernate.isInitialized( result.getContrasts() ) ) {
+        if ( ModelUtils.isInitialized( result.getContrasts() ) ) {
             this.contrasts = result.getContrasts().stream()
                     .map( c -> new ContrastResultValueObject( c, includeFactorValues ) )
                     .collect( Collectors.toList() );

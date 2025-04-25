@@ -10,7 +10,7 @@ import gemma.gsec.util.SecurityUtil;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.Hibernate;
+import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
@@ -117,7 +117,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.description = ee.getDescription();
 
         // accession
-        if ( !ignoreAccession && ee.getAccession() != null && Hibernate.isInitialized( ee.getAccession() ) ) {
+        if ( !ignoreAccession && ee.getAccession() != null && ModelUtils.isInitialized( ee.getAccession() ) ) {
             this.accession = ee.getAccession().getAccession();
             this.externalDatabase = ee.getAccession().getExternalDatabase().getName();
             this.externalDatabaseUri = ee.getAccession().getExternalDatabase().getWebUri();
@@ -135,7 +135,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         }
 
         // Counts
-        if ( Hibernate.isInitialized( ee.getBioAssays() ) ) {
+        if ( ModelUtils.isInitialized( ee.getBioAssays() ) ) {
             this.numberOfBioAssays = ee.getBioAssays().size();
         } else {
             // this is a denormalization, so we merely use it as a fallback if bioAssays are not initialized
@@ -143,7 +143,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         }
 
         // ED
-        if ( !ignoreDesign && ee.getExperimentalDesign() != null && Hibernate.isInitialized( ee.getExperimentalDesign() ) ) {
+        if ( !ignoreDesign && ee.getExperimentalDesign() != null && ModelUtils.isInitialized( ee.getExperimentalDesign() ) ) {
             this.experimentalDesign = ee.getExperimentalDesign().getId();
         }
 
@@ -155,7 +155,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         batchConfound = ee.getBatchConfound();
 
         // GEEQ: for administrators, create an admin geeq VO. Normal GEEQ VO otherwise.
-        if ( ee.getGeeq() != null && Hibernate.isInitialized( ee.getGeeq() ) ) {
+        if ( ee.getGeeq() != null && ModelUtils.isInitialized( ee.getGeeq() ) ) {
             geeq = SecurityUtil.isUserAdmin() ?
                     new GeeqAdminValueObject( ee.getGeeq() ) :
                     new GeeqValueObject( ee.getGeeq() );
@@ -163,7 +163,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
             geeq = null;
         }
 
-        if ( Hibernate.isInitialized( ee.getCharacteristics() ) ) {
+        if ( ModelUtils.isInitialized( ee.getCharacteristics() ) ) {
             characteristics = ee.getCharacteristics().stream()
                     .map( CharacteristicValueObject::new )
                     .collect( Collectors.toSet() );
