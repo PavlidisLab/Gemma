@@ -780,8 +780,19 @@ public class DatasetsWebService {
             @ApiResponse(responseCode = "404", description = "The dataset does not exist.",
                     content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<List<BioAssayValueObject>> getDatasetSamples( // Params:
-            @PathParam("dataset") DatasetArg<?> datasetArg // Required
+            @PathParam("dataset") DatasetArg<?> datasetArg, // Required
+            @QueryParam("quantitationType") QuantitationTypeArg<?> quantitationTypeArg,
+            @QueryParam("useProcessedQuantitationType") boolean useProcessedQuantitationType
     ) {
+        if ( quantitationTypeArg != null ) {
+            ExpressionExperiment ee = datasetArgService.getEntity( datasetArg );
+            QuantitationType qt = quantitationTypeArgService.getEntity( quantitationTypeArg, ee );
+            return respond( datasetArgService.getSamples( datasetArg, qt ) );
+        }
+        if ( useProcessedQuantitationType ) {
+            QuantitationType qt = datasetArgService.getPreferredQuantitationType( datasetArg );
+            return respond( datasetArgService.getSamples( datasetArg, qt ) );
+        }
         return respond( datasetArgService.getSamples( datasetArg ) );
     }
 

@@ -61,11 +61,15 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     public QuantitationTypeDaoImpl( SessionFactory sessionFactory ) {
         super( QuantitationType.class, sessionFactory );
         //noinspection unchecked
-        dataVectorTypes = getSessionFactory().getAllClassMetadata().values().stream()
-                .map( ClassMetadata::getMappedClass )
-                .filter( DataVector.class::isAssignableFrom )
-                .map( clazz -> ( Class<? extends DataVector> ) clazz )
+        dataVectorTypes = sessionFactory.getAllClassMetadata().values().stream()
+                .filter( cm -> DataVector.class.isAssignableFrom( cm.getMappedClass() ) )
+                .map( cm -> ( Class<? extends DataVector> ) cm.getMappedClass() )
                 .collect( Collectors.toSet() );
+    }
+
+    @Override
+    public Set<Class<? extends DataVector>> getVectorTypes() {
+        return dataVectorTypes;
     }
 
     @Override
@@ -161,14 +165,14 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
 
     @Override
     public QuantitationType findByNameAndVectorType( ExpressionExperiment ee, String name, Class<? extends DataVector> dataVectorType ) {
-        Long id = ( Long ) getSessionFactory().getCurrentSession()
-                .createCriteria( dataVectorType )
-                .add( Restrictions.eq( "expressionExperiment", ee ) )
-                .createCriteria( "quantitationType" )
-                .add( Restrictions.eq( "name", name ) )
-                .setProjection( Projections.distinct( Projections.id() ) )
+        String entityName = getSessionFactory().getClassMetadata( dataVectorType ).getEntityName();
+        return ( QuantitationType ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select v.quantitationType from " + entityName + " v "
+                        + "where v.expressionExperiment = :ee and v.quantitationType.name = :name "
+                        + "group by v.quantitationType" )
+                .setParameter( "ee", ee )
+                .setParameter( "name", name )
                 .uniqueResult();
-        return id != null ? load( id ) : null;
     }
 
     @Override
@@ -194,15 +198,30 @@ public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledD
     }
 
     @Override
+    public QuantitationType loadById( Long id, ExpressionExperiment ee ) {
+        Set<QuantitationType> found = dataVectorTypes.stream()
+                .map( vt -> loadByIdAndVectorType( id, ee, vt ) )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toSet() );
+        if ( found.size() == 1 ) {
+            return found.iterator().next();
+        } else if ( found.size() > 1 ) {
+            throw new NonUniqueResultException( found.size() );
+        } else {
+            return null;
+        }
+    }
+
+    @Override
     public QuantitationType loadByIdAndVectorType( Long id, ExpressionExperiment ee, Class<? extends DataVector> dataVectorType ) {
-        id = ( Long ) getSessionFactory().getCurrentSession()
-                .createCriteria( dataVectorType )
-                .add( Restrictions.eq( "expressionExperiment", ee ) )
-                .createCriteria( "quantitationType" )
-                .add( Restrictions.idEq( id ) )
-                .setProjection( Projections.distinct( Projections.id() ) )
+        String entityName = getSessionFactory().getClassMetadata( dataVectorType ).getEntityName();
+        return ( QuantitationType ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select v.quantitationType from " + entityName + " v "
+                        + "where v.expressionExperiment = :ee and v.quantitationType.id = :id "
+                        + "group by v.quantitationType" )
+                .setParameter( "ee", ee )
+                .setParameter( "id", id )
                 .uniqueResult();
-        return id != null ? load( id ) : null;
     }
 
     @Override

@@ -37,6 +37,13 @@ import java.util.Set;
  */
 public interface QuantitationTypeDao extends FilteringVoEnabledDao<QuantitationType, QuantitationTypeValueObject> {
 
+    /**
+     * Obtain all the data vector types that are associated with quantitation types.
+     */
+    Collection<Class<? extends DataVector>> getVectorTypes();
+
+    @Nullable
+    QuantitationType loadById( Long id, ExpressionExperiment ee );
 
     /**
      * Load a QT from an experiment by ID and vector type.
