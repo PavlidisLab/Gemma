@@ -1,5 +1,11 @@
 ## Updates
 
+### Update 2.8.6
+
+Add `quantitationType` and `useProcessedQuantitationType` to `getDatasetSamples` endpoint. This allows one to request
+samples matching the expression data. For now, this is not really useful, but in the 2.9.0 release, some datasets will
+have expression data at the sub-assay level.
+
 ### Update 2.8.5
 
 Use 200 as a default response code.

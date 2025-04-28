@@ -22,6 +22,15 @@ public class QuantitationTypeByNameArg extends QuantitationTypeArg<String> {
     }
 
     @Override
+    QuantitationType getEntity( ExpressionExperiment ee, QuantitationTypeService service ) {
+        try {
+            return service.findByName( ee, getValue() );
+        } catch ( NonUniqueQuantitationTypeByNameException e ) {
+            throw new BadRequestException( "More than one quantitation type uses the given name. Use a numerical ID instead.", e );
+        }
+    }
+
+    @Override
     QuantitationType getEntity( ExpressionExperiment ee, QuantitationTypeService service, Class<? extends DesignElementDataVector> dataVectorType ) {
         try {
             return service.findByNameAndVectorType( ee, getValue(), dataVectorType );

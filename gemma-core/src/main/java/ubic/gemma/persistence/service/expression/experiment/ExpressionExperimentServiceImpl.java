@@ -53,10 +53,7 @@ import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
@@ -1077,6 +1074,18 @@ public class ExpressionExperimentServiceImpl
             thawedBioAssayDimensions.add( this.bioAssayDimensionService.thaw( bioAssayDimension ) );
         }
         return thawedBioAssayDimensions;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BioAssayDimension getBioAssayDimension( ExpressionExperiment entity, QuantitationType qt ) {
+        for ( Class<? extends DataVector> vectorType : quantitationTypeService.getVectorTypes() ) {
+            BioAssayDimension bad;
+            if ( ( bad = expressionExperimentDao.getBioAssayDimension( entity, qt, vectorType) ) != null ) {
+                return bad;
+            }
+        }
+        return null;
     }
 
     @Override

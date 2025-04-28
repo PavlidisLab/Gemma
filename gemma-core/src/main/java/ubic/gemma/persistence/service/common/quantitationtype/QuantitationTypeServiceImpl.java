@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
 
@@ -48,6 +49,13 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
     }
 
     @Override
+    // does not need to a transaction
+    public Collection<Class<? extends DataVector>> getVectorTypes() {
+        return this.quantitationTypeDao.getVectorTypes();
+    }
+
+
+    @Override
     @Transactional(readOnly = true)
     public List<QuantitationType> loadByDescription( String description ) {
         return this.quantitationTypeDao.loadByDescription( description );
@@ -61,14 +69,24 @@ public class QuantitationTypeServiceImpl extends AbstractFilteringVoEnabledServi
 
     @Override
     @Transactional(readOnly = true)
+    public QuantitationType loadById( Long id, ExpressionExperiment ee ) {
+        return quantitationTypeDao.loadById( id, ee );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public QuantitationType loadByIdAndVectorType( Long id, ExpressionExperiment ee, Class<? extends DataVector> dataVectorType ) {
         return quantitationTypeDao.loadByIdAndVectorType( id, ee, dataVectorType );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType ) {
-        return this.quantitationTypeDao.find( ee, quantitationType );
+    public QuantitationType findByName( ExpressionExperiment ee, String name ) throws NonUniqueQuantitationTypeByNameException {
+        try {
+            return quantitationTypeDao.findByNameAndVectorType( ee, name, RawExpressionDataVector.class );
+        } catch ( NonUniqueResultException e ) {
+            throw new NonUniqueQuantitationTypeByNameException( String.format( "More than one QuantitationType uses %s as name.", name ), e );
+        }
     }
 
     @Override

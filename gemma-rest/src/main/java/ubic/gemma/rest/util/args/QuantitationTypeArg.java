@@ -16,6 +16,12 @@ public abstract class QuantitationTypeArg<T> extends AbstractEntityArg<T, Quanti
     }
 
     /**
+     * Obtain a QT for a specific experiment from any vector type.
+     */
+    @Nullable
+    abstract QuantitationType getEntity( ExpressionExperiment ee, QuantitationTypeService service );
+
+    /**
      * Obtain a QT for a specific experiment and vector type.
      */
     @Nullable

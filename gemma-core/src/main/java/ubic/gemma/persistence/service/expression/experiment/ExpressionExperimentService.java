@@ -452,6 +452,14 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment );
 
     /**
+     * Obtain a {@link BioAssayDimension} for a particular QT.
+     * @return a corresponding {@link BioAssayDimension} or null if there is no data vectors
+     */
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    BioAssayDimension getBioAssayDimension( ExpressionExperiment entity, QuantitationType qt );
+
+    /**
      * @param expressionExperiment experiment
      * @return the amount of biomaterials associated with the given expression experiment.
      */

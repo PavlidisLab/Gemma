@@ -15,6 +15,10 @@ public class QuantitationTypeArgService extends AbstractEntityArgService<Quantit
         super( service );
     }
 
+    public QuantitationType getEntity( QuantitationTypeArg<?> quantitationTypeArg, ExpressionExperiment ee ) {
+        return checkEntity( quantitationTypeArg, quantitationTypeArg.getEntity( ee, service ) );
+    }
+
     public QuantitationType getEntity( QuantitationTypeArg<?> quantitationTypeArg, ExpressionExperiment ee, Class<? extends DesignElementDataVector> vectorType ) {
         return checkEntity( quantitationTypeArg, quantitationTypeArg.getEntity( ee, service, vectorType ) );
     }

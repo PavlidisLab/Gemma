@@ -18,8 +18,7 @@
  */
 package ubic.gemma.persistence.service.common.quantitationtype;
 
-import org.apache.commons.lang3.StringUtils;
-import org.hibernate.Criteria;
+import org.hibernate.NonUniqueResultException;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -33,12 +32,8 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractCriteriaFilteringVoEnabledDao;
-import ubic.gemma.persistence.util.BusinessKey;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
@@ -55,93 +50,58 @@ import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 public class QuantitationTypeDaoImpl extends AbstractCriteriaFilteringVoEnabledDao<QuantitationType, QuantitationTypeValueObject>
         implements QuantitationTypeDao {
 
+    private final Set<Class<? extends DataVector>> vectorTypes;
+
     @Autowired
     public QuantitationTypeDaoImpl( SessionFactory sessionFactory ) {
         super( QuantitationType.class, sessionFactory );
-    }
-
-    @Override
-    public QuantitationType find( QuantitationType quantitationType ) {
-        //        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( QuantitationType.class );
-        //        BusinessKey.addRestrictions( queryObject, quantitationType );
-        //        return ( QuantitationType ) queryObject.uniqueResult();
-        /*
-         * Using this method doesn't really make sense, since QTs are EE-specific not re-usable outside of the context
-         * of replacing data for an EE. However, there are a few exceptions to this - QTs can be associated with other
-         * entities, so this might cause problems. At the moment I cannot find any places this method is used, though.
-         */
-        throw new UnsupportedOperationException( "Searching for quantitationtypes without a qualifier for EE not supported by this DAO" );
-    }
-
-    @Override
-    public QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType ) {
-
-        // find all QTs for the experiment
-        //language=HQL
-        final String queryString = "select distinct quantType from ExpressionExperiment ee "
-                + "inner join ee.quantitationTypes as quantType where ee  = :ee ";
-
         //noinspection unchecked
-        List<?> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "ee", ee ).list();
+        vectorTypes = sessionFactory.getAllClassMetadata().values().stream()
+                .filter( cm -> DataVector.class.isAssignableFrom( cm.getMappedClass() ) )
+                .map( cm -> ( Class<? extends DataVector> ) cm.getMappedClass() )
+                .collect( Collectors.toSet() );
+    }
 
-        // find all matching QTs; not necessarily for this experiment. This is lazy - we could go through the above to check each for a match.
-        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( QuantitationType.class );
-        BusinessKey.addRestrictions( queryObject, quantitationType );
-        Collection<?> qts = queryObject.list();
 
-        // intersect that with the ones the experiment has (again, this is the lazy way to do this)
-        list.retainAll( qts );
-
-        if ( list.isEmpty() ) {
-            return null;
-        }
-        if ( list.size() > 1 ) {
-            /*
-             * Ideally this wouldn't happen. We should use the one that has data attached to it.
-             */
-            final String q2 = "select distinct q from ProcessedExpressionDataVector v"
-                    + " inner join v.quantitationType as q where v.expressionExperiment = :ee ";
-
-            final String q3 = "select distinct q from RawExpressionDataVector v"
-                    + " inner join v.quantitationType as q where v.expressionExperiment = :ee ";
-
-            //noinspection unchecked
-            List<?> l2 = this.getSessionFactory().getCurrentSession().createQuery( q2 )
-                    .setParameter( "ee", ee ).list();
-
-            //noinspection unchecked
-            l2.addAll( this.getSessionFactory().getCurrentSession().createQuery( q3 )
-                    .setParameter( "ee", ee ).list() );
-
-            list.retainAll( l2 );
-
-            if ( list.size() > 1 ) {
-
-                throw new IllegalStateException( "Experiment has more than one used QT matching criteria: " + StringUtils.join( qts, ";" ) );
-            }
-        }
-        return ( QuantitationType ) list.iterator().next();
-
+    @Override
+    public Collection<Class<? extends DataVector>> getVectorTypes() {
+        return vectorTypes;
     }
 
     @Override
     public QuantitationType findByNameAndVectorType( ExpressionExperiment ee, String name, Class<? extends DataVector> dataVectorType ) {
         String entityName = getSessionFactory().getClassMetadata( dataVectorType ).getEntityName();
         return ( QuantitationType ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct v.quantitationType from " + entityName + " v "
-                        + "where v.expressionExperiment = :ee and v.quantitationType.name = :name" )
+                .createQuery( "select v.quantitationType from " + entityName + " v "
+                        + "where v.expressionExperiment = :ee and v.quantitationType.name = :name "
+                        + "group by v.quantitationType" )
                 .setParameter( "ee", ee )
                 .setParameter( "name", name )
                 .uniqueResult();
     }
 
     @Override
+    public QuantitationType loadById( Long id, ExpressionExperiment ee ) {
+        Set<QuantitationType> found = vectorTypes.stream()
+                .map( vt -> loadByIdAndVectorType( id, ee, vt ) )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toSet() );
+        if ( found.size() == 1 ) {
+            return found.iterator().next();
+        } else if ( found.size() > 1 ) {
+            throw new NonUniqueResultException( found.size() );
+        } else {
+            return null;
+        }
+    }
+
+    @Override
     public QuantitationType loadByIdAndVectorType( Long id, ExpressionExperiment ee, Class<? extends DataVector> dataVectorType ) {
         String entityName = getSessionFactory().getClassMetadata( dataVectorType ).getEntityName();
         return ( QuantitationType ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct v.quantitationType from " + entityName + " v "
-                        + "where v.expressionExperiment = :ee and v.quantitationType.id = :id" )
+                .createQuery( "select v.quantitationType from " + entityName + " v "
+                        + "where v.expressionExperiment = :ee and v.quantitationType.id = :id "
+                        + "group by v.quantitationType" )
                 .setParameter( "ee", ee )
                 .setParameter( "id", id )
                 .uniqueResult();

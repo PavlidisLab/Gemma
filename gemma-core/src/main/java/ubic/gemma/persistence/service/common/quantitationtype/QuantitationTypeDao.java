@@ -33,19 +33,18 @@ import java.util.List;
  */
 public interface QuantitationTypeDao extends FilteringVoEnabledDao<QuantitationType, QuantitationTypeValueObject> {
 
+    /**
+     * Obtain all the data vector types that are associated with quantitation types.
+     */
+    Collection<Class<? extends DataVector>> getVectorTypes();
+
+    @Nullable
+    QuantitationType loadById( Long id, ExpressionExperiment ee );
+
     @Nullable
     QuantitationType loadByIdAndVectorType( Long id, ExpressionExperiment ee, Class<? extends DataVector> dataVectorType );
 
     List<QuantitationType> loadByDescription( String description );
-
-    /**
-     * Locate a QT associated with the given ee matching the specification of the passed quantitationType, or null if
-     * there isn't one.
-     *
-     * @return found QT
-     */
-    @Nullable
-    QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType );
 
     /**
      * Find a quantitation type by experiment, name and data vector type.

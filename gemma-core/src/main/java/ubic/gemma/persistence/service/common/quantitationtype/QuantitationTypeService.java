@@ -36,6 +36,14 @@ import java.util.List;
 public interface QuantitationTypeService extends BaseService<QuantitationType>, FilteringVoEnabledService<QuantitationType, QuantitationTypeValueObject> {
 
     /**
+     * @see QuantitationTypeDao#getVectorTypes()
+     */
+    Collection<Class<? extends DataVector>> getVectorTypes();
+
+    @Nullable
+    QuantitationType loadById( Long value, ExpressionExperiment ee );
+
+    /**
      * Find a quantitation type by ID and vector type.
      * <p>
      * While the QT can be retrieved uniquely by ID, the purpose of this method is to ensure that it also belongs to a
@@ -44,14 +52,8 @@ public interface QuantitationTypeService extends BaseService<QuantitationType>, 
     @Nullable
     QuantitationType loadByIdAndVectorType( Long id, ExpressionExperiment ee, Class<? extends DataVector> dataVectorType );
 
-    /**
-     * Locate a QT associated with the given ee matching the specification of the passed quantitationType, or null if
-     * there isn't one.
-     *
-     * @return found QT
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    QuantitationType find( ExpressionExperiment ee, QuantitationType quantitationType );
+    QuantitationType findByName( ExpressionExperiment ee, String name ) throws NonUniqueQuantitationTypeByNameException;
 
     /**
      * @see QuantitationTypeDao#findByNameAndVectorType(ExpressionExperiment, String, Class)
