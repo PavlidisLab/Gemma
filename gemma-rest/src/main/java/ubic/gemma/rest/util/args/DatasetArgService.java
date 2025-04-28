@@ -9,11 +9,13 @@ import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.search.*;
 import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
@@ -24,6 +26,7 @@ import ubic.gemma.rest.util.MalformedArgException;
 import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.InternalServerErrorException;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.ServiceUnavailableException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -174,7 +177,23 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
      */
     public List<BioAssayValueObject> getSamples( DatasetArg<?> arg ) {
         ExpressionExperiment ee = service.thawBioAssays( this.getEntity( arg ) );
-        List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( ee.getBioAssays(), true );
+        return createSampleVos( ee, ee.getBioAssays() );
+    }
+
+    /**
+     * Obtain a collection of BioAssays that represent the experiments samples for a particular quantitation type.
+     */
+    public List<BioAssayValueObject> getSamples( DatasetArg<?> datasetArg, QuantitationType qt ) {
+        ExpressionExperiment ee = getEntity( datasetArg );
+        BioAssayDimension bad = service.getBioAssayDimension( ee, qt );
+        if ( bad == null ) {
+            throw new NotFoundException( "There are no assays associated to " + qt + "." );
+        }
+        return createSampleVos( ee, bad.getBioAssays() );
+    }
+
+    private List<BioAssayValueObject> createSampleVos( ExpressionExperiment ee, Collection<BioAssay> samples ) {
+        List<BioAssayValueObject> bioAssayValueObjects = baService.loadValueObjects( samples, true );
         Collection<OutlierDetails> outliers = outlierDetectionService.getOutlierDetails( ee );
         if ( outliers != null ) {
             Set<Long> predictedOutlierBioAssayIds = outliers.stream()
@@ -194,5 +213,13 @@ public class DatasetArgService extends AbstractEntityArgService<ExpressionExperi
     public Set<AnnotationValueObject> getAnnotations( DatasetArg<?> arg ) {
         ExpressionExperiment ee = this.getEntity( arg );
         return service.getAnnotationsById( ee.getId() );
+    }
+
+    public QuantitationType getPreferredQuantitationType( DatasetArg<?> datasetArg ) {
+        QuantitationType qt = service.getPreferredQuantitationType( getEntity( datasetArg ) );
+        if ( qt == null ) {
+            throw new NotFoundException( "No preferred quantitation type found for dataset with ID " + datasetArg + "." );
+        }
+        return qt;
     }
 }

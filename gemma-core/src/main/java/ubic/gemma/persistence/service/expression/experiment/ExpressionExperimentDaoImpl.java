@@ -24,6 +24,7 @@ import lombok.Value;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.StandardBasicTypes;
@@ -55,8 +56,8 @@ import ubic.gemma.persistence.service.common.description.CharacteristicDao;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
-import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.Filter;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -1123,6 +1124,17 @@ public class ExpressionExperimentDaoImpl
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ee", expressionExperiment ).list();
+    }
+
+    @Nullable
+    @Override
+    public BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt, Class<? extends DataVector> vectorType ) {
+        return ( BioAssayDimension ) getSessionFactory().getCurrentSession()
+                .createCriteria( vectorType )
+                .add( Restrictions.eq( "expressionExperiment", ee ) )
+                .add( Restrictions.eq( "quantitationType", qt ) )
+                .setProjection( Projections.groupProperty( "bioAssayDimension" ) )
+                .uniqueResult();
     }
 
     @Override

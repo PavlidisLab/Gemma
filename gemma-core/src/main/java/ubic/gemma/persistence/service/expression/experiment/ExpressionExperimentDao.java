@@ -10,10 +10,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
@@ -161,6 +158,9 @@ public interface ExpressionExperimentDao
     Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids );
 
     Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment );
+
+    @Nullable
+    BioAssayDimension getBioAssayDimension( ExpressionExperiment ee, QuantitationType qt, Class<? extends DataVector> vectorType );
 
     long getBioMaterialCount( ExpressionExperiment expressionExperiment );
 
