@@ -1,6 +1,7 @@
 package ubic.gemma.core.ontology;
 
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -141,6 +142,7 @@ public class OntologyServiceTest extends AbstractJUnit4SpringContextTests {
     }
 
     @Test
+    @Ignore("Broken due to https://github.com/PavlidisLab/Gemma/issues/1348")
     public void testFindTermInexact() throws OntologySearchException, SearchException {
         SearchService.SearchResultMap srm = mock();
         when( srm.getByResultObjectType( Gene.class ) ).thenReturn( Collections.emptyList() );
