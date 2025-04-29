@@ -19,6 +19,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -69,7 +70,7 @@ public class ExpressionExperimentPlatformSwitchTest extends AbstractGeoServiceTe
     @Test
     @Category({ GeoTest.class, SlowTest.class })
     public void testGSE36025() {
-        assumeThatResourceIsAvailable( "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi" );
+        assumeThatResourceIsAvailable( EntrezUtils.ESEARCH );
 
         // GSE36025
         //

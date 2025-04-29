@@ -20,7 +20,6 @@ package ubic.gemma.core.loader.entrez;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 import ubic.gemma.core.util.SimpleRetry;
@@ -32,7 +31,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -45,9 +43,6 @@ import static ubic.gemma.core.loader.entrez.NcbiXmlUtils.createDocumentBuilder;
 @CommonsLog
 public class EutilFetch {
 
-    private static final String EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=";
-    private static final String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=";
-    private static final String EQUERY = "https://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=";
     private static final int MAX_TRIES = 3;
 
     private final String apiKey;
@@ -69,10 +64,7 @@ public class EutilFetch {
      */
     @Nullable
     public String fetch( String db, String searchString, int limit ) throws IOException {
-        URL searchUrl = new URL( EutilFetch.ESEARCH + urlEncode( db )
-                + "&usehistory=y"
-                + "&term=" + urlEncode( searchString )
-                + ( StringUtils.isNotBlank( apiKey ) ? "&api_key=" + urlEncode( apiKey ) : "" ) );
+        URL searchUrl = EntrezUtils.search( db, searchString, true, apiKey );
         return retryTemplate.execute( ( ctx ) -> {
             Document document;
             try ( InputStream is = searchUrl.openStream() ) {
@@ -96,33 +88,17 @@ public class EutilFetch {
             String queryId = XMLUtils.getTextValue( document.getElementsByTagName( "QueryKey" ).item( 0 ) );
             String cookie = XMLUtils.getTextValue( document.getElementsByTagName( "WebEnv" ).item( 0 ) );
 
-            URL fetchUrl = new URL( EutilFetch.EFETCH + urlEncode( db )
-                    + "&mode=text"
-                    + "&query_key=" + urlEncode( queryId )
-                    + "&WebEnv=" + urlEncode( cookie )
-                    + "&retmax=" + limit
-                    + ( StringUtils.isNotBlank( apiKey ) ? "&api_key=" + urlEncode( apiKey ) : "" ) );
+            URL fetchUrl = EntrezUtils.summary( db, queryId, "xml", 0, limit, cookie, apiKey );
             return IOUtils.toString( fetchUrl, StandardCharsets.UTF_8 );
         }, "retrieve " + searchUrl );
     }
 
     public Collection<String> query( String db, String query ) throws IOException {
-        URL url = new URL( EutilFetch.EQUERY + urlEncode( db )
-                + "&term=" + urlEncode( query )
-                + "&cmd=search"
-                + ( StringUtils.isNotBlank( apiKey ) ? "&api_key=" + urlEncode( apiKey ) : "" ) );
+        URL url = EntrezUtils.query( db, query, "search", apiKey );
         return retryTemplate.execute( ( ctx ) -> {
             try ( BufferedReader br = new BufferedReader( new InputStreamReader( url.openStream() ) ) ) {
                 return br.lines().collect( Collectors.toList() );
             }
         }, "retrieve " + url );
-    }
-
-    private String urlEncode( String s ) {
-        try {
-            return URLEncoder.encode( s, StandardCharsets.UTF_8.name() );
-        } catch ( UnsupportedEncodingException e ) {
-            throw new RuntimeException( e );
-        }
     }
 }

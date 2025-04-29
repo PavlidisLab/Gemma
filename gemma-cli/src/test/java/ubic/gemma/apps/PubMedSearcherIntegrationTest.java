@@ -23,6 +23,7 @@ import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.cli.util.CliContext;
 import ubic.gemma.cli.util.test.BaseCliIntegrationTest;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.ByteArrayOutputStream;
@@ -47,7 +48,7 @@ public class PubMedSearcherIntegrationTest extends BaseCliIntegrationTest {
     @Test
     @Category(SlowTest.class)
     public final void testMain() {
-        assumeThatResourceIsAvailable( "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi" );
+        assumeThatResourceIsAvailable( EntrezUtils.ESEARCH );
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         assertThat( p )
                 .withArguments( "hippocampus", "diazepam", "juvenile" )

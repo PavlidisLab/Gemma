@@ -26,6 +26,7 @@ import org.junit.experimental.categories.Category;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXParseException;
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -53,7 +54,7 @@ public class GeoBrowserTest {
 
     @BeforeClass
     public static void checkThatGeoIsAvailable() {
-        assumeThatResourceIsAvailable( "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi" );
+        assumeThatResourceIsAvailable( EntrezUtils.ESUMMARY );
     }
 
     @Test
