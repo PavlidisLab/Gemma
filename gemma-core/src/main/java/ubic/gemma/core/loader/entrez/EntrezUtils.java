@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.entrez;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.Assert;
 import ubic.gemma.core.config.Settings;
 
 import javax.annotation.Nullable;
@@ -13,7 +14,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * Low-level utilities for generating Entrez URLs.
  * <p>
- * Read more about this in <a href="https://www.ncbi.nlm.nih.gov/books/NBK25499/">The E-utilities In-Depth: Parameters, Syntax and More</a>.
+ * Read more about this in <a href="https://www.ncbi.nlm.nih.gov/books/NBK25500/">The E-utilities In-Depth: Parameters, Syntax and More</a>.
  * @author poirigui
  */
 public class EntrezUtils {
@@ -26,14 +27,24 @@ public class EntrezUtils {
     private static final String TOOL = "gemma";
     private static final String EMAIL = Settings.getString( "gemma.support.email" );
 
-    public static URL search( String db, String term, boolean useHistory, @Nullable String apiKey ) {
+    /**
+     * Perform a search on an Entrez database.
+     * <p>
+     * Results must be subsequently retrieved with {@link #fetch(String, String, String, int, int, String, String)} or
+     * {@link #summary(String, String, String, int, int, String, String)}. The query key and WebEnv values must be
+     * extracted from the payload.
+     */
+    public static URL search( String db, String term, @Nullable String apiKey ) {
         return createUrl( ESEARCH
                 + "?db=" + urlEncode( db )
                 + "&term=" + urlEncode( term )
-                + "&usehistory=" + ( useHistory ? "y" : "n" ), apiKey );
+                + "&usehistory=y", apiKey );
     }
 
-    public static URL search( String db, String term, String retmode, String rettype, @Nullable String apiKey ) {
+    /**
+     * Perform a search on an Entrez database and retrieve results immediately.
+     */
+    public static URL searchAndRetrieve( String db, String term, String retmode, String rettype, @Nullable String apiKey ) {
         return createUrl( ESEARCH
                 + "?db=" + urlEncode( db )
                 + "&term=" + urlEncode( term )
@@ -41,7 +52,10 @@ public class EntrezUtils {
                 + "&rettype=" + urlEncode( rettype ), apiKey );
     }
 
-    public static URL search( String db, String term, String retmode, String rettype, int retstart, int retmax, @Nullable String apiKey ) {
+    /**
+     * Perform a search on an Entrez database and retrieve results immediately.
+     */
+    public static URL searchAndRetrieve( String db, String term, String retmode, String rettype, int retstart, int retmax, @Nullable String apiKey ) {
         return createUrl( ESEARCH
                 + "?db=" + urlEncode( db )
                 + "&term=" + urlEncode( term )
@@ -51,6 +65,9 @@ public class EntrezUtils {
                 + "&rettype=" + urlEncode( rettype ), apiKey );
     }
 
+    /**
+     * Summarize a previous {@link #search(String, String, String)} query.
+     */
     public static URL summary( String db, String queryKey, String retmode, int retstart, int retmax, String webEnv, @Nullable String apiKey ) {
         return createUrl( ESUMMARY
                 + "?db=" + urlEncode( db )
@@ -61,7 +78,10 @@ public class EntrezUtils {
                 + "&WebEnv=" + urlEncode( webEnv ), apiKey );
     }
 
-    public static URL fetch( String db, String id, String retmode, String rettype, @Nullable String apiKey ) {
+    /**
+     * Retrieve a record from an Entrez database by ID.
+     */
+    public static URL fetchById( String db, String id, String retmode, String rettype, @Nullable String apiKey ) {
         return createUrl( EFETCH
                 + "?db=" + urlEncode( db )
                 + "&id=" + urlEncode( id )
@@ -69,6 +89,9 @@ public class EntrezUtils {
                 + "&rettype=" + urlEncode( rettype ), apiKey );
     }
 
+    /**
+     * Retrieve the results of a previous {@link #search(String, String, String)} query.
+     */
     public static URL fetch( String db, String queryKey, String retmode, int retstart, int retmax, String webEnv, @Nullable String apiKey ) {
         return createUrl( EFETCH
                 + "?db=" + urlEncode( db )
@@ -83,10 +106,10 @@ public class EntrezUtils {
      * @deprecated this is not a documented Entrez API and should not be used.
      */
     @Deprecated
-    public static URL query( String db, String query, String cmd, @Nullable String apiKey ) {
+    public static URL query( String db, String term, String cmd, @Nullable String apiKey ) {
         return createUrl( EQUERY
                 + "?db=" + urlEncode( db )
-                + "&term=" + urlEncode( query )
+                + "&term=" + urlEncode( term )
                 + "&cmd=" + cmd, apiKey );
     }
 
