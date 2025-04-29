@@ -23,16 +23,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.xml.sax.SAXException;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.model.common.description.BibliographicReference;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -47,13 +45,13 @@ public class PubMedSearch {
     private static final int CHUNK_SIZE = 10; // don't retrieve too many at once, it isn't nice.
     private static final int MAX_TRIES = 3;
 
-    private final String uri;
+    private final String apiKey;
     private final SimpleRetry<IOException> retryTemplate = new SimpleRetry<>( MAX_TRIES, 1000, 1.5, IOException.class, PubMedSearch.class.getName() );
     private final ESearchXMLParser parser = new ESearchXMLParser();
     private final PubMedXMLFetcher fetcher;
 
     public PubMedSearch( String apiKey ) {
-        this.uri = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=xml&rettype=full" + ( StringUtils.isNotBlank( apiKey ) ? "&api_key=" + urlEncode( apiKey ) : "" );
+        this.apiKey = apiKey;
         this.fetcher = new PubMedXMLFetcher( apiKey );
     }
 
@@ -65,7 +63,7 @@ public class PubMedSearch {
      * @throws IOException                  IO problems
      */
     public Collection<BibliographicReference> searchAndRetrieveByHTTP( Collection<String> searchTerms ) throws IOException {
-        URL toBeGotten = new URL( uri + "&term=" + urlEncode( StringUtils.join( " ", searchTerms ) ) );
+        URL toBeGotten = EntrezUtils.search( "pubmed", StringUtils.join( " ", searchTerms ), "xml", "full", apiKey );
         log.info( "Fetching " + toBeGotten );
         Collection<String> ids = retryTemplate.execute( ( retryCount, lastAttempt ) -> {
             try ( InputStream is = toBeGotten.openStream() ) {
@@ -117,12 +115,11 @@ public class PubMedSearch {
      */
     public Collection<String> searchAndRetrieveIdsByHTTP( String searchQuery ) throws IOException {
         // build URL
-        String URLString = uri + "&term=" + urlEncode( searchQuery );
+        URL toBeGotten = EntrezUtils.search( "pubmed", searchQuery, "xml", "full", apiKey );
 
         int count = retryTemplate.execute( ( attempt, lastAttempt ) -> {
             // log.info( "Fetching " + toBeGotten );
             // builder.append("&retmax=" + 70000);
-            URL toBeGotten = new URL( URLString );
             // parse how many
             try ( InputStream is = toBeGotten.openStream() ) {
                 return parser.getCount( is );
@@ -141,9 +138,9 @@ public class PubMedSearch {
 
         return retryTemplate.execute( ( attempt, lastAttempt ) -> {
             // now get them all
-            URL toBeGotten = new URL( URLString + "&retmax=" + count );
-            log.info( "Fetching " + count + " IDs from:" + toBeGotten );
-            try ( InputStream is = toBeGotten.openStream() ) {
+            URL toBeGotten2 = EntrezUtils.search( "pubmed", searchQuery, "xml", "full", 0, count, apiKey );
+            log.info( "Fetching " + count + " IDs from:" + toBeGotten2 );
+            try ( InputStream is = toBeGotten2.openStream() ) {
                 return parser.parse( is );
             } catch ( ParserConfigurationException | SAXException | ESearchException e ) {
                 throw new RuntimeException( e );
@@ -168,13 +165,5 @@ public class PubMedSearch {
         }
 
         return results;
-    }
-
-    private String urlEncode( String s ) {
-        try {
-            return URLEncoder.encode( s, StandardCharsets.UTF_8.name() );
-        } catch ( UnsupportedEncodingException e ) {
-            throw new RuntimeException( e );
-        }
     }
 }

@@ -28,6 +28,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -211,7 +212,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
     @Test
     @Category(SlowTest.class)
     public void testLoadRNASeqData() throws Exception {
-        assumeThatResourceIsAvailable( "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi" );
+        assumeThatResourceIsAvailable( EntrezUtils.ESUMMARY );
         try {
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
             Collection<?> results = geoService.fetchAndLoad( "GSE19166", false, false, false );
