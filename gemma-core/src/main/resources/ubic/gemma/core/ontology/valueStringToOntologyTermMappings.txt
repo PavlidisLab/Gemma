@@ -223,7 +223,7 @@ ccRCC tumour tissue	clear cell renal carcinoma	http://purl.obolibrary.org/obo/MO
 CD-1	CD1 mus strain	http://www.ebi.ac.uk/efo/EFO_0005180	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 CD-1 mouse	CD1 mus strain	http://www.ebi.ac.uk/efo/EFO_0005180	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 CD1	CD1 mus strain	http://www.ebi.ac.uk/efo/EFO_0005180	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-CD34+ mononuclear	mononuclear cell	http://purl.obolibrary.org/obo/CL_0000842	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
+CD34+ mononuclear	mononuclear leukocyte	http://purl.obolibrary.org/obo/CL_0000842	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 CD4 T cells	CD4-positive, alpha-beta T cell	http://purl.obolibrary.org/obo/CL_0000624	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 CD4 T-cell	CD4-positive, alpha-beta T cell	http://purl.obolibrary.org/obo/CL_0000624	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 CD4+ lymphocyte	CD4-positive, alpha-beta T cell	http://purl.obolibrary.org/obo/CL_0000624	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
