@@ -64,15 +64,15 @@ public class PubMedSearch {
      * @throws IOException                  IO problems
      */
     public Collection<BibliographicReference> searchAndRetrieveByHTTP( Collection<String> searchTerms ) throws IOException {
-        URL toBeGotten = EntrezUtils.search( "pubmed", StringUtils.join( " ", searchTerms ), "xml", "full", apiKey );
-        log.info( "Fetching " + toBeGotten );
+        URL searchUrl = EntrezUtils.searchAndRetrieve( "pubmed", StringUtils.join( " ", searchTerms ), "xml", "full", apiKey );
+        log.info( "Fetching " + searchUrl );
         Collection<String> ids = retryTemplate.execute( ( ctx ) -> {
-            try ( InputStream is = toBeGotten.openStream() ) {
+            try ( InputStream is = searchUrl.openStream() ) {
                 return parser.parse( is );
             } catch ( ParserConfigurationException | ESearchException | SAXException e ) {
                 throw new RuntimeException( e );
             }
-        }, "fetching " + toBeGotten );
+        }, "fetching " + searchUrl );
 
         try {
             Thread.sleep( 100 );
@@ -116,13 +116,11 @@ public class PubMedSearch {
      */
     public Collection<String> searchAndRetrieveIdsByHTTP( String searchQuery ) throws IOException {
         // build URL
-        URL toBeGotten = EntrezUtils.search( "pubmed", searchQuery, "xml", "full", apiKey );
+        URL searchUrl = EntrezUtils.searchAndRetrieve( "pubmed", searchQuery, "xml", "full", apiKey );
 
+        // parse how many
         int count = retryTemplate.execute( ( ctx ) -> {
-            // log.info( "Fetching " + toBeGotten );
-            // builder.append("&retmax=" + 70000);
-            // parse how many
-            try ( InputStream is = toBeGotten.openStream() ) {
+            try ( InputStream is = searchUrl.openStream() ) {
                 return parser.getCount( is );
             } catch ( ParserConfigurationException | SAXException | ESearchException e ) {
                 throw new RuntimeException( e );
@@ -139,9 +137,9 @@ public class PubMedSearch {
 
         return retryTemplate.execute( ( ctx ) -> {
             // now get them all
-            URL toBeGotten2 = EntrezUtils.search( "pubmed", searchQuery, "xml", "full", 0, count, apiKey );
-            log.info( "Fetching " + count + " IDs from:" + toBeGotten2 );
-            try ( InputStream is = toBeGotten2.openStream() ) {
+            URL fullSearchUrl = EntrezUtils.searchAndRetrieve( "pubmed", searchQuery, "xml", "full", 0, count, apiKey );
+            log.info( "Fetching " + count + " IDs from:" + fullSearchUrl );
+            try ( InputStream is = fullSearchUrl.openStream() ) {
                 return parser.parse( is );
             } catch ( ParserConfigurationException | SAXException | ESearchException e ) {
                 throw new RuntimeException( e );
