@@ -46,9 +46,6 @@ public class PubMedSearchTest {
         assumeThatResourceIsAvailable( EntrezUtils.ESEARCH );
     }
 
-    /*
-     * Test method for 'ubic.gemma.core.loader.entrez.pubmed.PubMedSearch.searchAndRetriveByHTTP(Collection<String>)'
-     */
     @Test
     @Category(SlowTest.class)
     public void testSearchAndRetrieveByHTTP() throws Exception {
@@ -57,7 +54,7 @@ public class PubMedSearchTest {
         searchTerms.add( "hippocampus" );
         searchTerms.add( "habenula" );
         searchTerms.add( "glucose" );
-        Collection<BibliographicReference> actualResult = pms.searchAndRetrieveByHTTP( searchTerms );
+        Collection<BibliographicReference> actualResult = pms.searchAndRetrieve( searchTerms );
         assertTrue( "Expected at least 5 results, got " + actualResult.size(), actualResult.size() >= 5 );
         /*
          * at least, this was the result on 4/2008.
@@ -67,9 +64,6 @@ public class PubMedSearchTest {
         assertNotNull( r.getPublicationDate() );
     }
 
-    /*
-     * Test method for 'ubic.gemma.core.loader.entrez.pubmed.PubMedSearch.searchAndRetriveByHTTP(Collection<String>)'
-     */
     @Test
     @Category(SlowTest.class)
     public void testSearchAndRetrieveByHTTPInChunks() throws Exception {
@@ -77,7 +71,7 @@ public class PubMedSearchTest {
         searchTerms.add( "brain" );
         searchTerms.add( "hippocampus" );
         searchTerms.add( "habenula" );
-        Collection<BibliographicReference> actualResult = pms.searchAndRetrieveByHTTP( searchTerms );
+        Collection<BibliographicReference> actualResult = pms.searchAndRetrieve( searchTerms );
         /*
          * at least, this was the result on 4/2008.
          */
@@ -89,7 +83,7 @@ public class PubMedSearchTest {
     public void testSearchAndRetrieveIdByHTTPBookshelf() throws Exception {
         Collection<String> searchTerms = new HashSet<>();
         searchTerms.add( "23865096" );
-        Collection<BibliographicReference> actualResult = pms.searchAndRetrieveIdByHTTP( searchTerms );
+        Collection<BibliographicReference> actualResult = pms.fetchById( searchTerms );
         assertEquals( 1, actualResult.size() );
     }
 
@@ -100,7 +94,7 @@ public class PubMedSearchTest {
         searchTerms.add( "hippocampus" );
         searchTerms.add( "habenula" );
         searchTerms.add( "glucose" );
-        Collection<String> actualResult = pms.searchAndRetrieveIdsByHTTP( searchTerms );
+        Collection<String> actualResult = pms.search( searchTerms );
         assertTrue( "Expect at least 5 results, got " + actualResult.size(), actualResult.size() >= 5 );
     }
 }

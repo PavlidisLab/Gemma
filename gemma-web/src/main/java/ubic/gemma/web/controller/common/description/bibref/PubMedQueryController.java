@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
+import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 import ubic.gemma.web.controller.BaseController;
@@ -51,11 +51,11 @@ public class PubMedQueryController extends BaseController implements Initializin
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
 
-    private PubMedXMLFetcher pubMedXmlFetcher;
+    private PubMedSearch pubMedXmlFetcher;
 
     @Override
     public void afterPropertiesSet() {
-        pubMedXmlFetcher = new PubMedXMLFetcher( ncbiApiKey );
+        pubMedXmlFetcher = new PubMedSearch( ncbiApiKey );
     }
 
     @RequestMapping(method = { RequestMethod.GET, RequestMethod.HEAD })
@@ -91,7 +91,7 @@ public class PubMedQueryController extends BaseController implements Initializin
                 return new ModelAndView( "bibRefSearch", result.getModel() );
             }
             try {
-                bibRefFound = this.pubMedXmlFetcher.retrieveByHTTP( pubMedId );
+                bibRefFound = this.pubMedXmlFetcher.fetchById( pubMedId );
             } catch ( IOException e ) {
                 log.error( "Failed to retrieve bibliographic reference from PubMed with ID: " + pubMedId, e );
             }

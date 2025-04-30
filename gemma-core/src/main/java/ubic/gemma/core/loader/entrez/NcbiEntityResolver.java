@@ -16,7 +16,7 @@ import java.util.WeakHashMap;
  * @author poirigui
  */
 @CommonsLog
-public class NcbiEntityResolver implements EntityResolver {
+class NcbiEntityResolver implements EntityResolver {
 
     private static final Map<String, byte[]> dtdCache = new WeakHashMap<>();
 

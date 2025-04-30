@@ -30,7 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
+import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.geo.*;
 import ubic.gemma.core.loader.expression.geo.model.*;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
@@ -839,9 +839,9 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
             BibliographicReference pubmed = experiment.getPrimaryPublication();
             if ( pubmed == null )
                 continue;
-            PubMedXMLFetcher fetcher = new PubMedXMLFetcher( ncbiApiKey );
+            PubMedSearch fetcher = new PubMedSearch( ncbiApiKey );
             try {
-                pubmed = fetcher.retrieveByHTTP( Integer.parseInt( pubmed.getPubAccession().getAccession() ) );
+                pubmed = fetcher.fetchById( Integer.parseInt( pubmed.getPubAccession().getAccession() ) );
             } catch ( Exception e ) {
                 GeoServiceImpl.log.warn( "Filed to get data from pubmed, continuing without it." );
                 GeoServiceImpl.log.error( e, e );
@@ -849,14 +849,6 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
             if ( pubmed == null )
                 continue;
             experiment.setPrimaryPublication( pubmed );
-
-            // don't spam NCBI. > 3 per second is a no-no without an API key
-            // see https://ncbiinsights.ncbi.nlm.nih.gov/2017/11/02/new-api-keys-for-the-e-utilities/
-            try {
-                Thread.sleep( 350 );
-            } catch ( InterruptedException e ) {
-                //
-            }
         }
     }
 

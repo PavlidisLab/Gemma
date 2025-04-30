@@ -21,21 +21,18 @@ package ubic.gemma.core.loader.entrez;
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.IOUtils;
 import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
 import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.core.util.SimpleRetryPolicy;
-import ubic.gemma.core.util.XMLUtils;
 
 import javax.annotation.Nullable;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.stream.Collectors;
-
-import static ubic.gemma.core.loader.entrez.NcbiXmlUtils.createDocumentBuilder;
 
 /**
  * @author paul
@@ -44,61 +41,52 @@ import static ubic.gemma.core.loader.entrez.NcbiXmlUtils.createDocumentBuilder;
 public class EutilFetch {
 
     private static final int MAX_TRIES = 3;
-
-    private final String apiKey;
-    private final SimpleRetry<IOException> retryTemplate = new SimpleRetry<>( new SimpleRetryPolicy( MAX_TRIES, 1000, 1.5 ), IOException.class, EutilFetch.class.getName() );
-
-    public EutilFetch( String apiKey ) {
-        this.apiKey = apiKey;
-    }
+    private static final SimpleRetry<IOException> retryTemplate = new SimpleRetry<>( new SimpleRetryPolicy( MAX_TRIES, 1000, 1.5 ), IOException.class, EutilFetch.class.getName() );
 
     /**
      * Attempts to fetch data via Eutils; failures will be re-attempted several times.
      * <p>
      * See <a href="http://www.ncbi.nlm.nih.gov/corehtml/query/static/esummary_help.html">ncbi help</a>
      *
-     * @param db           e.g., gds.
-     * @param searchString search string
-     * @param limit        - Maximum number of records to return.
+     * @param db     e.g., gds.
+     * @param term   search string
+     * @param limit  maximum number of records to return.
+     * @param apiKey
      * @throws IOException if there is a problem while manipulating the file
      */
     @Nullable
-    public String fetch( String db, String searchString, int limit ) throws IOException {
-        URL searchUrl = EntrezUtils.search( db, searchString, true, apiKey );
+    public static String fetch( String db, String term, int limit, @Nullable String apiKey ) throws IOException {
+        URL searchUrl = EntrezUtils.search( db, term, "xml", apiKey );
         return retryTemplate.execute( ( ctx ) -> {
-            Document document;
-            try ( InputStream is = searchUrl.openStream() ) {
-                DocumentBuilder builder = createDocumentBuilder();
-                document = builder.parse( is );
-            } catch ( SAXException | ParserConfigurationException e ) {
-                throw new RuntimeException( e );
-            }
+            Document document = EntrezUtils.doNicely( () -> {
+                try ( InputStream is = searchUrl.openStream() ) {
+                    return EntrezXmlUtils.parse( is );
+                }
+            }, apiKey );
 
-            int count;
-            try {
-                count = Integer.parseInt( XMLUtils.getTextValue( document.getElementsByTagName( "Count" ).item( 0 ) ) );
-            } catch ( NumberFormatException e ) {
-                throw new IOException( "Could not parse count from: " + searchUrl );
-            }
-
+            int count = EntrezXmlUtils.getCount( document );
             if ( count == 0 ) {
                 return null;
             }
 
-            String queryId = XMLUtils.getTextValue( document.getElementsByTagName( "QueryKey" ).item( 0 ) );
-            String cookie = XMLUtils.getTextValue( document.getElementsByTagName( "WebEnv" ).item( 0 ) );
+            String queryId = EntrezXmlUtils.getQueryId( document );
+            String cookie = EntrezXmlUtils.getCookie( document );
 
             URL fetchUrl = EntrezUtils.summary( db, queryId, "xml", 0, limit, cookie, apiKey );
-            return IOUtils.toString( fetchUrl, StandardCharsets.UTF_8 );
+            return EntrezUtils.doNicely( () -> IOUtils.toString( fetchUrl, StandardCharsets.UTF_8 ), apiKey );
         }, "retrieve " + searchUrl );
     }
 
-    public Collection<String> query( String db, String query ) throws IOException {
+    /**
+     * @deprecated this method relies on an undocumented Entrez API.
+     */
+    @Deprecated
+    public static Collection<String> query( String db, String query, @Nullable String apiKey ) throws IOException {
         URL url = EntrezUtils.query( db, query, "search", apiKey );
-        return retryTemplate.execute( ( ctx ) -> {
-            try ( BufferedReader br = new BufferedReader( new InputStreamReader( url.openStream() ) ) ) {
+        return retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
+            try ( BufferedReader br = new BufferedReader( new InputStreamReader( url.openStream(), StandardCharsets.UTF_8 ) ) ) {
                 return br.lines().collect( Collectors.toList() );
             }
-        }, "retrieve " + url );
+        }, apiKey ), "retrieve " + url );
     }
 }

@@ -21,11 +21,12 @@ package ubic.gemma.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
-import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.cli.util.AbstractCLI;
 import ubic.gemma.cli.util.CLI;
+import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
 
@@ -36,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author pavlidis
@@ -91,45 +93,29 @@ public class MeshTermFetcherCli extends AbstractCLI {
 
     @Override
     protected void doWork() throws Exception {
-        PubMedXMLFetcher fetcher = new PubMedXMLFetcher( ncbiApiKey );
-
-        Collection<Integer> ids = this.readIdsFromFile( file );
-        Collection<Integer> chunk = new ArrayList<>();
-        for ( Integer i : ids ) {
-
-            chunk.add( i );
-
-            if ( chunk.size() == MeshTermFetcherCli.CHUNK_SIZE ) {
-
-                this.processChunk( fetcher, chunk );
-                chunk.clear();
-            }
-        }
-
-        if ( !chunk.isEmpty() ) {
+        PubMedSearch fetcher = new PubMedSearch( ncbiApiKey );
+        List<String> ids = this.readIdsFromFile( file ).stream().distinct().collect( Collectors.toList() );
+        for ( List<String> chunk : ListUtils.partition( ids, MeshTermFetcherCli.CHUNK_SIZE ) ) {
             this.processChunk( fetcher, chunk );
         }
     }
 
-    private Collection<Integer> readIdsFromFile( String inFile ) throws IOException {
+    private Collection<String> readIdsFromFile( String inFile ) throws IOException {
         log.info( "Reading " + inFile );
-
-        Collection<Integer> ids = new ArrayList<>();
+        Collection<String> ids = new ArrayList<>();
         try ( BufferedReader in = new BufferedReader( new FileReader( file ) ) ) {
             String line;
             while ( ( line = in.readLine() ) != null ) {
                 if ( line.startsWith( "#" ) )
                     continue;
-
-                ids.add( Integer.parseInt( line ) );
-
+                ids.add( StringUtils.strip( line ) );
             }
         }
         return ids;
     }
 
-    private void processChunk( PubMedXMLFetcher fetcher, Collection<Integer> ids ) throws IOException {
-        Collection<BibliographicReference> refs = fetcher.retrieveByHTTP( ids );
+    private void processChunk( PubMedSearch fetcher, Collection<String> pubMedIds ) throws IOException {
+        Collection<BibliographicReference> refs = fetcher.fetchById( pubMedIds );
 
         for ( BibliographicReference r : refs ) {
             getCliContext().getOutputStream().print( r.getPubAccession().getAccession() + "\t" );

@@ -38,7 +38,7 @@ public class EutilFetchTest {
     @Category(SlowTest.class)
     public void testFetch() throws Exception {
         assumeThatResourceIsAvailable( EntrezUtils.ESEARCH );
-        String result = new EutilFetch( Settings.getString( "ncbi.efetch.apikey" ) ).fetch( "gds", "GSE4595", 2 );
+        String result = EutilFetch.fetch( "gds", "GSE4595", 2, Settings.getString( "ncbi.efetch.apikey" ) );
         assertNotNull( result );
         assertTrue( "Got " + result, result.startsWith( "<?xml" ) );
     }

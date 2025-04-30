@@ -29,7 +29,7 @@ import org.springframework.util.Assert;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
-import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
+import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.simple.model.*;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -84,11 +84,11 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
 
-    private PubMedXMLFetcher pubfetch;
+    private PubMedSearch pubfetch;
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        pubfetch = new PubMedXMLFetcher( ncbiApiKey );
+        pubfetch = new PubMedSearch( ncbiApiKey );
     }
 
     @Override
@@ -128,7 +128,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
 
         if ( metaData.getPubMedId() != null ) {
             try {
-                experiment.setPrimaryPublication( pubfetch.retrieveByHTTP( metaData.getPubMedId() ) );
+                experiment.setPrimaryPublication( pubfetch.fetchById( metaData.getPubMedId() ) );
             } catch ( IOException e ) {
                 log.error( "Failed to retrieve PubMed entry for " + metaData.getPubMedId() + ", the primary publication will not be updated.", e );
             }

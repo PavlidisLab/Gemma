@@ -161,7 +161,7 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
             searchTerms.add( pubmedId );
             Collection<BibliographicReference> publications;
             try {
-                publications = pms.searchAndRetrieveIdByHTTP( searchTerms );
+                publications = pms.fetchById( searchTerms );
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
             }

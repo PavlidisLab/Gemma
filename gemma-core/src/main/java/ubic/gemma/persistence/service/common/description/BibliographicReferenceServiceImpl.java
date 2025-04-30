@@ -20,7 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
+import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
@@ -64,7 +64,7 @@ public class BibliographicReferenceServiceImpl
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
 
-    private PubMedXMLFetcher pubMedXmlFetcher;
+    private PubMedSearch pubMedXmlFetcher;
 
     @Autowired
     public BibliographicReferenceServiceImpl( BibliographicReferenceDao bibliographicReferenceDao ) {
@@ -74,7 +74,7 @@ public class BibliographicReferenceServiceImpl
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        this.pubMedXmlFetcher = new PubMedXMLFetcher( ncbiApiKey );
+        this.pubMedXmlFetcher = new PubMedSearch( ncbiApiKey );
     }
 
     @Override
@@ -209,7 +209,7 @@ public class BibliographicReferenceServiceImpl
         existingBibRef.getPubAccession().setAccession( pubMedId );
         BibliographicReference fresh;
         try {
-            fresh = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+            fresh = this.pubMedXmlFetcher.fetchById( Integer.parseInt( pubMedId ) );
         } catch ( IOException e ) {
             throw new IllegalStateException( "Unable to retrieve record from pubmed for id=" + pubMedId, e );
         }

@@ -27,7 +27,7 @@ import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.loader.entrez.pubmed.ExpressionExperimentBibRefFinder;
-import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
+import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -53,7 +53,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     private ExpressionExperimentService ees;
     @Autowired
     private PersisterHelper persisterHelper;
-    private PubMedXMLFetcher fetcher;
+    private PubMedSearch fetcher;
     private ExpressionExperimentBibRefFinder finder;
 
     @Value("${entrez.efetch.apikey}")
@@ -62,7 +62,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     @Override
     public void afterPropertiesSet() throws Exception {
         super.afterPropertiesSet();
-        this.fetcher = new PubMedXMLFetcher( ncbiApiKey );
+        this.fetcher = new PubMedSearch( ncbiApiKey );
         this.finder = new ExpressionExperimentBibRefFinder( ncbiApiKey );
     }
 
@@ -146,7 +146,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
             experiment = ees.thawLite( experiment );
 
             // get from GEO or get from a file
-            BibliographicReference ref = fetcher.retrieveByHTTP( pubmedIds.get( experiment.getShortName() ) );
+            BibliographicReference ref = fetcher.fetchById( pubmedIds.get( experiment.getShortName() ) );
 
             if ( ref == null ) {
                 if ( this.pubmedIdFilename != null ) {

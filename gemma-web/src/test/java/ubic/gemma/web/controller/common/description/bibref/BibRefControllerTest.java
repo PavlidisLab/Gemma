@@ -60,13 +60,11 @@ public class BibRefControllerTest extends BaseSpringWebTest {
 
         assert brs != null;
 
-        PubMedXMLParser pmp = new PubMedXMLParser();
-
         ExternalDatabase pubmed = externalDatabaseService.findByName( ExternalDatabases.PUBMED );
         assertNotNull( pubmed );
 
         try {
-            Collection<BibliographicReference> brl = pmp
+            Collection<BibliographicReference> brl = PubMedXMLParser
                     .parse( this.getClass().getResourceAsStream( "/data/pubmed-test.xml" ) );
             br = brl.iterator().next();
 

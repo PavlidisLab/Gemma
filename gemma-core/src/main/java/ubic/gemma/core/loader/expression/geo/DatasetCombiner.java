@@ -24,21 +24,17 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.tools.ant.filters.StringInputStream;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 import ubic.basecode.math.StringDistance;
 import ubic.basecode.util.StringUtil;
+import ubic.gemma.core.loader.entrez.EntrezXmlUtils;
 import ubic.gemma.core.loader.entrez.EutilFetch;
 import ubic.gemma.core.loader.expression.geo.model.*;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static ubic.gemma.core.loader.entrez.NcbiXmlUtils.createDocumentBuilder;
 
 /**
  * Class to handle cases where there are multiple GEO dataset for a single actual experiment. This can occur in at least
@@ -159,7 +155,7 @@ public class DatasetCombiner {
 
         Collection<String> associatedDatasetAccessions = new HashSet<>();
         try {
-            String details = new EutilFetch( ncbiApiKey ).fetch( "gds", seriesAccession, 100 );
+            String details = EutilFetch.fetch( "gds", seriesAccession, 100, ncbiApiKey );
             if ( details == null ) {
                 return associatedDatasetAccessions;
             }
@@ -172,15 +168,13 @@ public class DatasetCombiner {
             XPathExpression xgds = xpath.compile(
                     "/eSummaryResult/DocSum[Item/@Name=\"entryType\" and (Item=\"GDS\")]/Item[@Name=\"GDS\"][1]/text()" );
 
-            DocumentBuilder builder = createDocumentBuilder();
-
             /*
              * Bug 2690. There must be a better way.
              */
             details = details.replaceAll( "encoding=\"UTF-8\"", "" );
             try ( StringInputStream sis = new StringInputStream( StringUtils.strip( details ) ) ) {
 
-                Document document = builder.parse( sis );
+                Document document = EntrezXmlUtils.parse( sis );
 
                 NodeList result = ( NodeList ) xgds.evaluate( document, XPathConstants.NODESET );
                 for ( int i = 0; i < result.getLength(); i++ ) {
@@ -195,7 +189,7 @@ public class DatasetCombiner {
 
         } catch ( IOException e ) {
             throw new RuntimeException( "Could not parse XML data from remote server", e );
-        } catch ( ParserConfigurationException | SAXException | XPathExpressionException e ) {
+        } catch ( XPathExpressionException e ) {
             throw new RuntimeException( "XML parsing error of remote data", e );
         }
     }
@@ -216,7 +210,7 @@ public class DatasetCombiner {
 
         Collection<String> associatedSeriesAccession = new HashSet<>();
         try {
-            Collection<String> lines = new EutilFetch( ncbiApiKey ).query( "gds", datasetAccession + "[Accession]" );
+            Collection<String> lines = EutilFetch.query( "gds", datasetAccession + "[Accession]", ncbiApiKey );
             for ( String line : lines ) {
                 Matcher mat = pat.matcher( line );
                 if ( mat.find() ) {

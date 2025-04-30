@@ -19,7 +19,9 @@
 package ubic.gemma.web.controller.common.description.bibref;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,7 +29,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
-import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
+import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
@@ -55,7 +57,7 @@ import java.util.Map.Entry;
  * @author keshav
  */
 @Controller
-public class BibliographicReferenceController extends BaseController {
+public class BibliographicReferenceController extends BaseController implements InitializingBean {
 
     private static final String messagePrefix = "Reference with PubMed Id";
 
@@ -65,8 +67,16 @@ public class BibliographicReferenceController extends BaseController {
     private Persister persisterHelper;
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
-    @Autowired
-    private PubMedXMLFetcher pubMedXmlFetcher;
+
+    @Value("${entrez.efetch.apikey}")
+    private String ncbiApiKey;
+
+    private PubMedSearch pubMedXmlFetcher;
+
+    @Override
+    public void afterPropertiesSet() {
+        pubMedXmlFetcher = new PubMedSearch( ncbiApiKey );
+    }
 
     @RequestMapping(value = "/showAllEeBibRefs.html", method = { RequestMethod.GET, RequestMethod.HEAD })
     public ModelAndView showAllForExperiments() {
@@ -109,7 +119,7 @@ public class BibliographicReferenceController extends BaseController {
         if ( bibRef == null ) {
             // attempt to fetch it from PubMed
             try {
-                bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( accession ) );
+                bibRef = this.pubMedXmlFetcher.fetchById( Integer.parseInt( accession ) );
                 return new ModelAndView( "bibRefAdd" )
                         .addObject( "bibliographicReference", bibRef );
             } catch ( NumberFormatException e ) {
@@ -135,7 +145,7 @@ public class BibliographicReferenceController extends BaseController {
         BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( String.valueOf( pubMedId ), ExternalDatabases.PUBMED );
         if ( bibRef == null ) {
             try {
-                bibRef = this.pubMedXmlFetcher.retrieveByHTTP( pubMedId );
+                bibRef = this.pubMedXmlFetcher.fetchById( pubMedId );
             } catch ( IOException e ) {
                 throw new RuntimeException( "Failed to retrieve publication with PubMed ID " + pubMedId + ".", e );
             }

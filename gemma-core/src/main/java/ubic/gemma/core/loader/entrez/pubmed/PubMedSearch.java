@@ -18,17 +18,17 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
+import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.xml.sax.SAXException;
+import org.w3c.dom.Document;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
+import ubic.gemma.core.loader.entrez.EntrezXmlUtils;
 import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.model.common.description.BibliographicReference;
 
-import javax.xml.parsers.ParserConfigurationException;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -40,58 +40,17 @@ import java.util.stream.Collectors;
  *
  * @author pavlidis
  */
+@CommonsLog
 public class PubMedSearch {
 
-    private static final Log log = LogFactory.getLog( PubMedSearch.class );
-    private static final int CHUNK_SIZE = 10; // don't retrieve too many at once, it isn't nice.
     private static final int MAX_TRIES = 3;
+    private static final int BATCH_SIZE = 30;
 
     private final String apiKey;
     private final SimpleRetry<IOException> retryTemplate = new SimpleRetry<>( new SimpleRetryPolicy( MAX_TRIES, 1000, 1.5 ), IOException.class, PubMedSearch.class.getName() );
-    private final ESearchXMLParser parser = new ESearchXMLParser();
-    private final PubMedXMLFetcher fetcher;
 
     public PubMedSearch( String apiKey ) {
         this.apiKey = apiKey;
-        this.fetcher = new PubMedXMLFetcher( apiKey );
-    }
-
-    /**
-     * Search based on terms
-     *
-     * @param  searchTerms                  search terms
-     * @return BibliographicReference representing the publication
-     * @throws IOException                  IO problems
-     */
-    public Collection<BibliographicReference> searchAndRetrieveByHTTP( Collection<String> searchTerms ) throws IOException {
-        URL searchUrl = EntrezUtils.searchAndRetrieve( "pubmed", StringUtils.join( " ", searchTerms ), "xml", "full", apiKey );
-        log.info( "Fetching " + searchUrl );
-        Collection<String> ids = retryTemplate.execute( ( ctx ) -> {
-            try ( InputStream is = searchUrl.openStream() ) {
-                return parser.parse( is );
-            } catch ( ParserConfigurationException | ESearchException | SAXException e ) {
-                throw new RuntimeException( e );
-            }
-        }, "fetching " + searchUrl );
-
-        try {
-            Thread.sleep( 100 );
-        } catch ( InterruptedException e ) {
-            Thread.currentThread().interrupt();
-            return Collections.emptyList();
-        }
-
-        Collection<BibliographicReference> results = fetchById( ids );
-
-        log.info( "Fetched " + results.size() + " references" );
-
-        return results;
-    }
-
-    public Collection<BibliographicReference> searchAndRetrieveIdByHTTP( Collection<String> searchTerms ) throws IOException {
-        Collection<BibliographicReference> results = fetchById( searchTerms );
-        log.info( "Fetched " + results.size() + " references" );
-        return results;
     }
 
     /**
@@ -101,9 +60,8 @@ public class PubMedSearch {
      * @return The PubMed ids (as strings) for the search results.
      * @throws IOException                  IO problems
      */
-    public Collection<String> searchAndRetrieveIdsByHTTP( Collection<String> searchTerms ) throws IOException {
-        // space them out, then let the overloaded method urlencode them
-        return searchAndRetrieveIdsByHTTP( String.join( " ", searchTerms ) );
+    public Collection<String> search( Collection<String> searchTerms ) throws IOException {
+        return search( String.join( " ", searchTerms ) );
     }
 
     /**
@@ -114,55 +72,78 @@ public class PubMedSearch {
      * @return The PubMed ids (as strings) for the search results.
      * @throws IOException                  IO problems
      */
-    public Collection<String> searchAndRetrieveIdsByHTTP( String searchQuery ) throws IOException {
-        // build URL
-        URL searchUrl = EntrezUtils.searchAndRetrieve( "pubmed", searchQuery, "xml", "full", apiKey );
-
-        // parse how many
-        int count = retryTemplate.execute( ( ctx ) -> {
+    public Collection<String> search( String searchQuery ) throws IOException {
+        URL searchUrl = EntrezUtils.search( "pubmed", searchQuery, "xml", apiKey );
+        log.debug( "Fetching " + searchUrl );
+        return retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
             try ( InputStream is = searchUrl.openStream() ) {
-                return parser.getCount( is );
-            } catch ( ParserConfigurationException | SAXException | ESearchException e ) {
-                throw new RuntimeException( e );
+                return EntrezXmlUtils.extractIds( EntrezXmlUtils.parse( is ) );
             }
-        }, "retrieving the number of results of " + searchQuery );
-
-        // be nice
-        try {
-            Thread.sleep( 100 );
-        } catch ( InterruptedException e ) {
-            Thread.currentThread().interrupt();
-            return Collections.emptyList();
-        }
-
-        return retryTemplate.execute( ( ctx ) -> {
-            // now get them all
-            URL fullSearchUrl = EntrezUtils.searchAndRetrieve( "pubmed", searchQuery, "xml", "full", 0, count, apiKey );
-            log.info( "Fetching " + count + " IDs from:" + fullSearchUrl );
-            try ( InputStream is = fullSearchUrl.openStream() ) {
-                return parser.parse( is );
-            } catch ( ParserConfigurationException | SAXException | ESearchException e ) {
-                throw new RuntimeException( e );
-            }
-        }, "retrieving " + searchQuery );
+        }, apiKey ), "retrieving the number of results of " + searchQuery );
     }
 
-    private Collection<BibliographicReference> fetchById( Collection<String> ids ) throws IOException {
-        Collection<BibliographicReference> results = new HashSet<>();
-
-        if ( ids == null || ids.isEmpty() ) return results;
-
-        for ( List<String> batch : ListUtils.partition( new ArrayList<>( ids ), CHUNK_SIZE ) ) {
-            log.debug( "Fetching PubMed IDs " + batch );
-            results.addAll( fetcher.retrieveByHTTP( batch.stream().map( Integer::parseInt ).collect( Collectors.toSet() ) ) );
-            try {
-                Thread.sleep( 100 );
-            } catch ( InterruptedException e ) {
-                Thread.currentThread().interrupt();
-                return results;
+    /**
+     * Search based on terms
+     *
+     * @param  terms                  search terms
+     * @return BibliographicReference representing the publication
+     * @throws IOException                  IO problems
+     */
+    public Collection<BibliographicReference> searchAndRetrieve( Collection<String> terms ) throws IOException {
+        URL searchUrl = EntrezUtils.search( "pubmed", StringUtils.join( " ", terms ), "xml", apiKey );
+        log.debug( "Fetching " + searchUrl );
+        Collection<String> ids = retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
+            try ( InputStream is = searchUrl.openStream() ) {
+                Document document = EntrezXmlUtils.parse( is );
+                return EntrezXmlUtils.extractIds( document );
             }
-        }
+        }, apiKey ), "fetching " + searchUrl );
+        return fetchById( ids );
+    }
 
-        return results;
+    /**
+     * @see EntrezUtils#fetchById(String, String, String, String, String)
+     */
+    @Nullable
+    public BibliographicReference fetchById( int pubMedId ) throws IOException {
+        URL fetchUrl = EntrezUtils.fetchById( "pubmed", String.valueOf( pubMedId ), "xml", "full", apiKey );
+        log.debug( "Fetching " + fetchUrl );
+        Collection<BibliographicReference> results = retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
+            try ( InputStream is = fetchUrl.openStream() ) {
+                return PubMedXMLParser.parse( is );
+            }
+        }, apiKey ), "fetching " + fetchUrl );
+
+        if ( results == null || results.isEmpty() ) {
+            return null;
+        }
+        assert results.size() == 1;
+        return results.iterator().next();
+    }
+
+    /**
+     * @see EntrezUtils#fetchById(String, String, String, String, String)
+     */
+    public Collection<BibliographicReference> fetchById( Collection<String> pubmedIds ) throws IOException {
+        Collection<BibliographicReference> results = new HashSet<>();
+        if ( pubmedIds == null || pubmedIds.isEmpty() ) return results;
+        List<Integer> uniqueSortedIds = pubmedIds.stream().map( Integer::valueOf ).collect( Collectors.toList() );
+        if ( uniqueSortedIds.isEmpty() ) {
+            return Collections.emptyList();
+        }
+        List<BibliographicReference> result = new ArrayList<>( uniqueSortedIds.size() );
+        for ( List<Integer> batch : ListUtils.partition( uniqueSortedIds.stream().distinct().collect( Collectors.toList() ), BATCH_SIZE ) ) {
+            URL fetchUrl = EntrezUtils.fetchById( "pubmed",
+                    batch.stream().map( String::valueOf ).collect( Collectors.joining( "," ) ),
+                    "xml", "full", apiKey );
+            log.debug( "Fetching " + fetchUrl );
+            result.addAll( retryTemplate.execute( ( ctx ) ->
+                    EntrezUtils.doNicely( () -> {
+                        try ( InputStream is = fetchUrl.openStream() ) {
+                            return PubMedXMLParser.parse( is );
+                        }
+                    }, apiKey ), "fetching " + fetchUrl ) );
+        }
+        return result;
     }
 }

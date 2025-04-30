@@ -30,7 +30,7 @@ import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
+import ubic.gemma.core.loader.entrez.EntrezXmlUtils;
 import ubic.gemma.core.loader.entrez.EutilFetch;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -46,8 +46,6 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 import ubic.gemma.persistence.util.Slice;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.*;
 import java.io.*;
 import java.util.*;
@@ -57,7 +55,6 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
-import static ubic.gemma.core.loader.entrez.NcbiXmlUtils.createDocumentBuilder;
 
 /**
  * This is marked as {@link Lazy} since we don't use it outside Gemma Web, so it won't be loaded unless it's needed.
@@ -142,7 +139,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
          * The maxrecords is > 1 because it return platforms as well (and there are series with as many as 13 platforms
          * ... leaving some headroom)
          */
-        String details = new EutilFetch( ncbiApiKey ).fetch( "gds", accession, 25 );
+        String details = EutilFetch.fetch( "gds", accession, 25, ncbiApiKey );
 
         if ( details == null ) {
             throw new IOException( "No results from GEO" );
@@ -193,8 +190,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
         details = details.replaceAll( "encoding=\"UTF-8\"", "" );
 
         try {
-            DocumentBuilder builder = createDocumentBuilder();
-            Document document = builder.parse( new InputSource( new StringReader( details ) ) );
+            Document document = EntrezXmlUtils.parse( new InputSource( new StringReader( details ) ) );
 
             String gse = "GSE" + xgse.evaluate( document, XPathConstants.STRING );
             String title = ( String ) xtitle.evaluate( document, XPathConstants.STRING );
@@ -223,7 +219,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
             details = buf.toString();
 
             // }
-        } catch ( ParserConfigurationException | SAXException | XPathExpressionException e ) {
+        } catch ( XPathExpressionException e ) {
             throw new RuntimeException( e );
         }
 

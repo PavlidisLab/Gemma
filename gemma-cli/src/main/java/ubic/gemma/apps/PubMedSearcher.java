@@ -74,7 +74,7 @@ public class PubMedSearcher extends AbstractAuthenticatedCLI {
     protected void doAuthenticatedWork() throws Exception {
         PubMedSearch pubMedSearcher = new PubMedSearch( ncbiApiKey );
         Collection<BibliographicReference> refs = pubMedSearcher
-                .searchAndRetrieveByHTTP( this.args );
+                .searchAndRetrieve( this.args );
 
         getCliContext().getOutputStream().println( refs.size() + " references found" );
 

@@ -26,6 +26,7 @@ import org.junit.experimental.categories.Category;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXParseException;
 import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.loader.entrez.EntrezException;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.util.test.category.GeoTest;
@@ -37,6 +38,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 
@@ -95,10 +97,12 @@ public class GeoBrowserTest {
                 } );
         assertThat( b.retrieveGeoRecords( query, 0, 10 ) )
                 .hasSize( 10 );
-        assertThat( b.retrieveGeoRecords( query, 1000000000, 10 ) )
-                .isEmpty();
+        assertThat( b.retrieveGeoRecords( query, query.getTotalRecords() - 1, 10 ) )
+                .hasSize( 1 );
+        assertThatThrownBy( () -> b.retrieveGeoRecords( query, query.getTotalRecords(), 10 ) )
+                .isInstanceOf( EntrezException.class )
+                .hasMessage( "Search backend can not retrieve history data." );
     }
-
 
     /**
      * Exercises getting details
