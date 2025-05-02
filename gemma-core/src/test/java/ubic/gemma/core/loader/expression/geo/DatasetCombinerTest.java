@@ -24,7 +24,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.config.Settings;
-import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.geo.model.GeoDataset;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -51,7 +50,7 @@ public class DatasetCombinerTest {
 
     @Test
     public void testFindGDSGrouping() throws Exception {
-        assumeThatResourceIsAvailable( EntrezUtils.ESEARCH );
+        assumeThatResourceIsAvailable( "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi" );
         Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE674", Settings.getString( "ncbi.efetch.apikey" ) );
         assertEquals( 2, result.size() );
         assertTrue( result.contains( "GDS472" ) && result.contains( "GDS473" ) );
@@ -101,7 +100,7 @@ public class DatasetCombinerTest {
 
     @Test
     public void testFindGSE267() throws Exception {
-        assumeThatResourceIsAvailable( EntrezUtils.ESEARCH );
+        assumeThatResourceIsAvailable( "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi" );
         Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE267", Settings.getString( "ncbi.efetch.apikey" ) );
         assertEquals( 0, result.size() );
     }

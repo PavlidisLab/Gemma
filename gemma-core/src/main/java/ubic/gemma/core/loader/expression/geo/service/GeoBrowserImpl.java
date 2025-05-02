@@ -35,7 +35,6 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.StringUtil;
-import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.entrez.NcbiXmlUtils;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
@@ -51,6 +50,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpression;
 import java.io.*;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -76,6 +77,8 @@ public class GeoBrowserImpl implements GeoBrowser {
      */
     private static final long MAX_MINIML_RECORD_SIZE = 100_000_000;
 
+    private static final String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds";
+    private static final String ESUMMARY = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=gds";
     private static final String GEO_BROWSE = "https://www.ncbi.nlm.nih.gov/geo/browse/";
     private static final String FLANKING_QUOTES_REGEX = "^\"|\"$";
 
@@ -275,12 +278,18 @@ public class GeoBrowserImpl implements GeoBrowser {
 
     @Override
     public GeoQuery searchGeoRecords( GeoRecordType recordType, String term ) throws IOException {
-        URL searchUrl = EntrezUtils.search( "gds", term, true, ncbiApiKey );
+        String searchUrl = ESEARCH
+                + "&term=" + urlEncode( term )
+                + "&usehistory=y";
+
+        if ( StringUtils.isNotBlank( ncbiApiKey ) ) {
+            searchUrl += "&api_key=" + ncbiApiKey;
+        }
 
         log.debug( "Searching GEO with: " + searchUrl );
         Document searchDocument;
         try {
-            searchDocument = parseMiniMLDocument( searchUrl );
+            searchDocument = parseMiniMLDocument( new URL( searchUrl ) );
         } catch ( SAXParseException e ) {
             throw new RuntimeException( "Failed to parse MINiML document at " + searchUrl, e );
         }
@@ -313,7 +322,13 @@ public class GeoBrowserImpl implements GeoBrowser {
         // if start > count, it should be empty
         int expectedRecords = Math.min( pageSize, Math.max( count - start, 0 ) );
 
-        URL fetchUrl = EntrezUtils.summary( "gds", queryId, "mode.text", start, pageSize, cookie, ncbiApiKey );
+        String fetchUrl = GeoBrowserImpl.ESUMMARY
+                + "&mode=mode.text"
+                + "&query_key=" + urlEncode( queryId )
+                + "&retstart=" + start
+                + "&retmax=" + pageSize
+                + "&WebEnv=" + urlEncode( cookie )
+                + ( StringUtils.isNotBlank( ncbiApiKey ) ? "&api_key=" + urlEncode( ncbiApiKey ) : "" );
 
         StopWatch t = new StopWatch();
         DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd", Locale.ENGLISH ); // for logging
@@ -322,7 +337,7 @@ public class GeoBrowserImpl implements GeoBrowser {
 
         Document summaryDocument;
         try {
-            summaryDocument = parseMiniMLDocument( fetchUrl );
+            summaryDocument = parseMiniMLDocument( new URL( fetchUrl ) );
         } catch ( SAXParseException e ) {
             throw new RuntimeException( "Failed to parse MINiML document at " + fetchUrl, e );
         }
@@ -360,14 +375,19 @@ public class GeoBrowserImpl implements GeoBrowser {
             return Collections.emptyList();
         }
 
-        URL fetchUrl = EntrezUtils.summary( "gds", query.getQueryId(), "mode.text", 1, query.getTotalRecords(), query.getCookie(), ncbiApiKey );
+        String fetchUrl = GeoBrowserImpl.ESUMMARY
+                + "&mode=mode.text"
+                + "&query_key=" + urlEncode( query.getQueryId() )
+                + "&retmax=" + query.getTotalRecords()
+                + "&WebEnv=" + urlEncode( query.getCookie() )
+                + ( StringUtils.isNotBlank( ncbiApiKey ) ? "&api_key=" + urlEncode( ncbiApiKey ) : "" );
 
         StopWatch t = new StopWatch();
         t.start();
 
         Document summaryDocument;
         try {
-            summaryDocument = parseMiniMLDocument( fetchUrl );
+            summaryDocument = parseMiniMLDocument( new URL( fetchUrl ) );
         } catch ( SAXParseException e ) {
             throw new RuntimeException( "Failed to parse MINiML document at " + fetchUrl, e );
         }
@@ -685,6 +705,14 @@ public class GeoBrowserImpl implements GeoBrowser {
                 return "gpl";
             default:
                 throw new UnsupportedOperationException( "Unsupported record type: " + recordType );
+        }
+    }
+
+    private String urlEncode( String s ) {
+        try {
+            return URLEncoder.encode( s, StandardCharsets.UTF_8.name() );
+        } catch ( UnsupportedEncodingException e ) {
+            throw new RuntimeException( e );
         }
     }
 

@@ -22,7 +22,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import ubic.gemma.core.config.Settings;
-import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.util.test.category.PubMedTest;
 import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -43,7 +42,7 @@ public class PubMedSearchTest {
 
     @Before
     public void setUp() throws Exception {
-        assumeThatResourceIsAvailable( EntrezUtils.ESEARCH );
+        assumeThatResourceIsAvailable( "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi" );
     }
 
     /*
