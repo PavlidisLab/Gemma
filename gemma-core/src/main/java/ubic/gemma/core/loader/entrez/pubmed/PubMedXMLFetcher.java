@@ -83,4 +83,12 @@ public class PubMedXMLFetcher {
         assert results.size() == 1;
         return results.iterator().next();
     }
+
+    private String urlEncode( String s ) {
+        try {
+            return URLEncoder.encode( s, StandardCharsets.UTF_8.name() );
+        } catch ( UnsupportedEncodingException e ) {
+            throw new RuntimeException( e );
+        }
+    }
 }
