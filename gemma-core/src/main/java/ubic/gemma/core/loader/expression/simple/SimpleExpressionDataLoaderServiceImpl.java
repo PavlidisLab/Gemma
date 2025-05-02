@@ -128,7 +128,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
 
         if ( metaData.getPubMedId() != null ) {
             try {
-                experiment.setPrimaryPublication( pubfetch.fetchById( metaData.getPubMedId() ) );
+                experiment.setPrimaryPublication( pubfetch.retrieve( metaData.getPubMedId() ) );
             } catch ( IOException e ) {
                 log.error( "Failed to retrieve PubMed entry for " + metaData.getPubMedId() + ", the primary publication will not be updated.", e );
             }

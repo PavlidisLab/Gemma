@@ -119,7 +119,7 @@ public class BibliographicReferenceController extends BaseController implements 
         if ( bibRef == null ) {
             // attempt to fetch it from PubMed
             try {
-                bibRef = this.pubMedXmlFetcher.fetchById( Integer.parseInt( accession ) );
+                bibRef = this.pubMedXmlFetcher.retrieve( accession );
                 return new ModelAndView( "bibRefAdd" )
                         .addObject( "bibliographicReference", bibRef );
             } catch ( NumberFormatException e ) {
@@ -140,12 +140,12 @@ public class BibliographicReferenceController extends BaseController implements 
     }
 
     @RequestMapping(value = "/bibRefAdd.html", method = RequestMethod.POST)
-    public RedirectView add( @RequestParam("accession") Integer pubMedId, @RequestParam(value = "refresh", required = false) Boolean refresh ) {
+    public RedirectView add( @RequestParam("accession") String pubMedId, @RequestParam(value = "refresh", required = false) Boolean refresh ) {
         // FIXME: allow use of the primary key as well.
         BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( String.valueOf( pubMedId ), ExternalDatabases.PUBMED );
         if ( bibRef == null ) {
             try {
-                bibRef = this.pubMedXmlFetcher.fetchById( pubMedId );
+                bibRef = this.pubMedXmlFetcher.retrieve( pubMedId );
             } catch ( IOException e ) {
                 throw new RuntimeException( "Failed to retrieve publication with PubMed ID " + pubMedId + ".", e );
             }

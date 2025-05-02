@@ -196,7 +196,7 @@ public class LoadSimpleExpressionDataCli extends AbstractAuthenticatedCLI {
         metaData.setSource( getRecordField( record, "source" ) );
         String pubMedId = getRecordField( record, "pubmed_id" );
         if ( pubMedId != null ) {
-            metaData.setPubMedId( Integer.parseInt( pubMedId ) );
+            metaData.setPubMedId( pubMedId );
         }
 
         String samplesMetadataFile;

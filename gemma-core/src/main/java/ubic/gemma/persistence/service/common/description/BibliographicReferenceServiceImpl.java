@@ -209,7 +209,7 @@ public class BibliographicReferenceServiceImpl
         existingBibRef.getPubAccession().setAccession( pubMedId );
         BibliographicReference fresh;
         try {
-            fresh = this.pubMedXmlFetcher.fetchById( Integer.parseInt( pubMedId ) );
+            fresh = this.pubMedXmlFetcher.retrieve( pubMedId );
         } catch ( IOException e ) {
             throw new IllegalStateException( "Unable to retrieve record from pubmed for id=" + pubMedId, e );
         }

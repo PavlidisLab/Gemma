@@ -115,7 +115,7 @@ public class MeshTermFetcherCli extends AbstractCLI {
     }
 
     private void processChunk( PubMedSearch fetcher, Collection<String> pubMedIds ) throws IOException {
-        Collection<BibliographicReference> refs = fetcher.fetchById( pubMedIds );
+        Collection<BibliographicReference> refs = fetcher.retrieve( pubMedIds );
 
         for ( BibliographicReference r : refs ) {
             getCliContext().getOutputStream().print( r.getPubAccession().getAccession() + "\t" );

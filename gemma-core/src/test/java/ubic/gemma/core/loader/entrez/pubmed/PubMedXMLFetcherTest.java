@@ -42,7 +42,7 @@ public class PubMedXMLFetcherTest {
     @Test
     public final void testRetrieveByHTTP() {
         try {
-            BibliographicReference br = pmf.fetchById( 15173114 );
+            BibliographicReference br = pmf.retrieve( "15173114" );
 
             assertNotNull( br );
 
@@ -60,7 +60,7 @@ public class PubMedXMLFetcherTest {
     @Test
     public final void testRetrieveByHTTP2() {
         try {
-            BibliographicReference br = pmf.fetchById( 24850731 );
+            BibliographicReference br = pmf.retrieve( "24850731" );
 
             assertNotNull( br );
 
@@ -81,7 +81,7 @@ public class PubMedXMLFetcherTest {
     @Test
     public final void testRetrieveByHTTPBookshelf() {
         try {
-            BibliographicReference br = pmf.fetchById( 23865096 );
+            BibliographicReference br = pmf.retrieve( "23865096" );
 
             assertNotNull( br );
 
@@ -100,7 +100,7 @@ public class PubMedXMLFetcherTest {
     @Test
     public final void testRetrieveByHTTPNotFound() {
         try {
-            BibliographicReference br = pmf.fetchById( 1517311444 );
+            BibliographicReference br = pmf.retrieve( "1517311444" );
             assertNull( br );
         } catch ( Exception e ) {
             assumeThatExceptionIsDueToNetworkIssue( e );

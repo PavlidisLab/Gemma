@@ -20,10 +20,11 @@ package ubic.gemma.core.loader.entrez.pubmed;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.collections4.ListUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
+import ubic.gemma.core.loader.entrez.EntrezQuery;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.entrez.EntrezXmlUtils;
+import ubic.gemma.core.loader.entrez.EntrezRetmode;
 import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -60,8 +61,8 @@ public class PubMedSearch {
      * @return The PubMed ids (as strings) for the search results.
      * @throws IOException                  IO problems
      */
-    public Collection<String> search( Collection<String> searchTerms ) throws IOException {
-        return search( String.join( " ", searchTerms ) );
+    public Collection<String> search( Collection<String> searchTerms, int maxResults ) throws IOException {
+        return search( String.join( " ", searchTerms ), maxResults );
     }
 
     /**
@@ -70,50 +71,51 @@ public class PubMedSearch {
      * @param  searchQuery                  - what would normally be typed into pubmed search box for example "Neural
      *                                      Pathways"[MeSH]
      * @return The PubMed ids (as strings) for the search results.
-     * @throws IOException                  IO problems
      */
-    public Collection<String> search( String searchQuery ) throws IOException {
-        URL searchUrl = EntrezUtils.search( "pubmed", searchQuery, "xml", apiKey );
-        log.debug( "Fetching " + searchUrl );
-        return retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
-            try ( InputStream is = searchUrl.openStream() ) {
-                return EntrezXmlUtils.extractIds( EntrezXmlUtils.parse( is ) );
-            }
-        }, apiKey ), "retrieving the number of results of " + searchQuery );
+    public Collection<String> search( String searchQuery, int maxResults ) throws IOException {
+        EntrezQuery query = searchInternal( searchQuery );
+        int max = maxResults > 0 ? Math.min( maxResults, query.getTotalRecords() ) : query.getTotalRecords();
+        List<String> ids = new ArrayList<>( max );
+        for ( int i = 0; i < max; i += BATCH_SIZE ) {
+            URL fetchUrl = EntrezUtils.search( "pubmed", query, EntrezRetmode.XML, i, BATCH_SIZE, apiKey );
+            ids.addAll( retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
+                try ( InputStream is = fetchUrl.openStream() ) {
+                    Document doc = EntrezXmlUtils.parse( is );
+                    return EntrezXmlUtils.extractIds( doc );
+                }
+            }, apiKey ), "retrieving " + ( i + BATCH_SIZE ) + "/" + query.getTotalRecords() + " PubMed IDs from " + searchQuery ) );
+        }
+        return ids;
     }
 
     /**
-     * Search based on terms
+     * Search based on terms and retrieve the PubMed records.
+     * <p>
+     * This is more efficient than calling {@link #search(String, int)} and then {@link #retrieve(Collection)} as it bypasses
+     * the intermediary query to get PubMed IDs.
      *
-     * @param  terms                  search terms
+     * @param  searchQuery            search terms
      * @return BibliographicReference representing the publication
-     * @throws IOException                  IO problems
      */
-    public Collection<BibliographicReference> searchAndRetrieve( Collection<String> terms ) throws IOException {
-        URL searchUrl = EntrezUtils.search( "pubmed", StringUtils.join( " ", terms ), "xml", apiKey );
-        log.debug( "Fetching " + searchUrl );
-        Collection<String> ids = retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
-            try ( InputStream is = searchUrl.openStream() ) {
-                Document document = EntrezXmlUtils.parse( is );
-                return EntrezXmlUtils.extractIds( document );
-            }
-        }, apiKey ), "fetching " + searchUrl );
-        return fetchById( ids );
+    public Collection<BibliographicReference> searchAndRetrieve( String searchQuery, int maxResults ) throws IOException {
+        EntrezQuery query = searchInternal( searchQuery );
+        int max = maxResults > 0 ? Math.min( maxResults, query.getTotalRecords() ) : query.getTotalRecords();
+        List<BibliographicReference> ids = new ArrayList<>( max );
+        for ( int i = 0; i < max; i += BATCH_SIZE ) {
+            URL fetchUrl = EntrezUtils.fetch( "pubmed", query, EntrezRetmode.XML, i, BATCH_SIZE, apiKey );
+            ids.addAll( fetch( fetchUrl ) );
+        }
+        return ids;
     }
 
     /**
-     * @see EntrezUtils#fetchById(String, String, String, String, String)
+     * Retrieve a single PubMed record by ID.
+     * @see EntrezUtils#fetchById(String, String, EntrezRetmode, String, String)
      */
     @Nullable
-    public BibliographicReference fetchById( int pubMedId ) throws IOException {
-        URL fetchUrl = EntrezUtils.fetchById( "pubmed", String.valueOf( pubMedId ), "xml", "full", apiKey );
-        log.debug( "Fetching " + fetchUrl );
-        Collection<BibliographicReference> results = retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
-            try ( InputStream is = fetchUrl.openStream() ) {
-                return PubMedXMLParser.parse( is );
-            }
-        }, apiKey ), "fetching " + fetchUrl );
-
+    public BibliographicReference retrieve( String pubMedId ) throws IOException {
+        URL fetchUrl = EntrezUtils.fetchById( "pubmed", pubMedId, EntrezRetmode.XML, "full", apiKey );
+        Collection<BibliographicReference> results = fetch( fetchUrl );
         if ( results == null || results.isEmpty() ) {
             return null;
         }
@@ -122,28 +124,43 @@ public class PubMedSearch {
     }
 
     /**
-     * @see EntrezUtils#fetchById(String, String, String, String, String)
+     * Retrieve multiple PubMed records by ID.
+     * @see EntrezUtils#fetchById(String, String, EntrezRetmode, String, String)
      */
-    public Collection<BibliographicReference> fetchById( Collection<String> pubmedIds ) throws IOException {
+    public Collection<BibliographicReference> retrieve( Collection<String> pubmedIds ) throws IOException {
         Collection<BibliographicReference> results = new HashSet<>();
         if ( pubmedIds == null || pubmedIds.isEmpty() ) return results;
-        List<Integer> uniqueSortedIds = pubmedIds.stream().map( Integer::valueOf ).collect( Collectors.toList() );
-        if ( uniqueSortedIds.isEmpty() ) {
+        List<String> uniqueIds = pubmedIds.stream().distinct().collect( Collectors.toList() );
+        if ( uniqueIds.isEmpty() ) {
             return Collections.emptyList();
         }
-        List<BibliographicReference> result = new ArrayList<>( uniqueSortedIds.size() );
-        for ( List<Integer> batch : ListUtils.partition( uniqueSortedIds.stream().distinct().collect( Collectors.toList() ), BATCH_SIZE ) ) {
+        List<BibliographicReference> result = new ArrayList<>( uniqueIds.size() );
+        for ( List<String> batch : ListUtils.partition( uniqueIds.stream().distinct().collect( Collectors.toList() ), BATCH_SIZE ) ) {
             URL fetchUrl = EntrezUtils.fetchById( "pubmed",
                     batch.stream().map( String::valueOf ).collect( Collectors.joining( "," ) ),
-                    "xml", "full", apiKey );
-            log.debug( "Fetching " + fetchUrl );
-            result.addAll( retryTemplate.execute( ( ctx ) ->
-                    EntrezUtils.doNicely( () -> {
-                        try ( InputStream is = fetchUrl.openStream() ) {
-                            return PubMedXMLParser.parse( is );
-                        }
-                    }, apiKey ), "fetching " + fetchUrl ) );
+                    EntrezRetmode.XML, "full", apiKey );
+            result.addAll( fetch( fetchUrl ) );
         }
         return result;
+    }
+
+    private EntrezQuery searchInternal( String searchQuery ) throws IOException {
+        URL searchUrl = EntrezUtils.search( "pubmed", searchQuery, EntrezRetmode.XML, apiKey );
+        log.debug( "Fetching " + searchUrl );
+        return retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
+            try ( InputStream is = searchUrl.openStream() ) {
+                return EntrezXmlUtils.getQuery( EntrezXmlUtils.parse( is ) );
+            }
+        }, apiKey ), "searching " + searchQuery );
+    }
+
+    private Collection<BibliographicReference> fetch( URL fetchUrl ) throws IOException {
+        log.debug( "Fetching " + fetchUrl );
+        return retryTemplate.execute( ( ctx ) ->
+                EntrezUtils.doNicely( () -> {
+                    try ( InputStream is = fetchUrl.openStream() ) {
+                        return PubMedXMLParser.parse( is );
+                    }
+                }, apiKey ), "fetching " + fetchUrl );
     }
 }

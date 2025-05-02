@@ -91,7 +91,7 @@ public class PubMedQueryController extends BaseController implements Initializin
                 return new ModelAndView( "bibRefSearch", result.getModel() );
             }
             try {
-                bibRefFound = this.pubMedXmlFetcher.fetchById( pubMedId );
+                bibRefFound = this.pubMedXmlFetcher.retrieve( String.valueOf( pubMedId ) );
             } catch ( IOException e ) {
                 log.error( "Failed to retrieve bibliographic reference from PubMed with ID: " + pubMedId, e );
             }

@@ -79,7 +79,7 @@ public class ExpressionExperimentBibRefFinder {
             return null;
 
         PubMedSearch fetcher = new PubMedSearch( ncbiApiKey );
-        return fetcher.fetchById( pubMedId );
+        return fetcher.retrieve( String.valueOf( pubMedId ) );
     }
 
     private int locatePubMedId( String geoSeries ) throws IOException {

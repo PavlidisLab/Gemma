@@ -20,6 +20,7 @@ package ubic.gemma.apps;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
@@ -73,8 +74,7 @@ public class PubMedSearcher extends AbstractAuthenticatedCLI {
     @Override
     protected void doAuthenticatedWork() throws Exception {
         PubMedSearch pubMedSearcher = new PubMedSearch( ncbiApiKey );
-        Collection<BibliographicReference> refs = pubMedSearcher
-                .searchAndRetrieve( this.args );
+        Collection<BibliographicReference> refs = pubMedSearcher.searchAndRetrieve( StringUtils.join( " ", this.args ), -1 );
 
         getCliContext().getOutputStream().println( refs.size() + " references found" );
 

@@ -36,6 +36,7 @@ import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.entrez.EntrezXmlUtils;
+import ubic.gemma.core.loader.entrez.EntrezRetmode;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeriesType;
@@ -275,7 +276,7 @@ public class GeoBrowserImpl implements GeoBrowser {
 
     @Override
     public GeoQuery searchGeoRecords( GeoRecordType recordType, String term ) throws IOException {
-        URL searchUrl = EntrezUtils.search( "gds", term, "xml", ncbiApiKey );
+        URL searchUrl = EntrezUtils.search( "gds", term, EntrezRetmode.XML, ncbiApiKey );
 
         log.debug( "Searching GEO with: " + searchUrl );
         // FIXME: this is not a MINiML document
@@ -292,8 +293,6 @@ public class GeoBrowserImpl implements GeoBrowser {
     public Slice<GeoRecord> retrieveGeoRecords( GeoQuery query, int start, int pageSize, GeoRetrieveConfig config ) throws IOException {
         Assert.isTrue( start >= 0, "Start must be zero or greater." );
         Assert.isTrue( pageSize >= 1, "Page size must be one or greater." );
-        String queryId = query.getQueryId();
-        String cookie = query.getCookie();
         int count = query.getTotalRecords();
 
         if ( count == 0 ) {
@@ -303,7 +302,7 @@ public class GeoBrowserImpl implements GeoBrowser {
         // if start > count, it should be empty
         int expectedRecords = Math.min( pageSize, Math.max( count - start, 0 ) );
 
-        URL fetchUrl = EntrezUtils.summary( "gds", queryId, "xml", start, pageSize, cookie, ncbiApiKey );
+        URL fetchUrl = EntrezUtils.summary( "gds", query, EntrezRetmode.XML, start, pageSize, ncbiApiKey );
 
         StopWatch t = new StopWatch();
         DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd", Locale.ENGLISH ); // for logging
@@ -345,7 +344,7 @@ public class GeoBrowserImpl implements GeoBrowser {
             return Collections.emptyList();
         }
 
-        URL fetchUrl = EntrezUtils.summary( "gds", query.getQueryId(), "xml", 0, query.getTotalRecords(), query.getCookie(), ncbiApiKey );
+        URL fetchUrl = EntrezUtils.summary( "gds", query, EntrezRetmode.XML, 0, query.getTotalRecords(), ncbiApiKey );
 
         StopWatch t = new StopWatch();
         t.start();
@@ -644,7 +643,7 @@ public class GeoBrowserImpl implements GeoBrowser {
         if ( record.getPubMedIds() == null || record.getPubMedIds().isEmpty() ) {
             return;
         }
-        Collection<BibliographicReference> refs = pubmedFetcher.fetchById( record.getPubMedIds() );
+        Collection<BibliographicReference> refs = pubmedFetcher.retrieve( record.getPubMedIds() );
         Collection<String> meshheadings = new ArrayList<>();
         for ( BibliographicReference ref : refs ) {
             for ( MedicalSubjectHeading mesh : ref.getMeshTerms() ) {

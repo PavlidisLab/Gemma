@@ -56,7 +56,8 @@ public class EutilFetch {
      */
     @Nullable
     public static String fetch( String db, String term, int limit, @Nullable String apiKey ) throws IOException {
-        URL searchUrl = EntrezUtils.search( db, term, "xml", apiKey );
+        URL searchUrl = EntrezUtils.search( db, term, EntrezRetmode.XML, apiKey );
+        System.out.println( searchUrl );
         return retryTemplate.execute( ( ctx ) -> {
             Document document = EntrezUtils.doNicely( () -> {
                 try ( InputStream is = searchUrl.openStream() ) {
@@ -64,15 +65,12 @@ public class EutilFetch {
                 }
             }, apiKey );
 
-            int count = EntrezXmlUtils.getCount( document );
-            if ( count == 0 ) {
+            EntrezQuery query = EntrezXmlUtils.getQuery( document );
+            if ( query.getTotalRecords() == 0 ) {
                 return null;
             }
 
-            String queryId = EntrezXmlUtils.getQueryId( document );
-            String cookie = EntrezXmlUtils.getCookie( document );
-
-            URL fetchUrl = EntrezUtils.summary( db, queryId, "xml", 0, limit, cookie, apiKey );
+            URL fetchUrl = EntrezUtils.summary( db, query, EntrezRetmode.XML, 0, limit, apiKey );
             return EntrezUtils.doNicely( () -> IOUtils.toString( fetchUrl, StandardCharsets.UTF_8 ), apiKey );
         }, "retrieve " + searchUrl );
     }

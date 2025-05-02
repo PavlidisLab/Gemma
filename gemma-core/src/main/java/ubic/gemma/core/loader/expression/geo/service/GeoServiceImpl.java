@@ -841,7 +841,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
                 continue;
             PubMedSearch fetcher = new PubMedSearch( ncbiApiKey );
             try {
-                pubmed = fetcher.fetchById( Integer.parseInt( pubmed.getPubAccession().getAccession() ) );
+                pubmed = fetcher.retrieve( pubmed.getPubAccession().getAccession() );
             } catch ( Exception e ) {
                 GeoServiceImpl.log.warn( "Filed to get data from pubmed, continuing without it." );
                 GeoServiceImpl.log.error( e, e );

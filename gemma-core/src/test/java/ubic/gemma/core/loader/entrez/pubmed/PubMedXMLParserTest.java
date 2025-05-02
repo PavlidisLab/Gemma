@@ -153,7 +153,6 @@ public class PubMedXMLParserTest {
      * This uses a medline-format file, instead of the pubmed xml files we get from the eutils.
      */
     @Test
-    @Category(SlowTest.class)
     public void testParseMulti() throws Exception {
         assumeThatResourceIsAvailable( "https://dtd.nlm.nih.gov/ncbi/pubmed/out/pubmed_190101.dtd" );
         try ( InputStream testStream = new GZIPInputStream( new ClassPathResource( "/data/loader/medline.multi.xml.gz" ).getInputStream() ) ) {

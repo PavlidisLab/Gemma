@@ -35,7 +35,6 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailabl
 public class EutilFetchTest {
 
     @Test
-    @Category(SlowTest.class)
     public void testFetch() throws Exception {
         assumeThatResourceIsAvailable( EntrezUtils.ESEARCH );
         String result = EutilFetch.fetch( "gds", "GSE4595", 2, Settings.getString( "ncbi.efetch.apikey" ) );

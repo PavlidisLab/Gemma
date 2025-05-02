@@ -210,7 +210,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
     @Category(SlowTest.class)
     public void testSearchByBibRefIdProblems() throws SearchException, IOException {
         PubMedSearch fetcher = new PubMedSearch( ncbiApiKey );
-        BibliographicReference bibref = fetcher.fetchById( 9600966 );
+        BibliographicReference bibref = fetcher.retrieve( "9600966" );
         assertNotNull( bibref );
         bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
         assertTrue( bibref.getAbstractText().contains(
@@ -246,7 +246,7 @@ public class SearchServiceIntegrationTest extends BaseSpringContextTest {
     @Category(SlowTest.class)
     public void testSearchByBibRefIdProblemsB() throws SearchException, IOException {
         PubMedSearch fetcher = new PubMedSearch( ncbiApiKey );
-        BibliographicReference bibref = fetcher.fetchById( 22780917 );
+        BibliographicReference bibref = fetcher.retrieve( "22780917" );
         assertNotNull( bibref );
         bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
         assertTrue( bibref.getAbstractText().contains(

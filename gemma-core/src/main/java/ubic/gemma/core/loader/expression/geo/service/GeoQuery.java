@@ -1,18 +1,21 @@
 package ubic.gemma.core.loader.expression.geo.service;
 
-import lombok.Value;
+import lombok.Getter;
+import ubic.gemma.core.loader.entrez.EntrezQuery;
 
 /**
  * Represents a GEO query.
  * @author poirigui
  */
-@Value
-public class GeoQuery {
+@Getter
+public class GeoQuery extends EntrezQuery {
     /**
      * Type of record being queried.
      */
-    GeoRecordType recordType;
-    String queryId;
-    String cookie;
-    int totalRecords;
+    private final GeoRecordType recordType;
+
+    public GeoQuery( GeoRecordType recordType, String queryId, String cookie, int totalRecords ) {
+        super( queryId, cookie, totalRecords );
+        this.recordType = recordType;
+    }
 }

@@ -100,8 +100,7 @@ public class GeoBrowserTest {
         assertThat( b.retrieveGeoRecords( query, query.getTotalRecords() - 1, 10 ) )
                 .hasSize( 1 );
         assertThatThrownBy( () -> b.retrieveGeoRecords( query, query.getTotalRecords(), 10 ) )
-                .isInstanceOf( EntrezException.class )
-                .hasMessage( "Search backend can not retrieve history data." );
+                .isInstanceOf( IndexOutOfBoundsException.class );
     }
 
     /**

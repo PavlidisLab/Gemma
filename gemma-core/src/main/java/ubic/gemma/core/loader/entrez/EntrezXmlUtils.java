@@ -73,17 +73,8 @@ public class EntrezXmlUtils {
         return builder;
     }
 
-    public static Collection<String> extractIds( Document doc ) {
-        NodeList idList = doc.getElementsByTagName( "Id" );
-        Collection<String> result = new HashSet<>();
-        for ( Node elem = idList.item( 0 ); elem != null; elem = elem.getNextSibling() ) {
-            String val = XMLUtils.getTextValue( elem );
-            if ( StringUtils.isBlank( val ) ) {
-                continue;
-            }
-            result.add( val );
-        }
-        return result;
+    public static EntrezQuery getQuery( Document doc ) {
+        return new EntrezQuery( getQueryId( doc ), getCookie( doc ), getCount( doc ) );
     }
 
     public static int getCount( Document document ) {
@@ -96,5 +87,18 @@ public class EntrezXmlUtils {
 
     public static String getCookie( Document document ) {
         return XMLUtils.getTextValue( XMLUtils.getUniqueItem( document.getElementsByTagName( "WebEnv" ) ) );
+    }
+
+    public static Collection<String> extractIds( Document doc ) {
+        NodeList idList = doc.getElementsByTagName( "Id" );
+        Collection<String> result = new HashSet<>();
+        for ( Node elem = idList.item( 0 ); elem != null; elem = elem.getNextSibling() ) {
+            String val = XMLUtils.getTextValue( elem );
+            if ( StringUtils.isBlank( val ) ) {
+                continue;
+            }
+            result.add( val );
+        }
+        return result;
     }
 }

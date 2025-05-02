@@ -67,7 +67,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     }
 
     private String pubmedIdFilename;
-    private Map<String, Integer> pubmedIds = new HashMap<>();
+    private Map<String, String> pubmedIds = new HashMap<>();
 
     @Override
     public String getCommandName() {
@@ -146,7 +146,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
             experiment = ees.thawLite( experiment );
 
             // get from GEO or get from a file
-            BibliographicReference ref = fetcher.fetchById( pubmedIds.get( experiment.getShortName() ) );
+            BibliographicReference ref = fetcher.retrieve( pubmedIds.get( experiment.getShortName() ) );
 
             if ( ref == null ) {
                 if ( this.pubmedIdFilename != null ) {
@@ -192,8 +192,8 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
      * Reads pubmedID and experiment short name from the file and stores it in a HashMap<eeShortName, pubmedId>. E.g.
      * 22438826 GSE27715 22340501 GSE35802
      */
-    private Map<String, Integer> parsePubmedIdFile( String filename ) throws IOException {
-        Map<String, Integer> ids = new HashMap<>();
+    private Map<String, String> parsePubmedIdFile( String filename ) throws IOException {
+        Map<String, String> ids = new HashMap<>();
         final int COL_COUNT = 2;
         try ( BufferedReader br = new BufferedReader( new FileReader( filename ) ) ) {
             String row;
@@ -203,7 +203,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
                     log.error( "Line must contain " + COL_COUNT + " columns. Invalid line " + row );
                     continue;
                 }
-                ids.put( col[1].trim(), Integer.parseInt( col[0].trim() ) );
+                ids.put( col[1].trim(), col[0].trim() );
             }
         }
         log.info( "Read " + ids.size() + " entries from " + filename );

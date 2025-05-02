@@ -56,7 +56,7 @@ public class SimpleExpressionExperimentMetadata implements Serializable {
      * PubMed identifier.
      */
     @Nullable
-    private Integer pubMedId;
+    private String pubMedId;
 
     @Nullable
     private String source;
