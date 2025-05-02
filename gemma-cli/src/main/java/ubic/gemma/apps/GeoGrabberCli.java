@@ -363,12 +363,11 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         try ( CSVPrinter os = tsvFormat.print( getOutputWriter() ) ) {
             int numProcessed = 0;
             int numUsed = 0;
-            int totalRecords = Integer.MAX_VALUE;
+            int totalRecords = query.getTotalRecords();
             for ( ; start < totalRecords; start += chunkSize ) {
                 log.debug( "Searching from " + start + ", seeking " + chunkSize + " records" );
 
                 Slice<GeoRecord> recs = getGeoRecords( query, start, chunkSize, true );
-                totalRecords = requireNonNull( recs.getTotalElements() ).intValue();
 
                 log.debug( "Retrieved " + recs.size() + " GEO records." ); // we skip ones that are not using taxa of interest
 
