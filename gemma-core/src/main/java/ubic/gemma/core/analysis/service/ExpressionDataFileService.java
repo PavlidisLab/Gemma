@@ -114,9 +114,9 @@ public interface ExpressionDataFileService {
      */
     Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, ExpressionExperimentMetaFileType type, boolean exclusive ) throws IOException;
 
-    Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, String filename, boolean exclusive ) throws IOException;
+    LockedPath getMetadataFile( ExpressionExperiment ee, String filename, boolean exclusive ) throws IOException;
 
-    Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, String filename, boolean exclusive, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException, IOException;
+    LockedPath getMetadataFile( ExpressionExperiment ee, String filename, boolean exclusive, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException, IOException;
 
     /**
      * Copy a metadata file to the location of a given metadata type.

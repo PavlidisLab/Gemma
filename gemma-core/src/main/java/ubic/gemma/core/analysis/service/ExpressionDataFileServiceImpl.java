@@ -293,18 +293,18 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     @Override
-    public Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, String filename, boolean exclusive ) throws IOException {
+    public LockedPath getMetadataFile( ExpressionExperiment ee, String filename, boolean exclusive ) throws IOException {
         try ( LockedPath lock = fileLockManager.acquirePathLock( metadataDir.resolve( getEEFolderName( ee ) ).resolve( filename ), exclusive ) ) {
             // lock will be managed by the LockedFile
-            return Optional.of( lock.steal() );
+            return lock.steal();
         }
     }
 
     @Override
-    public Optional<LockedPath> getMetadataFile( ExpressionExperiment ee, String filename, boolean exclusive, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException, IOException {
+    public LockedPath getMetadataFile( ExpressionExperiment ee, String filename, boolean exclusive, long timeout, TimeUnit timeUnit ) throws InterruptedException, TimeoutException, IOException {
         try ( LockedPath lock = fileLockManager.tryAcquirePathLock( metadataDir.resolve( getEEFolderName( ee ) ).resolve( filename ), exclusive, timeout, timeUnit ) ) {
             // lock will be managed by the LockedFile
-            return Optional.of( lock.steal() );
+            return lock.steal();
         }
     }
 

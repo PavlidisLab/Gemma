@@ -35,13 +35,19 @@ function __gemma_cli_sc_complete() {
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.ExpressionExperimentMetadataFileAdderCli ' ]]; then
-        if ! [[ "$current_option" =~ (--changelog-entry|--experiment|-ce|-e) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--changelog-entry --experiment --force --help -ce -e -force -h" -- "$2")
+        if ! [[ "$current_option" =~ (--changelog-entry|--experiment|--file-type|-ce|-e|-fileType) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--changelog-entry --experiment --file-type --force --help -ce -e -fileType -force -h" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--file-type|-fileType) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' addMetadataFile ' ]]; then
-        if ! [[ "$current_option" =~ (--changelog-entry|--experiment|-ce|-e) ]]; then
-            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--changelog-entry --experiment --force --help -ce -e -force -h" -- "$2")
+        if ! [[ "$current_option" =~ (--changelog-entry|--experiment|--file-type|-ce|-e|-fileType) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -W "--changelog-entry --experiment --file-type --force --help -ce -e -fileType -force -h" -- "$2")
+        fi
+        if [[ "$current_option" =~ (--file-type|-fileType) ]]; then
+            mapfile -t -O "${#COMPREPLY[@]}" COMPREPLY < <(compgen -f -- "$2")
         fi
     fi
     if [[ " $words " =~ ' ubic.gemma.apps.LoadSimpleExpressionDataCli ' ]]; then

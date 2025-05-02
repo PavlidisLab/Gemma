@@ -108,15 +108,13 @@ public class LockExpressionDataFileCli extends ExpressionExperimentManipulatingC
     private LockedPath getLock( ExpressionExperiment ee, String filename, boolean exclusive ) throws IOException, InterruptedException, TimeoutException {
         if ( timeoutMs != null ) {
             if ( metadata ) {
-                return expressionDataFileService.getMetadataFile( ee, filename, exclusive, timeoutMs, TimeUnit.MILLISECONDS )
-                        .orElseThrow( () -> new IOException( "Metadata file not found: " + filename ) );
+                return expressionDataFileService.getMetadataFile( ee, filename, exclusive, timeoutMs, TimeUnit.MILLISECONDS );
             } else {
                 return expressionDataFileService.getDataFile( filename, exclusive, timeoutMs, TimeUnit.MILLISECONDS );
             }
         } else {
             if ( metadata ) {
-                return expressionDataFileService.getMetadataFile( ee, filename, exclusive )
-                        .orElseThrow( () -> new IOException( "Metadata file not found: " + filename ) );
+                return expressionDataFileService.getMetadataFile( ee, filename, exclusive );
             } else {
                 return expressionDataFileService.getDataFile( filename, exclusive );
             }
