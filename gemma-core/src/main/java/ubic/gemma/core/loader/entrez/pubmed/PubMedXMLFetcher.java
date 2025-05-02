@@ -27,7 +27,10 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.stream.Collectors;
@@ -53,26 +56,26 @@ public class PubMedXMLFetcher {
         if ( pubMedIds.isEmpty() ) {
             return Collections.emptyList();
         }
-        URL fetchUrl = EntrezUtils.fetchById( "pubmed",
+        URL toBeGotten = EntrezUtils.fetch( "pubmed",
                 pubMedIds.stream().map( String::valueOf ).collect( Collectors.joining( "," ) ),
                 "xml", "full", apiKey );
-        log.debug( "Fetching " + fetchUrl );
+        log.debug( "Fetching " + toBeGotten );
         return retryTemplate.execute( ( attempt, lastAttempt ) -> {
-            try ( InputStream is = fetchUrl.openStream() ) {
+            try ( InputStream is = toBeGotten.openStream() ) {
                 return pubMedXMLParser.parse( is );
             }
-        }, "fetching " + fetchUrl );
+        }, "fetching " + toBeGotten );
     }
 
     @Nullable
     public BibliographicReference retrieveByHTTP( int pubMedId ) throws IOException {
-        URL fetchUrl = EntrezUtils.fetchById( "pubmed", String.valueOf( pubMedId ), "xml", "full", apiKey );
-        log.debug( "Fetching " + fetchUrl );
+        URL toBeGotten = EntrezUtils.fetch( "pubmed", String.valueOf( pubMedId ), "xml", "full", apiKey );
+        log.debug( "Fetching " + toBeGotten );
         Collection<BibliographicReference> results = retryTemplate.execute( ( attempt, lastAttempt ) -> {
-            try ( InputStream is = fetchUrl.openStream() ) {
+            try ( InputStream is = toBeGotten.openStream() ) {
                 return pubMedXMLParser.parse( is );
             }
-        }, "fetching " + fetchUrl );
+        }, "fetching " + toBeGotten );
 
         if ( results == null || results.isEmpty() ) {
             return null;
