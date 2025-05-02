@@ -65,6 +65,7 @@ import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.core.loader.expression.geo.model.GeoSeriesType.EXPRESSION_PROFILING_BY_ARRAY;
+import static ubic.gemma.core.loader.expression.geo.model.GeoSeriesType.EXPRESSION_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING;
 import static ubic.gemma.core.ontology.ValueStringToOntologyMapping.lookup;
 
 /**
@@ -1970,6 +1971,7 @@ public class GeoConverterImpl implements GeoConverter {
      */
     private void convertSeriesTypes( GeoSeries series, ExpressionExperiment expExp ) {
         Set<Characteristic> assayTypes = series.getSeriesTypes().stream()
+                .filter( this::isSeriesTypeSupported )
                 .map( st -> convertSeriesType( series, st ) )
                 .filter( Objects::nonNull )
                 .collect( Collectors.toSet() );
@@ -1980,6 +1982,14 @@ public class GeoConverterImpl implements GeoConverter {
         } else {
             log.warn( "Could not detect an assay type for " + expExp + "." );
         }
+    }
+
+    /**
+     * Indicate if we support loading data for the given GEO series type.
+     */
+    private boolean isSeriesTypeSupported( GeoSeriesType geoSeriesType ) {
+        return geoSeriesType == EXPRESSION_PROFILING_BY_ARRAY
+                || geoSeriesType == EXPRESSION_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING;
     }
 
     /**
