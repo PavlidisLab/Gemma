@@ -20,8 +20,10 @@ package ubic.gemma.core.loader.entrez;
 
 import org.junit.Test;
 import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 import ubic.gemma.core.util.test.Assumptions;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 
@@ -46,5 +48,16 @@ public class EntrezXmlUtilsTest {
         Collection<String> ids = EntrezXmlUtils.extractIds( document );
         assertEquals( 4, ids.size() );
         assertTrue( ids.contains( "15963425" ) );
+    }
+
+    @Test
+    public void testParseWithInvalidUtf8Characters() throws IOException {
+        try ( InputStream stream = EntrezXmlUtilsTest.class.getResourceAsStream( "/data/GSE730_family.xml" ) ) {
+            RuntimeException e = assertThrows( RuntimeException.class, () -> EntrezXmlUtils.parse( stream ) );
+            assertTrue( e.getCause() instanceof SAXException );
+        }
+        try ( InputStream stream = EntrezXmlUtilsTest.class.getResourceAsStream( "/data/GSE730_family.xml" ) ) {
+            EntrezXmlUtils.parse( stream, "windows-1252" );
+        }
     }
 }

@@ -34,9 +34,9 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXParseException;
 import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.StringUtil;
+import ubic.gemma.core.loader.entrez.EntrezRetmode;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.entrez.EntrezXmlUtils;
-import ubic.gemma.core.loader.entrez.EntrezRetmode;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeriesType;
@@ -673,7 +673,7 @@ public class GeoBrowserImpl implements GeoBrowser {
         } catch ( Exception e ) {
             if ( e.getCause() instanceof SAXParseException ) {
                 // the stacktrace is not very useful, and if the error is reproducible, it will also happen on the GEO Query side
-                log.warn( "Failed to parse detailed GEO series MINiML from FTP for " + geoAccession + ", will attempt to retrieve it from GEO query..." );
+                log.warn( "Failed to parse detailed GEO series MINiML from FTP for " + geoAccession + ", will attempt to retrieve it from GEO query...", e );
                 if ( ( document = fetchDetailedGeoSeriesFamilyFromGeoQuery( geoAccession ) ) != null ) {
                     return document;
                 }
@@ -684,11 +684,26 @@ public class GeoBrowserImpl implements GeoBrowser {
         throw new FileNotFoundException( "No series file found for " + geoAccession );
     }
 
+    @Nullable
+    Document fetchDetailedGeoSeriesFamilyFromGeoFtp( String geoAccession ) throws IOException {
+        try {
+            return fetchDetailedGeoSeriesFamilyFromGeoFtp( geoAccession, null );
+        } catch ( RuntimeException e ) {
+            if ( e.getCause() instanceof SAXParseException ) {
+                // the stack trace is not very useful
+                log.warn( "GEO series file for " + geoAccession + " appears to contain invalid characters, will attempt to parse it with Windows-1251 character encoding." );
+                return fetchDetailedGeoSeriesFamilyFromGeoFtp( geoAccession, "windows-1252" );
+            } else {
+                throw e;
+            }
+        }
+    }
+
     /**
      * Fetch a detailed GEO series MINiML document.
      */
     @Nullable
-    Document fetchDetailedGeoSeriesFamilyFromGeoFtp( String geoAccession ) throws IOException {
+    private Document fetchDetailedGeoSeriesFamilyFromGeoFtp( String geoAccession, @Nullable String encoding ) throws IOException {
         URL documentUrl = getUrlForSeriesFamily( geoAccession, GeoSource.FTP_VIA_HTTPS, GeoFormat.MINIML );
         return execute( ( ctx ) -> {
             try ( TarInputStream tis = new TarInputStream( new GZIPInputStream( documentUrl.openStream() ) ) ) {
@@ -697,7 +712,7 @@ public class GeoBrowserImpl implements GeoBrowser {
                     if ( entry.getName().equals( geoAccession + "_family.xml" ) ) {
                         String entryUrl = documentUrl + "!" + entry.getName();
                         log.debug( "Parsing MINiML for " + geoAccession + " from " + entryUrl + "..." );
-                        return parseDetailedGeoSeriesDocument( geoAccession, entryUrl, tis );
+                        return encoding != null ? EntrezXmlUtils.parse( tis, encoding ) : EntrezXmlUtils.parse( tis );
                     }
                 }
             } catch ( FileNotFoundException e ) {
@@ -712,20 +727,16 @@ public class GeoBrowserImpl implements GeoBrowser {
      * Retrieve a detailed GEO series document directly from GEO.
      */
     @Nullable
-    Document fetchDetailedGeoSeriesFamilyFromGeoQuery( String geoAccession ) throws IOException, SAXParseException {
+    Document fetchDetailedGeoSeriesFamilyFromGeoQuery( String geoAccession ) throws IOException {
         URL documentUrl = getUrlForSeriesFamily( geoAccession, GeoSource.QUERY, GeoFormat.MINIML );
         return execute( ( ctx ) -> {
             try ( InputStream tis = documentUrl.openStream() ) {
-                return parseDetailedGeoSeriesDocument( geoAccession, documentUrl.toString(), tis );
+                log.debug( "Parsing MINiML for " + geoAccession + " from " + documentUrl + "..." );
+                return EntrezXmlUtils.parse( tis );
             } catch ( FileNotFoundException e ) {
                 return null;
             }
         }, "retrieve " + documentUrl );
-    }
-
-    private Document parseDetailedGeoSeriesDocument( String geoAccession, String documentUrl, InputStream is ) throws IOException {
-        log.debug( "Parsing MINiML for " + geoAccession + " from " + documentUrl + "..." );
-        return EntrezXmlUtils.parse( is );
     }
 
     /**

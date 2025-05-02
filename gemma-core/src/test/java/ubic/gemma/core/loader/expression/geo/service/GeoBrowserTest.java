@@ -24,9 +24,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.w3c.dom.Document;
-import org.xml.sax.SAXParseException;
 import ubic.gemma.core.config.Settings;
-import ubic.gemma.core.loader.entrez.EntrezException;
 import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.util.test.category.GeoTest;
@@ -207,11 +205,23 @@ public class GeoBrowserTest {
      */
     @Test
     @Category(SlowTest.class)
-    public void testFetchDetailedGeoSeries() throws IOException, SAXParseException {
+    public void testFetchDetailedGeoSeries() throws IOException {
         GeoBrowserImpl b = new GeoBrowserImpl( ncbiApiKey );
-        Document rec1 = b.fetchDetailedGeoSeriesFamilyFromGeoFtp( "GSE93825" );
+        Document rec1 = b.fetchDetailedGeoSeriesFamilyFromGeoFtp( "GSE93826" );
         assertThat( rec1 ).isNotNull();
         Document rec2 = b.fetchDetailedGeoSeriesFamilyFromGeoQuery( "GSE93825" );
+        assertThat( rec2 ).isNotNull();
+        // FIXME: there are slight differences
+        // assertThat( getTextValue( rec1 ) ).isEqualTo( getTextValue( rec2 ) );
+    }
+
+    @Test
+    @Category(SlowTest.class)
+    public void testFetchDetailedGeoSeriesWithInvalidUtf8Characters() throws IOException {
+        GeoBrowserImpl b = new GeoBrowserImpl( ncbiApiKey );
+        Document rec1 = b.fetchDetailedGeoSeriesFamilyFromGeoFtp( "GSE730" );
+        assertThat( rec1 ).isNotNull();
+        Document rec2 = b.fetchDetailedGeoSeriesFamilyFromGeoQuery( "GSE730" );
         assertThat( rec2 ).isNotNull();
         // FIXME: there are slight differences
         // assertThat( getTextValue( rec1 ) ).isEqualTo( getTextValue( rec2 ) );

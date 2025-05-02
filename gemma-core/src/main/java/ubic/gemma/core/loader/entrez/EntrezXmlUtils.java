@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import ubic.gemma.core.util.XMLUtils;
 
@@ -31,6 +32,25 @@ public class EntrezXmlUtils {
         try {
             DocumentBuilder builder = createDocumentBuilder();
             Document doc = builder.parse( is );
+            checkForErrors( doc );
+            return doc;
+        } catch ( ParserConfigurationException | SAXException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * Parse an XML reply with a specific character encoding.
+     * <p>
+     * This is mainly useful for querying old MINiML documents from NCBI FTP server that are declared as UTF-8 but
+     * actually use Windows-1252 encoding.
+     */
+    public static Document parse( InputStream is, String encoding ) throws IOException {
+        try {
+            DocumentBuilder builder = createDocumentBuilder();
+            InputSource inputSource = new InputSource( is );
+            inputSource.setEncoding( encoding );
+            Document doc = builder.parse( inputSource );
             checkForErrors( doc );
             return doc;
         } catch ( ParserConfigurationException | SAXException e ) {
