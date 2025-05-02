@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
 import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
+import static ubic.gemma.core.util.NetUtils.bytePerSecondToDisplaySize;
 
 /**
  * Detects 10X MEX data from GEO series and samples.
@@ -368,9 +369,9 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
                             long downloadedBytes = IOUtils.copyLarge( is, os );
                             // make sure we're done with the file I/O before checking its size
                             os.close();
-                            log.info( String.format( "%s: Done downloading %s (%s in %s @ %s/s).",
+                            log.info( String.format( "%s: Done downloading %s (%s in %s @ %s).",
                                     geoAccession, file, byteCountToDisplaySize( downloadedBytes ), timer,
-                                    byteCountToDisplaySize( 1000 * downloadedBytes / timer.getTime() ) ) );
+                                    bytePerSecondToDisplaySize( 1000.0 * downloadedBytes / timer.getTime() ) ) );
                             if ( !existsAndHasExpectedSize( dest, file, expectedContentLength, false, true ) ) {
                                 throw new IOException( String.format( "Unexpected size for %s: %d B were expected but %d were copied.",
                                         dest, expectedContentLength, downloadedBytes ) );
@@ -490,10 +491,10 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
                         }
                         if ( barcodesT != null && featuresT != null && matrixT != null ) {
                             if ( copiedBytes > 0 ) {
-                                log.info( String.format( "%s: Done copying MEX files from archive (%s in %s @ %s/s).",
+                                log.info( String.format( "%s: Done copying MEX files from archive (%s in %s @ %s).",
                                         geoAccession,
                                         byteCountToDisplaySize( copiedBytes ), timer,
-                                        byteCountToDisplaySize( 1000 * copiedBytes / timer.getTime() ) ) );
+                                        bytePerSecondToDisplaySize( 1000.0 * copiedBytes / timer.getTime() ) ) );
                             }
                             return true;
                         } else if ( sampleDirectory.toFile().exists() ) {

@@ -1,9 +1,11 @@
 package ubic.gemma.core.util.locking;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLockInterruptionException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.TimeUnit;
@@ -26,10 +28,12 @@ class ReadWriteFileLock implements ReadWriteLock {
 
     /**
      * Open a read/write file lock.
-     * @param path    a path to lock
+     * @param path          a path to lock
+     * @param deleteOnClose if true, the file will be deleted when the lock is released and no other threads or process
+     *                      is holding it
      */
-    public static ReadWriteFileLock open( Path path ) {
-        return new ReadWriteFileLock( new ReentrantReadWriteLock(), path );
+    public static ReadWriteFileLock open( Path path, boolean deleteOnClose ) {
+        return new ReadWriteFileLock( new ReentrantReadWriteLock(), path, deleteOnClose );
     }
 
     private final Path path;
@@ -45,10 +49,10 @@ class ReadWriteFileLock implements ReadWriteLock {
      */
     private final AtomicInteger channelHolders = new AtomicInteger( 0 );
 
-    private ReadWriteFileLock( ReentrantReadWriteLock rwLock, Path path ) {
+    private ReadWriteFileLock( ReentrantReadWriteLock rwLock, Path path, boolean deleteOnClose ) {
         this.path = path;
-        this.readLock = new FileLock( rwLock.readLock(), true );
-        this.writeLock = new FileLock( rwLock.writeLock(), false );
+        this.readLock = new FileLock( rwLock.readLock(), true, deleteOnClose );
+        this.writeLock = new FileLock( rwLock.writeLock(), false, deleteOnClose );
     }
 
     public Path getPath() {
@@ -64,11 +68,13 @@ class ReadWriteFileLock implements ReadWriteLock {
         return fc;
     }
 
+    @Nonnull
     @Override
     public Lock readLock() {
         return readLock;
     }
 
+    @Nonnull
     @Override
     public Lock writeLock() {
         return writeLock;
@@ -98,6 +104,7 @@ class ReadWriteFileLock implements ReadWriteLock {
 
         private final Lock lock;
         private final boolean shared;
+        private final boolean deleteOnClose;
         /**
          * Total holders for this lock for this thread.
          */
@@ -112,9 +119,10 @@ class ReadWriteFileLock implements ReadWriteLock {
          */
         private final AtomicInteger fileLockHolders = new AtomicInteger( 0 );
 
-        private FileLock( Lock lock, boolean shared ) {
+        private FileLock( Lock lock, boolean shared, boolean deleteOnClose ) {
             this.lock = lock;
             this.shared = shared;
+            this.deleteOnClose = deleteOnClose;
         }
 
         @Override
@@ -225,6 +233,7 @@ class ReadWriteFileLock implements ReadWriteLock {
             }
         }
 
+        @Nonnull
         @Override
         public Condition newCondition() {
             return lock.newCondition();
@@ -271,7 +280,19 @@ class ReadWriteFileLock implements ReadWriteLock {
                     throw new IllegalStateException();
                 }
                 channel = null;
-                c.close();
+                if ( deleteOnClose ) {
+                    boolean canDelete;
+                    try ( java.nio.channels.FileLock l = c.tryLock( 0, Long.MAX_VALUE, false ) ) {
+                        canDelete = l != null;
+                    } finally {
+                        c.close();
+                    }
+                    if ( canDelete ) {
+                        Files.delete( path );
+                    }
+                } else {
+                    c.close();
+                }
             }
         }
     }

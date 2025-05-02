@@ -29,16 +29,21 @@ public class SimpleRetry<E extends Exception> {
     /**
      * Execute the given callable with a retry strategy.
      * @param what an object describing what is being retried, it's toString() will be used for logging
+     * @throws E the first exception to occur, all other will be included as suppressed via {@link Exception#addSuppressed(Throwable)}.
      */
     public <T> T execute( SimpleRetryCallable<T, E> callable, Object what ) throws E {
-        E lastException = null;
+        E firstException = null;
         for ( int i = 0; i <= retryPolicy.getMaxRetries(); i++ ) {
             try {
                 return callable.call( new SimpleRetryContext( i, i == retryPolicy.getMaxRetries() ) );
             } catch ( Exception e ) {
                 if ( exceptionClass.isInstance( e ) ) {
-                    //noinspection unchecked
-                    lastException = ( E ) e;
+                    if ( firstException == null ) {
+                        //noinspection unchecked
+                        firstException = ( E ) e;
+                    } else {
+                        firstException.addSuppressed( e );
+                    }
                 } else {
                     throw e;
                 }
@@ -54,7 +59,7 @@ public class SimpleRetry<E extends Exception> {
             }
         }
         logger.error( "Maximum number of retries reached for " + what + ", raising the last exception." );
-        assert lastException != null;
-        throw lastException;
+        assert firstException != null;
+        throw firstException;
     }
 }

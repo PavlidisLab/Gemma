@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
+import static ubic.gemma.core.util.NetUtils.bytePerSecondToDisplaySize;
 
 /**
  * Handle detection and download of single-cell data from a single file in the supplementary materials of a GEO series.
@@ -127,9 +128,9 @@ public abstract class AbstractSingleFileInSeriesSingleCellDetector extends Abstr
                 long downloadedBytes = IOUtils.copyLarge( is, os );
                 // make sure we're done with the file I/O before checking its size
                 os.close();
-                log.info( String.format( "%s: Retrieved " + name + " file (%s in %s @ %s/s).", series.getGeoAccession(),
+                log.info( String.format( "%s: Retrieved " + name + " file (%s in %s @ %s).", series.getGeoAccession(),
                         byteCountToDisplaySize( downloadedBytes ), timer,
-                        byteCountToDisplaySize( 1000.0 * downloadedBytes / timer.getTime() ) ) );
+                        bytePerSecondToDisplaySize( 1000.0 * downloadedBytes / timer.getTime() ) ) );
                 if ( !existsAndHasExpectedSize( dest, file, expectedContentLength, true, false ) ) {
                     throw new IOException( String.format( "Unexpected size for %s: %d B were expected but %d B were copied.",
                             dest, expectedContentLength, downloadedBytes ) );

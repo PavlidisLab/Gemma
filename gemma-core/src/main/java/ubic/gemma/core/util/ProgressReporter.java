@@ -4,7 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
 
-import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
+import static ubic.gemma.core.util.NetUtils.bytePerSecondToDisplaySize;
 
 /**
  * Report progress.
@@ -69,20 +69,20 @@ public class ProgressReporter {
         if ( maxSizeInBytes > 0 ) {
             double progressInPercent = ( double ) progressInBytes / ( double ) maxSizeInBytes;
             if ( atEnd || progressInPercent - lastReportedProgressInPercent > progressIncrementToReportInPercent ) {
-                logger.info( String.format( "%s %.2f%% [%d/%d] @ %s/s",
+                logger.info( String.format( "%s %.2f%% [%d/%d] @ %s",
                         what,
                         100 * progressInPercent,
                         progressInBytes, maxSizeInBytes,
-                        byteCountToDisplaySize( 1e9 * progressInBytes / ( System.nanoTime() - startTimeNanos ) ) ) );
+                        bytePerSecondToDisplaySize( 1e9 * progressInBytes / ( System.nanoTime() - startTimeNanos ) ) ) );
                 lastReportedProgressInPercent = progressInPercent;
                 lastReportedProgressInBytes = progressInBytes;
             }
         } else {
             if ( atEnd || progressInBytes - lastReportedProgressInBytes > progressIncrementToReportInBytes ) {
-                logger.info( String.format( "%s [%d/?] @ %s/s",
+                logger.info( String.format( "%s [%d/?] @ %s",
                         what,
                         progressInBytes,
-                        byteCountToDisplaySize( 1e9 * progressInBytes / ( System.nanoTime() - startTimeNanos ) ) ) );
+                        bytePerSecondToDisplaySize( 1e9 * progressInBytes / ( System.nanoTime() - startTimeNanos ) ) ) );
                 lastReportedProgressInPercent = 0.0;
                 lastReportedProgressInBytes = progressInBytes;
             }
