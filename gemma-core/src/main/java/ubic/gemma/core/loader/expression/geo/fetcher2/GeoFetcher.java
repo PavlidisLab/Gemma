@@ -30,11 +30,11 @@ public class GeoFetcher extends AbstractFetcher {
             try {
                 downloadViaFtp( accession, GeoUtils.getUrlForSeriesFamily( accession, GeoSource.FTP, GeoFormat.SOFT ), dest );
             } catch ( IOException e ) {
-                log.error( "Retrieving SOFT file for " + accession + " via FTP failed, trying HTTPS.", e );
+                log.warn( "Retrieving SOFT file for " + accession + " via FTP failed, trying HTTPS.", e );
                 try {
                     downloadViaHttps( accession, GeoUtils.getUrlForSeriesFamily( accession, GeoSource.FTP_VIA_HTTPS, GeoFormat.SOFT ), dest );
                 } catch ( IOException e1 ) {
-                    log.error( "Retrieving SOFT file for " + accession + " via HTTPS failed, trying via the GEO Browser directly.", e );
+                    log.warn( "Retrieving SOFT file for " + accession + " via HTTPS failed, trying via the GEO Browser directly.", e );
                     // last resort, ask GEO to generate the file
                     downloadViaHttps( accession, GeoUtils.getUrlForSeriesFamily( accession, GeoSource.QUERY, GeoFormat.SOFT ), dest );
                 }
