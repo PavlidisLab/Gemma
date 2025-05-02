@@ -1,5 +1,9 @@
 package ubic.gemma.core.loader.entrez;
 
+/**
+ * Possible values for the Entrez {@code retmode} parameter.
+ * @author poirigui
+ */
 public enum EntrezRetmode {
     XML( "xml" ),
     JSON( "json" );

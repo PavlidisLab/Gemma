@@ -29,8 +29,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-import ubic.gemma.core.loader.entrez.EntrezXmlUtils;
 import ubic.gemma.core.loader.entrez.EutilFetch;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -139,7 +137,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
          * The maxrecords is > 1 because it return platforms as well (and there are series with as many as 13 platforms
          * ... leaving some headroom)
          */
-        String details = EutilFetch.fetch( "gds", accession, 25, ncbiApiKey );
+        Document details = EutilFetch.summary( "gds", accession, 25, ncbiApiKey );
 
         if ( details == null ) {
             throw new IOException( "No results from GEO" );
@@ -182,20 +180,12 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
      * @param  details XML from eSummary
      * @return HTML-formatted
      */
-    String formatDetails( String details, String contextPath ) throws IOException {
-
-        /*
-         * Bug 2690. There must be a better way.
-         */
-        details = details.replaceAll( "encoding=\"UTF-8\"", "" );
-
+    String formatDetails( Document details, String contextPath ) throws IOException {
         try {
-            Document document = EntrezXmlUtils.parse( new InputSource( new StringReader( details ) ) );
-
-            String gse = "GSE" + xgse.evaluate( document, XPathConstants.STRING );
-            String title = ( String ) xtitle.evaluate( document, XPathConstants.STRING );
-            NodeList gpls = ( NodeList ) xgpls.evaluate( document, XPathConstants.NODESET );
-            String summary = ( String ) xsummary.evaluate( document, XPathConstants.STRING );
+            String gse = "GSE" + xgse.evaluate( details, XPathConstants.STRING );
+            String title = ( String ) xtitle.evaluate( details, XPathConstants.STRING );
+            NodeList gpls = ( NodeList ) xgpls.evaluate( details, XPathConstants.NODESET );
+            String summary = ( String ) xsummary.evaluate( details, XPathConstants.STRING );
 
             StringBuilder buf = new StringBuilder();
             buf.append( "<div class=\"small\">" );
@@ -216,14 +206,10 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
             this.formatArrayDetails( gpls, buf, contextPath );
 
             buf.append( "</div>" );
-            details = buf.toString();
-
-            // }
+            return buf.toString();
         } catch ( XPathExpressionException e ) {
             throw new RuntimeException( e );
         }
-
-        return details;
     }
 
     private List<GeoRecord> filterGeoRecords( Slice<GeoRecord> records ) {

@@ -23,8 +23,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ContextConfiguration;
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.loader.entrez.EntrezXmlUtils;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -98,9 +101,9 @@ public class GeoBrowserServiceParseTest extends BaseTest {
     @Test
     @Category(SlowTest.class)
     public void testParse() {
-        String response;
+        Document response;
         try ( InputStream r = new ClassPathResource( "/data/loader/expression/geo/geo.esummary.test.xml" ).getInputStream() ) {
-            response = IOUtils.toString( r, StandardCharsets.ISO_8859_1 );
+            response = EntrezXmlUtils.parse( r );
         } catch ( IOException e ) {
             assumeThatExceptionIsDueToNetworkIssue( e );
             return;
@@ -116,9 +119,9 @@ public class GeoBrowserServiceParseTest extends BaseTest {
 
     @Test
     public void testParse2() {
-        String response;
+        Document response;
         try ( InputStream r = new ClassPathResource( "/data/loader/expression/geo/geo.esummary.test1.xml" ).getInputStream() ) {
-            response = IOUtils.toString( r, StandardCharsets.UTF_8 );
+            response = EntrezXmlUtils.parse( r );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -134,9 +137,9 @@ public class GeoBrowserServiceParseTest extends BaseTest {
 
     @Test
     public void testParse3() {
-        String response;
+        Document response;
         try ( InputStream r = new ClassPathResource( "/data/loader/expression/geo/geo.esummary.test2.xml" ).getInputStream() ) {
-            response = IOUtils.toString( r, StandardCharsets.UTF_8 );
+            response = EntrezXmlUtils.parse( r );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }

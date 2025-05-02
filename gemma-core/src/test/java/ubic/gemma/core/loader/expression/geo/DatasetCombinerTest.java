@@ -50,11 +50,19 @@ public class DatasetCombinerTest {
     private Collection<GeoDataset> gds;
 
     @Test
-    public void testFindGDSGrouping() throws Exception {
+    public void testFindGDSGrouping() {
         assumeThatResourceIsAvailable( EntrezUtils.ESEARCH );
         Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE674", Settings.getString( "ncbi.efetch.apikey" ) );
         assertEquals( 2, result.size() );
         assertTrue( result.contains( "GDS472" ) && result.contains( "GDS473" ) );
+    }
+
+    @Test
+    public void testFindGSEForGDS() {
+        assumeThatResourceIsAvailable( EntrezUtils.ESEARCH );
+        Collection<String> result = DatasetCombiner.findGSEforGDS( "GDS472", Settings.getString( "ncbi.efetch.apikey" ) );
+        assertEquals( 1, result.size() );
+        assertTrue( result.contains( "GSE674" ) );
     }
 
     @Test

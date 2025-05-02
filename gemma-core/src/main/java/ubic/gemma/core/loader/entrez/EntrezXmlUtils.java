@@ -4,7 +4,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import ubic.gemma.core.util.XMLUtils;
 
@@ -39,17 +38,6 @@ public class EntrezXmlUtils {
         }
     }
 
-    public static Document parse( InputSource is ) throws IOException {
-        try {
-            DocumentBuilder builder = createDocumentBuilder();
-            Document doc = builder.parse( is );
-            checkForErrors( doc );
-            return doc;
-        } catch ( ParserConfigurationException | SAXException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
     private static void checkForErrors( Document doc ) {
         NodeList error = doc.getDocumentElement().getElementsByTagName( "ERROR" );
         if ( error.item( 0 ) != null ) {
@@ -60,7 +48,6 @@ public class EntrezXmlUtils {
             throw new EntrezException( errors.get( 0 ), errors );
         }
     }
-
 
     /**
      * Create a document builder with {@link NcbiEntityResolver} as entity resolver.

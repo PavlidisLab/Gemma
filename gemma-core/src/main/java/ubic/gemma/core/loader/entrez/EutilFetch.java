@@ -19,22 +19,17 @@
 package ubic.gemma.core.loader.entrez;
 
 import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.io.IOUtils;
 import org.w3c.dom.Document;
 import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 
 import javax.annotation.Nullable;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.stream.Collectors;
 
 /**
+ * High-level API for interacting with NCBI Entrez utilities.
  * @author paul
  */
 @CommonsLog
@@ -53,11 +48,11 @@ public class EutilFetch {
      * @param limit  maximum number of records to return.
      * @param apiKey
      * @throws IOException if there is a problem while manipulating the file
+     * @see EntrezUtils#summary(String, EntrezQuery, EntrezRetmode, int, int, String)
      */
     @Nullable
-    public static String fetch( String db, String term, int limit, @Nullable String apiKey ) throws IOException {
+    public static Document summary( String db, String term, int limit, @Nullable String apiKey ) throws IOException {
         URL searchUrl = EntrezUtils.search( db, term, EntrezRetmode.XML, apiKey );
-        System.out.println( searchUrl );
         return retryTemplate.execute( ( ctx ) -> {
             Document document = EntrezUtils.doNicely( () -> {
                 try ( InputStream is = searchUrl.openStream() ) {
@@ -71,20 +66,11 @@ public class EutilFetch {
             }
 
             URL fetchUrl = EntrezUtils.summary( db, query, EntrezRetmode.XML, 0, limit, apiKey );
-            return EntrezUtils.doNicely( () -> IOUtils.toString( fetchUrl, StandardCharsets.UTF_8 ), apiKey );
+            return EntrezUtils.doNicely( () -> {
+                try ( InputStream is = fetchUrl.openStream() ) {
+                    return EntrezXmlUtils.parse( is );
+                }
+            }, apiKey );
         }, "retrieve " + searchUrl );
-    }
-
-    /**
-     * @deprecated this method relies on an undocumented Entrez API.
-     */
-    @Deprecated
-    public static Collection<String> query( String db, String query, @Nullable String apiKey ) throws IOException {
-        URL url = EntrezUtils.query( db, query, "search", apiKey );
-        return retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
-            try ( BufferedReader br = new BufferedReader( new InputStreamReader( url.openStream(), StandardCharsets.UTF_8 ) ) ) {
-                return br.lines().collect( Collectors.toList() );
-            }
-        }, apiKey ), "retrieve " + url );
     }
 }

@@ -3,6 +3,10 @@ package ubic.gemma.core.loader.entrez;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+/**
+ * Represents an Entrez search query.
+ * @author poirigui
+ */
 @Getter
 @AllArgsConstructor
 public class EntrezQuery {
