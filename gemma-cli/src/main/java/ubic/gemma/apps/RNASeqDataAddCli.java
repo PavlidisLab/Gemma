@@ -223,7 +223,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
         /* copy metadata files */
         if ( qualityControlReportFile != null ) {
             try {
-                Path dest = expressionDataFileService.copyMetadataFile( ee, qualityControlReportFile, ExpressionExperimentMetaFileType.MUTLQC_REPORT, true );
+                Path dest = expressionDataFileService.copyMetadataFile( ee, qualityControlReportFile, ExpressionExperimentMetaFileType.MULTIQC_REPORT, true );
                 expressionMetadataChangelogFileService.addChangelogEntry( ee, "Added a QC report file." );
                 log.info( "Copied QC report file to " + dest + "." );
             } catch ( IOException e ) {
