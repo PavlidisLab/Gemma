@@ -75,6 +75,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
@@ -332,17 +333,32 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Override
     public Path copyMultiQCReport( ExpressionExperiment ee, Path existingFile, boolean forceWrite ) throws IOException {
         Path reportFile = copyMetadataFile( ee, existingFile, ExpressionExperimentMetaFileType.MULTIQC_REPORT, forceWrite );
-        Path dataFile = existingFile.resolveSibling( "multiqc_data/multiqc_data.json" );
-        if ( Files.exists( dataFile ) ) {
-            copyMetadataFile( ee, dataFile, ExpressionExperimentMetaFileType.MULTIQC_DATA, true );
-        } else {
-            log.warn( "Could not find MultiQC JSON data output file: " + dataFile );
-        }
-        Path logFile = existingFile.resolveSibling( "multiqc_data/multiqc.log" );
-        if ( Files.exists( logFile ) ) {
-            copyMetadataFile( ee, logFile, ExpressionExperimentMetaFileType.MULTIQC_LOG, true );
-        } else {
-            log.warn( "Could not find MultiQC log output file: " + logFile );
+        Path multiQcDataDir = existingFile.resolveSibling( "multiqc_data" );
+        if ( Files.exists( multiQcDataDir ) ) {
+            Path dataFile = multiQcDataDir.resolve( "multiqc_data.json" );
+            if ( Files.exists( dataFile ) ) {
+                copyMetadataFile( ee, dataFile, ExpressionExperimentMetaFileType.MULTIQC_DATA, true );
+            } else {
+                log.warn( "Could not find MultiQC JSON data output file: " + dataFile );
+            }
+            Path logFile = multiQcDataDir.resolve( "multiqc.log" );
+            if ( Files.exists( logFile ) ) {
+                copyMetadataFile( ee, logFile, ExpressionExperimentMetaFileType.MULTIQC_LOG, true );
+            } else {
+                log.warn( "Could not find MultiQC log output file: " + logFile );
+            }
+            // copy all other files in the data directory
+            try ( Stream<Path> s = Files.list( multiQcDataDir ) ) {
+                Set<Path> paths = s
+                        .filter( w -> !w.getFileName().toString().equals( "multiqc_data.json" ) && !w.getFileName().toString().equals( "multiqc.log" ) )
+                        .collect( Collectors.toSet() );
+                if ( !paths.isEmpty() ) {
+                    log.info( "Found " + paths.size() + " additional files in the MultiQC data directory." );
+                }
+                for ( Path p : paths ) {
+                    copyMetadataFile( ee, p, "multiqc_data/" + p.getFileName().toString(), true );
+                }
+            }
         }
         return reportFile;
     }
