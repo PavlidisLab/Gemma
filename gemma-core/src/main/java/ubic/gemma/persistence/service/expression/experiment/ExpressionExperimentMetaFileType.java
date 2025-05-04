@@ -16,9 +16,9 @@ public enum ExpressionExperimentMetaFileType {
 
     MULTIQC_REPORT( 3, "MultiQCReports" + File.separatorChar + "multiqc_report.html", "MultiQC Report",
             ".multiqc.report.html", false, false, "text/html" ),
-    MULTIQC_DATA( 5, "MultiQCReports" + File.separatorChar + "multiqc_data.json", "MultiQC Report (JSON metadata)",
+    MULTIQC_DATA( 5, "MultiQCReports" + File.separatorChar + "multiqc_data/multiqc_data.json", "MultiQC Report (JSON metadata)",
             ".multiqc.data.json", false, false, "application/json" ),
-    MULTIQC_LOG( 6, "MultiQCReports" + File.separatorChar + "multiqc.log", "MultiQC Report (log file)",
+    MULTIQC_LOG( 6, "MultiQCReports" + File.separatorChar + "multiqc_data/multiqc.log", "MultiQC Report (log file)",
             ".multiqc.log", false, false, "text/plain" ),
 
     ADDITIONAL_PIPELINE_CONFIGURATIONS( 4, "configurations" + File.separatorChar, "Additional pipeline configuration settings",
