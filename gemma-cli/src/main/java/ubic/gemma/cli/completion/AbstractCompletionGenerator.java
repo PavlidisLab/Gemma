@@ -17,8 +17,9 @@ public abstract class AbstractCompletionGenerator implements CompletionGenerator
         return File.class.equals( o.getType() )
                 || Path.class.equals( o.getType() )
                 // FIXME: remove all these heuristics, all options should be either File or Path
-                || StringUtils.containsAnyIgnoreCase( o.getOpt(), FILE_KEYWORDS )
-                || StringUtils.containsAnyIgnoreCase( o.getLongOpt(), FILE_KEYWORDS )
-                || StringUtils.containsAnyIgnoreCase( o.getArgName(), FILE_KEYWORDS );
+                || ( String.class.equals( o.getType() ) && o.getConverter() == null && (
+                StringUtils.containsAnyIgnoreCase( o.getOpt(), FILE_KEYWORDS )
+                        || StringUtils.containsAnyIgnoreCase( o.getLongOpt(), FILE_KEYWORDS )
+                        || StringUtils.containsAnyIgnoreCase( o.getArgName(), FILE_KEYWORDS ) ) );
     }
 }
