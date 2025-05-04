@@ -140,6 +140,14 @@ public interface ExpressionDataFileService {
     Path copyMetadataFile( ExpressionExperiment ee, Path existingFile, String filename, boolean forceWrite ) throws IOException;
 
     /**
+     * Copy a MultiQC report.
+     * <p>
+     * This is a helper based on {@link #copyMetadataFile(ExpressionExperiment, Path, String, boolean)} that will
+     * automatically copy the main HTML report file as well as the log and JSON data files if they exist.:w
+     */
+    Path copyMultiQCReport( ExpressionExperiment ee, Path existingFile, boolean forceWrite ) throws IOException;
+
+    /**
      * Delete a metadata file.
      * <p>
      * If the metadata file is organized as a directory, it is deleted recursively.

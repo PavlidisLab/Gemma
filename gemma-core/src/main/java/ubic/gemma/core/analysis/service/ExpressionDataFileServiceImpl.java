@@ -329,6 +329,24 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         return copyMetadataFileInternal( existingFile, destinationFile, forceWrite );
     }
 
+    @Override
+    public Path copyMultiQCReport( ExpressionExperiment ee, Path existingFile, boolean forceWrite ) throws IOException {
+        Path reportFile = copyMetadataFile( ee, existingFile, ExpressionExperimentMetaFileType.MULTIQC_REPORT, forceWrite );
+        Path dataFile = existingFile.resolveSibling( "multiqc_data/multiqc_data.json" );
+        if ( Files.exists( dataFile ) ) {
+            copyMetadataFile( ee, dataFile, ExpressionExperimentMetaFileType.MULTIQC_DATA, true );
+        } else {
+            log.warn( "Could not find MultiQC JSON data output file: " + dataFile );
+        }
+        Path logFile = existingFile.resolveSibling( "multiqc_data/multiqc.log" );
+        if ( Files.exists( logFile ) ) {
+            copyMetadataFile( ee, logFile, ExpressionExperimentMetaFileType.MULTIQC_LOG, true );
+        } else {
+            log.warn( "Could not find MultiQC log output file: " + logFile );
+        }
+        return reportFile;
+    }
+
     private Path copyMetadataFileInternal( Path existingFile, Path destinationFile, boolean forceWrite ) throws IOException {
         if ( !forceWrite && Files.exists( destinationFile ) ) {
             throw new RuntimeException( "Metadata file already exists, use forceWrite is not override." );

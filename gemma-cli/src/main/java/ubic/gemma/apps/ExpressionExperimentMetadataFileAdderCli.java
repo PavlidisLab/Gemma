@@ -74,10 +74,13 @@ public class ExpressionExperimentMetadataFileAdderCli extends ExpressionExperime
     protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
         try {
             String buf = generateChangelog( expressionExperiment );
-            if ( fileType != null ) {
+            if ( fileType == ExpressionExperimentMetaFileType.MULTIQC_REPORT ) {
+                expressionDataFileService.copyMultiQCReport( expressionExperiment, filename, isForce() );
+            } else if ( fileType != null ) {
                 expressionDataFileService.copyMetadataFile( expressionExperiment, filename, fileType, isForce() );
+            } else {
+                expressionDataFileService.copyMetadataFile( expressionExperiment, filename, filename.getFileName().toString(), isForce() );
             }
-            expressionDataFileService.copyMetadataFile( expressionExperiment, filename, filename.getFileName().toString(), isForce() );
             expressionMetadataChangelogFileService.addChangelogEntry( expressionExperiment, buf );
         } catch ( IOException | InterruptedException e ) {
             throw new RuntimeException( e );
