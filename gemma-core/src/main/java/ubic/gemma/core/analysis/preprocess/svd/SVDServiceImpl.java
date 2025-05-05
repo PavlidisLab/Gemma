@@ -99,7 +99,7 @@ public class SVDServiceImpl implements SVDService {
             BioMaterial bm ) {
         for ( FactorValue fv : bm.getAllFactorValues() ) {
             ExperimentalFactor experimentalFactor = fv.getExperimentalFactor();
-            double valueToStore;
+            Number valueToStore;
             if ( experimentalFactor.getType() == FactorType.CONTINUOUS ) {
                 if ( fv.getMeasurement() != null ) { // continuous
                     valueToStore = measurement2double( fv.getMeasurement() );
