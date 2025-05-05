@@ -240,7 +240,10 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                     throw new RuntimeException( String.format( "No accessions were found in %s, is the file empty?", summaryOutputFile ) );
                 }
                 if ( !accessions.containsAll( accessionsToRemove ) ) {
-                    throw new RuntimeException( String.format( "Some of the accessions from %s were not found as input, are you sure this is the right summary file?.", summaryOutputFile ) );
+                    Set<String> missingAccessions = new HashSet<>( accessionsToRemove );
+                    missingAccessions.removeAll( accessions );
+                    throw new RuntimeException( String.format( "Some of the accessions from %s were not found as input, are you sure this is the right summary file?. Examples: %s.",
+                            summaryOutputFile, missingAccessions.stream().limit( 10 ).collect( Collectors.joining( ", " ) ) ) );
                 }
                 accessions.removeAll( accessionsToRemove );
                 log.info( String.format( "Resuming download, %d accessions were already processed%s...",
