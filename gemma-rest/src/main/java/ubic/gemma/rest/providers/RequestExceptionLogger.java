@@ -8,6 +8,7 @@ import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
 
 import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.ServiceUnavailableException;
 import javax.ws.rs.ext.Provider;
 
 @Provider
@@ -30,7 +31,8 @@ public class RequestExceptionLogger implements ApplicationEventListener {
                 } else {
                     m = "Exception was raised, but there is no current request.";
                 }
-                if ( event.getException() instanceof ClientErrorException ) {
+                if ( event.getException() instanceof ClientErrorException
+                        || event.getException() instanceof ServiceUnavailableException ) {
                     log.warn( m, event.getException() );
                 } else {
                     log.error( m, event.getException() );

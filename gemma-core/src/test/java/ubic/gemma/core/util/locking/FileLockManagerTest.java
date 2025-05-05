@@ -113,6 +113,7 @@ public class FileLockManagerTest {
         try ( LockedPath sharedLock = fileLockManager.acquirePathLock( dir.resolve( "foo" ), false ) ) {
             assertThat( sharedLock.isShared() ).isTrue();
             try ( LockedPath exclusiveLock = sharedLock.toExclusive() ) {
+                assertThat( exclusiveLock.isValid() ).isTrue();
                 assertThat( exclusiveLock.isShared() ).isFalse();
                 assertThat( sharedLock.isValid() ).isFalse();
             }
