@@ -1675,7 +1675,7 @@ public class DatasetsWebService {
         if ( svd == null ) {
             throw new NotFoundException( ee.getShortName() + " does not have an SVD." );
         }
-        return respond( new SimpleSVDValueObject( svd.getBioMaterials().stream().map( BioMaterial::getId ).collect( Collectors.toList() ), svd.getVariances(), svd.getVMatrix().getRawMatrix() ) );
+        return respond( new SimpleSVDValueObject( svd ) );
     }
 
     /**
@@ -2148,6 +2148,11 @@ public class DatasetsWebService {
     @Value
     public static class SimpleSVDValueObject {
         /**
+         * BioAssay IDs
+         * Order same as rows of the v matrix.
+         */
+        List<Long> bioAssayIds;
+        /**
          * Order same as the rows of the v matrix.
          */
         List<Long> bioMaterialIds;
@@ -2157,6 +2162,13 @@ public class DatasetsWebService {
          */
         double[] variances;
         double[][] vMatrix;
+
+        public SimpleSVDValueObject( SVDResult svd ) {
+            bioAssayIds = svd.getBioAssays().stream().map( BioAssay::getId ).collect( Collectors.toList() );
+            bioMaterialIds = svd.getBioMaterials().stream().map( BioMaterial::getId ).collect( Collectors.toList() );
+            variances = svd.getVariances();
+            vMatrix = svd.getVMatrix().getRawMatrix();
+        }
     }
 
     private <T> QueriedAndFilteredAndInferredResponseDataObject<T> all( List<T> results, String query, @Nullable Filters filters, String[] groupBy, @Nullable Sort by, Collection<OntologyTerm> inferredTerms ) {
