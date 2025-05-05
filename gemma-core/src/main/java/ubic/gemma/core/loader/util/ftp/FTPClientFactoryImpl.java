@@ -38,7 +38,7 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
      * Maximum number of idle connections kept in the pool, per host.
      */
     private int maxIdleConnections = 4;
-    private int maxTotalConnections = 16;
+    private int maxTotalConnections = 4;
     private FTPClientAuthenticator authenticator = new AnonymousFTPCLientAuthenticator();
 
     /**
