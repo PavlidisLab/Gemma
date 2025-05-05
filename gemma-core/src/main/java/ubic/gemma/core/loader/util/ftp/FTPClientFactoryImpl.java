@@ -195,6 +195,7 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
         @Override
         public void close() throws IOException {
             try {
+                super.close();
                 if ( reachedEof ) {
                     // this can block
                     client.completePendingCommand();
@@ -218,8 +219,6 @@ public class FTPClientFactoryImpl implements FTPClientFactory, AutoCloseable {
             } catch ( Exception e ) {
                 destroyClient( url, client );
                 throw e;
-            } finally {
-                super.close();
             }
         }
     }
