@@ -1,6 +1,5 @@
 package ubic.gemma.core.loader.entrez;
 
-import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -62,8 +61,8 @@ public class EntrezXmlUtils {
         NodeList error = doc.getDocumentElement().getElementsByTagName( "ERROR" );
         if ( error.item( 0 ) != null ) {
             List<String> errors = new ArrayList<>();
-            for ( Node elem = error.item( 0 ); elem != null; elem = elem.getNextSibling() ) {
-                errors.add( XMLUtils.getTextValue( elem ) );
+            for ( int i = 0; i < error.getLength(); i++ ) {
+                errors.add( XMLUtils.getTextValue( error.item( i ) ) );
             }
             throw new EntrezException( errors.get( 0 ), errors );
         }
@@ -99,11 +98,9 @@ public class EntrezXmlUtils {
     public static Collection<String> extractIds( Document doc ) {
         NodeList idList = doc.getElementsByTagName( "Id" );
         Collection<String> result = new HashSet<>();
-        for ( Node elem = idList.item( 0 ); elem != null; elem = elem.getNextSibling() ) {
+        for ( int i = 0; i < idList.getLength(); i++ ) {
+            Node elem = idList.item( i );
             String val = XMLUtils.getTextValue( elem );
-            if ( StringUtils.isBlank( val ) ) {
-                continue;
-            }
             result.add( val );
         }
         return result;
