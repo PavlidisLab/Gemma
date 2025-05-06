@@ -16,6 +16,7 @@ import ubic.gemma.core.util.locking.FileLockManager;
 import ubic.gemma.core.util.locking.LockedPath;
 
 import javax.annotation.Nullable;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -197,6 +198,9 @@ public class SimpleDownloader {
             // check if downloading is necessary
             // check size and last modified
             FTPFile ftpFile = client.mlistFile( remoteFile );
+            if ( ftpFile == null ) {
+                throw new FileNotFoundException( "Could not locate file at " + url + "." );
+            }
             long remoteFileSize = ftpFile.getSize();
             if ( force ) {
                 log.info( "Force download requested, downloading " + url + " to " + dest + "." );
