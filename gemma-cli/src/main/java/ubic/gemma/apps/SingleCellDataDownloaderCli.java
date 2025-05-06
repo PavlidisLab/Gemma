@@ -52,6 +52,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             ACCESSIONS_OPTION = "e",
             SUMMARY_OUTPUT_FILE_OPTION = "s",
             RESUME_OPTION = "r",
+            RESUME_IGNORE_UNKNOWN_DATASETS = "resumeIgnoreUnknownDatasets",
             RETRY_OPTION = "retry",
             RETRY_COUNT_OPTION = "retryCount",
             FETCH_THREADS_OPTION = "fetchThreads",
@@ -135,6 +136,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         options.addOption( Option.builder( ACCESSIONS_OPTION ).longOpt( "acc" ).hasArg().desc( "Comma-delimited list of accessions to download." ).build() );
         options.addOption( Option.builder( SUMMARY_OUTPUT_FILE_OPTION ).longOpt( "summary-output-file" ).type( File.class ).hasArg().desc( "File to write the summary output to. This is used to keep track of progress and resume download with -r/--resume." ).build() );
         options.addOption( Option.builder( RESUME_OPTION ).longOpt( "resume" ).desc( "Resume download from a previous invocation of this command. Requires -s/--summary-output-file to be set and refer to an existing file." ).build() );
+        options.addOption( Option.builder( RESUME_IGNORE_UNKNOWN_DATASETS ).longOpt( "resume-ignore-unknown-datasets" ).desc( "Ignore unknown datasets when resuming." ).build() );
         options.addOption( Option.builder( RETRY_OPTION ).longOpt( "retry" ).hasArg().desc( "Retry problematic datasets. Possible values are: '" + UNSUPPORTED_INDICATOR + "', '" + UNKNOWN_INDICATOR + "' or '" + FAILED_INDICATOR + "', or any combination delimited by ','. Requires -r/--resume option to be set." ).build() );
         options.addOption( Option.builder( RETRY_COUNT_OPTION ).longOpt( "retry-count" ).hasArg().type( Integer.class ).desc( "Number of times to retry a download operation." ).build() );
         options.addOption( SKIP_DOWNLOAD_OPTION, "skip-download", false, "Skip download of single-cell data." );
@@ -221,6 +223,9 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             if ( summaryOutputFile == null ) {
                 throw new IllegalArgumentException( "The -" + RESUME_OPTION + " option requires the -" + SUMMARY_OUTPUT_FILE_OPTION + " option to be provided." );
             }
+            if ( !Files.exists( summaryOutputFile ) ) {
+                throw new IllegalStateException( "The summary output file " + summaryOutputFile + " does not exist." );
+            }
             AtomicInteger accessionsToRetry = new AtomicInteger( 0 );
             try ( Stream<String> lines = Files.lines( summaryOutputFile ) ) {
                 Set<String> accessionsToRemove = lines.skip( 1 )
@@ -242,8 +247,13 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                 if ( !accessions.containsAll( accessionsToRemove ) ) {
                     Set<String> missingAccessions = new HashSet<>( accessionsToRemove );
                     missingAccessions.removeAll( accessions );
-                    throw new RuntimeException( String.format( "Some of the accessions from %s were not found as input, are you sure this is the right summary file?. Examples: %s.",
-                            summaryOutputFile, missingAccessions.stream().limit( 10 ).collect( Collectors.joining( ", " ) ) ) );
+                    String message = String.format( "Some of the accessions from %s were not found as input, are you sure this is the right summary file?. Examples: %s.",
+                            summaryOutputFile, missingAccessions.stream().limit( 10 ).collect( Collectors.joining( ", " ) ) );
+                    if ( commandLine.hasOption( RESUME_IGNORE_UNKNOWN_DATASETS ) ) {
+                        log.warn( message );
+                    } else {
+                        throw new RuntimeException( message );
+                    }
                 }
                 accessions.removeAll( accessionsToRemove );
                 log.info( String.format( "Resuming download, %d accessions were already processed%s...",
