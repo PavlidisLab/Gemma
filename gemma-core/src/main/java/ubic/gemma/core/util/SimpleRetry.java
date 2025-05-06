@@ -58,7 +58,7 @@ public class SimpleRetry<E extends Exception> {
                 }
             }
         }
-        logger.error( "Maximum number of retries reached for " + what + ", raising the last exception." );
+        logger.warn( "Maximum number of retries reached for " + what + ", raising the first exception." );
         assert firstException != null;
         throw firstException;
     }

@@ -1,6 +1,8 @@
 package ubic.gemma.core.loader.expression.geo.fetcher2;
 
 import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import ubic.gemma.core.loader.expression.geo.service.GeoFormat;
 import ubic.gemma.core.loader.expression.geo.service.GeoSource;
 import ubic.gemma.core.loader.expression.geo.service.GeoUtils;
@@ -11,9 +13,14 @@ import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.locking.FileLockManager;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Stream;
+import java.util.zip.GZIPOutputStream;
 
 @CommonsLog
 public class GeoFetcher {
@@ -49,19 +56,54 @@ public class GeoFetcher {
             try {
                 URL resource = GeoUtils.getUrlForSeriesFamily( accession, GeoSource.FTP, GeoFormat.SOFT );
                 simpleDownloader.download( resource, dest, false );
+                return dest;
             } catch ( IOException e ) {
                 log.warn( "Retrieving SOFT file for " + accession + " via FTP failed, trying HTTPS.", e );
                 try {
                     URL resource = GeoUtils.getUrlForSeriesFamily( accession, GeoSource.FTP_VIA_HTTPS, GeoFormat.SOFT );
                     simpleDownloader.download( resource, dest, false );
+                    return dest;
                 } catch ( IOException e1 ) {
                     log.warn( "Retrieving SOFT file for " + accession + " via HTTPS failed, trying via the GEO Browser directly.", e );
-                    // last resort, ask GEO to generate the file
-                    URL resource = GeoUtils.getUrlForSeriesFamily( accession, GeoSource.QUERY, GeoFormat.SOFT );
-                    simpleDownloader.download( resource, dest, false );
+                    try {
+                        return fetchSeriesFamilySoftFileFromGeoQuery( accession );
+                    } catch ( IOException e2 ) {
+                        e.addSuppressed( e1 );
+                        e.addSuppressed( e2 );
+                        throw e;
+                    }
                 }
             }
-            return dest;
         }, "download SOFT file for " + accession );
+    }
+
+    Path fetchSeriesFamilySoftFileFromGeoQuery( String accession ) throws IOException {
+        Path dest = geoSeriesDownloadPath.resolve( accession ).resolve( accession + ".soft.gz" );
+        // last resort, ask GEO to generate the file
+        URL resource = GeoUtils.getUrlForSeriesFamily( accession, GeoSource.QUERY, GeoFormat.SOFT );
+        Path uncompressedDest = geoSeriesDownloadPath.resolve( accession ).resolve( accession + ".soft" );
+        simpleDownloader.download( resource, uncompressedDest, false );
+        try {
+            validateSoftFile( accession, uncompressedDest );
+            try ( InputStream is = Files.newInputStream( uncompressedDest ); OutputStream out = new GZIPOutputStream( Files.newOutputStream( dest ) ) ) {
+                long bytesWritten = IOUtils.copyLarge( is, out );
+                log.info( "Compressed " + uncompressedDest + " to " + dest + ", final size is " + FileUtils.byteCountToDisplaySize( bytesWritten ) + "." );
+            }
+            return dest;
+        } finally {
+            log.info( "Deleting " + uncompressedDest );
+            Files.delete( uncompressedDest );
+        }
+    }
+
+    private void validateSoftFile( String accession, Path uncompressedDest ) throws IOException {
+        // validate the soft file
+        String firstLine;
+        try ( Stream<String> s = Files.lines( uncompressedDest ) ) {
+            firstLine = s.findFirst().orElse( null );
+        }
+        if ( firstLine == null || !firstLine.equals( "^SERIES = " + accession ) ) {
+            throw new IOException( "Invalid SOFT file downloaded for " + accession + ", first line is: '" + firstLine + "', expected " + "'^SERIES = " + accession + "'." );
+        }
     }
 }
