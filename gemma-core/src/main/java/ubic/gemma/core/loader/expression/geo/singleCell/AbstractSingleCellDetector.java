@@ -104,7 +104,12 @@ public abstract class AbstractSingleCellDetector implements SingleCellDetector {
             stream = new BufferedInputStream( new ProgressInputStream( url.openStream(), what, getClass().getName(), sizeInBytes ) );
         }
         if ( decompressIfNeeded && filename.endsWith( ".gz" ) ) {
-            return new GZIPInputStream( stream );
+            try {
+                return new GZIPInputStream( stream );
+            } catch ( Exception e ) {
+                stream.close();
+                throw e;
+            }
         } else {
             return stream;
         }

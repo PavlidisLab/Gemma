@@ -35,6 +35,7 @@ import ubic.gemma.cli.util.EnumConverter;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.core.loader.expression.simple.model.*;
 import ubic.gemma.core.ontology.ValueStringToOntologyMapping;
+import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
@@ -56,7 +57,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.zip.GZIPInputStream;
 
 import static java.util.Objects.requireNonNull;
 
@@ -399,7 +399,7 @@ public class LoadSimpleExpressionDataCli extends AbstractAuthenticatedCLI {
 
     private InputStream openFile( Path p ) throws IOException {
         if ( p.getFileName().toString().endsWith( ".gz" ) ) {
-            return new GZIPInputStream( Files.newInputStream( p ) );
+            return FileUtils.openCompressedFile( p );
         } else {
             return Files.newInputStream( p );
         }

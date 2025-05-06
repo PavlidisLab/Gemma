@@ -706,7 +706,9 @@ public class GeoBrowserImpl implements GeoBrowser {
     private Document fetchDetailedGeoSeriesFamilyFromGeoFtp( String geoAccession, @Nullable String encoding ) throws IOException {
         URL documentUrl = getUrlForSeriesFamily( geoAccession, GeoSource.FTP_VIA_HTTPS, GeoFormat.MINIML );
         return execute( ( ctx ) -> {
-            try ( TarArchiveInputStream tis = new TarArchiveInputStream( new GZIPInputStream( documentUrl.openStream() ) ) ) {
+            // important note: GZIPInputStream can fail and prevent the stream from being closed, so there must be two
+            // try-with-resources statements
+            try ( InputStream is = documentUrl.openStream(); TarArchiveInputStream tis = new TarArchiveInputStream( new GZIPInputStream( is ) ) ) {
                 TarArchiveEntry entry;
                 while ( ( entry = tis.getNextEntry() ) != null ) {
                     if ( entry.getName().equals( geoAccession + "_family.xml" ) ) {

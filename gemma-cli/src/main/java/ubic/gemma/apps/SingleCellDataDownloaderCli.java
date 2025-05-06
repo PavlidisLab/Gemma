@@ -23,6 +23,7 @@ import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactoryImpl;
+import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.locking.FileLockManager;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -41,7 +42,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.GZIPInputStream;
 
 import static java.util.Objects.requireNonNull;
 
@@ -494,7 +494,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
         geoFetcher.setFtpClientFactory( ftpClientFactory );
         geoFetcher.setFileLockManager( fileLockManager );
         Path dest = geoFetcher.fetchSeriesFamilySoftFile( accession );
-        try ( InputStream is = new GZIPInputStream( Files.newInputStream( dest ) ) ) {
+        try ( InputStream is = FileUtils.openCompressedFile( dest ) ) {
             GeoFamilyParser parser = new GeoFamilyParser();
             parser.parse( is );
             return requireNonNull( parser.getUniqueResult() ).getSeriesMap().get( accession );

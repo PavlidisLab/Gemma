@@ -31,7 +31,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
-import java.util.zip.GZIPInputStream;
 
 import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
 
@@ -321,11 +320,11 @@ public class SimpleDownloader {
         if ( checkArchiveIntegrity ) {
             long decompressedSize;
             if ( dest.toString().toLowerCase().endsWith( ".tar.gz" ) ) {
-                try ( TarArchiveInputStream tis = new TarArchiveInputStream( new GZIPInputStream( Files.newInputStream( dest ) ) ) ) {
+                try ( TarArchiveInputStream tis = new TarArchiveInputStream( FileUtils.openCompressedFile( dest ) ) ) {
                     decompressedSize = tis.skip( Long.MAX_VALUE );
                 }
             } else if ( dest.toString().toLowerCase().endsWith( ".gz" ) ) {
-                try ( GZIPInputStream in = new GZIPInputStream( Files.newInputStream( dest ) ) ) {
+                try ( InputStream in = FileUtils.openCompressedFile( dest ) ) {
                     decompressedSize = in.skip( Long.MAX_VALUE );
                 }
             } else if ( dest.toString().toLowerCase().endsWith( ".zip" ) ) {

@@ -15,6 +15,7 @@ import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.DesignElementMapper;
 import ubic.gemma.core.loader.util.mapper.EntityMapper;
 import ubic.gemma.core.loader.util.mapper.EntityMapperUtils;
+import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -36,7 +37,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.GZIPInputStream;
 
 /**
  * Load single cell data from <a href="https://kb.10xgenomics.com/hc/en-us/articles/115000794686-How-is-the-MEX-format-used-for-the-gene-barcode-matrices">10X Genomics MEX format</a>.
@@ -463,7 +463,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
 
     private MatrixVectorReader readMatrixMarketFromPath( Path path ) throws IOException {
         if ( path.toString().endsWith( ".gz" ) ) {
-            return new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( path ) ) ) );
+            return new MatrixVectorReader( new InputStreamReader( FileUtils.openCompressedFile( path ) ) );
         } else {
             return new MatrixVectorReader( Files.newBufferedReader( path ) );
         }
@@ -478,7 +478,7 @@ public class MexSingleCellDataLoader implements SingleCellDataLoader {
 
     private List<String> readLinesFromPath( Path path ) throws IOException {
         if ( path.toString().endsWith( ".gz" ) ) {
-            try ( BufferedReader br = new BufferedReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( path ) ) ) ) ) {
+            try ( BufferedReader br = new BufferedReader( new InputStreamReader( FileUtils.openCompressedFile( path ) ) ) ) {
                 return br.lines().collect( Collectors.toList() );
             }
         } else {

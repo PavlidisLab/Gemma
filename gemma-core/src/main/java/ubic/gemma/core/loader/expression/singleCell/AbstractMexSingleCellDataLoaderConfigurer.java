@@ -5,14 +5,15 @@ import no.uib.cipr.matrix.io.MatrixSize;
 import no.uib.cipr.matrix.io.MatrixVectorReader;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import ubic.gemma.core.util.FileUtils;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.GZIPInputStream;
 
 public abstract class AbstractMexSingleCellDataLoaderConfigurer implements SingleCellDataLoaderConfigurer<MexSingleCellDataLoader> {
 
@@ -87,7 +88,7 @@ public abstract class AbstractMexSingleCellDataLoaderConfigurer implements Singl
             return;
         }
         for ( Path matrixFile : matrixFiles ) {
-            try ( MatrixVectorReader reader = new MatrixVectorReader( new InputStreamReader( new GZIPInputStream( Files.newInputStream( matrixFile ) ) ) ) ) {
+            try ( MatrixVectorReader reader = new MatrixVectorReader( new InputStreamReader( FileUtils.openCompressedFile( matrixFile ) ) ) ) {
                 MatrixInfo info = reader.readMatrixInfo();
                 MatrixSize size = reader.readMatrixSize( info );
                 if ( ( double ) size.numEntries() / ( ( double ) size.numRows() * ( double ) size.numColumns() ) < 0.01 ) {

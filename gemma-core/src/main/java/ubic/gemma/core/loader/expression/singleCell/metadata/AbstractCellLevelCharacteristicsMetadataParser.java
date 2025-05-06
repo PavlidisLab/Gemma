@@ -1,15 +1,14 @@
 package ubic.gemma.core.loader.expression.singleCell.metadata;
 
 import lombok.Setter;
-import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.util.Assert;
 import ubic.gemma.core.loader.util.mapper.*;
+import ubic.gemma.core.util.FileUtils;
 import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.AbstractDescribable;
 import ubic.gemma.model.common.description.Category;
@@ -25,7 +24,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.zip.GZIPInputStream;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellDimensionUtils.createReverseIndex;
@@ -337,7 +335,7 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
 
     private CSVParser openMetadataFile( Path metadataFile ) throws IOException {
         if ( metadataFile.toString().endsWith( ".gz" ) ) {
-            return getTsvFormat().parse( new InputStreamReader( new GZIPInputStream( Files.newInputStream( metadataFile ) ) ) );
+            return getTsvFormat().parse( new InputStreamReader( FileUtils.openCompressedFile( metadataFile ) ) );
         } else {
             return getTsvFormat().parse( Files.newBufferedReader( metadataFile ) );
         }
