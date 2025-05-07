@@ -303,7 +303,7 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
             // if the config says so, we'll trust it
             return ( ( AnnDataSingleCellDataLoaderConfig ) config ).getTranspose();
         }
-        return hasSampleNameColumn( obs ) || hasCellIdColumn( obs ) || hasCellTypeColumn( obs ) || hasGenes( var );
+        return hasSampleNameColumn( obs, config ) || hasCellIdColumn( obs ) || hasCellTypeColumn( obs, config ) || hasGenes( var );
     }
 
     private boolean hasGenes( Dataframe<?> df ) {
@@ -315,7 +315,13 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
         return false;
     }
 
-    private boolean hasSampleNameColumn( Dataframe<?> df ) {
+    private boolean hasSampleNameColumn( Dataframe<?> df, SingleCellDataLoaderConfig config ) {
+        if ( config instanceof AnnDataSingleCellDataLoaderConfig ) {
+            String sampleFactorName;
+            if ( ( sampleFactorName = ( ( AnnDataSingleCellDataLoaderConfig ) config ).getSampleFactorName() ) != null ) {
+                return df.getColumns().contains( sampleFactorName );
+            }
+        }
         for ( Dataframe.Column<?, ?> column : df ) {
             if ( column.getType().equals( String.class ) && isSampleNameColumn( ( Dataframe.Column<?, String> ) column ) ) {
                 return true;
@@ -333,7 +339,13 @@ public abstract class AbstractAnnDataSingleCellDataLoaderConfigurer implements S
         return false;
     }
 
-    private boolean hasCellTypeColumn( Dataframe<?> df ) {
+    private boolean hasCellTypeColumn( Dataframe<?> df, SingleCellDataLoaderConfig config ) {
+        if ( config instanceof AnnDataSingleCellDataLoaderConfig ) {
+            String cellTypeFactorName;
+            if ( ( cellTypeFactorName = ( ( AnnDataSingleCellDataLoaderConfig ) config ).getCellTypeFactorName() ) != null ) {
+                return df.getColumns().contains( cellTypeFactorName );
+            }
+        }
         for ( Dataframe.Column<?, ?> column : df ) {
             if ( column.getType().equals( String.class ) && isCellTypeColumn( ( Dataframe.Column<?, String> ) column ) ) {
                 return true;
