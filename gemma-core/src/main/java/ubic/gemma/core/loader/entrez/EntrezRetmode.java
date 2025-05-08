@@ -6,7 +6,8 @@ package ubic.gemma.core.loader.entrez;
  */
 public enum EntrezRetmode {
     XML( "xml" ),
-    JSON( "json" );
+    JSON( "json" ),
+    TEXT( "text" );
 
     private final String value;
 

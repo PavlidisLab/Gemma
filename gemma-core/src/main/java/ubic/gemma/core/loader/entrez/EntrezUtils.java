@@ -80,7 +80,7 @@ public class EntrezUtils {
     /**
      * Perform a search on an Entrez database.
      * <p>
-     * Results must be subsequently retrieved with {@link #fetch(String, EntrezQuery, EntrezRetmode, int, int, String)} or
+     * Results must be subsequently retrieved with {@link #fetch(String, EntrezQuery, EntrezRetmode, String, int, int, String)} or
      * {@link #summary(String, EntrezQuery, EntrezRetmode, int, int, String)}. The query key and WebEnv values must be
      * extracted from the payload.
      */

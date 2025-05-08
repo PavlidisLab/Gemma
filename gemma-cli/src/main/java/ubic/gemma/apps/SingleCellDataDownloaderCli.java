@@ -21,6 +21,7 @@ import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
+import ubic.gemma.core.loader.expression.sra.SraFetcher;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactoryImpl;
 import ubic.gemma.core.util.FileUtils;
@@ -71,7 +72,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             MEX_FEATURES_FILE_SUFFIX = "mexFeaturesFile",
             MEX_MATRIX_FILE_SUFFIX = "mexMatrixFile";
 
-    private static final String[] SUMMARY_HEADER = new String[] { "geo_accession", "data_type", "number_of_samples", "number_of_cells", "number_of_genes", "additional_supplementary_files", "comment" };
+    private static final String[] SUMMARY_HEADER = new String[] { "geo_accession", "data_type", "number_of_samples", "number_of_cells", "number_of_genes", "additional_supplementary_files", "data_in_sra", "comment" };
 
     private static final String
             UNKNOWN_INDICATOR = "UNKNOWN",
@@ -89,6 +90,9 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
 
     @Value("${geo.local.singleCellData.basepath}")
     private Path singleCellDataBasePath;
+
+    @Value("${entrez.efetch.apikey}")
+    private String ncbiApiKey;
 
     private final Set<String> accessions = new HashSet<>();
     @Nullable
@@ -326,6 +330,8 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
             detector.setFTPClientFactory( ftpClientFactory );
             detector.setDownloadDirectory( singleCellDataBasePath );
             detector.setRetryPolicy( retryPolicy );
+            SraFetcher sraFetcher = new SraFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), ncbiApiKey );
+            detector.setSraFetcher( sraFetcher );
             if ( barcodesFileSuffix != null && featuresFileSuffix != null && matrixFileSuffix != null ) {
                 detector.setMexFileSuffixes( barcodesFileSuffix, featuresFileSuffix, matrixFileSuffix );
             }
@@ -342,6 +348,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                     String detectedDataType = UNKNOWN_INDICATOR;
                     Integer numberOfSamples = null, numberOfCells = null, numberOfGenes = null;
                     List<String> additionalSupplementaryFiles = new ArrayList<>();
+                    String dataInSra = null;
                     String comment = "";
                     try {
                         log.info( geoAccession + ": Parsing GEO series metadata..." );
@@ -410,6 +417,10 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                                 additionalSupplementaryFiles.addAll( detector.getAdditionalSupplementaryFiles( series, sample ) );
                             }
                         }
+                        Collection<String> sraAccessions = new ArrayList<>();
+                        if ( detector.hasSingleCellDataInSra( series, sraAccessions ) ) {
+                            dataInSra = String.join( "|", sraAccessions );
+                        }
                     } catch ( Exception e ) {
                         addErrorObject( geoAccession, e );
                         comment = StringUtils.strip( ExceptionUtils.getRootCauseMessage( e ) );
@@ -428,7 +439,7 @@ public class SingleCellDataDownloaderCli extends AbstractCLI {
                                 writer.printRecord(
                                         geoAccession, detectedDataType, numberOfSamples, numberOfCells, numberOfGenes,
                                         additionalSupplementaryFiles.stream().map( this::formatFilename ).collect( Collectors.joining( ";" ) ),
-                                        comment );
+                                        dataInSra, comment );
                                 writer.flush(); // for convenience, so that results appear immediately with tail -f
                             } catch ( IOException e ) {
                                 log.error( "Failed to append to the summary output file.", e );
