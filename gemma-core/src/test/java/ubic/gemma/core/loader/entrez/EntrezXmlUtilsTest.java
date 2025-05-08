@@ -21,7 +21,6 @@ package ubic.gemma.core.loader.entrez;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
-import ubic.gemma.core.util.test.Assumptions;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,16 +37,39 @@ public class EntrezXmlUtilsTest {
      * Test method for 'ubic.gemma.core.loader.entrez.pubmed.ESearchXMLParser.parse(InputStream)'
      */
     @Test
-    public void testExtractIds() throws Exception {
-        Assumptions.assumeThatResourceIsAvailable( EntrezUtils.ESEARCH );
+    public void testExtractSearchIds() throws Exception {
         Document document;
         try ( InputStream stream = EntrezXmlUtilsTest.class.getResourceAsStream( "/data/esearchresult.xml" ) ) {
             assertNotNull( stream );
             document = EntrezXmlUtils.parse( stream );
         }
-        Collection<String> ids = EntrezXmlUtils.extractIds( document );
+        Collection<String> ids = EntrezXmlUtils.extractSearchIds( document );
         assertEquals( 4, ids.size() );
         assertTrue( ids.contains( "15963425" ) );
+    }
+
+    @Test
+    public void testExtractFetchIds() throws IOException {
+        Document document;
+        try ( InputStream stream = EntrezXmlUtilsTest.class.getResourceAsStream( "/data/loader/entrez/efetchresult.xml" ) ) {
+            assertNotNull( stream );
+            document = EntrezXmlUtils.parse( stream );
+        }
+        Collection<String> ids = EntrezXmlUtils.extractFetchIds( document );
+        assertEquals( 1, ids.size() );
+        assertTrue( ids.contains( "5557657" ) );
+    }
+
+    @Test
+    public void testExtractLinkIds() throws Exception {
+        Document document;
+        try ( InputStream stream = EntrezXmlUtilsTest.class.getResourceAsStream( "/data/loader/entrez/elinkresult.xml" ) ) {
+            assertNotNull( stream );
+            document = EntrezXmlUtils.parse( stream );
+        }
+        Collection<String> ids = EntrezXmlUtils.extractLinkIds( document, "protein", "gene" );
+        assertEquals( 2, ids.size() );
+        assertTrue( ids.contains( "522311" ) );
     }
 
     @Test

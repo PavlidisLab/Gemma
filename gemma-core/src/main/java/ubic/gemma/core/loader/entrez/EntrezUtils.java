@@ -27,7 +27,7 @@ public class EntrezUtils {
     public static final String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi";
     public static final String ESUMMARY = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi";
     public static final String EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi";
-    public static final String EQUERY = "https://www.ncbi.nlm.nih.gov/entrez/query.fcgi";
+    public static final String ELINK = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi";
 
     private static final String TOOL = "gemma";
     private static final String EMAIL = Settings.getString( "gemma.support.email" );
@@ -143,27 +143,46 @@ public class EntrezUtils {
     /**
      * Retrieve the results of a previous {@link #search(String, String, EntrezRetmode, String)} query.
      */
-    public static URL fetch( String db, EntrezQuery query, EntrezRetmode retmode, int retstart, int retmax, @Nullable String apiKey ) {
+    public static URL fetch( String db, EntrezQuery query, EntrezRetmode retmode, String rettype, int retstart, int retmax, @Nullable String apiKey ) {
         Assert.isTrue( retstart >= 0 );
         Assert.isTrue( retmax > 0 );
         return createUrl( EFETCH
                 + "?db=" + urlEncode( db )
                 + "&query_key=" + urlEncode( query.getQueryId() )
                 + "&retmode=" + urlEncode( retmode.getValue() )
+                + "&rettype=" + urlEncode( rettype )
                 + "&retstart=" + retstart
                 + "&retmax=" + retmax
                 + "&WebEnv=" + urlEncode( query.getCookie() ), apiKey );
     }
 
     /**
-     * @deprecated this is not a documented Entrez API and should not be used.
+     *
+     * @param db
+     * @param apiKey
+     * @return
      */
-    @Deprecated
-    public static URL query( String db, String term, String cmd, @Nullable String apiKey ) {
-        return createUrl( EQUERY
-                + "?db=" + urlEncode( db )
-                + "&term=" + urlEncode( term )
-                + "&cmd=" + urlEncode( cmd ), apiKey );
+    public static URL linkById( String db, String dbfrom, String id, String cmd, EntrezRetmode retmode, @Nullable String apiKey ) {
+        return createUrl( ELINK + "?db=" + urlEncode( db )
+                + "&dbfrom=" + urlEncode( dbfrom )
+                + "&id=" + urlEncode( id )
+                + "&cmd=" + urlEncode( cmd )
+                + "&retmode=" + urlEncode( retmode.getValue() ), apiKey );
+    }
+
+    /**
+     *
+     * @param db
+     * @param apiKey
+     * @return
+     */
+    public static URL linkById( String db, String dbfrom, EntrezQuery query, String cmd, EntrezRetmode retmode, @Nullable String apiKey ) {
+        return createUrl( ELINK + "?db=" + urlEncode( db )
+                + "&dbfrom=" + urlEncode( dbfrom )
+                + "&query_key=" + urlEncode( query.getQueryId() )
+                + "&retmode=" + urlEncode( retmode.getValue() )
+                + "&cmd=" + urlEncode( cmd )
+                + "&WebEnv=" + urlEncode( query.getCookie() ), apiKey );
     }
 
     private static URL createUrl( String url, @Nullable String apiKey ) {
