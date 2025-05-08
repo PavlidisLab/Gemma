@@ -21,11 +21,13 @@ import ubic.gemma.core.loader.expression.geo.singleCell.GeoBioAssayMapper;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
 import ubic.gemma.core.loader.expression.geo.singleCell.NoSingleCellDataFoundException;
 import ubic.gemma.core.loader.expression.singleCell.*;
+import ubic.gemma.core.loader.expression.sra.SraFetcher;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPConfig;
 import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
 import ubic.gemma.core.loader.util.mapper.RenamingBioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.SimpleDesignElementMapper;
+import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.test.BaseTest;
 import ubic.gemma.core.util.test.category.GeoTest;
 import ubic.gemma.core.util.test.category.SlowTest;
@@ -79,6 +81,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
         detector = new GeoSingleCellDetector();
         detector.setFTPClientFactory( ftpClientFactory );
         detector.setDownloadDirectory( downloadDir );
+        detector.setSraFetcher( new SraFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), null ) );
     }
 
     /**
@@ -795,6 +798,13 @@ public class GeoSingleCellDetectorTest extends BaseTest {
                 .extracting( BioAssay::getName )
                 .containsExactly( "GSM3580724", "GSM3580725", "GSM3580726", "GSM3580727", "GSM3580745", "GSM3580746" )
                 .doesNotContain( "GSM3580744" );
+    }
+
+    @Test
+    public void testHasSingleCellDataInSra() throws IOException {
+        GeoSeries series = readSeriesFromGeo( "GSE278619" );
+        assertThat( detector.hasSingleCellDataInSra( series ) ).isTrue();
+        assertThat( detector.hasSingleCellDataInSra( series.getSamples().iterator().next() ) ).isTrue();
     }
 
     @Test

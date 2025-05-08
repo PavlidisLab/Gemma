@@ -12,6 +12,10 @@ import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
+import ubic.gemma.core.loader.expression.sra.SraFetcher;
+import ubic.gemma.core.loader.expression.sra.model.SraExperiment;
+import ubic.gemma.core.loader.expression.sra.model.SraExperimentPackage;
+import ubic.gemma.core.loader.expression.sra.model.SraExperimentPackageSet;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 import ubic.gemma.core.util.SimpleRetryPolicy;
@@ -72,6 +76,9 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
 
     @Nullable
     private ExecutorService executor;
+
+    @Nullable
+    private SraFetcher sraFetcher;
 
     private int numberOfFetchThreads = DEFAULT_NUMBER_OF_FETCH_THREADS;
     private Path downloadDirectory;
@@ -182,6 +189,13 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
                 ( ( ArchiveBasedSingleCellDetector ) detector ).setMaxNumberOfEntriesToSkip( maxNumberOfEntriesToSkip );
             }
         }
+    }
+
+    /**
+     * Set the {@link SraFetcher} used to fetch SRA metadata.
+     */
+    public void setSraFetcher( @Nullable SraFetcher sraFetcher ) {
+        this.sraFetcher = sraFetcher;
     }
 
     /**
@@ -625,6 +639,70 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
      */
     public boolean hasSingleCellDataInSeries( GeoSeries series ) {
         return Arrays.stream( detectors ).anyMatch( detector -> detector.hasSingleCellData( series ) );
+    }
+
+    /**
+     * Check if a GEO series has single-cell data in SRA.
+     */
+    public boolean hasSingleCellDataInSra( GeoSeries series ) {
+        if ( series.getGeoAccession() == null ) {
+            log.warn( series + " does not have a GEO accession, cannot check if it has single-cell data in SRA." );
+            return false;
+        }
+        return hasSingleCellDataInSra( series.getGeoAccession(), null );
+    }
+
+    public boolean hasSingleCellDataInSra( GeoSeries series, Collection<String> sraAccessions ) {
+        if ( series.getGeoAccession() == null ) {
+            log.warn( series + " does not have a GEO accession, cannot check if it has single-cell data in SRA." );
+            return false;
+        }
+        return hasSingleCellDataInSra( series.getGeoAccession(), sraAccessions );
+    }
+
+    /**
+     * Check if a GEO sample has single-cell data in SRA.
+     */
+    public boolean hasSingleCellDataInSra( GeoSample sample ) {
+        if ( sample.getGeoAccession() == null ) {
+            log.warn( sample + " does not have a GEO accession, cannot check if it has single-cell data in SRA." );
+            return false;
+        }
+        return hasSingleCellDataInSra( sample.getGeoAccession(), null );
+    }
+
+    private boolean hasSingleCellDataInSra( String geoAccession, @Nullable Collection<String> sraAccessions ) {
+        Assert.notNull( sraFetcher, "An SraFetcher must be set to retrieve metadata from SRA." );
+        try {
+            SraExperimentPackageSet sraMeta = sraFetcher.fetchByGeoAccession( geoAccession );
+            List<SraExperiment> e = sraMeta.getExperimentPackages()
+                    .stream()
+                    .map( SraExperimentPackage::getExperiment )
+                    .filter( this::isSingleCell )
+                    .collect( Collectors.toList() );
+            if ( !e.isEmpty() ) {
+                log.info( "Found single-cell data in SRA for " + geoAccession + ": " + e.stream()
+                        .map( SraExperiment::getAccession )
+                        .collect( Collectors.joining( ", " ) ) );
+                if ( sraAccessions != null ) {
+                    e.stream()
+                            .map( SraExperiment::getAccession )
+                            .forEach( sraAccessions::add );
+                }
+                return true;
+            }
+            return false;
+        } catch ( IOException e ) {
+            log.warn( "", e );
+            return false;
+        }
+    }
+
+    /**
+     * Check if an SRA experiment is single-cell.
+     */
+    private boolean isSingleCell( SraExperiment ep ) {
+        return Objects.equals( ep.getDesign().getLibraryDescriptor().getSource(), "TRANSCRIPTOMIC SINGLE CELL" );
     }
 
     /**
