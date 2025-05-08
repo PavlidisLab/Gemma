@@ -5,7 +5,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-class SraDateParser extends XmlAdapter<String, Date> {
+public class SraDateParser extends XmlAdapter<String, Date> {
 
     private final DateFormat format = new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss" );
 

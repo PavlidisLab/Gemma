@@ -12,6 +12,10 @@ import java.util.List;
 public class SraExperimentPackage {
     @XmlElement(name = "EXPERIMENT")
     private SraExperiment experiment;
+    @XmlElement(name = "SUBMISSION")
+    private SraSubmission submission;
+    @XmlElement(name = "Organization")
+    private SraOrganization organization;
     @XmlElement(name = "RUN_SET")
     private List<SraRunSet> runSets;
 }
