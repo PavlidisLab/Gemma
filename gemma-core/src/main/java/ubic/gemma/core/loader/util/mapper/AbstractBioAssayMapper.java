@@ -72,11 +72,7 @@ public abstract class AbstractBioAssayMapper implements BioAssayMapper {
     }
 
     protected boolean matchId( @Nullable Long a, String b ) {
-        try {
-            return a != null && a.equals( Long.parseLong( StringUtils.strip( b ) ) );
-        } catch ( NumberFormatException e ) {
-            return false;
-        }
+        return a != null && a.toString().equals( StringUtils.strip( b ) );
     }
 
     protected boolean matchName( String a, String b ) {

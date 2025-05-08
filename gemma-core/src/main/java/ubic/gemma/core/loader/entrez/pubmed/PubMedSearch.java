@@ -81,7 +81,7 @@ public class PubMedSearch {
             ids.addAll( retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
                 try ( InputStream is = fetchUrl.openStream() ) {
                     Document doc = EntrezXmlUtils.parse( is );
-                    return EntrezXmlUtils.extractIds( doc );
+                    return EntrezXmlUtils.extractSearchIds( doc );
                 }
             }, apiKey ), "retrieving " + ( i + BATCH_SIZE ) + "/" + query.getTotalRecords() + " PubMed IDs from " + searchQuery ) );
         }
@@ -102,7 +102,7 @@ public class PubMedSearch {
         int max = maxResults > 0 ? Math.min( maxResults, query.getTotalRecords() ) : query.getTotalRecords();
         List<BibliographicReference> ids = new ArrayList<>( max );
         for ( int i = 0; i < max; i += BATCH_SIZE ) {
-            URL fetchUrl = EntrezUtils.fetch( "pubmed", query, EntrezRetmode.XML, i, BATCH_SIZE, apiKey );
+            URL fetchUrl = EntrezUtils.fetch( "pubmed", query, EntrezRetmode.XML, "full", i, BATCH_SIZE, apiKey );
             ids.addAll( fetch( fetchUrl ) );
         }
         return ids;

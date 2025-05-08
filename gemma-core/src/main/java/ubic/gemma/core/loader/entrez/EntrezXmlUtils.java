@@ -1,7 +1,6 @@
 package ubic.gemma.core.loader.entrez;
 
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -9,6 +8,7 @@ import ubic.gemma.core.util.XMLUtils;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPathExpression;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -21,6 +21,12 @@ import java.util.List;
  * @author poirigui
  */
 public class EntrezXmlUtils {
+
+    private static final XPathExpression xCount = XMLUtils.compile( "/eSearchResult/Count" );
+    private static final XPathExpression xQueryKey = XMLUtils.compile( "/eSearchResult/QueryKey" );
+    private static final XPathExpression xCookie = XMLUtils.compile( "/eSearchResult/WebEnv" );
+    private static final XPathExpression xSearchId = XMLUtils.compile( "/eSearchResult/IdList/Id" );
+    private static final XPathExpression xFetchId = XMLUtils.compile( "/IdList/Id" );
 
     /**
      * Parse an XML reply from Entrez.
@@ -84,25 +90,58 @@ public class EntrezXmlUtils {
     }
 
     public static int getCount( Document document ) {
-        return Integer.parseInt( XMLUtils.getTextValue( document.getElementsByTagName( "Count" ).item( 0 ) ) );
+        return Integer.parseInt( XMLUtils.evaluateToString( xCount, document ) );
     }
 
     public static String getQueryId( Document document ) {
-        return XMLUtils.getTextValue( XMLUtils.getUniqueItem( document.getElementsByTagName( "QueryKey" ) ) );
+        return XMLUtils.evaluateToString( xQueryKey, document );
     }
 
     public static String getCookie( Document document ) {
-        return XMLUtils.getTextValue( XMLUtils.getUniqueItem( document.getElementsByTagName( "WebEnv" ) ) );
+        return XMLUtils.evaluateToString( xCookie, document );
     }
 
-    public static Collection<String> extractIds( Document doc ) {
-        NodeList idList = doc.getElementsByTagName( "Id" );
+    /**
+     * Extract IDs from an ESearch call.
+     * @see EntrezUtils#search(String, EntrezQuery, EntrezRetmode, int, int, String)
+     */
+    public static Collection<String> extractSearchIds( Document doc ) {
+        NodeList idList = XMLUtils.evaluate( xSearchId, doc );
         Collection<String> result = new HashSet<>();
         for ( int i = 0; i < idList.getLength(); i++ ) {
-            Node elem = idList.item( i );
-            String val = XMLUtils.getTextValue( elem );
-            result.add( val );
+            result.add( idList.item( i ).getTextContent() );
         }
         return result;
+    }
+
+    /**
+     * Extract IDs from an EFetch call.
+     * <p>
+     * The {@code uilist} return type must be used in the call.
+     * @see EntrezUtils#fetch(String, EntrezQuery, EntrezRetmode, String, int, int, String)
+     * @see EntrezUtils#fetchById(String, String, EntrezRetmode, String, String)
+     */
+    public static Collection<String> extractFetchIds( Document doc ) {
+        NodeList idList = XMLUtils.evaluate( xFetchId, doc );
+        Collection<String> result = new HashSet<>();
+        for ( int i = 0; i < idList.getLength(); i++ ) {
+            result.add( idList.item( i ).getTextContent() );
+        }
+        return result;
+    }
+
+    /**
+     * Extract IDs from an ELink call.
+     * @see EntrezUtils#linkById(String, String, EntrezQuery, String, EntrezRetmode, String)
+     * @see EntrezUtils#linkById(String, String, String, String, EntrezRetmode, String)
+     */
+    public static Collection<String> extractLinkIds( Document doc, String dbfrom, String dbto ) {
+        XPathExpression xId = XMLUtils.compile( "/eLinkResult/LinkSet[DbFrom/text()='" + dbfrom + "']/LinkSetDb[DbTo/text()='" + dbto + "']/Link/Id" );
+        Collection<String> ids2 = new ArrayList<>();
+        NodeList nl = XMLUtils.evaluate( xId, doc );
+        for ( int i = 0; i < nl.getLength(); i++ ) {
+            ids2.add( nl.item( i ).getTextContent() );
+        }
+        return ids2;
     }
 }
