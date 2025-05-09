@@ -157,10 +157,11 @@ public class EntrezUtils {
     }
 
     /**
-     *
-     * @param db
-     * @param apiKey
-     * @return
+     * Retrieve related records from an Entrez database by ID.
+     * @param db     target database
+     * @param dbfrom source database, the ID must come from this database
+     * @param id     the ID to link from
+     * @param cmd    the command to use, e.g. "neighbor"
      */
     public static URL linkById( String db, String dbfrom, String id, String cmd, EntrezRetmode retmode, @Nullable String apiKey ) {
         return createUrl( ELINK + "?db=" + urlEncode( db )
@@ -171,12 +172,9 @@ public class EntrezUtils {
     }
 
     /**
-     *
-     * @param db
-     * @param apiKey
-     * @return
+     * Retrieve related records from an Entrez database from a previous {@link #search(String, String, EntrezRetmode, String)} query.
      */
-    public static URL linkById( String db, String dbfrom, EntrezQuery query, String cmd, EntrezRetmode retmode, @Nullable String apiKey ) {
+    public static URL link( String db, String dbfrom, EntrezQuery query, String cmd, EntrezRetmode retmode, @Nullable String apiKey ) {
         return createUrl( ELINK + "?db=" + urlEncode( db )
                 + "&dbfrom=" + urlEncode( dbfrom )
                 + "&query_key=" + urlEncode( query.getQueryId() )

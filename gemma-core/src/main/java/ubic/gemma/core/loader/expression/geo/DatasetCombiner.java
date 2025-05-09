@@ -29,10 +29,7 @@ import ubic.gemma.core.loader.entrez.EutilFetch;
 import ubic.gemma.core.loader.expression.geo.model.*;
 import ubic.gemma.core.util.XMLUtils;
 
-import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -83,7 +80,7 @@ public class DatasetCombiner {
      */
     private static final Map<String, Collection<String>> microarrayNameStrings = new HashMap<>();
 
-    private static XPathExpression xgds;
+    private static final XPathExpression xgds = XMLUtils.compile( "/eSummaryResult/DocSum/Item[@Name=\"Accession\"]" );
 
     static {
         // note : all lower case!
@@ -111,13 +108,6 @@ public class DatasetCombiner {
         DatasetCombiner.microarrayNameStrings.get( "chip" ).add( "chipa" );
         DatasetCombiner.microarrayNameStrings.get( "chip" ).add( "chipb" );
         DatasetCombiner.microarrayNameStrings.get( "chip" ).add( "chipc" );
-        XPathFactory xf = XPathFactory.newInstance();
-        XPath xpath = xf.newXPath();
-        try {
-            DatasetCombiner.xgds = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"Accession\"]" );
-        } catch ( XPathExpressionException e ) {
-            throw new RuntimeException( e );
-        }
     }
 
     // Maps of sample accessions to other useful bits.

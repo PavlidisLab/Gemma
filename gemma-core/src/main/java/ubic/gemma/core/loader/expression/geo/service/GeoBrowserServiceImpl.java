@@ -31,6 +31,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import ubic.gemma.core.loader.entrez.EutilFetch;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.core.util.XMLUtils;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -44,7 +45,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 import ubic.gemma.persistence.util.Slice;
 
-import javax.xml.xpath.*;
+import javax.xml.xpath.XPathExpression;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -65,25 +66,11 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
     private static final String GEO_DATA_STORE_FILE_NAME = "GEODataStore";
     private static final Log log = LogFactory.getLog( GeoBrowserServiceImpl.class.getName() );
 
-    // private static final XPathExpression xgds;
-    private static final XPathExpression xgse;
-    private static final XPathExpression xtitle;
-    private static final XPathExpression xgpls;
-    private static final XPathExpression xsummary;
-
-    static {
-        XPathFactory xf = XPathFactory.newInstance();
-        XPath xpath = xf.newXPath();
-        try {
-            // xgds = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GDS\"][1]/text()" );
-            xgse = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GSE\"][1]/text()" );
-            xtitle = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"title\"][1]/text()" );
-            xgpls = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GPL\"]/text()" );
-            xsummary = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"summary\"][1]/text()" );
-        } catch ( XPathExpressionException e ) {
-            throw new RuntimeException( e );
-        }
-    }
+    // private static final XPathExpression xgds = XMLUtils.compile( "/eSummaryResult/DocSum/Item[@Name=\"GDS\"][1]/text()" );
+    private static final XPathExpression xgse = XMLUtils.compile( "/eSummaryResult/DocSum/Item[@Name=\"GSE\"][1]/text()" );
+    private static final XPathExpression xtitle = XMLUtils.compile( "/eSummaryResult/DocSum/Item[@Name=\"title\"][1]/text()" );
+    private static final XPathExpression xgpls = XMLUtils.compile( "/eSummaryResult/DocSum/Item[@Name=\"GPL\"]/text()" );
+    private static final XPathExpression xsummary = XMLUtils.compile( "/eSummaryResult/DocSum/Item[@Name=\"summary\"][1]/text()" );
 
     @Autowired
     protected ExpressionExperimentService expressionExperimentService;
@@ -181,35 +168,31 @@ public class GeoBrowserServiceImpl implements GeoBrowserService, InitializingBea
      * @return HTML-formatted
      */
     String formatDetails( Document details, String contextPath ) throws IOException {
-        try {
-            String gse = "GSE" + xgse.evaluate( details, XPathConstants.STRING );
-            String title = ( String ) xtitle.evaluate( details, XPathConstants.STRING );
-            NodeList gpls = ( NodeList ) xgpls.evaluate( details, XPathConstants.NODESET );
-            String summary = ( String ) xsummary.evaluate( details, XPathConstants.STRING );
+        String gse = "GSE" + XMLUtils.evaluateToString( xgse, details );
+        String title = XMLUtils.evaluateToString( xtitle, details );
+        NodeList gpls = XMLUtils.evaluate( xgpls, details );
+        String summary = XMLUtils.evaluateToString( xsummary, details );
 
-            StringBuilder buf = new StringBuilder();
-            buf.append( "<div class=\"small\">" );
+        StringBuilder buf = new StringBuilder();
+        buf.append( "<div class=\"small\">" );
 
-            ExpressionExperiment ee = this.expressionExperimentService.findByShortName( gse );
+        ExpressionExperiment ee = this.expressionExperimentService.findByShortName( gse );
 
-            if ( ee != null ) {
-                buf.append( "\n<p><strong><a target=\"_blank\" href=\"" )
-                        .append( entityUrlBuilder.fromBaseUrl( contextPath ).entity( ee ).web().toUriString() )
-                        .append( "\">" ).append( escapeHtml4( gse ) ).append( "</a></strong>" );
-            } else {
-                buf.append( "\n<p><strong>" ).append( gse ).append( " [new to Gemma]</strong>" );
-            }
-
-            buf.append( "<p>" ).append( title ).append( "</p>\n" );
-            buf.append( "<p>" ).append( summary ).append( "</p>\n" );
-
-            this.formatArrayDetails( gpls, buf, contextPath );
-
-            buf.append( "</div>" );
-            return buf.toString();
-        } catch ( XPathExpressionException e ) {
-            throw new RuntimeException( e );
+        if ( ee != null ) {
+            buf.append( "\n<p><strong><a target=\"_blank\" href=\"" )
+                    .append( entityUrlBuilder.fromBaseUrl( contextPath ).entity( ee ).web().toUriString() )
+                    .append( "\">" ).append( escapeHtml4( gse ) ).append( "</a></strong>" );
+        } else {
+            buf.append( "\n<p><strong>" ).append( gse ).append( " [new to Gemma]</strong>" );
         }
+
+        buf.append( "<p>" ).append( title ).append( "</p>\n" );
+        buf.append( "<p>" ).append( summary ).append( "</p>\n" );
+
+        this.formatArrayDetails( gpls, buf, contextPath );
+
+        buf.append( "</div>" );
+        return buf.toString();
     }
 
     private List<GeoRecord> filterGeoRecords( Slice<GeoRecord> records ) {

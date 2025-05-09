@@ -26,6 +26,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.EntityResolver;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -52,22 +53,23 @@ public class XMLUtils {
     private static final XPath xpath = xFactory.newXPath();
 
     /**
-     * Create a new DocumentBuilder with some good presets for Gemma.
+     * Create a new DocumentBuilder with some good presets for general usage.
      * <p>
-     * For security reasons (and also performance), the returned DocumentBuilder is not capable of resolving entities.
-     * If you need to resolve DTDs or XSD schemas, you must implement an {@link org.xml.sax.EntityResolver}.
+     * For security reasons (and also performance), an {@link EntityResolver} must be supplied to resolve DTDs or XSD
+     * schemas.
      */
-    public static DocumentBuilder createDocumentBuilder() throws ParserConfigurationException {
+    public static DocumentBuilder createDocumentBuilder( EntityResolver entityResolver ) {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setIgnoringComments( true );
         factory.setValidating( false );
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        builder.setErrorHandler( new SimpleSaxErrorHandler( log ) );
-        // the default behavior is to retrieve DTDs from the web, which is extremely dangerous (and slow)
-        builder.setEntityResolver( ( systemId, publicId ) -> {
-            throw new RuntimeException( "No entity resolver has been set." );
-        } );
-        return builder;
+        try {
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            builder.setErrorHandler( new SimpleSaxErrorHandler( log ) );
+            builder.setEntityResolver( entityResolver );
+            return builder;
+        } catch ( ParserConfigurationException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     public static List<String> extractMultipleChildren( Node parent, String elementName ) {

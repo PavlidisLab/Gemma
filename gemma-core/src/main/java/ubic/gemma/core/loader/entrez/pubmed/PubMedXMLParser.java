@@ -28,7 +28,7 @@ import ubic.gemma.core.util.XMLUtils;
 import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.expression.biomaterial.Compound;
 
-import javax.xml.xpath.*;
+import javax.xml.xpath.XPathExpression;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
@@ -52,6 +52,9 @@ public class PubMedXMLParser {
     private static final Locale PUB_MED_LOCALE = Locale.ENGLISH;
     private static final DateFormat df = DateFormat.getDateInstance( DateFormat.MEDIUM );
     private static final String[] PUB_MED_DATE_FORMATS = new String[] { "MMM dd, yyyy", "yyyy", "mm dd, yyyy" };
+
+    private static final XPathExpression xRefSource = XMLUtils.compile( "RefSource/text()" );
+    private static final XPathExpression xPmid = XMLUtils.compile( "PMID/text()" );
 
     public static void extractBookPublicationYear( BibliographicReference bibRef, Node item ) {
         NodeList c = item.getChildNodes();
@@ -654,23 +657,10 @@ public class PubMedXMLParser {
                         String reftypeName = ( ( Attr ) reftype ).getValue();
                         PubMedXMLParser.log.debug( reftypeName );
                         if ( reftypeName.equals( "RetractionIn" ) ) {
-
-                            try {
-                                XPathFactory xf = XPathFactory.newInstance();
-                                XPath xpath = xf.newXPath();
-                                XPathExpression xgds = xpath.compile( "RefSource/text()" );
-                                String ref = ( String ) xgds.evaluate( jitem, XPathConstants.STRING );
-
-                                xgds = xpath.compile( "PMID/text()" );
-                                String pmid = ( String ) xgds.evaluate( jitem, XPathConstants.STRING );
-
-                                String description = "Retracted [In: " + ref + " PMID=" + pmid + "]";
-                                bibRef.setDescription( description );
-                            } catch ( XPathExpressionException e ) {
-                                PubMedXMLParser.log
-                                        .warn( "Error while trying to get details of the retraction: " + e.getMessage(),
-                                                e );
-                            }
+                            String ref = XMLUtils.evaluateToString( xRefSource, jitem );
+                            String pmid = XMLUtils.evaluateToString( xPmid, jitem );
+                            String description = "Retracted [In: " + ref + " PMID=" + pmid + "]";
+                            bibRef.setDescription( description );
                             /*
                              * Such papers also have <PublicationType>Retracted Publication</PublicationType>
                              */

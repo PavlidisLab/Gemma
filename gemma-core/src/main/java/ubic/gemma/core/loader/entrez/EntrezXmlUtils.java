@@ -7,13 +7,11 @@ import org.xml.sax.SAXException;
 import ubic.gemma.core.util.XMLUtils;
 
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpression;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -29,17 +27,23 @@ public class EntrezXmlUtils {
     private static final XPathExpression xFetchId = XMLUtils.compile( "/IdList/Id" );
 
     /**
+     * A document builder with {@link NcbiEntityResolver} as entity resolver.
+     * <p>
+     * This will work for most of not all XML files from NCBI Entrez and related services.
+     */
+    private static final DocumentBuilder documentBuilder = XMLUtils.createDocumentBuilder( new NcbiEntityResolver() );
+
+    /**
      * Parse an XML reply from Entrez.
      * <p>
      * This will check if there are any {@code ERROR} tags.
      */
     public static Document parse( InputStream is ) throws IOException {
         try {
-            DocumentBuilder builder = createDocumentBuilder();
-            Document doc = builder.parse( is );
+            Document doc = documentBuilder.parse( is );
             checkForErrors( doc );
             return doc;
-        } catch ( ParserConfigurationException | SAXException e ) {
+        } catch ( SAXException e ) {
             throw new RuntimeException( e );
         }
     }
@@ -52,13 +56,12 @@ public class EntrezXmlUtils {
      */
     public static Document parse( InputStream is, String encoding ) throws IOException {
         try {
-            DocumentBuilder builder = createDocumentBuilder();
             InputSource inputSource = new InputSource( is );
             inputSource.setEncoding( encoding );
-            Document doc = builder.parse( inputSource );
+            Document doc = documentBuilder.parse( inputSource );
             checkForErrors( doc );
             return doc;
-        } catch ( ParserConfigurationException | SAXException e ) {
+        } catch ( SAXException e ) {
             throw new RuntimeException( e );
         }
     }
@@ -72,17 +75,6 @@ public class EntrezXmlUtils {
             }
             throw new EntrezException( errors.get( 0 ), errors );
         }
-    }
-
-    /**
-     * Create a document builder with {@link NcbiEntityResolver} as entity resolver.
-     * <p>
-     * This will work for most of not all XML files from NCBI Entrez and related services.
-     */
-    private static DocumentBuilder createDocumentBuilder() throws ParserConfigurationException {
-        DocumentBuilder builder = ubic.gemma.core.util.XMLUtils.createDocumentBuilder();
-        builder.setEntityResolver( new NcbiEntityResolver() );
-        return builder;
     }
 
     public static EntrezQuery getQuery( Document doc ) {
@@ -106,12 +98,7 @@ public class EntrezXmlUtils {
      * @see EntrezUtils#search(String, EntrezQuery, EntrezRetmode, int, int, String)
      */
     public static Collection<String> extractSearchIds( Document doc ) {
-        NodeList idList = XMLUtils.evaluate( xSearchId, doc );
-        Collection<String> result = new HashSet<>();
-        for ( int i = 0; i < idList.getLength(); i++ ) {
-            result.add( idList.item( i ).getTextContent() );
-        }
-        return result;
+        return extractIds( xSearchId, doc );
     }
 
     /**
@@ -122,23 +109,22 @@ public class EntrezXmlUtils {
      * @see EntrezUtils#fetchById(String, String, EntrezRetmode, String, String)
      */
     public static Collection<String> extractFetchIds( Document doc ) {
-        NodeList idList = XMLUtils.evaluate( xFetchId, doc );
-        Collection<String> result = new HashSet<>();
-        for ( int i = 0; i < idList.getLength(); i++ ) {
-            result.add( idList.item( i ).getTextContent() );
-        }
-        return result;
+        return extractIds( xFetchId, doc );
     }
 
     /**
      * Extract IDs from an ELink call.
-     * @see EntrezUtils#linkById(String, String, EntrezQuery, String, EntrezRetmode, String)
+     * @see EntrezUtils#link(String, String, EntrezQuery, String, EntrezRetmode, String)
      * @see EntrezUtils#linkById(String, String, String, String, EntrezRetmode, String)
      */
     public static Collection<String> extractLinkIds( Document doc, String dbfrom, String dbto ) {
         XPathExpression xId = XMLUtils.compile( "/eLinkResult/LinkSet[DbFrom/text()='" + dbfrom + "']/LinkSetDb[DbTo/text()='" + dbto + "']/Link/Id" );
+        return extractIds( xId, doc );
+    }
+
+    private static Collection<String> extractIds( XPathExpression expr, Document doc ) {
         Collection<String> ids2 = new ArrayList<>();
-        NodeList nl = XMLUtils.evaluate( xId, doc );
+        NodeList nl = XMLUtils.evaluate( expr, doc );
         for ( int i = 0; i < nl.getLength(); i++ ) {
             ids2.add( nl.item( i ).getTextContent() );
         }
