@@ -3,7 +3,7 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd"
        profile="metrics">
-    <bean class="ubic.gemma.cli.metrics.MeterRegistryCliConfigurer">
+    <bean class="ubic.gemma.cli.metrics.MeterRegistryCliConfigurer" lazy-init="false">
         <constructor-arg ref="meterRegistry"/>
     </bean>
 </beans>
