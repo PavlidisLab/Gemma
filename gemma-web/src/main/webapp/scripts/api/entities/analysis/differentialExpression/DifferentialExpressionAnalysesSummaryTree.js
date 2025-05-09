@@ -120,7 +120,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                     // make node for analysis
                     parentNode = new Ext.tree.TreeNode({
                         id: 'node' + this.ee.id + '-' + (nodeId++),
-                        expanded: true /* PP changed */,
+                        expanded: analyses.length<2,
                         singleClickExpand: true,
                         text: downloadDiffDataLink,
                         subsetIdent: subsetIdent,
@@ -250,12 +250,6 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                         }
                     }
 
-                    var analysisDesc = this.getANOVAtypeText(numberOfFactors);
-                    if (numberOfFactors === 1 || interaction <= 0) {
-                        analysisDesc += ' on ';
-                    } else {
-                        analysisDesc += ' with interactions on ';
-                    }
 
                     var deleteText = '';
                     var redoText = '';
@@ -266,7 +260,9 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                         refreshStatsText = this.getRefreshStatsLink(analysis);
                     }
 
-                    parentNode.setText(analysisDesc + parentText + subsetText + " " + parentNode.text + deleteText
+                    debugger
+
+                    parentNode.setText(subsetText + parentText + " " + parentNode.text + deleteText
                         + redoText + refreshStatsText);
 
                     // if this parent node has an interaction child,
@@ -278,6 +274,12 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                     });
                     sorter.doSort(parentNode);
                 }
+                var sorter = new Ext.tree.TreeSorter(this, {
+                    dir: 'ASC',
+                    property: 'text'
+                });
+                sorter.doSort(root)
+                root.firstChild.expanded = true
             },
 
             getSubsetText: function (analysis) {
@@ -288,8 +290,8 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                     subsetText = '<span ext:qtip="Analysis was run by subsetting the data on the factor '
                         + subsetFactor.category + " (" + subsetFactor.description
                         + ") and selecting samples where the value was \'" + subsetFactorValue.factorValue + '\'">'
-                        + " using a subset of the data (" + subsetFactor.category + " = " + analysis.subsetFactorValue.factorValue
-                        + ')</span>';
+                        + "[Subset: <b>" + analysis.subsetFactorValue.factorValue
+                        + '</b>]</span>';
                 }
                 return subsetText;
             },
@@ -301,34 +303,6 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                         + " onClick='Gemma.ExpressionExperimentDataFetch.fetchDiffExpressionData({0})' > " +
                         "<i class='gray-blue fa fa-cloud-download fa-lg' ext:qtip='Download all differential expression data for this analysis in a tab-delimited format'></i></span>",
                         analysis.id);
-            },
-            getANOVAtypeText: function (numberOfFactors) {
-
-                var analysisDesc = '';
-                // just being overly safe here
-                switch (numberOfFactors) {
-                    case 1:
-                        analysisDesc = 'One-way ANOVA';
-                        break;
-                    case 2:
-                        analysisDesc = 'Two-way ANOVA';
-                        break;
-                    case 3:
-                        analysisDesc = 'Three-way ANOVA';
-                        break;
-                    case 4:
-                        analysisDesc = 'Four-way ANOVA';
-                        break;
-                    case 5:
-                        analysisDesc = 'Five-way ANOVA';
-                        break;
-                    case 6:
-                        analysisDesc = 'Six-way ANOVA';
-                        break;
-                    default:
-                        analysisDesc = 'n-way ANOVA';
-                }
-                return analysisDesc;
             },
             /**
              * get the number of probes that are differentially expressed and the number of 'up' and 'down' probes
@@ -514,13 +488,13 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                         var ef = resultSet.experimentalFactors[k];
 
                         if (ef.type === 'continuous') {
-                            factorText = factorText + ef.name + ': ' + ef.description;
+                            factorText = factorText + '<b>' + ef.name  + "</b>" + ': ' + ef.description;
                         } else {
                             if ( k > 0 && k < resultSet.experimentalFactors.length ) {
                                 factorText = factorText + "&nbsp;X&nbsp;";
                                 interaction = interaction + 1;
                             }
-                            factorText = factorText + ef.name;
+                            factorText = factorText + '<b>' + ef.name + "</b>";
                         }
                     }
                 }
