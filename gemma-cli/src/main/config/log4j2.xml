@@ -12,8 +12,6 @@
         <Property name="gemma.log.pattern" value="%d %p %pid [%t] %C.%M(%L) | %m%n"/>
         <Property name="gemma.slack.token" value="${sys:gemma.slack.token}"/>
         <Property name="gemma.slack.channel" value="${sys:gemma.slack.channel}"/>
-        <!-- The following environment variables work on Rocky Linux 9 and Fedora 41 -->
-        <Property name="username" value="${env:USER}"/>
     </Properties>
     <Appenders>
         <!-- Logging to the standard error because the standard output is used for the output of the command line tool. -->
@@ -70,7 +68,7 @@
         </RollingFile>
         <!-- Slack appender for ERROR and FATAL messages -->
         <Slack name="slack" token="${gemma.slack.token}" channel="${gemma.slack.channel}">
-            <PatternLayout pattern="%d %p ${username} %pid [%t] %C.%M(%L) | %m%n%throwable{none}"/>
+            <PatternLayout pattern="%d %p %pid [%t] %C.%M(%L) | %m%n%throwable{none}"/>
         </Slack>
     </Appenders>
     <Loggers>

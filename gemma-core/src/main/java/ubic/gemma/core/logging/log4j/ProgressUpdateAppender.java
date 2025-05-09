@@ -46,7 +46,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author keshav
  */
-@Plugin(name = "ProgressUpdate", category = Node.CATEGORY, elementType = Appender.ELEMENT_TYPE, printObject = true)
+@Plugin(name = "ProgressUpdate", category = Node.CATEGORY, elementType = Appender.ELEMENT_TYPE)
 public class ProgressUpdateAppender extends AbstractAppender {
 
     /**

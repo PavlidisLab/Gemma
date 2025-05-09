@@ -4,6 +4,7 @@ import com.slack.api.Slack;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.request.chat.ChatPostMessageRequest;
 import com.slack.api.model.Attachment;
+import com.slack.api.model.Message;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Filter;
@@ -23,12 +24,14 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.HashMap;
 
 /**
  * Log4j2 appender that report log events to a Slack channel.
+ *
  * @author poirigui
  */
-@Plugin(name = "Slack", category = Node.CATEGORY, elementType = Appender.ELEMENT_TYPE, printObject = true)
+@Plugin(name = "Slack", category = Node.CATEGORY, elementType = Appender.ELEMENT_TYPE)
 public class SlackAppender extends AbstractAppender {
 
     public static class Builder extends AbstractAppender.Builder<Builder> implements org.apache.logging.log4j.core.util.Builder<SlackAppender> {
@@ -83,6 +86,7 @@ public class SlackAppender extends AbstractAppender {
         try {
             ChatPostMessageRequest.ChatPostMessageRequestBuilder request = ChatPostMessageRequest.builder()
                     .channel( channel )
+                    .metadata( metadataFromLogEvent( loggingEvent ) )
                     .text( new String( getLayout().toByteArray( loggingEvent ), StandardCharsets.UTF_8 ) );
 
             // attach a stacktrace if available
@@ -112,6 +116,23 @@ public class SlackAppender extends AbstractAppender {
         } catch ( Exception e ) {
             getHandler().error( "Failed to close the Slack instance.", null, e );
         }
+    }
+
+    private Message.Metadata metadataFromLogEvent( LogEvent event ) {
+        HashMap<String, Object> map = new HashMap<>();
+        map.put( "logger_name", event.getLoggerName() );
+        map.put( "logger_fqcn", event.getLoggerFqcn() );
+        map.put( "thread_name", event.getThreadName() );
+        map.put( "thread_id", event.getThreadId() );
+        map.put( "thread_priority", event.getThreadPriority() );
+        map.put( "level", event.getLevel().toString() );
+        map.put( "time_millis", event.getTimeMillis() );
+        map.put( "context_stack", event.getContextStack().asList() );
+        map.put( "context_data", event.getContextData().toMap() );
+        return Message.Metadata.builder()
+                .eventType( "log4j_log_event" )
+                .eventPayload( map )
+                .build();
     }
 
     private Attachment throwableAsAttachment( Throwable t ) {
