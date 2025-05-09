@@ -26,7 +26,7 @@ public class ThreadPoolTaskExecutorMetrics implements MeterBinder {
                 .bindTo( registry );
     }
 
-    public void setPoolName( String poolName ) {
+    public void setPoolName( @Nullable String poolName ) {
         this.poolName = poolName;
     }
 }
