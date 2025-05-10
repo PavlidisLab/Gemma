@@ -23,6 +23,7 @@
             <property name="jdbcUrl" value="${gemma.db.url}"/>
             <property name="dataSourceProperties" ref="dataSourceProps"/>
             <property name="maximumPoolSize" value="${gemma.db.maximumPoolSize}"/>
+            <property name="minimumIdle" value="${gemma.db.minimumIdle}"/>
         </bean>
         <!-- Provide a SecurityContext for running logic with the GROUP_AGENT role -->
         <!-- This is lazily initialized because we only need it for scheduled jobs -->
@@ -43,6 +44,7 @@
             <property name="jdbcUrl" value="${gemma.testdb.url}"/>
             <property name="dataSourceProperties" ref="dataSourceProps"/>
             <property name="maximumPoolSize" value="${gemma.testdb.maximumPoolSize}"/>
+            <property name="minimumIdle" value="${gemma.testdb.minimumIdle}"/>
         </bean>
         <bean id="groupAgentSecurityContext"
               class="ubic.gemma.core.security.ManualAuthenticationServiceBasedSecurityContextFactory"
