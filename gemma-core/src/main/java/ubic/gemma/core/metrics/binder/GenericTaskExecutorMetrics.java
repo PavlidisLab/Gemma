@@ -4,7 +4,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import ubic.gemma.core.util.DelegatingTaskExecutor;
+import ubic.gemma.core.util.concurrent.DelegatingTaskExecutor;
 
 import javax.annotation.Nullable;
 

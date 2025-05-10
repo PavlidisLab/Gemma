@@ -29,7 +29,7 @@ import org.springframework.security.concurrent.DelegatingSecurityContextCallable
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import ubic.gemma.core.job.notification.TaskPostProcessing;
-import ubic.gemma.core.metrics.binder.ThreadPoolExecutorMetrics;
+import ubic.gemma.core.metrics.binder.GenericExecutorMetrics;
 import ubic.gemma.core.util.SimpleThreadFactory;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -168,11 +168,7 @@ public class TaskRunningServiceImpl implements TaskRunningService, InitializingB
 
     @Override
     public void bindTo( MeterRegistry meterRegistry ) {
-        if ( executorService instanceof ThreadPoolExecutor ) {
-            new ThreadPoolExecutorMetrics( ( ThreadPoolExecutor ) executorService, "gemmaBackgroundTasks" )
-                    .bindTo( meterRegistry );
-        } else {
-            log.warn( "The background task executor is not a ThreadPoolExecutor, cannot bind metrics." );
-        }
+        new GenericExecutorMetrics( executorService, "gemmaBackgroundTasks" )
+                .bindTo( meterRegistry );
     }
 }

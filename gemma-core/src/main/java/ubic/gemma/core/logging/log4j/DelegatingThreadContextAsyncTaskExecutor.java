@@ -1,7 +1,7 @@
 package ubic.gemma.core.logging.log4j;
 
 import org.springframework.core.task.AsyncTaskExecutor;
-import ubic.gemma.core.util.DelegatingAsyncTaskExecutor;
+import ubic.gemma.core.util.concurrent.DelegatingAsyncTaskExecutor;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;

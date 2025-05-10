@@ -2,7 +2,7 @@ package ubic.gemma.cli.batch;
 
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.util.Assert;
-import ubic.gemma.core.util.AbstractDelegatingExecutorService;
+import ubic.gemma.core.util.concurrent.AbstractDelegatingExecutorService;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;

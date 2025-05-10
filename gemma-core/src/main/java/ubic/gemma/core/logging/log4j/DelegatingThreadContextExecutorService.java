@@ -1,6 +1,6 @@
 package ubic.gemma.core.logging.log4j;
 
-import ubic.gemma.core.util.AbstractDelegatingExecutorService;
+import ubic.gemma.core.util.concurrent.AbstractDelegatingExecutorService;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
