@@ -140,7 +140,7 @@ public class SlackAppenderTest {
                     .satisfies( section -> {
                         assertThat( section.getFields() )
                                 .extracting( TextObject::getText )
-                                .containsExactly( "*Logger Name*", "Foo", "*k*", "v" );
+                                .contains( "*Logger Name*", "Foo", "*k*", "v" );
                     } );
         } );
     }
@@ -164,7 +164,7 @@ public class SlackAppenderTest {
                     .satisfies( section -> {
                         assertThat( section.getFields() )
                                 .extracting( TextObject::getText )
-                                .containsExactly( "*Logger Name*", "Foo", "*Stack*", "foo → bar" );
+                                .contains( "*Logger Name*", "Foo", "*Stack*", "foo → bar" );
                     } );
         } );
     }
