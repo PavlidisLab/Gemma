@@ -59,9 +59,7 @@
             <DefaultRolloverStrategy max="2147483647" fileIndex="min"/>
         </RollingFile>
         <!-- Slack appender for ERROR and FATAL messages -->
-        <Slack name="slack" token="${gemma.slack.token}" channel="${gemma.slack.channel}">
-            <PatternLayout pattern="${gemma.log.pattern}%throwable{none}"/>
-        </Slack>
+        <Slack name="slack" token="${gemma.slack.token}" channel="${gemma.slack.channel}"/>
         <!--  Special appender for task progress updates -->
         <ProgressUpdate name="progressUpdate">
             <PatternLayout pattern="%m"/>

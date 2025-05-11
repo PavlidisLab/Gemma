@@ -67,9 +67,7 @@
             <DefaultRolloverStrategy max="100" fileIndex="min"/>
         </RollingFile>
         <!-- Slack appender for ERROR and FATAL messages -->
-        <Slack name="slack" token="${gemma.slack.token}" channel="${gemma.slack.channel}">
-            <PatternLayout pattern="%d %p %pid [%t] %C.%M(%L) | %m%n%throwable{none}"/>
-        </Slack>
+        <Slack name="slack" token="${gemma.slack.token}" channel="${gemma.slack.channel}"/>
     </Appenders>
     <Loggers>
         <Root level="INFO">
