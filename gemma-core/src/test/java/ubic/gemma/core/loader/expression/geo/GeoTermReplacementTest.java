@@ -14,6 +14,7 @@ import ubic.basecode.ontology.providers.*;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.ontology.providers.PatoOntologyService;
+import ubic.gemma.core.util.concurrent.Executors;
 import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.BufferedReader;
@@ -24,7 +25,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;

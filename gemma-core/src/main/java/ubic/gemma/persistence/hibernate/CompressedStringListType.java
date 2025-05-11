@@ -8,6 +8,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 import org.springframework.util.Assert;
+import ubic.gemma.core.util.concurrent.ThreadUtils;
 
 import javax.annotation.Nullable;
 import java.io.*;
@@ -146,7 +147,7 @@ public class CompressedStringListType implements UserType, ParameterizedType {
         } catch ( IOException e ) {
             throw new HibernateException( e );
         }
-        new Thread( () -> {
+        ThreadUtils.newThread( () -> {
             try ( Writer w = new OutputStreamWriter( new GZIPOutputStream( out ), charset ) ) {
                 boolean first = true;
                 for ( String s1 : s ) {

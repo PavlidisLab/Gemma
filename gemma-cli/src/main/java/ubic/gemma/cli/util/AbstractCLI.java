@@ -29,8 +29,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.Assert;
 import ubic.gemma.cli.batch.*;
-import ubic.gemma.core.logging.log4j.DelegatingThreadContextExecutorService;
 import ubic.gemma.core.util.SimpleThreadFactory;
+import ubic.gemma.core.util.concurrent.Executors;
 
 import javax.annotation.Nullable;
 import java.io.*;
@@ -40,7 +40,6 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
@@ -620,9 +619,9 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
         Assert.isNull( executorService, "There is already a batch task ExecutorService." );
         ThreadFactory threadFactory = new SimpleThreadFactory( "gemma-cli-batch-thread-" );
         if ( this.numThreads > 1 ) {
-            return new DelegatingThreadContextExecutorService( Executors.newFixedThreadPool( this.numThreads, threadFactory ) );
+            return Executors.newFixedThreadPool( this.numThreads, threadFactory );
         } else {
-            return new DelegatingThreadContextExecutorService( Executors.newSingleThreadExecutor( threadFactory ) );
+            return Executors.newSingleThreadExecutor( threadFactory );
         }
     }
 

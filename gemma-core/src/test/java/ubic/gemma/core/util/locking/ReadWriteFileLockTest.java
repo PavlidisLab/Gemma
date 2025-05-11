@@ -1,6 +1,7 @@
 package ubic.gemma.core.util.locking;
 
 import org.junit.Test;
+import ubic.gemma.core.util.concurrent.ThreadUtils;
 
 import java.io.IOException;
 import java.nio.channels.OverlappingFileLockException;
@@ -87,7 +88,7 @@ public class ReadWriteFileLockTest {
         AtomicBoolean result = new AtomicBoolean();
         AtomicBoolean result2 = new AtomicBoolean();
         AtomicBoolean result3 = new AtomicBoolean();
-        Thread t = new Thread( () -> {
+        Thread t = ThreadUtils.newThread( () -> {
             result.set( lock.readLock().tryLock() );
             if ( result.get() ) {
                 lock.readLock().unlock();
@@ -112,7 +113,7 @@ public class ReadWriteFileLockTest {
 
         lock.readLock().lock();
 
-        Thread t2 = new Thread( () -> {
+        Thread t2 = ThreadUtils.newThread( () -> {
             result.set( lock.readLock().tryLock() );
             if ( result.get() ) {
                 lock.readLock().unlock();
@@ -154,7 +155,7 @@ public class ReadWriteFileLockTest {
         lock.readLock().lock();
         lock.readLock().lock();
 
-        Thread t = new Thread( () -> {
+        Thread t = ThreadUtils.newThread( () -> {
             lock.readLock().lock();
             lock.readLock().lock();
             lock.readLock().unlock();

@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.security.concurrent.DelegatingSecurityContextRunnable;
 import ubic.basecode.util.FileTools;
+import ubic.gemma.core.util.concurrent.ThreadUtils;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.persistence.persister.Persister;
 
@@ -71,7 +72,7 @@ public class NCBIGene2GOAssociationLoader {
         final BlockingQueue<Gene2GOAssociation> queue = new ArrayBlockingQueue<>(
                 NCBIGene2GOAssociationLoader.QUEUE_SIZE );
 
-        Thread loadThread = new Thread( new DelegatingSecurityContextRunnable( new Runnable() {
+        Thread loadThread = ThreadUtils.newThread( new DelegatingSecurityContextRunnable( new Runnable() {
             @Override
             public void run() {
                 NCBIGene2GOAssociationLoader.log.info( "Starting loading" );
@@ -81,7 +82,7 @@ public class NCBIGene2GOAssociationLoader {
 
         loadThread.start();
 
-        Thread parseThread = new Thread( new DelegatingSecurityContextRunnable( new Runnable() {
+        Thread parseThread = ThreadUtils.newThread( new DelegatingSecurityContextRunnable( new Runnable() {
             @Override
             public void run() {
                 try {

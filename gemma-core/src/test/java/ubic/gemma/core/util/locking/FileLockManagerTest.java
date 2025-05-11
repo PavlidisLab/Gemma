@@ -2,6 +2,7 @@ package ubic.gemma.core.util.locking;
 
 import org.junit.After;
 import org.junit.Test;
+import ubic.gemma.core.util.concurrent.ThreadUtils;
 
 import java.io.IOException;
 import java.nio.channels.OverlappingFileLockException;
@@ -151,7 +152,7 @@ public class FileLockManagerTest {
 
         try ( LockedPath lock = fileLockManager.acquirePathLock( dir, false ) ) {
             assertThat( lock.isValid() ).isTrue();
-            Thread t = new Thread( () -> {
+            Thread t = ThreadUtils.newThread( () -> {
                 try ( LockedPath lock2 = fileLockManager.tryAcquirePathLock( dir, false, 0, TimeUnit.MILLISECONDS ) ) {
                     assertThat( lock2.isValid() ).isTrue();
                 } catch ( IOException | InterruptedException | TimeoutException e ) {
@@ -164,7 +165,7 @@ public class FileLockManagerTest {
 
         try ( LockedPath lock = fileLockManager.acquirePathLock( dir, true ) ) {
             assertThat( lock.isValid() ).isTrue();
-            Thread t = new Thread( () -> {
+            Thread t = ThreadUtils.newThread( () -> {
                 assertThatThrownBy( () -> {
                     try ( LockedPath ignored = fileLockManager.tryAcquirePathLock( dir, false, 0, TimeUnit.MILLISECONDS ) ) {
 

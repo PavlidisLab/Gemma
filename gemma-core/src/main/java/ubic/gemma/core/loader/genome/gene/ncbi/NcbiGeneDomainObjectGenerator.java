@@ -23,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NcbiGeneHistory;
+import ubic.gemma.core.util.concurrent.ThreadUtils;
 import ubic.gemma.model.genome.Taxon;
 
 import java.io.File;
@@ -213,7 +214,7 @@ public class NcbiGeneDomainObjectGenerator {
         // all accessions for the gene are done.
         // 1b) Create a Collection<Gene2Accession>, and push into BlockingQueue
 
-        Thread parseThread = new Thread( new Runnable() {
+        Thread parseThread = ThreadUtils.newThread( new Runnable() {
             @Override
             public void run() {
                 try {

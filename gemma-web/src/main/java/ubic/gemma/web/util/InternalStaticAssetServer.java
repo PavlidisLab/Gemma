@@ -4,6 +4,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.apache.commons.io.IOUtils;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.util.Assert;
+import ubic.gemma.core.util.concurrent.ThreadUtils;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -60,7 +61,7 @@ public class InternalStaticAssetServer implements StaticAssetServer, SmartLifecy
                     .redirectError( ProcessBuilder.Redirect.PIPE )
                     .start();
             // this thread will live as long as the process does, so no need to manage its lifecycle
-            new Thread( () -> {
+            ThreadUtils.newThread( () -> {
                 try {
                     if ( npmServeProcess.waitFor() != 0 ) {
                         errorMessage = IOUtils.toString( npmServeProcess.getErrorStream(), StandardCharsets.UTF_8 );

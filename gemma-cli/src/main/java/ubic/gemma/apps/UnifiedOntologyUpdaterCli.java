@@ -25,6 +25,7 @@ import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.util.SimpleDownloader;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.SimpleThreadFactory;
+import ubic.gemma.core.util.concurrent.Executors;
 import ubic.gemma.core.util.locking.FileLockManager;
 
 import java.io.BufferedReader;
@@ -40,7 +41,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
