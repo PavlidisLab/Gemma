@@ -30,7 +30,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import ubic.gemma.core.job.notification.TaskPostProcessing;
 import ubic.gemma.core.metrics.binder.GenericExecutorMetrics;
-import ubic.gemma.core.util.SimpleThreadFactory;
+import ubic.gemma.core.util.concurrent.SimpleThreadFactory;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;

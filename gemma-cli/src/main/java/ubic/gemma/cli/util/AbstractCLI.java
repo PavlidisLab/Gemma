@@ -29,7 +29,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.Assert;
 import ubic.gemma.cli.batch.*;
-import ubic.gemma.core.util.SimpleThreadFactory;
+import ubic.gemma.core.util.concurrent.SimpleThreadFactory;
 import ubic.gemma.core.util.concurrent.Executors;
 
 import javax.annotation.Nullable;

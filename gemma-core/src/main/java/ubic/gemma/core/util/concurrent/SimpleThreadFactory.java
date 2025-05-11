@@ -1,4 +1,4 @@
-package ubic.gemma.core.util;
+package ubic.gemma.core.util.concurrent;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.concurrent.ThreadFactory;
