@@ -9,11 +9,12 @@ import java.util.concurrent.Future;
 /**
  * @author poirigui
  */
-public class DelegatingThreadContextAsyncTaskExecutor implements DelegatingAsyncTaskExecutor {
+public class DelegatingThreadContextAsyncTaskExecutor extends DelegatingThreadContextTaskExecutor implements DelegatingAsyncTaskExecutor {
 
     private final AsyncTaskExecutor delegate;
 
     public DelegatingThreadContextAsyncTaskExecutor( AsyncTaskExecutor delegate ) {
+        super( delegate );
         this.delegate = delegate;
     }
 
@@ -35,10 +36,5 @@ public class DelegatingThreadContextAsyncTaskExecutor implements DelegatingAsync
     @Override
     public <T> Future<T> submit( Callable<T> task ) {
         return delegate.submit( DelegatingThreadContextCallable.create( task ) );
-    }
-
-    @Override
-    public void execute( Runnable task ) {
-        delegate.execute( DelegatingThreadContextRunnable.create( task ) );
     }
 }

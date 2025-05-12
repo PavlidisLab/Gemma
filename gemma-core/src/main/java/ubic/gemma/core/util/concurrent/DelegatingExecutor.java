@@ -8,5 +8,8 @@ import java.util.concurrent.Executor;
  */
 public interface DelegatingExecutor extends Executor {
 
+    /**
+     * The executor this is delegating for.
+     */
     Executor getDelegate();
 }

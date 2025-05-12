@@ -9,6 +9,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * @author poirigui
+ */
 public class DelegatingThreadContextScheduledExecutorService extends AbstractDelegatingExecutorService implements DelegatingScheduledExecutorService {
 
     private final ScheduledExecutorService delegate;

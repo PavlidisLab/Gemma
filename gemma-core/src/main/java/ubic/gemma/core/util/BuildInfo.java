@@ -68,7 +68,7 @@ public class BuildInfo implements InitializingBean {
 
     }
 
-    BuildInfo( String version, String timestampAsString, String gitHash ) {
+    public BuildInfo( String version, String timestampAsString, String gitHash ) {
         this.version = version;
         this.timestampAsString = timestampAsString;
         this.gitHash = gitHash;

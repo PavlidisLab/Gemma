@@ -4,17 +4,16 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.gemma.cli.metrics.MeterRegistryCliConfigurer;
+import ubic.gemma.cli.authentication.CLIAuthenticationAware;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.test.BaseTest;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -39,10 +38,10 @@ public class MeterRegistryCliConfigurerTest extends BaseTest {
     }
 
     @Autowired
-    private ApplicationContext applicationContext;
+    private SimpleMeterRegistry meterRegistry;
 
     @Autowired
-    private SimpleMeterRegistry meterRegistry;
+    private List<CLIAuthenticationAware> cliAuthenticationAware;
 
     @Test
     public void test() {
@@ -56,7 +55,7 @@ public class MeterRegistryCliConfigurerTest extends BaseTest {
         UserDetails userDetails = mock( UserDetails.class );
         when( userDetails.getUsername() ).thenReturn( "joe" );
         when( auth.getPrincipal() ).thenReturn( userDetails );
-        applicationContext.publishEvent( new AuthenticationSuccessEvent( auth ) );
+        cliAuthenticationAware.forEach( bean -> bean.setAuthentication( auth ) );
 
         meterRegistry.counter( "test" ).increment();
         assertThat( meterRegistry.getMetersAsString() )

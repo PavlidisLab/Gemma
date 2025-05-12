@@ -10,9 +10,7 @@ import java.util.stream.Collectors;
  * A delegating executor service inspired by {@link org.springframework.security.concurrent.DelegatingSecurityContextExecutorService}.
  * @author poirigui
  */
-public abstract class AbstractDelegatingExecutorService implements DelegatingExecutorService {
-
-    protected abstract Runnable wrap( Runnable runnable );
+public abstract class AbstractDelegatingExecutorService extends AbstractDelegatingExecutor implements DelegatingExecutorService {
 
     protected abstract <T> Callable<T> wrap( Callable<T> callable );
 
@@ -23,6 +21,7 @@ public abstract class AbstractDelegatingExecutorService implements DelegatingExe
     private final ExecutorService delegate;
 
     protected AbstractDelegatingExecutorService( ExecutorService delegate ) {
+        super( delegate );
         this.delegate = delegate;
     }
 
@@ -96,10 +95,5 @@ public abstract class AbstractDelegatingExecutorService implements DelegatingExe
     @Override
     public <T> T invokeAny( Collection<? extends Callable<T>> collection, long l, TimeUnit timeUnit ) throws InterruptedException, ExecutionException, TimeoutException {
         return delegate.invokeAny( wrap( collection ), l, timeUnit );
-    }
-
-    @Override
-    public void execute( Runnable runnable ) {
-        delegate.execute( wrap( runnable ) );
     }
 }
