@@ -21,7 +21,8 @@ package ubic.gemma.core.analysis.expression.diff;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -34,8 +35,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.determineAnalysisType;
-
 /**
  * A differential expression analysis tool that executes the appropriate analysis based on the number of experimental
  * factors and factor values, as well as the block design.
@@ -47,7 +46,7 @@ import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.deter
  *
  * @author keshav
  */
-@Component
+@Service
 class AnalysisSelectionAndExecutionService {
 
     private static final Log log = LogFactory.getLog( AnalysisSelectionAndExecutionService.class );
@@ -59,6 +58,7 @@ class AnalysisSelectionAndExecutionService {
     @Autowired
     private ExpressionDataMatrixService expressionDataMatrixService;
 
+    @Transactional(readOnly = true)
     public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config ) {
         AnalysisType analyzer = DiffExAnalyzerUtils.determineAnalysisType( expressionExperiment, config );
@@ -86,6 +86,7 @@ class AnalysisSelectionAndExecutionService {
         return diffExAnalyzer.run( expressionExperiment, dmatrix, config );
     }
 
+    @Transactional(readOnly = true)
     public DifferentialExpressionAnalysis analyze( ExpressionExperimentSubSet subset,
             DifferentialExpressionAnalysisConfig config ) {
         AnalysisType analyzer = DiffExAnalyzerUtils.determineAnalysisType( subset, config );
