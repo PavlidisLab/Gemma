@@ -7,6 +7,7 @@ Gemma (pronounced: _Jemma_) is database of curated and re-analyzed gene expressi
 - Re-annotated microarray platforms at the sequence level, which allows for more consistent cross-platform comparisons.
 - Re-analysis of data sets for differential expression
 - GUI and programmatic access
+- As of May 2025, Gemma includes **[single cell RNA sequencing experiments](scrnaseq.md)**
 
 ## Terms and Conditions 
 
