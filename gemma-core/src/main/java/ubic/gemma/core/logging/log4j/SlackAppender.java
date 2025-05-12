@@ -208,10 +208,10 @@ public class SlackAppender extends AbstractAppender {
         }
         map.put( "time_millis", event.getTimeMillis() );
         if ( event.getContextStack() != null ) {
-            map.put( "context_stack", event.getContextStack().asList() );
+            map.put( "context_stack", new ArrayList<>( event.getContextStack().asList() ) );
         }
         if ( event.getContextData() != null ) {
-            map.put( "context_data", event.getContextData().toMap() );
+            map.put( "context_data", new HashMap<>( event.getContextData().toMap() ) );
         }
         if ( event.getSource() != null ) {
             map.put( "source", event.getSource().toString() );
