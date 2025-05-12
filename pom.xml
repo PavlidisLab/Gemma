@@ -809,7 +809,7 @@
 		</plugins>
 	</reporting>
 	<properties>
-		<gsec.version>0.0.18-SNAPSHOT</gsec.version>
+		<gsec.version>0.0.18</gsec.version>
 		<spring.version>3.2.18.RELEASE</spring.version>
 		<spring.security.version>3.2.10.RELEASE</spring.security.version>
 		<jersey.version>2.25.1</jersey.version>
