@@ -269,7 +269,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         // GSM475204 GSM475205 GSM475206 GSM475207 GSM475208 GSM475209
         // 3949585 3929008 3712314 3693219 3574068 3579631
 
-        ExpressionDataDoubleMatrix mat = dataMatrixService.getProcessedExpressionDataMatrix( ee );
+        ExpressionDataDoubleMatrix mat = dataMatrixService.getProcessedExpressionDataMatrix( ee, true );
         assertNotNull( mat );
         assertEquals( 199, mat.rows() );
 
@@ -362,7 +362,7 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
             assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
         }
 
-        ExpressionDataDoubleMatrix mat = dataMatrixService.getProcessedExpressionDataMatrix( ee );
+        ExpressionDataDoubleMatrix mat = dataMatrixService.getProcessedExpressionDataMatrix( ee, true );
         assertNotNull( mat );
         assertEquals( 199, mat.rows() );
         assertTrue( mat.getQuantitationTypes().iterator().next().getName().startsWith( "log2cpm" ) );

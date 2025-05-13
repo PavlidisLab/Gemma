@@ -93,7 +93,7 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
         config.addFactorsToInclude( factors );
         config.addInteractionToInclude( factors );
 
-        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee, true );
         Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, dmatrix, config );
         assertEquals( 1, result.size() );
 

@@ -145,7 +145,7 @@ public class SubsettedAnalysis2Test extends AbstractGeoServiceTest {
 
         config.setSubsetFactor( strainOrLine );
 
-        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee, true );
         Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, dmatrix, config );
         assertEquals( 2, result.size() ); // two subsets
 

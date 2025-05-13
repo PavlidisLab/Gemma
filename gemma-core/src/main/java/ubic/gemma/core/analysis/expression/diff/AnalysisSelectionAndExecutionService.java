@@ -68,7 +68,7 @@ class AnalysisSelectionAndExecutionService {
         }
 
         ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
-                .getProcessedExpressionDataMatrix( expressionExperiment );
+                .getProcessedExpressionDataMatrix( expressionExperiment, true );
 
         // if this is a subset analysis, see if we can reuse an existing set of subsets
         if ( config.getSubsetFactor() != null ) {
@@ -96,7 +96,7 @@ class AnalysisSelectionAndExecutionService {
         }
 
         ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
-                .getProcessedExpressionDataMatrix( subset.getSourceExperiment() );
+                .getProcessedExpressionDataMatrix( subset.getSourceExperiment(), true );
 
         return diffExAnalyzer.run( subset, dmatrix, config );
     }

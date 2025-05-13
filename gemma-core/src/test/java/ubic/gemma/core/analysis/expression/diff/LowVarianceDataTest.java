@@ -163,7 +163,7 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
         config.setAnalysisType( aa );
         config.addFactorsToInclude( factors );
 
-        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee, true );
         Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, dmatrix, config );
         assertEquals( 1, result.size() );
 

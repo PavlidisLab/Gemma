@@ -174,7 +174,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
             assertEquals( 4, v.getBioAssays().size() );
         }
 
-        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee, true );
         assertEquals( 199, dmatrix.rows() );
         assertEquals( 4, dmatrix.columns() );
 
@@ -279,7 +279,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.addFactorsToInclude( ee.getExperimentalDesign().getExperimentalFactors() );
         config.setModerateStatistics( false );
-        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee, true );
         Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( ee, dmatrix, config );
         assertNotNull( analyses );
         assertEquals( 1, analyses.size() );

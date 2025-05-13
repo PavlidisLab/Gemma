@@ -149,7 +149,7 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
 
         config.setSubsetFactor( diseasegroup );
 
-        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee, true );
         Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( ee, dmatrix, config );
         assertEquals( 6, analyses.size() ); // a subset for each disease: SZ, PD, HD, ALS, ALZ, MS
 
