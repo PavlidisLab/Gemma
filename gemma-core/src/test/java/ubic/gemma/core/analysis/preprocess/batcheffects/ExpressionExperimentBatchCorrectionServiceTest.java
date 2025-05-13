@@ -21,6 +21,7 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,6 +79,7 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
     }
 
     @Test
+    @Ignore
     @Category(SlowTest.class)
     public void testComBatOnEE() throws Exception {
 

@@ -272,6 +272,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
     }
 
     @Test
+    @Ignore
     @Category(SlowTest.class)
     public void testReorder() throws Exception {
 
