@@ -29,6 +29,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.persistence.util.Thaws;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -683,8 +684,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         if ( scd == null ) {
             throw new IllegalStateException( qt + " does not have an associated single-cell dimension." );
         }
-        Hibernate.initialize( scd.getCellTypeAssignments() );
-        Hibernate.initialize( scd.getCellLevelCharacteristics() );
+        Thaws.thawSingleCellDimension( scd );
         return scd;
     }
 
@@ -740,8 +740,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     public Optional<SingleCellDimension> getPreferredSingleCellDimensionWithCellLevelCharacteristics( ExpressionExperiment ee ) {
         return getPreferredSingleCellDimension( ee )
                 .map( scd -> {
-                    Hibernate.initialize( scd.getCellTypeAssignments() );
-                    Hibernate.initialize( scd.getCellLevelCharacteristics() );
+                    Thaws.thawSingleCellDimension( scd );
                     return scd;
                 } );
     }

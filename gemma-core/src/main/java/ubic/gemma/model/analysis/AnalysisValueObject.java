@@ -1,6 +1,7 @@
 package ubic.gemma.model.analysis;
 
 import ubic.gemma.model.common.IdentifiableValueObject;
+import ubic.gemma.model.util.ModelUtils;
 
 public abstract class AnalysisValueObject<T extends Analysis> extends IdentifiableValueObject<T> {
 
@@ -15,7 +16,7 @@ public abstract class AnalysisValueObject<T extends Analysis> extends Identifiab
     protected AnalysisValueObject( T analysis ) {
         super( analysis );
         this.name = analysis.getName();
-        if ( analysis.getProtocol() != null ) {
+        if ( analysis.getProtocol() != null && ModelUtils.isInitialized( analysis.getProtocol() ) ) {
             this.protocol = new ProtocolValueObject( analysis.getProtocol() );
         }
     }

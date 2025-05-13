@@ -5,6 +5,8 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
@@ -72,5 +74,17 @@ public class Thaws {
                 Hibernate.initialize( bm.getBioAssaysUsedIn() );
             }
         } );
+    }
+
+    /**
+     * Thaw a single-cell dimension.
+     */
+    public static void thawSingleCellDimension( SingleCellDimension singleCellDimension ) {
+        singleCellDimension.getCellTypeAssignments().forEach( Thaws::thawCellTypeAssignment );
+        Hibernate.initialize( singleCellDimension.getCellLevelCharacteristics() );
+    }
+
+    public static void thawCellTypeAssignment( CellTypeAssignment cellTypeAssignment ) {
+        Hibernate.initialize( cellTypeAssignment.getProtocol() );
     }
 }
