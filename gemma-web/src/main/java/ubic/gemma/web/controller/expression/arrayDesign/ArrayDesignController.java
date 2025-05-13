@@ -65,6 +65,7 @@ import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.util.WebEntityUrlBuilder;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.util.*;
@@ -105,6 +106,8 @@ public class ArrayDesignController {
     private ArrayDesignAnnotationService annotationFileService;
     @Autowired
     private WebEntityUrlBuilder entityUrlBuilder;
+    @Autowired
+    private ServletContext servletContext;
 
     @Value("${gemma.support.email}")
     private String supportEmail;
@@ -601,7 +604,7 @@ public class ArrayDesignController {
             if ( this.getTaskCommand().getEntityId() == null ) {
                 log.info( "Generating summary for all platforms" );
                 arrayDesignReportService.generateArrayDesignReport();
-                return newTaskResult( null );
+                return newTaskResult( servletContext.getContextPath() + "/arrays/showAllArrayDesignStatistics.html" );
             }
             ArrayDesignValueObject report = arrayDesignReportService
                     .generateArrayDesignReport( getTaskCommand().getEntityId() );

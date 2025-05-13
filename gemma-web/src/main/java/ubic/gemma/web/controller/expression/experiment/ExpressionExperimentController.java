@@ -1864,7 +1864,7 @@ public class ExpressionExperimentController {
         public TaskResult call() {
             expressionExperimentService.remove( getTaskCommand().getEntityId() );
             String url = entityUrlBuilder.fromRoot().all( ExpressionExperiment.class ).toUriString();
-            return newTaskResult( "Dataset id: " + getTaskCommand().getEntityId() + " removed from Database" );
+            return newTaskResult( servletContext.getContextPath() + "/expressionExperiment/showAllExpressionExperiments.html" );
         }
     }
 

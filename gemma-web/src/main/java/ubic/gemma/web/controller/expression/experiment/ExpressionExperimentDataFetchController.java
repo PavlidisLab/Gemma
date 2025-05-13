@@ -46,6 +46,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.web.util.EntityNotFoundException;
 
 import javax.annotation.Nullable;
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
@@ -75,6 +76,8 @@ public class ExpressionExperimentDataFetchController {
     private ExpressionDataFileService expressionDataFileService;
     @Autowired
     private QuantitationTypeService quantitationTypeService;
+    @Autowired
+    private ServletContext servletContext;
 
     @Value("${gemma.appdata.home}/dataFiles")
     private Path dataDir;
@@ -243,7 +246,7 @@ public class ExpressionExperimentDataFetchController {
             watch.stop();
             log.debug( "Finished getting co-expression file; done in " + watch.getTime() + " milliseconds" );
 
-            return newTaskResult( null );
+            return newTaskResult( servletContext.getContextPath() + "/getData.html?file=" + f.getFileName() );
         }
     }
 
@@ -383,7 +386,7 @@ public class ExpressionExperimentDataFetchController {
             watch.stop();
             log.debug( "Finished writing and downloading a file; done in " + watch.getTime() + " milliseconds" );
 
-            return newTaskResult( null );
+            return newTaskResult( servletContext.getContextPath() + "/getData.html?file=" + f.getFileName() );
         }
 
     }
@@ -442,7 +445,7 @@ public class ExpressionExperimentDataFetchController {
             //     throw new UnsupportedOperationException( "Sorry, you can't get multiple analyses at once using this method." );
             // }
 
-            return newTaskResult( null );
+            return newTaskResult( servletContext.getContextPath() + "/getData.html?file=" + files.iterator().next().getFileName() );
         }
     }
 }
