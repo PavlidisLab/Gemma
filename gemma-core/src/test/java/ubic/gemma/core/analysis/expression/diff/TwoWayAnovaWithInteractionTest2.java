@@ -90,15 +90,18 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
     public void setUp() throws Exception {
         SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
         metaData.setShortName( RandomStringUtils.randomAlphabetic( 10 ) );
+        metaData.setName( RandomStringUtils.randomAlphabetic( 10 ) );
         metaData.setTaxon( SimpleTaxonMetadata.forName( "mouse" ) );
         SimpleQuantitationTypeMetadata qtMetadata = new SimpleQuantitationTypeMetadata();
         qtMetadata.setName( "whatever" );
         // metaData.setScale( ScaleType.LOG2 ); // this is actually wrong!
         qtMetadata.setScale( ScaleType.LINEAR );
+        qtMetadata.setIsPreferred( true );
         metaData.setQuantitationType( qtMetadata );
 
         SimplePlatformMetadata f = new SimplePlatformMetadata();
         f.setShortName( "GSE8441_test" );
+        f.setName( "test" );
         f.setTechnologyType( TechnologyType.ONECOLOR );
         metaData.getArrayDesigns().add( f );
 

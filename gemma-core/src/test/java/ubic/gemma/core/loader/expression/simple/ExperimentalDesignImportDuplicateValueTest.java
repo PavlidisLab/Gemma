@@ -69,6 +69,7 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
         SimpleExpressionExperimentMetadata metaData = new SimpleExpressionExperimentMetadata();
 
         metaData.setShortName( randomName() );
+        metaData.setName( randomName() );
         metaData.setDescription( "bar" );
         metaData.setTaxon( SimpleTaxonMetadata.forName( "human" ) );
         SimpleQuantitationTypeMetadata qtMetadata = new SimpleQuantitationTypeMetadata();
