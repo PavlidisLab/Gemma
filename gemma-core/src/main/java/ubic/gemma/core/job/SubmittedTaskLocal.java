@@ -47,7 +47,7 @@ class SubmittedTaskLocal implements SubmittedTask {
     private CompletableFuture<TaskResult> future;
 
     public SubmittedTaskLocal( TaskCommand taskCommand, TaskPostProcessing taskPostProcessing, Executor executor ) {
-        this.taskId = getTaskCommand().getTaskId();
+        this.taskId = taskCommand.getTaskId();
         this.taskCommand = taskCommand;
 
         // This can be changed by the user AFTER the task was submitted.
