@@ -94,6 +94,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
         String eeShortName = RandomStringUtils.randomAlphabetic( 11 );
         metaData.setShortName( eeShortName );
+        metaData.setName( "foo" );
         metaData.setDescription( "bar" );
         metaData.setTaxon( SimpleTaxonMetadata.forName( "human" ) );
         SimpleQuantitationTypeMetadata qtMetadata = new SimpleQuantitationTypeMetadata();
