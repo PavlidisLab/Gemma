@@ -701,6 +701,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<SingleCellDimension> getSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee ) {
         return expressionExperimentDao.getSingleCellDimensionsWithoutCellIds( ee );
     }
