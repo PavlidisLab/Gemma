@@ -205,7 +205,7 @@
     background: #f4f4f4;
 }
 
-.x-form-item:nth-child(odd) *:not(textarea):not(.ee-status-badge):not(.fa):not(.security-link):not(.pp_comm *) {
+.x-form-item:nth-child(odd) *:not(textarea):not(.ee-status-badge):not(.fa):not(.security-link):not(.pp_comm *):not(.x-tree-ec-icon) {
     background: #f4f4f4;
 }
 
