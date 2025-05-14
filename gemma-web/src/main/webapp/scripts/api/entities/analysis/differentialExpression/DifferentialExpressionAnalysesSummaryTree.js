@@ -260,7 +260,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                         refreshStatsText = this.getRefreshStatsLink(analysis);
                     }
 
-                    debugger
+                    // debugger
 
                     parentNode.setText(subsetText + parentText + " " + parentNode.text + deleteText
                         + redoText + refreshStatsText);

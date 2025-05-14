@@ -60,6 +60,7 @@ import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import static ubic.gemma.core.util.Constants.GEMMA_CITATION_NOTICE;
 import static ubic.gemma.core.util.Constants.GEMMA_LICENSE_NOTICE;
@@ -501,6 +502,9 @@ public class DEDVController {
                 geneIds = reducedGeneIds.subList( 0, MAX_RESULTS_TO_RETURN );
             }
 
+            ees = ees.stream()
+                    .map( expressionExperimentService::thawLite )
+                    .collect( Collectors.toList() );
             dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees, geneIds );
         }
 
