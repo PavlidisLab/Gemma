@@ -82,10 +82,9 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         this.toRedo = toRedo;
     }
 
-    public DifferentialExpressionAnalysisTaskCommand( String taskId, boolean forceAnalysis,
+    public DifferentialExpressionAnalysisTaskCommand( boolean forceAnalysis,
             ExpressionExperiment expressionExperiment ) {
         super();
-        this.setTaskId( taskId );
         this.forceAnalysis = forceAnalysis;
         this.expressionExperiment = expressionExperiment;
     }

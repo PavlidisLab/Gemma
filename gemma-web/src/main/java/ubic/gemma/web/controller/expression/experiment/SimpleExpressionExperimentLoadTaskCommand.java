@@ -20,11 +20,11 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import ubic.gemma.core.job.Task;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 
 import java.util.Collection;
-import java.util.Locale;
 
 /**
  * Extends a SimpleExpressionExperimentMetaData with information about the file and provide simplified taxon/platform
@@ -52,4 +52,9 @@ public class SimpleExpressionExperimentLoadTaskCommand extends TaskCommand {
     private boolean validateOnly;
     private String serverFilePath;
     private String originalFileName;
+
+    @Override
+    public Class<? extends Task<?>> getTaskClass() {
+        return null;
+    }
 }

@@ -30,12 +30,14 @@ import static java.util.Objects.requireNonNull;
 @CommonsLog
 class ExecutingTask implements Callable<TaskResult> {
 
+    private final String taskId;
     private final Task<?> task;
 
     @Nullable
     private TaskLifecycleHandler lifecycleHandler;
 
-    public ExecutingTask( Task<?> task ) {
+    public ExecutingTask( String taskId, Task<?> task ) {
+        this.taskId = taskId;
         this.task = task;
     }
 
@@ -50,7 +52,7 @@ class ExecutingTask implements Callable<TaskResult> {
             result = this.task.call();
         } catch ( Exception e ) {
             // result is an exception
-            result = new TaskResult( task.getTaskCommand().getTaskId(), e );
+            result = new TaskResult( e );
         }
 
         if ( result.getException() == null ) {
@@ -86,6 +88,7 @@ class ExecutingTask implements Callable<TaskResult> {
                     break;
                 case SUCCESS:
                     lifecycleHandler.onSuccess();
+                    break;
                 case FAILURE:
                     lifecycleHandler.onFailure( ( Exception ) requireNonNull( arg ) );
                     break;
@@ -95,7 +98,7 @@ class ExecutingTask implements Callable<TaskResult> {
             }
         } catch ( Exception e ) {
             log.error( String.format( "An error occurred while running lifecycle phase %s for task with ID %s.",
-                    phase, task.getTaskCommand().getTaskId() ), e );
+                    phase, taskId ), e );
         }
     }
 }

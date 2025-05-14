@@ -33,7 +33,7 @@ public class BatchInfoFetchTaskImpl extends AbstractTask<BatchInfoFetchTaskComma
             throw new UnsupportedOperationException(
                     "Doing all Batch fetches in task not implemented, sorry, you must configure one" );
         } else if ( getTaskCommand().getExpressionExperiment() != null ) {
-            getTaskCommand().setMaxRuntime( 30 ); // time to download files etc.
+            getTaskCommand().setMaxRuntimeMillis( 30 ); // time to download files etc.
             try {
                 batchInfoService.fillBatchInformation( getTaskCommand().getExpressionExperiment(), true );
             } catch ( BatchInfoPopulationException e ) {

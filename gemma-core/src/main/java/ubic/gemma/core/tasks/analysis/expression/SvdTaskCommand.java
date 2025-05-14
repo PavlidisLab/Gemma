@@ -31,7 +31,7 @@ public class SvdTaskCommand extends TaskCommand {
 
     public SvdTaskCommand( ExpressionExperiment expressionExperiment ) {
         super();
-        this.setMaxRuntime( 30 );
+        this.setMaxRuntimeMillis( 30 );
         this.expressionExperiment = expressionExperiment;
     }
 

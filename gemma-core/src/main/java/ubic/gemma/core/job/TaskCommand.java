@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.job;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,16 +38,16 @@ import java.io.Serializable;
  * @author keshav
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
+@Getter
+@Setter
 public abstract class TaskCommand implements Serializable {
-
     // How long we will wait for a started task before giving up waiting for it. Tasks running longer than this will be
     // cancelled. This does not include time spent queued.
-    public static final int MAX_RUNTIME_MINUTES = 60;
+    public static final long MAX_RUNTIME_MILLIS = 60 * 1000;
     /**
      * How long we will queue a task before giving up and cancelling it (default value)
      */
-    public static final int MAX_QUEUING_MINUTES = 60 * 2;
-    private static final long serialVersionUID = 1L;
+    public static final long MAX_QUEUING_MILLIS = 60 * 2 * 1000;
     /**
      * Should an email be sent to the user when the job is done?
      */
@@ -59,18 +61,21 @@ public abstract class TaskCommand implements Serializable {
      * Used to propagate security to grid workers.
      */
     private final SecurityContext securityContext;
-    private String submitter;
-    private String taskId;
     /**
-     * How long we will allow this task to be queued before giving up.
+     * Task submitted, if known.
      */
-    private Integer maxQueueMinutes = TaskCommand.MAX_QUEUING_MINUTES;
-    private int maxRuntime = TaskCommand.MAX_RUNTIME_MINUTES;
+    @Nullable
+    private final String submitter;
+    /**
+     * How long we will allow this task to be queued before giving up, or -1 for no limit.
+     */
+    private long maxQueueMillis = TaskCommand.MAX_QUEUING_MILLIS;
+    /**
+     * How long we will allow this task to run before giving up, or -1 for no limit.
+     */
+    private long maxRuntimeMillis = TaskCommand.MAX_RUNTIME_MILLIS;
 
     public TaskCommand() {
-        // The taskId is assigned on creation.
-        this.taskId = TaskUtils.generateTaskId();
-
         // security details.
         SecurityContext context = SecurityContextHolder.getContext();
         assert context != null;
@@ -78,87 +83,25 @@ public abstract class TaskCommand implements Serializable {
 
         Authentication authentication = context.getAuthentication();
         // can happen in test situations.
-        if ( authentication != null )
+        if ( authentication != null ) {
             this.submitter = authentication.getName();
-    }
-
-    public Integer getMaxQueueMinutes() {
-        return maxQueueMinutes;
-    }
-
-    /**
-     * How long we will allow this task to be queued before giving up. Default = TaskRunningService.MAX_QUEUING_MINUTES
-     *
-     * @param maxQueueMinutes max queue minutes
-     */
-    public void setMaxQueueMinutes( Integer maxQueueMinutes ) {
-        this.maxQueueMinutes = maxQueueMinutes;
+        } else {
+            this.submitter = null;
+        }
     }
 
     /**
-     * @return the maxRuntime in minutes
+     * Obtain the class of the {@link Task} object that will be run for this command.
+     * <p>
+     * If null, the task command cannot be submitted through {@link TaskRunningService#submitTaskCommand(TaskCommand)}
+     * and a task object must be explicitly created.
+     * <p>
+     * For now, this how we map from TaskCommand to Task that actually runs it. We have to have this mapping somewhere
+     * until we make Tasks themselves serializable. Tasks are not readily serializable because they have dependencies to
+     * Spring services. at which point TaskCommand can be deprecated(or remain as TaskContext).
      */
-    public int getMaxRuntime() {
-        return maxRuntime;
-    }
-
-    /**
-     * @param maxRuntime the maxRuntime to set (in minutes) before we bail. Default is MAX_RUNTIME_MINUTES
-     */
-    public void setMaxRuntime( int maxRuntime ) {
-        this.maxRuntime = maxRuntime;
-    }
-
-    /**
-     * @return the persistJobDetails
-     */
-    public Boolean getPersistJobDetails() {
-        return persistJobDetails;
-    }
-
-    /**
-     * @param persistJobDetails the persistJobDetails to set
-     */
-    public void setPersistJobDetails( Boolean persistJobDetails ) {
-        this.persistJobDetails = persistJobDetails;
-    }
-
-    public SecurityContext getSecurityContext() {
-        return this.securityContext;
-    }
-
-    /**
-     * @return the submitter
-     */
-    public String getSubmitter() {
-        return submitter;
-    }
-
-    // For now, this how we map from TaskCommand to Task that actually runs it.
-    // We have to have this mapping somewhere until we make Tasks themselves serializable. Tasks are not readily
-    // serializable because they have dependencies to spring services.
-    // at which point TaskCommand can be deprecated(or remain as TaskContext).
     @Nullable
     public Class<? extends Task<?>> getTaskClass() {
         return null;
-    }
-
-    public String getTaskId() {
-        return this.taskId;
-    }
-
-    /**
-     * @param taskId task id
-     */
-    public void setTaskId( String taskId ) {
-        this.taskId = taskId;
-    }
-
-    public boolean isEmailAlert() {
-        return emailAlert;
-    }
-
-    public void setEmailAlert( boolean emailAlert ) {
-        this.emailAlert = emailAlert;
     }
 }

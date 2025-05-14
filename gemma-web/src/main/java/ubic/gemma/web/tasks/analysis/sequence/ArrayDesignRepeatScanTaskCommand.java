@@ -42,7 +42,6 @@ public class ArrayDesignRepeatScanTaskCommand extends TaskCommand {
     @SuppressWarnings("unused") // Possible external use
     public ArrayDesignRepeatScanTaskCommand( String taskId, ArrayDesign arrayDesign ) {
         super();
-        this.setTaskId( taskId );
         this.arrayDesign = arrayDesign;
     }
 
