@@ -222,12 +222,12 @@ public class DiffExTest extends AbstractGeoServiceTest {
                 assertEquals( 1, r.getContrasts().size() );
                 ContrastResult contrast = r.getContrasts().iterator().next();
                 assertNotNull( contrast.getCoefficient() );
-                assertEquals( 2.272896, Math.abs( contrast.getCoefficient() ), 0.01 );
+                assertEquals( 2.272896, Math.abs( contrast.getCoefficient() ), 0.0001 );
                 assertNotNull( contrast.getPvalue() );
                 assertEquals( 0.006149004, contrast.getPvalue(), 0.0001 );
                 assertNotNull( contrast.getTstat() );
-                assertEquals( 12.70765, Math.abs( contrast.getTstat() ), 0.001 );
-                assertEquals( 0.006135591, r.getPvalue(), 0.00001 );
+                assertEquals( 12.6937, Math.abs( contrast.getTstat() ), 0.0001 );
+                assertEquals( 0.006149003, r.getPvalue(), 0.00001 );
                 break;
             }
         }
