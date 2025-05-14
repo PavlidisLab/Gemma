@@ -19,6 +19,7 @@ import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
@@ -35,7 +36,7 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
     private final SessionFactory sessionFactory;
 
     @Autowired
-    private BioAssayDimensionService bioAssayDimensionService;
+    private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
     private ProcessedDataVectorByGeneCache processedDataVectorByGeneCache;
@@ -672,7 +673,16 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
     }
 
     private Collection<BioAssayDimension> getBioAssayDimensions( BioAssaySet ee ) {
-        return bioAssayDimensionService.findByBioAssaysContainingAll( ee.getBioAssays() );
+        return getBioAssayDimensionsForExperiment( getExperiment( ee ) );
+    }
+
+    /**
+     * Retrieve all the BADs for the experiment, including those from subsets.
+     */
+    private Collection<BioAssayDimension> getBioAssayDimensionsForExperiment( ExpressionExperiment ee ) {
+        HashSet<BioAssayDimension> dimensions = new HashSet<>( expressionExperimentService.getBioAssayDimensions( ee ) );
+        dimensions.addAll( expressionExperimentService.getBioAssayDimensionsFromSubSets( ee ) );
+        return dimensions;
     }
 
     private ExpressionExperiment getExperiment( BioAssaySet bas ) {

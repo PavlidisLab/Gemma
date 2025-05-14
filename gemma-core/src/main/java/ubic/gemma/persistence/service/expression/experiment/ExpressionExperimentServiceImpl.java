@@ -1237,7 +1237,6 @@ public class ExpressionExperimentServiceImpl
     public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
         Collection<BioAssayDimension> bioAssayDimensions = this.expressionExperimentDao
                 .getBioAssayDimensions( expressionExperiment );
-        Collection<BioAssayDimension> thawedBioAssayDimensions = new HashSet<>();
         bioAssayDimensions.forEach( Thaws::thawBioAssayDimension );
         return bioAssayDimensions;
     }
