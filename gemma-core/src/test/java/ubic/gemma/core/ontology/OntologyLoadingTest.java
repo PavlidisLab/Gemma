@@ -107,6 +107,10 @@ public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
     @Autowired
     private MouseDevelopmentOntologyService mdo;
 
+    @Autowired
+    @Qualifier("unifiedOntologyService")
+    private OntologyService unified;
+
     @Test
     public void testThatConnectivityAndConnectiveAreExcludedFromStemmingInClo() {
         assertThat( clo.getExcludedWordsFromStemming() ).contains( "connectivity", "connective" );
@@ -126,7 +130,7 @@ public class OntologyLoadingTest extends AbstractJUnit4SpringContextTests {
     @Category(SlowTest.class)
     public void testInitializeAllOntologies() {
         // these are notoriously slow, so we skip them
-        List<OntologyService> ignoredOntologies = Arrays.asList( efo, chebi, mp, mondo, clo, cl, hpo, uberon, obi, mdo );
+        List<OntologyService> ignoredOntologies = Arrays.asList( efo, chebi, mp, mondo, clo, cl, hpo, uberon, obi, mdo, unified );
         List<OntologyService> services = new ArrayList<>();
         List<Future<?>> futures = new ArrayList<>();
         for ( OntologyService os : ontologyServices ) {
