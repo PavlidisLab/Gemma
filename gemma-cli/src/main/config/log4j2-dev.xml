@@ -23,6 +23,7 @@
         <Logger name="net.sf.ehcache.hibernate.strategy.AbstractReadWriteEhcacheAccessStrategy" level="ERROR"/>
         <Logger name="org" level="WARN"/>
         <Logger name="org.apache.commons" level="WARN"/>
+        <Logger name="org.apache.jena.riot.RDFLanguages" level="ERROR"/>
         <Logger name="org.hibernate" level="WARN"/>
         <Logger name="org.hibernate.cache.ReadWriteCache" level="ERROR"/>
         <Logger name="org.hibernate.cache.ehcache.internal.strategy.AbstractReadWriteEhcacheAccessStrategy"
