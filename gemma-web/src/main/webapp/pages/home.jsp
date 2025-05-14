@@ -29,7 +29,7 @@
             </p>
             <p>
                 <b>May 2025:</b> We are happy to announce that Gemma now has support for single-cell/single-nucleus
-                data. While work is still in progress, you can <a href="${appConfig['gemma.gemBrow.url']}/scrna">start using
+                data. While work is still in progress, you can <a href="${appConfig['gemma.gemBrow.url']}/#/scrnaseq">start using
                 data now</a>. We're providing some additional details <a
                     href="https://pavlidislab.github.io/Gemma/scrnaseq.html">here</a>.
             </p>
