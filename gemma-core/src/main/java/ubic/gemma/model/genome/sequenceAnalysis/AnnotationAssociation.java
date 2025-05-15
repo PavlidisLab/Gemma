@@ -47,7 +47,7 @@ public class AnnotationAssociation extends BioSequence2GeneProduct {
 
     @Override
     public int hashCode() {
-        return IdentifiableUtils.hash( getBioSequence(), getGeneProduct() );
+        return IdentifiableUtils.hash( getBioSequence(), getGeneProduct(), getSource() );
     }
 
     @Override

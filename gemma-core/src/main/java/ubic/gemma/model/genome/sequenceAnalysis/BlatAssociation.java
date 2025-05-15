@@ -35,7 +35,7 @@ public class BlatAssociation extends BioSequence2GeneProduct {
 
     @Override
     public int hashCode() {
-        return IdentifiableUtils.hash( getBioSequence(), getGeneProduct() );
+        return IdentifiableUtils.hash( getBioSequence(), getGeneProduct(), getBlatResult() );
     }
 
     @Override

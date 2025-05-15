@@ -39,7 +39,7 @@ public class ReferenceAssociation extends BioSequence2GeneProduct {
 
     @Override
     public int hashCode() {
-        return IdentifiableUtils.hash( getBioSequence(), getGeneProduct() );
+        return IdentifiableUtils.hash( getBioSequence(), getGeneProduct(), getReferencedDatabaseEntry() );
     }
 
     @Override
