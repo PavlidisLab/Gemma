@@ -20,6 +20,7 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 /**
  * An association between BioSequence and GeneProduct that is provided through an external annotation source, rather
@@ -45,6 +46,11 @@ public class AnnotationAssociation extends BioSequence2GeneProduct {
     }
 
     @Override
+    public int hashCode() {
+        return IdentifiableUtils.hash( getBioSequence(), getGeneProduct() );
+    }
+
+    @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
             return true;
@@ -56,7 +62,9 @@ public class AnnotationAssociation extends BioSequence2GeneProduct {
         if ( getId() != null && other.getId() != null ) {
             return getId().equals( other.getId() );
         } else {
-            return false;
+            return IdentifiableUtils.equals( getBioSequence(), other.getBioSequence() )
+                    && IdentifiableUtils.equals( getGeneProduct(), other.getGeneProduct() )
+                    && IdentifiableUtils.equals( getSource(), other.getSource() );
         }
     }
 

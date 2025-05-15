@@ -19,6 +19,7 @@
 package ubic.gemma.model.genome.sequenceAnalysis;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 public class BlatAssociation extends BioSequence2GeneProduct {
 
@@ -33,6 +34,11 @@ public class BlatAssociation extends BioSequence2GeneProduct {
     }
 
     @Override
+    public int hashCode() {
+        return IdentifiableUtils.hash( getBioSequence(), getGeneProduct() );
+    }
+
+    @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
             return true;
@@ -44,7 +50,9 @@ public class BlatAssociation extends BioSequence2GeneProduct {
         if ( getId() != null && other.getId() != null ) {
             return getId().equals( other.getId() );
         } else {
-            return false;
+            return IdentifiableUtils.equals( getBioSequence(), other.getBioSequence() )
+                    && IdentifiableUtils.equals( getGeneProduct(), other.getGeneProduct() )
+                    && IdentifiableUtils.equals( getBlatResult(), other.getBlatResult() );
         }
     }
 

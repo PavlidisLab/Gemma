@@ -43,10 +43,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Aligns sequences from array designs to the genome, using blat, and persists the blat results.
@@ -291,9 +288,9 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
             Collection<BioSequence> needBlat = this.getGoldenPathAlignments( sequencesToBlat, taxon, results );
 
-            if ( needBlat.size() > 0 ) {
+            if ( !needBlat.isEmpty() ) {
                 ArrayDesignSequenceAlignmentServiceImpl.log.info( "Running blat on " + needBlat.size() + " sequences" );
-                Map<BioSequence, Collection<BlatResult>> moreResults = blat.blatQuery( needBlat, sensitive, taxon );
+                Map<BioSequence, List<BlatResult>> moreResults = blat.blatQuery( needBlat, sensitive, taxon );
                 results.putAll( moreResults );
             }
         } catch ( IOException e ) {

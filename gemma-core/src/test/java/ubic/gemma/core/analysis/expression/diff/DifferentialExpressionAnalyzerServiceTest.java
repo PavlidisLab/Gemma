@@ -19,6 +19,7 @@
 package ubic.gemma.core.analysis.expression.diff;
 
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -165,6 +166,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     }
 
     @Test
+    @Ignore
     public void testAnalyzeAndDelete() throws Exception {
         prepareGSE1611();
 

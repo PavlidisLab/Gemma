@@ -24,8 +24,6 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
 
-import java.util.Objects;
-
 /**
  * An association between a BioSequence and a Gene Product. This class is abstract and is variously subclassed with
  * BlatAssociation in order to capture the scores and other parameters that document why we think there is a connection
@@ -33,7 +31,6 @@ import java.util.Objects;
  */
 public abstract class BioSequence2GeneProduct extends AbstractIdentifiable {
 
-    private Long id = null;
     private Analysis sourceAnalysis = null;
     private Integer overlap = null;
     private Double score = null;
@@ -135,10 +132,5 @@ public abstract class BioSequence2GeneProduct extends AbstractIdentifiable {
 
     public void setThreePrimeDistanceMeasurementMethod( ThreePrimeDistanceMethod threePrimeDistanceMeasurementMethod ) {
         this.threePrimeDistanceMeasurementMethod = threePrimeDistanceMeasurementMethod;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash( bioSequence, geneProduct );
     }
 }

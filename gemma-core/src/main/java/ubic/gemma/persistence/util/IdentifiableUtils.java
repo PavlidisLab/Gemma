@@ -86,7 +86,7 @@ public class IdentifiableUtils {
     public static int hash( Identifiable... identifiables ) {
         Object[] ids = new Long[identifiables.length];
         for ( int i = 0; i < identifiables.length; i++ ) {
-            ids[i] = identifiables[i] != null ? requireNonNull( identifiables[i].getId(), "Cannot hash a transient entity." ) : null;
+            ids[i] = identifiables[i] != null ? requireNonNull( identifiables[i].getId(), "Cannot hash a transient entity, either persist it first or use a different collection type." ) : null;
         }
         return Objects.hash( ids );
     }

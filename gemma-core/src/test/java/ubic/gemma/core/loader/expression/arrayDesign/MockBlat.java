@@ -22,8 +22,8 @@ class MockBlat implements Blat {
     }
 
     @Override
-    public Collection<BlatResult> blatQuery( BioSequence b ) {
-        Collection<BlatResult> result = new HashSet<>();
+    public List<BlatResult> blatQuery( BioSequence b ) {
+        List<BlatResult> result = new ArrayList<>();
         BioSequence chromseq = new PersistentDummyObjectHelper().getTestNonPersistentBioSequence( taxon );
         chromseq.setLength( ( long ) 1e7 );
         BlatResult br = BlatResult.Factory.newInstance();
@@ -56,14 +56,14 @@ class MockBlat implements Blat {
     }
 
     @Override
-    public Collection<BlatResult> blatQuery( BioSequence b, Taxon t, boolean sensitive ) {
+    public List<BlatResult> blatQuery( BioSequence b, Taxon t, boolean sensitive ) {
         return this.blatQuery( b );
     }
 
     @Override
-    public Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, boolean sensitive,
+    public Map<BioSequence, List<BlatResult>> blatQuery( Collection<BioSequence> sequences, boolean sensitive,
             Taxon t ) {
-        Map<BioSequence, Collection<BlatResult>> results = new HashMap<>();
+        Map<BioSequence, List<BlatResult>> results = new HashMap<>();
         for ( BioSequence bioSequence : sequences ) {
             results.put( bioSequence, this.blatQuery( bioSequence ) );
         }
@@ -71,7 +71,7 @@ class MockBlat implements Blat {
     }
 
     @Override
-    public Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, Taxon t ) {
+    public Map<BioSequence, List<BlatResult>> blatQuery( Collection<BioSequence> sequences, Taxon t ) {
         return this.blatQuery( sequences, false, t );
     }
 
@@ -126,7 +126,7 @@ class MockBlat implements Blat {
     }
 
     @Override
-    public Collection<BlatResult> processPsl( InputStream inputStream, Taxon t ) {
+    public List<BlatResult> processPsl( InputStream inputStream, Taxon t ) {
         return null;
     }
 

@@ -19,6 +19,7 @@
 package ubic.gemma.model.association;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
 /**
  * An association between a BioSequence and a GeneProduct based on external database identifiers.
@@ -37,6 +38,11 @@ public class ReferenceAssociation extends BioSequence2GeneProduct {
     }
 
     @Override
+    public int hashCode() {
+        return IdentifiableUtils.hash( getBioSequence(), getGeneProduct() );
+    }
+
+    @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
             return true;
@@ -48,7 +54,9 @@ public class ReferenceAssociation extends BioSequence2GeneProduct {
         if ( getId() != null && other.getId() != null ) {
             return getId().equals( other.getId() );
         } else {
-            return false;
+            return IdentifiableUtils.equals( getBioSequence(), other.getBioSequence() )
+                    && IdentifiableUtils.equals( getGeneProduct(), other.getGeneProduct() )
+                    && IdentifiableUtils.equals( getReferencedDatabaseEntry(), other.getReferencedDatabaseEntry() );
         }
     }
 

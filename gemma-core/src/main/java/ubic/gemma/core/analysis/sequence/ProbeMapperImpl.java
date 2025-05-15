@@ -32,10 +32,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
 import ubic.gemma.persistence.service.genome.ChromosomeUtils;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Provides methods for mapping sequences to genes and gene products. Some methods accept a configuration object that
@@ -292,9 +289,9 @@ public class ProbeMapperImpl implements ProbeMapper {
         b.setBlatScoreThreshold( config.getBlatScoreThreshold() );
 
         try {
-            Map<BioSequence, Collection<BlatResult>> results = b.blatQuery( sequences, goldenpath.getTaxon() );
-            Collection<BlatResult> blatRes = new HashSet<>();
-            for ( Collection<BlatResult> coll : results.values() ) {
+            Map<BioSequence, List<BlatResult>> results = b.blatQuery( sequences, goldenpath.getTaxon() );
+            List<BlatResult> blatRes = new ArrayList<>();
+            for ( List<BlatResult> coll : results.values() ) {
                 blatRes.addAll( coll );
             }
             return this.processBlatResults( goldenpath, blatRes );
