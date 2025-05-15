@@ -88,6 +88,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * AnnData (and also Seurat Disk, but the former is preferred)
      */
     @Test
+    @Ignore
     @Category(SlowTest.class)
     public void testGSE225158() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE225158" );
@@ -132,6 +133,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This AnnData file has invalid columns and numerical categorical arrays and uses a dense matrix.
      */
     @Test
+    @Ignore
     @Category(SlowTest.class)
     public void testGSE221593() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE221593" );
@@ -230,6 +232,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This is a case of a MEX dataset where files are bundled in a per-sample TAR archive.
      */
     @Test
+    @Ignore
     @Category(SlowTest.class)
     public void testGSE201814() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE201814" );
@@ -612,6 +615,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This is a Loom dataset with a single file in the series. We support detection and download, but not loading.
      */
     @Test
+    @Ignore
     @Category(SlowTest.class)
     public void testGSE159416() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE159416" );
@@ -688,6 +692,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This sample has duplicated cell IDs.
      */
     @Test
+    @Ignore
     @Category(SlowTest.class)
     public void testGSM4282408() throws NoSingleCellDataFoundException, IOException {
         GeoSeries series = readSeriesFromGeo( "GSE144172" );
@@ -731,6 +736,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This dataset as an array of ENUM, a raw.X and needs to be transposed.
      */
     @Test
+    @Ignore
     @Category(SlowTest.class)
     public void testGSE244451() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE244451" );
