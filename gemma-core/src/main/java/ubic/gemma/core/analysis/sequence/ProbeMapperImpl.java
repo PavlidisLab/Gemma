@@ -125,7 +125,7 @@ public class ProbeMapperImpl implements ProbeMapper {
                         + " blat associations (after trimming non-canonical chromosome hits)" );
             }
 
-            Collection<BlatAssociation> blatAssociationsForSequence = new HashSet<>();
+            List<BlatAssociation> blatAssociationsForSequence = new ArrayList<>();
             int skipped = 0;
             // map each blat result.
             for ( BlatResult blatResult : trimmedBlatResultsForSequence ) {
@@ -206,10 +206,8 @@ public class ProbeMapperImpl implements ProbeMapper {
 
             String queryName = sequence.getName();
             assert StringUtils.isNotBlank( queryName );
-            if ( !allRes.containsKey( queryName ) ) {
-                allRes.put( queryName, blatAssociationsForSequence );
-            }
-            allRes.get( queryName ).addAll( blatAssociationsForSequence );
+            allRes.computeIfAbsent( queryName, k -> new ArrayList<>() )
+                    .addAll( blatAssociationsForSequence );
 
             // if ( log.isDebugEnabled() ) {
             // log.info( blatAssociationsForSequence.size() + " associations for " + sequence
@@ -333,14 +331,14 @@ public class ProbeMapperImpl implements ProbeMapper {
      * @param blatAssociationsForSequence associations for one sequence.
      * @return filtered collection
      */
-    private Collection<BlatAssociation> filterOnScores( Collection<BlatAssociation> blatAssociationsForSequence,
+    private List<BlatAssociation> filterOnScores( List<BlatAssociation> blatAssociationsForSequence,
             ProbeMapperConfig config ) {
 
         double minimumExonOverlapFraction = config.getMinimumExonOverlapFraction();
         if ( minimumExonOverlapFraction == 0 )
             return blatAssociationsForSequence;
 
-        Collection<BlatAssociation> result = new HashSet<>();
+        List<BlatAssociation> result = new ArrayList<>();
 
         for ( BlatAssociation ba : blatAssociationsForSequence ) {
             if ( BlatAssociationScorer.computeOverlapFraction( ba ) < minimumExonOverlapFraction ) {
