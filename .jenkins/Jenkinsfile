@@ -212,7 +212,7 @@ pipeline {
                     steps {
                         setBuildStatus "SonarQube Analysis", "SonarQube analysis for build #${env.BUILD_NUMBER} has started...", 'PENDING'
                         withSonarQubeEnv('UBC SonarQube') {
-                            sh "mvn dependency-check:check sonar:sonar -Dsonar.projectKey=mslg -Dsonar.projectName='MSL - Gemma' -Dsonar.exclusions=src/**/node_modules/**"
+                            sh "mvn dependency-check:check sonar:sonar -Dsonar.projectKey=mslg -Dsonar.projectName='MSL - Gemma'"
                         }
                     }
                     post {
