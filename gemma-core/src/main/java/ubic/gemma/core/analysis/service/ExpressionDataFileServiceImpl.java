@@ -985,31 +985,32 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     /**
      * Checks whether the given file is ok to return, or it should be regenerated.
      *
-     * @param forceWrite whether the file should be overridden even if found.
-     * @param f          the file to check.
-     * @param check      the file will be considered invalid after this date.
+     * @param forceWrite  whether the file should be overridden even if found.
+     * @param f           the file to check.
+     * @param check the file will be considered invalid if it was generated before this date.
      * @return true, if the given file is ok to be returned, false if it should be regenerated.
      */
-    private boolean checkFileOkToReturn( boolean forceWrite, Path f, Date check ) {
-        Date modified = new Date( f.toFile().lastModified() );
+    private boolean checkFileOkToReturn( boolean forceWrite, Path f, Date check ) throws IOException {
+        long lastModifiedMillis = Files.getLastModifiedTime( f ).toMillis();
         if ( Files.exists( f ) ) {
             if ( forceWrite ) {
                 ExpressionDataFileServiceImpl.log
                         .info( String.format( ExpressionDataFileServiceImpl.MSG_FILE_FORCED, f ) );
-            } else if ( modified.after( check ) ) {
+                return false;
+            } else if ( lastModifiedMillis < check.getTime() ) {
                 ExpressionDataFileServiceImpl.log
                         .info( String.format( ExpressionDataFileServiceImpl.MSG_FILE_OUTDATED, f ) );
+                return false;
             } else {
                 ExpressionDataFileServiceImpl.log
                         .info( String.format( ExpressionDataFileServiceImpl.MSG_FILE_EXISTS, f ) );
                 return true;
             }
-        } else if ( !Files.exists( f ) ) {
+        } else {
             ExpressionDataFileServiceImpl.log
                     .info( String.format( ExpressionDataFileServiceImpl.MSG_FILE_NOT_EXISTS, f ) );
+            return false;
         }
-
-        return false;
     }
 
     /**
